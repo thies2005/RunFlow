@@ -19,8 +19,14 @@ export default function OnboardingWizard() {
         refetchInterval: (query) => query.state.data?.syncInProgress ? 1000 : false,
     });
 
+    const [importRange, setImportRange] = useState('ALL');
+
     const syncMutation = useMutation({
-        mutationFn: async () => await fetch('/api/sync', { method: 'POST' }),
+        mutationFn: async () => await fetch('/api/sync', {
+            method: 'POST',
+            body: JSON.stringify({ range: importRange }),
+            headers: { 'Content-Type': 'application/json' }
+        }),
     });
 
     // Analysis Logic (Step 2)
@@ -94,13 +100,30 @@ export default function OnboardingWizard() {
                         </div>
 
                         {!syncStatus?.syncInProgress && syncStatus?.totalActivities === 0 && (
-                            <button
-                                onClick={() => syncMutation.mutate()}
-                                disabled={syncMutation.isPending}
-                                className="btn-primary w-full py-3"
-                            >
-                                {syncMutation.isPending ? 'Starting...' : 'Start Import'}
-                            </button>
+                            <div className="space-y-4">
+                                <div className="text-left">
+                                    <label className="block text-sm font-medium text-gray-400 mb-1 ml-1">Import Range</label>
+                                    <select
+                                        value={importRange}
+                                        onChange={(e) => setImportRange(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-accent-orange outline-none"
+                                    >
+                                        <option value="1_MONTH">Last Month</option>
+                                        <option value="3_MONTHS">Last 3 Months</option>
+                                        <option value="6_MONTHS">Last 6 Months</option>
+                                        <option value="1_YEAR">Last Year</option>
+                                        <option value="2_YEARS">Last 2 Years</option>
+                                        <option value="ALL">All History</option>
+                                    </select>
+                                </div>
+                                <button
+                                    onClick={() => syncMutation.mutate()}
+                                    disabled={syncMutation.isPending}
+                                    className="btn-primary w-full py-3"
+                                >
+                                    {syncMutation.isPending ? 'Starting...' : 'Start Import'}
+                                </button>
+                            </div>
                         )}
 
                         {!syncStatus?.syncInProgress && (syncStatus?.totalActivities || 0) > 0 && (

@@ -21,9 +21,12 @@ export async function POST(request: NextRequest) {
             }, { status: 409 });
         }
 
+        // Get options
+        const { range } = await request.json().catch(() => ({}));
+
         // Start sync
-        console.log(`Starting sync for user ${session.user.id}`);
-        const result = await syncUserActivities(session.user.id);
+        console.log(`Starting sync for user ${session.user.id} with range: ${range || 'ALL'}`);
+        const result = await syncUserActivities(session.user.id, range);
         console.log(`Sync complete for user ${session.user.id}:`, result);
 
         return NextResponse.json({

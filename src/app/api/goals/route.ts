@@ -110,5 +110,37 @@ export async function POST(request: NextRequest) {
         },
     });
 
+    // Generate Training Plan Workouts
+    if (currentVdot) {
+        // Import dynamically to avoid circular dependencies if any (though here it's fine)
+        const { generateTrainingPlan } = await import('@/lib/plans');
+
+        try {
+            const workouts = generateTrainingPlan({
+                vdot: currentVdot,
+                raceType: raceType as any,
+                raceDate: new Date(raceDate),
+                startDate: new Date(),
+            });
+
+            if (workouts.length > 0) {
+                await prisma.workout.createMany({
+                    data: workouts.map(w => ({
+                        goalId: goal.id,
+                        scheduledDate: w.date,
+                        workoutType: w.type,
+                        description: w.description,
+                        targetDistance: w.totalDistance,
+                        targetPace: w.targetPace,
+                    })),
+                });
+                console.log(`Generated ${workouts.length} workouts for goal ${goal.id}`);
+            }
+        } catch (error) {
+            console.error('Failed to generate training plan:', error);
+            // Don't fail the request, just log it. Plan can be regenerated later.
+        }
+    }
+
     return NextResponse.json({ goal });
 }

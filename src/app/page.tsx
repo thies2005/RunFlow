@@ -1,13 +1,15 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { TodayWorkout, RaceCountdown, ActivityList, FitnessChart } from '@/components';
+import { TodayWorkout, RaceCountdown, ActivityList, FitnessChart, AnalyticsDashboard } from '@/components';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
+    const router = useRouter();
     const queryClient = useQueryClient();
 
     // Fetch activities
@@ -89,6 +91,18 @@ export default function Dashboard() {
         return null;
     }
 
+    // Redirect to onboarding if authenticated but no activities (and not currently syncing)
+    if (status === 'authenticated'
+        && syncStatus
+        && syncStatus.totalActivities === 0
+        && !syncStatus.syncInProgress
+        && !activitiesLoading) {
+        if (typeof window !== 'undefined') {
+            router.push('/onboarding');
+        }
+        return null;
+    }
+
     const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
     const todayWorkout = activeGoal?.workouts?.[0] || null;
 
@@ -104,6 +118,7 @@ export default function Dashboard() {
 
     // Check for any errors
     const hasError = activitiesError || goalsError || syncError || syncMutation.error;
+    const currentVdot = activitiesData?.activities?.[0]?.estimatedVdot || null;
 
     return (
         <div className="min-h-screen bg-background">
@@ -225,38 +240,39 @@ export default function Dashboard() {
                     </div>
 
                     {/* Right column - Quick stats */}
-                    <div className="lg:col-span-1">
-                        <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.2s' }}>
-                            <h2 className="text-lg font-semibold text-gray-300 mb-4">
-                                This Week
-                            </h2>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="glass-card p-4 text-center">
-                                    <p className="stat-value-accent text-3xl font-bold">
-                                        {((activitiesData?.activities?.slice(0, 7)
-                                            .reduce((sum: number, a: any) => sum + (a.distance || 0), 0) / 1000) || 0).toFixed(1)
-                                        }
+                    <div className="lg:col-span-1 flex flex-col justify-center">
+                        <div className="glass-card p-6">
+                            <h2 className="text-lg font-semibold text-gray-300 mb-4">Training Status</h2>
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="text-center">
+                                    <p className="text-4xl font-bold text-white mb-1">
+                                        {currentVdot?.toFixed(1) || '-'}
                                     </p>
-                                    <p className="text-sm text-gray-400 mt-1">km</p>
-                                </div>
-                                <div className="glass-card p-4 text-center">
-                                    <p className="stat-value text-3xl font-bold">
-                                        {activitiesData?.activities?.slice(0, 7).length || 0}
-                                    </p>
-                                    <p className="text-sm text-gray-400 mt-1">activities</p>
+                                    <p className="text-sm text-gray-400">Current VDOT</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                {/* Analytics Dashboard */}
+                {activitiesData?.activities?.length > 0 && (
+                    <div className="mt-8">
+                        <h2 className="text-xl font-semibold text-white mb-4">Performance Analytics</h2>
+                        <AnalyticsDashboard
+                            activities={activitiesData.activities}
+                            currentVdot={currentVdot}
+                        />
+                    </div>
+                )}
+
                 {/* Fitness chart */}
-                <div className="mt-6">
+                <div className="mt-8">
                     <FitnessChart data={fitnessData} isLoading={activitiesLoading} />
                 </div>
 
                 {/* Activity history */}
-                <div className="mt-6">
+                <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-semibold text-white">Recent Activities</h2>
                         <button type="button" className="btn-secondary py-2 px-4">View All</button>

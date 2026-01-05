@@ -1,0 +1,57 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: runflow-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}
+      - STRAVA_CLIENT_SECRET=${STRAVA_CLIENT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - runflow-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: runflow-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=runflow
+      - POSTGRES_PASSWORD=runflow
+      - POSTGRES_DB=runflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U runflow -d runflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - runflow-network
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: runflow-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - app
+    networks:
+      - runflow-network
+
+networks:
+  runflow-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

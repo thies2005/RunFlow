@@ -16,7 +16,7 @@ export default function Dashboard() {
     const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useQuery({
         queryKey: ['activities'],
         queryFn: async () => {
-            const res = await fetch('/api/activities?limit=10');
+            const res = await fetch('/api/activities?limit=10&type=RUN');
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
                 throw new Error(errorData.error || 'Failed to fetch activities');
@@ -275,7 +275,13 @@ export default function Dashboard() {
                 <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-semibold text-white">Recent Activities</h2>
-                        <button type="button" className="btn-secondary py-2 px-4">View All</button>
+                        <button
+                            type="button"
+                            onClick={() => router.push('/activities')}
+                            className="btn-secondary py-2 px-4"
+                        >
+                            View All
+                        </button>
                     </div>
                     <ActivityList
                         activities={activitiesData?.activities || []}

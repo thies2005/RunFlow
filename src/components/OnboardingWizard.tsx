@@ -31,8 +31,8 @@ export default function OnboardingWizard() {
 
     // Analysis Logic (Step 2)
     const { data: activitiesData } = useQuery({
-        queryKey: ['activities', 'all'],
-        queryFn: async () => (await fetch('/api/activities?limit=100')).json(),
+        queryKey: ['activities', 'run'],
+        queryFn: async () => (await fetch('/api/activities?limit=100&type=RUN')).json(),
         enabled: step >= 2,
     }); // Fetch more for analysis
 
@@ -58,6 +58,10 @@ export default function OnboardingWizard() {
         },
         onSuccess: () => {
             router.push('/');
+        },
+        onError: (error) => {
+            console.error('Goal creation failed:', error);
+            alert('Failed to create goal. Please try again.');
         }
     });
 

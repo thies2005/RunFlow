@@ -12,11 +12,11 @@ export default function Dashboard() {
     const router = useRouter();
     const queryClient = useQueryClient();
 
-    // Fetch activities
+    // Fetch activities (Fetch more for analytics)
     const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useQuery({
         queryKey: ['activities'],
         queryFn: async () => {
-            const res = await fetch('/api/activities?limit=10&type=RUN');
+            const res = await fetch('/api/activities?limit=300&type=RUN');
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
                 throw new Error(errorData.error || 'Failed to fetch activities');
@@ -106,8 +106,13 @@ export default function Dashboard() {
     const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
     const todayWorkout = activeGoal?.workouts?.[0] || null;
 
+    // Derived Activity Lists
+    // We fetch 300 for analytics, but only show 10 in the list
+    const allActivities = activitiesData?.activities || [];
+    const recentActivities = allActivities.slice(0, 10);
+
     // Mock fitness data (would come from API in production)
-    const fitnessData = activitiesData?.activities?.length > 0
+    const fitnessData = allActivities.length > 0
         ? Array.from({ length: 30 }, (_, i) => ({
             date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString(),
             ctl: 40 + Math.random() * 20,
@@ -118,7 +123,7 @@ export default function Dashboard() {
 
     // Check for any errors
     const hasError = activitiesError || goalsError || syncError || syncMutation.error;
-    const currentVdot = activitiesData?.activities?.[0]?.estimatedVdot || null;
+    const currentVdot = allActivities[0]?.estimatedVdot || null;
 
     return (
         <div className="min-h-screen bg-background">
@@ -249,6 +254,15 @@ export default function Dashboard() {
                                         {currentVdot?.toFixed(1) || '-'}
                                     </p>
                                     <p className="text-sm text-gray-400">Current VDOT</p>
+                                    {/* Feature: Estimate VDOT if missing */}
+                                    {!currentVdot && (
+                                        <button
+                                            onClick={() => router.push('/onboarding?step=3')}
+                                            className="text-xs text-accent-orange mt-2 hover:underline"
+                                        >
+                                            Set Race Goal to Estimate
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -256,11 +270,11 @@ export default function Dashboard() {
                 </div>
 
                 {/* Analytics Dashboard */}
-                {activitiesData?.activities?.length > 0 && (
+                {allActivities.length > 0 && (
                     <div className="mt-8">
                         <h2 className="text-xl font-semibold text-white mb-4">Performance Analytics</h2>
                         <AnalyticsDashboard
-                            activities={activitiesData.activities}
+                            activities={allActivities}
                             currentVdot={currentVdot}
                         />
                     </div>
@@ -284,7 +298,7 @@ export default function Dashboard() {
                         </button>
                     </div>
                     <ActivityList
-                        activities={activitiesData?.activities || []}
+                        activities={recentActivities}
                         isLoading={activitiesLoading}
                     />
                 </div>

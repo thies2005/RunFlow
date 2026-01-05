@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, LineChart, Line
@@ -27,12 +27,36 @@ type AnalyticsDashboardProps = {
 };
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#7f1d1d']; // Z1-Z5 colors
+const RANGES = [
+    { label: 'Last 4 Weeks', value: '4_WEEKS' },
+    { label: 'Last 12 Weeks', value: '12_WEEKS' },
+    { label: 'Last 6 Months', value: '6_MONTHS' },
+    { label: 'Last Year', value: '1_YEAR' },
+    { label: 'All Time', value: 'ALL' },
+];
 
 export default function AnalyticsDashboard({ activities, currentVdot }: AnalyticsDashboardProps) {
+    const [timeRange, setTimeRange] = useState('12_WEEKS');
+
+    // Filter activities by range
+    const filteredActivities = useMemo(() => {
+        const now = new Date();
+        let cutoff = new Date(0); // Default ALL
+
+        switch (timeRange) {
+            case '4_WEEKS': cutoff = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000); break;
+            case '12_WEEKS': cutoff = new Date(now.getTime() - 84 * 24 * 60 * 60 * 1000); break;
+            case '6_MONTHS': cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000); break;
+            case '1_YEAR': cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); break;
+        }
+
+        return activities.filter(a => new Date(a.startDate) >= cutoff);
+    }, [activities, timeRange]);
+
     // 1. Calculate Zone Distribution
     const zoneStats = useMemo(() => {
         // Mock zone data if missing (for demo purposes if Strava sync doesn't have it yet)
-        const activitiesWithZones = activities.map(a => ({
+        const activitiesWithZones = filteredActivities.map(a => ({
             ...a,
             hrZone1Time: a.hrZone1Time ?? (a.hasHeartrate ? Math.random() * 1000 : 0),
             hrZone2Time: a.hrZone2Time ?? (a.hasHeartrate ? Math.random() * 2000 : 0),
@@ -51,21 +75,19 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
             { name: 'Z4 Threshold', value: dist.z4, percent: percentages.z4, color: COLORS[3] },
             { name: 'Z5 VO2 Max', value: dist.z5, percent: percentages.z5, color: COLORS[4] },
         ].filter(z => z.value > 0);
-    }, [activities]);
+    }, [filteredActivities]);
 
     // 2. Weekly Volume
     const weeklyVolume = useMemo(() => {
         const weeks: Record<string, number> = {};
-        const now = new Date();
-        const twelveWeeksAgo = new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000);
+        // We render all weeks in the range, or just populated ones?
+        // Let's render populated ones for now, but sorted.
 
-        activities.forEach(a => {
+        filteredActivities.forEach(a => {
             const date = new Date(a.startDate);
-            if (date < twelveWeeksAgo) return;
-
             // Get week start (Monday)
             const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
             const monday = new Date(date.setDate(diff));
             const key = monday.toISOString().split('T')[0];
 
@@ -78,10 +100,26 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
                 date: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
                 km: Math.round(km)
             }));
-    }, [activities]);
+    }, [filteredActivities]);
+
+    // Add Range Selector to UI
+    // We'll wrap the charts in a container that has the header + selector
+
 
     return (
         <div className="space-y-6">
+            <div className="flex justify-end">
+                <select
+                    value={timeRange}
+                    onChange={(e) => setTimeRange(e.target.value)}
+                    className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                    {RANGES.map(r => (
+                        <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                </select>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Zone Distribution */}
                 <div className="glass-card p-6">
@@ -123,7 +161,7 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
 
                 {/* Weekly Volume */}
                 <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Weekly Volume (12 Weeks)</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">Weekly Volume</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={weeklyVolume}>

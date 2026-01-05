@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { ArrowRight, CheckCircle, RefreshCw, BarChart2, Calendar, Check } from 'lucide-react';
@@ -9,8 +9,12 @@ import AnalyticsDashboard from './AnalyticsDashboard';
 
 export default function OnboardingWizard() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { data: session } = useSession();
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(() => {
+        const p = searchParams.get('step');
+        return p ? parseInt(p) : 1;
+    });
 
     // Sync Logic (Step 1)
     const { data: syncStatus } = useQuery({

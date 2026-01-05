@@ -2,6 +2,7 @@
 
 import { Calendar, Target, TrendingUp, Timer } from 'lucide-react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 interface Goal {
     id: string;
@@ -38,6 +39,8 @@ function formatTime(seconds: number): string {
 }
 
 export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
+    const router = useRouter();
+
     if (!goal) {
         return (
             <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.1s' }}>
@@ -45,7 +48,12 @@ export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
                 <div className="text-center py-8">
                     <span className="text-4xl mb-4 block">🏁</span>
                     <p className="text-gray-400">No race goal set</p>
-                    <button className="btn-secondary mt-4">Set Your Goal</button>
+                    <button
+                        onClick={() => router.push('/onboarding?step=3')}
+                        className="btn-secondary mt-4"
+                    >
+                        Set Your Goal
+                    </button>
                 </div>
             </div>
         );

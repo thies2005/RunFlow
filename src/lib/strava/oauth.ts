@@ -23,37 +23,49 @@ export const authOptions: AuthOptions = {
     callbacks: {
         async signIn({ user, account }) {
             if (account?.provider === 'strava' && account.providerAccountId) {
-                // Store Strava-specific data on the user
-                await prisma.user.update({
-                    where: { id: user.id },
-                    data: {
-                        stravaId: account.providerAccountId,
-                        stravaAccessToken: account.access_token,
-                        stravaRefreshToken: account.refresh_token,
-                        stravaTokenExpiry: account.expires_at
-                            ? new Date(account.expires_at * 1000)
-                            : null,
-                    },
-                });
+                try {
+                    // Store Strava-specific data on the user
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                            stravaId: account.providerAccountId,
+                            stravaAccessToken: account.access_token,
+                            stravaRefreshToken: account.refresh_token,
+                            stravaTokenExpiry: account.expires_at
+                                ? new Date(account.expires_at * 1000)
+                                : null,
+                        },
+                    });
+                } catch (error) {
+                    console.error('Error storing Strava tokens:', error);
+                    // Don't block sign-in if token storage fails
+                }
             }
             return true;
         },
         async session({ session, user }) {
-            if (session.user) {
+            // Ensure user ID is always set
+            if (session.user && user) {
                 session.user.id = user.id;
 
-                // Check if user has valid Strava connection
-                const dbUser = await prisma.user.findUnique({
-                    where: { id: user.id },
-                    select: {
-                        stravaId: true,
-                        stravaTokenExpiry: true,
-                        lastSyncAt: true,
-                    },
-                });
+                try {
+                    // Check if user has valid Strava connection
+                    const dbUser = await prisma.user.findUnique({
+                        where: { id: user.id },
+                        select: {
+                            stravaId: true,
+                            stravaTokenExpiry: true,
+                            lastSyncAt: true,
+                        },
+                    });
 
-                session.user.hasStrava = !!dbUser?.stravaId;
-                session.user.lastSyncAt = dbUser?.lastSyncAt?.toISOString() ?? null;
+                    session.user.hasStrava = !!dbUser?.stravaId;
+                    session.user.lastSyncAt = dbUser?.lastSyncAt?.toISOString() ?? null;
+                } catch (error) {
+                    console.error('Error fetching user data for session:', error);
+                    session.user.hasStrava = false;
+                    session.user.lastSyncAt = null;
+                }
             }
             return session;
         },
@@ -65,6 +77,7 @@ export const authOptions: AuthOptions = {
     session: {
         strategy: 'database',
     },
+    debug: process.env.NODE_ENV === 'development',
 };
 
 /**

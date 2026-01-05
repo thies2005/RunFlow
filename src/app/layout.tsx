@@ -20,6 +20,9 @@ export default function RootLayout({
         <html lang="en" className="dark">
             <body className={inter.className}>
                 <Providers>{children}</Providers>
+                <div className="fixed top-2 right-2 z-[100] text-[10px] text-white/20 font-mono pointer-events-none">
+                    v1.0.0
+                </div>
             </body>
         </html>
     );

@@ -1,54 +1,71 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Settings, LogOut } from 'lucide-react';
+import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { TodayWorkout, RaceCountdown, ActivityList, FitnessChart } from '@/components';
+import { TodayWorkout, RaceCountdown, ActivityList, FitnessChart, AnalyticsDashboard } from '@/components';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
+    const router = useRouter();
     const queryClient = useQueryClient();
 
     // Fetch activities
-    const { data: activitiesData, isLoading: activitiesLoading } = useQuery({
+    const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useQuery({
         queryKey: ['activities'],
         queryFn: async () => {
             const res = await fetch('/api/activities?limit=10');
-            if (!res.ok) throw new Error('Failed to fetch activities');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to fetch activities');
+            }
             return res.json();
         },
         enabled: status === 'authenticated',
+        retry: 1,
     });
 
     // Fetch goals
-    const { data: goalsData, isLoading: goalsLoading } = useQuery({
+    const { data: goalsData, isLoading: goalsLoading, error: goalsError } = useQuery({
         queryKey: ['goals'],
         queryFn: async () => {
             const res = await fetch('/api/goals');
-            if (!res.ok) throw new Error('Failed to fetch goals');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to fetch goals');
+            }
             return res.json();
         },
         enabled: status === 'authenticated',
+        retry: 1,
     });
 
     // Fetch sync status
-    const { data: syncStatus, isLoading: syncLoading } = useQuery({
+    const { data: syncStatus, isLoading: syncLoading, error: syncError } = useQuery({
         queryKey: ['sync-status'],
         queryFn: async () => {
             const res = await fetch('/api/sync');
-            if (!res.ok) throw new Error('Failed to fetch sync status');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to fetch sync status');
+            }
             return res.json() as Promise<{ syncInProgress: boolean; lastSyncAt: string | null; totalActivities: number }>;
         },
         enabled: status === 'authenticated',
         refetchInterval: (query) => query.state.data?.syncInProgress ? 2000 : false,
+        retry: 1,
     });
 
     // Sync mutation
     const syncMutation = useMutation({
         mutationFn: async () => {
             const res = await fetch('/api/sync', { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to start sync');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to start sync');
+            }
             return res.json();
         },
         onSuccess: () => {
@@ -60,7 +77,7 @@ export default function Dashboard() {
     // Show loading state
     if (status === 'loading') {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="animate-pulse text-gray-400">Loading...</div>
             </div>
         );
@@ -70,6 +87,18 @@ export default function Dashboard() {
     if (status === 'unauthenticated') {
         if (typeof window !== 'undefined') {
             window.location.href = '/login';
+        }
+        return null;
+    }
+
+    // Redirect to onboarding if authenticated but no activities (and not currently syncing)
+    if (status === 'authenticated'
+        && syncStatus
+        && syncStatus.totalActivities === 0
+        && !syncStatus.syncInProgress
+        && !activitiesLoading) {
+        if (typeof window !== 'undefined') {
+            router.push('/onboarding');
         }
         return null;
     }
@@ -86,6 +115,10 @@ export default function Dashboard() {
             tsb: -10 + Math.random() * 25,
         }))
         : [];
+
+    // Check for any errors
+    const hasError = activitiesError || goalsError || syncError || syncMutation.error;
+    const currentVdot = activitiesData?.activities?.[0]?.estimatedVdot || null;
 
     return (
         <div className="min-h-screen bg-background">
@@ -105,19 +138,23 @@ export default function Dashboard() {
                         <div className="flex items-center gap-4">
                             {/* Sync button */}
                             <button
-                                onClick={() => syncMutation.mutate()}
+                                type="button"
+                                onClick={() => {
+                                    console.log('Sync button clicked');
+                                    syncMutation.mutate();
+                                }}
                                 disabled={syncStatus?.syncInProgress || syncMutation.isPending}
-                                className="btn-secondary flex items-center gap-2 py-2 px-4"
+                                className="btn-secondary flex items-center gap-2 py-2 px-4 disabled:opacity-50"
                             >
                                 <RefreshCw className={`w-4 h-4 ${syncStatus?.syncInProgress || syncMutation.isPending
                                     ? 'animate-spin'
                                     : ''
                                     }`} />
-                                {syncStatus?.syncInProgress ? 'Syncing...' : 'Sync'}
+                                {syncMutation.isPending ? 'Starting...' : syncStatus?.syncInProgress ? 'Syncing...' : 'Sync'}
                             </button>
 
                             {/* Settings */}
-                            <button className="p-2 text-gray-400 hover:text-white transition-colors">
+                            <button type="button" className="p-2 text-gray-400 hover:text-white transition-colors">
                                 <Settings className="w-5 h-5" />
                             </button>
 
@@ -131,7 +168,11 @@ export default function Dashboard() {
                                     />
                                 )}
                                 <button
-                                    onClick={() => signOut()}
+                                    type="button"
+                                    onClick={() => {
+                                        console.log('Sign out clicked');
+                                        signOut({ callbackUrl: '/login' });
+                                    }}
                                     className="p-2 text-gray-400 hover:text-white transition-colors"
                                     title="Sign out"
                                 >
@@ -142,6 +183,28 @@ export default function Dashboard() {
                     </div>
                 </div>
             </header>
+
+            {/* Error banner */}
+            {hasError && (
+                <div className="bg-red-500/10 border-b border-red-500/20 py-3 px-4">
+                    <div className="max-w-7xl mx-auto flex items-center gap-2 text-red-400">
+                        <AlertCircle className="w-5 h-5" />
+                        <span className="text-sm">
+                            {syncMutation.error?.message || activitiesError?.message || goalsError?.message || syncError?.message || 'An error occurred'}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                queryClient.invalidateQueries();
+                                syncMutation.reset();
+                            }}
+                            className="ml-auto text-sm underline hover:no-underline"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Main content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -177,41 +240,42 @@ export default function Dashboard() {
                     </div>
 
                     {/* Right column - Quick stats */}
-                    <div className="lg:col-span-1">
-                        <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.2s' }}>
-                            <h2 className="text-lg font-semibold text-gray-300 mb-4">
-                                This Week
-                            </h2>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="glass-card p-4 text-center">
-                                    <p className="stat-value-accent text-3xl font-bold">
-                                        {activitiesData?.activities?.slice(0, 7)
-                                            .reduce((sum: number, a: any) => sum + (a.distance || 0), 0) / 1000 || 0
-                                        }
+                    <div className="lg:col-span-1 flex flex-col justify-center">
+                        <div className="glass-card p-6">
+                            <h2 className="text-lg font-semibold text-gray-300 mb-4">Training Status</h2>
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="text-center">
+                                    <p className="text-4xl font-bold text-white mb-1">
+                                        {currentVdot?.toFixed(1) || '-'}
                                     </p>
-                                    <p className="text-sm text-gray-400 mt-1">km</p>
-                                </div>
-                                <div className="glass-card p-4 text-center">
-                                    <p className="stat-value text-3xl font-bold">
-                                        {activitiesData?.activities?.slice(0, 7).length || 0}
-                                    </p>
-                                    <p className="text-sm text-gray-400 mt-1">activities</p>
+                                    <p className="text-sm text-gray-400">Current VDOT</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                {/* Analytics Dashboard */}
+                {activitiesData?.activities?.length > 0 && (
+                    <div className="mt-8">
+                        <h2 className="text-xl font-semibold text-white mb-4">Performance Analytics</h2>
+                        <AnalyticsDashboard
+                            activities={activitiesData.activities}
+                            currentVdot={currentVdot}
+                        />
+                    </div>
+                )}
+
                 {/* Fitness chart */}
-                <div className="mt-6">
+                <div className="mt-8">
                     <FitnessChart data={fitnessData} isLoading={activitiesLoading} />
                 </div>
 
                 {/* Activity history */}
-                <div className="mt-6">
+                <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-semibold text-white">Recent Activities</h2>
-                        <button className="btn-secondary py-2 px-4">View All</button>
+                        <button type="button" className="btn-secondary py-2 px-4">View All</button>
                     </div>
                     <ActivityList
                         activities={activitiesData?.activities || []}

@@ -34,6 +34,7 @@ model User {
   hrMax         Int?      // Maximum heart rate
   hrRest        Int?      // Resting heart rate
   weight        Float?    // kg
+  height        Float?    // cm
   
   // HR Zone thresholds (% of hrMax)
   hrZone1Max    Int       @default(60)  // Z1 ends at 60%
@@ -129,6 +130,7 @@ model Activity {
   // Pace/Speed
   averageSpeed    Float?    // m/s
   maxSpeed        Float?    // m/s
+  gradeAdjustedSpeed Float? // m/s (GAP)
   
   // Heart Rate
   averageHr       Float?
@@ -154,6 +156,10 @@ model Activity {
   
   // Raw Strava response
   rawJson         Json?
+  streams         Json?     // Stored streams (time, hr, distance, altitude, velocity_smooth)
+
+  // Training Classification
+  trainingType    WorkoutType? // Auto-tagged or manual override
   
   // Relations
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -163,6 +169,8 @@ model Activity {
   
   @@index([userId, startDate])
   @@index([type])
+  @@index([userId, type, startDate])  // For filtering by type within date range
+  @@index([userId, hasHeartrate])     // For HR-based metrics queries
 }
 
 enum ActivityType {

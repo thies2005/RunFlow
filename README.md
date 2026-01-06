@@ -31,6 +31,15 @@ The heart of our workflow is `scripts/deploy.ps1`. This PowerShell script automa
 3.  Configures `docker-compose.yml` for **local build** and pushes to `main`.
 4.  Configures `docker-compose.yml` for **image pull** and pushes to `dockerhub`.
 
+### 🐳 Docker Hub Images
+
+Our automated builds are available on Docker Hub as `t23wes3/runflow`. 
+
+- **Link**: [t23wes3/runflow](https://hub.docker.com/r/t23wes3/runflow)
+- **Architectures**: Multi-arch support for `linux/amd64` and `linux/arm64` (Raspberry Pi, ARM servers).
+
+The `dockerhub` branch is pre-configured to pull these images, making deployment on production servers a simple `docker compose pull && docker compose up -d` process.
+
 #### Usage
 
 To deploy a new version from your development machine:
@@ -49,6 +58,35 @@ If you only changed code/docs and don't need a new Docker build (lighter update)
 ```powershell
 .\scripts\deploy.ps1 "Update README" -SkipDocker
 ```
+
+### 🔧 Deployment Options (Server-Side)
+
+We support two ways to deploy on your server, controlled by which Docker Compose files you use.
+
+#### 1. Standard Deployment (Pull from Hub)
+**Best for**: Production, speed, stability.
+Uses the pre-built image from Docker Hub.
+
+```bash
+# 1. Update repo
+git pull origin main
+
+# 2. Deploy
+docker compose up -d
+```
+
+#### 2. Testing Deployment (Build from Source)
+**Best for**: Testing latest changes before a Docker Hub push, or debugging platform issues.
+Forces a local build of the Docker image on your server.
+
+```bash
+# 1. Update repo
+git pull origin main
+
+# 2. Deploy with Build Override
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
+*This command tells Docker: "Use the base config, but apply the build overrides, and force a rebuild."*
 
 ---
 
@@ -118,6 +156,30 @@ docker compose up -d
 
 ---
 
+## 🧪 Testing & Quality
+
+To ensure stability, RunFlow includes a comprehensive test suite and strict build checks.
+
+### Basic Testing
+Run unit and snapshot tests using Jest:
+```bash
+npm run test
+```
+
+### Integration Testing
+Run database-connected integration tests:
+```bash
+npm run test:integration
+```
+
+### Production Build Check
+To verify the application compiles correctly and matches production requirements before deploying:
+```bash
+npm run build
+```
+
+---
+
 ## 📚 Features & Physics
 
 ### Key Metrics
@@ -129,6 +191,43 @@ docker compose up -d
 
 ### Cross-Training Logic
 Cycling and other aerobic activities contribute to your **Cardiovascular Fitness (CTL)** but are excluded from **Running Impact Stress**. This allows you to track total metabolic fitness while monitoring specific running load to prevent injury.
+
+---
+
+## 💾 Backup & Restore
+
+RunFlow includes a fully automated backup system to ensure your training data is never lost.
+
+### Automated Backups
+The system runs a dedicated backup container that:
+- **Schedule**: Creates a backup **every 6 hours**.
+- **Retention**: Implements a smart retention policy:
+  - Keeps last **7 daily** backups.
+  - Keeps last **4 weekly** backups.
+  - Keeps last **6 monthly** backups.
+- **Location**: Backups are stored in the `./backups` directory on the host machine.
+
+### Restoring Data
+
+We provide helper scripts to make restoration easy.
+
+**Warning: Restoration will overwrite the current database.**
+
+#### On Windows
+```powershell
+.\scripts\restore.ps1 "backup_2024-01-01_120000.sql.gz"
+```
+
+#### On Linux / Mac
+```bash
+./scripts/restore.sh "backup_2024-01-01_120000.sql.gz"
+```
+
+### Migrating to a New Server
+Since backups are stored locally in the `./backups` folder:
+1. **Copy the Folder**: You must manually copy the `./backups` folder (or specific files) from your old server to the new one.
+2. **Place**: Put them in the root `RunFlow/backups/` directory on the new server.
+3. **Restore**: Run the restore script as shown above.
 
 ---
 

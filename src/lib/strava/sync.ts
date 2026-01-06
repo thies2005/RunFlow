@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { refreshStravaToken } from './oauth';
 import { calculateTrimp, type Sex } from '@/lib/metrics/trimp';
 import { calculateRunningTss, getActivityContribution } from '@/lib/metrics/fitness';
+import { WorkoutType } from '@/lib/types';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const MAX_PER_PAGE = 200;
@@ -79,6 +80,7 @@ export interface StravaActivity {
     elapsed_time: number;
     average_speed: number;
     max_speed: number;
+    average_grade_adjusted_speed?: number; // Added GAP
     average_heartrate?: number;
     max_heartrate?: number;
     has_heartrate: boolean;
@@ -86,6 +88,7 @@ export interface StravaActivity {
     elev_high?: number;
     elev_low?: number;
     description?: string;
+    workout_type?: number;
 }
 
 /**
@@ -104,6 +107,35 @@ function mapActivityType(stravaType: string): string {
         'Workout': 'WORKOUT',
     };
     return typeMap[stravaType] || 'OTHER';
+}
+
+/**
+ * Determine workout type based on Strava data and heuristics
+ */
+function determineWorkoutType(activity: StravaActivity): WorkoutType {
+    // 0: Run (default)
+    // 1: Race
+    // 2: Long Run
+    // 3: Workout
+    if (activity.workout_type === 1) return 'RACE';
+    if (activity.workout_type === 2) return 'LONG_RUN';
+    if (activity.workout_type === 3) return 'INTERVALS'; // Strava calls it 'workout'
+
+    // Heuristics for untagged runs
+    if (activity.type === 'Run' || activity.type === 'VirtualRun') {
+        const distKm = activity.distance / 1000;
+
+        // Long run classification if not explicitly tagged
+        if (distKm >= 15) return 'LONG_RUN'; // Simple threshold for now
+
+        return 'EASY';
+    }
+
+    if (activity.type === 'Ride' || activity.type === 'VirtualRide') return 'RIDE';
+    if (activity.type === 'Swim') return 'SWIM';
+    if (activity.type === 'WeightTraining') return 'STRENGTH';
+
+    return 'OTHER';
 }
 
 /**
@@ -166,11 +198,11 @@ async function fetchActivityStreams(
     accessToken: string,
     activityId: number,
     retryCount: number = 0
-): Promise<{ time: number[]; heartrate: number[] } | null> {
+): Promise<{ time: number[]; heartrate?: number[]; velocity_smooth?: number[]; altitude?: number[]; cadence?: number[] } | null> {
     await rateLimiter.checkAndWait();
 
     const response = await fetch(
-        `${STRAVA_API_BASE}/activities/${activityId}/streams?keys=time,heartrate&key_by_type=true`,
+        `${STRAVA_API_BASE}/activities/${activityId}/streams?keys=time,heartrate,velocity_smooth,altitude,cadence&key_by_type=true`,
         {
             headers: { Authorization: `Bearer ${accessToken}` },
         }
@@ -190,29 +222,37 @@ async function fetchActivityStreams(
     if (!response.ok) return null;
 
     const streams = await response.json();
-    if (!streams.time || !streams.heartrate) return null;
+    if (!streams.time) return null;
 
     return {
         time: streams.time.data,
-        heartrate: streams.heartrate.data,
+        heartrate: streams.heartrate?.data,
+        velocity_smooth: streams.velocity_smooth?.data,
+        altitude: streams.altitude?.data,
+        cadence: streams.cadence?.data,
     };
 }
 
 /**
- * Calculate time in zones based on HR stream and user max HR
+ * Calculate time in zones based on HR stream and user-configured zone thresholds
+ * @param heartrates - Array of heart rate values from stream
+ * @param times - Array of timestamps from stream
+ * @param hrMax - User's maximum heart rate
+ * @param zoneThresholds - User-configured zone thresholds (% of hrMax)
  */
 function calculateZoneTimes(
     heartrates: number[],
     times: number[],
-    hrMax: number
+    hrMax: number,
+    zoneThresholds: { z1: number; z2: number; z3: number; z4: number } = { z1: 60, z2: 70, z3: 80, z4: 90 }
 ): { z1: number; z2: number; z3: number; z4: number; z5: number } {
     const zones = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
 
-    // Default percentages if not customized (matching User model defaults)
-    const z1Ceil = Math.floor(hrMax * 0.60);
-    const z2Ceil = Math.floor(hrMax * 0.70);
-    const z3Ceil = Math.floor(hrMax * 0.80);
-    const z4Ceil = Math.floor(hrMax * 0.90);
+    // Use user-configured percentages or defaults
+    const z1Ceil = Math.floor(hrMax * (zoneThresholds.z1 / 100));
+    const z2Ceil = Math.floor(hrMax * (zoneThresholds.z2 / 100));
+    const z3Ceil = Math.floor(hrMax * (zoneThresholds.z3 / 100));
+    const z4Ceil = Math.floor(hrMax * (zoneThresholds.z4 / 100));
 
     for (let i = 0; i < heartrates.length; i++) {
         // Calculate duration of this point
@@ -278,6 +318,10 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 hrRest: true,
                 sex: true,
                 lastSyncAt: true,
+                hrZone1Max: true,
+                hrZone2Max: true,
+                hrZone3Max: true,
+                hrZone4Max: true,
             },
         });
 
@@ -344,11 +388,22 @@ export async function syncUserActivities(userId: string, range?: string): Promis
 
                     // --- Fetch Streams & Calculate Zones (Expensive operation) ---
                     let zoneTimes = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+                    let streams = null;
 
-                    if (activity.has_heartrate && user?.hrMax) {
-                        const streams = await fetchActivityStreams(accessToken, activity.id);
-                        if (streams) {
-                            zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, user.hrMax);
+                    // Always fetch streams for analysis if we can (limit to runs/rides involving HR or heavy data?)
+                    // For now, fetch for all runs to enable analysis
+                    if (['Run', 'VirtualRun', 'Ride', 'VirtualRide'].includes(activity.type)) {
+                        streams = await fetchActivityStreams(accessToken, activity.id);
+
+                        if (streams && streams.heartrate && user?.hrMax) {
+                            // Use user-configured zone thresholds or defaults
+                            const zoneThresholds = {
+                                z1: user.hrZone1Max ?? 60,
+                                z2: user.hrZone2Max ?? 70,
+                                z3: user.hrZone3Max ?? 80,
+                                z4: user.hrZone4Max ?? 90,
+                            };
+                            zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, user.hrMax, zoneThresholds);
                         }
                     }
 
@@ -389,6 +444,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         elapsedTime: activity.elapsed_time,
                         averageSpeed: activity.average_speed,
                         maxSpeed: activity.max_speed,
+                        gradeAdjustedSpeed: activity.average_grade_adjusted_speed ?? null,
                         averageHr: activity.average_heartrate ?? null,
                         maxHr: activity.max_heartrate ?? null,
                         hasHeartrate: activity.has_heartrate,
@@ -402,7 +458,10 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         hrZone3Time: zoneTimes.z3,
                         hrZone4Time: zoneTimes.z4,
                         hrZone5Time: zoneTimes.z5,
+
                         rawJson: activity as any,
+                        streams: streams as any,
+                        trainingType: determineWorkoutType(activity),
                     };
 
                     if (isNew) {
@@ -479,8 +538,25 @@ export async function getSyncStatus(userId: string): Promise<{
         },
     });
 
+    let syncInProgress = user?.syncInProgress ?? false;
+
+    // Auto-reset stuck sync flag after 10 minutes
+    const SYNC_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+    if (syncInProgress && user?.lastSyncAt) {
+        const timeSinceLastSync = Date.now() - user.lastSyncAt.getTime();
+        if (timeSinceLastSync > SYNC_TIMEOUT_MS) {
+            // Sync has been "in progress" for too long - reset the flag
+            await prisma.user.update({
+                where: { id: userId },
+                data: { syncInProgress: false },
+            });
+            syncInProgress = false;
+            logger.warn(`Auto-reset stuck syncInProgress flag for user ${userId} after ${Math.round(timeSinceLastSync / 1000 / 60)} minutes`);
+        }
+    }
+
     return {
-        syncInProgress: user?.syncInProgress ?? false,
+        syncInProgress,
         lastSyncAt: user?.lastSyncAt ?? null,
         totalActivities: user?._count?.activities ?? 0,
     };

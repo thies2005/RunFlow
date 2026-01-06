@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import RacePredictionChart from '@/components/RacePredictionChart';
-import CombinedAnalyticsChart from '@/components/CombinedAnalyticsChart';
+import CombinedAnalyticsChart, { TimeRange } from '@/components/CombinedAnalyticsChart';
 import {
     calculateWeightedEffectiveVO2max,
     calculateMarathonShape,
@@ -26,12 +26,34 @@ import {
     formatPace,
     type TrainingPaces
 } from '@/lib/metrics/vdot';
+import type { Activity, Goal } from '@/lib/types';
 
 export default function AnalyticsPage() {
     const { status } = useSession();
     const router = useRouter();
     const queryClient = useQueryClient();
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
+    const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
+
+    // Filter helpers
+    const filterByTimeRange = <T extends { date?: string; week?: string }>(data: T[], range: TimeRange): T[] => {
+        if (range === 'ALL' || !data.length) return data;
+        const now = new Date();
+        const cutoff = new Date();
+
+        switch (range) {
+            case '1Y': cutoff.setFullYear(now.getFullYear() - 1); break;
+            case '6M': cutoff.setMonth(now.getMonth() - 6); break;
+            case '3M': cutoff.setMonth(now.getMonth() - 3); break;
+            case '1M': cutoff.setMonth(now.getMonth() - 1); break;
+        }
+
+        return data.filter(d => {
+            const dateStr = d.date || d.week;
+            if (!dateStr) return true;
+            return new Date(dateStr) >= cutoff;
+        });
+    };
 
     // Fetch ALL activities
     const { data: activitiesData, isLoading } = useQuery({
@@ -91,10 +113,10 @@ export default function AnalyticsPage() {
 
     // Calculated data
     const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions, combinedData, trainingPaces } = useMemo(() => {
-        const activities = activitiesData?.activities || [];
+        const activities: Activity[] = activitiesData?.activities || [];
         const runs: ActivityForShape[] = activities
-            .filter((a: any) => a.type === 'RUN')
-            .map((a: any) => ({
+            .filter((a: Activity) => a.type === 'RUN')
+            .map((a: Activity) => ({
                 startDate: a.startDate,
                 distance: a.distance,
                 movingTime: a.movingTime,
@@ -103,7 +125,7 @@ export default function AnalyticsPage() {
             }));
 
         const maxHR = userData?.user?.hrMax || 190;
-        const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
+        const activeGoal = goalsData?.goals?.find((g: Goal) => g.isActive);
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
 
         // Use corrected effectiveVO2max from stats API (includes vdotCorrectionFactor)
@@ -186,7 +208,17 @@ export default function AnalyticsPage() {
             dailyLoads.set(dateKey, (dailyLoads.get(dateKey) || 0) + trimp);
         });
 
-        const startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        const earliestRun = runs.length > 0
+            ? runs.reduce((min, r) => new Date(r.startDate) < new Date(min.startDate) ? r : min)
+            : null;
+        const earliestDate = earliestRun ? new Date(earliestRun.startDate) : now;
+        const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+        // Start from earliest activity or 1 year ago, whichever is earlier
+        // ensuring we have coverage for the 1Y chart view
+        const startDate = new Date(Math.min(earliestDate.getTime(), oneYearAgo.getTime()));
+        // Buffer a few days for initial values
+        startDate.setDate(startDate.getDate() - 1);
         for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
             const dateKey = d.toISOString().split('T')[0];
             const load = dailyLoads.get(dateKey) || 0;
@@ -209,8 +241,8 @@ export default function AnalyticsPage() {
         const weeklyTimeMap = new Map<string, number>();
         const weeklyVO2Map = new Map<string, { values: number[]; vo2max?: number }>();
 
-        runs.forEach(run => {
-            const date = new Date(run.startDate);
+        activities.forEach(activity => {
+            const date = new Date(activity.startDate);
             const weekStart = new Date(date);
             const day = weekStart.getDay();
             weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1)); // Monday
@@ -220,16 +252,22 @@ export default function AnalyticsPage() {
             weekEnd.setDate(weekEnd.getDate() + 6); // Sunday
             const weekKey = weekEnd.toISOString().split('T')[0]; // ISO Date
 
-            weeklyVolumeMap.set(weekKey, (weeklyVolumeMap.get(weekKey) || 0) + run.distance / 1000);
-            weeklyTimeMap.set(weekKey, (weeklyTimeMap.get(weekKey) || 0) + run.movingTime / 60);
+            // Always add to Training Time (minutes) - All Activity Types
+            const minutes = activity.movingTime / 60;
+            weeklyTimeMap.set(weekKey, (weeklyTimeMap.get(weekKey) || 0) + minutes);
 
-            // Calculate VO2max for this run if it has HR
-            if (run.hasHeartrate && run.averageHr && run.distance >= 3000) {
-                const vo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr, maxHR);
-                if (vo2 > 0) {
-                    const existing = weeklyVO2Map.get(weekKey) || { values: [] };
-                    existing.values.push(vo2);
-                    weeklyVO2Map.set(weekKey, existing);
+            // Run-specific metrics (Volume, VO2)
+            if (activity.type === 'RUN') {
+                weeklyVolumeMap.set(weekKey, (weeklyVolumeMap.get(weekKey) || 0) + activity.distance / 1000);
+
+                // Calculate VO2max for this run if it has HR
+                if (activity.hasHeartrate && activity.averageHr && activity.distance >= 3000) {
+                    const vo2 = calculateEffectiveVO2max(activity.distance, activity.movingTime, activity.averageHr, maxHR);
+                    if (vo2 > 0) {
+                        const existing = weeklyVO2Map.get(weekKey) || { values: [] };
+                        existing.values.push(vo2);
+                        weeklyVO2Map.set(weekKey, existing);
+                    }
                 }
             }
         });
@@ -249,6 +287,7 @@ export default function AnalyticsPage() {
         weeklyVO2Map.forEach((_, key) => allWeekKeys.add(key));
         fitnessDataMap.forEach((_, key) => allWeekKeys.add(key));
         weeklyVolumeMap.forEach((_, key) => allWeekKeys.add(key));
+        weeklyTimeMap.forEach((_, key) => allWeekKeys.add(key));
 
         const weeks = Array.from(allWeekKeys).sort((a, b) => {
             const dateA = new Date(a);
@@ -294,6 +333,10 @@ export default function AnalyticsPage() {
             };
         });
 
+        // 5. Filter data based on TimeRange
+        // Note: CombinedAnalyticsChart does internal filtering based on its prop, but we need to filter
+        // the other datasets (trend charts) here.
+
         return {
             runalyzeMetrics: {
                 effectiveVO2max,
@@ -316,6 +359,11 @@ export default function AnalyticsPage() {
             combinedData: combinedDataWithRolling
         };
     }, [activitiesData, userData, goalsData, statsData]);
+
+    // Apply filtering to the data used in stand-alone charts
+    const filteredVo2Trend = useMemo(() => filterByTimeRange(vo2TrendData, timeRange), [vo2TrendData, timeRange]);
+    const filteredShapeTrend = useMemo(() => filterByTimeRange(shapeTrendData, timeRange), [shapeTrendData, timeRange]);
+    const filteredFitness = useMemo(() => filterByTimeRange(fitnessData, timeRange), [fitnessData, timeRange]);
 
     if (status === 'loading' || isLoading) {
         return (
@@ -419,7 +467,12 @@ export default function AnalyticsPage() {
 
 
                 {/* Combined Analytics Chart */}
-                <CombinedAnalyticsChart data={combinedData} />
+                {/* Combined Analytics Chart */}
+                <CombinedAnalyticsChart
+                    data={combinedData}
+                    timeRange={timeRange}
+                    onTimeRangeChange={setTimeRange}
+                />
 
                 {/* Race Prediction Chart with Shape Slider */}
                 <RacePredictionChart
@@ -503,7 +556,7 @@ export default function AnalyticsPage() {
                         <h3 className="text-lg font-semibold text-white mb-4">Effective VO2max Trend</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={vo2TrendData}>
+                                <LineChart data={filteredVo2Trend}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                                     <XAxis
                                         dataKey="date"
@@ -542,7 +595,7 @@ export default function AnalyticsPage() {
                         <h3 className="text-lg font-semibold text-white mb-4">Marathon Shape Trend</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={shapeTrendData}>
+                                <AreaChart data={filteredShapeTrend}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                                     <XAxis
                                         dataKey="week"
@@ -568,7 +621,7 @@ export default function AnalyticsPage() {
                     <h3 className="text-lg font-semibold text-white mb-4">Fitness & Form (CTL / ATL / TSB)</h3>
                     <div className="h-72">
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={fitnessData}>
+                            <LineChart data={filteredFitness}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                                 <XAxis
                                     dataKey="date"

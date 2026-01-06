@@ -1,8 +1,10 @@
 'use client';
 
-import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Mountain, Zap } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Mountain, Zap, BarChart2, Tag } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { Activity } from '@/lib/types';
+import { Activity, WorkoutType } from '@/lib/types';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 interface ActivityDetailsModalProps {
     isOpen: boolean;
@@ -11,7 +13,38 @@ interface ActivityDetailsModalProps {
 }
 
 export default function ActivityDetailsModal({ isOpen, onClose, activity }: ActivityDetailsModalProps) {
+    const [trainingType, setTrainingType] = useState<WorkoutType | null>(null);
+    const [isUpdatingType, setIsUpdatingType] = useState(false);
+
+    useEffect(() => {
+        if (activity) {
+            setTrainingType(activity.trainingType || 'EASY');
+        }
+    }, [activity]);
+
     if (!isOpen || !activity) return null;
+
+    const handleTypeChange = async (newType: WorkoutType) => {
+        setTrainingType(newType);
+        setIsUpdatingType(true);
+        try {
+            const res = await fetch(`/api/activities/${activity.id}/type`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ trainingType: newType }),
+            });
+            if (!res.ok) throw new Error('Failed to update type');
+        } catch (error) {
+            console.error(error);
+            // Revert on error?
+        } finally {
+            setIsUpdatingType(false);
+        }
+    };
+
+    const WORKOUT_TYPES: WorkoutType[] = [
+        'EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'REPETITIONS', 'RECOVERY', 'RACE', 'REST'
+    ];
 
     // Helper to format duration
     const formatDuration = (seconds: number) => {
@@ -59,6 +92,38 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }: Acti
                 </div>
 
                 <div className="p-6 overflow-y-auto max-h-[80vh]">
+                    {/* Actions Row */}
+                    <div className="flex flex-wrap items-center gap-4 mb-6">
+                        <Link
+                            href={`/activity/${activity.id}/analysis`}
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 rounded-lg text-white font-medium transition-all shadow-lg shadow-accent-purple/20"
+                        >
+                            <BarChart2 className="w-4 h-4" />
+                            Analyse
+                        </Link>
+
+                        <div className="relative group">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-colors cursor-pointer">
+                                <Tag className="w-4 h-4 text-gray-400" />
+                                <select
+                                    value={trainingType || 'EASY'}
+                                    onChange={(e) => handleTypeChange(e.target.value as WorkoutType)}
+                                    className="bg-transparent border-none text-sm text-white focus:ring-0 cursor-pointer appearance-none pr-8"
+                                    disabled={isUpdatingType}
+                                >
+                                    {WORKOUT_TYPES.map(type => (
+                                        <option key={type} value={type} className="bg-gray-900 text-white">
+                                            {type.replace('_', ' ')}
+                                        </option>
+                                    ))}
+                                    <option value="RIDE" className="bg-gray-900 text-white">RIDE</option>
+                                    <option value="SWIM" className="bg-gray-900 text-white">SWIM</option>
+                                    <option value="STRENGTH" className="bg-gray-900 text-white">STRENGTH</option>
+                                    <option value="OTHER" className="bg-gray-900 text-white">OTHER</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     {/* Description if available */}
                     {activity.description && (
                         <div className="mb-8 bg-white/5 rounded-xl p-4">
@@ -115,6 +180,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }: Acti
                                 <span className="text-gray-400">Low Point</span>
                                 <span className="text-white font-medium">{activity.elevLow ? Math.round(activity.elevLow) : '-'} m</span>
                             </div>
+                            <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-2">
+                                <span className="text-gray-400">GAP</span>
+                                <span className="text-accent-cyan font-medium">{formatPace(activity.gradeAdjustedSpeed)}</span>
+                            </div>
                         </div>
 
                         {/* Training Load */}
@@ -135,6 +204,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }: Acti
                                         ? `${Math.round((activity.averageHr / activity.maxHr) * 100)}% HRmax`
                                         : '-'}
                                 </span>
+                            </div>
+                            <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-2">
+                                <span className="text-gray-400">Eff. VO2 Max</span>
+                                <span className="text-accent-purple font-medium">{activity.estimatedVdot ? activity.estimatedVdot.toFixed(1) : '-'}</span>
                             </div>
                         </div>
 

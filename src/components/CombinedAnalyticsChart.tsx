@@ -14,8 +14,12 @@ interface DataPoint {
     trainingTime?: number; // minutes
 }
 
+export type TimeRange = 'ALL' | '1Y' | '6M' | '3M' | '1M';
+
 interface CombinedAnalyticsChartProps {
     data: DataPoint[];
+    timeRange: TimeRange;
+    onTimeRangeChange: (range: TimeRange) => void;
 }
 
 const SERIES_CONFIG = {
@@ -28,10 +32,8 @@ const SERIES_CONFIG = {
 };
 
 type SeriesKey = keyof typeof SERIES_CONFIG;
-type TimeRange = 'ALL' | '1Y' | '6M' | '3M' | '1M';
 
-export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartProps) {
-    const [timeRange, setTimeRange] = useState<TimeRange>('ALL');
+export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: CombinedAnalyticsChartProps) {
     const [visibleSeries, setVisibleSeries] = useState<Record<SeriesKey, boolean>>({
         vo2max: true,
         ctl: true,
@@ -105,7 +107,7 @@ export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartP
                     {(['1M', '3M', '6M', '1Y', 'ALL'] as TimeRange[]).map(range => (
                         <button
                             key={range}
-                            onClick={() => setTimeRange(range)}
+                            onClick={() => onTimeRangeChange(range)}
                             className={`px-3 py-1 text-xs font-medium rounded transition-all ${timeRange === range
                                 ? 'bg-[#374151] text-white shadow-sm'
                                 : 'text-gray-400 hover:text-gray-200'

@@ -51,6 +51,11 @@ export default function OnboardingWizard() {
     const [strengthPerWeek, setStrengthPerWeek] = useState(0);
     const [swimsPerWeek, setSwimsPerWeek] = useState(0);
 
+    // Phase Lengths (weeks)
+    const [taperWeeks, setTaperWeeks] = useState(2);
+    const [peakWeeks, setPeakWeeks] = useState(4);
+    const [buildWeeks, setBuildWeeks] = useState(4);
+
     const createGoalMutation = useMutation({
         mutationFn: async () => {
             const res = await fetch('/api/goals', {
@@ -65,6 +70,9 @@ export default function OnboardingWizard() {
                     ridesPerWeek,
                     strengthPerWeek,
                     swimsPerWeek,
+                    taperWeeks,
+                    peakWeeks,
+                    buildWeeks,
                 }),
             });
             if (!res.ok) throw new Error('Failed to create goal');
@@ -265,6 +273,44 @@ export default function OnboardingWizard() {
                                         {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
                                     </select>
                                 </div>
+                            </div>
+
+                            {/* Phase Length Controls */}
+                            <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
+                                <h4 className="text-sm font-semibold text-gray-300 mb-3">Training Phases (weeks)</h4>
+                                <div className="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-400 mb-1">Taper</label>
+                                        <select
+                                            value={taperWeeks}
+                                            onChange={(e) => setTaperWeeks(Number(e.target.value))}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                        >
+                                            {[1, 2, 3].map(n => <option key={n} value={n}>{n}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-400 mb-1">Peak</label>
+                                        <select
+                                            value={peakWeeks}
+                                            onChange={(e) => setPeakWeeks(Number(e.target.value))}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                        >
+                                            {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-400 mb-1">Build</label>
+                                        <select
+                                            value={buildWeeks}
+                                            onChange={(e) => setBuildWeeks(Number(e.target.value))}
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                        >
+                                            {[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">Remaining weeks will be Base phase.</p>
                             </div>
                             <div className="glass-card p-4 flex items-start gap-3 bg-blue-500/10 border-blue-500/20">
                                 <CheckCircle className="w-5 h-5 text-blue-400 mt-0.5" />

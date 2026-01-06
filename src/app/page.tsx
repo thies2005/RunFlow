@@ -4,17 +4,20 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Settings, LogOut, AlertCircle, Edit2, Check } from 'lucide-react';
+import { RefreshCw, Settings, LogOut, AlertCircle, Edit2, Check, TrendingUp, Activity } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { TodayWorkout, RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
+import ProfileModal from '@/components/ProfileModal';
+import type { Workout, Goal } from '@/lib/types';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const queryClient = useQueryClient();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [editingWorkout, setEditingWorkout] = useState<any>(null);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
 
     // 1. Fetch Stats (Server-calculated)
     const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -78,6 +81,9 @@ export default function Dashboard() {
             const res = await fetch('/api/sync', { method: 'POST' });
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
+                if (errorData.details) {
+                    throw new Error(`${errorData.error}: ${errorData.details}`);
+                }
                 throw new Error(errorData.error || 'Failed to start sync');
             }
             return res.json();
@@ -102,15 +108,15 @@ export default function Dashboard() {
 
     // Data extraction
     const recentActivities = activitiesData?.activities || [];
-    const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
-    const weeklyWorkouts = activeGoal?.workouts || [];
+    const activeGoal: Goal | undefined = goalsData?.goals?.find((g: Goal) => g.isActive);
+    const weeklyWorkouts: Workout[] = activeGoal?.workouts || [];
 
     // Find today's workout or the first uncompleted one
     const today = new Date().toDateString();
-    const todayWorkout = weeklyWorkouts.find((w: any) => new Date(w.scheduledDate).toDateString() === today) ||
-        weeklyWorkouts.find((w: any) => !w.isCompleted) || null;
+    const todayWorkout = weeklyWorkouts.find((w: Workout) => new Date(w.scheduledDate).toDateString() === today) ||
+        weeklyWorkouts.find((w: Workout) => !w.isCompleted) || null;
 
-    const firstUncompletedIndex = weeklyWorkouts.findIndex((w: any) => !w.isCompleted);
+    const firstUncompletedIndex = weeklyWorkouts.findIndex((w: Workout) => !w.isCompleted);
 
     // Stats from Server
     const currentWeekMileage = statsData?.currentWeekMileage || 0;
@@ -178,7 +184,7 @@ export default function Dashboard() {
                             </button>
                             <div className="flex items-center gap-3">
                                 {session?.user?.image && (
-                                    <button onClick={() => setIsSettingsOpen(true)} className="relative group">
+                                    <button onClick={() => setIsProfileOpen(true)} className="relative group">
                                         <img
                                             src={session.user.image}
                                             alt={session.user.name || 'User'}
@@ -226,7 +232,7 @@ export default function Dashboard() {
                             <h2 className="text-lg font-semibold text-gray-300 mb-4">This Week's Workouts</h2>
                             {weeklyWorkouts.length > 0 ? (
                                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                                    {weeklyWorkouts.map((workout: any, index: number) => {
+                                    {weeklyWorkouts.map((workout: Workout, index: number) => {
                                         const workoutDate = new Date(workout.scheduledDate);
                                         const isWorkoutToday = workoutDate.toDateString() === today;
                                         const isNextWorkout = index === firstUncompletedIndex;
@@ -295,31 +301,49 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div className="lg:col-span-1">
-                        <RaceCountdown goal={activeGoal} weeklyMileage={currentWeekMileage} className="h-full" marathonShape={marathonShape.shape} />
+                        <RaceCountdown goal={activeGoal ?? null} weeklyMileage={currentWeekMileage} className="h-full" marathonShape={marathonShape.shape} />
                     </div>
                     <div className="lg:col-span-1 h-full flex flex-col">
                         <div className="glass-card p-6 h-full flex flex-col justify-center">
                             <h2 className="text-lg font-semibold text-gray-300 mb-4">Training Status</h2>
 
-                            {/* Metrics List (Runalyze Style) */}
-                            <div className="space-y-3">
-                                {/* Effective VO2max */}
+                            {/* Top Metrics Grid */}
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                {/* Marathon Shape */}
                                 <div className="flex items-center gap-3">
-                                    <div className="w-28 text-xs text-gray-400 truncate">Effective VO2max</div>
-                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                                        <div className="h-full bg-teal-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, ((effectiveVO2max - 30) / 40) * 100))}%` }} />
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shrink-0">
+                                        <TrendingUp className="w-5 h-5 text-white" />
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-sm font-bold text-teal-400">
-                                            {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
-                                        </div>
-                                        {correctionFactor !== 1.0 && (
-                                            <div className="text-[10px] text-gray-500">
-                                                {correctionFactor.toFixed(2)}x
-                                            </div>
-                                        )}
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium leading-tight">Marathon Shape</p>
+                                        <p className="text-xl font-bold text-white leading-tight">{marathonShapePercent}%</p>
                                     </div>
                                 </div>
+
+                                {/* Effective VO2max */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shrink-0">
+                                        <Activity className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium leading-tight">Effective VO2max</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-xl font-bold text-white leading-tight">
+                                                {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
+                                            </p>
+                                            {correctionFactor !== 1.0 && (
+                                                <span className="text-[10px] text-gray-500">
+                                                    {correctionFactor.toFixed(2)}x
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Metrics List (Runalyze Style) */}
+                            <div className="space-y-4">
+
 
                                 {/* Fatigue (ATL) */}
                                 <div className="flex items-center gap-3">
@@ -421,6 +445,11 @@ export default function Dashboard() {
                 workout={editingWorkout}
                 goalId={activeGoal?.id}
             />
-        </div >
+
+            <ProfileModal
+                isOpen={isProfileOpen}
+                onClose={() => setIsProfileOpen(false)}
+            />
+        </div>
     );
 }

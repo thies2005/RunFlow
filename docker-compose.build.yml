@@ -1,0 +1,8 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Override the pull_policy from the main file (which is 'always')
+    # 'build' ensures compcose builds the image instead of trying to pull it
+    pull_policy: build

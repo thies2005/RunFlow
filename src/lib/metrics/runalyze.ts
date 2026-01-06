@@ -5,6 +5,34 @@
 
 import { calculateVdot, predictRaceTime, type RaceDistance } from './vdot';
 
+// ============================================
+// Constants (extracted magic numbers)
+// ============================================
+
+/** Minimum activity distance in meters for inclusion in VO2max calculations */
+const MIN_DISTANCE_FOR_CALCULATION = 3000; // 3km
+
+/** Minimum activity duration in seconds for inclusion in calculations */
+const MIN_DURATION_FOR_CALCULATION = 600; // 10 minutes
+
+/** Daily decay factor for time-weighted averages (5% per day) */
+const DAILY_DECAY_FACTOR = 0.95;
+
+/** Minimum long run distance in meters for marathon shape scoring */
+const MIN_LONG_RUN_DISTANCE = 13000; // 13km
+
+/** Maximum shape penalty for marathon predictions (30% slower at 0% shape) */
+const MAX_MARATHON_SHAPE_PENALTY = 0.30;
+
+/** Maximum shape penalty for half marathon predictions (15% slower at 0% shape) */
+const MAX_HALF_SHAPE_PENALTY = 0.15;
+
+/** Target long run points for 100% shape score */
+const TARGET_LONG_RUN_POINTS = 10;
+
+/** Target weekly cross-training minutes for 100% score */
+const TARGET_CROSS_TRAINING_WEEKLY_MINUTES = 300;
+
 /**
  * Activity data needed for calculations
  */
@@ -54,6 +82,11 @@ export function calculateEffectiveVO2max(
     // %VO2max ≈ 1.5 * (%HRmax - 0.5) (simplified approximation)
     // More accurate: %VO2max = 0.64 + 0.36 * %HRmax (for trained athletes)
     const percentVO2max = 0.64 + 0.36 * percentHRmax;
+
+    // Guard: prevent division by zero or near-zero
+    if (percentVO2max <= 0.1) {
+        return 0;
+    }
 
     // Effective VO2max = VO2 cost / %VO2max
     const effectiveVO2max = vo2Cost / percentVO2max;

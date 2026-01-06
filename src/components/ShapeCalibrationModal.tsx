@@ -369,18 +369,24 @@ export default function ShapeCalibrationModal({
 
                             <div className="flex gap-2 items-center">
                                 <input
-                                    type="number" placeholder="HH" value={vdotHours} onChange={e => setVdotHours(e.target.value)}
+                                    type="number" placeholder="HH" value={vdotHours}
+                                    onChange={e => setVdotHours(validateTimeInput(e.target.value, 23))}
                                     className="w-16 bg-gray-800 border border-gray-700 rounded p-2 text-white text-center"
+                                    min="0" max="23"
                                 />
                                 <span className="text-gray-500">:</span>
                                 <input
-                                    type="number" placeholder="MM" value={vdotMinutes} onChange={e => setVdotMinutes(e.target.value)}
+                                    type="number" placeholder="MM" value={vdotMinutes}
+                                    onChange={e => setVdotMinutes(validateTimeInput(e.target.value, 59))}
                                     className="w-16 bg-gray-800 border border-gray-700 rounded p-2 text-white text-center"
+                                    min="0" max="59"
                                 />
                                 <span className="text-gray-500">:</span>
                                 <input
-                                    type="number" placeholder="SS" value={vdotSeconds} onChange={e => setVdotSeconds(e.target.value)}
+                                    type="number" placeholder="SS" value={vdotSeconds}
+                                    onChange={e => setVdotSeconds(validateTimeInput(e.target.value, 59))}
                                     className="w-16 bg-gray-800 border border-gray-700 rounded p-2 text-white text-center"
+                                    min="0" max="59"
                                 />
                             </div>
 

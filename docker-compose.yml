@@ -53,6 +53,28 @@
     networks:
       - runflow-network
 
+  backup:
+    image: prodrigestivill/postgres-backup-local
+    container_name: runflow-backup
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=runflow
+      - POSTGRES_USER=runflow
+      - POSTGRES_PASSWORD=runflow
+      - SCHEDULE=@every 6h
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+      - HEALTHCHECK_PORT=8080
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - runflow-network
+
   tunnel:
     image: cloudflare/cloudflared:latest
     container_name: runflow-tunnel

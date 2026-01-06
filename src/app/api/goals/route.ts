@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek } = body;
+    const { name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, taperWeeks, peakWeeks, buildWeeks } = body;
 
     if (!name || !raceType || !raceDate) {
         return NextResponse.json(
@@ -135,6 +135,9 @@ export async function POST(request: NextRequest) {
                 ridesPerWeek: ridesPerWeek ?? 0,
                 strengthPerWeek: strengthPerWeek ?? 0,
                 swimsPerWeek: swimsPerWeek ?? 0,
+                taperWeeks: taperWeeks ?? 2,
+                peakWeeks: peakWeeks ?? 4,
+                buildWeeks: buildWeeks ?? 4,
             });
 
             if (workouts.length > 0) {

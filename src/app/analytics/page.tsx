@@ -173,6 +173,21 @@ export default function AnalyticsPage() {
             }
         }
 
+        // Build weekly volume map (km per week)
+        const weeklyVolumeMap = new Map<string, number>();
+        const weeklyTimeMap = new Map<string, number>();
+
+        runs.forEach(run => {
+            const date = new Date(run.startDate);
+            const weekStart = new Date(date);
+            const day = weekStart.getDay();
+            weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1)); // Monday
+            const weekKey = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            weeklyVolumeMap.set(weekKey, (weeklyVolumeMap.get(weekKey) || 0) + run.distance / 1000);
+            weeklyTimeMap.set(weekKey, (weeklyTimeMap.get(weekKey) || 0) + run.movingTime / 60);
+        });
+
         // Build combined data for CombinedAnalyticsChart
         const combinedData = fitness.map(f => {
             const vo2Entry = vo2Trend.find(v => v.date === f.date);
@@ -182,6 +197,8 @@ export default function AnalyticsPage() {
                 ctl: f.ctl,
                 atl: f.atl,
                 tsb: f.tsb,
+                volume: Math.round(weeklyVolumeMap.get(f.date) || 0),
+                trainingTime: Math.round(weeklyTimeMap.get(f.date) || 0),
             };
         });
 
@@ -321,6 +338,16 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
+                {/* Race Prediction Chart with Shape Slider */}
+                <RacePredictionChart
+                    effectiveVO2max={runalyzeMetrics.effectiveVO2max}
+                    currentShape={runalyzeMetrics.shape}
+                    calibrationFactor={runalyzeMetrics.calibrationFactor}
+                />
+
+                {/* Combined Analytics Chart */}
+                <CombinedAnalyticsChart data={combinedData} />
+
                 {/* === TREND CHARTS === */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* VO2max Trend */}
@@ -399,16 +426,6 @@ export default function AnalyticsPage() {
                         </div>
                     </div>
                 </div>
-
-                {/* Race Prediction Chart with Shape Slider */}
-                <RacePredictionChart
-                    effectiveVO2max={runalyzeMetrics.effectiveVO2max}
-                    currentShape={runalyzeMetrics.shape}
-                    calibrationFactor={runalyzeMetrics.calibrationFactor}
-                />
-
-                {/* Combined Analytics Chart */}
-                <CombinedAnalyticsChart data={combinedData} />
             </main>
 
             {/* Calibration Modal */}

@@ -130,9 +130,14 @@ export default function RacePredictionChart({
                         <Tooltip
                             contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
                             formatter={(value: number, name: string) => {
-                                const mins = Math.floor(value);
-                                const secs = Math.round((value - mins) * 60);
-                                return [`${mins}:${secs.toString().padStart(2, '0')}`, name === 'predictedMin' ? 'Predicted' : 'Optimal'];
+                                const totalSecs = Math.round(value * 60);
+                                const hours = Math.floor(totalSecs / 3600);
+                                const mins = Math.floor((totalSecs % 3600) / 60);
+                                const secs = totalSecs % 60;
+                                const timeStr = hours > 0
+                                    ? `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+                                    : `${mins}:${secs.toString().padStart(2, '0')}`;
+                                return [timeStr, name === 'predictedMin' ? 'Predicted' : 'Optimal'];
                             }}
                         />
                         <Bar dataKey="optimalMin" fill="#4ade80" opacity={0.3} name="Optimal" radius={[0, 4, 4, 0]} />

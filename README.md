@@ -165,6 +165,43 @@ Cycling and other aerobic activities contribute to your **Cardiovascular Fitness
 
 ---
 
+## 💾 Backup & Restore
+
+RunFlow includes a fully automated backup system to ensure your training data is never lost.
+
+### Automated Backups
+The system runs a dedicated backup container that:
+- **Schedule**: Creates a backup **every 6 hours**.
+- **Retention**: Implements a smart retention policy:
+  - Keeps last **7 daily** backups.
+  - Keeps last **4 weekly** backups.
+  - Keeps last **6 monthly** backups.
+- **Location**: Backups are stored in the `./backups` directory on the host machine.
+
+### Restoring Data
+
+We provide helper scripts to make restoration easy.
+
+**Warning: Restoration will overwrite the current database.**
+
+#### On Windows
+```powershell
+.\scripts\restore.ps1 "backup_2024-01-01_120000.sql.gz"
+```
+
+#### On Linux / Mac
+```bash
+./scripts/restore.sh "backup_2024-01-01_120000.sql.gz"
+```
+
+### Migrating to a New Server
+Since backups are stored locally in the `./backups` folder:
+1. **Copy the Folder**: You must manually copy the `./backups` folder (or specific files) from your old server to the new one.
+2. **Place**: Put them in the root `RunFlow/backups/` directory on the new server.
+3. **Restore**: Run the restore script as shown above.
+
+---
+
 ## ❓ Troubleshooting
 
 **Q: Database connection failed?**

@@ -187,7 +187,17 @@ export default function AnalyticsPage() {
             dailyLoads.set(dateKey, (dailyLoads.get(dateKey) || 0) + trimp);
         });
 
-        const startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        const earliestRun = runs.length > 0
+            ? runs.reduce((min, r) => new Date(r.startDate) < new Date(min.startDate) ? r : min)
+            : null;
+        const earliestDate = earliestRun ? new Date(earliestRun.startDate) : now;
+        const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+        // Start from earliest activity or 1 year ago, whichever is earlier
+        // ensuring we have coverage for the 1Y chart view
+        const startDate = new Date(Math.min(earliestDate.getTime(), oneYearAgo.getTime()));
+        // Buffer a few days for initial values
+        startDate.setDate(startDate.getDate() - 1);
         for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
             const dateKey = d.toISOString().split('T')[0];
             const load = dailyLoads.get(dateKey) || 0;

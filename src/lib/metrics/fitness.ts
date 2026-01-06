@@ -50,6 +50,8 @@ export function calculateFitnessHistory(
     initialCtl: number = 0,
     initialAtl: number = 0
 ): FitnessHistory[] {
+    if (dailyLoads.length === 0) return [];
+
     const ctlDecay = calculateDecayFactor(CTL_TIME_CONSTANT);
     const atlDecay = calculateDecayFactor(ATL_TIME_CONSTANT);
 
@@ -59,23 +61,39 @@ export function calculateFitnessHistory(
 
     const history: FitnessHistory[] = [];
 
-    // Sort by date
-    const sorted = [...dailyLoads].sort((a, b) => a.date.getTime() - b.date.getTime());
+    // Create a map for easy lookup
+    const loadMap = new Map<string, DailyLoad>();
+    dailyLoads.forEach(l => {
+        const dateKey = new Date(l.date).toISOString().split('T')[0];
+        loadMap.set(dateKey, l);
+    });
 
-    for (const day of sorted) {
+    // Determine range
+    const timestamps = dailyLoads.map(d => new Date(d.date).getTime());
+    const minDate = new Date(Math.min(...timestamps));
+    const now = new Date();
+
+    // Iterate from first activity to today (to ensure decay is calculated up to now)
+    for (let d = new Date(minDate); d <= now; d.setDate(d.getDate() + 1)) {
+        const dateKey = d.toISOString().split('T')[0];
+        const dayLoad = loadMap.get(dateKey);
+
+        const trimp = dayLoad?.trimp || 0;
+        const runningTss = dayLoad?.runningTss || 0;
+
         // Update CTL (total TRIMP from all activities)
-        ctl = ctl * ctlDecay + day.trimp * (1 - ctlDecay);
+        ctl = ctl * ctlDecay + trimp * (1 - ctlDecay);
 
         // Update ATL (total TRIMP)
-        atl = atl * atlDecay + day.trimp * (1 - atlDecay);
+        atl = atl * atlDecay + trimp * (1 - atlDecay);
 
         // Update Running-only CTL
-        ctlRunning = ctlRunning * ctlDecay + day.runningTss * (1 - ctlDecay);
+        ctlRunning = ctlRunning * ctlDecay + runningTss * (1 - ctlDecay);
 
         const tsb = ctl - atl;
 
         history.push({
-            date: day.date,
+            date: new Date(d),
             metrics: {
                 ctl: Math.round(ctl * 10) / 10,
                 atl: Math.round(atl * 10) / 10,

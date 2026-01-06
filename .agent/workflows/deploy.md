@@ -1,10 +1,10 @@
 ---
-description: Automated dual-branch deployment (Main=Build, Hub=Image) with versioning
+description: Automated deployment to master branch with versioning and Docker Hub push
 ---
 
-# Deploy Workflow V2
+# Deploy Workflow V3 (Simplified)
 
-This workflow automates the entire release process, managing versions and two separate git branches.
+This workflow automates the release process: version bump, Docker image build/push, and git push to master.
 
 ## Usage
 
@@ -12,34 +12,36 @@ This workflow automates the entire release process, managing versions and two se
 .\scripts\deploy.ps1 "Your commit message"
 ```
 
+Use `-SkipDocker` flag to skip rebuilding Docker images (e.g., for documentation-only changes).
+
 ## What it does
 
 1.  **Bumps Version**: Automatically increments the patch version in `package.json` (e.g., `1.1.0` -> `1.1.1`).
-2.  **Builds & Pushes**: Creates a multi-arch Docker image tagged with the new version AND `latest`.
-3.  **Updates `main` Branch**:
-    *   Configures `docker-compose.yml` for **Local Build** (`build: .`).
-    *   Commits changes and pushes to `origin/main`.
-4.  **Updates `dockerhub` Branch**:
-    *   Switches to `dockerhub` branch (creates it if missing).
-    *   Merges `main`.
-    *   Configures `docker-compose.yml` for **Image Pull** (`image: ...` and `pull_policy: always`).
-    *   Commits and pushes to `origin/dockerhub`.
-    *   Switches back to `main`.
+2.  **Builds & Pushes**: Creates a multi-arch Docker image (amd64/arm64) tagged with both version AND `latest`.
+3.  **Commits & Pushes**: Commits all changes and pushes to `origin/master`.
 
-## Configuration
+## Docker Setup
 
-The script manages `docker-compose.yml` automatically by toggling comments.
+The `docker-compose.yml` is configured to:
+- **Pull** the app image from Docker Hub (`t23wes3/runflow:latest`)
+- **Build** the migrator from local source (for Prisma schema updates)
 
-*   **Main Branch**:
-    ```yaml
-    build:
-      context: .
-    # image: ...
-    ```
-*   **Dockerhub Branch**:
-    ```yaml
-    # build:
-    #   context: .
-    image: t23wes3/runflow:latest
-    pull_policy: always
-    ```
+```yaml
+app:
+  image: t23wes3/runflow:latest
+  pull_policy: always
+
+migrator:
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: builder
+```
+
+## Server Deployment
+
+After running the deploy script:
+```bash
+git pull
+docker compose up -d
+```

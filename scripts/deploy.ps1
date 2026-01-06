@@ -2,7 +2,7 @@
 # Usage: .\scripts\deploy.ps1 "Commit message"
 
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [string]$Message,
     [switch]$SkipDocker
 )
@@ -12,7 +12,7 @@ $ErrorActionPreference = "Stop"
 # Configuration
 $DockerUser = "t23wes3" 
 $ImageName = "runflow"
-$BranchMain = "main"
+$BranchMain = "master"
 
 Write-Host "[DEPLOY] Starting deployment process..." -ForegroundColor Cyan
 
@@ -38,7 +38,8 @@ $LatestImageName = "${DockerUser}/${ImageName}:latest"
 if ($SkipDocker) {
     Write-Host ""
     Write-Host "[BUILD] Skipping Docker build as requested." -ForegroundColor Magenta
-} else {
+}
+else {
     Write-Host ""
     Write-Host "[BUILD] Building and Pushing Multi-Arch Image ($newVersion)..." -ForegroundColor Yellow
 
@@ -46,11 +47,12 @@ if ($SkipDocker) {
     if (-not (docker buildx ls | Select-String "runflow-builder")) {
         docker buildx create --name runflow-builder --use > $null
         docker buildx inspect --bootstrap > $null
-    } else {
+    }
+    else {
         docker buildx use runflow-builder > $null
     }
 
-    docker buildx build --platform linux/amd64,linux/arm64 -t $FullImageName -t $LatestImageName --push .
+    docker buildx build --platform linux/amd64, linux/arm64 -t $FullImageName -t $LatestImageName --push .
     if ($LASTEXITCODE -ne 0) { Write-Error "Docker build/push failed!"; exit 1 }
 }
 

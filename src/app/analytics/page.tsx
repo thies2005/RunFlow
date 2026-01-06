@@ -131,21 +131,30 @@ export default function AnalyticsPage() {
             };
         }).filter(d => d.vo2 > 0);
 
-        // Calculate rolling average
+        // Calculate rolling median
         rawVo2Data.forEach((point, index) => {
             const windowSize = 4;
-            let sum = 0;
-            let count = 0;
+            const windowValues: number[] = [];
 
-            for (let i = index; i >= 0 && count < windowSize; i--) {
-                sum += rawVo2Data[i].vo2;
-                count++;
+            for (let i = index; i >= 0 && windowValues.length < windowSize; i--) {
+                windowValues.push(rawVo2Data[i].vo2);
             }
 
-            vo2Trend.push({
-                ...point,
-                vo2Rolling: count > 0 ? Math.round(sum / count * 10) / 10 : undefined
-            });
+            if (windowValues.length > 0) {
+                // Calculate Median
+                windowValues.sort((a, b) => a - b);
+                const mid = Math.floor(windowValues.length / 2);
+                const median = windowValues.length % 2 !== 0
+                    ? windowValues[mid]
+                    : (windowValues[mid - 1] + windowValues[mid]) / 2;
+
+                vo2Trend.push({
+                    ...point,
+                    vo2Rolling: Math.round(median * 10) / 10
+                });
+            } else {
+                vo2Trend.push(point);
+            }
         });
 
         // === Shape Trend (Weekly) ===
@@ -493,7 +502,21 @@ export default function AnalyticsPage() {
                                         contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
                                         labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                     />
-                                    <Line type="monotone" dataKey="vo2Rolling" stroke="#3b82f6" strokeWidth={2} dot={false} name="VO2max (Avg)" />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="vo2"
+                                        stroke="none"
+                                        dot={{ r: 3, fill: '#3b82f6', fillOpacity: 0.4 }}
+                                        name="VO2max (Run)"
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="vo2Rolling"
+                                        stroke="#3b82f6"
+                                        strokeWidth={2}
+                                        dot={false}
+                                        name="Trend (Median)"
+                                    />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>

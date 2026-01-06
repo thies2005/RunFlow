@@ -1,149 +1,144 @@
 # RunFlow
 
-A Dockerized running performance dashboard with Strava integration, combining Runna-style training interface with Runalyze-grade analytics.
+RunFlow is a production-grade running performance dashboard that combines the best of **Runna** (structured training plans) and **Runalyze** (deep analytics). It is containerized with Docker for easy deployment and uses Cloudflare Tunnels for secure external access.
 
-## Features
+## 🏗️ Architecture
 
-- **Strava Sync**: OAuth2 integration with paginated activity sync (respects rate limits)
-- **Cross-Training Engine**: Cycling contributes to aerobic fitness (CTL) but NOT running stress
-- **VDOT Calculator**: Race predictions for 5K, 10K, Half Marathon, Marathon
-- **Training Load**: CTL/ATL/TSB fitness tracking using Banister's model
-- **Premium UI**: Dark theme with glassmorphism, animations, and Runna-style workout cards
+- **Frontend**: Next.js 14 (App Router) with Tailwind CSS & Recharts for visualization.
+- **Backend**: Next.js API Routes.
+- **Database**: PostgreSQL 16 (persisted via Docker volume).
+- **ORM**: Prisma for type-safe database access.
+- **Auth**: NextAuth.js with Strava OAuth provider.
+- **Networking**: Cloudflare Tunnel (`cloudflared`) for secure public access without opening ports.
 
-## Quick Start
+## 🚀 Deployment & Workflow
 
-1. **Configure Environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your credentials
-   ```
-
-2. **Get Strava API credentials**
-   - Go to https://www.strava.com/settings/api
-   - Create an application
-   - Copy Client ID and Client Secret to `.env`
-
-3. **Get Cloudflare Tunnel token**
-   - Go to https://one.dash.cloudflare.com
-   - Zero Trust → Networks → Tunnels
-   - Create tunnel and copy token to `.env`
-
-4. **Start with Docker Compose**
-   ```bash
-   docker compose up --build
-   ```
-
-5. **Access the app**
-   - Local: http://localhost:3000
-   - Via tunnel: Your configured Cloudflare domain
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Generate Prisma client
-npx prisma generate
-
-# Push schema to database
-npx prisma db push
-
-# Start dev server
-npm run dev
-```
-
-## Tech Stack
-
-- **Frontend**: Next.js 14, React, Tailwind CSS, Recharts
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Database**: PostgreSQL 16
-- **Auth**: NextAuth.js with Strava OAuth
-- **Deployment**: Docker Compose, Cloudflare Tunnels
-
-## Deployment & Architecture
-
-We use a **Dual-Branch Strategy** to support both local development and production deployment.
+We utilize a **Dual-Branch Strategy** to seamlessly handle local development and production deployment.
 
 ### Branches
-- **`main`**: The development branch. `docker-compose.yml` is configured to **build locally** (`build: .`).
-- **`dockerhub`**: The production branch. `docker-compose.yml` is configured to **pull images** (`image: t23wes3/runflow:TAG`).
 
-### Automated Workflow
-Use the `scripts/deploy.ps1` script to manage releases. It handles version bumping, multi-arch builds, and keeping both branches in sync.
+| Branch | Purpose | Docker Composition |
+| :--- | :--- | :--- |
+| **`main`** | Development & Source | Configured to **build** images locally (`build: .`). Changes here trigger builds. |
+| **`dockerhub`** | Production Deployment | Configured to **pull** pre-built images (`image: t23wes3/runflow:TAG`). Best for servers. |
 
-#### 1. Full Release (Build + Push)
-Builds new Docker images (amd64/arm64), pushes to Docker Hub, and updates both git branches.
+### The Deployment Script
+
+The heart of our workflow is `scripts/deploy.ps1`. This PowerShell script automates the entire release process:
+
+1.  **Bumps the version** in `package.json`.
+2.  **Builds multi-arch images** (amd64/arm64) and pushes them to Docker Hub.
+3.  Configures `docker-compose.yml` for **local build** and pushes to `main`.
+4.  Configures `docker-compose.yml` for **image pull** and pushes to `dockerhub`.
+
+#### Usage
+
+To deploy a new version from your development machine:
+
 ```powershell
-.\scripts\deploy.ps1 "Your commit message"
+# 1. Ensure you are on the main branch
+git checkout main
+
+# 2. Run deployment script
+# Usage: .\scripts\deploy.ps1 "Your commit message"
+.\scripts\deploy.ps1 "Added new analytics charts"
 ```
 
-#### 2. Code Sync Only (No Docker Build)
-Skips the image build but syncs code updates to both `main` and `dockerhub` branches.
+If you only changed code/docs and don't need a new Docker build (lighter update):
+
 ```powershell
-.\scripts\deploy.ps1 "Your commit message" -SkipDocker
+.\scripts\deploy.ps1 "Update README" -SkipDocker
 ```
 
-### Deployment Guides
+---
 
-#### Option A: Deploy from Source (`main` Branch)
-Best for development or if you want to build locally.
+## 🛠️ Setup Guide
+
+### Prerequisites
+
+- **Docker & Docker Compose**: [Install Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- **Node.js** (Optional, for local script execution)
+- **Strava Account**: For API credentials.
+- **Cloudflare Account**: For Tunnels.
+
+### 1. Configuration (.env)
+
+Duplicate `.env.example` to `.env` and configure the following:
+
+| Variable | Description |
+| :--- | :--- |
+| `DATABASE_URL` | Postgres connection string. Default: `postgresql://runflow:runflow@db:5432/runflow` |
+| `NEXTAUTH_URL` | The full public URL of your app (e.g., `https://run.yourdomain.com`). |
+| `NEXTAUTH_SECRET` | A random string for encryption. Generate with `openssl rand -base64 32`. |
+| `STRAVA_CLIENT_ID` | From [Strava API Settings](https://www.strava.com/settings/api). |
+| `STRAVA_CLIENT_SECRET` | From [Strava API Settings](https://www.strava.com/settings/api). |
+| `TUNNEL_TOKEN` | Cloudflare Tunnel token. Get from Zero Trust Dashboard. |
+
+### 2. Running Locally (Development)
+
+Run the app locally with hot-reloading (via Docker mount) or standard build.
+
 ```bash
-# 1. Pull latest code
-git pull origin main
+# Clone the repository
+git clone https://github.com/t23wes3/RunFlow.git
+cd RunFlow
 
-# 2. Build and start containers
-docker compose up --build -d
+# Start services (App, DB, Tunnel)
+docker compose up --build
 ```
 
-#### Option B: Deploy from Docker Hub (`dockerhub` Branch)
-Best for production. Uses pre-built multi-arch images.
-```bash
-# 1. Pull latest config
-git pull origin dockerhub
+Access the app at `http://localhost:3000`.
 
-# 2. Pull latest images
+### 3. Deploying to Production (Server)
+
+On your VPS (e.g., Ubuntu, Raspberry Pi), use the `dockerhub` branch for a lightweight deployment.
+
+```bash
+# 1. Clone the repository (first time)
+git clone -b dockerhub https://github.com/t23wes3/RunFlow.git
+cd RunFlow
+
+# 2. Set up environment
+# Create your .env file here with production credentials
+
+# 3. Pull and Start
 docker compose pull
-
-# 3. Start containers
 docker compose up -d
 ```
 
-### Updating Configuration
+**Updating Production:**
 
-To update settings (`.env`, `docker-compose.yml`) on a running server:
+When you've deployed a new version via the script, simply run this on your server:
 
 ```bash
-# 1. Edit your .env file
-nano .env
-
-# 2. Restart containers to apply changes
-docker compose down && docker compose up -d
+git pull origin dockerhub
+docker compose pull
+docker compose up -d
 ```
 
-**Common configuration changes:**
-- `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` - Strava API credentials
-- `NEXTAUTH_URL` - Your app's public URL
-- `TUNNEL_TOKEN` - Cloudflare tunnel token
+---
 
-**Quick update from main branch:**
-```bash
-git pull origin main && docker compose up --build -d
-```
+## 📚 Features & Physics
 
-> **Tip:** The `main` branch always has the latest schema changes. If you add new features locally, run `docker compose up --build` to rebuild with your changes.
+### Key Metrics
+- **TRIMP (Training Impulse)**: Calculated using Banister's formula based on heart rate reserve.
+- **CTL (Chronic Training Load)**: 42-day weighted average of daily stress (Fitness).
+- **ATL (Acute Training Load)**: 7-day weighted average (Fatigue).
+- **TSB (Training Stress Balance)**: CTL - ATL (Form).
+- **Effective VO2max**: Derived from race performances or training data.
 
-## Key Calculations
+### Cross-Training Logic
+Cycling and other aerobic activities contribute to your **Cardiovascular Fitness (CTL)** but are excluded from **Running Impact Stress**. This allows you to track total metabolic fitness while monitoring specific running load to prevent injury.
 
-### VDOT (Daniels-Gilbert Formula)
-Used for race predictions and training pace zones.
+---
 
-### TRIMP (Banister's Model)
-```
-TRIMP = Duration × %HRR × 0.64 × e^(1.92 × %HRR)
-```
+## ❓ Troubleshooting
 
-### Fitness Tracking
-- **CTL**: 42-day exponentially weighted average
-- **ATL**: 7-day exponentially weighted average  
-- **TSB**: CTL - ATL (positive = fresh, negative = fatigued)
+**Q: Database connection failed?**
+A: Ensure the `db` service is healthy (`docker ps`) and `DATABASE_URL` in `.env` matches the postgres credentials.
+
+**Q: "No matching manifest for linux/arm64..."**
+A: Ensure you used the `deploy.ps1` script which builds multi-arch images. Standard local builds might only be amd64.
+
+**Q: NextAuth "Try signing in with a different account"?**
+A: Check that your `NEXTAUTH_URL` matches exactly the URL you are accessing (including https) and that the callback URL in Strava settings matches `https://your-domain.com/api/auth/callback/strava`.

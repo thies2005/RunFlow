@@ -1,17 +1,25 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw, TrendingUp } from 'lucide-react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import {
+    calculateWeightedEffectiveVO2max,
+    calculateMarathonShape,
+    calculatePredictedTimes,
+    type ActivityForShape
+} from '@/lib/metrics/runalyze';
+import { formatTime } from '@/lib/metrics/vdot';
 
 export default function AnalyticsPage() {
     const { status } = useSession();
     const router = useRouter();
     const queryClient = useQueryClient();
 
-    // Fetch ALL activities (runs, rides, swims)
+    // Fetch ALL activities
     const { data: activitiesData, isLoading } = useQuery({
         queryKey: ['all-activities'],
         queryFn: async () => {
@@ -22,18 +30,18 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
-    // Fetch goals for VDOT
-    const { data: goalsData } = useQuery({
-        queryKey: ['goals'],
+    // Fetch user settings (for maxHR)
+    const { data: userData } = useQuery({
+        queryKey: ['user-settings'],
         queryFn: async () => {
-            const res = await fetch('/api/goals');
-            if (!res.ok) throw new Error('Failed to fetch goals');
+            const res = await fetch('/api/user');
+            if (!res.ok) throw new Error('Failed to fetch user');
             return res.json();
         },
         enabled: status === 'authenticated',
     });
 
-    // Recalculate VDOT mutation
+    // Recalculate mutation
     const recalculateMutation = useMutation({
         mutationFn: async () => {
             const res = await fetch('/api/settings/recalculate-vdot', { method: 'POST' });
@@ -41,9 +49,39 @@ export default function AnalyticsPage() {
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['goals'] });
+            queryClient.invalidateQueries({ queryKey: ['all-activities'] });
         },
     });
+
+    // Calculate Runalyze metrics
+    const runalyzeMetrics = useMemo(() => {
+        const activities = activitiesData?.activities || [];
+        const runs: ActivityForShape[] = activities
+            .filter((a: any) => a.type === 'RUN')
+            .map((a: any) => ({
+                startDate: a.startDate,
+                distance: a.distance,
+                movingTime: a.movingTime,
+                averageHr: a.averageHr,
+                hasHeartrate: a.hasHeartrate,
+            }));
+
+        const maxHR = userData?.user?.hrMax || 190;
+
+        const effectiveVO2max = calculateWeightedEffectiveVO2max(runs, maxHR);
+        const shapeResult = calculateMarathonShape(runs, effectiveVO2max);
+        const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape);
+
+        return {
+            effectiveVO2max,
+            shape: shapeResult.shape,
+            mileageScore: shapeResult.mileageScore,
+            longRunScore: shapeResult.longRunScore,
+            details: shapeResult.details,
+            optimalTime: times.optimal,
+            predictedTime: times.predicted,
+        };
+    }, [activitiesData, userData]);
 
     if (status === 'loading' || isLoading) {
         return (
@@ -58,89 +96,101 @@ export default function AnalyticsPage() {
         return null;
     }
 
-    const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
-    const currentVdot = activeGoal?.currentVdot || null;
     const activities = activitiesData?.activities || [];
-
-    // Split by type
     const runs = activities.filter((a: any) => a.type === 'RUN');
     const rides = activities.filter((a: any) => a.type === 'RIDE' || a.type === 'VIRTUAL_RIDE');
     const swims = activities.filter((a: any) => a.type === 'SWIM');
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Header */}
             <header className="border-b border-white/10 backdrop-blur-md bg-background/80 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => router.push('/')}
-                                className="p-2 text-gray-400 hover:text-white transition-colors"
-                            >
+                            <button onClick={() => router.push('/')} className="p-2 text-gray-400 hover:text-white transition-colors">
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
                             <h1 className="text-xl font-bold text-white">Analytics</h1>
                         </div>
-
-                        {/* Recalculate VDOT button */}
                         <button
                             onClick={() => recalculateMutation.mutate()}
                             disabled={recalculateMutation.isPending}
                             className="btn-secondary flex items-center gap-2 py-2 px-4"
                         >
                             <RefreshCw className={`w-4 h-4 ${recalculateMutation.isPending ? 'animate-spin' : ''}`} />
-                            {recalculateMutation.isPending ? 'Recalculating...' : 'Recalculate VDOT'}
+                            {recalculateMutation.isPending ? 'Recalculating...' : 'Recalculate'}
                         </button>
                     </div>
                 </div>
             </header>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* VDOT Status */}
-                {recalculateMutation.isSuccess && (
-                    <div className="mb-6 p-4 glass-card bg-green-500/10 border-green-500/20">
-                        <p className="text-green-400">
-                            ✅ VDOT recalculated: <strong>{recalculateMutation.data?.vdot?.toFixed(1)}</strong>
+                {/* Runalyze-style Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="glass-card p-6 text-center">
+                        <p className="text-gray-400 text-sm mb-2">Effective VO2max</p>
+                        <p className="text-4xl font-bold text-white">
+                            {runalyzeMetrics.effectiveVO2max > 0 ? runalyzeMetrics.effectiveVO2max.toFixed(1) : '-'}
                         </p>
+                        <p className="text-xs text-gray-500 mt-1">Pace + Heart Rate based</p>
                     </div>
-                )}
 
-                {/* Stats Overview */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                    <div className="glass-card p-4 text-center">
-                        <p className="text-gray-400 text-xs mb-1">Current VDOT</p>
-                        <p className="text-2xl font-bold text-white">
-                            {currentVdot && currentVdot > 0 ? currentVdot.toFixed(1) : '-'}
+                    <div className="glass-card p-6 text-center">
+                        <p className="text-gray-400 text-sm mb-2">Marathon Shape</p>
+                        <p className={`text-4xl font-bold ${runalyzeMetrics.shape >= 100 ? 'text-green-400' :
+                                runalyzeMetrics.shape >= 70 ? 'text-yellow-400' : 'text-red-400'
+                            }`}>
+                            {runalyzeMetrics.shape}%
                         </p>
+                        <div className="flex justify-center gap-4 mt-2 text-xs text-gray-500">
+                            <span>Mileage: {runalyzeMetrics.mileageScore}%</span>
+                            <span>Long Runs: {runalyzeMetrics.longRunScore}%</span>
+                        </div>
                     </div>
-                    <div className="glass-card p-4 text-center">
-                        <p className="text-gray-400 text-xs mb-1">Total Runs</p>
-                        <p className="text-2xl font-bold text-white">{runs.length}</p>
-                    </div>
-                    <div className="glass-card p-4 text-center">
-                        <p className="text-gray-400 text-xs mb-1">Run Distance</p>
-                        <p className="text-2xl font-bold text-white">
-                            {Math.round(runs.reduce((s: number, a: any) => s + a.distance, 0) / 1000)} km
-                        </p>
-                    </div>
-                    <div className="glass-card p-4 text-center">
-                        <p className="text-gray-400 text-xs mb-1">Bike Time</p>
-                        <p className="text-2xl font-bold text-white">
-                            {Math.round(rides.reduce((s: number, a: any) => s + a.movingTime, 0) / 3600)}h
-                        </p>
-                    </div>
-                    <div className="glass-card p-4 text-center">
-                        <p className="text-gray-400 text-xs mb-1">Swims</p>
-                        <p className="text-2xl font-bold text-white">{swims.length}</p>
+
+                    <div className="glass-card p-6 text-center">
+                        <p className="text-gray-400 text-sm mb-2">Marathon Prediction</p>
+                        <div className="flex justify-center items-baseline gap-3">
+                            <div>
+                                <p className="text-xs text-gray-500">Optimal</p>
+                                <p className="text-lg font-semibold text-green-400">
+                                    {runalyzeMetrics.optimalTime > 0 ? formatTime(runalyzeMetrics.optimalTime) : '-'}
+                                </p>
+                            </div>
+                            <span className="text-gray-600">→</span>
+                            <div>
+                                <p className="text-xs text-gray-500">Predicted</p>
+                                <p className="text-2xl font-bold text-white">
+                                    {runalyzeMetrics.predictedTime > 0 ? formatTime(runalyzeMetrics.predictedTime) : '-'}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Main Analytics Dashboard */}
-                <AnalyticsDashboard
-                    activities={runs}
-                    currentVdot={currentVdot}
-                />
+                {/* Shape Details */}
+                <div className="glass-card p-4 mb-8">
+                    <div className="grid grid-cols-4 gap-4 text-center text-sm">
+                        <div>
+                            <p className="text-gray-500">Avg Weekly</p>
+                            <p className="text-white font-semibold">{runalyzeMetrics.details.avgWeeklyKm} km</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Target Weekly</p>
+                            <p className="text-white font-semibold">{runalyzeMetrics.details.targetWeeklyKm} km</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Long Run Points</p>
+                            <p className="text-white font-semibold">{runalyzeMetrics.details.longRunPoints} / 10</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Activities</p>
+                            <p className="text-white font-semibold">{runs.length} runs • {rides.length} rides • {swims.length} swims</p>
+                        </div>
+                    </div>
+                </div>
+
+                <AnalyticsDashboard activities={runs} currentVdot={runalyzeMetrics.effectiveVO2max} />
             </main>
         </div>
     );

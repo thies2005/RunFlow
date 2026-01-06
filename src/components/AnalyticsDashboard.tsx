@@ -54,10 +54,9 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
         return activities.filter(a => new Date(a.startDate) >= cutoff);
     }, [activities, timeRange]);
 
-    // 1. Calculate Zone Distribution
-    const zoneStats = useMemo(() => {
-        // Mock zone data if missing (for demo purposes if Strava sync doesn't have it yet)
-        const activitiesWithZones = filteredActivities.map(a => ({
+    // Unified activities processing with fallback/mock data
+    const activitiesWithZones = useMemo(() => {
+        return filteredActivities.map(a => ({
             ...a,
             hrZone1Time: a.hrZone1Time ?? (a.hasHeartrate ? Math.random() * 1000 : 0),
             hrZone2Time: a.hrZone2Time ?? (a.hasHeartrate ? Math.random() * 2000 : 0),
@@ -65,7 +64,10 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
             hrZone4Time: a.hrZone4Time ?? (a.hasHeartrate ? Math.random() * 200 : 0),
             hrZone5Time: a.hrZone5Time ?? (a.hasHeartrate ? Math.random() * 50 : 0),
         }));
+    }, [filteredActivities]);
 
+    // 1. Calculate Zone Distribution
+    const zoneStats = useMemo(() => {
         const dist = calculateZoneDistribution(activitiesWithZones as any);
         const percentages = calculateZonePercentages(dist);
 
@@ -76,7 +78,7 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
             { name: 'Z4 Threshold', value: dist.z4, percent: percentages.z4, color: COLORS[3] },
             { name: 'Z5 VO2 Max', value: dist.z5, percent: percentages.z5, color: COLORS[4] },
         ].filter(z => z.value > 0);
-    }, [filteredActivities]);
+    }, [activitiesWithZones]);
 
     // 2. Weekly Volume
     const weeklyVolume = useMemo(() => {
@@ -161,7 +163,8 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
     const zoneTrend = useMemo(() => {
         const weeksData: Record<string, { z1: number; z2: number; z3: number; z4: number; z5: number }> = {};
 
-        filteredActivities.forEach(a => {
+        // Use activitiesWithZones for consistent data
+        activitiesWithZones.forEach(a => {
             const date = new Date(a.startDate);
             const day = date.getDay();
             const diff = date.getDate() - day + (day === 0 ? -6 : 1);
@@ -187,7 +190,7 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
                 Z4: Math.round(zones.z4),
                 Z5: Math.round(zones.z5),
             }));
-    }, [filteredActivities]);
+    }, [activitiesWithZones]);
 
 
     return (

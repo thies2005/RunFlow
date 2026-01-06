@@ -13,7 +13,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, weeklyMileageGoal } = await req.json();
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max } = await req.json();
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -22,14 +22,28 @@ export async function POST(req: Request) {
         // 1. Calculate new VDOT
         const newVdot = calculateVdot({ distance: raceDistance as RaceDistance, timeSeconds });
 
-        // 2. Find Active Goal
+        // 2. Update User HR settings if provided
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: {
+                ...(maxHeartRate && { hrMax: maxHeartRate }),
+                ...(restingHeartRate && { hrRest: restingHeartRate }),
+                ...(hrZone1Max && { hrZone1Max }),
+                ...(hrZone2Max && { hrZone2Max }),
+                ...(hrZone3Max && { hrZone3Max }),
+                ...(hrZone4Max && { hrZone4Max }),
+            }
+        });
+
+        // 3. Find Active Goal
         const activeGoal = await prisma.goal.findFirst({
             where: { userId: session.user.id, isActive: true },
         });
 
         if (activeGoal) {
             const runs = runsPerWeek || 4;
-            const rides = ridesPerWeek || 1;
+            const rides = ridesPerWeek || 0;
+            const strength = strengthPerWeek || 0;
             const mileageGoal = weeklyMileageGoal || null; // meters
 
             // Update Goal Settings
@@ -39,6 +53,7 @@ export async function POST(req: Request) {
                     currentVdot: newVdot,
                     runsPerWeek: runs,
                     ridesPerWeek: rides,
+                    strengthPerWeek: strength,
                     weeklyMileageGoal: mileageGoal,
                 }
             });
@@ -67,6 +82,7 @@ export async function POST(req: Request) {
                 startDate: startDate,
                 runsPerWeek: runs,
                 ridesPerWeek: rides,
+                strengthPerWeek: strength,
                 weeklyMileageGoal: mileageGoal
             });
 

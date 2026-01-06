@@ -84,6 +84,55 @@ Skips the image build but syncs code updates to both `main` and `dockerhub` bran
 .\scripts\deploy.ps1 "Your commit message" -SkipDocker
 ```
 
+### Deployment Guides
+
+#### Option A: Deploy from Source (`main` Branch)
+Best for development or if you want to build locally.
+```bash
+# 1. Pull latest code
+git pull origin main
+
+# 2. Build and start containers
+docker compose up --build -d
+```
+
+#### Option B: Deploy from Docker Hub (`dockerhub` Branch)
+Best for production. Uses pre-built multi-arch images.
+```bash
+# 1. Pull latest config
+git pull origin dockerhub
+
+# 2. Pull latest images
+docker compose pull
+
+# 3. Start containers
+docker compose up -d
+```
+
+### Updating Configuration
+
+To update settings (`.env`, `docker-compose.yml`) on a running server:
+
+```bash
+# 1. Edit your .env file
+nano .env
+
+# 2. Restart containers to apply changes
+docker compose down && docker compose up -d
+```
+
+**Common configuration changes:**
+- `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` - Strava API credentials
+- `NEXTAUTH_URL` - Your app's public URL
+- `TUNNEL_TOKEN` - Cloudflare tunnel token
+
+**Quick update from main branch:**
+```bash
+git pull origin main && docker compose up --build -d
+```
+
+> **Tip:** The `main` branch always has the latest schema changes. If you add new features locally, run `docker compose up --build` to rebuild with your changes.
+
 ## Key Calculations
 
 ### VDOT (Daniels-Gilbert Formula)

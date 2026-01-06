@@ -35,6 +35,19 @@ model User {
   hrRest        Int?      // Resting heart rate
   weight        Float?    // kg
   
+  // HR Zone thresholds (% of hrMax)
+  hrZone1Max    Int       @default(60)  // Z1 ends at 60%
+  hrZone2Max    Int       @default(70)  // Z2 ends at 70%
+  hrZone3Max    Int       @default(80)  // Z3 ends at 80%
+  hrZone4Max    Int       @default(90)  // Z4 ends at 90%
+  // Z5 = 90%+ (implied)
+  
+  // VO2max correction based on reference race
+  vdotCorrectionFactor   Float     @default(1.0)
+  vdotReferenceRaceDate  DateTime?
+  vdotReferenceRaceTime  Int?      // seconds
+  vdotReferenceRaceType  String?   // "5K", "10K", "HALF", "MARATHON"
+  
   // Sync status
   lastSyncAt    DateTime?
   syncInProgress Boolean  @default(false)
@@ -182,12 +195,15 @@ model Goal {
   // Current predictions based on VDOT
   currentVdot       Float?
   predictedTime     Int?      // seconds
+  marathonShapeFactor Float    @default(1.0) // Correction Multiplier
   
   // Training plan settings
   weeklyMileageGoal Float?    // km per week at peak
   planWeeks         Int       @default(12)
   runsPerWeek       Int       @default(4)
   ridesPerWeek      Int       @default(0)
+  strengthPerWeek   Int       @default(0)
+  swimsPerWeek      Int       @default(0)
   
   // keeping deprecated fields temporarily to avoid migration friction if db push isn't forced?
   // No, I'll remove them. 'migrator' uses 'db push' which might handle removal.
@@ -195,7 +211,7 @@ model Goal {
   // Status
   isActive    Boolean   @default(true)
   completedAt DateTime?
-  actualTime  Int?      // Actual finish time in seconds
+
   
   // Relations
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -22,10 +22,11 @@ export async function POST(request: NextRequest) {
         }
 
         // Get options
-        const { range } = await request.json().catch(() => ({}));
+        const body = await request.json().catch(() => ({}));
+        const range = body.range || 'ALL'; // Default to ALL when sync is triggered manually
 
         // Start sync
-        console.log(`Starting sync for user ${session.user.id} with range: ${range || 'ALL'}`);
+        console.log(`Starting sync for user ${session.user.id} with range: ${range}`);
         const result = await syncUserActivities(session.user.id, range);
         console.log(`Sync complete for user ${session.user.id}:`, result);
 

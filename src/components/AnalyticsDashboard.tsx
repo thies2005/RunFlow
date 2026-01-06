@@ -1,32 +1,17 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, LineChart, Line
+    AreaChart, Area, LineChart, Line
 } from 'recharts';
-import { calculateZoneDistribution, calculateZonePercentages, type ZoneDistribution } from '@/lib/analytics/zones';
-
-type Activity = {
-    id: string;
-    startDate: string;
-    distance: number;
-    movingTime: number;
-    hasHeartrate: boolean;
-    hrZone1Time?: number;
-    hrZone2Time?: number;
-    hrZone3Time?: number;
-    hrZone4Time?: number;
-    hrZone5Time?: number;
-    estimatedVdot?: number;
-};
+import { predictRaceTime, formatTime, formatPace } from '@/lib/metrics/vdot';
 
 type AnalyticsDashboardProps = {
-    activities: Activity[];
     currentVdot: number | null;
 };
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#7f1d1d']; // Z1-Z5 colors
 const RANGES = [
     { label: 'Last 4 Weeks', value: '4_WEEKS' },
     { label: 'Last 12 Weeks', value: '12_WEEKS' },
@@ -35,76 +20,42 @@ const RANGES = [
     { label: 'All Time', value: 'ALL' },
 ];
 
-export default function AnalyticsDashboard({ activities, currentVdot }: AnalyticsDashboardProps) {
+interface HistoryResponse {
+    weeklyVolume: { date: string; km: number }[];
+    zoneTrend: { date: string; Z1: number; Z2: number; Z3: number; Z4: number; Z5: number }[];
+    fitnessTrend: { date: string; ctl: number; atl: number; tsb: number }[];
+    vdotTrend: { date: string; vdot: number }[];
+    totals: { distance: number; activities: number; averagePace: number };
+}
+
+export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardProps) {
     const [timeRange, setTimeRange] = useState('12_WEEKS');
 
-    // Filter activities by range
-    const filteredActivities = useMemo(() => {
-        const now = new Date();
-        let cutoff = new Date(0); // Default ALL
-
-        switch (timeRange) {
-            case '4_WEEKS': cutoff = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000); break;
-            case '12_WEEKS': cutoff = new Date(now.getTime() - 84 * 24 * 60 * 60 * 1000); break;
-            case '6_MONTHS': cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000); break;
-            case '1_YEAR': cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); break;
+    // Fetch Aggregated History
+    const { data, isLoading } = useQuery<HistoryResponse>({
+        queryKey: ['analytics-history', timeRange],
+        queryFn: async () => {
+            const res = await fetch(`/api/analytics/history?range=${timeRange}`);
+            if (!res.ok) throw new Error('Failed to fetch analytics');
+            return res.json();
         }
+    });
 
-        return activities.filter(a => new Date(a.startDate) >= cutoff);
-    }, [activities, timeRange]);
+    if (isLoading) {
+        return <div className="animate-pulse h-96 bg-gray-800/50 rounded-xl"></div>;
+    }
 
-    // 1. Calculate Zone Distribution
-    const zoneStats = useMemo(() => {
-        // Mock zone data if missing (for demo purposes if Strava sync doesn't have it yet)
-        const activitiesWithZones = filteredActivities.map(a => ({
-            ...a,
-            hrZone1Time: a.hrZone1Time ?? (a.hasHeartrate ? Math.random() * 1000 : 0),
-            hrZone2Time: a.hrZone2Time ?? (a.hasHeartrate ? Math.random() * 2000 : 0),
-            hrZone3Time: a.hrZone3Time ?? (a.hasHeartrate ? Math.random() * 500 : 0),
-            hrZone4Time: a.hrZone4Time ?? (a.hasHeartrate ? Math.random() * 200 : 0),
-            hrZone5Time: a.hrZone5Time ?? (a.hasHeartrate ? Math.random() * 50 : 0),
-        }));
+    if (!data) return null;
 
-        const dist = calculateZoneDistribution(activitiesWithZones as any);
-        const percentages = calculateZonePercentages(dist);
+    const { weeklyVolume, zoneTrend, fitnessTrend, vdotTrend, totals } = data;
 
-        return [
-            { name: 'Z1 Recovery', value: dist.z1, percent: percentages.z1, color: COLORS[0] },
-            { name: 'Z2 Aerobic', value: dist.z2, percent: percentages.z2, color: COLORS[1] },
-            { name: 'Z3 Tempo', value: dist.z3, percent: percentages.z3, color: COLORS[2] },
-            { name: 'Z4 Threshold', value: dist.z4, percent: percentages.z4, color: COLORS[3] },
-            { name: 'Z5 VO2 Max', value: dist.z5, percent: percentages.z5, color: COLORS[4] },
-        ].filter(z => z.value > 0);
-    }, [filteredActivities]);
-
-    // 2. Weekly Volume
-    const weeklyVolume = useMemo(() => {
-        const weeks: Record<string, number> = {};
-        // We render all weeks in the range, or just populated ones?
-        // Let's render populated ones for now, but sorted.
-
-        filteredActivities.forEach(a => {
-            const date = new Date(a.startDate);
-            // Get week start (Monday)
-            const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-            const monday = new Date(date.setDate(diff));
-            const key = monday.toISOString().split('T')[0];
-
-            weeks[key] = (weeks[key] || 0) + (a.distance / 1000);
-        });
-
-        return Object.entries(weeks)
-            .sort((a, b) => a[0].localeCompare(b[0]))
-            .map(([date, km]) => ({
-                date: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-                km: Math.round(km)
-            }));
-    }, [filteredActivities]);
-
-    // Add Range Selector to UI
-    // We'll wrap the charts in a container that has the header + selector
-
+    // Race Predictions based on current VDOT
+    const racePredictions = currentVdot && currentVdot > 0 ? [
+        { race: '5K', time: formatTime(predictRaceTime(currentVdot, '5K')) },
+        { race: '10K', time: formatTime(predictRaceTime(currentVdot, '10K')) },
+        { race: 'Half', time: formatTime(predictRaceTime(currentVdot, 'HALF')) },
+        { race: 'Marathon', time: formatTime(predictRaceTime(currentVdot, 'MARATHON')) },
+    ] : [];
 
     return (
         <div className="space-y-6">
@@ -121,41 +72,30 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Zone Distribution */}
+                {/* Zone Distribution Trend */}
                 <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Training Zones</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">Training Zone Trend</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={zoneStats}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {zoneStats.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                    formatter={(value: number) => Math.round(value / 60) + ' mins'}
-                                />
-                            </PieChart>
+                            <AreaChart data={zoneTrend}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => v >= 60 ? `${Math.round(v / 60)}h` : `${v}m`} />
+                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} formatter={(value: number) => {
+                                    if (value >= 60) {
+                                        const hours = Math.floor(value / 60);
+                                        const mins = Math.round(value % 60);
+                                        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                                    }
+                                    return `${Math.round(value)}m`;
+                                }} />
+                                <Area type="monotone" dataKey="Z1" stackId="1" stroke="#10b981" fill="#10b981" name="Z1 Recovery" />
+                                <Area type="monotone" dataKey="Z2" stackId="1" stroke="#3b82f6" fill="#3b82f6" name="Z2 Aerobic" />
+                                <Area type="monotone" dataKey="Z3" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="Z3 Tempo" />
+                                <Area type="monotone" dataKey="Z4" stackId="1" stroke="#ef4444" fill="#ef4444" name="Z4 Threshold" />
+                                <Area type="monotone" dataKey="Z5" stackId="1" stroke="#7f1d1d" fill="#7f1d1d" name="Z5 VO2max" />
+                            </AreaChart>
                         </ResponsiveContainer>
-                    </div>
-                    <div className="flex flex-wrap justify-center gap-4 mt-4">
-                        {zoneStats.map((entry, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
-                                <span className="text-sm text-gray-300">
-                                    {entry.name} ({entry.percent}%)
-                                </span>
-                            </div>
-                        ))}
                     </div>
                 </div>
 
@@ -166,24 +106,9 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={weeklyVolume}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis
-                                    dataKey="date"
-                                    stroke="#9ca3af"
-                                    fontSize={12}
-                                    tickLine={false}
-                                    axisLine={false}
-                                />
-                                <YAxis
-                                    stroke="#9ca3af"
-                                    fontSize={12}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    unit="km"
-                                />
-                                <Tooltip
-                                    cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
-                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                />
+                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} unit="km" />
+                                <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
                                 <Bar dataKey="km" fill="#60a5fa" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
@@ -191,7 +116,7 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
                 </div>
             </div>
 
-            {/* VDOT & Stats */}
+            {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="glass-card p-4 text-center">
                     <p className="text-gray-400 text-sm mb-1">Current VDOT</p>
@@ -200,24 +125,73 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
                 <div className="glass-card p-4 text-center">
                     <p className="text-gray-400 text-sm mb-1">Total Distance</p>
                     <p className="text-3xl font-bold text-white">
-                        {Math.round(activities.reduce((sum, a) => sum + a.distance, 0) / 1000)}
-                        <span className="text-sm text-gray-500 font-normal ml-1">km</span>
+                        {totals?.distance || 0}<span className="text-sm text-gray-500 font-normal ml-1">km</span>
                     </p>
                 </div>
                 <div className="glass-card p-4 text-center">
                     <p className="text-gray-400 text-sm mb-1">Total Activities</p>
-                    <p className="text-3xl font-bold text-white">{activities.length}</p>
+                    <p className="text-3xl font-bold text-white">{totals?.activities || 0}</p>
                 </div>
                 <div className="glass-card p-4 text-center">
                     <p className="text-gray-400 text-sm mb-1">Avg Pace</p>
                     <p className="text-3xl font-bold text-white">
-                        {activities.length > 0
-                            ? new Date(activities.reduce((sum, a) => sum + (a.distance > 0 ? a.movingTime / (a.distance / 1000) : 0), 0) / activities.filter(a => a.distance > 0).length * 1000).toISOString().substr(14, 5)
-                            : '-'
-                        }
+                        {totals?.averagePace ? formatPace(totals.averagePace).replace('/km', '') : '-'}
                     </p>
                 </div>
             </div>
+
+            {/* VDOT Trend */}
+            {vdotTrend.length > 0 && (
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">VDOT Trend</h3>
+                    <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={vdotTrend}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
+                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                                <Line type="monotone" dataKey="vdot" stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b' }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
+            {/* Race Predictions */}
+            {racePredictions.length > 0 && (
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Race Predictions (VDOT {currentVdot?.toFixed(1)})</h3>
+                    <div className="grid grid-cols-4 gap-4">
+                        {racePredictions.map(p => (
+                            <div key={p.race} className="text-center">
+                                <p className="text-gray-400 text-sm">{p.race}</p>
+                                <p className="text-2xl font-bold text-white">{p.time}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Fitness Chart */}
+            {fitnessTrend.length > 0 && (
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Fitness Tracking (Impulse-Response)</h3>
+                    <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={fitnessTrend}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                                <Line type="monotone" dataKey="ctl" stroke="#10b981" strokeWidth={2} name="Fitness (CTL)" dot={false} />
+                                <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} name="Fatigue (ATL)" dot={false} />
+                                <Line type="monotone" dataKey="tsb" stroke="#3b82f6" strokeWidth={2} name="Form (TSB)" dot={false} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

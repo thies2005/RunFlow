@@ -36,7 +36,7 @@ export default function OnboardingWizard() {
     // Analysis Logic (Step 2)
     const { data: activitiesData } = useQuery({
         queryKey: ['activities', 'run'],
-        queryFn: async () => (await fetch('/api/activities?limit=100&type=RUN')).json(),
+        queryFn: async () => (await fetch('/api/activities?limit=100')).json(),
         enabled: step >= 2,
     }); // Fetch more for analysis
 
@@ -44,6 +44,12 @@ export default function OnboardingWizard() {
     const [goalName, setGoalName] = useState('My First Race');
     const [raceType, setRaceType] = useState('FIVE_K');
     const [raceDate, setRaceDate] = useState(new Date(Date.now() + 12 * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]); // 12 weeks from now
+
+    // Training Frequency (0-5)
+    const [runsPerWeek, setRunsPerWeek] = useState(4);
+    const [ridesPerWeek, setRidesPerWeek] = useState(0);
+    const [strengthPerWeek, setStrengthPerWeek] = useState(0);
+    const [swimsPerWeek, setSwimsPerWeek] = useState(0);
 
     const createGoalMutation = useMutation({
         mutationFn: async () => {
@@ -54,7 +60,11 @@ export default function OnboardingWizard() {
                     name: goalName,
                     raceType,
                     raceDate,
-                    planWeeks: 12, // Default
+                    planWeeks: 12,
+                    runsPerWeek,
+                    ridesPerWeek,
+                    strengthPerWeek,
+                    swimsPerWeek,
                 }),
             });
             if (!res.ok) throw new Error('Failed to create goal');
@@ -154,7 +164,6 @@ export default function OnboardingWizard() {
                         </div>
 
                         <AnalyticsDashboard
-                            activities={activitiesData?.activities || []}
                             currentVdot={currentVdot}
                         />
 
@@ -214,6 +223,49 @@ export default function OnboardingWizard() {
                                 </div>
                             </div>
 
+                            {/* Training Frequency */}
+                            <div className="grid grid-cols-4 gap-3">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1">Runs/wk</label>
+                                    <select
+                                        value={runsPerWeek}
+                                        onChange={(e) => setRunsPerWeek(Number(e.target.value))}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                    >
+                                        {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1">Rides/wk</label>
+                                    <select
+                                        value={ridesPerWeek}
+                                        onChange={(e) => setRidesPerWeek(Number(e.target.value))}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                    >
+                                        {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1">Strength/wk</label>
+                                    <select
+                                        value={strengthPerWeek}
+                                        onChange={(e) => setStrengthPerWeek(Number(e.target.value))}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                    >
+                                        {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-400 mb-1">Swims/wk</label>
+                                    <select
+                                        value={swimsPerWeek}
+                                        onChange={(e) => setSwimsPerWeek(Number(e.target.value))}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                    >
+                                        {[0, 1, 2, 3, 4, 5].map(n => <option key={n} value={n}>{n}</option>)}
+                                    </select>
+                                </div>
+                            </div>
                             <div className="glass-card p-4 flex items-start gap-3 bg-blue-500/10 border-blue-500/20">
                                 <CheckCircle className="w-5 h-5 text-blue-400 mt-0.5" />
                                 <div>

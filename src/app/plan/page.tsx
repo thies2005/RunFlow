@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Flag, Activity, Clock, Zap, Bike, Mountain, Play, Plus, Dumbbell } from 'lucide-react';
+import { ArrowLeft, Calendar, Flag, Activity, Clock, Zap, Bike, Mountain, Play, Plus, Dumbbell, Settings } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isToday, isPast, differenceInWeeks, addDays } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { EditWorkoutModal } from '@/components'; // Assuming export from index
@@ -163,7 +163,7 @@ export default function PlanPage() {
                                             <div
                                                 key={workout.id}
                                                 onClick={() => handleEdit(workout)}
-                                                className={`p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer ${isTodayItem ? 'bg-accent-orange/10' : ''}`}
+                                                className={`group p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer ${isTodayItem ? 'bg-accent-orange/10' : ''}`}
                                             >
                                                 <div className="flex flex-col items-center w-12 text-center">
                                                     <span className="text-xs text-gray-500 uppercase">{format(wDate, 'EEE')}</span>
@@ -181,17 +181,20 @@ export default function PlanPage() {
                                                         <h4 className={`font-medium ${isDone ? 'text-gray-500 line-through' : 'text-white'}`}>
                                                             {style.label}
                                                         </h4>
-                                                        {workout.targetDistance > 0 && (
-                                                            <span className="text-sm text-gray-400">
-                                                                {(workout.targetDistance / 1000).toFixed(1)} km
-                                                            </span>
-                                                        )}
-                                                        {/* Duration for non-distance */}
-                                                        {workout.targetDistance === 0 && workout.targetDuration > 0 && (
-                                                            <span className="text-sm text-gray-400">
-                                                                {Math.round(workout.targetDuration / 60)} min
-                                                            </span>
-                                                        )}
+                                                        <div className="flex items-center gap-2">
+                                                            {workout.targetDistance > 0 && (
+                                                                <span className="text-sm text-gray-400">
+                                                                    {(workout.targetDistance / 1000).toFixed(1)} km
+                                                                </span>
+                                                            )}
+                                                            {/* Duration for non-distance */}
+                                                            {workout.targetDistance === 0 && workout.targetDuration > 0 && (
+                                                                <span className="text-sm text-gray-400">
+                                                                    {Math.round(workout.targetDuration / 60)} min
+                                                                </span>
+                                                            )}
+                                                            <Settings className="w-4 h-4 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                        </div>
                                                     </div>
                                                     <p className="text-sm text-gray-500 line-clamp-1">{workout.description}</p>
                                                 </div>

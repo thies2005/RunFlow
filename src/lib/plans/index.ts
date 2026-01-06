@@ -8,6 +8,8 @@ export type PlanConfig = {
     startDate?: Date; // Defaults to now
     runsPerWeek?: number; // Default 4
     ridesPerWeek?: number; // Default 0
+    strengthPerWeek?: number; // Default 0
+    swimsPerWeek?: number; // Default 0
     weeklyMileageGoal?: number | null; // Max km per week (in meters!)
 };
 
@@ -28,6 +30,8 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const startDate = config.startDate || new Date();
     const runsPerWeek = config.runsPerWeek || 4;
     const ridesPerWeek = config.ridesPerWeek || 0;
+    const strengthPerWeek = config.strengthPerWeek || 0;
+    const swimsPerWeek = config.swimsPerWeek || 0;
 
     // Determine Peak Volume (meters)
     let peakVolume = config.weeklyMileageGoal || 40000;
@@ -74,7 +78,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
         }
 
         // Generate base workouts
-        let weekSchedule = generateWeek(phase, raceType, paces, runsPerWeek, ridesPerWeek);
+        let weekSchedule = generateWeek(phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek);
 
         // Scale runs to fit Volume Cap
         const runningWorkouts = weekSchedule.filter(w => isRun(w.type));
@@ -147,80 +151,145 @@ function generateWeek(
     raceType: RaceType,
     paces: any,
     runsPerWeek: number,
-    ridesPerWeek: number
+    ridesPerWeek: number,
+    strengthPerWeek: number,
+    swimsPerWeek: number
 ): ScheduledWorkout[] {
     const workouts: ScheduledWorkout[] = [];
+    const usedDays = new Set<number>();
 
-    // Run Patterns (Day offsets 0-6, Mon-Sun)
-    let runDays: number[] = [];
-    if (runsPerWeek <= 2) runDays = [1, 6]; // Tue, Sun
-    else if (runsPerWeek === 3) runDays = [1, 3, 6]; // Tue, Thu, Sun
-    else if (runsPerWeek === 4) runDays = [1, 3, 5, 6]; // Tue, Thu, Sat, Sun
-    else if (runsPerWeek === 5) runDays = [1, 2, 3, 5, 6]; // Tue, Wed, Thu, Sat, Sun
-    else if (runsPerWeek === 6) runDays = [0, 1, 2, 3, 5, 6]; // all but Fri
-    else runDays = [0, 1, 2, 3, 4, 5, 6]; // Everyday
+    // Helper to get next available day, preferring the suggested day
+    const getAvailableDay = (preferred: number): number => {
+        if (!usedDays.has(preferred)) return preferred;
+        // Try nearby days
+        for (let offset = 1; offset <= 6; offset++) {
+            const before = (preferred - offset + 7) % 7;
+            const after = (preferred + offset) % 7;
+            if (!usedDays.has(after)) return after;
+            if (!usedDays.has(before)) return before;
+        }
+        return preferred; // Fallback: stack if no free day
+    };
 
-    // 1. Assign Runs
+    // === 1. RUNNING WORKOUTS ===
+    // Long Run -> Sunday (day 6) - most important
+    if (runsPerWeek >= 1) {
+        const longRunDay = getAvailableDay(6); // Sunday
+        usedDays.add(longRunDay);
+        const longRunDist = getLongRunDistance(raceType, phase);
+        workouts.push({
+            dayOffset: longRunDay,
+            type: WorkoutType.LONG_RUN,
+            description: `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`,
+            totalDistance: longRunDist,
+            targetPace: paces.easy.avg,
+            targetDuration: 0
+        });
+    }
 
-    // Long Run -> Last day
-    const longRunDay = runDays[runDays.length - 1];
-    let longRunDist = getLongRunDistance(raceType, phase);
-    workouts.push({
-        dayOffset: longRunDay,
-        type: WorkoutType.LONG_RUN,
-        description: `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`,
-        totalDistance: longRunDist,
-        targetPace: paces.easy.avg,
-        targetDuration: 0
-    });
-
-    // Quality Session(s)
-    let assigned = 1;
-    if (runDays.length >= 2 && phase !== 'BASE' && phase !== 'TAPER') {
-        const qualityDay = runDays[1]; // Usually Thu (index 1 of [Tue, Thu...])
+    // Quality Session -> Wednesday (day 2) for max spacing from Sunday
+    if (runsPerWeek >= 2 && phase !== 'BASE' && phase !== 'TAPER') {
+        const qualityDay = getAvailableDay(2); // Wednesday
+        usedDays.add(qualityDay);
         const q = getQualitySession(raceType, paces);
         workouts.push({
             dayOffset: qualityDay,
             ...q,
             targetDuration: 0
         });
-        assigned++;
-    }
-
-    // Fill remaining run days with Easy
-    const currentAssignedDays = workouts.map(w => w.dayOffset);
-    let availableRunDays = runDays.filter(d => !currentAssignedDays.includes(d));
-
-    // Distribute remaining volume roughly? We just assume 6-8km easy runs initially, then scaling fixes it.
-    availableRunDays.forEach(day => {
+    } else if (runsPerWeek >= 2) {
+        // BASE/TAPER: Easy run instead of quality
+        const easyDay = getAvailableDay(2);
+        usedDays.add(easyDay);
         workouts.push({
-            dayOffset: day,
+            dayOffset: easyDay,
             type: WorkoutType.EASY,
-            description: `Easy Run: 6km`,
-            totalDistance: 6000,
+            description: 'Easy Run: 5km',
+            totalDistance: 5000,
             targetPace: paces.easy.avg,
             targetDuration: 0
         });
-    });
+    }
 
-    // 2. Assign Rides (Fill free slots)
-    // logic: bike rides only time and training zone, should mostly be used for z1 or z2
-    if (ridesPerWeek > 0) {
-        let ridesAssigned = 0;
-        const allDays = [0, 1, 2, 3, 4, 5, 6];
-        const freeDays = allDays.filter(d => !runDays.includes(d));
+    // Additional easy runs if requested (prefer Tuesday, Thursday, Saturday)
+    const easyRunPreferences = [1, 3, 5, 0, 4]; // Tue, Thu, Sat, Mon, Fri
+    let additionalRuns = Math.max(0, runsPerWeek - 2);
+    for (const preferred of easyRunPreferences) {
+        if (additionalRuns <= 0) break;
+        const day = getAvailableDay(preferred);
+        if (!usedDays.has(day)) {
+            usedDays.add(day);
+            workouts.push({
+                dayOffset: day,
+                type: WorkoutType.EASY,
+                description: 'Easy Run: 6km',
+                totalDistance: 6000,
+                targetPace: paces.easy.avg,
+                targetDuration: 0
+            });
+            additionalRuns--;
+        }
+    }
 
-        for (const day of freeDays) {
-            if (ridesAssigned >= ridesPerWeek) break;
+    // === 2. STRENGTH TRAINING ===
+    // Prefer Tuesday and Friday (not after long run)
+    const strengthPreferences = [1, 4, 3, 0]; // Tue, Fri, Thu, Mon
+    let strengthRemaining = strengthPerWeek;
+    for (const preferred of strengthPreferences) {
+        if (strengthRemaining <= 0) break;
+        const day = getAvailableDay(preferred);
+        if (!usedDays.has(day)) {
+            usedDays.add(day);
+            workouts.push({
+                dayOffset: day,
+                type: WorkoutType.STRENGTH,
+                description: 'Strength: 45min Session',
+                totalDistance: 0,
+                targetPace: 0,
+                targetDuration: 2700
+            });
+            strengthRemaining--;
+        }
+    }
+
+    // === 3. CYCLING (Cross-training) ===
+    // Fill remaining days with cycling
+    const cyclePreferences = [0, 4, 5, 3, 1, 2]; // Mon, Fri, Sat, Thu, Tue, Wed
+    let ridesRemaining = ridesPerWeek;
+    for (const preferred of cyclePreferences) {
+        if (ridesRemaining <= 0) break;
+        const day = getAvailableDay(preferred);
+        if (!usedDays.has(day)) {
+            usedDays.add(day);
             workouts.push({
                 dayOffset: day,
                 type: WorkoutType.RIDE,
                 description: 'Cross Train: 60min Bike (Zone 1-2)',
-                totalDistance: 0, // No distance
+                totalDistance: 0,
                 targetPace: 0,
-                targetDuration: 3600 // 60 mins
+                targetDuration: 3600
             });
-            ridesAssigned++;
+            ridesRemaining--;
+        }
+    }
+
+    // === 4. SWIMMING ===
+    const swimPreferences = [4, 0, 3]; // Fri, Mon, Thu
+    let swimsRemaining = swimsPerWeek;
+    for (const preferred of swimPreferences) {
+        if (swimsRemaining <= 0) break;
+        const day = getAvailableDay(preferred);
+        if (!usedDays.has(day)) {
+            usedDays.add(day);
+            workouts.push({
+                dayOffset: day,
+                type: WorkoutType.SWIM,
+                description: 'Swim: 30min Session',
+                totalDistance: 0,
+                targetPace: 0,
+                targetDuration: 1800
+            });
+            swimsRemaining--;
         }
     }
 

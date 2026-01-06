@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks } = body;
+    const { name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek } = body;
 
     if (!name || !raceType || !raceDate) {
         return NextResponse.json(
@@ -105,6 +105,10 @@ export async function POST(request: NextRequest) {
             targetTime: targetTime || null,
             weeklyMileageGoal: weeklyMileageGoal || null,
             planWeeks: planWeeks || 12,
+            runsPerWeek: runsPerWeek ?? 4,
+            ridesPerWeek: ridesPerWeek ?? 0,
+            strengthPerWeek: strengthPerWeek ?? 0,
+            swimsPerWeek: swimsPerWeek ?? 0,
             currentVdot,
             predictedTime,
         },
@@ -121,6 +125,10 @@ export async function POST(request: NextRequest) {
                 raceType: raceType as any,
                 raceDate: new Date(raceDate),
                 startDate: new Date(),
+                runsPerWeek: runsPerWeek ?? 4,
+                ridesPerWeek: ridesPerWeek ?? 0,
+                strengthPerWeek: strengthPerWeek ?? 0,
+                swimsPerWeek: swimsPerWeek ?? 0,
             });
 
             if (workouts.length > 0) {

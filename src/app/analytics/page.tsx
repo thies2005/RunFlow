@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import RacePredictionChart from '@/components/RacePredictionChart';
-import CombinedAnalyticsChart from '@/components/CombinedAnalyticsChart';
+import CombinedAnalyticsChart, { TimeRange } from '@/components/CombinedAnalyticsChart';
 import {
     calculateWeightedEffectiveVO2max,
     calculateMarathonShape,
@@ -33,6 +33,27 @@ export default function AnalyticsPage() {
     const router = useRouter();
     const queryClient = useQueryClient();
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
+    const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
+
+    // Filter helpers
+    const filterByTimeRange = <T extends { date?: string; week?: string }>(data: T[], range: TimeRange): T[] => {
+        if (range === 'ALL' || !data.length) return data;
+        const now = new Date();
+        const cutoff = new Date();
+
+        switch (range) {
+            case '1Y': cutoff.setFullYear(now.getFullYear() - 1); break;
+            case '6M': cutoff.setMonth(now.getMonth() - 6); break;
+            case '3M': cutoff.setMonth(now.getMonth() - 3); break;
+            case '1M': cutoff.setMonth(now.getMonth() - 1); break;
+        }
+
+        return data.filter(d => {
+            const dateStr = d.date || d.week;
+            if (!dateStr) return true;
+            return new Date(dateStr) >= cutoff;
+        });
+    };
 
     // Fetch ALL activities
     const { data: activitiesData, isLoading } = useQuery({
@@ -312,6 +333,10 @@ export default function AnalyticsPage() {
             };
         });
 
+        // 5. Filter data based on TimeRange
+        // Note: CombinedAnalyticsChart does internal filtering based on its prop, but we need to filter
+        // the other datasets (trend charts) here.
+
         return {
             runalyzeMetrics: {
                 effectiveVO2max,
@@ -334,6 +359,11 @@ export default function AnalyticsPage() {
             combinedData: combinedDataWithRolling
         };
     }, [activitiesData, userData, goalsData, statsData]);
+
+    // Apply filtering to the data used in stand-alone charts
+    const filteredVo2Trend = useMemo(() => filterByTimeRange(vo2TrendData, timeRange), [vo2TrendData, timeRange]);
+    const filteredShapeTrend = useMemo(() => filterByTimeRange(shapeTrendData, timeRange), [shapeTrendData, timeRange]);
+    const filteredFitness = useMemo(() => filterByTimeRange(fitnessData, timeRange), [fitnessData, timeRange]);
 
     if (status === 'loading' || isLoading) {
         return (
@@ -437,7 +467,12 @@ export default function AnalyticsPage() {
 
 
                 {/* Combined Analytics Chart */}
-                <CombinedAnalyticsChart data={combinedData} />
+                {/* Combined Analytics Chart */}
+                <CombinedAnalyticsChart
+                    data={combinedData}
+                    timeRange={timeRange}
+                    onTimeRangeChange={setTimeRange}
+                />
 
                 {/* Race Prediction Chart with Shape Slider */}
                 <RacePredictionChart
@@ -521,7 +556,7 @@ export default function AnalyticsPage() {
                         <h3 className="text-lg font-semibold text-white mb-4">Effective VO2max Trend</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={vo2TrendData}>
+                                <LineChart data={filteredVo2Trend}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                                     <XAxis
                                         dataKey="date"
@@ -560,7 +595,7 @@ export default function AnalyticsPage() {
                         <h3 className="text-lg font-semibold text-white mb-4">Marathon Shape Trend</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={shapeTrendData}>
+                                <AreaChart data={filteredShapeTrend}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                                     <XAxis
                                         dataKey="week"
@@ -586,7 +621,7 @@ export default function AnalyticsPage() {
                     <h3 className="text-lg font-semibold text-white mb-4">Fitness & Form (CTL / ATL / TSB)</h3>
                     <div className="h-72">
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={fitnessData}>
+                            <LineChart data={filteredFitness}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                                 <XAxis
                                     dataKey="date"

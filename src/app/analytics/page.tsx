@@ -99,7 +99,11 @@ export default function AnalyticsPage() {
         const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
 
-        const effectiveVO2max = calculateWeightedEffectiveVO2max(runs, maxHR);
+        // Use corrected effectiveVO2max from stats API (includes vdotCorrectionFactor)
+        // Fall back to local calculation if stats not loaded
+        const localVO2max = calculateWeightedEffectiveVO2max(runs, maxHR);
+        const effectiveVO2max = statsData?.effectiveVO2max || localVO2max;
+
         const shapeResult = calculateMarathonShape(runs, effectiveVO2max);
         const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapeResult.shape, calibrationFactor);
@@ -170,7 +174,7 @@ export default function AnalyticsPage() {
         return {
             runalyzeMetrics: {
                 effectiveVO2max,
-                rawVO2max: statsData?.rawVO2max || effectiveVO2max,
+                rawVO2max: statsData?.rawVO2max || localVO2max,
                 vdotCorrectionFactor: statsData?.vdotCorrectionFactor || 1.0,
                 shape: shapeResult.shape,
                 mileageScore: shapeResult.mileageScore,

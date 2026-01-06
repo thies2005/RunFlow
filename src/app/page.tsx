@@ -269,7 +269,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div className="lg:col-span-1">
-                        <RaceCountdown goal={activeGoal} weeklyMileage={currentWeekMileage} className="h-full" />
+                        <RaceCountdown goal={activeGoal} weeklyMileage={currentWeekMileage} className="h-full" marathonShape={marathonShape.shape} />
                     </div>
                     <div className="lg:col-span-1 h-full flex flex-col">
                         <div className="glass-card p-6 h-full flex flex-col justify-center">
@@ -285,17 +285,6 @@ export default function Dashboard() {
                                     </div>
                                     <div className="w-12 text-right text-sm font-bold text-teal-400">
                                         {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
-                                    </div>
-                                </div>
-
-                                {/* Marathon Shape */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-28 text-xs text-gray-400 truncate">Marathon Shape</div>
-                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(100, marathonShapePercent)}%` }} />
-                                    </div>
-                                    <div className="w-12 text-right text-sm font-bold text-green-400">
-                                        {marathonShapePercent > 0 ? `${marathonShapePercent}%` : '-'}
                                     </div>
                                 </div>
 

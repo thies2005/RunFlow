@@ -14,6 +14,7 @@ type Props = {
     rawVO2max?: number;
     vdotCorrectionFactor?: number;
     shapePercent: number;
+    activities?: any[];
 };
 
 type RaceType = '5K' | '10K' | 'HALF' | 'MARATHON';
@@ -25,16 +26,58 @@ export default function ShapeCalibrationModal({
     effectiveVO2max,
     rawVO2max,
     vdotCorrectionFactor = 1.0,
-    shapePercent
+    shapePercent,
+    activities = []
 }: Props) {
     const queryClient = useQueryClient();
     const [mode, setMode] = useState<'SHAPE' | 'VDOT' | 'MANUAL'>('VDOT');
 
     // VDOT Correction State
     const [vdotRaceType, setVdotRaceType] = useState<RaceType>('5K');
+    const [isCustomDistance, setIsCustomDistance] = useState(false);
+    const [customDistanceMeters, setCustomDistanceMeters] = useState('');
     const [vdotHours, setVdotHours] = useState('');
     const [vdotMinutes, setVdotMinutes] = useState('');
     const [vdotSeconds, setVdotSeconds] = useState('');
+    const [selectedActivityId, setSelectedActivityId] = useState<string>('');
+
+    // Handle activity selection
+    const handleActivitySelect = (activityId: string) => {
+        setSelectedActivityId(activityId);
+        const activity = activities.find(a => a.id === activityId);
+
+        if (activity) {
+            // Set time (prefer elapsed time if available and close to moving time, otherwise moving time)
+            // For races, elapsed time is usually the official time.
+            const timeSeconds = activity.elapsedTime || activity.movingTime;
+            const h = Math.floor(timeSeconds / 3600);
+            const m = Math.floor((timeSeconds % 3600) / 60);
+            const s = timeSeconds % 60;
+
+            setVdotHours(h.toString());
+            setVdotMinutes(m.toString());
+            setVdotSeconds(s.toString());
+
+            // Determine race type based on distance
+            const dist = activity.distance; // meters
+            if (Math.abs(dist - 5000) < 200) {
+                setVdotRaceType('5K');
+                setIsCustomDistance(false);
+            } else if (Math.abs(dist - 10000) < 400) {
+                setVdotRaceType('10K');
+                setIsCustomDistance(false);
+            } else if (Math.abs(dist - 21097.5) < 500) {
+                setVdotRaceType('HALF');
+                setIsCustomDistance(false);
+            } else if (Math.abs(dist - 42195) < 1000) {
+                setVdotRaceType('MARATHON');
+                setIsCustomDistance(false);
+            } else {
+                setIsCustomDistance(true);
+                setCustomDistanceMeters(Math.round(dist).toString());
+            }
+        }
+    };
 
     // Shape Calibration State (existing functionality)
     const [shapeRaceType, setShapeRaceType] = useState<'MARATHON' | 'HALF'>('MARATHON');
@@ -66,7 +109,7 @@ export default function ShapeCalibrationModal({
 
     // VDOT Correction Mutation (new)
     const vdotMutation = useMutation({
-        mutationFn: async (data: { raceType: RaceType; raceTimeSeconds: number } | { correctionFactor: number }) => {
+        mutationFn: async (data: { raceType?: RaceType; raceTimeSeconds: number; distanceMeters?: number } | { correctionFactor: number }) => {
             const res = await fetch('/api/settings/vdot-correction', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -98,31 +141,35 @@ export default function ShapeCalibrationModal({
 
         if (totalSeconds <= 0) return null;
 
-        // Calculate implied VDOT from reference race
-        const impliedVdot = calculateVdot({
-            distance: vdotRaceType,
-            timeSeconds: totalSeconds,
-        });
+        let impliedVdot = 0;
+        let baseVdot = 0;
+        if (rawVO2max && rawVO2max > 0) {
+            baseVdot = rawVO2max;
+        } else if (effectiveVO2max > 0) {
+            // Fallback if raw not available (approximate)
+            baseVdot = effectiveVO2max / vdotCorrectionFactor;
+        }
 
-        // Use raw VO2max (before any correction) as the baseline
-        const baseVdot = rawVO2max || effectiveVO2max;
-        if (baseVdot <= 0) return null;
+        if (isCustomDistance && customDistanceMeters) {
+            const meters = parseFloat(customDistanceMeters);
+            if (meters > 0) {
+                impliedVdot = calculateVdot({ distance: meters, timeSeconds: totalSeconds });
+            }
+        } else {
+            impliedVdot = calculateVdot({ distance: vdotRaceType, timeSeconds: totalSeconds });
+        }
 
-        // Calculate correction factor
-        const correctionFactor = impliedVdot / baseVdot;
+        let newFactor = 0;
+        if (baseVdot > 0) {
+            newFactor = impliedVdot / baseVdot;
+        }
 
-        return {
-            actualSeconds: totalSeconds,
-            impliedVdot,
-            baseVdot,
-            correctionFactor,
-            correctedVdot: baseVdot * correctionFactor,
-        };
+        return { impliedVdot, baseVdot, newFactor };
     })();
 
     const vdotCorrectionValid = vdotCalcData &&
-        vdotCalcData.correctionFactor >= 0.5 &&
-        vdotCalcData.correctionFactor <= 1.5;
+        vdotCalcData.newFactor >= 0.5 &&
+        vdotCalcData.newFactor <= 1.5;
 
     // Shape Calibration Calculations (existing)
     const shapeCalcData = (() => {
@@ -151,16 +198,33 @@ export default function ShapeCalibrationModal({
     const shapeFactor = shapeCalcData?.factor || null;
     const isShapeInputValid = shapeFactor !== null && shapeFactor >= -2.0 && shapeFactor <= 2.0;
 
-    const handleApply = () => {
-        if (mode === 'VDOT' && vdotCalcData && vdotCorrectionValid) {
-            const h = parseInt(vdotHours) || 0;
-            const m = parseInt(vdotMinutes) || 0;
-            const s = parseInt(vdotSeconds) || 0;
-            const totalSeconds = h * 3600 + m * 60 + s;
+    const handleVdotSubmit = () => {
+        const h = parseInt(vdotHours) || 0;
+        const m = parseInt(vdotMinutes) || 0;
+        const s = parseInt(vdotSeconds) || 0;
+        const totalSeconds = h * 3600 + m * 60 + s;
+
+        if (totalSeconds <= 0) return;
+
+        if (isCustomDistance) {
+            const meters = parseFloat(customDistanceMeters);
+            if (meters > 0) {
+                vdotMutation.mutate({
+                    distanceMeters: meters,
+                    raceTimeSeconds: totalSeconds
+                });
+            }
+        } else {
             vdotMutation.mutate({
                 raceType: vdotRaceType,
                 raceTimeSeconds: totalSeconds
             });
+        }
+    };
+
+    const handleApply = () => {
+        if (mode === 'VDOT' && vdotCalcData && vdotCorrectionValid) {
+            handleVdotSubmit();
         } else if (mode === 'SHAPE' && shapeFactor && isShapeInputValid) {
             shapeMutation.mutate(shapeFactor);
         } else if (mode === 'MANUAL') {
@@ -175,14 +239,14 @@ export default function ShapeCalibrationModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden">
+            <div className="bg-[#111827] border border-gray-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
                 {/* Header */}
-                <div className="flex justify-between items-center p-4 border-b border-gray-800 bg-gray-900/50">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Calculator className="w-5 h-5 text-accent-pink" />
-                        Calibrate Predictions
-                    </h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+                <div className="flex items-center justify-between p-4 border-b border-gray-800">
+                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <Calculator className="w-5 h-5 text-accent-cyan" />
+                        Calibration
+                    </h2>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white transition">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -191,48 +255,99 @@ export default function ShapeCalibrationModal({
                 <div className="flex border-b border-gray-800">
                     <button
                         onClick={() => setMode('VDOT')}
-                        className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${mode === 'VDOT' ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-gray-300'}`}
+                        className={`flex-1 py-3 text-sm font-medium transition ${mode === 'VDOT' ? 'text-accent-cyan border-b-2 border-accent-cyan' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <Zap className="w-4 h-4" />
                         VDOT Correction
                     </button>
                     <button
                         onClick={() => setMode('SHAPE')}
-                        className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-1.5 ${mode === 'SHAPE' ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-gray-300'}`}
+                        className={`flex-1 py-3 text-sm font-medium transition ${mode === 'SHAPE' ? 'text-accent-orange border-b-2 border-accent-orange' : 'text-gray-400 hover:text-white'}`}
                     >
-                        <Target className="w-4 h-4" />
                         Shape Factor
                     </button>
                     <button
                         onClick={() => setMode('MANUAL')}
-                        className={`flex-1 py-3 text-sm font-medium transition-colors ${mode === 'MANUAL' ? 'text-white bg-gray-800' : 'text-gray-400 hover:text-gray-300'}`}
+                        className={`flex-1 py-3 text-sm font-medium transition ${mode === 'MANUAL' ? 'text-gray-200 border-b-2 border-gray-200' : 'text-gray-400 hover:text-white'}`}
                     >
                         Manual
                     </button>
                 </div>
 
+                {/* Content */}
                 <div className="p-6 space-y-6">
-                    {/* VDOT Correction Mode */}
                     {mode === 'VDOT' && (
                         <div className="space-y-4">
-                            <p className="text-sm text-gray-400">
-                                Use a known race result to calibrate your VO2max. This corrects for sensor drift or environmental factors.
-                            </p>
-
-                            {/* Race Type Selector */}
-                            <div className="flex gap-2 flex-wrap">
-                                {(['5K', '10K', 'HALF', 'MARATHON'] as RaceType[]).map((type) => (
-                                    <button
-                                        key={type}
-                                        onClick={() => setVdotRaceType(type)}
-                                        className={`px-3 py-1.5 rounded text-sm ${vdotRaceType === type ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'}`}
-                                    >
-                                        {type === 'HALF' ? 'Half Marathon' : type === 'MARATHON' ? 'Marathon' : type}
-                                    </button>
-                                ))}
+                            <div className="bg-accent-cyan/10 p-3 rounded-lg border border-accent-cyan/20">
+                                <p className="text-sm text-accent-cyan">
+                                    Calibrate your global Effective VO2max to match your actual race performance.
+                                    This updates all your historical data.
+                                </p>
                             </div>
 
-                            {/* Time Input */}
+                            {/* Activity Selector */}
+                            <div className="space-y-2">
+                                <label className="text-sm text-gray-400">Auto-fill from Recent Activity</label>
+                                <select
+                                    className="w-full bg-[#1f2937] border border-gray-700 rounded px-3 py-2 text-white text-sm focus:border-accent-cyan outline-none"
+                                    value={selectedActivityId}
+                                    onChange={(e) => handleActivitySelect(e.target.value)}
+                                >
+                                    <option value="">Select an activity...</option>
+                                    {activities
+                                        .filter(a => a.type === 'RUN' && a.distance > 1000)
+                                        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+                                        .slice(0, 20)
+                                        .map(a => (
+                                            <option key={a.id} value={a.id}>
+                                                {new Date(a.startDate).toLocaleDateString()} - {(a.distance / 1000).toFixed(2)}km - {formatTime(a.elapsedTime || a.movingTime)}
+                                            </option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="text-xs text-gray-500 mb-1 block">Distance</label>
+                                    {isCustomDistance ? (
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="number"
+                                                className="w-full bg-[#1f2937] border border-gray-700 rounded px-3 py-2 text-white focus:border-accent-cyan outline-none"
+                                                placeholder="Meters"
+                                                value={customDistanceMeters}
+                                                onChange={(e) => setCustomDistanceMeters(e.target.value)}
+                                            />
+                                            <button
+                                                onClick={() => setIsCustomDistance(false)}
+                                                className="text-xs text-accent-cyan underline whitespace-nowrap"
+                                            >
+                                                Standard
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <select
+                                                className="w-full bg-[#1f2937] border border-gray-700 rounded px-3 py-2 text-white focus:border-accent-cyan outline-none"
+                                                value={vdotRaceType}
+                                                onChange={(e) => setVdotRaceType(e.target.value as RaceType)}
+                                            >
+                                                <option value="5K">5K</option>
+                                                <option value="10K">10K</option>
+                                                <option value="HALF">Half Marathon</option>
+                                                <option value="MARATHON">Marathon</option>
+                                            </select>
+                                            <button
+                                                onClick={() => { setIsCustomDistance(true); setCustomDistanceMeters(''); }}
+                                                className="text-xs text-accent-cyan underline whitespace-nowrap"
+                                            >
+                                                Custom
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="flex gap-2 items-center">
                                 <input
                                     type="number" placeholder="HH" value={vdotHours} onChange={e => setVdotHours(e.target.value)}
@@ -265,7 +380,7 @@ export default function ShapeCalibrationModal({
                                         <div className="p-2 bg-gray-800/50 rounded text-center">
                                             <p className="text-gray-500 text-xs">Correction</p>
                                             <p className={`font-mono text-lg ${vdotCorrectionValid ? 'text-green-400' : 'text-red-400'}`}>
-                                                {vdotCalcData.correctionFactor.toFixed(3)}x
+                                                {vdotCalcData.newFactor.toFixed(3)}x
                                             </p>
                                         </div>
                                     </div>

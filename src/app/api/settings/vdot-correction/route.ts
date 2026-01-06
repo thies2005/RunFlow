@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json();
-        const { raceType, raceTimeSeconds, raceDate, correctionFactor } = body;
+        const { raceType, raceTimeSeconds, raceDate, correctionFactor, distanceMeters } = body;
 
         let newCorrectionFactor: number;
         let referenceRaceData: {
@@ -75,17 +75,28 @@ export async function POST(request: NextRequest) {
         } = {};
 
         // Option 1: Calculate from reference race
-        if (raceType && raceTimeSeconds) {
-            if (!RACE_DISTANCES[raceType]) {
-                return NextResponse.json({ error: 'Invalid race type' }, { status: 400 });
+        if ((raceType || distanceMeters) && raceTimeSeconds) {
+            let distance: RaceDistance | number;
+            let finalRaceType = raceType;
+
+            if (distanceMeters) {
+                distance = parseFloat(distanceMeters);
+                if (!finalRaceType) {
+                    finalRaceType = `Custom: ${(distance / 1000).toFixed(2)}km`;
+                }
+            } else if (raceType && RACE_DISTANCES[raceType]) {
+                distance = raceType as RaceDistance;
+            } else {
+                return NextResponse.json({ error: 'Invalid race type or distance' }, { status: 400 });
             }
+
             if (raceTimeSeconds <= 0) {
                 return NextResponse.json({ error: 'Invalid race time' }, { status: 400 });
             }
 
             // Calculate implied VDOT from the reference race
             const impliedVdot = calculateVdot({
-                distance: raceType as RaceDistance,
+                distance,
                 timeSeconds: raceTimeSeconds,
             });
 

@@ -456,6 +456,7 @@ export default function AnalyticsPage() {
                 rawVO2max={runalyzeMetrics.rawVO2max}
                 vdotCorrectionFactor={runalyzeMetrics.vdotCorrectionFactor}
                 shapePercent={runalyzeMetrics.shape}
+                activities={activitiesData?.activities || []}
             />
         </div>
     );

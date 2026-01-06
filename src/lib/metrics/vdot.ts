@@ -9,7 +9,7 @@
 export type RaceDistance = '5K' | '10K' | 'HALF' | 'MARATHON';
 
 export interface RaceInput {
-    distance: RaceDistance;
+    distance: RaceDistance | number;
     timeSeconds: number;
 }
 
@@ -48,7 +48,10 @@ export function calculateVdot(input: RaceInput): number {
     // Avoid division by zero or invalid time
     if (input.timeSeconds <= 0) return 0;
 
-    const distanceMeters = DISTANCES[input.distance];
+    const distanceMeters = typeof input.distance === 'number'
+        ? input.distance
+        : DISTANCES[input.distance];
+
     const timeMinutes = input.timeSeconds / 60;
 
     // Velocity in meters per minute

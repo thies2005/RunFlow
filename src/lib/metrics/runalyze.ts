@@ -14,6 +14,10 @@ export type ActivityForShape = {
     movingTime: number;    // seconds
     averageHr?: number | null;
     hasHeartrate: boolean;
+    type?: string;           // Activity type (RUN, RIDE, SWIM, etc.)
+    hrZone2Time?: number;    // seconds in Zone 2
+    hrZone3Time?: number;    // seconds in Zone 3  
+    hrZone4Time?: number;    // seconds in Zone 4
 };
 
 /**
@@ -58,23 +62,80 @@ export function calculateEffectiveVO2max(
 }
 
 /**
- * Calculate Marathon Shape percentage
- * Combines weekly mileage (66.7%) and long run points (33.3%)
+ * Calculate General Aerobic Score from cross-training activities
+ * Sums time in Z2-Z4 from non-running activities (cycling, swimming, etc.)
  * 
- * @param activities - Array of activities from last 6 months
+ * @param activities - Array of cross-training activities with zone data
+ * @param lookbackDays - Days to look back (default 90)
+ * @returns Score normalized to 0-100 (target: ~300 min/week aerobic work)
+ */
+export function calculateGeneralAerobicScore(
+    activities: ActivityForShape[],
+    lookbackDays: number = 90
+): { score: number; totalMinutes: number; activityTypes: string[] } {
+    const now = new Date();
+    const cutoffDate = new Date(now.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
+
+    // Filter to non-running activities within the lookback period
+    const runningTypes = ['RUN', 'VIRTUAL_RUN', 'TRAIL_RUN'];
+    const relevantActivities = activities.filter(a => {
+        const activityDate = new Date(a.startDate);
+        const type = a.type?.toUpperCase() || '';
+        return activityDate >= cutoffDate && !runningTypes.includes(type);
+    });
+
+    // Sum Z2, Z3, Z4 time (in seconds)
+    let totalZoneSeconds = 0;
+    const activityTypesSet = new Set<string>();
+
+    relevantActivities.forEach(a => {
+        const z2 = a.hrZone2Time || 0;
+        const z3 = a.hrZone3Time || 0;
+        const z4 = a.hrZone4Time || 0;
+        totalZoneSeconds += (z2 + z3 + z4);
+        if (a.type) activityTypesSet.add(a.type);
+    });
+
+    const totalMinutes = totalZoneSeconds / 60;
+    const weeksInPeriod = lookbackDays / 7;
+    const avgWeeklyMinutes = totalMinutes / weeksInPeriod;
+
+    // Target: 300 min/week of aerobic cross-training = 100%
+    // This represents ~5 hours/week which is a substantial cross-training load
+    const targetWeeklyMinutes = 300;
+    const score = Math.min(100, (avgWeeklyMinutes / targetWeeklyMinutes) * 100);
+
+    return {
+        score: Math.round(score),
+        totalMinutes: Math.round(totalMinutes),
+        activityTypes: Array.from(activityTypesSet)
+    };
+}
+
+/**
+ * Calculate Marathon Shape percentage
+ * Combines weekly mileage (50%), long run points (25%), and cross-training (25%)
+ * When no cross-training is provided, falls back to original 66.7% / 33.3% split
+ * 
+ * @param runActivities - Array of running activities from last 6 months
  * @param effectiveVO2max - Current effective VO2max
- * @returns Shape percentage (0-100+, can exceed 100% if overtrained)
+ * @param crossTrainingActivities - Optional array of cross-training activities with zone data
+ * @param crossTrainingCoefficient - Coefficient for cross-training contribution (default 0.5)
+ * @returns Shape percentage (capped at 100%)
  */
 export function calculateMarathonShape(
-    activities: ActivityForShape[],
-    effectiveVO2max: number
-): { shape: number; mileageScore: number; longRunScore: number; details: ShapeDetails } {
-    if (!activities.length || effectiveVO2max <= 0) {
+    runActivities: ActivityForShape[],
+    effectiveVO2max: number,
+    crossTrainingActivities?: ActivityForShape[],
+    crossTrainingCoefficient: number = 0.5
+): { shape: number; mileageScore: number; longRunScore: number; crossTrainingScore: number; details: ShapeDetails } {
+    if (!runActivities.length || effectiveVO2max <= 0) {
         return {
             shape: 0,
             mileageScore: 0,
             longRunScore: 0,
-            details: { avgWeeklyKm: 0, targetWeeklyKm: 0, longRunPoints: 0, targetPoints: 10 }
+            crossTrainingScore: 0,
+            details: { avgWeeklyKm: 0, targetWeeklyKm: 0, longRunPoints: 0, targetPoints: 10, crossTrainingMinutes: 0 }
         };
     }
 
@@ -83,8 +144,8 @@ export function calculateMarathonShape(
     const tenWeeksAgo = new Date(now.getTime() - 70 * 24 * 60 * 60 * 1000);
 
     // Filter activities
-    const last6Months = activities.filter(a => new Date(a.startDate) >= sixMonthsAgo);
-    const last10Weeks = activities.filter(a => new Date(a.startDate) >= tenWeeksAgo);
+    const last6Months = runActivities.filter(a => new Date(a.startDate) >= sixMonthsAgo);
+    const last10Weeks = runActivities.filter(a => new Date(a.startDate) >= tenWeeksAgo);
 
     // === MILEAGE COMPONENT (66.7%) ===
     // Target: VO2max value in km per week (e.g., VO2max 50 → 50 km/week)
@@ -121,19 +182,44 @@ export function calculateMarathonShape(
     const targetPoints = 10;
     const longRunScore = Math.min(120, (longRunPoints / targetPoints) * 100);
 
+    // === CROSS-TRAINING COMPONENT ===
+    // Calculate aerobic contribution from non-running activities
+    let crossTrainingScore = 0;
+    let crossTrainingMinutes = 0;
+    if (crossTrainingActivities && crossTrainingActivities.length > 0) {
+        const aerobicResult = calculateGeneralAerobicScore(crossTrainingActivities, 90);
+        crossTrainingScore = aerobicResult.score;
+        crossTrainingMinutes = aerobicResult.totalMinutes;
+    }
+
     // === COMBINED SHAPE ===
-    // 66.7% mileage + 33.3% long runs
-    const shape = Math.round((mileageScore * 2 / 3) + (longRunScore * 1 / 3));
+    // With cross-training: 50% mileage + 25% long runs + 25% cross-training (with coefficient)
+    // Without cross-training: 66.7% mileage + 33.3% long runs (original behavior)
+    let shape: number;
+    if (crossTrainingActivities && crossTrainingActivities.length > 0) {
+        // Apply coefficient to cross-training contribution
+        const effectiveCrossTraining = crossTrainingScore * crossTrainingCoefficient;
+        // New weighted formula: Run volume (50%) + Long runs (25%) + Cross-training (25%)
+        shape = (mileageScore * 0.50) + (longRunScore * 0.25) + (effectiveCrossTraining * 0.25);
+    } else {
+        // Original formula when no cross-training data available
+        shape = (mileageScore * 2 / 3) + (longRunScore * 1 / 3);
+    }
+
+    // Cap at 100%
+    shape = Math.min(100, Math.round(shape));
 
     return {
         shape,
         mileageScore: Math.round(mileageScore),
         longRunScore: Math.round(longRunScore),
+        crossTrainingScore: Math.round(crossTrainingScore),
         details: {
             avgWeeklyKm: Math.round(avgWeeklyKm * 10) / 10,
             targetWeeklyKm: Math.round(targetWeeklyKm),
             longRunPoints: Math.round(longRunPoints * 10) / 10,
-            targetPoints
+            targetPoints,
+            crossTrainingMinutes: Math.round(crossTrainingMinutes)
         }
     };
 }
@@ -143,6 +229,7 @@ export type ShapeDetails = {
     targetWeeklyKm: number;
     longRunPoints: number;
     targetPoints: number;
+    crossTrainingMinutes?: number;
 };
 
 /**

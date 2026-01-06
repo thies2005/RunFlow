@@ -59,6 +59,17 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
+    // Fetch analytics stats for VDOT correction factor
+    const { data: statsData } = useQuery({
+        queryKey: ['analytics-stats'],
+        queryFn: async () => {
+            const res = await fetch('/api/analytics/stats');
+            if (!res.ok) throw new Error('Failed to fetch stats');
+            return res.json();
+        },
+        enabled: status === 'authenticated',
+    });
+
     // Recalculate mutation
     const recalculateMutation = useMutation({
         mutationFn: async () => {
@@ -159,9 +170,12 @@ export default function AnalyticsPage() {
         return {
             runalyzeMetrics: {
                 effectiveVO2max,
+                rawVO2max: statsData?.rawVO2max || effectiveVO2max,
+                vdotCorrectionFactor: statsData?.vdotCorrectionFactor || 1.0,
                 shape: shapeResult.shape,
                 mileageScore: shapeResult.mileageScore,
                 longRunScore: shapeResult.longRunScore,
+                crossTrainingScore: shapeResult.crossTrainingScore || 0,
                 details: shapeResult.details,
                 optimalTime: times.optimal,
                 predictedTime: times.predicted,
@@ -172,7 +186,7 @@ export default function AnalyticsPage() {
             fitnessData: fitness,
             racePredictions: allPredictions
         };
-    }, [activitiesData, userData, goalsData]);
+    }, [activitiesData, userData, goalsData, statsData]);
 
     if (status === 'loading' || isLoading) {
         return (
@@ -226,13 +240,16 @@ export default function AnalyticsPage() {
                     <div className="glass-card p-6 text-center">
                         <p className="text-gray-400 text-sm mb-2">Marathon Shape</p>
                         <p className={`text-4xl font-bold ${runalyzeMetrics.shape >= 100 ? 'text-green-400' :
-                                runalyzeMetrics.shape >= 70 ? 'text-yellow-400' : 'text-red-400'
+                            runalyzeMetrics.shape >= 70 ? 'text-yellow-400' : 'text-red-400'
                             }`}>
                             {runalyzeMetrics.shape}%
                         </p>
                         <div className="flex justify-center gap-4 mt-2 text-xs text-gray-500">
                             <span>Mileage: {runalyzeMetrics.mileageScore}%</span>
                             <span>Long Runs: {runalyzeMetrics.longRunScore}%</span>
+                            {runalyzeMetrics.crossTrainingScore > 0 && (
+                                <span className="text-accent-blue">X-Train: {runalyzeMetrics.crossTrainingScore}%</span>
+                            )}
                         </div>
                     </div>
 
@@ -371,6 +388,8 @@ export default function AnalyticsPage() {
                 onClose={() => setIsCalibrationOpen(false)}
                 currentFactor={runalyzeMetrics.calibrationFactor}
                 effectiveVO2max={runalyzeMetrics.effectiveVO2max}
+                rawVO2max={runalyzeMetrics.rawVO2max}
+                vdotCorrectionFactor={runalyzeMetrics.vdotCorrectionFactor}
                 shapePercent={runalyzeMetrics.shape}
             />
         </div>

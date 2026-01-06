@@ -42,6 +42,12 @@ model User {
   hrZone4Max    Int       @default(90)  // Z4 ends at 90%
   // Z5 = 90%+ (implied)
   
+  // VO2max correction based on reference race
+  vdotCorrectionFactor   Float     @default(1.0)
+  vdotReferenceRaceDate  DateTime?
+  vdotReferenceRaceTime  Int?      // seconds
+  vdotReferenceRaceType  String?   // "5K", "10K", "HALF", "MARATHON"
+  
   // Sync status
   lastSyncAt    DateTime?
   syncInProgress Boolean  @default(false)

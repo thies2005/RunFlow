@@ -161,6 +161,15 @@ export default function Dashboard() {
                                 {syncMutation.isPending ? 'Starting...' : syncStatus?.syncInProgress ? 'Syncing...' : 'Sync'}
                             </button>
 
+                            {/* Analytics */}
+                            <button
+                                type="button"
+                                onClick={() => router.push('/analytics')}
+                                className="btn-secondary flex items-center gap-2 py-2 px-4"
+                            >
+                                📊 Analytics
+                            </button>
+
                             {/* Settings */}
                             <button
                                 type="button"

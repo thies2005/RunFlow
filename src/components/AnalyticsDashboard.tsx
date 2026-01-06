@@ -102,8 +102,74 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
             }));
     }, [filteredActivities]);
 
-    // Add Range Selector to UI
-    // We'll wrap the charts in a container that has the header + selector
+    // 3. VDOT Trend (from activities with estimatedVdot)
+    const vdotTrend = useMemo(() => {
+        return filteredActivities
+            .filter(a => a.estimatedVdot && a.estimatedVdot > 0)
+            .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+            .map(a => ({
+                date: new Date(a.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+                vdot: Math.round(a.estimatedVdot! * 10) / 10,
+            }));
+    }, [filteredActivities]);
+
+    // 4. Race Predictions (based on currentVdot)
+    const racePredictions = useMemo(() => {
+        if (!currentVdot || currentVdot <= 0) return [];
+
+        // Approximated from Daniels tables
+        const predictions = [
+            { race: '5K', time: predictTime(currentVdot, 5000) },
+            { race: '10K', time: predictTime(currentVdot, 10000) },
+            { race: 'Half', time: predictTime(currentVdot, 21097) },
+            { race: 'Marathon', time: predictTime(currentVdot, 42195) },
+        ];
+        return predictions;
+    }, [currentVdot]);
+
+    // 5. Marathon Shape (CTL/ATL/TSB simulation)
+    const fitnessData = useMemo(() => {
+        const sortedActivities = [...filteredActivities]
+            .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
+        let ctl = 30; // Base fitness
+        let atl = 30; // Base fatigue
+        const data: { date: string; ctl: number; atl: number; tsb: number }[] = [];
+
+        sortedActivities.forEach(a => {
+            // Simple TRIMP approximation: duration * intensity
+            const trimp = (a.movingTime / 60) * (a.distance > 0 ? 0.8 : 0.5);
+
+            // Exponential weighted moving averages
+            ctl = ctl + (trimp - ctl) / 42; // 42-day CTL
+            atl = atl + (trimp - atl) / 7;  // 7-day ATL
+            const tsb = ctl - atl;
+
+            data.push({
+                date: new Date(a.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+                ctl: Math.round(ctl),
+                atl: Math.round(atl),
+                tsb: Math.round(tsb),
+            });
+        });
+
+        return data.slice(-30); // Last 30 data points
+    }, [filteredActivities]);
+
+    // Helper to predict race time from VDOT
+    function predictTime(vdot: number, distanceMeters: number): string {
+        // Simplified prediction formula
+        const velocity = vdot * 0.8; // m/min approximation
+        const timeMinutes = distanceMeters / velocity;
+        const hours = Math.floor(timeMinutes / 60);
+        const mins = Math.floor(timeMinutes % 60);
+        const secs = Math.round((timeMinutes * 60) % 60);
+
+        if (hours > 0) {
+            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
 
 
     return (
@@ -218,6 +284,97 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
                     </p>
                 </div>
             </div>
+
+            {/* VDOT Trend Chart */}
+            {vdotTrend.length > 0 && (
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">VDOT Trend</h3>
+                    <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={vdotTrend}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    stroke="#9ca3af"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <YAxis
+                                    stroke="#9ca3af"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    domain={['dataMin - 2', 'dataMax + 2']}
+                                />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="vdot"
+                                    stroke="#f59e0b"
+                                    strokeWidth={2}
+                                    dot={{ fill: '#f59e0b', strokeWidth: 2 }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
+            {/* Race Predictions */}
+            {racePredictions.length > 0 && (
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Race Predictions (VDOT {currentVdot?.toFixed(1)})</h3>
+                    <div className="grid grid-cols-4 gap-4">
+                        {racePredictions.map(p => (
+                            <div key={p.race} className="text-center">
+                                <p className="text-gray-400 text-sm">{p.race}</p>
+                                <p className="text-2xl font-bold text-white">{p.time}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Marathon Shape / Fitness (CTL/ATL/TSB) */}
+            {fitnessData.length > 0 && (
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Marathon Shape (Fitness Tracking)</h3>
+                    <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={fitnessData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    stroke="#9ca3af"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <YAxis
+                                    stroke="#9ca3af"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                />
+                                <Line type="monotone" dataKey="ctl" stroke="#10b981" strokeWidth={2} name="Fitness (CTL)" dot={false} />
+                                <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} name="Fatigue (ATL)" dot={false} />
+                                <Line type="monotone" dataKey="tsb" stroke="#3b82f6" strokeWidth={2} name="Form (TSB)" dot={false} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="flex justify-center gap-6 mt-4">
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-sm text-gray-300">Fitness (CTL)</span></div>
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500" /><span className="text-sm text-gray-300">Fatigue (ATL)</span></div>
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500" /><span className="text-sm text-gray-300">Form (TSB)</span></div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

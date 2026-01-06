@@ -146,15 +146,17 @@ export type ShapeDetails = {
 };
 
 /**
- * Calculate predicted marathon time adjusted by shape
+ * Calculate predicted marathon time adjusted by shape and calibration
  * 
  * @param effectiveVO2max - Current VO2max
  * @param shapePercent - Marathon shape percentage
+ * @param calibrationFactor - Optional calibration multiplier (default 1.0)
  * @returns Object with optimal and predicted times
  */
 export function calculatePredictedTimes(
     effectiveVO2max: number,
-    shapePercent: number
+    shapePercent: number,
+    calibrationFactor: number = 1.0
 ): { optimal: number; predicted: number } {
     if (effectiveVO2max <= 0) {
         return { optimal: 0, predicted: 0 };
@@ -164,15 +166,43 @@ export function calculatePredictedTimes(
     const optimalSeconds = predictRaceTime(effectiveVO2max, 'MARATHON');
 
     // Predicted time is adjusted by shape
-    // If shape is 50%, prediction is ~15-20% slower than optimal
     // Formula: predicted = optimal * (1 + (1 - shape/100) * 0.3)
-    const shapeFactor = 1 + (1 - shapePercent / 100) * 0.3;
-    const predictedSeconds = optimalSeconds * shapeFactor;
+    const basePredictedSeconds = optimalSeconds * (1 + (1 - shapePercent / 100) * 0.3);
+
+    // Apply calibration factor
+    const finalPredictedSeconds = basePredictedSeconds * calibrationFactor;
 
     return {
         optimal: Math.round(optimalSeconds),
-        predicted: Math.round(predictedSeconds)
+        predicted: Math.round(finalPredictedSeconds)
     };
+}
+
+/**
+ * Solve for calibration factor given a Race Result
+ * Finds the factor needed to make the prediction match the actual race time
+ */
+export function solveCalibrationFactory(
+    effectiveVO2max: number,
+    shapePercent: number,
+    actualRaceTimeSeconds: number,
+    raceDistance: 'MARATHON' | 'HALF' = 'MARATHON'
+): number {
+    if (effectiveVO2max <= 0 || actualRaceTimeSeconds <= 0) return 1.0;
+
+    // 1. Calculate prediction from VO2max + Shape for the specific distance
+    const optimalSeconds = predictRaceTime(effectiveVO2max, raceDistance);
+
+    // Shape adjustment (simplified: assuming same shape logic applies to Half, though usually less)
+    const shapeImpact = raceDistance === 'MARATHON' ? 0.3 : 0.15; // Shape matters less for a half
+    const predictedSeconds = optimalSeconds * (1 + (1 - shapePercent / 100) * shapeImpact);
+
+    // 2. Factor = Actual / Predicted
+    // Example: Predicted 3:00, Actual 3:15 -> Factor ~1.08 (slower)
+    // Example: Predicted 3:00, Actual 2:55 -> Factor ~0.97 (faster)
+    const factor = actualRaceTimeSeconds / predictedSeconds;
+
+    return Math.round(factor * 1000) / 1000;
 }
 
 /**

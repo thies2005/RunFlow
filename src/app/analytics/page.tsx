@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Settings2 } from 'lucide-react';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import {
     calculateWeightedEffectiveVO2max,
     calculateMarathonShape,
@@ -18,6 +19,7 @@ export default function AnalyticsPage() {
     const { status } = useSession();
     const router = useRouter();
     const queryClient = useQueryClient();
+    const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
 
     // Fetch ALL activities
     const { data: activitiesData, isLoading } = useQuery({
@@ -36,6 +38,17 @@ export default function AnalyticsPage() {
         queryFn: async () => {
             const res = await fetch('/api/user');
             if (!res.ok) throw new Error('Failed to fetch user');
+            return res.json();
+        },
+        enabled: status === 'authenticated',
+    });
+
+    // Fetch active goal for calibration factor
+    const { data: goalsData } = useQuery({
+        queryKey: ['goals'],
+        queryFn: async () => {
+            const res = await fetch('/api/goals');
+            if (!res.ok) throw new Error('Failed to fetch goals');
             return res.json();
         },
         enabled: status === 'authenticated',
@@ -68,9 +81,13 @@ export default function AnalyticsPage() {
 
         const maxHR = userData?.user?.hrMax || 190;
 
+        // Use active goal's calibration factor (default 1.0)
+        const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
+        const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
+
         const effectiveVO2max = calculateWeightedEffectiveVO2max(runs, maxHR);
         const shapeResult = calculateMarathonShape(runs, effectiveVO2max);
-        const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape);
+        const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
 
         return {
             effectiveVO2max,
@@ -80,8 +97,9 @@ export default function AnalyticsPage() {
             details: shapeResult.details,
             optimalTime: times.optimal,
             predictedTime: times.predicted,
+            calibrationFactor
         };
-    }, [activitiesData, userData]);
+    }, [activitiesData, userData, goalsData]);
 
     if (status === 'loading' || isLoading) {
         return (
@@ -127,6 +145,7 @@ export default function AnalyticsPage() {
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Runalyze-style Metrics */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {/* Effective VO2max */}
                     <div className="glass-card p-6 text-center">
                         <p className="text-gray-400 text-sm mb-2">Effective VO2max</p>
                         <p className="text-4xl font-bold text-white">
@@ -135,6 +154,7 @@ export default function AnalyticsPage() {
                         <p className="text-xs text-gray-500 mt-1">Pace + Heart Rate based</p>
                     </div>
 
+                    {/* Marathon Shape */}
                     <div className="glass-card p-6 text-center">
                         <p className="text-gray-400 text-sm mb-2">Marathon Shape</p>
                         <p className={`text-4xl font-bold ${runalyzeMetrics.shape >= 100 ? 'text-green-400' :
@@ -148,7 +168,17 @@ export default function AnalyticsPage() {
                         </div>
                     </div>
 
-                    <div className="glass-card p-6 text-center">
+                    {/* Predictions + Calibration */}
+                    <div className="glass-card p-6 text-center relative group">
+                        <div className="absolute top-2 right-2">
+                            <button
+                                onClick={() => setIsCalibrationOpen(true)}
+                                className="p-2 text-gray-500 hover:text-accent-pink transition-colors"
+                                title="Calibrate Prediction"
+                            >
+                                <Settings2 className="w-4 h-4" />
+                            </button>
+                        </div>
                         <p className="text-gray-400 text-sm mb-2">Marathon Prediction</p>
                         <div className="flex justify-center items-baseline gap-3">
                             <div>
@@ -159,7 +189,14 @@ export default function AnalyticsPage() {
                             </div>
                             <span className="text-gray-600">→</span>
                             <div>
-                                <p className="text-xs text-gray-500">Predicted</p>
+                                <p className="text-xs text-gray-500 flex items-center justify-center gap-1">
+                                    Predicted
+                                    {runalyzeMetrics.calibrationFactor !== 1.0 && (
+                                        <span className="text-accent-blue text-[10px] bg-accent-blue/10 px-1 rounded">
+                                            {runalyzeMetrics.calibrationFactor.toFixed(2)}x
+                                        </span>
+                                    )}
+                                </p>
                                 <p className="text-2xl font-bold text-white">
                                     {runalyzeMetrics.predictedTime > 0 ? formatTime(runalyzeMetrics.predictedTime) : '-'}
                                 </p>
@@ -190,8 +227,21 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
-                <AnalyticsDashboard activities={runs} currentVdot={runalyzeMetrics.effectiveVO2max} />
+                {/* Charts */}
+                <AnalyticsDashboard
+                    activities={runs}
+                    currentVdot={runalyzeMetrics.effectiveVO2max}
+                />
             </main>
+
+            {/* Calibration Modal */}
+            <ShapeCalibrationModal
+                isOpen={isCalibrationOpen}
+                onClose={() => setIsCalibrationOpen(false)}
+                currentFactor={runalyzeMetrics.calibrationFactor}
+                effectiveVO2max={runalyzeMetrics.effectiveVO2max}
+                shapePercent={runalyzeMetrics.shape}
+            />
         </div>
     );
 }

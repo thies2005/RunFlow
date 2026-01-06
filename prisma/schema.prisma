@@ -182,6 +182,7 @@ model Goal {
   // Current predictions based on VDOT
   currentVdot       Float?
   predictedTime     Int?      // seconds
+  marathonShapeFactor Float    @default(1.0) // Correction Multiplier
   
   // Training plan settings
   weeklyMileageGoal Float?    // km per week at peak

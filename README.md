@@ -59,6 +59,35 @@ If you only changed code/docs and don't need a new Docker build (lighter update)
 .\scripts\deploy.ps1 "Update README" -SkipDocker
 ```
 
+### 🔧 Deployment Options (Server-Side)
+
+We support two ways to deploy on your server, controlled by which Docker Compose files you use.
+
+#### 1. Standard Deployment (Pull from Hub)
+**Best for**: Production, speed, stability.
+Uses the pre-built image from Docker Hub.
+
+```bash
+# 1. Update repo
+git pull origin main
+
+# 2. Deploy
+docker compose up -d
+```
+
+#### 2. Testing Deployment (Build from Source)
+**Best for**: Testing latest changes before a Docker Hub push, or debugging platform issues.
+Forces a local build of the Docker image on your server.
+
+```bash
+# 1. Update repo
+git pull origin main
+
+# 2. Deploy with Build Override
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
+*This command tells Docker: "Use the base config, but apply the build overrides, and force a rebuild."*
+
 ---
 
 ## 🛠️ Setup Guide

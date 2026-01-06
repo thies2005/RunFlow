@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Save, AlertCircle, Bike } from 'lucide-react';
+import { X, Save, AlertCircle, Bike, Activity } from 'lucide-react';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -17,8 +17,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const [seconds, setSeconds] = useState('0');
 
     // Plan Customization
-    const [daysPerWeek, setDaysPerWeek] = useState(5);
-    const [includeCrossTraining, setIncludeCrossTraining] = useState(false);
+    const [runsPerWeek, setRunsPerWeek] = useState(4);
+    const [ridesPerWeek, setRidesPerWeek] = useState(0);
 
     const [message, setMessage] = useState('');
 
@@ -27,6 +27,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             const timeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
             const raceDistance = distance;
 
+            // Allow 0 runs? No, min 3.
             if (timeSeconds === 0) throw new Error('Time cannot be zero');
 
             const res = await fetch('/api/settings/update-vdot', {
@@ -34,8 +35,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 body: JSON.stringify({
                     timeSeconds,
                     raceDistance,
-                    daysPerWeek,
-                    includeCrossTraining
+                    runsPerWeek,
+                    ridesPerWeek
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -133,20 +134,20 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </div>
 
                     <div className="border-t border-white/10 pt-6">
-                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Plan Structure</h3>
+                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Plan Volume</h3>
 
-                        {/* Days Per Week */}
+                        {/* Runs Per Week */}
                         <div className="mb-6">
                             <div className="flex justify-between mb-2">
-                                <label className="text-xs text-gray-400 uppercase">Training Days / Week</label>
-                                <span className="text-white font-bold">{daysPerWeek}</span>
+                                <label className="text-xs text-gray-400 uppercase flex items-center gap-1"><Activity className="w-3 h-3" /> Runs / Week</label>
+                                <span className="text-accent-orange font-bold">{runsPerWeek}</span>
                             </div>
                             <input
                                 type="range"
                                 min="3"
                                 max="7"
-                                value={daysPerWeek}
-                                onChange={(e) => setDaysPerWeek(parseInt(e.target.value))}
+                                value={runsPerWeek}
+                                onChange={(e) => setRunsPerWeek(parseInt(e.target.value))}
                                 className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
                             />
                             <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -156,22 +157,24 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             </div>
                         </div>
 
-                        {/* Cross Training */}
-                        <div
-                            className={`p-3 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${includeCrossTraining ? 'bg-accent-orange/10 border-accent-orange' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
-                            onClick={() => setIncludeCrossTraining(!includeCrossTraining)}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-full ${includeCrossTraining ? 'bg-accent-orange text-white' : 'bg-white/10 text-gray-400'}`}>
-                                    <Bike className="w-4 h-4" />
-                                </div>
-                                <div>
-                                    <h4 className={`text-sm font-medium ${includeCrossTraining ? 'text-white' : 'text-gray-300'}`}>Include Cross-Training</h4>
-                                    <p className="text-xs text-gray-500">Add cycling sessions</p>
-                                </div>
+                        {/* Rides Per Week */}
+                        <div className="mb-6">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-gray-400 uppercase flex items-center gap-1"><Bike className="w-3 h-3" /> Rides / Week</label>
+                                <span className="text-accent-cyan font-bold">{ridesPerWeek}</span>
                             </div>
-                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${includeCrossTraining ? 'bg-accent-orange border-accent-orange' : 'border-gray-500'}`}>
-                                {includeCrossTraining && <div className="w-2 h-2 bg-white rounded-full" />}
+                            <input
+                                type="range"
+                                min="0"
+                                max="3"
+                                value={ridesPerWeek}
+                                onChange={(e) => setRidesPerWeek(parseInt(e.target.value))}
+                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>None</span>
+                                <span>1</span>
+                                <span>3</span>
                             </div>
                         </div>
                     </div>
@@ -189,8 +192,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         className="btn-primary w-full flex items-center justify-center gap-2 py-3"
                     >
                         {updateMutation.isPending ? <Save className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
-                        {updateMutation.isPending ? 'Generating...' : 'Save & Generate Adaptive Plan'}
+                        {updateMutation.isPending ? 'Generating...' : 'Save & Recalibrate'}
                     </button>
+
+                    <p className="text-xs text-gray-500 text-center mt-2">
+                        This re-generates your future plan based on the new settings.
+                    </p>
                 </div>
             </div>
         </div>

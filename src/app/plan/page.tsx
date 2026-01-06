@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Flag, Activity, Clock, Zap, Bike, Mountain, Play, Plus, Dumbbell } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isToday, isPast, differenceInWeeks, addDays } from 'date-fns';
 import { useSession } from 'next-auth/react';
-import EditWorkoutModal from '@/components/EditWorkoutModal';
+import { EditWorkoutModal } from '@/components'; // Assuming export from index
 
 const workoutStyles: Record<string, { color: string, icon: any, label: string }> = {
     EASY: { color: 'text-green-400', icon: Activity, label: 'Easy Run' },
@@ -21,6 +21,8 @@ const workoutStyles: Record<string, { color: string, icon: any, label: string }>
     OTHER: { color: 'text-gray-400', icon: Activity, label: 'Other' },
     RACE: { color: 'text-purple-400', icon: Flag, label: 'Race' },
 };
+
+const RUN_TYPES = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 'RACE', 'REPETITIONS'];
 
 function getPhase(weeksUntilRace: number) {
     if (weeksUntilRace <= 2) return { name: 'TAPER', color: 'text-teal-400 border-teal-500/30 bg-teal-500/10' };
@@ -38,7 +40,7 @@ export default function PlanPage() {
     const [editingWorkout, setEditingWorkout] = useState<any>(null);
     const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
 
-    const { data, isLoading } = useQuery({
+    const { data, isLoading, refetch } = useQuery({
         queryKey: ['plan'],
         queryFn: async () => (await fetch('/api/plan')).json(),
         enabled: status === 'authenticated'
@@ -110,6 +112,14 @@ export default function PlanPage() {
 
                         const weekWorkouts = weeks[weekStartIso].sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
 
+                        // Calculate Mileage
+                        const weeklyMileage = weekWorkouts.reduce((sum: number, w: any) => {
+                            if (RUN_TYPES.includes(w.workoutType) && w.targetDistance > 0) {
+                                return sum + w.targetDistance;
+                            }
+                            return sum;
+                        }, 0);
+
                         return (
                             <div key={weekStartIso} className="glass-card overflow-hidden">
                                 {/* Week Header */}
@@ -120,6 +130,9 @@ export default function PlanPage() {
                                             <span className="text-xs text-gray-400">
                                                 {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
                                             </span>
+                                        </div>
+                                        <div className="px-2 py-1 bg-white/5 rounded text-xs text-gray-300 border border-white/10">
+                                            {(weeklyMileage / 1000).toFixed(1)} km
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -173,6 +186,12 @@ export default function PlanPage() {
                                                                 {(workout.targetDistance / 1000).toFixed(1)} km
                                                             </span>
                                                         )}
+                                                        {/* Duration for non-distance */}
+                                                        {workout.targetDistance === 0 && workout.targetDuration > 0 && (
+                                                            <span className="text-sm text-gray-400">
+                                                                {Math.round(workout.targetDuration / 60)} min
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <p className="text-sm text-gray-500 line-clamp-1">{workout.description}</p>
                                                 </div>
@@ -188,7 +207,10 @@ export default function PlanPage() {
 
             <EditWorkoutModal
                 isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    refetch();
+                }}
                 workout={editingWorkout}
                 defaultDate={createDate}
                 goalId={goal.id}

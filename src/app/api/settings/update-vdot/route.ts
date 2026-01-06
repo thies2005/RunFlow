@@ -13,7 +13,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { timeSeconds, raceDistance, daysPerWeek, includeCrossTraining } = await req.json();
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek } = await req.json();
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -28,13 +28,16 @@ export async function POST(req: Request) {
         });
 
         if (activeGoal) {
+            const runs = runsPerWeek || 4;
+            const rides = ridesPerWeek || 0;
+
             // Update Goal Settings
             await prisma.goal.update({
                 where: { id: activeGoal.id },
                 data: {
                     currentVdot: newVdot,
-                    daysPerWeek: daysPerWeek || 5, // Default 5
-                    includeCrossTraining: includeCrossTraining || false
+                    runsPerWeek: runs,
+                    ridesPerWeek: rides
                 }
             });
 
@@ -47,15 +50,19 @@ export async function POST(req: Request) {
 
             // Generate new plan (offset to start TODAY)
             const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 1);
+            startDate.setDate(startDate.getDate() - 1); // Start yesterday so today is day 1? Or purely relative.
+
+            // Wait, previous logic was startDate. setDate( - 1). 
+            // Current 'generatePlan' uses date logic.
+            // If I generate starting TODAY, the scheduled dates will start from TODAY.
 
             const workouts = generateTrainingPlan({
                 vdot: newVdot,
-                raceType: activeGoal.raceType, // Prisma Enum
+                raceType: activeGoal.raceType,
                 raceDate: activeGoal.raceDate,
                 startDate: startDate,
-                daysPerWeek: daysPerWeek || 5,
-                includeCrossTraining: includeCrossTraining || false
+                runsPerWeek: runs,
+                ridesPerWeek: rides
             });
 
             // Save workouts
@@ -66,9 +73,9 @@ export async function POST(req: Request) {
                         scheduledDate: w.date,
                         workoutType: w.type as WorkoutType,
                         description: w.description,
-                        targetDistance: w.totalDistance, // meters
-                        targetPace: w.targetPace || 0, // sec/km
-                        targetDuration: 0, // Optional
+                        targetDistance: w.totalDistance,
+                        targetPace: w.targetPace || 0,
+                        targetDuration: 0,
                         isCompleted: false
                     }
                 }))

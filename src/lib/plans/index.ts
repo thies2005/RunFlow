@@ -6,8 +6,8 @@ export type PlanConfig = {
     raceType: RaceType;
     raceDate: Date;
     startDate?: Date; // Defaults to now
-    daysPerWeek?: number; // Default 4
-    includeCrossTraining?: boolean; // Default false
+    runsPerWeek?: number; // Default 4
+    ridesPerWeek?: number; // Default 0
 };
 
 export type GeneratedWorkout = {
@@ -24,8 +24,8 @@ export type GeneratedWorkout = {
 export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const { vdot, raceType, raceDate } = config;
     const startDate = config.startDate || new Date();
-    const daysPerWeek = config.daysPerWeek || 4;
-    const includeCrossTraining = config.includeCrossTraining || false;
+    const runsPerWeek = config.runsPerWeek || 4;
+    const ridesPerWeek = config.ridesPerWeek || 0;
 
     // Calculate weeks available
     const timeDiff = raceDate.getTime() - startDate.getTime();
@@ -37,22 +37,14 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const workouts: GeneratedWorkout[] = [];
 
     let currentDate = new Date(startDate);
-    // Align to Monday? Or purely relative?
-    // Relative for simplicity, but we assign specific "Day offsets" within a week.
-    // If startDate is Wednesday, Date+0 is Wed.
-    // We treat "Week" as 7-day blocks starting from startDate.
 
-    // We want to align "Long Run" to Sunday usually.
-    // But for MVP, let's keep it relative.
+    // We treat "Week" as 7-day blocks starting from startDate.
 
     for (let week = 1; week <= weeksAvailable; week++) {
         const weeksUntilRace = weeksAvailable - week + 1;
         const phase = getPhase(weeksUntilRace);
 
-        const weekSchedule = generateWeek(phase, raceType, paces, daysPerWeek, includeCrossTraining);
-
-        // Sort schedule to put Long Run at end? Or spaced?
-        // Let's rely on dayOffsets.
+        const weekSchedule = generateWeek(phase, raceType, paces, runsPerWeek, ridesPerWeek);
 
         weekSchedule.forEach(w => {
             const specificDate = new Date(currentDate);
@@ -87,34 +79,22 @@ function generateWeek(
     phase: 'BASE' | 'BUILD' | 'PEAK' | 'TAPER',
     raceType: RaceType,
     paces: any,
-    daysPerWeek: number,
-    includeCrossTraining: boolean
+    runsPerWeek: number,
+    ridesPerWeek: number
 ): ScheduledWorkout[] {
     const workouts: ScheduledWorkout[] = [];
 
-    // Define patterns based on days running (excludes XT)
-    // 3: Tue, Thu, Sun(Long)
-    // 4: Tue, Thu, Sat, Sun(Long)
-    // 5: Tue, Wed, Thu, Sat, Sun(Long)
-    // or similar distribution.
-    // We use offsets 0-6 relative to start of week.
+    // Run Patterns (Day offsets 0-6, Mon-Sun)
+    let runDays: number[] = [];
+    if (runsPerWeek <= 3) runDays = [1, 3, 6]; // Tue, Thu, Sun
+    else if (runsPerWeek === 4) runDays = [1, 3, 5, 6]; // Tue, Thu, Sat, Sun
+    else if (runsPerWeek === 5) runDays = [1, 2, 3, 5, 6]; // Tue, Wed, Thu, Sat, Sun
+    else if (runsPerWeek === 6) runDays = [0, 1, 2, 3, 5, 6]; // all but Fri? Or Mon-Sat? Let's say all but Fri.
+    else runDays = [0, 1, 2, 3, 4, 5, 6]; // Everyday
 
-    // Let's assume start of week = Monday.
-    // offsets: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun.
-
-    let pattern: number[] = [];
-    if (daysPerWeek <= 3) pattern = [1, 3, 6]; // Tue, Thu, Sun
-    else if (daysPerWeek === 4) pattern = [1, 3, 5, 6]; // Tue, Thu, Sat, Sun
-    else if (daysPerWeek === 5) pattern = [1, 2, 3, 5, 6]; // Tue, Wed, Thu, Sat, Sun
-    else if (daysPerWeek >= 6) pattern = [0, 1, 2, 3, 5, 6]; // Mon, Tue, Wed, Thu, Sat, Sun
-
-    // Slot assignments
-    // Long Run -> Last day (6)
-    // Quality -> Midweek (3 or 2)
-    // Others -> Easy
-
-    // 1. Long Run
-    const longRunDay = pattern[pattern.length - 1];
+    // 1. Assign Runs
+    // Long Run -> Last day
+    const longRunDay = runDays[runDays.length - 1];
     let longRunDist = getLongRunDistance(raceType, phase);
     workouts.push({
         dayOffset: longRunDay,
@@ -124,17 +104,17 @@ function generateWeek(
         targetPace: paces.easy.avg
     });
 
-    // 2. Quality Session
-    if (pattern.length >= 2 && phase !== 'BASE' && phase !== 'TAPER') {
-        const qualityDay = pattern[1]; // Usually Thu or Wed
+    // Quality Session
+    if (runDays.length >= 2 && phase !== 'BASE' && phase !== 'TAPER') {
+        const qualityDay = runDays[1]; // Usually Thu or Wed
         const q = getQualitySession(raceType, paces);
         workouts.push({
             dayOffset: qualityDay,
             ...q
         });
-    } else if (pattern.length >= 2) {
+    } else if (runDays.length >= 2) {
         // Base/Taper replace quality with easy
-        const qualityDay = pattern[1];
+        const qualityDay = runDays[1];
         workouts.push({
             dayOffset: qualityDay,
             type: WorkoutType.EASY,
@@ -144,12 +124,11 @@ function generateWeek(
         });
     }
 
-    // 3. Easy Runs (Fill remaining slots)
-    // Filter out used days (Long Run and Quality/Replacement)
-    const usedDays = workouts.map(w => w.dayOffset);
-    const availableDays = pattern.filter(d => !usedDays.includes(d));
+    // Easy Runs (Rest of runDays)
+    const assignedRunDays = workouts.map(w => w.dayOffset);
+    const availableRunDays = runDays.filter(d => !assignedRunDays.includes(d));
 
-    availableDays.forEach(day => {
+    availableRunDays.forEach(day => {
         workouts.push({
             dayOffset: day,
             type: WorkoutType.EASY,
@@ -159,29 +138,28 @@ function generateWeek(
         });
     });
 
-    // 4. Cross Training
-    if (includeCrossTraining) {
-        // Find a free slot.
-        const rDays = pattern; // Running days
-        // Possible days: 0..6
+    // 2. Assign Rides (Fill free slots)
+    if (ridesPerWeek > 0) {
+        let ridesAssigned = 0;
         const allDays = [0, 1, 2, 3, 4, 5, 6];
-        const freeDays = allDays.filter(d => !rDays.includes(d));
+        const freeDays = allDays.filter(d => !runDays.includes(d));
 
-        if (freeDays.length > 0) {
-            // Pick midpoint? or first?
-            // If running Tue,Thu,Sun (1,3,6). Free: 0,2,4,5.
-            // 2(Wed) or 5(Sat) are good.
-            // Let's pick '2' (Wed) if free, else '5' (Sat), else first available.
-            let xtDay = freeDays.includes(2) ? 2 : (freeDays.includes(4) ? 4 : freeDays[0]);
-
+        // Prioritize weekends/midweek?
+        // Let's just fill sequentially from freeDays.
+        for (const day of freeDays) {
+            if (ridesAssigned >= ridesPerWeek) break;
             workouts.push({
-                dayOffset: xtDay,
+                dayOffset: day,
                 type: WorkoutType.RIDE,
-                description: 'Cross Train: 45-60min Bike Ride',
-                totalDistance: 0, // Distance not strict
+                description: 'Cross Train: 60min Bike Ride',
+                totalDistance: 25000, // Estimate 25km? Or 0.
                 targetPace: 0
             });
+            ridesAssigned++;
         }
+
+        // If still need rides (runs+rides > 7), we skip (cannot double up easily in this model without conflict).
+        // User should limit via UI.
     }
 
     return workouts;

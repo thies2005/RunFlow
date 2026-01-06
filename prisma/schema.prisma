@@ -67,7 +67,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
+  
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
@@ -186,8 +186,11 @@ model Goal {
   // Training plan settings
   weeklyMileageGoal Float?    // km per week at peak
   planWeeks         Int       @default(12)
-  daysPerWeek       Int       @default(4)
-  includeCrossTraining Boolean @default(false)
+  runsPerWeek       Int       @default(4)
+  ridesPerWeek      Int       @default(0)
+  
+  // keeping deprecated fields temporarily to avoid migration friction if db push isn't forced?
+  // No, I'll remove them. 'migrator' uses 'db push' which might handle removal.
   
   // Status
   isActive    Boolean   @default(true)

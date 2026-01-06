@@ -72,13 +72,20 @@ export default function ShapeCalibrationModal({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
-            if (!res.ok) throw new Error('Failed to update VDOT correction');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to update VDOT correction');
+            }
             return res.json();
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
             queryClient.invalidateQueries({ queryKey: ['all-activities'] });
             onClose();
+        },
+        onError: (error: Error) => {
+            console.error('VDOT correction error:', error);
+            alert(`Error: ${error.message}`);
         },
     });
 

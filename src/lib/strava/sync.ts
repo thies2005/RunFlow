@@ -128,10 +128,83 @@ async function fetchActivities(
 }
 
 /**
+ * Fetch activity streams (heartrate, time)
+ */
+async function fetchActivityStreams(
+    accessToken: string,
+    activityId: number
+): Promise<{ time: number[]; heartrate: number[] } | null> {
+    await rateLimiter.checkAndWait();
+
+    const response = await fetch(
+        `${STRAVA_API_BASE}/activities/${activityId}/streams?keys=time,heartrate&key_by_type=true`,
+        {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }
+    );
+
+    if (response.status === 429) {
+        const retryAfter = parseInt(response.headers.get('Retry-After') || '900');
+        console.log(`Rate limited fetching streams, waiting ${retryAfter}s`);
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        return fetchActivityStreams(accessToken, activityId);
+    }
+
+    if (!response.ok) return null;
+
+    const streams = await response.json();
+    if (!streams.time || !streams.heartrate) return null;
+
+    return {
+        time: streams.time.data,
+        heartrate: streams.heartrate.data,
+    };
+}
+
+/**
+ * Calculate time in zones based on HR stream and user max HR
+ */
+function calculateZoneTimes(
+    heartrates: number[],
+    times: number[],
+    hrMax: number
+): { z1: number; z2: number; z3: number; z4: number; z5: number } {
+    const zones = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+
+    // Default percentages if not customized (matching User model defaults)
+    const z1Ceil = Math.floor(hrMax * 0.60);
+    const z2Ceil = Math.floor(hrMax * 0.70);
+    const z3Ceil = Math.floor(hrMax * 0.80);
+    const z4Ceil = Math.floor(hrMax * 0.90);
+
+    for (let i = 0; i < heartrates.length; i++) {
+        // Calculate duration of this point
+        // Stream time is cumulative relative to start
+        // We assume constant sampling or take diff to next point?
+        // Strava streams usually align. Let's take diff to next, or 1s if last
+        // Actually, just assumed 1s for simplicity usually works, but streams can be sparse.
+        // Better: (nextTime - currTime)
+        const duration = (i < times.length - 1)
+            ? Math.min(times[i + 1] - times[i], 10) // Cap gaps at 10s to avoid paused time skew
+            : 1;
+
+        const hr = heartrates[i];
+
+        if (hr <= z1Ceil) zones.z1 += duration;
+        else if (hr <= z2Ceil) zones.z2 += duration;
+        else if (hr <= z3Ceil) zones.z3 += duration;
+        else if (hr <= z4Ceil) zones.z4 += duration;
+        else zones.z5 += duration;
+    }
+
+    return zones;
+}
+
+/**
  * Calculate timestamp for range
  */
 function getRangeStartTimestamp(range?: string): number | undefined {
-    if (!range || range === 'ALL') return undefined; // 'ALL' means start from beginning (undefined 'after')
+    if (!range || range === 'ALL') return undefined;
 
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
@@ -215,12 +288,27 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         where: { stravaId: BigInt(activity.id) },
                     });
 
-                    if (existing) {
+                    // Determine if we need to process this activity
+                    // Process if: New OR (Existing but missing Zone data AND has HR)
+                    const isNew = !existing;
+                    const needsUpdate = existing && existing.hasHeartrate && existing.hrZone1Time === null;
+
+                    if (!isNew && !needsUpdate) {
                         skipped++;
                         continue;
                     }
 
-                    // Calculate TRIMP if HR data available
+                    // --- Fetch Streams & Calculate Zones (Expensive operation) ---
+                    let zoneTimes = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+
+                    if (activity.has_heartrate && user?.hrMax) {
+                        const streams = await fetchActivityStreams(accessToken, activity.id);
+                        if (streams) {
+                            zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, user.hrMax);
+                        }
+                    }
+
+                    // Calculate TRIMP
                     let trimp: number | null = null;
                     if (activity.has_heartrate && activity.average_heartrate && user?.hrMax && user?.hrRest) {
                         const result = calculateTrimp({
@@ -233,12 +321,11 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         trimp = result.trimp;
                     }
 
-                    // Calculate running TSS for run activities
+                    // Calculate running TSS
                     let runningTss: number | null = null;
                     const contribution = getActivityContribution(activity.type);
                     if (contribution.contributesToRunningTss && activity.distance > 0) {
-                        // Default threshold pace ~5:00/km (300 sec/km) if not set
-                        const thresholdPace = 300;
+                        const thresholdPace = 300; // Default 5:00/km
                         runningTss = calculateRunningTss(
                             activity.moving_time,
                             activity.distance,
@@ -246,35 +333,54 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         );
                     }
 
-                    // Store activity
-                    await prisma.activity.create({
-                        data: {
-                            userId,
-                            stravaId: BigInt(activity.id),
-                            type: mapActivityType(activity.type) as any,
-                            sportType: activity.sport_type,
-                            name: activity.name,
-                            description: activity.description,
-                            startDate: new Date(activity.start_date),
-                            timezone: activity.timezone,
-                            distance: activity.distance,
-                            movingTime: activity.moving_time,
-                            elapsedTime: activity.elapsed_time,
-                            averageSpeed: activity.average_speed,
-                            maxSpeed: activity.max_speed,
-                            averageHr: activity.average_heartrate ?? null,
-                            maxHr: activity.max_heartrate ?? null,
-                            hasHeartrate: activity.has_heartrate,
-                            totalElevation: activity.total_elevation_gain,
-                            elevHigh: activity.elev_high ?? null,
-                            elevLow: activity.elev_low ?? null,
-                            trimp,
-                            runningTss,
-                            rawJson: activity as any,
-                        },
-                    });
+                    const activityData = {
+                        name: activity.name,
+                        description: activity.description,
+                        type: mapActivityType(activity.type) as any,
+                        sportType: activity.sport_type,
+                        startDate: new Date(activity.start_date),
+                        timezone: activity.timezone,
+                        distance: activity.distance,
+                        movingTime: activity.moving_time,
+                        elapsedTime: activity.elapsed_time,
+                        averageSpeed: activity.average_speed,
+                        maxSpeed: activity.max_speed,
+                        averageHr: activity.average_heartrate ?? null,
+                        maxHr: activity.max_heartrate ?? null,
+                        hasHeartrate: activity.has_heartrate,
+                        totalElevation: activity.total_elevation_gain,
+                        elevHigh: activity.elev_high ?? null,
+                        elevLow: activity.elev_low ?? null,
+                        trimp,
+                        runningTss,
+                        hrZone1Time: zoneTimes.z1,
+                        hrZone2Time: zoneTimes.z2,
+                        hrZone3Time: zoneTimes.z3,
+                        hrZone4Time: zoneTimes.z4,
+                        hrZone5Time: zoneTimes.z5,
+                        rawJson: activity as any,
+                    };
 
-                    synced++;
+                    if (isNew) {
+                        await prisma.activity.create({
+                            data: {
+                                userId,
+                                stravaId: BigInt(activity.id),
+                                ...activityData
+                            },
+                        });
+                        synced++;
+                    } else if (needsUpdate) {
+                        await prisma.activity.update({
+                            where: { id: existing.id },
+                            data: {
+                                ...activityData,
+                                updatedAt: new Date() // force update
+                            }
+                        });
+                        synced++; // Count updates as synced
+                    }
+
                 } catch (err) {
                     console.error(`Error syncing activity ${activity.id}:`, err);
                     errors++;

@@ -32,6 +32,7 @@ export async function GET(request: Request) {
         switch (range) {
             case 'ALL': cutoff = new Date(0); break;
             case '6_MONTHS': cutoff.setMonth(now.getMonth() - 6); break;
+            case '12_WEEKS': cutoff.setDate(now.getDate() - 84); break;
             case '4_WEEKS': cutoff.setDate(now.getDate() - 28); break;
             case '1_YEAR': default: cutoff.setFullYear(now.getFullYear() - 1); break;
         }

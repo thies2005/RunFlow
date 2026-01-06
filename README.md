@@ -24,7 +24,7 @@ This is the recommended way to install RunFlow on a Linux server or VPS. The app
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/t23wes3/RunFlow.git
+git clone https://github.com/thies2005/RunFlow.git
 cd RunFlow
 
 # 2. Configure Environment

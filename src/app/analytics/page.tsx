@@ -20,7 +20,12 @@ import {
     calculateEffectiveVO2max,
     type ActivityForShape
 } from '@/lib/metrics/runalyze';
-import { formatTime } from '@/lib/metrics/vdot';
+import {
+    formatTime,
+    calculateTrainingPaces,
+    formatPace,
+    type TrainingPaces
+} from '@/lib/metrics/vdot';
 
 export default function AnalyticsPage() {
     const { status } = useSession();
@@ -85,7 +90,7 @@ export default function AnalyticsPage() {
     });
 
     // Calculated data
-    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions, combinedData } = useMemo(() => {
+    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions, combinedData, trainingPaces } = useMemo(() => {
         const activities = activitiesData?.activities || [];
         const runs: ActivityForShape[] = activities
             .filter((a: any) => a.type === 'RUN')
@@ -109,6 +114,7 @@ export default function AnalyticsPage() {
         const shapeResult = calculateMarathonShape(runs, effectiveVO2max);
         const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapeResult.shape, calibrationFactor);
+        const trainingPaces = calculateTrainingPaces(effectiveVO2max);
 
         // === VO2max Trend (with Rolling Average) ===
         const vo2Trend: { date: string; vo2: number; vo2Rolling?: number }[] = [];
@@ -297,6 +303,7 @@ export default function AnalyticsPage() {
             shapeTrendData: shapeTrend,
             fitnessData: fitness,
             racePredictions: allPredictions,
+            trainingPaces,
             combinedData: combinedDataWithRolling
         };
     }, [activitiesData, userData, goalsData, statsData]);
@@ -411,6 +418,59 @@ export default function AnalyticsPage() {
                     currentShape={runalyzeMetrics.shape}
                     calibrationFactor={runalyzeMetrics.calibrationFactor}
                 />
+
+                {/* Training Paces Section */}
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Training Paces</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {/* Easy */}
+                        <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                            <p className="text-green-400 text-xs font-semibold mb-1 uppercase tracking-wider">Easy (E)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0
+                                    ? `${formatPace(trainingPaces?.easy.min || 0)} - ${formatPace(trainingPaces?.easy.max || 0)}`
+                                    : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-1">Recovery & Long Runs</p>
+                        </div>
+
+                        {/* Marathon */}
+                        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
+                            <p className="text-blue-400 text-xs font-semibold mb-1 uppercase tracking-wider">Marathon (M)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.marathon || 0) : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-1">Steady State</p>
+                        </div>
+
+                        {/* Threshold */}
+                        <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
+                            <p className="text-yellow-400 text-xs font-semibold mb-1 uppercase tracking-wider">Threshold (T)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.threshold || 0) : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-1">Tempo Runs</p>
+                        </div>
+
+                        {/* Interval */}
+                        <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
+                            <p className="text-orange-400 text-xs font-semibold mb-1 uppercase tracking-wider">Interval (I)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.interval || 0) : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-1">VO2max Work</p>
+                        </div>
+
+                        {/* Repetition */}
+                        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
+                            <p className="text-red-400 text-xs font-semibold mb-1 uppercase tracking-wider">Repetition (R)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.repetition || 0) : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-1">Speed & Mechanics</p>
+                        </div>
+                    </div>
+                </div>
 
                 {/* === TREND CHARTS === */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

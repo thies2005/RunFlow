@@ -211,15 +211,38 @@ export default function Dashboard() {
                     <div className="lg:col-span-1 flex flex-col justify-center">
                         <div className="glass-card p-6">
                             <h2 className="text-lg font-semibold text-gray-300 mb-4">Training Status</h2>
-                            <div className="grid grid-cols-1 gap-4">
-                                <div className="text-center">
-                                    <p className="text-4xl font-bold text-white mb-1">
-                                        {currentVdot ? currentVdot.toFixed(1) : '-'}
+
+                            {/* Effective VO2max (Runalyze Style) */}
+                            <div className="mb-6">
+                                <div className="flex justify-between items-baseline mb-2">
+                                    <p className="text-sm font-medium text-gray-400">Effective VO2max</p>
+                                    <p className="text-2xl font-bold text-teal-400">
+                                        {effectiveVO2max > 0 ? effectiveVO2max.toFixed(2) : '-'}
                                     </p>
-                                    <p className="text-sm text-gray-400">Current VDOT</p>
+                                </div>
+                                <div className="h-2 w-full bg-gray-700/50 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-teal-500 rounded-full transition-all duration-1000"
+                                        style={{ width: `${Math.min(100, Math.max(0, ((effectiveVO2max - 30) / 40) * 100))}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between mt-1 text-[10px] text-gray-500">
+                                    <span>Unfit</span>
+                                    <span>Elite</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 pt-4 border-t border-white/5">
+                                <div className="flex justify-between items-center">
+                                    <div className="text-left">
+                                        <p className="text-xs text-gray-400 mb-0.5">Current VDOT</p>
+                                        <p className="text-xl font-bold text-white">
+                                            {currentVdot ? currentVdot.toFixed(1) : '-'}
+                                        </p>
+                                    </div>
                                     {!currentVdot && (
-                                        <button onClick={() => router.push('/onboarding?step=3')} className="text-xs text-accent-orange mt-2 hover:underline">
-                                            Set Race Goal to Estimate
+                                        <button onClick={() => router.push('/onboarding?step=3')} className="text-xs text-accent-orange hover:underline">
+                                            Set Goal
                                         </button>
                                     )}
                                 </div>

@@ -206,6 +206,7 @@ model Goal {
   isActive    Boolean   @default(true)
   completedAt DateTime?
   actualTime  Int?      // Actual finish time in seconds
+  marathonShapeFactor Float? @default(1.0) // Calibration factor for race prediction
   
   // Relations
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)

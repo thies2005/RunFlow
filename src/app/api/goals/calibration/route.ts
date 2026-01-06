@@ -19,8 +19,8 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { shapeFactor } = body;
 
-        if (typeof shapeFactor !== 'number' || shapeFactor < 0.5 || shapeFactor > 2.0) {
-            return NextResponse.json({ error: 'Invalid shape factor (must be 0.5 - 2.0)' }, { status: 400 });
+        if (typeof shapeFactor !== 'number' || shapeFactor < -2.0 || shapeFactor > 2.0) {
+            return NextResponse.json({ error: 'Invalid shape factor (must be -2.0 - 2.0)' }, { status: 400 });
         }
 
         const goal = await prisma.goal.findFirst({

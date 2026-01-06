@@ -45,6 +45,9 @@ const DISTANCES: Record<RaceDistance, number> = {
  * Uses the Daniels-Gilbert formula
  */
 export function calculateVdot(input: RaceInput): number {
+    // Avoid division by zero or invalid time
+    if (input.timeSeconds <= 0) return 0;
+
     const distanceMeters = DISTANCES[input.distance];
     const timeMinutes = input.timeSeconds / 60;
 
@@ -64,7 +67,8 @@ export function calculateVdot(input: RaceInput): number {
     // VDOT = VO2 / %VO2max
     const vdot = vo2 / percentVO2max;
 
-    return Math.round(vdot * 10) / 10;
+    // Clamp to 0.0 to avoid negative values for very slow efforts
+    return Math.max(0, Math.round(vdot * 10) / 10);
 }
 
 /**

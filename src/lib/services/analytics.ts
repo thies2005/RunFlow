@@ -1,6 +1,6 @@
-import { Activity } from '@/lib/types';
+import { Activity, MarathonShape } from '@/lib/types';
 import { METRICS } from '@/lib/constants';
-import { calculateWeightedEffectiveVO2max, calculateMarathonShape, MarathonShape } from '@/lib/metrics/runalyze';
+import { calculateWeightedEffectiveVO2max, calculateMarathonShape } from '@/lib/metrics/runalyze';
 
 /**
  * Service to handle analytics calculations

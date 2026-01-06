@@ -1,12 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Flag, Activity, Clock, Zap, Bike, Mountain, Play, Plus, Dumbbell, Settings } from 'lucide-react';
+import { ArrowLeft, Calendar, Flag, Activity, Clock, Zap, Bike, Mountain, Play, Plus, Dumbbell, Settings, GripVertical } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isToday, isPast, differenceInWeeks, addDays } from 'date-fns';
 import { useSession } from 'next-auth/react';
-import { EditWorkoutModal } from '@/components'; // Assuming export from index
+import { EditWorkoutModal } from '@/components';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const workoutStyles: Record<string, { color: string, icon: any, label: string }> = {
     EASY: { color: 'text-green-400', icon: Activity, label: 'Easy Run' },
@@ -34,11 +50,35 @@ function getPhase(weeksUntilRace: number) {
 export default function PlanPage() {
     const router = useRouter();
     const { status } = useSession();
+    const queryClient = useQueryClient();
 
     // Edit State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingWorkout, setEditingWorkout] = useState<any>(null);
     const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
+
+    // DnD Sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    // Reorder mutation
+    const reorderMutation = useMutation({
+        mutationFn: async ({ workoutId, newDate }: { workoutId: string; newDate: string }) => {
+            const res = await fetch('/api/workouts/reorder', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ workoutId, newDate }),
+            });
+            if (!res.ok) throw new Error('Failed to reorder');
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['plan'] });
+            queryClient.invalidateQueries({ queryKey: ['goals'] });
+        },
+    });
 
     const { data, isLoading, refetch } = useQuery({
         queryKey: ['plan'],
@@ -151,7 +191,7 @@ export default function PlanPage() {
 
                                 {/* Workouts */}
                                 <div className="divide-y divide-white/5">
-                                    {weekWorkouts.map((workout: any) => {
+                                    {weekWorkouts.map((workout: any, wIndex: number) => {
                                         const wDate = new Date(workout.scheduledDate);
                                         const isTodayItem = isToday(wDate);
                                         const isDone = workout.isCompleted;
@@ -159,24 +199,50 @@ export default function PlanPage() {
                                         const style = workoutStyles[workout.workoutType] || workoutStyles.EASY;
                                         const Icon = style.icon;
 
+                                        // Generate week days for date picker
+                                        const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
                                         return (
                                             <div
                                                 key={workout.id}
-                                                onClick={() => handleEdit(workout)}
-                                                className={`group p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer ${isTodayItem ? 'bg-accent-orange/10' : ''}`}
+                                                className={`group p-4 flex items-center gap-4 hover:bg-white/5 transition-colors ${isTodayItem ? 'bg-accent-orange/10' : ''}`}
                                             >
-                                                <div className="flex flex-col items-center w-12 text-center">
-                                                    <span className="text-xs text-gray-500 uppercase">{format(wDate, 'EEE')}</span>
-                                                    <span className={`text-lg font-bold ${isTodayItem ? 'text-accent-orange' : 'text-gray-300'}`}>
-                                                        {format(wDate, 'd')}
-                                                    </span>
+                                                {/* Drag handle with date selector */}
+                                                <div className="relative">
+                                                    <select
+                                                        value={format(wDate, 'yyyy-MM-dd')}
+                                                        onChange={(e) => {
+                                                            reorderMutation.mutate({
+                                                                workoutId: workout.id,
+                                                                newDate: e.target.value,
+                                                            });
+                                                        }}
+                                                        className="absolute inset-0 opacity-0 cursor-grab w-full h-full"
+                                                        disabled={reorderMutation.isPending}
+                                                    >
+                                                        {weekDays.map(day => (
+                                                            <option key={day.toISOString()} value={format(day, 'yyyy-MM-dd')}>
+                                                                {format(day, 'EEE d')}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="flex flex-col items-center w-12 text-center cursor-grab">
+                                                        <GripVertical className="w-4 h-4 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity mb-1" />
+                                                        <span className="text-xs text-gray-500 uppercase">{format(wDate, 'EEE')}</span>
+                                                        <span className={`text-lg font-bold ${isTodayItem ? 'text-accent-orange' : 'text-gray-300'}`}>
+                                                            {format(wDate, 'd')}
+                                                        </span>
+                                                    </div>
                                                 </div>
 
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-white/5 ${style.color}`}>
+                                                <div
+                                                    className={`w-10 h-10 rounded-full flex items-center justify-center bg-white/5 ${style.color} cursor-pointer`}
+                                                    onClick={() => handleEdit(workout)}
+                                                >
                                                     <Icon className="w-5 h-5" />
                                                 </div>
 
-                                                <div className="flex-1">
+                                                <div className="flex-1 cursor-pointer" onClick={() => handleEdit(workout)}>
                                                     <div className="flex items-center justify-between">
                                                         <h4 className={`font-medium ${isDone ? 'text-gray-500 line-through' : 'text-white'}`}>
                                                             {style.label}
@@ -187,7 +253,6 @@ export default function PlanPage() {
                                                                     {(workout.targetDistance / 1000).toFixed(1)} km
                                                                 </span>
                                                             )}
-                                                            {/* Duration for non-distance */}
                                                             {workout.targetDistance === 0 && workout.targetDuration > 0 && (
                                                                 <span className="text-sm text-gray-400">
                                                                     {Math.round(workout.targetDuration / 60)} min

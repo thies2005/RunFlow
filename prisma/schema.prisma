@@ -34,6 +34,7 @@ model User {
   hrMax         Int?      // Maximum heart rate
   hrRest        Int?      // Resting heart rate
   weight        Float?    // kg
+  height        Float?    // cm
   
   // HR Zone thresholds (% of hrMax)
   hrZone1Max    Int       @default(60)  // Z1 ends at 60%

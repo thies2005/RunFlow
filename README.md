@@ -31,6 +31,15 @@ The heart of our workflow is `scripts/deploy.ps1`. This PowerShell script automa
 3.  Configures `docker-compose.yml` for **local build** and pushes to `main`.
 4.  Configures `docker-compose.yml` for **image pull** and pushes to `dockerhub`.
 
+### 🐳 Docker Hub Images
+
+Our automated builds are available on Docker Hub as `t23wes3/runflow`. 
+
+- **Link**: [t23wes3/runflow](https://hub.docker.com/r/t23wes3/runflow)
+- **Architectures**: Multi-arch support for `linux/amd64` and `linux/arm64` (Raspberry Pi, ARM servers).
+
+The `dockerhub` branch is pre-configured to pull these images, making deployment on production servers a simple `docker compose pull && docker compose up -d` process.
+
 #### Usage
 
 To deploy a new version from your development machine:
@@ -114,6 +123,30 @@ When you've deployed a new version via the script, simply run this on your serve
 git pull origin dockerhub
 docker compose pull
 docker compose up -d
+```
+
+---
+
+## 🧪 Testing & Quality
+
+To ensure stability, RunFlow includes a comprehensive test suite and strict build checks.
+
+### Basic Testing
+Run unit and snapshot tests using Jest:
+```bash
+npm run test
+```
+
+### Integration Testing
+Run database-connected integration tests:
+```bash
+npm run test:integration
+```
+
+### Production Build Check
+To verify the application compiles correctly and matches production requirements before deploying:
+```bash
+npm run build
 ```
 
 ---

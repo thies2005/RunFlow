@@ -11,6 +11,11 @@ export type PlanConfig = {
     strengthPerWeek?: number; // Default 0
     swimsPerWeek?: number; // Default 0
     weeklyMileageGoal?: number | null; // Max km per week (in meters!)
+    // Phase length overrides (weeks)
+    taperWeeks?: number; // Default 2
+    peakWeeks?: number; // Default 4
+    buildWeeks?: number; // Default 4
+    // Remaining weeks are BASE
 };
 
 export type GeneratedWorkout = {
@@ -62,7 +67,11 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
 
     for (let week = 1; week <= totalWeeks; week++) {
         const weeksUntilRace = totalWeeks - week + 1; // 1-based countdown
-        const phase = getPhase(weeksUntilRace);
+        const phase = getPhase(weeksUntilRace, {
+            taperWeeks: config.taperWeeks,
+            peakWeeks: config.peakWeeks,
+            buildWeeks: config.buildWeeks,
+        });
 
         // Calculate Volume Cap for this week
         // 15% increase from previous week
@@ -128,10 +137,17 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     return workouts;
 }
 
-function getPhase(weeksUntilRace: number): 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' {
-    if (weeksUntilRace <= 2) return 'TAPER';
-    if (weeksUntilRace <= 6) return 'PEAK';
-    if (weeksUntilRace <= 10) return 'BUILD';
+function getPhase(
+    weeksUntilRace: number,
+    options?: { taperWeeks?: number; peakWeeks?: number; buildWeeks?: number }
+): 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' {
+    const taperWeeks = options?.taperWeeks ?? 2;
+    const peakWeeks = options?.peakWeeks ?? 4;
+    const buildWeeks = options?.buildWeeks ?? 4;
+
+    if (weeksUntilRace <= taperWeeks) return 'TAPER';
+    if (weeksUntilRace <= taperWeeks + peakWeeks) return 'PEAK';
+    if (weeksUntilRace <= taperWeeks + peakWeeks + buildWeeks) return 'BUILD';
     return 'BASE';
 }
 

@@ -479,8 +479,25 @@ export async function getSyncStatus(userId: string): Promise<{
         },
     });
 
+    let syncInProgress = user?.syncInProgress ?? false;
+
+    // Auto-reset stuck sync flag after 10 minutes
+    const SYNC_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+    if (syncInProgress && user?.lastSyncAt) {
+        const timeSinceLastSync = Date.now() - user.lastSyncAt.getTime();
+        if (timeSinceLastSync > SYNC_TIMEOUT_MS) {
+            // Sync has been "in progress" for too long - reset the flag
+            await prisma.user.update({
+                where: { id: userId },
+                data: { syncInProgress: false },
+            });
+            syncInProgress = false;
+            logger.warn(`Auto-reset stuck syncInProgress flag for user ${userId} after ${Math.round(timeSinceLastSync / 1000 / 60)} minutes`);
+        }
+    }
+
     return {
-        syncInProgress: user?.syncInProgress ?? false,
+        syncInProgress,
         lastSyncAt: user?.lastSyncAt ?? null,
         totalActivities: user?._count?.activities ?? 0,
     };

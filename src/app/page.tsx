@@ -8,12 +8,14 @@ import { RefreshCw, Settings, LogOut, AlertCircle, Edit2, Check } from 'lucide-r
 import { signOut } from 'next-auth/react';
 import { TodayWorkout, RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
+import ProfileModal from '@/components/ProfileModal';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const queryClient = useQueryClient();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [editingWorkout, setEditingWorkout] = useState<any>(null);
 
     // 1. Fetch Stats (Server-calculated)
@@ -178,7 +180,7 @@ export default function Dashboard() {
                             </button>
                             <div className="flex items-center gap-3">
                                 {session?.user?.image && (
-                                    <button onClick={() => setIsSettingsOpen(true)} className="relative group">
+                                    <button onClick={() => setIsProfileOpen(true)} className="relative group">
                                         <img
                                             src={session.user.image}
                                             alt={session.user.name || 'User'}
@@ -421,6 +423,11 @@ export default function Dashboard() {
                 workout={editingWorkout}
                 goalId={activeGoal?.id}
             />
-        </div >
+
+            <ProfileModal
+                isOpen={isProfileOpen}
+                onClose={() => setIsProfileOpen(false)}
+            />
+        </div>
     );
 }

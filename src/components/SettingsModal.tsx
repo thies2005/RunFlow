@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Save, AlertCircle, Bike, Activity } from 'lucide-react';
+import { X, Save, AlertCircle, Bike, Activity, Move } from 'lucide-react';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -18,7 +18,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
     // Plan Customization
     const [runsPerWeek, setRunsPerWeek] = useState(4);
-    const [ridesPerWeek, setRidesPerWeek] = useState(0);
+    const [ridesPerWeek, setRidesPerWeek] = useState(1);
+    const [weeklyMileage, setWeeklyMileage] = useState(40);
 
     const [message, setMessage] = useState('');
 
@@ -27,7 +28,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             const timeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
             const raceDistance = distance;
 
-            // Allow 0 runs? No, min 3.
             if (timeSeconds === 0) throw new Error('Time cannot be zero');
 
             const res = await fetch('/api/settings/update-vdot', {
@@ -36,7 +36,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     timeSeconds,
                     raceDistance,
                     runsPerWeek,
-                    ridesPerWeek
+                    ridesPerWeek,
+                    weeklyMileageGoal: weeklyMileage * 1000 // Convert km to meters
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -144,16 +145,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             </div>
                             <input
                                 type="range"
-                                min="3"
-                                max="7"
+                                min="2"
+                                max="5"
                                 value={runsPerWeek}
                                 onChange={(e) => setRunsPerWeek(parseInt(e.target.value))}
                                 className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
                             />
                             <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>2</span>
                                 <span>3</span>
                                 <span>5</span>
-                                <span>7</span>
                             </div>
                         </div>
 
@@ -165,16 +166,38 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             </div>
                             <input
                                 type="range"
-                                min="0"
+                                min="1"
                                 max="3"
                                 value={ridesPerWeek}
                                 onChange={(e) => setRidesPerWeek(parseInt(e.target.value))}
                                 className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
                             />
                             <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>None</span>
                                 <span>1</span>
+                                <span>2</span>
                                 <span>3</span>
+                            </div>
+                        </div>
+
+                        {/* Max Mileage Slider */}
+                        <div className="mb-6">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-gray-400 uppercase flex items-center gap-1"><Move className="w-3 h-3" /> Peak Mileage goal (km)</label>
+                                <span className="text-green-400 font-bold">{weeklyMileage} km</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="20"
+                                max="80"
+                                step="5"
+                                value={weeklyMileage}
+                                onChange={(e) => setWeeklyMileage(parseInt(e.target.value))}
+                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-green-500"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>20</span>
+                                <span>50</span>
+                                <span>80</span>
                             </div>
                         </div>
                     </div>
@@ -192,11 +215,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         className="btn-primary w-full flex items-center justify-center gap-2 py-3"
                     >
                         {updateMutation.isPending ? <Save className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
-                        {updateMutation.isPending ? 'Generating...' : 'Save & Recalibrate'}
+                        {updateMutation.isPending ? 'Generating Plan...' : 'Save & Generate Plan'}
                     </button>
 
                     <p className="text-xs text-gray-500 text-center mt-2">
-                        This re-generates your future plan based on the new settings.
+                        Adjusting settings will completely regenerate your future workout schedule.
                     </p>
                 </div>
             </div>

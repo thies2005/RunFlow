@@ -13,7 +13,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek } = await req.json();
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, weeklyMileageGoal } = await req.json();
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -29,7 +29,8 @@ export async function POST(req: Request) {
 
         if (activeGoal) {
             const runs = runsPerWeek || 4;
-            const rides = ridesPerWeek || 0;
+            const rides = ridesPerWeek || 1;
+            const mileageGoal = weeklyMileageGoal || null; // meters
 
             // Update Goal Settings
             await prisma.goal.update({
@@ -37,7 +38,8 @@ export async function POST(req: Request) {
                 data: {
                     currentVdot: newVdot,
                     runsPerWeek: runs,
-                    ridesPerWeek: rides
+                    ridesPerWeek: rides,
+                    weeklyMileageGoal: mileageGoal,
                 }
             });
 
@@ -50,11 +52,6 @@ export async function POST(req: Request) {
 
             // Generate new plan (offset to start TODAY)
             const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 1); // Start yesterday so today is day 1? Or purely relative.
-
-            // Wait, previous logic was startDate. setDate( - 1). 
-            // Current 'generatePlan' uses date logic.
-            // If I generate starting TODAY, the scheduled dates will start from TODAY.
 
             const workouts = generateTrainingPlan({
                 vdot: newVdot,
@@ -62,7 +59,8 @@ export async function POST(req: Request) {
                 raceDate: activeGoal.raceDate,
                 startDate: startDate,
                 runsPerWeek: runs,
-                ridesPerWeek: rides
+                ridesPerWeek: rides,
+                weeklyMileageGoal: mileageGoal
             });
 
             // Save workouts

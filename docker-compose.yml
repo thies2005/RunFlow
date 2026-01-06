@@ -1,8 +1,10 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: t23wes3/runflow:latest
+    pull_policy: always
     container_name: runflow-app
     restart: unless-stopped
     ports:

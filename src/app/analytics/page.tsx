@@ -428,9 +428,9 @@ export default function AnalyticsPage() {
                     calibrationFactor={runalyzeMetrics.calibrationFactor}
                 />
 
-                {/* Training Paces Section */}
+                {/* Training Paces & Heart Rate Section */}
                 <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Training Paces</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">Training Paces & Heart Rate</h3>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         {/* Easy */}
                         <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
@@ -440,7 +440,10 @@ export default function AnalyticsPage() {
                                     ? `${formatPace(trainingPaces?.easy.min || 0)} - ${formatPace(trainingPaces?.easy.max || 0)}`
                                     : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-1">Recovery & Long Runs</p>
+                            <p className="text-green-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.65)}-${Math.round(userData.user.hrMax * 0.79)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">65-79% HRmax</p>
                         </div>
 
                         {/* Marathon */}
@@ -449,7 +452,10 @@ export default function AnalyticsPage() {
                             <p className="text-white font-bold text-lg">
                                 {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.marathon || 0) : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-1">Steady State</p>
+                            <p className="text-blue-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.78)}-${Math.round(userData.user.hrMax * 0.82)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">78-82% HRmax</p>
                         </div>
 
                         {/* Threshold */}
@@ -458,7 +464,10 @@ export default function AnalyticsPage() {
                             <p className="text-white font-bold text-lg">
                                 {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.threshold || 0) : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-1">Tempo Runs</p>
+                            <p className="text-yellow-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.88)}-${Math.round(userData.user.hrMax * 0.92)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">88-92% HRmax</p>
                         </div>
 
                         {/* Interval */}
@@ -467,7 +476,10 @@ export default function AnalyticsPage() {
                             <p className="text-white font-bold text-lg">
                                 {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.interval || 0) : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-1">VO2max Work</p>
+                            <p className="text-orange-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.98)}-${Math.round(userData.user.hrMax * 1.0)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">98-100% HRmax</p>
                         </div>
 
                         {/* Repetition */}
@@ -476,7 +488,10 @@ export default function AnalyticsPage() {
                             <p className="text-white font-bold text-lg">
                                 {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.repetition || 0) : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-1">Speed & Mechanics</p>
+                            <p className="text-red-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `>${Math.round(userData.user.hrMax * 1.0)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">100%+ HRmax</p>
                         </div>
                     </div>
                 </div>

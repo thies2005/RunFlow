@@ -102,6 +102,7 @@ export default function Dashboard() {
     const recentActivities = activitiesData?.activities || [];
     const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
     const todayWorkout = activeGoal?.workouts?.[0] || null;
+    const upcomingWorkouts = activeGoal?.workouts?.slice(0, 3) || [];
 
     // Stats from Server
     const currentWeekMileage = statsData?.currentWeekMileage || 0;
@@ -205,11 +206,51 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-1">
-                        <TodayWorkout
-                            workout={todayWorkout}
-                            onComplete={(id) => completeWorkoutMutation.mutate(id)}
-                            isLoading={completeWorkoutMutation.isPending}
-                        />
+                        <div className="glass-card p-6">
+                            <h2 className="text-lg font-semibold text-gray-300 mb-4">This Week's Workouts</h2>
+                            {upcomingWorkouts.length > 0 ? (
+                                <div className="space-y-3">
+                                    {upcomingWorkouts.map((workout: any, index: number) => (
+                                        <div key={workout.id || index} className={`p-3 rounded-lg border ${index === 0 ? 'bg-accent-orange/10 border-accent-orange/30' : 'bg-white/5 border-white/10'}`}>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${index === 0 ? 'bg-accent-orange/20' : 'bg-white/10'}`}>
+                                                        <span className="text-sm">{workout.type === 'EASY' ? '🏃' : workout.type === 'LONG_RUN' ? '🚀' : workout.type === 'TEMPO' ? '⚡' : workout.type === 'INTERVAL' ? '🔥' : '💪'}</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className={`font-medium ${index === 0 ? 'text-accent-orange' : 'text-white'}`}>
+                                                            {workout.name || workout.type?.replace('_', ' ')}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {workout.description || (workout.targetDistance ? `${(workout.targetDistance / 1000).toFixed(1)} km` : workout.targetDuration ? `${Math.round(workout.targetDuration / 60)} min` : '')}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {index === 0 && !workout.isCompleted && (
+                                                    <button
+                                                        onClick={() => completeWorkoutMutation.mutate(workout.id)}
+                                                        disabled={completeWorkoutMutation.isPending}
+                                                        className="btn-primary py-1 px-3 text-xs"
+                                                    >
+                                                        {completeWorkoutMutation.isPending ? '...' : 'Done'}
+                                                    </button>
+                                                )}
+                                                {workout.isCompleted && (
+                                                    <span className="text-green-400 text-xs">✓ Completed</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6">
+                                    <p className="text-gray-500 text-sm">No workouts scheduled</p>
+                                    <button onClick={() => router.push('/onboarding?step=3')} className="text-xs text-accent-orange mt-2 hover:underline">
+                                        Set up a training plan
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="lg:col-span-1">
                         <RaceCountdown goal={activeGoal} weeklyMileage={currentWeekMileage} />

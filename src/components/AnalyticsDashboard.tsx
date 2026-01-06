@@ -80,8 +80,15 @@ export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardPr
                             <AreaChart data={zoneTrend}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                                 <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} unit="min" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} formatter={(value: number) => value + ' min'} />
+                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => v >= 60 ? `${Math.round(v / 60)}h` : `${v}m`} />
+                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} formatter={(value: number) => {
+                                    if (value >= 60) {
+                                        const hours = Math.floor(value / 60);
+                                        const mins = Math.round(value % 60);
+                                        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                                    }
+                                    return `${Math.round(value)}m`;
+                                }} />
                                 <Area type="monotone" dataKey="Z1" stackId="1" stroke="#10b981" fill="#10b981" name="Z1 Recovery" />
                                 <Area type="monotone" dataKey="Z2" stackId="1" stroke="#3b82f6" fill="#3b82f6" name="Z2 Aerobic" />
                                 <Area type="monotone" dataKey="Z3" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="Z3 Tempo" />

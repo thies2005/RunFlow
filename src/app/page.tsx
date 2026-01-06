@@ -77,8 +77,10 @@ export default function Dashboard() {
             queryClient.invalidateQueries({ queryKey: ['sync-status'] });
         },
     });
-    // Derive all activities for use in hooks (must be before early returns)
+
+    // Derive all activities & goals for use in hooks (must be before early returns)
     const allActivities = activitiesData?.activities || [];
+    const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
 
     // Calculate current week's mileage (Monday to now) - MUST be before any returns
     const currentWeekMileage = useMemo(() => {
@@ -96,6 +98,18 @@ export default function Dashboard() {
 
         return weeklyDistance / 1000; // Convert to km
     }, [allActivities]);
+
+    // Calculate metrics for Settings Slider - MUST be stable
+    const effectiveVO2max = useMemo(() => {
+        if (!allActivities.length) return 0;
+        // Mock max HR if not available (should really come from settings/user)
+        const maxHR = activeGoal?.maxHeartRate || 185;
+        return calculateWeightedEffectiveVO2max(allActivities, maxHR);
+    }, [allActivities, activeGoal?.maxHeartRate]);
+
+    const marathonShape = useMemo(() => {
+        return calculateMarathonShape(allActivities, effectiveVO2max);
+    }, [allActivities, effectiveVO2max]);
 
     // Show loading state
     if (status === 'loading') {
@@ -126,7 +140,6 @@ export default function Dashboard() {
         return null;
     }
 
-    const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
     const todayWorkout = activeGoal?.workouts?.[0] || null;
 
     // Derived Activity Lists
@@ -142,18 +155,6 @@ export default function Dashboard() {
             tsb: -10 + Math.random() * 25,
         }))
         : [];
-
-    // Calculate metrics for Settings Slider - MUST be stable
-    const effectiveVO2max = useMemo(() => {
-        if (!allActivities.length) return 0;
-        // Mock max HR if not available (should really come from settings/user)
-        const maxHR = activeGoal?.maxHeartRate || 185;
-        return calculateWeightedEffectiveVO2max(allActivities, maxHR);
-    }, [allActivities, activeGoal?.maxHeartRate]);
-
-    const marathonShape = useMemo(() => {
-        return calculateMarathonShape(allActivities, effectiveVO2max);
-    }, [allActivities, effectiveVO2max]);
 
     // Check for any errors
     const hasError = activitiesError || goalsError || syncError || syncMutation.error;

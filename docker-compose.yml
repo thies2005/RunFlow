@@ -1,10 +1,10 @@
-services:
+﻿services:
   app:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    image: t23wes3/runflow:latest
-    pull_policy: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # image: t23wes3/runflow:latest
+    # pull_policy: always
     container_name: runflow-app
     restart: unless-stopped
     ports:
@@ -39,7 +39,7 @@ services:
       - runflow-network
 
   db:
-    image: postgres:16-alpine
+    # image: postgres:16-alpine
     container_name: runflow-db
     restart: unless-stopped
     environment:
@@ -57,7 +57,7 @@ services:
       - runflow-network
 
   tunnel:
-    image: cloudflare/cloudflared:latest
+    # image: cloudflare/cloudflared:latest
     container_name: runflow-tunnel
     restart: unless-stopped
     command: tunnel --no-autoupdate run
@@ -74,3 +74,4 @@ networks:
 
 volumes:
   postgres_data:
+

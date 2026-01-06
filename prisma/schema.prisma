@@ -130,6 +130,7 @@ model Activity {
   // Pace/Speed
   averageSpeed    Float?    // m/s
   maxSpeed        Float?    // m/s
+  gradeAdjustedSpeed Float? // m/s (GAP)
   
   // Heart Rate
   averageHr       Float?
@@ -155,6 +156,10 @@ model Activity {
   
   // Raw Strava response
   rawJson         Json?
+  streams         Json?     // Stored streams (time, hr, distance, altitude, velocity_smooth)
+
+  // Training Classification
+  trainingType    WorkoutType? // Auto-tagged or manual override
   
   // Relations
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -220,8 +220,8 @@ export default function AnalyticsPage() {
         const weeklyTimeMap = new Map<string, number>();
         const weeklyVO2Map = new Map<string, { values: number[]; vo2max?: number }>();
 
-        runs.forEach(run => {
-            const date = new Date(run.startDate);
+        activities.forEach(activity => {
+            const date = new Date(activity.startDate);
             const weekStart = new Date(date);
             const day = weekStart.getDay();
             weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1)); // Monday
@@ -231,16 +231,22 @@ export default function AnalyticsPage() {
             weekEnd.setDate(weekEnd.getDate() + 6); // Sunday
             const weekKey = weekEnd.toISOString().split('T')[0]; // ISO Date
 
-            weeklyVolumeMap.set(weekKey, (weeklyVolumeMap.get(weekKey) || 0) + run.distance / 1000);
-            weeklyTimeMap.set(weekKey, (weeklyTimeMap.get(weekKey) || 0) + run.movingTime / 60);
+            // Always add to Training Time (minutes) - All Activity Types
+            const minutes = activity.movingTime / 60;
+            weeklyTimeMap.set(weekKey, (weeklyTimeMap.get(weekKey) || 0) + minutes);
 
-            // Calculate VO2max for this run if it has HR
-            if (run.hasHeartrate && run.averageHr && run.distance >= 3000) {
-                const vo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr, maxHR);
-                if (vo2 > 0) {
-                    const existing = weeklyVO2Map.get(weekKey) || { values: [] };
-                    existing.values.push(vo2);
-                    weeklyVO2Map.set(weekKey, existing);
+            // Run-specific metrics (Volume, VO2)
+            if (activity.type === 'RUN') {
+                weeklyVolumeMap.set(weekKey, (weeklyVolumeMap.get(weekKey) || 0) + activity.distance / 1000);
+
+                // Calculate VO2max for this run if it has HR
+                if (activity.hasHeartrate && activity.averageHr && activity.distance >= 3000) {
+                    const vo2 = calculateEffectiveVO2max(activity.distance, activity.movingTime, activity.averageHr, maxHR);
+                    if (vo2 > 0) {
+                        const existing = weeklyVO2Map.get(weekKey) || { values: [] };
+                        existing.values.push(vo2);
+                        weeklyVO2Map.set(weekKey, existing);
+                    }
                 }
             }
         });
@@ -260,6 +266,7 @@ export default function AnalyticsPage() {
         weeklyVO2Map.forEach((_, key) => allWeekKeys.add(key));
         fitnessDataMap.forEach((_, key) => allWeekKeys.add(key));
         weeklyVolumeMap.forEach((_, key) => allWeekKeys.add(key));
+        weeklyTimeMap.forEach((_, key) => allWeekKeys.add(key));
 
         const weeks = Array.from(allWeekKeys).sort((a, b) => {
             const dateA = new Date(a);

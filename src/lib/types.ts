@@ -27,6 +27,7 @@ export interface Activity {
     elapsedTime: number;
     averageSpeed: number | null;
     maxSpeed: number | null;
+    gradeAdjustedSpeed: number | null;
     averageHr: number | null;
     maxHr: number | null;
     hasHeartrate: boolean;
@@ -41,6 +42,8 @@ export interface Activity {
     hrZone3Time: number | null;
     hrZone4Time: number | null;
     hrZone5Time: number | null;
+    streams: any | null; // Using any for Json type, or could define a more specific type
+    trainingType: WorkoutType | null;
     createdAt: string | Date;
     updatedAt: string | Date;
 }

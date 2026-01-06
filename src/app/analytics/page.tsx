@@ -176,24 +176,43 @@ export default function AnalyticsPage() {
         // Build weekly volume map (km per week)
         const weeklyVolumeMap = new Map<string, number>();
         const weeklyTimeMap = new Map<string, number>();
+        const weeklyVO2Map = new Map<string, number[]>(); // Store all VO2 values per week for averaging
 
         runs.forEach(run => {
             const date = new Date(run.startDate);
             const weekStart = new Date(date);
             const day = weekStart.getDay();
             weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1)); // Monday
-            const weekKey = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            // Use Sunday as the key to match fitness data
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6); // Sunday
+            const weekKey = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
             weeklyVolumeMap.set(weekKey, (weeklyVolumeMap.get(weekKey) || 0) + run.distance / 1000);
             weeklyTimeMap.set(weekKey, (weeklyTimeMap.get(weekKey) || 0) + run.movingTime / 60);
+
+            // Calculate VO2max for this run if it has HR
+            if (run.hasHeartrate && run.averageHr && run.distance >= 3000) {
+                const vo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr, maxHR);
+                if (vo2 > 0) {
+                    const existing = weeklyVO2Map.get(weekKey) || [];
+                    existing.push(vo2);
+                    weeklyVO2Map.set(weekKey, existing);
+                }
+            }
         });
 
         // Build combined data for CombinedAnalyticsChart
         const combinedData = fitness.map(f => {
-            const vo2Entry = vo2Trend.find(v => v.date === f.date);
+            const vo2Values = weeklyVO2Map.get(f.date) || [];
+            const avgVO2 = vo2Values.length > 0
+                ? Math.round(vo2Values.reduce((a, b) => a + b, 0) / vo2Values.length * 10) / 10
+                : undefined;
+
             return {
                 date: f.date,
-                vo2max: vo2Entry?.vo2,
+                vo2max: avgVO2,
                 ctl: f.ctl,
                 atl: f.atl,
                 tsb: f.tsb,
@@ -360,7 +379,7 @@ export default function AnalyticsPage() {
                                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} />
                                     <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
                                     <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
-                                    <Line type="monotone" dataKey="vo2" stroke="#3b82f6" strokeWidth={2} dot={false} name="VO2max" />
+                                    <Line type="monotone" dataKey="vo2" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6', r: 4 }} name="VO2max" />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>

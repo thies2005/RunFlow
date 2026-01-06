@@ -15,6 +15,14 @@ export async function GET(request: Request) {
         }
 
         const userId = session.user.id;
+
+        // Fetch calibration factor
+        const activeGoal = await prisma.goal.findFirst({
+            where: { userId, isActive: true },
+            select: { marathonShapeFactor: true }
+        });
+        const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
+
         const { searchParams } = new URL(request.url);
         const range = searchParams.get('range') || '1_YEAR'; // Default to 1 year
 
@@ -165,7 +173,7 @@ export async function GET(request: Request) {
             .filter(a => new Date(a.startDate) >= cutoff && a.estimatedVdot && a.estimatedVdot > 0)
             .map(a => ({
                 date: new Date(a.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-                vdot: Math.round(a.estimatedVdot! * 10) / 10,
+                vdot: Math.round(a.estimatedVdot! * calibrationFactor * 10) / 10,
             }));
 
         const averagePace = totalDistance > 0 ? (totalMovingTime / totalDistance) * 1000 : 0; // sec/km

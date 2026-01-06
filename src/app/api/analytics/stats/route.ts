@@ -27,6 +27,7 @@ export async function GET() {
             where: { userId, isActive: true },
         });
         const currentVdot = activeGoal?.currentVdot || null;
+        const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
 
         // Fetch activities for calculations
         // We need enough history for VO2max (recent) and Shape (6 months)
@@ -62,7 +63,7 @@ export async function GET() {
             .reduce((sum, a) => sum + (a.distance || 0), 0) / 1000;
 
         // 2. Calculate VO2max
-        const effectiveVO2max = calculateWeightedEffectiveVO2max(activities, maxHR);
+        const effectiveVO2max = calculateWeightedEffectiveVO2max(activities, maxHR, calibrationFactor);
 
         // 3. Calculate Marathon Shape
         const marathonShape = calculateMarathonShape(activities, effectiveVO2max);

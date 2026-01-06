@@ -254,7 +254,8 @@ export function solveCalibrationFactor(
  */
 export function calculateWeightedEffectiveVO2max(
     activities: ActivityForShape[],
-    maxHR: number
+    maxHR: number,
+    calibrationFactor: number = 1.0
 ): number {
     const validActivities = activities.filter(a =>
         a.hasHeartrate &&
@@ -288,5 +289,5 @@ export function calculateWeightedEffectiveVO2max(
         }
     });
 
-    return totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 10) / 10 : 0;
+    return totalWeight > 0 ? Math.round((weightedSum / totalWeight) * calibrationFactor * 10) / 10 : 0;
 }

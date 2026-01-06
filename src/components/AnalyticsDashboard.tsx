@@ -143,9 +143,16 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
             const contribution = getActivityContribution(a.type || 'RUN');
 
             // Calculate TRIMP from zone data
-            const trimp = calculateTrimpFromZones(
+            let trimp = calculateTrimpFromZones(
                 a.hrZone1Time, a.hrZone2Time, a.hrZone3Time, a.hrZone4Time, a.hrZone5Time
             );
+
+            // Fallback: If no zone data, estimate TRIMP from duration
+            // Assume moderate intensity (Zone 2-3 equivalent: ~2.5 coefficient)
+            if (trimp === 0 && a.movingTime > 0) {
+                const durationMinutes = a.movingTime / 60;
+                trimp = durationMinutes * 2.5; // Conservative estimate
+            }
 
             // Calculate running TSS if it's a running activity
             const runningTss = contribution.contributesToRunningTss

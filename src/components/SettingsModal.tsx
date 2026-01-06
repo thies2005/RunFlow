@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X, Save, AlertCircle, Bike, Activity, Move, Timer } from 'lucide-react';
 import { calculatePredictedTimes } from '@/lib/metrics/runalyze';
 import { formatTime } from '@/lib/metrics/vdot';
@@ -64,6 +64,35 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
     // Heart Rate Settings
     const [maxHeartRate, setMaxHeartRate] = useState(185);
     const [restingHeartRate, setRestingHeartRate] = useState(55);
+    const [weight, setWeight] = useState(70);
+
+    // Fetch existing settings
+    const { data: settingsData } = useQuery({
+        queryKey: ['user-settings'],
+        queryFn: async () => {
+            const res = await fetch('/api/settings/update-vdot');
+            if (!res.ok) throw new Error('Failed to fetch settings');
+            return res.json();
+        },
+        refetchOnWindowFocus: false,
+    });
+
+    // Populate form with existing data
+    useEffect(() => {
+        if (settingsData) {
+            setMaxHeartRate(settingsData.hrMax);
+            setRestingHeartRate(settingsData.hrRest);
+            setWeight(settingsData.weight);
+            setZone1Max(settingsData.hrZone1Max);
+            setZone2Max(settingsData.hrZone2Max);
+            setZone3Max(settingsData.hrZone3Max);
+            setZone4Max(settingsData.hrZone4Max);
+            setRunsPerWeek(settingsData.runsPerWeek);
+            setRidesPerWeek(settingsData.ridesPerWeek);
+            setStrengthPerWeek(settingsData.strengthPerWeek);
+            setWeeklyMileage(settingsData.weeklyMileageGoal);
+        }
+    }, [settingsData]);
 
     // Zone Thresholds (% of Max HR)
     const [zone1Max, setZone1Max] = useState(60);
@@ -91,6 +120,7 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
                     weeklyMileageGoal: weeklyMileage * 1000,
                     maxHeartRate,
                     restingHeartRate,
+                    weight,
                     hrZone1Max: zone1Max,
                     hrZone2Max: zone2Max,
                     hrZone3Max: zone3Max,
@@ -324,7 +354,7 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
                     <div className="border-t border-white/10 pt-6">
                         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Heart Rate</h3>
 
-                        <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="grid grid-cols-3 gap-4 mb-6">
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1 uppercase">Max HR</label>
                                 <input
@@ -347,6 +377,18 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
                                     min="35"
                                     max="90"
                                     placeholder="55"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1 uppercase">Weight (kg)</label>
+                                <input
+                                    type="number"
+                                    value={weight}
+                                    onChange={e => setWeight(parseInt(e.target.value) || 70)}
+                                    className={inputClass}
+                                    min="30"
+                                    max="150"
+                                    placeholder="70"
                                 />
                             </div>
                         </div>

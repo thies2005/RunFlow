@@ -6,6 +6,49 @@ import { authOptions } from '@/lib/strava/oauth';
 import { NextResponse } from 'next/server';
 import { WorkoutType } from '@prisma/client';
 
+export async function GET() {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: {
+                hrMax: true,
+                hrRest: true,
+                weight: true,
+                hrZone1Max: true,
+                hrZone2Max: true,
+                hrZone3Max: true,
+                hrZone4Max: true
+            }
+        });
+
+        const activeGoal = await prisma.goal.findFirst({
+            where: { userId: session.user.id, isActive: true },
+        });
+
+        return NextResponse.json({
+            hrMax: user?.hrMax || 185,
+            hrRest: user?.hrRest || 55,
+            weight: user?.weight || 70,
+            hrZone1Max: user?.hrZone1Max || 60,
+            hrZone2Max: user?.hrZone2Max || 70,
+            hrZone3Max: user?.hrZone3Max || 80,
+            hrZone4Max: user?.hrZone4Max || 90,
+            runsPerWeek: activeGoal?.runsPerWeek || 4,
+            ridesPerWeek: activeGoal?.ridesPerWeek || 0,
+            strengthPerWeek: activeGoal?.strengthPerWeek || 0,
+            weeklyMileageGoal: (activeGoal?.weeklyMileageGoal || 40000) / 1000, // convert m to km
+            currentVdot: activeGoal?.currentVdot || 30
+        });
+    } catch (error) {
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}
+
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -13,7 +56,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max } = await req.json();
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max } = await req.json();
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -28,6 +71,7 @@ export async function POST(req: Request) {
             data: {
                 ...(maxHeartRate && { hrMax: maxHeartRate }),
                 ...(restingHeartRate && { hrRest: restingHeartRate }),
+                ...(weight && { weight: parseFloat(weight) }),
                 ...(hrZone1Max && { hrZone1Max }),
                 ...(hrZone2Max && { hrZone2Max }),
                 ...(hrZone3Max && { hrZone3Max }),

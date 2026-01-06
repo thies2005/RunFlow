@@ -109,6 +109,7 @@ export default function Dashboard() {
     // Stats from Server
     const currentWeekMileage = statsData?.currentWeekMileage || 0;
     const effectiveVO2max = statsData?.effectiveVO2max || 0;
+    const correctionFactor = statsData?.vdotCorrectionFactor || 1.0;
     const marathonShape = statsData?.marathonShape || { shape: 0, longRunScore: 0, weeklyMileageScore: 0 };
     const currentVdot = statsData?.currentVdot || activeGoal?.currentVdot || null;
     const marathonShapePercent = marathonShape?.shape || 0;
@@ -171,7 +172,14 @@ export default function Dashboard() {
                             </button>
                             <div className="flex items-center gap-3">
                                 {session?.user?.image && (
-                                    <img src={session.user.image} alt={session.user.name || 'User'} className="w-8 h-8 rounded-full" />
+                                    <button onClick={() => setIsSettingsOpen(true)} className="relative group">
+                                        <img
+                                            src={session.user.image}
+                                            alt={session.user.name || 'User'}
+                                            className="w-8 h-8 rounded-full border border-transparent group-hover:border-white transition-all cursor-pointer"
+                                        />
+                                        <div className="absolute inset-0 bg-white/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </button>
                                 )}
                                 <button onClick={() => signOut({ callbackUrl: '/login' })} className="p-2 text-gray-400 hover:text-white transition-colors">
                                     <LogOut className="w-5 h-5" />
@@ -283,8 +291,15 @@ export default function Dashboard() {
                                     <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
                                         <div className="h-full bg-teal-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, ((effectiveVO2max - 30) / 40) * 100))}%` }} />
                                     </div>
-                                    <div className="w-12 text-right text-sm font-bold text-teal-400">
-                                        {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
+                                    <div className="text-right">
+                                        <div className="text-sm font-bold text-teal-400">
+                                            {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
+                                        </div>
+                                        {correctionFactor !== 1.0 && (
+                                            <div className="text-[10px] text-gray-500">
+                                                {correctionFactor.toFixed(2)}x
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

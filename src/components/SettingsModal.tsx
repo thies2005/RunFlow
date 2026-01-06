@@ -254,12 +254,17 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
                                     <Timer className="w-3 h-3 text-accent-orange" />
                                     Recommended Goal
                                 </h4>
-                                <span className="text-xs text-gray-500">Based on Fitness & Shape</span>
+                                <div className="text-right">
+                                    <span className="text-accent-orange font-bold text-sm block">
+                                        {hours}:{minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 block">Based on Fitness & Shape</span>
+                                </div>
                             </div>
                             <input
                                 type="range"
                                 min={calculatePredictedTimes(effectiveVO2max, 100).optimal} // Fastest (100% shape)
-                                max={calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05} // Slowest (0% shape + 5% buffer)
+                                max={Math.round(calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05)} // Slowest (0% shape + 5% buffer)
                                 step="60" // 1 minute steps
                                 defaultValue={calculatePredictedTimes(effectiveVO2max, shapePercent).predicted}
                                 className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange mb-2"
@@ -275,7 +280,7 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
                             />
                             <div className="flex justify-between text-xs text-gray-500">
                                 <span>{formatTime(calculatePredictedTimes(effectiveVO2max, 100).optimal)} (Optimal)</span>
-                                <span>{formatTime(calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05)} (Conservative)</span>
+                                <span>{formatTime(Math.round(calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05))} (Conservative)</span>
                             </div>
                         </div>
                     )}

@@ -15,7 +15,7 @@ import { calculateRunningTss, getActivityContribution } from '@/lib/metrics/fitn
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const MAX_PER_PAGE = 200;
-const RATE_LIMIT_REQUESTS = 100;
+const RATE_LIMIT_REQUESTS = 95; // 5% buffer under Strava's 100 req/15min limit
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 // Simple in-memory rate limiter

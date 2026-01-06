@@ -162,7 +162,7 @@ export default function ShapeCalibrationModal({
                                     <div className="grid grid-cols-2 gap-2 text-sm">
                                         <div className="p-2 bg-gray-800/50 rounded text-center">
                                             <p className="text-gray-500 text-xs">Expected</p>
-                                            <p className="text-gray-300 font-mono">{formatTime(raceCalcData.basePredictedSeconds)}</p>
+                                            <p className="text-gray-300 font-mono">{formatTime(Math.round(raceCalcData.basePredictedSeconds))}</p>
                                         </div>
                                         <div className="p-2 bg-gray-800/50 rounded text-center">
                                             <p className="text-gray-500 text-xs">Your Time</p>
@@ -180,6 +180,10 @@ export default function ShapeCalibrationModal({
                                             Factor must be between 0.5x and 2.0x. Your time differs too much from predictions.
                                         </p>
                                     )}
+                                    {/* Debug Info */}
+                                    <div className="text-[10px] text-gray-600 font-mono text-center">
+                                        VO2:{effectiveVO2max.toFixed(1)} Shape:{shapePercent}% Opt:{Math.round(raceCalcData.optimalSeconds)}s
+                                    </div>
                                 </div>
                             )}
                         </div>

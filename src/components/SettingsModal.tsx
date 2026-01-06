@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Save, AlertCircle, Bike, Activity, Move, Timer } from 'lucide-react';
 import { calculatePredictedTimes } from '@/lib/metrics/runalyze';
@@ -15,10 +15,45 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, shapePercent = 0 }: SettingsModalProps) {
     const queryClient = useQueryClient();
-    const [distance, setDistance] = useState('5K');
-    const [hours, setHours] = useState('0');
-    const [minutes, setMinutes] = useState('25');
-    const [seconds, setSeconds] = useState('0');
+    const [distance, setDistance] = useState('MARATHON');
+    const [hours, setHours] = useState('');
+    const [minutes, setMinutes] = useState('');
+    const [seconds, setSeconds] = useState('');
+
+    // Calculate predicted time based on distance and fitness
+    const getPredictedTimeForDistance = (dist: string) => {
+        if (effectiveVO2max <= 0) return 0;
+        // Map distance string to marathon distance equivalent for calculation
+        const distMap: Record<string, 'MARATHON' | 'HALF' | '10K' | '5K'> = {
+            'MARATHON': 'MARATHON',
+            'HALF': 'HALF',
+            '10K': '10K',
+            '5K': '5K',
+        };
+        // Use the runalyze function but we need to calculate for specific distance
+        // For simplicity, use a direct ratio approximation or calculate per-distance
+        const marathonTimes = calculatePredictedTimes(effectiveVO2max, shapePercent);
+        const ratios: Record<string, number> = {
+            'MARATHON': 1,
+            'HALF': 0.45, // Half is roughly 45% of marathon time
+            '10K': 0.19,  // 10K is roughly 19% of marathon time
+            '5K': 0.09,   // 5K is roughly 9% of marathon time
+        };
+        return Math.round(marathonTimes.predicted * (ratios[dist] || 1));
+    };
+
+    // Update time when distance or fitness changes
+    useEffect(() => {
+        if (effectiveVO2max > 0) {
+            const predictedSeconds = getPredictedTimeForDistance(distance);
+            const h = Math.floor(predictedSeconds / 3600);
+            const m = Math.floor((predictedSeconds % 3600) / 60);
+            const s = predictedSeconds % 60;
+            setHours(h.toString());
+            setMinutes(m.toString());
+            setSeconds(s.toString());
+        }
+    }, [distance, effectiveVO2max, shapePercent]);
 
     // Plan Customization
     const [runsPerWeek, setRunsPerWeek] = useState(4);
@@ -256,9 +291,9 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
                                 </h4>
                                 <div className="text-right">
                                     <span className="text-accent-orange font-bold text-sm block">
-                                        {hours}:{minutes.toString().padStart(2, '0')}:{seconds.toString().padStart(2, '0')}
+                                        {formatTime((parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0))}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 block">Based on Fitness & Shape</span>
+                                    <span className="text-[10px] text-gray-500 block">Enter manually or use slider</span>
                                 </div>
                             </div>
                             <input

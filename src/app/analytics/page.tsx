@@ -26,6 +26,7 @@ import {
     formatPace,
     type TrainingPaces
 } from '@/lib/metrics/vdot';
+import type { Activity, Goal } from '@/lib/types';
 
 export default function AnalyticsPage() {
     const { status } = useSession();
@@ -91,10 +92,10 @@ export default function AnalyticsPage() {
 
     // Calculated data
     const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions, combinedData, trainingPaces } = useMemo(() => {
-        const activities = activitiesData?.activities || [];
+        const activities: Activity[] = activitiesData?.activities || [];
         const runs: ActivityForShape[] = activities
-            .filter((a: any) => a.type === 'RUN')
-            .map((a: any) => ({
+            .filter((a: Activity) => a.type === 'RUN')
+            .map((a: Activity) => ({
                 startDate: a.startDate,
                 distance: a.distance,
                 movingTime: a.movingTime,
@@ -103,7 +104,7 @@ export default function AnalyticsPage() {
             }));
 
         const maxHR = userData?.user?.hrMax || 190;
-        const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
+        const activeGoal = goalsData?.goals?.find((g: Goal) => g.isActive);
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
 
         // Use corrected effectiveVO2max from stats API (includes vdotCorrectionFactor)

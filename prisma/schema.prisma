@@ -164,6 +164,8 @@ model Activity {
   
   @@index([userId, startDate])
   @@index([type])
+  @@index([userId, type, startDate])  // For filtering by type within date range
+  @@index([userId, hasHeartrate])     // For HR-based metrics queries
 }
 
 enum ActivityType {

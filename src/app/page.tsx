@@ -9,6 +9,7 @@ import { signOut } from 'next-auth/react';
 import { TodayWorkout, RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
+import type { Workout, Goal } from '@/lib/types';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
@@ -16,7 +17,7 @@ export default function Dashboard() {
     const queryClient = useQueryClient();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [editingWorkout, setEditingWorkout] = useState<any>(null);
+    const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
 
     // 1. Fetch Stats (Server-calculated)
     const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -104,15 +105,15 @@ export default function Dashboard() {
 
     // Data extraction
     const recentActivities = activitiesData?.activities || [];
-    const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
-    const weeklyWorkouts = activeGoal?.workouts || [];
+    const activeGoal: Goal | undefined = goalsData?.goals?.find((g: Goal) => g.isActive);
+    const weeklyWorkouts: Workout[] = activeGoal?.workouts || [];
 
     // Find today's workout or the first uncompleted one
     const today = new Date().toDateString();
-    const todayWorkout = weeklyWorkouts.find((w: any) => new Date(w.scheduledDate).toDateString() === today) ||
-        weeklyWorkouts.find((w: any) => !w.isCompleted) || null;
+    const todayWorkout = weeklyWorkouts.find((w: Workout) => new Date(w.scheduledDate).toDateString() === today) ||
+        weeklyWorkouts.find((w: Workout) => !w.isCompleted) || null;
 
-    const firstUncompletedIndex = weeklyWorkouts.findIndex((w: any) => !w.isCompleted);
+    const firstUncompletedIndex = weeklyWorkouts.findIndex((w: Workout) => !w.isCompleted);
 
     // Stats from Server
     const currentWeekMileage = statsData?.currentWeekMileage || 0;
@@ -228,7 +229,7 @@ export default function Dashboard() {
                             <h2 className="text-lg font-semibold text-gray-300 mb-4">This Week's Workouts</h2>
                             {weeklyWorkouts.length > 0 ? (
                                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                                    {weeklyWorkouts.map((workout: any, index: number) => {
+                                    {weeklyWorkouts.map((workout: Workout, index: number) => {
                                         const workoutDate = new Date(workout.scheduledDate);
                                         const isWorkoutToday = workoutDate.toDateString() === today;
                                         const isNextWorkout = index === firstUncompletedIndex;
@@ -297,7 +298,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div className="lg:col-span-1">
-                        <RaceCountdown goal={activeGoal} weeklyMileage={currentWeekMileage} className="h-full" marathonShape={marathonShape.shape} />
+                        <RaceCountdown goal={activeGoal ?? null} weeklyMileage={currentWeekMileage} className="h-full" marathonShape={marathonShape.shape} />
                     </div>
                     <div className="lg:col-span-1 h-full flex flex-col">
                         <div className="glass-card p-6 h-full flex flex-col justify-center">

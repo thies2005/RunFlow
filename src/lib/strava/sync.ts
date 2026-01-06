@@ -199,20 +199,25 @@ async function fetchActivityStreams(
 }
 
 /**
- * Calculate time in zones based on HR stream and user max HR
+ * Calculate time in zones based on HR stream and user-configured zone thresholds
+ * @param heartrates - Array of heart rate values from stream
+ * @param times - Array of timestamps from stream
+ * @param hrMax - User's maximum heart rate
+ * @param zoneThresholds - User-configured zone thresholds (% of hrMax)
  */
 function calculateZoneTimes(
     heartrates: number[],
     times: number[],
-    hrMax: number
+    hrMax: number,
+    zoneThresholds: { z1: number; z2: number; z3: number; z4: number } = { z1: 60, z2: 70, z3: 80, z4: 90 }
 ): { z1: number; z2: number; z3: number; z4: number; z5: number } {
     const zones = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
 
-    // Default percentages if not customized (matching User model defaults)
-    const z1Ceil = Math.floor(hrMax * 0.60);
-    const z2Ceil = Math.floor(hrMax * 0.70);
-    const z3Ceil = Math.floor(hrMax * 0.80);
-    const z4Ceil = Math.floor(hrMax * 0.90);
+    // Use user-configured percentages or defaults
+    const z1Ceil = Math.floor(hrMax * (zoneThresholds.z1 / 100));
+    const z2Ceil = Math.floor(hrMax * (zoneThresholds.z2 / 100));
+    const z3Ceil = Math.floor(hrMax * (zoneThresholds.z3 / 100));
+    const z4Ceil = Math.floor(hrMax * (zoneThresholds.z4 / 100));
 
     for (let i = 0; i < heartrates.length; i++) {
         // Calculate duration of this point
@@ -278,6 +283,10 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 hrRest: true,
                 sex: true,
                 lastSyncAt: true,
+                hrZone1Max: true,
+                hrZone2Max: true,
+                hrZone3Max: true,
+                hrZone4Max: true,
             },
         });
 
@@ -348,7 +357,14 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     if (activity.has_heartrate && user?.hrMax) {
                         const streams = await fetchActivityStreams(accessToken, activity.id);
                         if (streams) {
-                            zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, user.hrMax);
+                            // Use user-configured zone thresholds or defaults
+                            const zoneThresholds = {
+                                z1: user.hrZone1Max ?? 60,
+                                z2: user.hrZone2Max ?? 70,
+                                z3: user.hrZone3Max ?? 80,
+                                z4: user.hrZone4Max ?? 90,
+                            };
+                            zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, user.hrMax, zoneThresholds);
                         }
                     }
 

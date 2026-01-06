@@ -3,17 +3,7 @@
 import { Calendar, Target, TrendingUp, Timer } from 'lucide-react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
-
-interface Goal {
-    id: string;
-    name: string;
-    raceType: 'FIVE_K' | 'TEN_K' | 'HALF_MARATHON' | 'MARATHON';
-    raceDate: string;
-    targetTime?: number | null;
-    currentVdot?: number | null;
-    predictedTime?: number | null;
-    weeklyMileageGoal?: number | null;
-}
+import type { Goal } from '@/lib/types';
 
 interface RaceCountdownProps {
     goal: Goal | null;

@@ -3,9 +3,10 @@
 import { useMemo, useState } from 'react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, LineChart, Line
+    PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
 } from 'recharts';
 import { calculateZoneDistribution, calculateZonePercentages, type ZoneDistribution } from '@/lib/analytics/zones';
+import { predictRaceTime, formatTime } from '@/lib/metrics/vdot';
 
 type Activity = {
     id: string;
@@ -113,16 +114,16 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
             }));
     }, [filteredActivities]);
 
-    // 4. Race Predictions (based on currentVdot)
+    // 4. Race Predictions (based on currentVdot) - Using proper Daniels formula
     const racePredictions = useMemo(() => {
         if (!currentVdot || currentVdot <= 0) return [];
 
-        // Approximated from Daniels tables
+        // Use proper Daniels formula from vdot module
         const predictions = [
-            { race: '5K', time: predictTime(currentVdot, 5000) },
-            { race: '10K', time: predictTime(currentVdot, 10000) },
-            { race: 'Half', time: predictTime(currentVdot, 21097) },
-            { race: 'Marathon', time: predictTime(currentVdot, 42195) },
+            { race: '5K', time: formatTime(predictRaceTime(currentVdot, '5K')) },
+            { race: '10K', time: formatTime(predictRaceTime(currentVdot, '10K')) },
+            { race: 'Half', time: formatTime(predictRaceTime(currentVdot, 'HALF')) },
+            { race: 'Marathon', time: formatTime(predictRaceTime(currentVdot, 'MARATHON')) },
         ];
         return predictions;
     }, [currentVdot]);
@@ -156,20 +157,37 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
         return data.slice(-30); // Last 30 data points
     }, [filteredActivities]);
 
-    // Helper to predict race time from VDOT
-    function predictTime(vdot: number, distanceMeters: number): string {
-        // Simplified prediction formula
-        const velocity = vdot * 0.8; // m/min approximation
-        const timeMinutes = distanceMeters / velocity;
-        const hours = Math.floor(timeMinutes / 60);
-        const mins = Math.floor(timeMinutes % 60);
-        const secs = Math.round((timeMinutes * 60) % 60);
+    // 6. Zone Trend (stacked area over weeks)
+    const zoneTrend = useMemo(() => {
+        const weeksData: Record<string, { z1: number; z2: number; z3: number; z4: number; z5: number }> = {};
 
-        if (hours > 0) {
-            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
+        filteredActivities.forEach(a => {
+            const date = new Date(a.startDate);
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(date.setDate(diff));
+            const key = monday.toISOString().split('T')[0];
+
+            if (!weeksData[key]) weeksData[key] = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+
+            weeksData[key].z1 += (a.hrZone1Time || 0) / 60;
+            weeksData[key].z2 += (a.hrZone2Time || 0) / 60;
+            weeksData[key].z3 += (a.hrZone3Time || 0) / 60;
+            weeksData[key].z4 += (a.hrZone4Time || 0) / 60;
+            weeksData[key].z5 += (a.hrZone5Time || 0) / 60;
+        });
+
+        return Object.entries(weeksData)
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([date, zones]) => ({
+                date: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+                Z1: Math.round(zones.z1),
+                Z2: Math.round(zones.z2),
+                Z3: Math.round(zones.z3),
+                Z4: Math.round(zones.z4),
+                Z5: Math.round(zones.z5),
+            }));
+    }, [filteredActivities]);
 
 
     return (
@@ -187,41 +205,45 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Zone Distribution */}
+                {/* Zone Distribution Trend (Stacked Area) */}
                 <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Training Zones</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">Training Zone Trend</h3>
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={zoneStats}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {zoneStats.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
+                            <AreaChart data={zoneTrend}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    stroke="#9ca3af"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <YAxis
+                                    stroke="#9ca3af"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    unit="min"
+                                />
                                 <Tooltip
                                     contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                    formatter={(value: number) => Math.round(value / 60) + ' mins'}
+                                    formatter={(value: number) => value + ' min'}
                                 />
-                            </PieChart>
+                                <Area type="monotone" dataKey="Z1" stackId="1" stroke="#10b981" fill="#10b981" name="Z1 Recovery" />
+                                <Area type="monotone" dataKey="Z2" stackId="1" stroke="#3b82f6" fill="#3b82f6" name="Z2 Aerobic" />
+                                <Area type="monotone" dataKey="Z3" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="Z3 Tempo" />
+                                <Area type="monotone" dataKey="Z4" stackId="1" stroke="#ef4444" fill="#ef4444" name="Z4 Threshold" />
+                                <Area type="monotone" dataKey="Z5" stackId="1" stroke="#7f1d1d" fill="#7f1d1d" name="Z5 VO2max" />
+                            </AreaChart>
                         </ResponsiveContainer>
                     </div>
                     <div className="flex flex-wrap justify-center gap-4 mt-4">
-                        {zoneStats.map((entry, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
-                                <span className="text-sm text-gray-300">
-                                    {entry.name} ({entry.percent}%)
-                                </span>
-                            </div>
-                        ))}
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-xs text-gray-300">Z1</span></div>
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500" /><span className="text-xs text-gray-300">Z2</span></div>
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-amber-500" /><span className="text-xs text-gray-300">Z3</span></div>
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500" /><span className="text-xs text-gray-300">Z4</span></div>
+                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-900" /><span className="text-xs text-gray-300">Z5</span></div>
                     </div>
                 </div>
 

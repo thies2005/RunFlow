@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Settings, LogOut, AlertCircle, Edit2, Check, TrendingUp, Activity } from 'lucide-react';
+import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { TodayWorkout, RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo } from '@/components';
+import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
+import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
+import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import type { Workout, Goal } from '@/lib/types';
 
 export default function Dashboard() {
@@ -34,7 +36,6 @@ export default function Dashboard() {
     const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useQuery({
         queryKey: ['recent-activities'],
         queryFn: async () => {
-            // Only fetch runs, limited to 10
             const res = await fetch('/api/activities?limit=10&type=RUN');
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
@@ -45,7 +46,7 @@ export default function Dashboard() {
         enabled: status === 'authenticated',
     });
 
-    // Fetch goals
+    // 3. Fetch goals
     const { data: goalsData, isLoading: goalsLoading, error: goalsError } = useQuery({
         queryKey: ['goals'],
         queryFn: async () => {
@@ -60,7 +61,7 @@ export default function Dashboard() {
         retry: 1,
     });
 
-    // Fetch sync status
+    // 4. Fetch sync status
     const { data: syncStatus, isLoading: syncLoading, error: syncError } = useQuery({
         queryKey: ['sync-status'],
         queryFn: async () => {
@@ -95,41 +96,24 @@ export default function Dashboard() {
         },
     });
 
-    const completeWorkoutMutation = useMutation({
-        mutationFn: async (workoutId: string) => {
-            const res = await fetch(`/api/workouts/${workoutId}/complete`, { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to complete workout');
-            return res.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['goals'] });
-        },
-    });
-
     // Data extraction
     const recentActivities = activitiesData?.activities || [];
     const activeGoal: Goal | undefined = goalsData?.goals?.find((g: Goal) => g.isActive);
     const weeklyWorkouts: Workout[] = activeGoal?.workouts || [];
 
-    // Find today's workout or the first uncompleted one
     const today = new Date().toDateString();
-    const todayWorkout = weeklyWorkouts.find((w: Workout) => new Date(w.scheduledDate).toDateString() === today) ||
-        weeklyWorkouts.find((w: Workout) => !w.isCompleted) || null;
-
-    const firstUncompletedIndex = weeklyWorkouts.findIndex((w: Workout) => !w.isCompleted);
 
     // Stats from Server
     const currentWeekMileage = statsData?.currentWeekMileage || 0;
     const effectiveVO2max = statsData?.effectiveVO2max || 0;
     const correctionFactor = statsData?.vdotCorrectionFactor || 1.0;
     const marathonShape = statsData?.marathonShape || { shape: 0, longRunScore: 0, weeklyMileageScore: 0 };
-    const currentVdot = statsData?.currentVdot || activeGoal?.currentVdot || null;
-    const marathonShapePercent = marathonShape?.shape || 0;
     const ctl = statsData?.ctl || 0;
     const atl = statsData?.atl || 0;
     const tsb = statsData?.tsb || 0;
     const workloadRatio = statsData?.workloadRatio || 0;
     const easyTrimp = statsData?.easyTrimp || 0;
+
 
     // Loading State
     if (status === 'loading') {
@@ -228,189 +212,26 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                     <div className="lg:col-span-1">
-                        <div className="glass-card p-6 h-full flex flex-col">
-                            <h2 className="text-lg font-semibold text-gray-300 mb-4">This Week's Workouts</h2>
-                            {weeklyWorkouts.length > 0 ? (
-                                <div className="space-y-3 max-h-96 overflow-y-auto">
-                                    {weeklyWorkouts.map((workout: Workout, index: number) => {
-                                        const workoutDate = new Date(workout.scheduledDate);
-                                        const isWorkoutToday = workoutDate.toDateString() === today;
-                                        const isNextWorkout = index === firstUncompletedIndex;
-                                        const isHighlighted = !workout.isCompleted && (isWorkoutToday || isNextWorkout);
-
-                                        return (
-                                            <div key={workout.id || index} className={`p-3 rounded-lg border transition-all ${workout.isCompleted ? 'bg-green-500/5 border-green-500/20' : isHighlighted ? 'bg-accent-orange/10 border-accent-orange/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-green-500/20' : isHighlighted ? 'bg-accent-orange/20' : 'bg-white/10'}`}>
-                                                            <span className="text-sm">{workout.workoutType === 'EASY' ? '🏃' : workout.workoutType === 'LONG_RUN' ? '🚀' : workout.workoutType === 'TEMPO' ? '⚡' : workout.workoutType === 'INTERVALS' ? '🔥' : workout.workoutType === 'STRENGTH' ? '💪' : workout.workoutType === 'REST' ? '😴' : workout.workoutType === 'RIDE' ? '🚴' : workout.workoutType === 'SWIM' ? '🏊' : '🎯'}</span>
-                                                        </div>
-                                                        <div>
-                                                            <div className="flex items-center gap-2">
-                                                                <p className={`font-medium ${workout.isCompleted ? 'text-green-400' : isHighlighted ? 'text-accent-orange' : 'text-white'}`}>
-                                                                    {workout.description || workout.workoutType?.replace('_', ' ')}
-                                                                </p>
-                                                                {isWorkoutToday && (
-                                                                    <span className="text-[10px] bg-accent-orange/20 text-accent-orange px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Today</span>
-                                                                )}
-                                                            </div>
-                                                            <p className="text-xs text-gray-500">
-                                                                {workout.targetDistance ? `${(workout.targetDistance / 1000).toFixed(1)} km` : workout.targetDuration ? `${Math.round(workout.targetDuration / 60)} min` : ''}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        {!workout.isCompleted && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => setEditingWorkout(workout)}
-                                                                    className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
-                                                                    title="Edit workout"
-                                                                >
-                                                                    <Edit2 className="w-4 h-4" />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => completeWorkoutMutation.mutate(workout.id)}
-                                                                    disabled={completeWorkoutMutation.isPending}
-                                                                    className="btn-primary py-1 px-3 text-xs flex items-center gap-1"
-                                                                >
-                                                                    <Check className="w-3 h-3" />
-                                                                    {completeWorkoutMutation.isPending ? '...' : 'Done'}
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        {workout.isCompleted && (
-                                                            <span className="text-green-400 text-xs flex items-center gap-1">
-                                                                <Check className="w-3 h-3" /> Done
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="text-center py-6">
-                                    <p className="text-gray-500 text-sm">No workouts scheduled</p>
-                                    <button onClick={() => router.push('/onboarding?step=3')} className="text-xs text-accent-orange mt-2 hover:underline">
-                                        Set up a training plan
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                        <WorkoutScheduleCard
+                            weeklyWorkouts={weeklyWorkouts}
+                            today={today}
+                            onEditWorkout={setEditingWorkout}
+                        />
                     </div>
                     <div className="lg:col-span-1">
                         <RaceCountdown goal={activeGoal ?? null} weeklyMileage={currentWeekMileage} className="h-full" marathonShape={marathonShape.shape} />
                     </div>
                     <div className="lg:col-span-1 h-full flex flex-col">
-                        <div className="glass-card p-6 h-full flex flex-col justify-center">
-                            <h2 className="text-lg font-semibold text-gray-300 mb-4">Training Status</h2>
-
-                            {/* Top Metrics Grid */}
-                            <div className="grid grid-cols-2 gap-4 mb-6">
-                                {/* Marathon Shape */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shrink-0">
-                                        <TrendingUp className="w-5 h-5 text-white" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium leading-tight">Marathon Shape</p>
-                                        <p className="text-xl font-bold text-white leading-tight">{marathonShapePercent}%</p>
-                                    </div>
-                                </div>
-
-                                {/* Effective VO2max */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shrink-0">
-                                        <Activity className="w-5 h-5 text-white" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium leading-tight">Effective VO2max</p>
-                                        <div className="flex items-baseline gap-1">
-                                            <p className="text-xl font-bold text-white leading-tight">
-                                                {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
-                                            </p>
-                                            {correctionFactor !== 1.0 && (
-                                                <span className="text-[10px] text-gray-500">
-                                                    {correctionFactor.toFixed(2)}x
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Metrics List (Runalyze Style) */}
-                            <div className="space-y-4">
-
-
-                                {/* Fatigue (ATL) */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-28 text-xs text-gray-400 truncate">Fatigue (ATL)</div>
-                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                                        <div className="h-full bg-red-500 rounded-full" style={{ width: `${Math.min(100, atl)}%` }} />
-                                    </div>
-                                    <div className="w-12 text-right text-sm font-bold text-red-400">
-                                        {atl > 0 ? `${atl}%` : '-'}
-                                    </div>
-                                </div>
-
-                                {/* Fitness (CTL) */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-28 text-xs text-gray-400 truncate">Fitness (CTL)</div>
-                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, ctl)}%` }} />
-                                    </div>
-                                    <div className="w-12 text-right text-sm font-bold text-blue-400">
-                                        {ctl > 0 ? `${ctl}%` : '-'}
-                                    </div>
-                                </div>
-
-                                {/* Stress Balance (TSB) */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-28 text-xs text-gray-400 truncate">Stress Balance</div>
-                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden relative">
-                                        <div className="absolute left-1/2 w-0.5 h-full bg-gray-600" />
-                                        <div
-                                            className={`h-full ${tsb >= 0 ? 'bg-green-500' : 'bg-orange-500'} rounded-full absolute`}
-                                            style={{
-                                                width: `${Math.min(50, Math.abs(tsb))}%`,
-                                                left: tsb >= 0 ? '50%' : `${50 - Math.min(50, Math.abs(tsb))}%`
-                                            }}
-                                        />
-                                    </div>
-                                    <div className={`w-12 text-right text-sm font-bold ${tsb >= 0 ? 'text-green-400' : 'text-orange-400'}`}>
-                                        {tsb >= 0 ? `+${tsb}` : tsb}
-                                    </div>
-                                </div>
-
-                                {/* Workload Ratio */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-28 text-xs text-gray-400 truncate">Workload Ratio</div>
-                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full ${workloadRatio >= 0.8 && workloadRatio <= 1.3 ? 'bg-green-500' : workloadRatio > 1.5 ? 'bg-red-500' : 'bg-yellow-500'}`}
-                                            style={{ width: `${Math.min(100, workloadRatio * 50)}%` }}
-                                        />
-                                    </div>
-                                    <div className="w-12 text-right text-sm font-bold text-yellow-400">
-                                        {workloadRatio > 0 ? workloadRatio.toFixed(2) : '-'}
-                                    </div>
-                                </div>
-
-                                {/* Easy TRIMP */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-28 text-xs text-gray-400 truncate">Weekly TRIMP</div>
-                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                                        <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(100, easyTrimp / 5)}%` }} />
-                                    </div>
-                                    <div className="w-12 text-right text-sm font-bold text-purple-400">
-                                        {easyTrimp > 0 ? easyTrimp : '-'}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <TrainingStatusCard
+                            marathonShape={marathonShape}
+                            effectiveVO2max={effectiveVO2max}
+                            correctionFactor={correctionFactor}
+                            ctl={ctl}
+                            atl={atl}
+                            tsb={tsb}
+                            workloadRatio={workloadRatio}
+                            easyTrimp={easyTrimp}
+                        />
                     </div>
                 </div>
 

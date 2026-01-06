@@ -2,14 +2,18 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Save, AlertCircle, Bike, Activity, Move } from 'lucide-react';
+import { X, Save, AlertCircle, Bike, Activity, Move, Timer } from 'lucide-react';
+import { calculatePredictedTimes } from '@/lib/metrics/runalyze';
+import { formatTime } from '@/lib/metrics/vdot';
 
 interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
+    effectiveVO2max?: number;
+    shapePercent?: number;
 }
 
-export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, shapePercent = 0 }: SettingsModalProps) {
     const queryClient = useQueryClient();
     const [distance, setDistance] = useState('5K');
     const [hours, setHours] = useState('0');
@@ -242,6 +246,40 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         </div>
                     </div>
 
+                    {/* Goal Time Slider */}
+                    {effectiveVO2max > 0 && (
+                        <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-xs font-semibold text-gray-300 flex items-center gap-1">
+                                    <Timer className="w-3 h-3 text-accent-orange" />
+                                    Recommended Goal
+                                </h4>
+                                <span className="text-xs text-gray-500">Based on Fitness & Shape</span>
+                            </div>
+                            <input
+                                type="range"
+                                min={calculatePredictedTimes(effectiveVO2max, 100).optimal} // Fastest (100% shape)
+                                max={calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05} // Slowest (0% shape + 5% buffer)
+                                step="60" // 1 minute steps
+                                defaultValue={calculatePredictedTimes(effectiveVO2max, shapePercent).predicted}
+                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange mb-2"
+                                onChange={(e) => {
+                                    const seconds = parseInt(e.target.value);
+                                    const h = Math.floor(seconds / 3600);
+                                    const m = Math.floor((seconds % 3600) / 60);
+                                    const s = seconds % 60;
+                                    setHours(h.toString());
+                                    setMinutes(m.toString());
+                                    setSeconds(s.toString());
+                                }}
+                            />
+                            <div className="flex justify-between text-xs text-gray-500">
+                                <span>{formatTime(calculatePredictedTimes(effectiveVO2max, 100).optimal)} (Optimal)</span>
+                                <span>{formatTime(calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05)} (Conservative)</span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Heart Rate Settings */}
                     <div className="border-t border-white/10 pt-6">
                         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Heart Rate</h3>
@@ -343,6 +381,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     </p>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

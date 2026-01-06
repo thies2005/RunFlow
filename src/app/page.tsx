@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { TodayWorkout, RaceCountdown, ActivityList, FitnessChart, AnalyticsDashboard, SettingsModal, PoweredByStravaLogo } from '@/components';
+import { calculateWeightedEffectiveVO2max, calculateMarathonShape } from '@/lib/metrics/runalyze';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
@@ -19,7 +20,7 @@ export default function Dashboard() {
     const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useQuery({
         queryKey: ['activities'],
         queryFn: async () => {
-            const res = await fetch('/api/activities?limit=300&type=RUN');
+            const res = await fetch('/api/activities?limit=300');
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
                 throw new Error(errorData.error || 'Failed to fetch activities');
@@ -141,6 +142,18 @@ export default function Dashboard() {
             tsb: -10 + Math.random() * 25,
         }))
         : [];
+
+    // Calculate metrics for Settings Slider - MUST be stable
+    const effectiveVO2max = useMemo(() => {
+        if (!allActivities.length) return 0;
+        // Mock max HR if not available (should really come from settings/user)
+        const maxHR = activeGoal?.maxHeartRate || 185;
+        return calculateWeightedEffectiveVO2max(allActivities, maxHR);
+    }, [allActivities, activeGoal?.maxHeartRate]);
+
+    const marathonShape = useMemo(() => {
+        return calculateMarathonShape(allActivities, effectiveVO2max);
+    }, [allActivities, effectiveVO2max]);
 
     // Check for any errors
     const hasError = activitiesError || goalsError || syncError || syncMutation.error;
@@ -348,7 +361,12 @@ export default function Dashboard() {
                 </div>
             </footer>
 
-            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+                effectiveVO2max={effectiveVO2max}
+                shapePercent={marathonShape.shape}
+            />
         </div>
     );
 }

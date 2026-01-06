@@ -36,7 +36,7 @@ export default function OnboardingWizard() {
     // Analysis Logic (Step 2)
     const { data: activitiesData } = useQuery({
         queryKey: ['activities', 'run'],
-        queryFn: async () => (await fetch('/api/activities?limit=100&type=RUN')).json(),
+        queryFn: async () => (await fetch('/api/activities?limit=100')).json(),
         enabled: step >= 2,
     }); // Fetch more for analysis
 

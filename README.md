@@ -61,6 +61,29 @@ npm run dev
 - **Auth**: NextAuth.js with Strava OAuth
 - **Deployment**: Docker Compose, Cloudflare Tunnels
 
+## Deployment & Architecture
+
+We use a **Dual-Branch Strategy** to support both local development and production deployment.
+
+### Branches
+- **`main`**: The development branch. `docker-compose.yml` is configured to **build locally** (`build: .`).
+- **`dockerhub`**: The production branch. `docker-compose.yml` is configured to **pull images** (`image: t23wes3/runflow:TAG`).
+
+### Automated Workflow
+Use the `scripts/deploy.ps1` script to manage releases. It handles version bumping, multi-arch builds, and keeping both branches in sync.
+
+#### 1. Full Release (Build + Push)
+Builds new Docker images (amd64/arm64), pushes to Docker Hub, and updates both git branches.
+```powershell
+.\scripts\deploy.ps1 "Your commit message"
+```
+
+#### 2. Code Sync Only (No Docker Build)
+Skips the image build but syncs code updates to both `main` and `dockerhub` branches.
+```powershell
+.\scripts\deploy.ps1 "Your commit message" -SkipDocker
+```
+
 ## Key Calculations
 
 ### VDOT (Daniels-Gilbert Formula)

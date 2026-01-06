@@ -53,7 +53,7 @@ To update to the latest version:
 
 ```bash
 # Pull latest source
-git pull origin main
+git pull origin master
 
 # Rebuild and restart
 docker compose up -d --build

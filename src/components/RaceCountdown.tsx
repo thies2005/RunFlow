@@ -18,6 +18,7 @@ interface Goal {
 interface RaceCountdownProps {
     goal: Goal | null;
     weeklyMileage?: number; // Current week's mileage in km
+    className?: string;
 }
 
 const raceLabels: Record<string, string> = {
@@ -38,12 +39,12 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
+export function RaceCountdown({ goal, weeklyMileage = 0, className = '' }: RaceCountdownProps) {
     const router = useRouter();
 
     if (!goal) {
         return (
-            <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.1s' }}>
+            <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
                 <h2 className="text-lg font-semibold text-gray-400 mb-4">Race Goal</h2>
                 <div className="text-center py-8">
                     <span className="text-4xl mb-4 block">🏁</span>
@@ -70,7 +71,7 @@ export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
     const progressPercent = Math.min(100, (weeksCompleted / totalWeeks) * 100);
 
     return (
-        <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.1s' }}>
+        <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-300">Race Goal</h2>
                 <div className="flex items-center gap-3">

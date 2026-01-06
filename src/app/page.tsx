@@ -206,9 +206,9 @@ export default function Dashboard() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                     <div className="lg:col-span-1">
-                        <div className="glass-card p-6">
+                        <div className="glass-card p-6 h-full flex flex-col">
                             <h2 className="text-lg font-semibold text-gray-300 mb-4">This Week's Workouts</h2>
                             {weeklyWorkouts.length > 0 ? (
                                 <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -269,10 +269,10 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div className="lg:col-span-1">
-                        <RaceCountdown goal={activeGoal} weeklyMileage={currentWeekMileage} />
+                        <RaceCountdown goal={activeGoal} weeklyMileage={currentWeekMileage} className="h-full" />
                     </div>
-                    <div className="lg:col-span-1 flex flex-col justify-center">
-                        <div className="glass-card p-6">
+                    <div className="lg:col-span-1 h-full flex flex-col">
+                        <div className="glass-card p-6 h-full flex flex-col justify-center">
                             <h2 className="text-lg font-semibold text-gray-300 mb-4">Training Status</h2>
 
                             {/* Metrics List (Runalyze Style) */}

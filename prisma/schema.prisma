@@ -35,6 +35,13 @@ model User {
   hrRest        Int?      // Resting heart rate
   weight        Float?    // kg
   
+  // HR Zone thresholds (% of hrMax)
+  hrZone1Max    Int       @default(60)  // Z1 ends at 60%
+  hrZone2Max    Int       @default(70)  // Z2 ends at 70%
+  hrZone3Max    Int       @default(80)  // Z3 ends at 80%
+  hrZone4Max    Int       @default(90)  // Z4 ends at 90%
+  // Z5 = 90%+ (implied)
+  
   // Sync status
   lastSyncAt    DateTime?
   syncInProgress Boolean  @default(false)

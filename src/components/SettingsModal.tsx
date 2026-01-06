@@ -26,6 +26,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const [maxHeartRate, setMaxHeartRate] = useState(185);
     const [restingHeartRate, setRestingHeartRate] = useState(55);
 
+    // Zone Thresholds (% of Max HR)
+    const [zone1Max, setZone1Max] = useState(60);
+    const [zone2Max, setZone2Max] = useState(70);
+    const [zone3Max, setZone3Max] = useState(80);
+    const [zone4Max, setZone4Max] = useState(90);
+
     const [message, setMessage] = useState('');
 
     const updateMutation = useMutation({
@@ -43,9 +49,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     runsPerWeek,
                     ridesPerWeek,
                     strengthPerWeek,
-                    weeklyMileageGoal: weeklyMileage * 1000, // Convert km to meters
+                    weeklyMileageGoal: weeklyMileage * 1000,
                     maxHeartRate,
-                    restingHeartRate
+                    restingHeartRate,
+                    hrZone1Max: zone1Max,
+                    hrZone2Max: zone2Max,
+                    hrZone3Max: zone3Max,
+                    hrZone4Max: zone4Max,
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -261,6 +271,54 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                     placeholder="55"
                                 />
                             </div>
+                        </div>
+
+                        {/* Zone Thresholds */}
+                        <div className="mb-4">
+                            <p className="text-xs text-gray-500 mb-3">Zone thresholds (% of Max HR)</p>
+                            <div className="grid grid-cols-4 gap-2">
+                                <div>
+                                    <label className="block text-xs text-green-400 mb-1 text-center">Z1 Max</label>
+                                    <input
+                                        type="number"
+                                        value={zone1Max}
+                                        onChange={e => setZone1Max(parseInt(e.target.value) || 60)}
+                                        className={`${inputClass} text-center text-sm`}
+                                        min="50" max="70"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-blue-400 mb-1 text-center">Z2 Max</label>
+                                    <input
+                                        type="number"
+                                        value={zone2Max}
+                                        onChange={e => setZone2Max(parseInt(e.target.value) || 70)}
+                                        className={`${inputClass} text-center text-sm`}
+                                        min="60" max="80"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-amber-400 mb-1 text-center">Z3 Max</label>
+                                    <input
+                                        type="number"
+                                        value={zone3Max}
+                                        onChange={e => setZone3Max(parseInt(e.target.value) || 80)}
+                                        className={`${inputClass} text-center text-sm`}
+                                        min="70" max="90"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-red-400 mb-1 text-center">Z4 Max</label>
+                                    <input
+                                        type="number"
+                                        value={zone4Max}
+                                        onChange={e => setZone4Max(parseInt(e.target.value) || 90)}
+                                        className={`${inputClass} text-center text-sm`}
+                                        min="80" max="100"
+                                    />
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-2">Z5 = above Z4 Max</p>
                         </div>
                     </div>
 

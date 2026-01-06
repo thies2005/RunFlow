@@ -13,7 +13,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate } = await req.json();
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max } = await req.json();
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -23,15 +23,17 @@ export async function POST(req: Request) {
         const newVdot = calculateVdot({ distance: raceDistance as RaceDistance, timeSeconds });
 
         // 2. Update User HR settings if provided
-        if (maxHeartRate || restingHeartRate) {
-            await prisma.user.update({
-                where: { id: session.user.id },
-                data: {
-                    ...(maxHeartRate && { hrMax: maxHeartRate }),
-                    ...(restingHeartRate && { hrRest: restingHeartRate }),
-                }
-            });
-        }
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: {
+                ...(maxHeartRate && { hrMax: maxHeartRate }),
+                ...(restingHeartRate && { hrRest: restingHeartRate }),
+                ...(hrZone1Max && { hrZone1Max }),
+                ...(hrZone2Max && { hrZone2Max }),
+                ...(hrZone3Max && { hrZone3Max }),
+                ...(hrZone4Max && { hrZone4Max }),
+            }
+        });
 
         // 3. Find Active Goal
         const activeGoal = await prisma.goal.findFirst({

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { ArrowRight, CheckCircle, RefreshCw, BarChart2, Calendar, Check } from 'lucide-react';
@@ -9,8 +9,12 @@ import AnalyticsDashboard from './AnalyticsDashboard';
 
 export default function OnboardingWizard() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { data: session } = useSession();
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(() => {
+        const p = searchParams.get('step');
+        return p ? parseInt(p) : 1;
+    });
 
     // Sync Logic (Step 1)
     const { data: syncStatus } = useQuery({
@@ -19,14 +23,20 @@ export default function OnboardingWizard() {
         refetchInterval: (query) => query.state.data?.syncInProgress ? 1000 : false,
     });
 
+    const [importRange, setImportRange] = useState('ALL');
+
     const syncMutation = useMutation({
-        mutationFn: async () => await fetch('/api/sync', { method: 'POST' }),
+        mutationFn: async () => await fetch('/api/sync', {
+            method: 'POST',
+            body: JSON.stringify({ range: importRange }),
+            headers: { 'Content-Type': 'application/json' }
+        }),
     });
 
     // Analysis Logic (Step 2)
     const { data: activitiesData } = useQuery({
-        queryKey: ['activities', 'all'],
-        queryFn: async () => (await fetch('/api/activities?limit=100')).json(),
+        queryKey: ['activities', 'run'],
+        queryFn: async () => (await fetch('/api/activities?limit=100&type=RUN')).json(),
         enabled: step >= 2,
     }); // Fetch more for analysis
 
@@ -52,6 +62,10 @@ export default function OnboardingWizard() {
         },
         onSuccess: () => {
             router.push('/');
+        },
+        onError: (error) => {
+            console.error('Goal creation failed:', error);
+            alert('Failed to create goal. Please try again.');
         }
     });
 
@@ -94,13 +108,30 @@ export default function OnboardingWizard() {
                         </div>
 
                         {!syncStatus?.syncInProgress && syncStatus?.totalActivities === 0 && (
-                            <button
-                                onClick={() => syncMutation.mutate()}
-                                disabled={syncMutation.isPending}
-                                className="btn-primary w-full py-3"
-                            >
-                                {syncMutation.isPending ? 'Starting...' : 'Start Import'}
-                            </button>
+                            <div className="space-y-4">
+                                <div className="text-left">
+                                    <label className="block text-sm font-medium text-gray-400 mb-1 ml-1">Import Range</label>
+                                    <select
+                                        value={importRange}
+                                        onChange={(e) => setImportRange(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-accent-orange outline-none"
+                                    >
+                                        <option value="1_MONTH">Last Month</option>
+                                        <option value="3_MONTHS">Last 3 Months</option>
+                                        <option value="6_MONTHS">Last 6 Months</option>
+                                        <option value="1_YEAR">Last Year</option>
+                                        <option value="2_YEARS">Last 2 Years</option>
+                                        <option value="ALL">All History</option>
+                                    </select>
+                                </div>
+                                <button
+                                    onClick={() => syncMutation.mutate()}
+                                    disabled={syncMutation.isPending}
+                                    className="btn-primary w-full py-3"
+                                >
+                                    {syncMutation.isPending ? 'Starting...' : 'Start Import'}
+                                </button>
+                            </div>
                         )}
 
                         {!syncStatus?.syncInProgress && (syncStatus?.totalActivities || 0) > 0 && (

@@ -4,6 +4,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Activity, Target, TrendingUp, Zap } from 'lucide-react';
+import { ConnectWithStravaButton } from '@/components';
 
 export default function LoginPage() {
     const { status } = useSession();
@@ -61,24 +62,11 @@ export default function LoginPage() {
                     </div>
 
                     {/* Strava login button */}
-                    <button
-                        onClick={() => signIn('strava', { callbackUrl: '/' })}
-                        className="btn-strava w-full text-lg"
-                    >
-                        <svg
-                            className="w-6 h-6"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066l-2.084 4.116z" />
-                            <path
-                                d="M7.778 13.828h2.89L7.778 8.206l-2.89 5.622h2.89zM7.778 0L0 15.38h4.192l3.586-7.052 3.578 7.052h4.192L7.778 0z"
-                                opacity=".6"
-                            />
-                        </svg>
-                        Connect with Strava
-                    </button>
+                    <div className="flex justify-center">
+                        <ConnectWithStravaButton
+                            onClick={() => signIn('strava', { callbackUrl: '/' })}
+                        />
+                    </div>
 
                     <p className="text-sm text-gray-500 mt-6">
                         We&apos;ll sync your activities to provide personalized training insights

@@ -2,6 +2,7 @@
 
 import { Calendar, Target, TrendingUp, Timer } from 'lucide-react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 interface Goal {
     id: string;
@@ -38,6 +39,8 @@ function formatTime(seconds: number): string {
 }
 
 export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
+    const router = useRouter();
+
     if (!goal) {
         return (
             <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.1s' }}>
@@ -45,7 +48,12 @@ export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
                 <div className="text-center py-8">
                     <span className="text-4xl mb-4 block">🏁</span>
                     <p className="text-gray-400">No race goal set</p>
-                    <button className="btn-secondary mt-4">Set Your Goal</button>
+                    <button
+                        onClick={() => router.push('/onboarding?step=3')}
+                        className="btn-secondary mt-4"
+                    >
+                        Set Your Goal
+                    </button>
                 </div>
             </div>
         );
@@ -65,7 +73,15 @@ export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
         <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-300">Race Goal</h2>
-                <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => router.push('/plan')}
+                        className="text-xs text-accent-orange hover:text-accent-pink transition-colors"
+                    >
+                        View Full Plan →
+                    </button>
+                    <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
+                </div>
             </div>
 
             {/* Race name and date */}
@@ -136,17 +152,18 @@ export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-400">This Week&apos;s Mileage</span>
                         <span className="text-sm text-white">
-                            {weeklyMileage.toFixed(1)} / {goal.weeklyMileageGoal.toFixed(0)} km
+                            {weeklyMileage.toFixed(1)} / {(goal.weeklyMileageGoal / 1000).toFixed(1)} km
                         </span>
                     </div>
                     <div className="h-2 bg-background rounded-full overflow-hidden">
                         <div
                             className="h-full bg-gradient-to-r from-accent-cyan to-green-500 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, (weeklyMileage / goal.weeklyMileageGoal) * 100)}%` }}
+                            style={{ width: `${Math.min(100, (weeklyMileage / (goal.weeklyMileageGoal / 1000)) * 100)}%` }}
                         />
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

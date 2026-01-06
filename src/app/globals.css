@@ -31,22 +31,18 @@ body {
 
 /* Glassmorphism effect for cards */
 .glass-card {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.03) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.03) 100%);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
 }
 
 .glass-card-hover:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.05) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(255, 255, 255, 0.05) 100%);
   border-color: rgba(255, 255, 255, 0.15);
 }
 
@@ -181,11 +177,25 @@ body {
 }
 
 /* Zone colors */
-.zone-1 { color: #4ade80; }
-.zone-2 { color: #a3e635; }
-.zone-3 { color: #facc15; }
-.zone-4 { color: #fb923c; }
-.zone-5 { color: #ef4444; }
+.zone-1 {
+  color: #4ade80;
+}
+
+.zone-2 {
+  color: #a3e635;
+}
+
+.zone-3 {
+  color: #facc15;
+}
+
+.zone-4 {
+  color: #fb923c;
+}
+
+.zone-5 {
+  color: #ef4444;
+}
 
 /* Stat display */
 .stat-value {
@@ -207,9 +217,12 @@ body {
 
 /* Animations */
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(247, 37, 133, 0.5);
   }
@@ -224,6 +237,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -253,4 +267,10 @@ body {
   background: #e34402;
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(252, 76, 2, 0.4);
+}
+
+/* Fix option visibility in dark mode selects */
+select option {
+  background-color: #12121a;
+  color: white;
 }

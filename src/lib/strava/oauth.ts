@@ -22,24 +22,10 @@ export const authOptions: AuthOptions = {
     ],
     callbacks: {
         async signIn({ user, account }) {
-            if (account?.provider === 'strava' && account.providerAccountId) {
-                try {
-                    // Store Strava-specific data on the user
-                    await prisma.user.update({
-                        where: { id: user.id },
-                        data: {
-                            stravaId: account.providerAccountId,
-                            stravaAccessToken: account.access_token,
-                            stravaRefreshToken: account.refresh_token,
-                            stravaTokenExpiry: account.expires_at
-                                ? new Date(account.expires_at * 1000)
-                                : null,
-                        },
-                    });
-                } catch (error) {
-                    console.error('Error storing Strava tokens:', error);
-                    // Don't block sign-in if token storage fails
-                }
+            // Fix: Strava Provider returns 'athlete' object which breaks PrismaAdapter
+            // We must remove it before NextAuth tries to save the account
+            if (account && 'athlete' in account) {
+                delete (account as any).athlete;
             }
             return true;
         },
@@ -49,17 +35,26 @@ export const authOptions: AuthOptions = {
                 session.user.id = user.id;
 
                 try {
-                    // Check if user has valid Strava connection
-                    const dbUser = await prisma.user.findUnique({
-                        where: { id: user.id },
-                        select: {
-                            stravaId: true,
-                            stravaTokenExpiry: true,
-                            lastSyncAt: true,
+                    // Check if user has valid Strava connection via Account table
+                    const account = await prisma.account.findFirst({
+                        where: {
+                            userId: user.id,
+                            provider: 'strava'
                         },
+                        select: {
+                            providerAccountId: true,
+                            expires_at: true,
+                        }
                     });
 
-                    session.user.hasStrava = !!dbUser?.stravaId;
+                    // Sync status logic (optional fallback to user fields if needed, 
+                    // but primarily we should check the Account presence)
+                    const dbUser = await prisma.user.findUnique({
+                        where: { id: user.id },
+                        select: { lastSyncAt: true }
+                    });
+
+                    session.user.hasStrava = !!account;
                     session.user.lastSyncAt = dbUser?.lastSyncAt?.toISOString() ?? null;
                 } catch (error) {
                     console.error('Error fetching user data for session:', error);
@@ -84,22 +79,21 @@ export const authOptions: AuthOptions = {
  * Refresh Strava access token if expired
  */
 export async function refreshStravaToken(userId: string): Promise<string | null> {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-            stravaRefreshToken: true,
-            stravaAccessToken: true,
-            stravaTokenExpiry: true,
-        },
+    const account = await prisma.account.findFirst({
+        where: {
+            userId: userId,
+            provider: 'strava'
+        }
     });
 
-    if (!user?.stravaRefreshToken) {
+    if (!account?.refresh_token) {
         return null;
     }
 
     // Check if token is still valid (with 5 min buffer)
-    if (user.stravaTokenExpiry && user.stravaTokenExpiry > new Date(Date.now() + 5 * 60 * 1000)) {
-        return user.stravaAccessToken;
+    // expires_at is in seconds (Unix timestamp)
+    if (account.expires_at && account.expires_at * 1000 > Date.now() + 5 * 60 * 1000) {
+        return account.access_token;
     }
 
     // Refresh the token
@@ -110,7 +104,7 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
             client_id: process.env.STRAVA_CLIENT_ID,
             client_secret: process.env.STRAVA_CLIENT_SECRET,
             grant_type: 'refresh_token',
-            refresh_token: user.stravaRefreshToken,
+            refresh_token: account.refresh_token,
         }),
     });
 
@@ -121,13 +115,15 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
 
     const data = await response.json();
 
-    // Update user with new tokens
-    await prisma.user.update({
-        where: { id: userId },
+    // Update account with new tokens
+    await prisma.account.update({
+        where: {
+            id: account.id
+        },
         data: {
-            stravaAccessToken: data.access_token,
-            stravaRefreshToken: data.refresh_token,
-            stravaTokenExpiry: new Date(data.expires_at * 1000),
+            access_token: data.access_token,
+            refresh_token: data.refresh_token,
+            expires_at: data.expires_at,
         },
     });
 

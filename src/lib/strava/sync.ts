@@ -128,9 +128,28 @@ async function fetchActivities(
 }
 
 /**
+ * Calculate timestamp for range
+ */
+function getRangeStartTimestamp(range?: string): number | undefined {
+    if (!range || range === 'ALL') return undefined; // 'ALL' means start from beginning (undefined 'after')
+
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+
+    switch (range) {
+        case '1_MONTH': return Math.floor((now - 30 * day) / 1000);
+        case '3_MONTHS': return Math.floor((now - 90 * day) / 1000);
+        case '6_MONTHS': return Math.floor((now - 180 * day) / 1000);
+        case '1_YEAR': return Math.floor((now - 365 * day) / 1000);
+        case '2_YEARS': return Math.floor((now - 730 * day) / 1000);
+        default: return undefined;
+    }
+}
+
+/**
  * Sync all activities for a user
  */
-export async function syncUserActivities(userId: string): Promise<{
+export async function syncUserActivities(userId: string, range?: string): Promise<{
     synced: number;
     skipped: number;
     errors: number;
@@ -157,10 +176,23 @@ export async function syncUserActivities(userId: string): Promise<{
             throw new Error('Failed to get Strava access token');
         }
 
-        // Calculate "after" timestamp for incremental sync
-        const after = user?.lastSyncAt
-            ? Math.floor(user.lastSyncAt.getTime() / 1000)
-            : undefined;
+        // Calculate "after" timestamp
+        // If range is 'ALL', we force undefined (full history)
+        // If range is specific, use that timestamp
+        // If range is undefined (auto/incremental), use lastSyncAt
+        let after: number | undefined;
+
+        if (range) {
+            if (range === 'ALL') {
+                after = undefined;
+            } else {
+                after = getRangeStartTimestamp(range);
+            }
+        } else {
+            after = user?.lastSyncAt
+                ? Math.floor(user.lastSyncAt.getTime() / 1000)
+                : undefined;
+        }
 
         let synced = 0;
         let skipped = 0;

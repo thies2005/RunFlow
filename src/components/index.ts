@@ -4,3 +4,6 @@ export { ActivityList } from './ActivityList';
 export { FitnessChart } from './FitnessChart';
 export { default as AnalyticsDashboard } from './AnalyticsDashboard';
 export { default as OnboardingWizard } from './OnboardingWizard';
+export { default as SettingsModal } from './SettingsModal';
+export { default as EditWorkoutModal } from './EditWorkoutModal';
+export * from './StravaLogos';

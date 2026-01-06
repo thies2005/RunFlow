@@ -1,117 +1,98 @@
 # RunFlow
 
-RunFlow is a production-grade running performance dashboard that combines the best of **Runna** (structured training plans) and **Runalyze** (deep analytics). It is containerized with Docker for easy deployment and uses Cloudflare Tunnels for secure external access.
+RunFlow is a production-grade running performance dashboard that combines structured training plans with deep analytics. It is containerized with Docker for easy deployment on any server (VPS, Raspberry Pi, Home Lab).
+
+![RunFlow Dashboard](public/dashboard-preview.png)
 
 ## 🏗️ Architecture
 
-- **Frontend**: Next.js 14 (App Router) with Tailwind CSS & Recharts for visualization.
-- **Backend**: Next.js API Routes (Service Layer Architecture).
-- **Database**: PostgreSQL 16 (persisted via Docker volume).
-- **ORM**: Prisma for type-safe database access.
-- **Auth**: NextAuth.js with Strava OAuth provider.
-- **Analytics**: Custom implementation of TRIMP, CTL/ATL/TSB, and Effective VO2max (Runalyze physics).
-- **Networking**: Cloudflare Tunnel (`cloudflared`) for secure public access without opening ports.
+- **Frontend/Backend**: Next.js 14 App Router (Service Layer Architecture).
+- **Database**: PostgreSQL 16.
+- **Physics**: Custom implementation of Runalyze TRIMP, CTL/ATL/TSB, and Effective VO2max.
+- **Images**: Multi-arch support (`linux/amd64`, `linux/arm64`) hosted on Docker Hub.
 
 ---
 
-## 🚀 Docker Deployment (Recommended)
+## 🚀 Server Installation (Docker Hub)
 
-RunFlow is designed to be deployed using Docker Compose. We provide official multi-arch images (`linux/amd64`, `linux/arm64`) on Docker Hub.
+This is the recommended way to install RunFlow on a Linux server or VPS. We pull the heavy application image from Docker Hub, so you don't need to build it.
 
 ### 1. Prerequisites
+- **Docker Engine** & **Docker Compose** installed.
+- **Git** (to fetch configuration files).
+- **Strava Account** (for API credentials).
 
-- **Docker & Docker Compose**: [Install Docker](https://docs.docker.com/get-docker/)
-- **Strava Account**: For API credentials ([Strava API Settings](https://www.strava.com/settings/api)).
-- **Cloudflare Account** (Optional): For secure public access via Tunnels.
-
-### 2. Quick Start
-
-Create a `docker-compose.yml` file or clone the repository:
+### 2. Install
+On your server, run the following:
 
 ```bash
+# 1. Clone the repository to get configuration files
+# We only need docker-compose.yml and the scripts
 git clone https://github.com/t23wes3/RunFlow.git
 cd RunFlow
+
+# 2. Configure Environment
+# Copy the example file and edit it with your credentials
+cp .env.example .env
+nano .env
 ```
 
-Create a `.env` file with your credentials (see Configuration below), then run:
+**Required .env Configuration**:
+- `NEXTAUTH_URL`: Must match your server's access URL (e.g., `https://run.yourdomain.com`).
+- `NEXTAUTH_SECRET`: Generate one (e.g., `openssl rand -base64 32`).
+- `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET`: Get these from [Strava Settings](https://www.strava.com/settings/api).
+
+### 3. Deploy
+Start the application. Docker will pull the pre-built application image from Docker Hub.
 
 ```bash
-# Pull the latest image and start
-docker compose pull
 docker compose up -d
 ```
 
-### 3. Updating
+*Note: The first run will build a small 'migrator' helper container to set up the database schema. This takes a few moments.*
 
-To update to the latest version:
+### 4. Updates
+To update to the latest version of RunFlow in the future:
 
 ```bash
+# Get latest config (if any)
+git pull origin main
+
+# Pull latest Docker image
 docker compose pull
+
+# Restart
 docker compose up -d
 ```
 
 ---
 
-## ⚙️ Configuration
+## 🛠️ Local Development (Build from Source)
 
-Create a `.env` file in the root directory. You can copy `.env.example` as a template.
-
-| Variable | Description |
-| :--- | :--- |
-| `DATABASE_URL` | Postgres connection string. Internal Docker default: `postgresql://runflow:runflow@db:5432/runflow` |
-| `NEXTAUTH_URL` | The full public URL of your app (e.g., `https://run.yourdomain.com`). |
-| `NEXTAUTH_SECRET` | A random string for encryption. Generate with `openssl rand -base64 32`. |
-| `STRAVA_CLIENT_ID` | From Strava API Settings. |
-| `STRAVA_CLIENT_SECRET` | From Strava API Settings. |
-| `TUNNEL_TOKEN` | (Optional) Cloudflare Tunnel token. |
-
----
-
-## 🛠️ Development
-
-To run the application locally for development:
+If you are a developer wanting to modify the code:
 
 ```bash
-# Start in development mode (builds from source, enables hot-reload)
+# Clone
+git clone https://github.com/t23wes3/RunFlow.git
+cd RunFlow
+
+# Start in Dev Mode (Hot-Reloading)
+# Uses docker-compose.dev.yml to mount source code
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-### Database Management
-
-- **Studio**: Run `npx prisma studio` to view data (requires local env setup).
-- **Migrations**: `npx prisma migrate dev` (requires local DB connection).
-
 ---
 
-## 💾 Backup & Restore
+## ⚙️ Advanced Configuration
 
-RunFlow includes an automated backup container (`postgres-backup`) that runs every 6 hours.
+| Variable | Description |
+| :--- | :--- |
+| `DATABASE_URL` | Internal Docker link. Leave default: `postgresql://runflow:runflow@db:5432/runflow` |
+| `TUNNEL_TOKEN` | (Optional) Cloudflare Tunnel token for secure remote access. |
 
-- **Location**: Backups are stored in `./backups` on the host.
-- **Retention**: Keeps 7 daily, 4 weekly, and 6 monthly backups.
-
-### Restoring Data
-
-**Warning**: This will overwrite your current database.
-
-**Windows**:
-```powershell
-.\scripts\restore.ps1 "backup_filename.sql.gz"
-```
-
-**Linux/Mac**:
+## 💾 Backups
+Automated backups run every 6 hours and are stored in the `./backups` directory on your server.
+To restore:
 ```bash
-./scripts/restore.sh "backup_filename.sql.gz"
-```
-
----
-
-## ⚡ Deployment Script (Maintainers)
-
-For maintainers pushing new versions to Docker Hub:
-
-```powershell
-# Usage: .\scripts\deploy.ps1 "Commit message"
-# Bumps version, builds multi-arch image, pushes to Hub & GitHub
-.\scripts\deploy.ps1 "feat: new analytics engine"
+./scripts/restore.sh "backup_file_name.sql.gz"
 ```

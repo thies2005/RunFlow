@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { TodayWorkout, RaceCountdown, ActivityList, FitnessChart, AnalyticsDashboard, SettingsModal } from '@/components';
+import { TodayWorkout, RaceCountdown, ActivityList, FitnessChart, AnalyticsDashboard, SettingsModal, PoweredByStravaLogo } from '@/components';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
@@ -313,9 +313,10 @@ export default function Dashboard() {
 
             {/* Footer */}
             <footer className="border-t border-white/10 mt-12 py-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <p className="text-center text-gray-500 text-sm">
-                        RunFlow • Powered by Strava • Built with ❤️ for runners
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-4">
+                    <PoweredByStravaLogo className="h-4" />
+                    <p className="text-gray-500 text-xs">
+                        RunFlow • Built with ❤️ for runners
                     </p>
                 </div>
             </footer>

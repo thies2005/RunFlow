@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
     Activity,
@@ -10,6 +11,7 @@ import {
     Mountain,
     Zap
 } from 'lucide-react';
+import ActivityDetailsModal from './ActivityDetailsModal';
 
 interface ActivityItem {
     id: string;
@@ -73,15 +75,23 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
     const crossTraining = isCrossTraining(activity.type);
 
     return (
-        <div
-            className={`glass-card glass-card-hover p-4 transition-all duration-200 ${crossTraining ? 'recovery-border' : ''
+        <button
+            className={`w-full text-left glass-card glass-card-hover p-4 transition-all duration-200 ${crossTraining ? 'recovery-border' : ''
                 }`}
+            onClick={(e) => {
+                // Determine if we should handle logic here or let parent handle?
+                // ActivityList handles the modal logic, so this button just bubbles up?
+                // Actually ActivityList renders ActivityCard, so we can pass onClick to ActivityCard?
+                // Or since ActivityCard is internal here, we can just assume it's wrapper.
+                // But ActivityCard doesn't receive onClick.
+                // I will modify ActivityCard to accept onClick or just use div in ActivityList wrapper.
+            }}
         >
             <div className="flex items-start gap-4">
                 {/* Activity type icon */}
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${crossTraining
-                        ? 'bg-gradient-to-br from-cyan-500/20 to-green-500/20 text-cyan-400'
-                        : 'bg-gradient-to-br from-orange-500/20 to-pink-500/20 text-orange-400'
+                    ? 'bg-gradient-to-br from-cyan-500/20 to-green-500/20 text-cyan-400'
+                    : 'bg-gradient-to-br from-orange-500/20 to-pink-500/20 text-orange-400'
                     }`}>
                     {activityIcons[activity.type]}
                 </div>
@@ -160,11 +170,13 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                     )}
                 </div>
             </div>
-        </div>
+        </button>
     );
 }
 
 export function ActivityList({ activities, isLoading }: ActivityListProps) {
+    const [selectedActivity, setSelectedActivity] = useState<ActivityItem | null>(null);
+
     if (isLoading) {
         return (
             <div className="space-y-4">
@@ -201,16 +213,25 @@ export function ActivityList({ activities, isLoading }: ActivityListProps) {
     }
 
     return (
-        <div className="space-y-3">
-            {activities.map((activity, index) => (
-                <div
-                    key={activity.id}
-                    className="animate-slide-in"
-                    style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                    <ActivityCard activity={activity} />
-                </div>
-            ))}
-        </div>
+        <>
+            <div className="space-y-3">
+                {activities.map((activity, index) => (
+                    <div
+                        key={activity.id}
+                        className="animate-slide-in"
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                        onClick={() => setSelectedActivity(activity)}
+                    >
+                        <ActivityCard activity={activity} />
+                    </div>
+                ))}
+            </div>
+
+            <ActivityDetailsModal
+                isOpen={!!selectedActivity}
+                onClose={() => setSelectedActivity(null)}
+                activity={selectedActivity as any}
+            />
+        </>
     );
 }

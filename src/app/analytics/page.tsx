@@ -20,7 +20,12 @@ import {
     calculateEffectiveVO2max,
     type ActivityForShape
 } from '@/lib/metrics/runalyze';
-import { formatTime } from '@/lib/metrics/vdot';
+import {
+    formatTime,
+    calculateTrainingPaces,
+    formatPace,
+    type TrainingPaces
+} from '@/lib/metrics/vdot';
 
 export default function AnalyticsPage() {
     const { status } = useSession();
@@ -85,7 +90,7 @@ export default function AnalyticsPage() {
     });
 
     // Calculated data
-    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions, combinedData } = useMemo(() => {
+    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions, combinedData, trainingPaces } = useMemo(() => {
         const activities = activitiesData?.activities || [];
         const runs: ActivityForShape[] = activities
             .filter((a: any) => a.type === 'RUN')
@@ -109,20 +114,46 @@ export default function AnalyticsPage() {
         const shapeResult = calculateMarathonShape(runs, effectiveVO2max);
         const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapeResult.shape, calibrationFactor);
+        const trainingPaces = calculateTrainingPaces(effectiveVO2max);
 
-        // === VO2max Trend ===
-        const vo2Trend: { date: string; vo2: number }[] = [];
+        // === VO2max Trend (with Rolling Average) ===
+        const vo2Trend: { date: string; vo2: number; vo2Rolling?: number }[] = [];
         const sortedRuns = [...runs]
             .filter(r => r.hasHeartrate && r.averageHr && r.distance >= 3000)
             .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
-        sortedRuns.slice(-50).forEach(run => {
+        // Calculate raw values first
+        const rawVo2Data = sortedRuns.slice(-50).map(run => {
             const vo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr!, maxHR);
-            if (vo2 > 0) {
+            return {
+                date: new Date(run.startDate).toISOString().split('T')[0], // Use ISO date for sorting
+                vo2: vo2 > 0 ? Math.round(vo2 * 10) / 10 : 0
+            };
+        }).filter(d => d.vo2 > 0);
+
+        // Calculate rolling median
+        rawVo2Data.forEach((point, index) => {
+            const windowSize = 4;
+            const windowValues: number[] = [];
+
+            for (let i = index; i >= 0 && windowValues.length < windowSize; i--) {
+                windowValues.push(rawVo2Data[i].vo2);
+            }
+
+            if (windowValues.length > 0) {
+                // Calculate Median
+                windowValues.sort((a, b) => a - b);
+                const mid = Math.floor(windowValues.length / 2);
+                const median = windowValues.length % 2 !== 0
+                    ? windowValues[mid]
+                    : (windowValues[mid - 1] + windowValues[mid]) / 2;
+
                 vo2Trend.push({
-                    date: new Date(run.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                    vo2: Math.round(vo2 * 10) / 10
+                    ...point,
+                    vo2Rolling: Math.round(median * 10) / 10
                 });
+            } else {
+                vo2Trend.push(point);
             }
         });
 
@@ -139,7 +170,7 @@ export default function AnalyticsPage() {
             const tempVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);
             const tempShape = calculateMarathonShape(weekRuns, tempVO2 || effectiveVO2max);
             shapeTrend.push({
-                week: weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                week: weekEnd.toISOString().split('T')[0], // ISO Date
                 shape: tempShape.shape
             });
         }
@@ -165,7 +196,7 @@ export default function AnalyticsPage() {
 
             if (d.getDay() === 0) { // Weekly sample
                 fitness.push({
-                    date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    date: d.toISOString().split('T')[0], // ISO Date
                     ctl: Math.round(ctl),
                     atl: Math.round(atl),
                     tsb: Math.round(tsb)
@@ -187,7 +218,7 @@ export default function AnalyticsPage() {
             // Use Sunday as the key to match fitness data
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekEnd.getDate() + 6); // Sunday
-            const weekKey = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const weekKey = weekEnd.toISOString().split('T')[0]; // ISO Date
 
             weeklyVolumeMap.set(weekKey, (weeklyVolumeMap.get(weekKey) || 0) + run.distance / 1000);
             weeklyTimeMap.set(weekKey, (weeklyTimeMap.get(weekKey) || 0) + run.movingTime / 60);
@@ -281,6 +312,7 @@ export default function AnalyticsPage() {
             shapeTrendData: shapeTrend,
             fitnessData: fitness,
             racePredictions: allPredictions,
+            trainingPaces,
             combinedData: combinedDataWithRolling
         };
     }, [activitiesData, userData, goalsData, statsData]);
@@ -385,19 +417,9 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
-                {/* === RACE PREDICTIONS === */}
-                <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Race Predictions</h3>
-                    <div className="grid grid-cols-4 gap-4">
-                        {racePredictions.map(p => (
-                            <div key={p.distance} className="text-center p-4 bg-white/5 rounded-lg">
-                                <p className="text-gray-400 text-sm mb-1">{p.distance}</p>
-                                <p className="text-xl font-bold text-white">{formatTime(p.predicted)}</p>
-                                <p className="text-xs text-gray-500">Optimal: {formatTime(p.optimal)}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+
+                {/* Combined Analytics Chart */}
+                <CombinedAnalyticsChart data={combinedData} />
 
                 {/* Race Prediction Chart with Shape Slider */}
                 <RacePredictionChart
@@ -406,22 +428,110 @@ export default function AnalyticsPage() {
                     calibrationFactor={runalyzeMetrics.calibrationFactor}
                 />
 
-                {/* Combined Analytics Chart */}
-                <CombinedAnalyticsChart data={combinedData} />
+                {/* Training Paces & Heart Rate Section */}
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Training Paces & Heart Rate</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {/* Easy */}
+                        <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
+                            <p className="text-green-400 text-xs font-semibold mb-1 uppercase tracking-wider">Easy (E)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0
+                                    ? `${formatPace(trainingPaces?.easy.min || 0)} - ${formatPace(trainingPaces?.easy.max || 0)}`
+                                    : '-'}
+                            </p>
+                            <p className="text-green-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.65)}-${Math.round(userData.user.hrMax * 0.79)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">65-79% HRmax</p>
+                        </div>
+
+                        {/* Marathon */}
+                        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
+                            <p className="text-blue-400 text-xs font-semibold mb-1 uppercase tracking-wider">Marathon (M)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.marathon || 0) : '-'}
+                            </p>
+                            <p className="text-blue-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.78)}-${Math.round(userData.user.hrMax * 0.82)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">78-82% HRmax</p>
+                        </div>
+
+                        {/* Threshold */}
+                        <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
+                            <p className="text-yellow-400 text-xs font-semibold mb-1 uppercase tracking-wider">Threshold (T)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.threshold || 0) : '-'}
+                            </p>
+                            <p className="text-yellow-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.88)}-${Math.round(userData.user.hrMax * 0.92)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">88-92% HRmax</p>
+                        </div>
+
+                        {/* Interval */}
+                        <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
+                            <p className="text-orange-400 text-xs font-semibold mb-1 uppercase tracking-wider">Interval (I)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.interval || 0) : '-'}
+                            </p>
+                            <p className="text-orange-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.98)}-${Math.round(userData.user.hrMax * 1.0)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">98-100% HRmax</p>
+                        </div>
+
+                        {/* Repetition */}
+                        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
+                            <p className="text-red-400 text-xs font-semibold mb-1 uppercase tracking-wider">Repetition (R)</p>
+                            <p className="text-white font-bold text-lg">
+                                {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.repetition || 0) : '-'}
+                            </p>
+                            <p className="text-red-300 text-sm mt-1">
+                                {userData?.user?.hrMax ? `>${Math.round(userData.user.hrMax * 1.0)} bpm` : '-'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 mt-0.5">100%+ HRmax</p>
+                        </div>
+                    </div>
+                </div>
 
                 {/* === TREND CHARTS === */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* VO2max Trend */}
+                    {/* VO2max Trend (Rolling Average) */}
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold text-white mb-4">Effective VO2max Trend</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={vo2TrendData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                    <XAxis
+                                        dataKey="date"
+                                        stroke="#9ca3af"
+                                        fontSize={11}
+                                        tickLine={false}
+                                        tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    />
                                     <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
-                                    <Line type="monotone" dataKey="vo2" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6', r: 4 }} name="VO2max" />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                        labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="vo2"
+                                        stroke="none"
+                                        dot={{ r: 3, fill: '#3b82f6', fillOpacity: 0.4 }}
+                                        name="VO2max (Run)"
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="vo2Rolling"
+                                        stroke="#3b82f6"
+                                        strokeWidth={2}
+                                        dot={false}
+                                        name="Trend (Median)"
+                                    />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
@@ -434,9 +544,18 @@ export default function AnalyticsPage() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={shapeTrendData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                    <XAxis dataKey="week" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                    <XAxis
+                                        dataKey="week"
+                                        stroke="#9ca3af"
+                                        fontSize={11}
+                                        tickLine={false}
+                                        tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    />
                                     <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={[0, 120]} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                        labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    />
                                     <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
                                 </AreaChart>
                             </ResponsiveContainer>
@@ -451,9 +570,18 @@ export default function AnalyticsPage() {
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={fitnessData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    stroke="#9ca3af"
+                                    fontSize={11}
+                                    tickLine={false}
+                                    tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                />
                                 <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                    labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                />
                                 <Legend />
                                 <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} name="Fitness (CTL)" />
                                 <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} name="Fatigue (ATL)" />

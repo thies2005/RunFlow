@@ -18,6 +18,8 @@ interface Goal {
 interface RaceCountdownProps {
     goal: Goal | null;
     weeklyMileage?: number; // Current week's mileage in km
+    className?: string;
+    marathonShape?: number;
 }
 
 const raceLabels: Record<string, string> = {
@@ -38,12 +40,12 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
+export function RaceCountdown({ goal, weeklyMileage = 0, className = '', marathonShape = 0 }: RaceCountdownProps) {
     const router = useRouter();
 
     if (!goal) {
         return (
-            <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.1s' }}>
+            <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
                 <h2 className="text-lg font-semibold text-gray-400 mb-4">Race Goal</h2>
                 <div className="text-center py-8">
                     <span className="text-4xl mb-4 block">🏁</span>
@@ -70,7 +72,7 @@ export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
     const progressPercent = Math.min(100, (weeksCompleted / totalWeeks) * 100);
 
     return (
-        <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.1s' }}>
+        <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-300">Race Goal</h2>
                 <div className="flex items-center gap-3">
@@ -123,12 +125,12 @@ export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
             {goal.currentVdot && (
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
                             <TrendingUp className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400 uppercase tracking-wide">VDOT</p>
-                            <p className="text-xl font-bold text-white">{goal.currentVdot.toFixed(1)}</p>
+                            <p className="text-xs text-gray-400 uppercase tracking-wide">Marathon Shape</p>
+                            <p className="text-xl font-bold text-white">{marathonShape}%</p>
                         </div>
                     </div>
 

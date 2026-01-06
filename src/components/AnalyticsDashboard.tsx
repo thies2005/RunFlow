@@ -7,6 +7,8 @@ import {
 } from 'recharts';
 import { calculateZoneDistribution, calculateZonePercentages, type ZoneDistribution } from '@/lib/analytics/zones';
 import { predictRaceTime, formatTime } from '@/lib/metrics/vdot';
+import { calculateTrimpFromZones } from '@/lib/metrics/trimp';
+import { calculateFitnessHistory, type DailyLoad, getActivityContribution, calculateRunningTss } from '@/lib/metrics/fitness';
 
 type Activity = {
     id: string;
@@ -14,6 +16,7 @@ type Activity = {
     distance: number;
     movingTime: number;
     hasHeartrate: boolean;
+    type?: string;
     hrZone1Time?: number;
     hrZone2Time?: number;
     hrZone3Time?: number;
@@ -54,15 +57,15 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
         return activities.filter(a => new Date(a.startDate) >= cutoff);
     }, [activities, timeRange]);
 
-    // Unified activities processing with fallback/mock data
+    // Unified activities processing - use actual zone data or default to 0
     const activitiesWithZones = useMemo(() => {
         return filteredActivities.map(a => ({
             ...a,
-            hrZone1Time: a.hrZone1Time ?? (a.hasHeartrate ? Math.random() * 1000 : 0),
-            hrZone2Time: a.hrZone2Time ?? (a.hasHeartrate ? Math.random() * 2000 : 0),
-            hrZone3Time: a.hrZone3Time ?? (a.hasHeartrate ? Math.random() * 500 : 0),
-            hrZone4Time: a.hrZone4Time ?? (a.hasHeartrate ? Math.random() * 200 : 0),
-            hrZone5Time: a.hrZone5Time ?? (a.hasHeartrate ? Math.random() * 50 : 0),
+            hrZone1Time: a.hrZone1Time ?? 0,
+            hrZone2Time: a.hrZone2Time ?? 0,
+            hrZone3Time: a.hrZone3Time ?? 0,
+            hrZone4Time: a.hrZone4Time ?? 0,
+            hrZone5Time: a.hrZone5Time ?? 0,
         }));
     }, [filteredActivities]);
 
@@ -130,34 +133,50 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
         return predictions;
     }, [currentVdot]);
 
-    // 5. Marathon Shape (CTL/ATL/TSB simulation)
+    // 5. Fitness Metrics (CTL/ATL/TSB) using Banister's Impulse-Response Model
     const fitnessData = useMemo(() => {
-        const sortedActivities = [...filteredActivities]
-            .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+        // Group activities by date and calculate daily TRIMP
+        const dailyLoadsMap: Map<string, DailyLoad> = new Map();
 
-        let ctl = 30; // Base fitness
-        let atl = 30; // Base fatigue
-        const data: { date: string; ctl: number; atl: number; tsb: number }[] = [];
+        activitiesWithZones.forEach(a => {
+            const dateKey = new Date(a.startDate).toISOString().split('T')[0];
+            const contribution = getActivityContribution(a.type || 'RUN');
 
-        sortedActivities.forEach(a => {
-            // Simple TRIMP approximation: duration * intensity
-            const trimp = (a.movingTime / 60) * (a.distance > 0 ? 0.8 : 0.5);
+            // Calculate TRIMP from zone data
+            const trimp = calculateTrimpFromZones(
+                a.hrZone1Time, a.hrZone2Time, a.hrZone3Time, a.hrZone4Time, a.hrZone5Time
+            );
 
-            // Exponential weighted moving averages
-            ctl = ctl + (trimp - ctl) / 42; // 42-day CTL
-            atl = atl + (trimp - atl) / 7;  // 7-day ATL
-            const tsb = ctl - atl;
+            // Calculate running TSS if it's a running activity
+            const runningTss = contribution.contributesToRunningTss
+                ? calculateRunningTss(a.movingTime, a.distance, 300) // 5:00/km threshold
+                : 0;
 
-            data.push({
-                date: new Date(a.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-                ctl: Math.round(ctl),
-                atl: Math.round(atl),
-                tsb: Math.round(tsb),
-            });
+            const existing = dailyLoadsMap.get(dateKey);
+            if (existing) {
+                existing.trimp += trimp;
+                existing.runningTss += runningTss;
+                existing.activityTypes.push(a.type || 'RUN');
+            } else {
+                dailyLoadsMap.set(dateKey, {
+                    date: new Date(dateKey),
+                    trimp,
+                    runningTss,
+                    activityTypes: [a.type || 'RUN']
+                });
+            }
         });
 
-        return data.slice(-30); // Last 30 data points
-    }, [filteredActivities]);
+        const dailyLoads = Array.from(dailyLoadsMap.values());
+        const fitnessHistory = calculateFitnessHistory(dailyLoads);
+
+        return fitnessHistory.slice(-30).map(h => ({
+            date: h.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+            ctl: h.metrics.ctl,
+            atl: h.metrics.atl,
+            tsb: h.metrics.tsb,
+        }));
+    }, [activitiesWithZones]);
 
     // 6. Zone Trend (stacked area over weeks)
     const zoneTrend = useMemo(() => {

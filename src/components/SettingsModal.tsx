@@ -19,7 +19,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     // Plan Customization
     const [runsPerWeek, setRunsPerWeek] = useState(4);
     const [ridesPerWeek, setRidesPerWeek] = useState(1);
+    const [strengthPerWeek, setStrengthPerWeek] = useState(0);
     const [weeklyMileage, setWeeklyMileage] = useState(40);
+
+    // Heart Rate Settings
+    const [maxHeartRate, setMaxHeartRate] = useState(185);
+    const [restingHeartRate, setRestingHeartRate] = useState(55);
 
     const [message, setMessage] = useState('');
 
@@ -37,7 +42,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     raceDistance,
                     runsPerWeek,
                     ridesPerWeek,
-                    weeklyMileageGoal: weeklyMileage * 1000 // Convert km to meters
+                    strengthPerWeek,
+                    weeklyMileageGoal: weeklyMileage * 1000, // Convert km to meters
+                    maxHeartRate,
+                    restingHeartRate
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -166,16 +174,38 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                             </div>
                             <input
                                 type="range"
-                                min="1"
+                                min="0"
                                 max="3"
                                 value={ridesPerWeek}
                                 onChange={(e) => setRidesPerWeek(parseInt(e.target.value))}
                                 className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
                             />
                             <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>0</span>
                                 <span>1</span>
                                 <span>2</span>
                                 <span>3</span>
+                            </div>
+                        </div>
+
+                        {/* Strength Per Week */}
+                        <div className="mb-6">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-gray-400 uppercase flex items-center gap-1">💪 Strength / Week</label>
+                                <span className="text-purple-400 font-bold">{strengthPerWeek}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="5"
+                                value={strengthPerWeek}
+                                onChange={(e) => setStrengthPerWeek(parseInt(e.target.value))}
+                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>0</span>
+                                <span>2</span>
+                                <span>5</span>
                             </div>
                         </div>
 
@@ -198,6 +228,38 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                 <span>20</span>
                                 <span>50</span>
                                 <span>80</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Heart Rate Settings */}
+                    <div className="border-t border-white/10 pt-6">
+                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Heart Rate</h3>
+
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1 uppercase">Max HR</label>
+                                <input
+                                    type="number"
+                                    value={maxHeartRate}
+                                    onChange={e => setMaxHeartRate(parseInt(e.target.value) || 185)}
+                                    className={inputClass}
+                                    min="130"
+                                    max="220"
+                                    placeholder="185"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1 uppercase">Resting HR</label>
+                                <input
+                                    type="number"
+                                    value={restingHeartRate}
+                                    onChange={e => setRestingHeartRate(parseInt(e.target.value) || 55)}
+                                    className={inputClass}
+                                    min="35"
+                                    max="90"
+                                    placeholder="55"
+                                />
                             </div>
                         </div>
                     </div>

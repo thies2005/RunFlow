@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -113,6 +113,23 @@ export default function Dashboard() {
     // We fetch 300 for analytics, but only show 10 in the list
     const allActivities = activitiesData?.activities || [];
     const recentActivities = allActivities.slice(0, 10);
+
+    // Calculate current week's mileage (Monday to now)
+    const currentWeekMileage = useMemo(() => {
+        if (!allActivities.length) return 0;
+
+        const now = new Date();
+        const day = now.getDay();
+        const diff = day === 0 ? -6 : 1 - day; // Get to Monday
+        const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+        monday.setHours(0, 0, 0, 0);
+
+        const weeklyDistance = allActivities
+            .filter((a: any) => new Date(a.startDate) >= monday)
+            .reduce((sum: number, a: any) => sum + (a.distance || 0), 0);
+
+        return weeklyDistance / 1000; // Convert to km
+    }, [allActivities]);
 
     // Mock fitness data (would come from API in production)
     const fitnessData = allActivities.length > 0
@@ -256,7 +273,7 @@ export default function Dashboard() {
                     <div className="lg:col-span-1">
                         <RaceCountdown
                             goal={activeGoal}
-                            weeklyMileage={25.5} // Would be calculated from activities
+                            weeklyMileage={currentWeekMileage}
                         />
                     </div>
 

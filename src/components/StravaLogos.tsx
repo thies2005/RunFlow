@@ -14,14 +14,17 @@ export const PoweredByStravaLogo = ({ className = "h-8" }: { className?: string 
     </div>
 );
 
-// We use an image for the official button to be safe, using a raw git CDN which is stable for dev.
-// Or we render a very close approximation.
+// Inline SVG version of Strava connect button (external image URL was broken)
 export const ConnectWithStravaButton = ({ onClick }: { onClick: () => void }) => (
-    <button onClick={onClick} className="group relative transition-transform hover:-translate-y-0.5 active:translate-y-0">
-        <img
-            src="https://raw.githubusercontent.com/strava/api/master/docs/assets/btn_strava_connectwith_orange.svg"
-            alt="Connect with Strava"
-            className="h-12 w-auto shadow-lg rounded"
-        />
+    <button
+        onClick={onClick}
+        className="group relative transition-transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3 bg-[#FC4C02] hover:bg-[#E34402] text-white font-semibold py-3 px-6 rounded-lg shadow-lg"
+    >
+        {/* Strava Logo SVG */}
+        <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">
+            <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066l-2.084 4.116z" opacity="0.6" />
+            <path d="M10.233 13.828L7.778 8.206l-2.455 5.622h4.91zM7.778 0L0 15.38h4.192l3.586-7.052 3.578 7.052h4.192L7.778 0z" />
+        </svg>
+        <span>Connect with Strava</span>
     </button>
 );

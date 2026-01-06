@@ -103,8 +103,14 @@ export default function Dashboard() {
     // Data extraction
     const recentActivities = activitiesData?.activities || [];
     const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
-    const todayWorkout = activeGoal?.workouts?.[0] || null;
     const weeklyWorkouts = activeGoal?.workouts || [];
+
+    // Find today's workout or the first uncompleted one
+    const today = new Date().toDateString();
+    const todayWorkout = weeklyWorkouts.find((w: any) => new Date(w.scheduledDate).toDateString() === today) ||
+        weeklyWorkouts.find((w: any) => !w.isCompleted) || null;
+
+    const firstUncompletedIndex = weeklyWorkouts.findIndex((w: any) => !w.isCompleted);
 
     // Stats from Server
     const currentWeekMileage = statsData?.currentWeekMileage || 0;
@@ -220,51 +226,63 @@ export default function Dashboard() {
                             <h2 className="text-lg font-semibold text-gray-300 mb-4">This Week's Workouts</h2>
                             {weeklyWorkouts.length > 0 ? (
                                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                                    {weeklyWorkouts.map((workout: any, index: number) => (
-                                        <div key={workout.id || index} className={`p-3 rounded-lg border transition-all ${workout.isCompleted ? 'bg-green-500/5 border-green-500/20' : index === 0 ? 'bg-accent-orange/10 border-accent-orange/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-green-500/20' : index === 0 ? 'bg-accent-orange/20' : 'bg-white/10'}`}>
-                                                        <span className="text-sm">{workout.workoutType === 'EASY' ? '🏃' : workout.workoutType === 'LONG_RUN' ? '🚀' : workout.workoutType === 'TEMPO' ? '⚡' : workout.workoutType === 'INTERVALS' ? '🔥' : workout.workoutType === 'STRENGTH' ? '💪' : workout.workoutType === 'REST' ? '😴' : workout.workoutType === 'RIDE' ? '🚴' : workout.workoutType === 'SWIM' ? '🏊' : '🎯'}</span>
+                                    {weeklyWorkouts.map((workout: any, index: number) => {
+                                        const workoutDate = new Date(workout.scheduledDate);
+                                        const isWorkoutToday = workoutDate.toDateString() === today;
+                                        const isNextWorkout = index === firstUncompletedIndex;
+                                        const isHighlighted = !workout.isCompleted && (isWorkoutToday || isNextWorkout);
+
+                                        return (
+                                            <div key={workout.id || index} className={`p-3 rounded-lg border transition-all ${workout.isCompleted ? 'bg-green-500/5 border-green-500/20' : isHighlighted ? 'bg-accent-orange/10 border-accent-orange/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-green-500/20' : isHighlighted ? 'bg-accent-orange/20' : 'bg-white/10'}`}>
+                                                            <span className="text-sm">{workout.workoutType === 'EASY' ? '🏃' : workout.workoutType === 'LONG_RUN' ? '🚀' : workout.workoutType === 'TEMPO' ? '⚡' : workout.workoutType === 'INTERVALS' ? '🔥' : workout.workoutType === 'STRENGTH' ? '💪' : workout.workoutType === 'REST' ? '😴' : workout.workoutType === 'RIDE' ? '🚴' : workout.workoutType === 'SWIM' ? '🏊' : '🎯'}</span>
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className={`font-medium ${workout.isCompleted ? 'text-green-400' : isHighlighted ? 'text-accent-orange' : 'text-white'}`}>
+                                                                    {workout.description || workout.workoutType?.replace('_', ' ')}
+                                                                </p>
+                                                                {isWorkoutToday && (
+                                                                    <span className="text-[10px] bg-accent-orange/20 text-accent-orange px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Today</span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-xs text-gray-500">
+                                                                {workout.targetDistance ? `${(workout.targetDistance / 1000).toFixed(1)} km` : workout.targetDuration ? `${Math.round(workout.targetDuration / 60)} min` : ''}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className={`font-medium ${workout.isCompleted ? 'text-green-400' : index === 0 ? 'text-accent-orange' : 'text-white'}`}>
-                                                            {workout.description || workout.workoutType?.replace('_', ' ')}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500">
-                                                            {workout.targetDistance ? `${(workout.targetDistance / 1000).toFixed(1)} km` : workout.targetDuration ? `${Math.round(workout.targetDuration / 60)} min` : ''}
-                                                        </p>
+                                                    <div className="flex items-center gap-2">
+                                                        {!workout.isCompleted && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => setEditingWorkout(workout)}
+                                                                    className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
+                                                                    title="Edit workout"
+                                                                >
+                                                                    <Edit2 className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => completeWorkoutMutation.mutate(workout.id)}
+                                                                    disabled={completeWorkoutMutation.isPending}
+                                                                    className="btn-primary py-1 px-3 text-xs flex items-center gap-1"
+                                                                >
+                                                                    <Check className="w-3 h-3" />
+                                                                    {completeWorkoutMutation.isPending ? '...' : 'Done'}
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {workout.isCompleted && (
+                                                            <span className="text-green-400 text-xs flex items-center gap-1">
+                                                                <Check className="w-3 h-3" /> Done
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    {!workout.isCompleted && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => setEditingWorkout(workout)}
-                                                                className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
-                                                                title="Edit workout"
-                                                            >
-                                                                <Edit2 className="w-4 h-4" />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => completeWorkoutMutation.mutate(workout.id)}
-                                                                disabled={completeWorkoutMutation.isPending}
-                                                                className="btn-primary py-1 px-3 text-xs flex items-center gap-1"
-                                                            >
-                                                                <Check className="w-3 h-3" />
-                                                                {completeWorkoutMutation.isPending ? '...' : 'Done'}
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                    {workout.isCompleted && (
-                                                        <span className="text-green-400 text-xs flex items-center gap-1">
-                                                            <Check className="w-3 h-3" /> Done
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <div className="text-center py-6">
@@ -368,13 +386,9 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                             </div>
-
-
                         </div>
                     </div>
                 </div>
-
-
 
                 <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">
@@ -407,6 +421,6 @@ export default function Dashboard() {
                 workout={editingWorkout}
                 goalId={activeGoal?.id}
             />
-        </div>
+        </div >
     );
 }

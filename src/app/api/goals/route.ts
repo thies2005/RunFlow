@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { analyzeRace, type RaceDistance } from '@/lib/metrics/vdot';
 
+import { startOfWeek, endOfWeek } from 'date-fns';
+
 // GET - List goals
 export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
@@ -12,6 +14,10 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const now = new Date();
+    const start = startOfWeek(now, { weekStartsOn: 1 });
+    const end = endOfWeek(now, { weekStartsOn: 1 });
+
     const goals = await prisma.goal.findMany({
         where: { userId: session.user.id },
         orderBy: { raceDate: 'asc' },
@@ -19,11 +25,11 @@ export async function GET(request: NextRequest) {
             workouts: {
                 where: {
                     scheduledDate: {
-                        gte: new Date(),
+                        gte: start,
+                        lte: end,
                     },
                 },
                 orderBy: { scheduledDate: 'asc' },
-                take: 7, // Next 7 workouts
             },
         },
     });

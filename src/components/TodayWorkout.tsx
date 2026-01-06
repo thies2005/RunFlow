@@ -84,7 +84,7 @@ export function TodayWorkout({ workout, onStart }: TodayWorkoutProps) {
         );
     }
 
-    const config = workoutConfig[workout.type];
+    const config = workoutConfig[workout.type] || workoutConfig.EASY;
 
     return (
         <div className="glass-card intensity-border p-6 animate-pulse-glow animate-slide-in">

@@ -73,7 +73,15 @@ export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
         <div className="glass-card p-6 animate-slide-in" style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-300">Race Goal</h2>
-                <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => router.push('/plan')}
+                        className="text-xs text-accent-orange hover:text-accent-pink transition-colors"
+                    >
+                        View Full Plan →
+                    </button>
+                    <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
+                </div>
             </div>
 
             {/* Race name and date */}

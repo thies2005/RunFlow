@@ -19,7 +19,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
     const updateMutation = useMutation({
         mutationFn: async () => {
-            const timeSeconds = parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
+            const timeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
             const raceDistance = distance;
 
             if (timeSeconds === 0) throw new Error('Time cannot be zero');

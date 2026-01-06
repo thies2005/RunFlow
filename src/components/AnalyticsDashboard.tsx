@@ -88,10 +88,10 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
 
         filteredActivities.forEach(a => {
             const date = new Date(a.startDate);
-            // Get week start (Monday)
+            // Get week start (Monday) - clone date to avoid mutation
             const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-            const monday = new Date(date.setDate(diff));
+            const diff = day === 0 ? -6 : 1 - day; // Days to subtract to get to Monday
+            const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
             const key = monday.toISOString().split('T')[0];
 
             weeks[key] = (weeks[key] || 0) + (a.distance / 1000);
@@ -166,9 +166,10 @@ export default function AnalyticsDashboard({ activities, currentVdot }: Analytic
         // Use activitiesWithZones for consistent data
         activitiesWithZones.forEach(a => {
             const date = new Date(a.startDate);
+            // Get week start (Monday) - clone date to avoid mutation
             const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-            const monday = new Date(date.setDate(diff));
+            const diff = day === 0 ? -6 : 1 - day; // Days to subtract to get to Monday
+            const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
             const key = monday.toISOString().split('T')[0];
 
             if (!weeksData[key]) weeksData[key] = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };

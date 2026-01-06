@@ -2,8 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, ArrowLeft } from 'lucide-react';
-import { ActivityList } from '@/components';
+import { RefreshCw, ArrowLeft, Plus } from 'lucide-react';
+import { ActivityList, ManualActivityModal } from '@/components';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
@@ -11,6 +11,7 @@ export default function ActivitiesPage() {
     const { status } = useSession();
     const router = useRouter();
     const [filter, setFilter] = useState('RUN'); // Default to RUN
+    const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
     const { data: activitiesData, isLoading, refetch, isRefetching } = useQuery({
         queryKey: ['activities', 'all', filter],
@@ -74,6 +75,14 @@ export default function ActivitiesPage() {
                         </div>
 
                         <button
+                            onClick={() => setIsManualModalOpen(true)}
+                            className="btn-primary flex items-center gap-2 py-2 px-4 shadow-lg shadow-blue-500/20"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span className="hidden sm:inline">Manual Entry</span>
+                        </button>
+
+                        <button
                             onClick={() => refetch()}
                             className="p-2 bg-white/5 rounded-lg hover:bg-white/10 text-white transition-colors"
                             disabled={isRefetching}
@@ -93,6 +102,11 @@ export default function ActivitiesPage() {
                     />
                 </div>
             </div>
+
+            <ManualActivityModal
+                isOpen={isManualModalOpen}
+                onClose={() => setIsManualModalOpen(false)}
+            />
         </div>
     );
 }

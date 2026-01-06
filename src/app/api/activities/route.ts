@@ -70,3 +70,51 @@ export async function GET(request: NextRequest) {
         );
     }
 }
+
+export async function POST(request: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const body = await request.json();
+        const { name, date, type, distance, duration, hr } = body;
+
+        // Validation
+        if (!name || !date || !distance || !duration) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        // Generate fake Strava ID (use timestamp)
+        const stravaId = BigInt(Date.now());
+
+        const activity = await prisma.activity.create({
+            data: {
+                userId: session.user.id,
+                stravaId,
+                name,
+                type: type || 'RUN',
+                startDate: new Date(date),
+                distance: parseFloat(distance) * 1000, // km -> meters
+                movingTime: parseInt(duration) * 60,   // min -> seconds
+                elapsedTime: parseInt(duration) * 60,
+                averageHr: hr ? parseFloat(hr) : null,
+                hasHeartrate: !!hr,
+
+                // Defaults for manual entry
+                totalElevation: 0,
+            },
+        });
+
+        // Convert BigInt for response
+        return NextResponse.json({
+            ...activity,
+            stravaId: activity.stravaId.toString(),
+        });
+
+    } catch (error) {
+        console.error('Create Activity Error:', error);
+        return NextResponse.json({ error: 'Failed to create activity' }, { status: 500 });
+    }
+}

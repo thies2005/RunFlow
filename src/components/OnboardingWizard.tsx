@@ -164,7 +164,6 @@ export default function OnboardingWizard() {
                         </div>
 
                         <AnalyticsDashboard
-                            activities={activitiesData?.activities || []}
                             currentVdot={currentVdot}
                         />
 

@@ -1,8 +1,8 @@
 export { TodayWorkout } from './TodayWorkout';
 export { RaceCountdown } from './RaceCountdown';
 export { ActivityList } from './ActivityList';
-export { FitnessChart } from './FitnessChart';
 export { default as AnalyticsDashboard } from './AnalyticsDashboard';
+export { default as ManualActivityModal } from './ManualActivityModal';
 export { default as OnboardingWizard } from './OnboardingWizard';
 export { default as SettingsModal } from './SettingsModal';
 export { default as EditWorkoutModal } from './EditWorkoutModal';

@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Calculator, AlertCircle, Check } from 'lucide-react';
-import { solveCalibrationFactor } from '@/lib/metrics/runalyze';
-import { formatTime } from '@/lib/metrics/vdot';
+import { solveCalibrationFactor, calculateAllRacePredictions } from '@/lib/metrics/runalyze';
+import { formatTime, predictRaceTime } from '@/lib/metrics/vdot';
 
 type Props = {
     isOpen: boolean;
@@ -52,19 +52,31 @@ export default function ShapeCalibrationModal({
     });
 
     // Calculations for Race Mode
-    const calculateFactorFromRace = () => {
+    const raceCalcData = (() => {
         const h = parseInt(hours) || 0;
         const m = parseInt(minutes) || 0;
         const s = parseInt(seconds) || 0;
         const totalSeconds = h * 3600 + m * 60 + s;
 
-        if (totalSeconds <= 0) return null;
+        if (totalSeconds <= 0 || effectiveVO2max <= 0) return null;
 
-        return solveCalibrationFactor(effectiveVO2max, shapePercent, totalSeconds, raceType);
-    };
+        const optimalSeconds = predictRaceTime(effectiveVO2max, raceType);
+        const shapeImpact = raceType === 'MARATHON' ? 0.30 : 0.15;
+        const baseShapePenalty = (1 - Math.min(shapePercent, 100) / 100) * shapeImpact;
+        const basePredictedSeconds = optimalSeconds * (1 + baseShapePenalty);
 
-    const solvedFactor = calculateFactorFromRace();
-    const isRaceInputValid = solvedFactor !== null && solvedFactor > 0.5 && solvedFactor < 2.0;
+        const factor = solveCalibrationFactor(effectiveVO2max, shapePercent, totalSeconds, raceType);
+
+        return {
+            factor,
+            actualSeconds: totalSeconds,
+            optimalSeconds,
+            basePredictedSeconds,
+        };
+    })();
+
+    const solvedFactor = raceCalcData?.factor || null;
+    const isRaceInputValid = solvedFactor !== null && solvedFactor >= 0.5 && solvedFactor <= 2.0;
 
     const handleApply = () => {
         const factor = mode === 'RACE' ? solvedFactor : parseFloat(manualFactor);
@@ -107,7 +119,7 @@ export default function ShapeCalibrationModal({
                     {mode === 'RACE' ? (
                         <div className="space-y-4">
                             <p className="text-sm text-gray-400">
-                                Enter a recent race time. We'll adjust your shape factor so the prediction matches your reality.
+                                Enter a recent race time to calibrate predictions.
                             </p>
 
                             {/* Race Type */}
@@ -144,13 +156,30 @@ export default function ShapeCalibrationModal({
                                 />
                             </div>
 
-                            {/* Result Preview */}
-                            {solvedFactor !== null && (
-                                <div className={`p-3 rounded-lg flex justify-between items-center ${isRaceInputValid ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-                                    <span className="text-sm text-gray-300">Implied Factor:</span>
-                                    <span className={`font-mono text-lg font-bold ${isRaceInputValid ? 'text-green-400' : 'text-red-400'}`}>
-                                        {solvedFactor.toFixed(3)}x
-                                    </span>
+                            {/* Comparison + Result */}
+                            {raceCalcData && (
+                                <div className="space-y-2">
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                        <div className="p-2 bg-gray-800/50 rounded text-center">
+                                            <p className="text-gray-500 text-xs">Expected</p>
+                                            <p className="text-gray-300 font-mono">{formatTime(raceCalcData.basePredictedSeconds)}</p>
+                                        </div>
+                                        <div className="p-2 bg-gray-800/50 rounded text-center">
+                                            <p className="text-gray-500 text-xs">Your Time</p>
+                                            <p className="text-white font-mono">{formatTime(raceCalcData.actualSeconds)}</p>
+                                        </div>
+                                    </div>
+                                    <div className={`p-3 rounded-lg flex justify-between items-center ${isRaceInputValid ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                                        <span className="text-sm text-gray-300">Calibration Factor:</span>
+                                        <span className={`font-mono text-lg font-bold ${isRaceInputValid ? 'text-green-400' : 'text-red-400'}`}>
+                                            {solvedFactor?.toFixed(2)}x
+                                        </span>
+                                    </div>
+                                    {!isRaceInputValid && solvedFactor !== null && (
+                                        <p className="text-xs text-red-400">
+                                            Factor must be between 0.5x and 2.0x. Your time differs too much from predictions.
+                                        </p>
+                                    )}
                                 </div>
                             )}
                         </div>

@@ -186,6 +186,8 @@ model Goal {
   // Training plan settings
   weeklyMileageGoal Float?    // km per week at peak
   planWeeks         Int       @default(12)
+  daysPerWeek       Int       @default(4)
+  includeCrossTraining Boolean @default(false)
   
   // Status
   isActive    Boolean   @default(true)
@@ -250,4 +252,8 @@ enum WorkoutType {
   RACE
   REST
   CROSS_TRAIN
+  RIDE
+  SWIM
+  STRENGTH
+  OTHER
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Save, AlertCircle } from 'lucide-react';
+import { X, Save, AlertCircle, Bike } from 'lucide-react';
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -15,6 +15,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const [hours, setHours] = useState('0');
     const [minutes, setMinutes] = useState('25');
     const [seconds, setSeconds] = useState('0');
+
+    // Plan Customization
+    const [daysPerWeek, setDaysPerWeek] = useState(5);
+    const [includeCrossTraining, setIncludeCrossTraining] = useState(false);
+
     const [message, setMessage] = useState('');
 
     const updateMutation = useMutation({
@@ -26,7 +31,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
             const res = await fetch('/api/settings/update-vdot', {
                 method: 'POST',
-                body: JSON.stringify({ timeSeconds, raceDistance }),
+                body: JSON.stringify({
+                    timeSeconds,
+                    raceDistance,
+                    daysPerWeek,
+                    includeCrossTraining
+                }),
                 headers: { 'Content-Type': 'application/json' }
             });
 
@@ -36,6 +46,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         onSuccess: (data) => {
             setMessage(`VDOT updated to ${data.vdot.toFixed(1)}! Plan regenerated.`);
             queryClient.invalidateQueries({ queryKey: ['goals'] });
+            queryClient.invalidateQueries({ queryKey: ['plan'] });
             setTimeout(() => {
                 setMessage('');
                 onClose();
@@ -52,72 +63,116 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
-            <div className="glass-card w-full max-w-md p-6 relative animate-slide-in">
+            <div className="glass-card w-full max-w-md p-6 relative animate-slide-in max-h-[90vh] overflow-y-auto">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
                     <X className="w-5 h-5" />
                 </button>
 
-                <h2 className="text-xl font-bold text-white mb-6">Settings</h2>
+                <h2 className="text-xl font-bold text-white mb-6">Plan Settings</h2>
 
                 <div className="space-y-6">
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">Calibrate Training</h3>
-                        <p className="text-sm text-gray-500">
-                            Enter a recent race result to calibrate your VDOT and regenerate your training plan.
+                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">Performance</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Enter a recent race result to calibrate your VDOT.
                         </p>
+
+                        {/* Race Distance */}
+                        <div className="mb-4">
+                            <label className="block text-xs text-gray-400 mb-1 uppercase">Distance</label>
+                            <select
+                                value={distance}
+                                onChange={(e) => setDistance(e.target.value)}
+                                className={inputClass}
+                            >
+                                <option value="5K">5K</option>
+                                <option value="10K">10K</option>
+                                <option value="HALF">Half Marathon</option>
+                                <option value="MARATHON">Marathon</option>
+                            </select>
+                        </div>
+
+                        {/* Time */}
+                        <div className="grid grid-cols-3 gap-2">
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1 uppercase">Hours</label>
+                                <input
+                                    type="number"
+                                    value={hours}
+                                    onChange={e => setHours(e.target.value)}
+                                    className={inputClass}
+                                    min="0"
+                                    placeholder="00"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1 uppercase">Mins</label>
+                                <input
+                                    type="number"
+                                    value={minutes}
+                                    onChange={e => setMinutes(e.target.value)}
+                                    className={inputClass}
+                                    min="0"
+                                    max="59"
+                                    placeholder="00"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1 uppercase">Secs</label>
+                                <input
+                                    type="number"
+                                    value={seconds}
+                                    onChange={e => setSeconds(e.target.value)}
+                                    className={inputClass}
+                                    min="0"
+                                    max="59"
+                                    placeholder="00"
+                                />
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Race Distance */}
-                    <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase">Distance</label>
-                        <select
-                            value={distance}
-                            onChange={(e) => setDistance(e.target.value)}
-                            className={inputClass}
+                    <div className="border-t border-white/10 pt-6">
+                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Plan Structure</h3>
+
+                        {/* Days Per Week */}
+                        <div className="mb-6">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-gray-400 uppercase">Training Days / Week</label>
+                                <span className="text-white font-bold">{daysPerWeek}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="3"
+                                max="7"
+                                value={daysPerWeek}
+                                onChange={(e) => setDaysPerWeek(parseInt(e.target.value))}
+                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>3</span>
+                                <span>5</span>
+                                <span>7</span>
+                            </div>
+                        </div>
+
+                        {/* Cross Training */}
+                        <div
+                            className={`p-3 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${includeCrossTraining ? 'bg-accent-orange/10 border-accent-orange' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                            onClick={() => setIncludeCrossTraining(!includeCrossTraining)}
                         >
-                            <option value="5K">5K</option>
-                            <option value="10K">10K</option>
-                            <option value="HALF">Half Marathon</option>
-                            <option value="MARATHON">Marathon</option>
-                        </select>
-                    </div>
-
-                    {/* Time */}
-                    <div className="grid grid-cols-3 gap-2">
-                        <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Hours</label>
-                            <input
-                                type="number"
-                                value={hours}
-                                onChange={e => setHours(e.target.value)}
-                                className={inputClass}
-                                min="0"
-                                placeholder="00"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Mins</label>
-                            <input
-                                type="number"
-                                value={minutes}
-                                onChange={e => setMinutes(e.target.value)}
-                                className={inputClass}
-                                min="0"
-                                max="59"
-                                placeholder="00"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Secs</label>
-                            <input
-                                type="number"
-                                value={seconds}
-                                onChange={e => setSeconds(e.target.value)}
-                                className={inputClass}
-                                min="0"
-                                max="59"
-                                placeholder="00"
-                            />
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-full ${includeCrossTraining ? 'bg-accent-orange text-white' : 'bg-white/10 text-gray-400'}`}>
+                                    <Bike className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h4 className={`text-sm font-medium ${includeCrossTraining ? 'text-white' : 'text-gray-300'}`}>Include Cross-Training</h4>
+                                    <p className="text-xs text-gray-500">Add cycling sessions</p>
+                                </div>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${includeCrossTraining ? 'bg-accent-orange border-accent-orange' : 'border-gray-500'}`}>
+                                {includeCrossTraining && <div className="w-2 h-2 bg-white rounded-full" />}
+                            </div>
                         </div>
                     </div>
 
@@ -134,7 +189,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                         className="btn-primary w-full flex items-center justify-center gap-2 py-3"
                     >
                         {updateMutation.isPending ? <Save className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
-                        {updateMutation.isPending ? 'Updating...' : 'Save & Recalibrate'}
+                        {updateMutation.isPending ? 'Generating...' : 'Save & Generate Adaptive Plan'}
                     </button>
                 </div>
             </div>

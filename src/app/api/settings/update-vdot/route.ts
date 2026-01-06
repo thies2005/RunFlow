@@ -13,7 +13,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { timeSeconds, raceDistance } = await req.json(); // e.g. "5K", 1500
+        const { timeSeconds, raceDistance, daysPerWeek, includeCrossTraining } = await req.json();
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -28,6 +28,16 @@ export async function POST(req: Request) {
         });
 
         if (activeGoal) {
+            // Update Goal Settings
+            await prisma.goal.update({
+                where: { id: activeGoal.id },
+                data: {
+                    currentVdot: newVdot,
+                    daysPerWeek: daysPerWeek || 5, // Default 5
+                    includeCrossTraining: includeCrossTraining || false
+                }
+            });
+
             // Regenerate Plan
 
             // Delete existing workouts for this goal
@@ -44,10 +54,11 @@ export async function POST(req: Request) {
                 raceType: activeGoal.raceType, // Prisma Enum
                 raceDate: activeGoal.raceDate,
                 startDate: startDate,
+                daysPerWeek: daysPerWeek || 5,
+                includeCrossTraining: includeCrossTraining || false
             });
 
             // Save workouts
-            // Map 'GeneratedWorkout' fields to 'Workout' Prisma model fields
             await prisma.$transaction(
                 workouts.map(w => prisma.workout.create({
                     data: {
@@ -62,12 +73,6 @@ export async function POST(req: Request) {
                     }
                 }))
             );
-
-            // Update Goal VDOT in DB
-            await prisma.goal.update({
-                where: { id: activeGoal.id },
-                data: { currentVdot: newVdot }
-            });
         }
 
         return NextResponse.json({ success: true, vdot: newVdot });

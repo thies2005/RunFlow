@@ -101,13 +101,50 @@ export async function GET() {
             }))
         );
 
+        // 4. Calculate CTL/ATL/TSB (Fitness/Fatigue/Form)
+        const dailyLoads = new Map<string, number>();
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+        runActivities
+            .filter(a => new Date(a.startDate) >= ninetyDaysAgo)
+            .forEach(run => {
+                const dateKey = new Date(run.startDate).toISOString().split('T')[0];
+                const trimp = run.movingTime / 60; // Simplified TRIMP
+                dailyLoads.set(dateKey, (dailyLoads.get(dateKey) || 0) + trimp);
+            });
+
+        let ctl = 0, atl = 0;
+        for (let d = new Date(ninetyDaysAgo); d <= now; d.setDate(d.getDate() + 1)) {
+            const dateKey = d.toISOString().split('T')[0];
+            const load = dailyLoads.get(dateKey) || 0;
+            ctl = ctl + (load - ctl) / 42;
+            atl = atl + (load - atl) / 7;
+        }
+        const tsb = ctl - atl;
+
+        // 5. Calculate Workload Ratio (Acute:Chronic = ATL:CTL)
+        const workloadRatio = ctl > 0 ? Math.round((atl / ctl) * 100) / 100 : 0;
+
+        // 6. Calculate Easy TRIMP (sum of last 7 days training load)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const easyTrimp = runActivities
+            .filter(a => new Date(a.startDate) >= sevenDaysAgo)
+            .reduce((sum, a) => sum + (a.movingTime / 60), 0);
+
         return NextResponse.json({
             currentWeekMileage,
             effectiveVO2max,
             rawVO2max,
             vdotCorrectionFactor,
             marathonShape,
-            currentVdot
+            currentVdot,
+            ctl: Math.round(ctl),
+            atl: Math.round(atl),
+            tsb: Math.round(tsb),
+            workloadRatio,
+            easyTrimp: Math.round(easyTrimp)
         });
 
     } catch (error) {

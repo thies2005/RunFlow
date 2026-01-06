@@ -108,6 +108,12 @@ export default function Dashboard() {
     const effectiveVO2max = statsData?.effectiveVO2max || 0;
     const marathonShape = statsData?.marathonShape || { shape: 0, longRunScore: 0, weeklyMileageScore: 0 };
     const currentVdot = statsData?.currentVdot || activeGoal?.currentVdot || null;
+    const marathonShapePercent = marathonShape?.shape || 0;
+    const ctl = statsData?.ctl || 0;
+    const atl = statsData?.atl || 0;
+    const tsb = statsData?.tsb || 0;
+    const workloadRatio = statsData?.workloadRatio || 0;
+    const easyTrimp = statsData?.easyTrimp || 0;
 
     // Loading State
     if (status === 'loading') {
@@ -212,40 +218,100 @@ export default function Dashboard() {
                         <div className="glass-card p-6">
                             <h2 className="text-lg font-semibold text-gray-300 mb-4">Training Status</h2>
 
-                            {/* Effective VO2max (Runalyze Style) */}
-                            <div className="mb-6">
-                                <div className="flex justify-between items-baseline mb-2">
-                                    <p className="text-sm font-medium text-gray-400">Effective VO2max</p>
-                                    <p className="text-2xl font-bold text-teal-400">
-                                        {effectiveVO2max > 0 ? effectiveVO2max.toFixed(2) : '-'}
-                                    </p>
+                            {/* Metrics List (Runalyze Style) */}
+                            <div className="space-y-3">
+                                {/* Effective VO2max */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-28 text-xs text-gray-400 truncate">Effective VO2max</div>
+                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
+                                        <div className="h-full bg-teal-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, ((effectiveVO2max - 30) / 40) * 100))}%` }} />
+                                    </div>
+                                    <div className="w-12 text-right text-sm font-bold text-teal-400">
+                                        {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
+                                    </div>
                                 </div>
-                                <div className="h-2 w-full bg-gray-700/50 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-teal-500 rounded-full transition-all duration-1000"
-                                        style={{ width: `${Math.min(100, Math.max(0, ((effectiveVO2max - 30) / 40) * 100))}%` }}
-                                    />
+
+                                {/* Marathon Shape */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-28 text-xs text-gray-400 truncate">Marathon Shape</div>
+                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
+                                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(100, marathonShapePercent)}%` }} />
+                                    </div>
+                                    <div className="w-12 text-right text-sm font-bold text-green-400">
+                                        {marathonShapePercent > 0 ? `${marathonShapePercent}%` : '-'}
+                                    </div>
                                 </div>
-                                <div className="flex justify-between mt-1 text-[10px] text-gray-500">
-                                    <span>Unfit</span>
-                                    <span>Elite</span>
+
+                                {/* Fatigue (ATL) */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-28 text-xs text-gray-400 truncate">Fatigue (ATL)</div>
+                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
+                                        <div className="h-full bg-red-500 rounded-full" style={{ width: `${Math.min(100, atl)}%` }} />
+                                    </div>
+                                    <div className="w-12 text-right text-sm font-bold text-red-400">
+                                        {atl > 0 ? `${atl}%` : '-'}
+                                    </div>
+                                </div>
+
+                                {/* Fitness (CTL) */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-28 text-xs text-gray-400 truncate">Fitness (CTL)</div>
+                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
+                                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, ctl)}%` }} />
+                                    </div>
+                                    <div className="w-12 text-right text-sm font-bold text-blue-400">
+                                        {ctl > 0 ? `${ctl}%` : '-'}
+                                    </div>
+                                </div>
+
+                                {/* Stress Balance (TSB) */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-28 text-xs text-gray-400 truncate">Stress Balance</div>
+                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden relative">
+                                        <div className="absolute left-1/2 w-0.5 h-full bg-gray-600" />
+                                        <div
+                                            className={`h-full ${tsb >= 0 ? 'bg-green-500' : 'bg-orange-500'} rounded-full absolute`}
+                                            style={{
+                                                width: `${Math.min(50, Math.abs(tsb))}%`,
+                                                left: tsb >= 0 ? '50%' : `${50 - Math.min(50, Math.abs(tsb))}%`
+                                            }}
+                                        />
+                                    </div>
+                                    <div className={`w-12 text-right text-sm font-bold ${tsb >= 0 ? 'text-green-400' : 'text-orange-400'}`}>
+                                        {tsb >= 0 ? `+${tsb}` : tsb}
+                                    </div>
+                                </div>
+
+                                {/* Workload Ratio */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-28 text-xs text-gray-400 truncate">Workload Ratio</div>
+                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full ${workloadRatio >= 0.8 && workloadRatio <= 1.3 ? 'bg-green-500' : workloadRatio > 1.5 ? 'bg-red-500' : 'bg-yellow-500'}`}
+                                            style={{ width: `${Math.min(100, workloadRatio * 50)}%` }}
+                                        />
+                                    </div>
+                                    <div className="w-12 text-right text-sm font-bold text-yellow-400">
+                                        {workloadRatio > 0 ? workloadRatio.toFixed(2) : '-'}
+                                    </div>
+                                </div>
+
+                                {/* Easy TRIMP */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-28 text-xs text-gray-400 truncate">Weekly TRIMP</div>
+                                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
+                                        <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(100, easyTrimp / 5)}%` }} />
+                                    </div>
+                                    <div className="w-12 text-right text-sm font-bold text-purple-400">
+                                        {easyTrimp > 0 ? easyTrimp : '-'}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4 pt-4 border-t border-white/5">
-                                <div className="flex justify-between items-center">
-                                    <div className="text-left">
-                                        <p className="text-xs text-gray-400 mb-0.5">Current VDOT</p>
-                                        <p className="text-xl font-bold text-white">
-                                            {currentVdot ? currentVdot.toFixed(1) : '-'}
-                                        </p>
-                                    </div>
-                                    {!currentVdot && (
-                                        <button onClick={() => router.push('/onboarding?step=3')} className="text-xs text-accent-orange hover:underline">
-                                            Set Goal
-                                        </button>
-                                    )}
-                                </div>
+                            {/* VDOT below */}
+                            <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+                                <p className="text-xs text-gray-400">Current VDOT</p>
+                                <p className="text-lg font-bold text-white">{currentVdot ? currentVdot.toFixed(1) : '-'}</p>
                             </div>
                         </div>
                     </div>

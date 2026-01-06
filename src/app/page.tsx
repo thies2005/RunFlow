@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { TodayWorkout, RaceCountdown, ActivityList, AnalyticsDashboard, SettingsModal, PoweredByStravaLogo } from '@/components';
+import { TodayWorkout, RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo } from '@/components';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
@@ -228,11 +228,7 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                <div className="mt-8">
-                    <h2 className="text-xl font-semibold text-white mb-4">Performance Analytics</h2>
-                    {/* AnalyticsDashboard now fetches its own data, we just pass VDOT context */}
-                    <AnalyticsDashboard currentVdot={currentVdot} />
-                </div>
+
 
                 {/* NOTE: FitnessChart moved inside AnalyticsDashboard or kept separately? 
                     The design in page.tsx had a separate FitnessChart. 

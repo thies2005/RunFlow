@@ -107,8 +107,8 @@ export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartP
                             key={range}
                             onClick={() => setTimeRange(range)}
                             className={`px-3 py-1 text-xs font-medium rounded transition-all ${timeRange === range
-                                    ? 'bg-[#374151] text-white shadow-sm'
-                                    : 'text-gray-400 hover:text-gray-200'
+                                ? 'bg-[#374151] text-white shadow-sm'
+                                : 'text-gray-400 hover:text-gray-200'
                                 }`}
                         >
                             {range}
@@ -142,7 +142,13 @@ export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartP
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                        <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                        <XAxis
+                            dataKey="date"
+                            stroke="#9ca3af"
+                            fontSize={11}
+                            tickLine={false}
+                            tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        />
 
                         {/* Left Y-Axis: VO2max */}
                         <YAxis
@@ -183,6 +189,7 @@ export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartP
                         <Tooltip
                             contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
                             labelStyle={{ color: '#9ca3af' }}
+                            labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         />
 
                         {/* VO2max Rolling Average (Smooth Line) */}
@@ -198,20 +205,7 @@ export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartP
                             />
                         )}
 
-                        {/* VO2max Raw Dots (No Line) */}
-                        {visibleSeries.vo2max && (
-                            <Line
-                                yAxisId="left"
-                                type="monotone"
-                                dataKey="vo2max"
-                                stroke="transparent"
-                                strokeWidth={0}
-                                dot={{ fill: SERIES_CONFIG.vo2max.color, r: 3, strokeWidth: 0 }}
-                                activeDot={{ r: 5, strokeWidth: 0 }}
-                                name="VO2max (Raw)"
-                                isAnimationActive={false}
-                            />
-                        )}
+
 
                         {/* Fitness Lines */}
                         {visibleSeries.ctl && (

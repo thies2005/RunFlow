@@ -110,20 +110,36 @@ export default function AnalyticsPage() {
         const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapeResult.shape, calibrationFactor);
 
-        // === VO2max Trend ===
-        const vo2Trend: { date: string; vo2: number }[] = [];
+        // === VO2max Trend (with Rolling Average) ===
+        const vo2Trend: { date: string; vo2: number; vo2Rolling?: number }[] = [];
         const sortedRuns = [...runs]
             .filter(r => r.hasHeartrate && r.averageHr && r.distance >= 3000)
             .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
-        sortedRuns.slice(-50).forEach(run => {
+        // Calculate raw values first
+        const rawVo2Data = sortedRuns.slice(-50).map(run => {
             const vo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr!, maxHR);
-            if (vo2 > 0) {
-                vo2Trend.push({
-                    date: new Date(run.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                    vo2: Math.round(vo2 * 10) / 10
-                });
+            return {
+                date: new Date(run.startDate).toISOString().split('T')[0], // Use ISO date for sorting
+                vo2: vo2 > 0 ? Math.round(vo2 * 10) / 10 : 0
+            };
+        }).filter(d => d.vo2 > 0);
+
+        // Calculate rolling average
+        rawVo2Data.forEach((point, index) => {
+            const windowSize = 4;
+            let sum = 0;
+            let count = 0;
+
+            for (let i = index; i >= 0 && count < windowSize; i--) {
+                sum += rawVo2Data[i].vo2;
+                count++;
             }
+
+            vo2Trend.push({
+                ...point,
+                vo2Rolling: count > 0 ? Math.round(sum / count * 10) / 10 : undefined
+            });
         });
 
         // === Shape Trend (Weekly) ===
@@ -139,7 +155,7 @@ export default function AnalyticsPage() {
             const tempVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);
             const tempShape = calculateMarathonShape(weekRuns, tempVO2 || effectiveVO2max);
             shapeTrend.push({
-                week: weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                week: weekEnd.toISOString().split('T')[0], // ISO Date
                 shape: tempShape.shape
             });
         }
@@ -165,7 +181,7 @@ export default function AnalyticsPage() {
 
             if (d.getDay() === 0) { // Weekly sample
                 fitness.push({
-                    date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    date: d.toISOString().split('T')[0], // ISO Date
                     ctl: Math.round(ctl),
                     atl: Math.round(atl),
                     tsb: Math.round(tsb)
@@ -187,7 +203,7 @@ export default function AnalyticsPage() {
             // Use Sunday as the key to match fitness data
             const weekEnd = new Date(weekStart);
             weekEnd.setDate(weekEnd.getDate() + 6); // Sunday
-            const weekKey = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const weekKey = weekEnd.toISOString().split('T')[0]; // ISO Date
 
             weeklyVolumeMap.set(weekKey, (weeklyVolumeMap.get(weekKey) || 0) + run.distance / 1000);
             weeklyTimeMap.set(weekKey, (weeklyTimeMap.get(weekKey) || 0) + run.movingTime / 60);
@@ -385,19 +401,9 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
-                {/* === RACE PREDICTIONS === */}
-                <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Race Predictions</h3>
-                    <div className="grid grid-cols-4 gap-4">
-                        {racePredictions.map(p => (
-                            <div key={p.distance} className="text-center p-4 bg-white/5 rounded-lg">
-                                <p className="text-gray-400 text-sm mb-1">{p.distance}</p>
-                                <p className="text-xl font-bold text-white">{formatTime(p.predicted)}</p>
-                                <p className="text-xs text-gray-500">Optimal: {formatTime(p.optimal)}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+
+                {/* Combined Analytics Chart */}
+                <CombinedAnalyticsChart data={combinedData} />
 
                 {/* Race Prediction Chart with Shape Slider */}
                 <RacePredictionChart
@@ -406,22 +412,28 @@ export default function AnalyticsPage() {
                     calibrationFactor={runalyzeMetrics.calibrationFactor}
                 />
 
-                {/* Combined Analytics Chart */}
-                <CombinedAnalyticsChart data={combinedData} />
-
                 {/* === TREND CHARTS === */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* VO2max Trend */}
+                    {/* VO2max Trend (Rolling Average) */}
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold text-white mb-4">Effective VO2max Trend</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={vo2TrendData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                    <XAxis
+                                        dataKey="date"
+                                        stroke="#9ca3af"
+                                        fontSize={11}
+                                        tickLine={false}
+                                        tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    />
                                     <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
-                                    <Line type="monotone" dataKey="vo2" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6', r: 4 }} name="VO2max" />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                        labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    />
+                                    <Line type="monotone" dataKey="vo2Rolling" stroke="#3b82f6" strokeWidth={2} dot={false} name="VO2max (Avg)" />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
@@ -434,9 +446,18 @@ export default function AnalyticsPage() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={shapeTrendData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                    <XAxis dataKey="week" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                    <XAxis
+                                        dataKey="week"
+                                        stroke="#9ca3af"
+                                        fontSize={11}
+                                        tickLine={false}
+                                        tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    />
                                     <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={[0, 120]} />
-                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                        labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    />
                                     <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
                                 </AreaChart>
                             </ResponsiveContainer>
@@ -451,9 +472,18 @@ export default function AnalyticsPage() {
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={fitnessData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                <XAxis
+                                    dataKey="date"
+                                    stroke="#9ca3af"
+                                    fontSize={11}
+                                    tickLine={false}
+                                    tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                />
                                 <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                    labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                />
                                 <Legend />
                                 <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} name="Fitness (CTL)" />
                                 <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} name="Fatigue (ATL)" />

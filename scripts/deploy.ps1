@@ -26,38 +26,53 @@ function Check-GitClean {
     }
 }
 
-# Helper to update docker-compose.yml
+# Helper to update docker-compose.yml (only affects app service)
 function Update-ComposeConfig {
     param ([string]$Mode) # "local" or "hub"
     
-    $content = Get-Content $DockerComposePath -Raw
+    $lines = Get-Content $DockerComposePath
+    $newLines = @()
+    $inAppService = $false
+    $serviceIndent = 0
     
-    if ($Mode -eq "local") {
-        # Enable Build, Disable Image
-        $content = $content -replace '#\s*build:', 'build:'
-        $content = $content -replace '#\s*context:', '  context:'
-        $content = $content -replace '#\s*dockerfile:', '  dockerfile:'
-        
-        # Comment out image if active
-        if ($content -match '\n\s+image:') {
-            $content = $content -replace '(\n\s+)(image:)', '$1# $2'
-            $content = $content -replace '(\n\s+)(pull_policy:)', '$1# $2'
+    foreach ($line in $lines) {
+        # Detect app service start
+        if ($line -match '^\s{2}app:') {
+            $inAppService = $true
+            $serviceIndent = 2
         }
-    }
-    elseif ($Mode -eq "hub") {
-        # Disable Build
-        if ($content -match '\n\s+build:') {
-             $content = $content -replace '(\n\s+)(build:)', '$1# $2'
-             $content = $content -replace '(\n\s+)(context:)', '$1# $2'
-             $content = $content -replace '(\n\s+)(dockerfile:)', '$1# $2'
+        # Detect next service (exit app context)
+        elseif ($inAppService -and $line -match '^\s{2}\w+:' -and $line -notmatch '^\s{2}app:') {
+            $inAppService = $false
         }
         
-        # Enable Image
-        $content = $content -replace '#\s*image:', 'image:'
-        $content = $content -replace '#\s*pull_policy:', 'pull_policy:'
+        if ($inAppService) {
+            if ($Mode -eq "local") {
+                # Uncomment build lines
+                if ($line -match '^\s*#\s*(build:|context:|dockerfile:)') {
+                    $line = $line -replace '#\s*', '    '
+                }
+                # Comment out image/pull_policy
+                if ($line -match '^\s{4}(image:|pull_policy:)') {
+                    $line = $line -replace '^(\s{4})', '$1# '
+                }
+            }
+            elseif ($Mode -eq "hub") {
+                # Comment out build lines
+                if ($line -match '^\s{4}(build:|context:|dockerfile:)') {
+                    $line = $line -replace '^(\s{4})', '$1# '
+                }
+                # Uncomment image/pull_policy
+                if ($line -match '^\s*#\s*(image:|pull_policy:)') {
+                    $line = $line -replace '#\s*', '    '
+                }
+            }
+        }
+        
+        $newLines += $line
     }
     
-    Set-Content -Path $DockerComposePath -Value $content -Encoding UTF8
+    Set-Content -Path $DockerComposePath -Value $newLines -Encoding UTF8
     Write-Host "[CONFIG] Updated docker-compose for $Mode environment." -ForegroundColor Gray
 }
 

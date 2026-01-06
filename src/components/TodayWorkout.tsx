@@ -1,19 +1,22 @@
 'use client';
 
-import { Play, Heart, Clock, TrendingUp } from 'lucide-react';
+import { CheckCircle, Heart, Clock, TrendingUp } from 'lucide-react';
 
 interface Workout {
-    type: 'EASY' | 'LONG_RUN' | 'TEMPO' | 'INTERVALS' | 'RECOVERY' | 'REST';
+    id: string;
+    type: 'EASY' | 'LONG_RUN' | 'TEMPO' | 'INTERVALS' | 'RECOVERY' | 'REST' | 'RIDE' | 'SWIM' | 'STRENGTH' | 'OTHER';
     description: string;
     targetDistance?: number; // meters
     targetDuration?: number; // seconds
     targetPace?: { min: number; max: number }; // sec/km
     targetHrZone?: number;
+    isCompleted?: boolean;
 }
 
 interface TodayWorkoutProps {
     workout: Workout | null;
-    onStart?: () => void;
+    onComplete?: (id: string) => void;
+    isLoading?: boolean;
 }
 
 const workoutConfig = {
@@ -53,6 +56,30 @@ const workoutConfig = {
         badge: 'badge-recovery',
         icon: '😴',
     },
+    RIDE: {
+        label: 'Ride',
+        color: 'from-orange-500 to-red-600',
+        badge: 'badge-tempo',
+        icon: '🚴',
+    },
+    SWIM: {
+        label: 'Swim',
+        color: 'from-cyan-500 to-blue-600',
+        badge: 'badge-interval',
+        icon: '🏊',
+    },
+    STRENGTH: {
+        label: 'Strength',
+        color: 'from-purple-500 to-pink-600',
+        badge: 'badge-recovery',
+        icon: '💪',
+    },
+    OTHER: {
+        label: 'Other',
+        color: 'from-gray-500 to-gray-600',
+        badge: 'badge-easy',
+        icon: '🏃',
+    },
 };
 
 function formatPace(secsPerKm: number): string {
@@ -70,7 +97,7 @@ function formatDuration(seconds: number): string {
     return `${mins} min`;
 }
 
-export function TodayWorkout({ workout, onStart }: TodayWorkoutProps) {
+export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutProps) {
     if (!workout) {
         return (
             <div className="glass-card p-6 animate-slide-in">
@@ -152,14 +179,22 @@ export function TodayWorkout({ workout, onStart }: TodayWorkoutProps) {
                 )}
             </div>
 
-            {workout.type !== 'REST' && (
+            {workout.type !== 'REST' && !workout.isCompleted && (
                 <button
-                    onClick={onStart}
+                    onClick={() => onComplete?.(workout.id)}
+                    disabled={isLoading}
                     className="w-full btn-primary flex items-center justify-center gap-2"
                 >
-                    <Play className="w-5 h-5" />
-                    Start Workout
+                    <CheckCircle className="w-5 h-5" />
+                    {isLoading ? 'Marking...' : 'Mark as Complete'}
                 </button>
+            )}
+
+            {workout.isCompleted && (
+                <div className="w-full py-3 bg-green-500/20 border border-green-500/30 rounded-xl flex items-center justify-center gap-2 text-green-400">
+                    <CheckCircle className="w-5 h-5" />
+                    <span className="font-semibold">Workout Completed</span>
+                </div>
             )}
         </div>
     );

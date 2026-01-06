@@ -79,6 +79,19 @@ export default function Dashboard() {
         },
     });
 
+    // Complete Workout Mutation
+    const completeWorkoutMutation = useMutation({
+        mutationFn: async (workoutId: string) => {
+            const res = await fetch(`/api/workouts/${workoutId}/complete`, { method: 'POST' });
+            if (!res.ok) throw new Error('Failed to complete workout');
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['goals'] });
+            // toast.success('Workout completed!'); // Assuming toast exists or silent success
+        },
+    });
+
     // Derive all activities & goals for use in hooks (must be before early returns)
     const allActivities = activitiesData?.activities || [];
     const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
@@ -274,7 +287,8 @@ export default function Dashboard() {
                     <div className="lg:col-span-1">
                         <TodayWorkout
                             workout={todayWorkout}
-                            onStart={() => console.log('Starting workout')}
+                            onComplete={(id) => completeWorkoutMutation.mutate(id)}
+                            isLoading={completeWorkoutMutation.isPending}
                         />
                     </div>
 

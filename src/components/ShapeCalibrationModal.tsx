@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Calculator, AlertCircle, Check } from 'lucide-react';
-import { solveCalibrationFactory } from '@/lib/metrics/runalyze';
+import { solveCalibrationFactor } from '@/lib/metrics/runalyze';
 import { formatTime } from '@/lib/metrics/vdot';
 
 type Props = {
@@ -60,7 +60,7 @@ export default function ShapeCalibrationModal({
 
         if (totalSeconds <= 0) return null;
 
-        return solveCalibrationFactory(effectiveVO2max, shapePercent, totalSeconds, raceType);
+        return solveCalibrationFactor(effectiveVO2max, shapePercent, totalSeconds, raceType);
     };
 
     const solvedFactor = calculateFactorFromRace();

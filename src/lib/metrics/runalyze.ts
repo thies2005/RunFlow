@@ -147,11 +147,11 @@ export type ShapeDetails = {
 
 /**
  * Calculate predicted marathon time adjusted by shape and calibration
+ * Predicted is ALWAYS >= Optimal (low shape = slower prediction)
  * 
  * @param effectiveVO2max - Current VO2max
- * @param shapePercent - Marathon shape percentage
- * @param calibrationFactor - Optional calibration multiplier (default 1.0)
- * @returns Object with optimal and predicted times
+ * @param shapePercent - Marathon shape percentage (0-100+)
+ * @param calibrationFactor - Adjusts shape effect (1.0 = normal, >1 = more conservative)
  */
 export function calculatePredictedTimes(
     effectiveVO2max: number,
@@ -162,27 +162,63 @@ export function calculatePredictedTimes(
         return { optimal: 0, predicted: 0 };
     }
 
-    // Optimal time is based purely on VO2max
+    // Optimal time is based purely on VO2max (your ceiling)
     const optimalSeconds = predictRaceTime(effectiveVO2max, 'MARATHON');
 
-    // Predicted time is adjusted by shape
-    // Formula: predicted = optimal * (1 + (1 - shape/100) * 0.3)
-    const basePredictedSeconds = optimalSeconds * (1 + (1 - shapePercent / 100) * 0.3);
+    // Shape penalty: how much slower than optimal
+    // At shape 100%: penalty = 0 (you can hit optimal)
+    // At shape 50%: penalty = 0.15 (15% slower)
+    // At shape 0%: penalty = 0.30 (30% slower)
+    const baseShapePenalty = (1 - Math.min(shapePercent, 100) / 100) * 0.30;
 
-    // Apply calibration factor
-    const finalPredictedSeconds = basePredictedSeconds * calibrationFactor;
+    // Calibration adjusts the penalty (>1 = more conservative, slower predictions)
+    const adjustedPenalty = baseShapePenalty * calibrationFactor;
+
+    // Predicted = Optimal + Penalty (always slower or equal)
+    const predictedSeconds = optimalSeconds * (1 + adjustedPenalty);
 
     return {
         optimal: Math.round(optimalSeconds),
-        predicted: Math.round(finalPredictedSeconds)
+        predicted: Math.round(predictedSeconds)
     };
 }
 
 /**
- * Solve for calibration factor given a Race Result
- * Finds the factor needed to make the prediction match the actual race time
+ * Calculate race predictions for all common distances
  */
-export function solveCalibrationFactory(
+export function calculateAllRacePredictions(
+    effectiveVO2max: number,
+    shapePercent: number,
+    calibrationFactor: number = 1.0
+): { distance: string; optimal: number; predicted: number }[] {
+    if (effectiveVO2max <= 0) return [];
+
+    const distances: { name: string; key: RaceDistance; shapeImpact: number }[] = [
+        { name: '5K', key: '5K', shapeImpact: 0.05 },
+        { name: '10K', key: '10K', shapeImpact: 0.08 },
+        { name: 'Half', key: 'HALF', shapeImpact: 0.15 },
+        { name: 'Marathon', key: 'MARATHON', shapeImpact: 0.30 },
+    ];
+
+    return distances.map(d => {
+        const optimal = predictRaceTime(effectiveVO2max, d.key);
+        const penalty = (1 - Math.min(shapePercent, 100) / 100) * d.shapeImpact * calibrationFactor;
+        const predicted = optimal * (1 + penalty);
+
+        return {
+            distance: d.name,
+            optimal: Math.round(optimal),
+            predicted: Math.round(predicted),
+        };
+    });
+}
+
+/**
+ * Solve for calibration factor given a Race Result
+ * Returns factor > 1 if you ran slower than predicted (more conservative)
+ * Returns factor < 1 if you ran faster than predicted (more aggressive)
+ */
+export function solveCalibrationFactor(
     effectiveVO2max: number,
     shapePercent: number,
     actualRaceTimeSeconds: number,
@@ -190,19 +226,26 @@ export function solveCalibrationFactory(
 ): number {
     if (effectiveVO2max <= 0 || actualRaceTimeSeconds <= 0) return 1.0;
 
-    // 1. Calculate prediction from VO2max + Shape for the specific distance
     const optimalSeconds = predictRaceTime(effectiveVO2max, raceDistance);
+    const shapeImpact = raceDistance === 'MARATHON' ? 0.30 : 0.15;
 
-    // Shape adjustment (simplified: assuming same shape logic applies to Half, though usually less)
-    const shapeImpact = raceDistance === 'MARATHON' ? 0.3 : 0.15; // Shape matters less for a half
-    const predictedSeconds = optimalSeconds * (1 + (1 - shapePercent / 100) * shapeImpact);
+    // Base predicted (without calibration)
+    const baseShapePenalty = (1 - Math.min(shapePercent, 100) / 100) * shapeImpact;
+    const basePredictedSeconds = optimalSeconds * (1 + baseShapePenalty);
 
-    // 2. Factor = Actual / Predicted
-    // Example: Predicted 3:00, Actual 3:15 -> Factor ~1.08 (slower)
-    // Example: Predicted 3:00, Actual 2:55 -> Factor ~0.97 (faster)
-    const factor = actualRaceTimeSeconds / predictedSeconds;
+    // If actual == basePredicted, factor = 1.0
+    // If actual > basePredicted (slower), factor > 1.0
+    // If actual < basePredicted (faster), factor < 1.0
 
-    return Math.round(factor * 1000) / 1000;
+    // We need: optimalSeconds * (1 + baseShapePenalty * factor) = actualRaceTimeSeconds
+    // Solve for factor:
+    if (baseShapePenalty === 0) return 1.0; // Can't calibrate if shape is 100%
+
+    const requiredPenalty = (actualRaceTimeSeconds / optimalSeconds) - 1;
+    const factor = requiredPenalty / baseShapePenalty;
+
+    // Clamp to reasonable range
+    return Math.max(0.5, Math.min(2.0, Math.round(factor * 100) / 100));
 }
 
 /**

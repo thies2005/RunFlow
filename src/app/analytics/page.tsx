@@ -5,12 +5,17 @@ import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, RefreshCw, Settings2 } from 'lucide-react';
-import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import {
+    LineChart, Line, AreaChart, Area, BarChart, Bar,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+} from 'recharts';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import {
     calculateWeightedEffectiveVO2max,
     calculateMarathonShape,
     calculatePredictedTimes,
+    calculateAllRacePredictions,
+    calculateEffectiveVO2max,
     type ActivityForShape
 } from '@/lib/metrics/runalyze';
 import { formatTime } from '@/lib/metrics/vdot';
@@ -66,8 +71,8 @@ export default function AnalyticsPage() {
         },
     });
 
-    // Calculate Runalyze metrics
-    const runalyzeMetrics = useMemo(() => {
+    // Calculated data
+    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions } = useMemo(() => {
         const activities = activitiesData?.activities || [];
         const runs: ActivityForShape[] = activities
             .filter((a: any) => a.type === 'RUN')
@@ -80,24 +85,92 @@ export default function AnalyticsPage() {
             }));
 
         const maxHR = userData?.user?.hrMax || 190;
-
-        // Use active goal's calibration factor (default 1.0)
         const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
 
         const effectiveVO2max = calculateWeightedEffectiveVO2max(runs, maxHR);
         const shapeResult = calculateMarathonShape(runs, effectiveVO2max);
         const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
+        const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapeResult.shape, calibrationFactor);
+
+        // === VO2max Trend ===
+        const vo2Trend: { date: string; vo2: number }[] = [];
+        const sortedRuns = [...runs]
+            .filter(r => r.hasHeartrate && r.averageHr && r.distance >= 3000)
+            .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
+        sortedRuns.slice(-50).forEach(run => {
+            const vo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr!, maxHR);
+            if (vo2 > 0) {
+                vo2Trend.push({
+                    date: new Date(run.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    vo2: Math.round(vo2 * 10) / 10
+                });
+            }
+        });
+
+        // === Shape Trend (Weekly) ===
+        const shapeTrend: { week: string; shape: number }[] = [];
+        const now = new Date();
+        for (let i = 11; i >= 0; i--) {
+            const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+            const weekStart = new Date(weekEnd.getTime() - 182 * 24 * 60 * 60 * 1000);
+            const weekRuns = runs.filter(r => {
+                const d = new Date(r.startDate);
+                return d >= weekStart && d <= weekEnd;
+            });
+            const tempVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);
+            const tempShape = calculateMarathonShape(weekRuns, tempVO2 || effectiveVO2max);
+            shapeTrend.push({
+                week: weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                shape: tempShape.shape
+            });
+        }
+
+        // === CTL/ATL/TSB (Fitness & Form) ===
+        const fitness: { date: string; ctl: number; atl: number; tsb: number }[] = [];
+        let ctl = 0, atl = 0;
+        const dailyLoads: Map<string, number> = new Map();
+
+        runs.forEach(run => {
+            const dateKey = new Date(run.startDate).toISOString().split('T')[0];
+            const trimp = run.movingTime / 60; // Simplified TRIMP
+            dailyLoads.set(dateKey, (dailyLoads.get(dateKey) || 0) + trimp);
+        });
+
+        const startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+            const dateKey = d.toISOString().split('T')[0];
+            const load = dailyLoads.get(dateKey) || 0;
+            ctl = ctl + (load - ctl) / 42;
+            atl = atl + (load - atl) / 7;
+            const tsb = ctl - atl;
+
+            if (d.getDay() === 0) { // Weekly sample
+                fitness.push({
+                    date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    ctl: Math.round(ctl),
+                    atl: Math.round(atl),
+                    tsb: Math.round(tsb)
+                });
+            }
+        }
 
         return {
-            effectiveVO2max,
-            shape: shapeResult.shape,
-            mileageScore: shapeResult.mileageScore,
-            longRunScore: shapeResult.longRunScore,
-            details: shapeResult.details,
-            optimalTime: times.optimal,
-            predictedTime: times.predicted,
-            calibrationFactor
+            runalyzeMetrics: {
+                effectiveVO2max,
+                shape: shapeResult.shape,
+                mileageScore: shapeResult.mileageScore,
+                longRunScore: shapeResult.longRunScore,
+                details: shapeResult.details,
+                optimalTime: times.optimal,
+                predictedTime: times.predicted,
+                calibrationFactor
+            },
+            vo2TrendData: vo2Trend,
+            shapeTrendData: shapeTrend,
+            fitnessData: fitness,
+            racePredictions: allPredictions
         };
     }, [activitiesData, userData, goalsData]);
 
@@ -114,11 +187,6 @@ export default function AnalyticsPage() {
         return null;
     }
 
-    const activities = activitiesData?.activities || [];
-    const runs = activities.filter((a: any) => a.type === 'RUN');
-    const rides = activities.filter((a: any) => a.type === 'RIDE' || a.type === 'VIRTUAL_RIDE');
-    const swims = activities.filter((a: any) => a.type === 'SWIM');
-
     return (
         <div className="min-h-screen bg-background">
             <header className="border-b border-white/10 backdrop-blur-md bg-background/80 sticky top-0 z-50">
@@ -128,7 +196,7 @@ export default function AnalyticsPage() {
                             <button onClick={() => router.push('/')} className="p-2 text-gray-400 hover:text-white transition-colors">
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
-                            <h1 className="text-xl font-bold text-white">Analytics</h1>
+                            <h1 className="text-xl font-bold text-white">Performance Analytics</h1>
                         </div>
                         <button
                             onClick={() => recalculateMutation.mutate()}
@@ -136,15 +204,15 @@ export default function AnalyticsPage() {
                             className="btn-secondary flex items-center gap-2 py-2 px-4"
                         >
                             <RefreshCw className={`w-4 h-4 ${recalculateMutation.isPending ? 'animate-spin' : ''}`} />
-                            {recalculateMutation.isPending ? 'Recalculating...' : 'Recalculate'}
+                            Refresh
                         </button>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Runalyze-style Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+                {/* === TOP METRICS === */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Effective VO2max */}
                     <div className="glass-card p-6 text-center">
                         <p className="text-gray-400 text-sm mb-2">Effective VO2max</p>
@@ -168,17 +236,15 @@ export default function AnalyticsPage() {
                         </div>
                     </div>
 
-                    {/* Predictions + Calibration */}
-                    <div className="glass-card p-6 text-center relative group">
-                        <div className="absolute top-2 right-2">
-                            <button
-                                onClick={() => setIsCalibrationOpen(true)}
-                                className="p-2 text-gray-500 hover:text-accent-pink transition-colors"
-                                title="Calibrate Prediction"
-                            >
-                                <Settings2 className="w-4 h-4" />
-                            </button>
-                        </div>
+                    {/* Predictions */}
+                    <div className="glass-card p-6 text-center relative">
+                        <button
+                            onClick={() => setIsCalibrationOpen(true)}
+                            className="absolute top-2 right-2 p-2 text-gray-500 hover:text-accent-pink transition"
+                            title="Calibrate"
+                        >
+                            <Settings2 className="w-4 h-4" />
+                        </button>
                         <p className="text-gray-400 text-sm mb-2">Marathon Prediction</p>
                         <div className="flex justify-center items-baseline gap-3">
                             <div>
@@ -205,8 +271,79 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
+                {/* === RACE PREDICTIONS === */}
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Race Predictions</h3>
+                    <div className="grid grid-cols-4 gap-4">
+                        {racePredictions.map(p => (
+                            <div key={p.distance} className="text-center p-4 bg-white/5 rounded-lg">
+                                <p className="text-gray-400 text-sm mb-1">{p.distance}</p>
+                                <p className="text-xl font-bold text-white">{formatTime(p.predicted)}</p>
+                                <p className="text-xs text-gray-500">Optimal: {formatTime(p.optimal)}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* === TREND CHARTS === */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* VO2max Trend */}
+                    <div className="glass-card p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4">Effective VO2max Trend</h3>
+                        <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={vo2TrendData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                    <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                                    <Line type="monotone" dataKey="vo2" stroke="#3b82f6" strokeWidth={2} dot={false} name="VO2max" />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Shape Trend */}
+                    <div className="glass-card p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4">Marathon Shape Trend</h3>
+                        <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={shapeTrendData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                    <XAxis dataKey="week" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                    <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={[0, 120]} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                                    <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                </div>
+
+                {/* === FITNESS & FORM === */}
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Fitness & Form (CTL / ATL / TSB)</h3>
+                    <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={fitnessData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                                <Legend />
+                                <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} name="Fitness (CTL)" />
+                                <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} name="Fatigue (ATL)" />
+                                <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} dot={false} name="Form (TSB)" />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-4 text-center">
+                        CTL = Long-term fitness • ATL = Short-term fatigue • TSB = Form (CTL - ATL)
+                    </p>
+                </div>
+
                 {/* Shape Details */}
-                <div className="glass-card p-4 mb-8">
+                <div className="glass-card p-4">
                     <div className="grid grid-cols-4 gap-4 text-center text-sm">
                         <div>
                             <p className="text-gray-500">Avg Weekly</p>
@@ -221,17 +358,11 @@ export default function AnalyticsPage() {
                             <p className="text-white font-semibold">{runalyzeMetrics.details.longRunPoints} / 10</p>
                         </div>
                         <div>
-                            <p className="text-gray-500">Activities</p>
-                            <p className="text-white font-semibold">{runs.length} runs • {rides.length} rides • {swims.length} swims</p>
+                            <p className="text-gray-500">Calibration</p>
+                            <p className="text-white font-semibold">{runalyzeMetrics.calibrationFactor.toFixed(2)}x</p>
                         </div>
                     </div>
                 </div>
-
-                {/* Charts */}
-                <AnalyticsDashboard
-                    activities={runs}
-                    currentVdot={runalyzeMetrics.effectiveVO2max}
-                />
             </main>
 
             {/* Calibration Modal */}

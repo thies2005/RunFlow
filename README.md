@@ -84,6 +84,31 @@ Skips the image build but syncs code updates to both `main` and `dockerhub` bran
 .\scripts\deploy.ps1 "Your commit message" -SkipDocker
 ```
 
+### Deployment Guides
+
+#### Option A: Deploy from Source (`main` Branch)
+Best for development or if you want to build locally.
+```bash
+# 1. Pull latest code
+git pull origin main
+
+# 2. Build and start containers
+docker compose up --build -d
+```
+
+#### Option B: Deploy from Docker Hub (`dockerhub` Branch)
+Best for production. Uses pre-built multi-arch images.
+```bash
+# 1. Pull latest config
+git pull origin dockerhub
+
+# 2. Pull latest images
+docker compose pull
+
+# 3. Start containers
+docker compose up -d
+```
+
 ## Key Calculations
 
 ### VDOT (Daniels-Gilbert Formula)

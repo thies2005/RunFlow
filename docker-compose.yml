@@ -1,7 +1,6 @@
 ﻿services:
   app:
-    image: t23wes3/runflow:latest
-    pull_policy: always
+    build: .
     container_name: runflow-app
     restart: unless-stopped
     ports:
@@ -93,5 +92,3 @@ networks:
 
 volumes:
   postgres_data:
-
-

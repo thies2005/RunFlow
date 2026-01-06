@@ -1,16 +1,19 @@
 'use client';
 
+import { useState } from 'react';
+
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { TodayWorkout, RaceCountdown, ActivityList, FitnessChart, AnalyticsDashboard } from '@/components';
+import { TodayWorkout, RaceCountdown, ActivityList, FitnessChart, AnalyticsDashboard, SettingsModal } from '@/components';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const queryClient = useQueryClient();
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     // Fetch activities (Fetch more for analytics)
     const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useQuery({
@@ -159,7 +162,11 @@ export default function Dashboard() {
                             </button>
 
                             {/* Settings */}
-                            <button type="button" className="p-2 text-gray-400 hover:text-white transition-colors">
+                            <button
+                                type="button"
+                                onClick={() => setIsSettingsOpen(true)}
+                                className="p-2 text-gray-400 hover:text-white transition-colors"
+                            >
                                 <Settings className="w-5 h-5" />
                             </button>
 
@@ -312,6 +319,8 @@ export default function Dashboard() {
                     </p>
                 </div>
             </footer>
+
+            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
         </div>
     );
 }

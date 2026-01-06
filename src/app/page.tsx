@@ -127,13 +127,13 @@ export default function Dashboard() {
 
     // Auth Redirects
     if (status === 'unauthenticated') {
-        if (typeof window !== 'undefined') window.location.href = '/login';
+        router.push('/login');
         return null;
     }
 
     // Onboarding Redirect
     if (status === 'authenticated' && syncStatus && syncStatus.totalActivities === 0 && !syncStatus.syncInProgress && !activitiesLoading) {
-        if (typeof window !== 'undefined') router.push('/onboarding');
+        router.push('/onboarding');
         return null;
     }
 
@@ -349,24 +349,12 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* VDOT below */}
-                            <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
-                                <p className="text-xs text-gray-400">Current VDOT</p>
-                                <p className="text-lg font-bold text-white">{currentVdot ? currentVdot.toFixed(1) : '-'}</p>
-                            </div>
+
                         </div>
                     </div>
                 </div>
 
 
-
-                {/* NOTE: FitnessChart moved inside AnalyticsDashboard or kept separately? 
-                    The design in page.tsx had a separate FitnessChart. 
-                    However, AnalyticsDashboard ALSO has a fitness chart now (Fitness Tracking).
-                    The old FitnessChart.tsx component is likely redundant or duplicative if AnalyticsDashboard covers it.
-                    For cleanup, I'll remove the redundant "Fitness Chart" section here since AnalyticsDashboard includes "Fitness Tracking".
-                    The user requested "Refactor AnalyticsDashboard to consume these new APIs", which implies consolidation.
-                */}
 
                 <div className="mt-8">
                     <div className="flex items-center justify-between mb-4">

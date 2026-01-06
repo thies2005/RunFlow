@@ -2,11 +2,16 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Calculator, Zap, Target } from 'lucide-react';
+import { X, Calculator } from 'lucide-react';
 import { solveCalibrationFactor } from '@/lib/metrics/runalyze';
 import { formatTime, predictRaceTime, calculateVdot, type RaceDistance } from '@/lib/metrics/vdot';
+import type { Activity } from '@/lib/types';
 
-type Props = {
+/**
+ * Props for ShapeCalibrationModal
+ * Exported for reuse in other components
+ */
+export interface ShapeCalibrationModalProps {
     isOpen: boolean;
     onClose: () => void;
     currentFactor: number;
@@ -14,10 +19,24 @@ type Props = {
     rawVO2max?: number;
     vdotCorrectionFactor?: number;
     shapePercent: number;
-    activities?: any[];
-};
+    activities?: Activity[];
+}
 
 type RaceType = '5K' | '10K' | 'HALF' | 'MARATHON';
+
+/**
+ * Validate and clamp time input values
+ * @param value - Input string value
+ * @param max - Maximum allowed value (59 for min/sec, 23 for hours)
+ * @returns Clamped string value or empty string
+ */
+function validateTimeInput(value: string, max: number): string {
+    if (value === '') return '';
+    const num = parseInt(value, 10);
+    if (isNaN(num) || num < 0) return '0';
+    if (num > max) return max.toString();
+    return num.toString();
+}
 
 export default function ShapeCalibrationModal({
     isOpen,
@@ -28,7 +47,7 @@ export default function ShapeCalibrationModal({
     vdotCorrectionFactor = 1.0,
     shapePercent,
     activities = []
-}: Props) {
+}: ShapeCalibrationModalProps) {
     const queryClient = useQueryClient();
     const [mode, setMode] = useState<'SHAPE' | 'VDOT' | 'MANUAL'>('VDOT');
 

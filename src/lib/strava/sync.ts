@@ -17,6 +17,18 @@ const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const MAX_PER_PAGE = 200;
 const RATE_LIMIT_REQUESTS = 95; // 5% buffer under Strava's 100 req/15min limit
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_RETRIES = 3; // Maximum retry attempts for rate-limited requests
+
+// Conditional logger - suppresses in production
+const logger = {
+    info: (...args: unknown[]) => {
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('[Strava]', ...args);
+        }
+    },
+    warn: (...args: unknown[]) => console.warn('[Strava]', ...args),
+    error: (...args: unknown[]) => console.error('[Strava]', ...args),
+};
 
 // Simple in-memory rate limiter
 const rateLimiter = {
@@ -35,7 +47,7 @@ const rateLimiter = {
         // If at limit, wait for window to reset
         if (this.requests >= RATE_LIMIT_REQUESTS) {
             const waitTime = RATE_LIMIT_WINDOW_MS - (now - this.windowStart) + 1000;
-            console.log(`Rate limit reached, waiting ${waitTime / 1000}s`);
+            logger.info(`Rate limit reached, waiting ${waitTime / 1000}s`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
             this.requests = 0;
             this.windowStart = Date.now();
@@ -44,6 +56,16 @@ const rateLimiter = {
         this.requests++;
     },
 };
+
+/**
+ * Safely convert a value to BigInt, handling edge cases
+ */
+function safeBigInt(value: unknown): bigint {
+    if (typeof value === 'bigint') return value;
+    if (typeof value === 'number') return BigInt(Math.floor(value));
+    if (typeof value === 'string') return BigInt(value);
+    throw new Error(`Cannot convert ${typeof value} to BigInt`);
+}
 
 export interface StravaActivity {
     id: number;
@@ -86,11 +108,16 @@ function mapActivityType(stravaType: string): string {
 
 /**
  * Fetch activities with pagination and rate limiting
+ * @param accessToken - Strava OAuth access token
+ * @param page - Page number (1-indexed)
+ * @param after - Only fetch activities after this Unix timestamp
+ * @param retryCount - Current retry attempt (for rate limiting)
  */
 async function fetchActivities(
     accessToken: string,
     page: number = 1,
-    after?: number
+    after?: number,
+    retryCount: number = 0
 ): Promise<StravaActivity[]> {
     await rateLimiter.checkAndWait();
 
@@ -113,11 +140,13 @@ async function fetchActivities(
     );
 
     if (response.status === 429) {
-        // Rate limited - wait and retry
+        if (retryCount >= MAX_RETRIES) {
+            throw new Error(`Strava rate limit exceeded after ${MAX_RETRIES} retries`);
+        }
         const retryAfter = parseInt(response.headers.get('Retry-After') || '900');
-        console.log(`Rate limited by Strava, waiting ${retryAfter}s`);
+        logger.warn(`Rate limited by Strava, waiting ${retryAfter}s (attempt ${retryCount + 1}/${MAX_RETRIES})`);
         await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-        return fetchActivities(accessToken, page, after);
+        return fetchActivities(accessToken, page, after, retryCount + 1);
     }
 
     if (!response.ok) {
@@ -129,10 +158,14 @@ async function fetchActivities(
 
 /**
  * Fetch activity streams (heartrate, time)
+ * @param accessToken - Strava OAuth access token
+ * @param activityId - Strava activity ID
+ * @param retryCount - Current retry attempt (for rate limiting)
  */
 async function fetchActivityStreams(
     accessToken: string,
-    activityId: number
+    activityId: number,
+    retryCount: number = 0
 ): Promise<{ time: number[]; heartrate: number[] } | null> {
     await rateLimiter.checkAndWait();
 
@@ -144,10 +177,14 @@ async function fetchActivityStreams(
     );
 
     if (response.status === 429) {
+        if (retryCount >= MAX_RETRIES) {
+            logger.warn(`Strava rate limit exceeded for streams after ${MAX_RETRIES} retries`);
+            return null; // Return null instead of throwing to not break full sync
+        }
         const retryAfter = parseInt(response.headers.get('Retry-After') || '900');
-        console.log(`Rate limited fetching streams, waiting ${retryAfter}s`);
+        logger.warn(`Rate limited fetching streams, waiting ${retryAfter}s (attempt ${retryCount + 1}/${MAX_RETRIES})`);
         await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-        return fetchActivityStreams(accessToken, activityId);
+        return fetchActivityStreams(accessToken, activityId, retryCount + 1);
     }
 
     if (!response.ok) return null;
@@ -277,7 +314,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
         while (hasMore) {
             const activities = await fetchActivities(accessToken, page, after);
 
-            console.log(`Sync page ${page}: Fetched ${activities.length} activities from Strava (after=${after})`);
+            logger.info(`Sync page ${page}: Fetched ${activities.length} activities from Strava (after=${after})`);
 
             if (activities.length === 0) {
                 hasMore = false;
@@ -288,7 +325,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 try {
                     // Check if already exists
                     const existing = await prisma.activity.findUnique({
-                        where: { stravaId: BigInt(activity.id) },
+                        where: { stravaId: safeBigInt(activity.id) },
                     });
 
                     // Determine if we need to process this activity
@@ -297,7 +334,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     const needsUpdate = existing && existing.hasHeartrate && existing.hrZone1Time === null;
 
                     if (page === 1 && skipped < 3) {
-                        console.log(`Activity ${activity.id}: isNew=${isNew}, needsUpdate=${needsUpdate}, hasHr=${activity.has_heartrate}, existingZone1=${existing?.hrZone1Time}`);
+                        logger.info(`Activity ${activity.id}: isNew=${isNew}, needsUpdate=${needsUpdate}, hasHr=${activity.has_heartrate}, existingZone1=${existing?.hrZone1Time}`);
                     }
 
                     if (!isNew && !needsUpdate) {
@@ -372,7 +409,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         await prisma.activity.create({
                             data: {
                                 userId,
-                                stravaId: BigInt(activity.id),
+                                stravaId: safeBigInt(activity.id),
                                 ...activityData
                             },
                         });
@@ -398,7 +435,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
 
             // Safety check - don't fetch more than 50 pages (10,000 activities)
             if (page > 50) {
-                console.warn('Reached max pages limit');
+                logger.warn('Reached max pages limit');
                 break;
             }
         }

@@ -213,6 +213,11 @@ model Goal {
   strengthPerWeek   Int       @default(0)
   swimsPerWeek      Int       @default(0)
   
+  // Phase Customization
+  taperWeeks        Int       @default(2)
+  peakWeeks         Int       @default(4)
+  buildWeeks        Int       @default(4)
+  
   // keeping deprecated fields temporarily to avoid migration friction if db push isn't forced?
   // No, I'll remove them. 'migrator' uses 'db push' which might handle removal.
   

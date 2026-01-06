@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
                     trimp: true,
                     runningTss: true,
                     estimatedVdot: true,
+                    trainingType: true,
                 },
             }),
             prisma.activity.count({ where }),

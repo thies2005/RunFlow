@@ -44,6 +44,9 @@ export async function GET() {
             ridesPerWeek: activeGoal?.ridesPerWeek || 0,
             strengthPerWeek: activeGoal?.strengthPerWeek || 0,
             weeklyMileageGoal: (activeGoal?.weeklyMileageGoal || 40000) / 1000, // convert m to km
+            taperWeeks: activeGoal?.taperWeeks,
+            peakWeeks: activeGoal?.peakWeeks,
+            buildWeeks: activeGoal?.buildWeeks,
             currentVdot: activeGoal?.currentVdot || 30
         });
     } catch (error) {
@@ -58,7 +61,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max } = await req.json();
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, taperWeeks, peakWeeks, buildWeeks } = await req.json();
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -92,6 +95,11 @@ export async function POST(req: Request) {
             const strength = strengthPerWeek || 0;
             const mileageGoal = weeklyMileageGoal || null; // meters
 
+            // Phase settings (use provided or defaults)
+            const taper = taperWeeks || 2;
+            const peak = peakWeeks || 4;
+            const build = buildWeeks || 4;
+
             // Update Goal Settings
             await prisma.goal.update({
                 where: { id: activeGoal.id },
@@ -101,6 +109,9 @@ export async function POST(req: Request) {
                     ridesPerWeek: rides,
                     strengthPerWeek: strength,
                     weeklyMileageGoal: mileageGoal,
+                    taperWeeks: taper,
+                    peakWeeks: peak,
+                    buildWeeks: build,
                 }
             });
 
@@ -129,7 +140,10 @@ export async function POST(req: Request) {
                 runsPerWeek: runs,
                 ridesPerWeek: rides,
                 strengthPerWeek: strength,
-                weeklyMileageGoal: mileageGoal
+                weeklyMileageGoal: mileageGoal,
+                taperWeeks: taper,
+                peakWeeks: peak,
+                buildWeeks: build,
             });
 
             // Save workouts

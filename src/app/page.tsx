@@ -76,6 +76,25 @@ export default function Dashboard() {
             queryClient.invalidateQueries({ queryKey: ['sync-status'] });
         },
     });
+    // Derive all activities for use in hooks (must be before early returns)
+    const allActivities = activitiesData?.activities || [];
+
+    // Calculate current week's mileage (Monday to now) - MUST be before any returns
+    const currentWeekMileage = useMemo(() => {
+        if (!allActivities.length) return 0;
+
+        const now = new Date();
+        const day = now.getDay();
+        const diff = day === 0 ? -6 : 1 - day; // Get to Monday
+        const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+        monday.setHours(0, 0, 0, 0);
+
+        const weeklyDistance = allActivities
+            .filter((a: any) => new Date(a.startDate) >= monday)
+            .reduce((sum: number, a: any) => sum + (a.distance || 0), 0);
+
+        return weeklyDistance / 1000; // Convert to km
+    }, [allActivities]);
 
     // Show loading state
     if (status === 'loading') {
@@ -111,25 +130,7 @@ export default function Dashboard() {
 
     // Derived Activity Lists
     // We fetch 300 for analytics, but only show 10 in the list
-    const allActivities = activitiesData?.activities || [];
     const recentActivities = allActivities.slice(0, 10);
-
-    // Calculate current week's mileage (Monday to now)
-    const currentWeekMileage = useMemo(() => {
-        if (!allActivities.length) return 0;
-
-        const now = new Date();
-        const day = now.getDay();
-        const diff = day === 0 ? -6 : 1 - day; // Get to Monday
-        const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
-        monday.setHours(0, 0, 0, 0);
-
-        const weeklyDistance = allActivities
-            .filter((a: any) => new Date(a.startDate) >= monday)
-            .reduce((sum: number, a: any) => sum + (a.distance || 0), 0);
-
-        return weeklyDistance / 1000; // Convert to km
-    }, [allActivities]);
 
     // Mock fitness data (would come from API in production)
     const fitnessData = allActivities.length > 0

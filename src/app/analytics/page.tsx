@@ -10,6 +10,8 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
+import RacePredictionChart from '@/components/RacePredictionChart';
+import CombinedAnalyticsChart from '@/components/CombinedAnalyticsChart';
 import {
     calculateWeightedEffectiveVO2max,
     calculateMarathonShape,
@@ -83,7 +85,7 @@ export default function AnalyticsPage() {
     });
 
     // Calculated data
-    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions } = useMemo(() => {
+    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions, combinedData } = useMemo(() => {
         const activities = activitiesData?.activities || [];
         const runs: ActivityForShape[] = activities
             .filter((a: any) => a.type === 'RUN')
@@ -171,6 +173,18 @@ export default function AnalyticsPage() {
             }
         }
 
+        // Build combined data for CombinedAnalyticsChart
+        const combinedData = fitness.map(f => {
+            const vo2Entry = vo2Trend.find(v => v.date === f.date);
+            return {
+                date: f.date,
+                vo2max: vo2Entry?.vo2,
+                ctl: f.ctl,
+                atl: f.atl,
+                tsb: f.tsb,
+            };
+        });
+
         return {
             runalyzeMetrics: {
                 effectiveVO2max,
@@ -188,7 +202,8 @@ export default function AnalyticsPage() {
             vo2TrendData: vo2Trend,
             shapeTrendData: shapeTrend,
             fitnessData: fitness,
-            racePredictions: allPredictions
+            racePredictions: allPredictions,
+            combinedData
         };
     }, [activitiesData, userData, goalsData, statsData]);
 
@@ -384,6 +399,16 @@ export default function AnalyticsPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Race Prediction Chart with Shape Slider */}
+                <RacePredictionChart
+                    effectiveVO2max={runalyzeMetrics.effectiveVO2max}
+                    currentShape={runalyzeMetrics.shape}
+                    calibrationFactor={runalyzeMetrics.calibrationFactor}
+                />
+
+                {/* Combined Analytics Chart */}
+                <CombinedAnalyticsChart data={combinedData} />
             </main>
 
             {/* Calibration Modal */}

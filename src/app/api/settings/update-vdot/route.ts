@@ -45,9 +45,16 @@ export async function POST(req: Request) {
 
             // Regenerate Plan
 
-            // Delete existing workouts for this goal
+            // Delete existing FUTURE & INCOMPLETE workouts for this goal
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             await prisma.workout.deleteMany({
-                where: { goalId: activeGoal.id }
+                where: {
+                    goalId: activeGoal.id,
+                    isCompleted: false,
+                    scheduledDate: { gte: today }
+                }
             });
 
             // Generate new plan (offset to start TODAY)

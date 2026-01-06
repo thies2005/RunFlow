@@ -152,17 +152,18 @@ export function RaceCountdown({ goal, weeklyMileage = 0 }: RaceCountdownProps) {
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-400">This Week&apos;s Mileage</span>
                         <span className="text-sm text-white">
-                            {weeklyMileage.toFixed(1)} / {goal.weeklyMileageGoal.toFixed(0)} km
+                            {weeklyMileage.toFixed(1)} / {(goal.weeklyMileageGoal / 1000).toFixed(1)} km
                         </span>
                     </div>
                     <div className="h-2 bg-background rounded-full overflow-hidden">
                         <div
                             className="h-full bg-gradient-to-r from-accent-cyan to-green-500 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, (weeklyMileage / goal.weeklyMileageGoal) * 100)}%` }}
+                            style={{ width: `${Math.min(100, (weeklyMileage / (goal.weeklyMileageGoal / 1000)) * 100)}%` }}
                         />
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

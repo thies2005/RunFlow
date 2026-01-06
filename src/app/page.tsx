@@ -126,7 +126,7 @@ export default function Dashboard() {
 
     // Check for any errors
     const hasError = activitiesError || goalsError || syncError || syncMutation.error;
-    const currentVdot = allActivities[0]?.estimatedVdot || null;
+    const currentVdot = activeGoal?.currentVdot || allActivities[0]?.estimatedVdot || null;
 
     return (
         <div className="min-h-screen bg-background">

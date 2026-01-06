@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth'; // Adjust path if needed, confirmed in previous steps it's likely here or lib/auth
+import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
-import { calculateWeightedEffectiveVO2max, calculateMarathonShape } from '@/lib/metrics/runalyze';
+import { AnalyticsService } from '@/lib/services/analytics';
+import { Activity } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,58 +16,42 @@ export async function GET() {
 
         const userId = session.user.id;
 
-        // Fetch user for maxHR and vdotCorrectionFactor
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true }
-        });
+        // 1. Fetch User Settings & Active Goal
+        const [user, activeGoal] = await Promise.all([
+            prisma.user.findUnique({
+                where: { id: userId },
+                select: { hrMax: true, vdotCorrectionFactor: true }
+            }),
+            prisma.goal.findFirst({
+                where: { userId, isActive: true },
+            })
+        ]);
+
+        // Defaults
         const maxHR = user?.hrMax || 185;
         const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
-
-        // Fetch active goal for VDOT
-        const activeGoal = await prisma.goal.findFirst({
-            where: { userId, isActive: true },
-        });
         const currentVdot = activeGoal?.currentVdot || null;
-        const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
+        // The original code used marathonShapeFactor as 'calibrationFactor' passed to VO2max calc. 
+        // We will pass 1.0 to raw calculation and handle correction separately as per service.
 
-        // Fetch activities for calculations
-        // We need enough history for VO2max (recent) and Shape (6 months)
+        // 2. Fetch Data (Optimized Selection)
+        // We need 6 months for Shape, but simpler metrics might need less. 
+        // fetching 6 months is fine for now, but we select only needed fields.
         const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
 
-        // Fetch running activities
-        const runActivities = await prisma.activity.findMany({
+        const activities = await prisma.activity.findMany({
             where: {
                 userId,
-                type: 'RUN', // Only runs for main stats
                 startDate: { gte: sixMonthsAgo },
             },
             select: {
+                type: true,
                 startDate: true,
                 distance: true,
                 movingTime: true,
                 averageHr: true,
                 hasHeartrate: true,
-                type: true,
-            },
-            orderBy: { startDate: 'desc' },
-        });
-
-        // Fetch cross-training activities with zone data
-        const crossTrainingActivities = await prisma.activity.findMany({
-            where: {
-                userId,
-                type: { in: ['RIDE', 'VIRTUAL_RIDE', 'SWIM', 'WORKOUT'] },
-                startDate: { gte: sixMonthsAgo },
-            },
-            select: {
-                startDate: true,
-                distance: true,
-                movingTime: true,
-                averageHr: true,
-                hasHeartrate: true,
-                type: true,
                 hrZone2Time: true,
                 hrZone3Time: true,
                 hrZone4Time: true,
@@ -74,64 +59,21 @@ export async function GET() {
             orderBy: { startDate: 'desc' },
         });
 
-        // 1. Calculate Weekly Mileage (Current Week)
-        const now = new Date();
-        const day = now.getDay();
-        const diff = day === 0 ? -6 : 1 - day; // Monday
-        const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
-        monday.setHours(0, 0, 0, 0);
-
-        const currentWeekMileage = runActivities
-            .filter(a => new Date(a.startDate) >= monday)
-            .reduce((sum, a) => sum + (a.distance || 0), 0) / 1000;
-
-        // 2. Calculate VO2max (raw) and apply correction factor
-        const rawVO2max = calculateWeightedEffectiveVO2max(runActivities, maxHR, calibrationFactor);
-        const effectiveVO2max = Math.round(rawVO2max * vdotCorrectionFactor * 10) / 10;
-
-        // 3. Calculate Marathon Shape (with cross-training support)
-        const marathonShape = calculateMarathonShape(
-            runActivities,
-            effectiveVO2max,
-            crossTrainingActivities.map(a => ({
-                ...a,
-                hrZone2Time: a.hrZone2Time ?? undefined,
-                hrZone3Time: a.hrZone3Time ?? undefined,
-                hrZone4Time: a.hrZone4Time ?? undefined,
-            }))
+        // Split into Run vs Cross-Training
+        const runActivities = activities.filter(a => a.type === 'RUN');
+        const crossTrainingActivities = activities.filter(a =>
+            ['RIDE', 'VIRTUAL_RIDE', 'SWIM', 'WORKOUT'].includes(a.type)
         );
 
-        // 4. Calculate CTL/ATL/TSB (Fitness/Fatigue/Form)
-        const dailyLoads = new Map<string, number>();
-        const ninetyDaysAgo = new Date();
-        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+        // 3. Compute Metrics via Service
+        const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
+        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+        const marathonShape = AnalyticsService.calculateShape(runActivities, crossTrainingActivities, effectiveVO2max);
 
-        runActivities
-            .filter(a => new Date(a.startDate) >= ninetyDaysAgo)
-            .forEach(run => {
-                const dateKey = new Date(run.startDate).toISOString().split('T')[0];
-                const trimp = run.movingTime / 60; // Simplified TRIMP
-                dailyLoads.set(dateKey, (dailyLoads.get(dateKey) || 0) + trimp);
-            });
-
-        let ctl = 0, atl = 0;
-        for (let d = new Date(ninetyDaysAgo); d <= now; d.setDate(d.getDate() + 1)) {
-            const dateKey = d.toISOString().split('T')[0];
-            const load = dailyLoads.get(dateKey) || 0;
-            ctl = ctl + (load - ctl) / 42;
-            atl = atl + (load - atl) / 7;
-        }
-        const tsb = ctl - atl;
-
-        // 5. Calculate Workload Ratio (Acute:Chronic = ATL:CTL)
-        const workloadRatio = ctl > 0 ? Math.round((atl / ctl) * 100) / 100 : 0;
-
-        // 6. Calculate Easy TRIMP (sum of last 7 days training load)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const easyTrimp = runActivities
-            .filter(a => new Date(a.startDate) >= sevenDaysAgo)
-            .reduce((sum, a) => sum + (a.movingTime / 60), 0);
+        // CTL/ATL uses run activities primarily for specificity, or all? 
+        // Original code used runActivities only. Keeping that behavior.
+        const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);
+        const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
         return NextResponse.json({
             currentWeekMileage,
@@ -140,11 +82,11 @@ export async function GET() {
             vdotCorrectionFactor,
             marathonShape,
             currentVdot,
-            ctl: Math.round(ctl),
-            atl: Math.round(atl),
-            tsb: Math.round(tsb),
+            ctl,
+            atl,
+            tsb,
             workloadRatio,
-            easyTrimp: Math.round(easyTrimp)
+            easyTrimp
         });
 
     } catch (error) {

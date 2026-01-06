@@ -11,6 +11,7 @@ import {
     Mountain,
     Zap
 } from 'lucide-react';
+import type { WorkoutType } from '@/lib/types';
 import ActivityDetailsModal from './ActivityDetailsModal';
 
 interface ActivityItem {
@@ -30,6 +31,7 @@ interface ActivityItem {
     trimp: number | null;
     runningTss: number | null;
     estimatedVdot: number | null;
+    trainingType: WorkoutType | null;
 }
 
 interface ActivityListProps {
@@ -71,8 +73,21 @@ function isCrossTraining(type: string): boolean {
     return type === 'VIRTUAL_RIDE' || type === 'RIDE';
 }
 
+const getWorkoutTypeStyle = (type: WorkoutType) => {
+    switch (type) {
+        case 'LONG_RUN': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+        case 'TEMPO': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+        case 'INTERVALS': return 'bg-red-500/10 text-red-400 border-red-500/20';
+        case 'RACE': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
+        case 'RECOVERY': return 'bg-green-500/10 text-green-400 border-green-500/20';
+        case 'STRENGTH': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+        default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+    }
+};
+
 function ActivityCard({ activity }: { activity: ActivityItem }) {
     const crossTraining = isCrossTraining(activity.type);
+    const showTag = activity.trainingType && activity.trainingType !== 'EASY' && activity.trainingType !== 'OTHER';
 
     return (
         <button
@@ -102,6 +117,11 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                         <h4 className="text-white font-semibold truncate">{activity.name}</h4>
                         {crossTraining && (
                             <span className="badge badge-recovery text-xs">Recovery</span>
+                        )}
+                        {showTag && (
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${getWorkoutTypeStyle(activity.trainingType!)}`}>
+                                {activity.trainingType!.replace('_', ' ')}
+                            </span>
                         )}
                     </div>
 

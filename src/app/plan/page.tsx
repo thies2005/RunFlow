@@ -3,26 +3,20 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Flag, Activity, Clock, Zap, Bike, Mountain, Play, Plus, Dumbbell, Settings, GripVertical } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, isToday, isPast, differenceInWeeks, addDays } from 'date-fns';
+import { ArrowLeft, Calendar, Flag, Activity, Clock, Zap, Bike, Mountain, Plus, Dumbbell, Settings, GripVertical } from 'lucide-react';
+import { format, startOfWeek, addDays, isToday, isSameDay, differenceInWeeks } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { EditWorkoutModal } from '@/components';
 import {
     DndContext,
-    closestCenter,
-    KeyboardSensor,
-    PointerSensor,
     useSensor,
     useSensors,
     DragEndEvent,
+    PointerSensor,
+    TouchSensor,
+    useDraggable,
+    useDroppable,
 } from '@dnd-kit/core';
-import {
-    SortableContext,
-    sortableKeyboardCoordinates,
-    useSortable,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
 const workoutStyles: Record<string, { color: string, icon: any, label: string }> = {
     EASY: { color: 'text-green-400', icon: Activity, label: 'Easy Run' },
@@ -47,6 +41,114 @@ function getPhase(weeksUntilRace: number) {
     return { name: 'BASE', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' };
 }
 
+// --- Draggable Workout Component ---
+function DraggableWorkout({ workout, isTodayItem, onClick }: { workout: any; isTodayItem: boolean; onClick: () => void }) {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: workout.id,
+        data: { workout },
+    });
+
+    const style = workoutStyles[workout.workoutType] || workoutStyles.EASY;
+    const Icon = style.icon;
+
+    const dragStyle = transform ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: 50,
+        opacity: 0.9,
+    } : undefined;
+
+    if (isDragging) {
+        return (
+            <div ref={setNodeRef} style={dragStyle} className="bg-gray-800 p-4 rounded-lg shadow-xl border border-white/20 flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-white/5 ${style.color}`}>
+                    <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                    <h4 className="font-medium text-white">{style.label}</h4>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={dragStyle}
+            className={`group p-3 rounded-lg flex items-center gap-3 hover:bg-white/5 transition-colors border border-transparent ${isDragging ? 'opacity-0' : ''} ${isTodayItem ? 'bg-accent-orange/5 border-accent-orange/20' : 'bg-white/5'}`}
+        >
+            <div className="cursor-grab text-gray-600 hover:text-white" {...listeners} {...attributes}>
+                <GripVertical className="w-4 h-4" />
+            </div>
+
+            <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center bg-white/5 ${style.color} cursor-pointer`}
+                onClick={onClick}
+            >
+                <Icon className="w-4 h-4" />
+            </div>
+
+            <div className="flex-1 cursor-pointer min-w-0" onClick={onClick}>
+                <div className="flex items-center justify-between">
+                    <h4 className={`text-sm font-medium truncate ${workout.isCompleted ? 'text-gray-500 line-through' : 'text-white'}`}>
+                        {style.label}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                        {workout.targetDistance > 0 && (
+                            <span className="text-xs text-gray-400 whitespace-nowrap">
+                                {(workout.targetDistance / 1000).toFixed(1)}k
+                            </span>
+                        )}
+                        <Settings className="w-3 h-3 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                </div>
+                <p className="text-xs text-gray-500 truncate">{workout.description}</p>
+            </div>
+        </div>
+    );
+}
+
+// --- Droppable Day Component ---
+function DroppableDay({ date, children, isTodayItem, onAdd }: { date: Date; children: React.ReactNode; isTodayItem: boolean; onAdd: () => void }) {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const { setNodeRef, isOver } = useDroppable({
+        id: `day-${dateStr}`,
+        data: { date: dateStr },
+    });
+
+    return (
+        <div
+            ref={setNodeRef}
+            className={`flex gap-2 p-2 rounded-lg min-h-[80px] transition-colors border ${isOver ? 'bg-white/10 border-accent-orange/50' : 'border-transparent hover:bg-white/5'} ${isTodayItem ? 'bg-accent-orange/5' : ''}`}
+        >
+            {/* Date Column */}
+            <div className="flex flex-col items-center w-12 pt-2 shrink-0">
+                <span className="text-[10px] text-gray-500 uppercase">{format(date, 'EEE')}</span>
+                <span className={`text-lg font-bold ${isTodayItem ? 'text-accent-orange' : 'text-gray-300'}`}>
+                    {format(date, 'd')}
+                </span>
+                <button
+                    onClick={onAdd}
+                    className="mt-2 text-gray-600 hover:text-white transition-colors"
+                >
+                    <Plus className="w-4 h-4" />
+                </button>
+            </div>
+
+            {/* Workouts Column */}
+            <div className="flex-1 space-y-2">
+                {children}
+                {/* Empty State Placeholder (only if no children) */}
+                {Array.isArray(children) && children.length === 0 && (
+                    <div className="h-full flex items-center justify-center border border-dashed border-white/10 rounded-lg text-xs text-gray-600">
+                        Rest Day
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+
 export default function PlanPage() {
     const router = useRouter();
     const { status } = useSession();
@@ -60,7 +162,7 @@ export default function PlanPage() {
     // DnD Sensors
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+        useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     );
 
     // Reorder mutation
@@ -75,6 +177,7 @@ export default function PlanPage() {
             return res.json();
         },
         onSuccess: () => {
+            // Optimistic update handled by invalidation for now
             queryClient.invalidateQueries({ queryKey: ['plan'] });
             queryClient.invalidateQueries({ queryKey: ['goals'] });
         },
@@ -85,6 +188,25 @@ export default function PlanPage() {
         queryFn: async () => (await fetch('/api/plan')).json(),
         enabled: status === 'authenticated'
     });
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active) {
+            const workoutId = active.id as string;
+            const overId = over.id as string;
+
+            if (overId.startsWith('day-')) {
+                const newDate = overId.replace('day-', '');
+                const currentWorkout = active.data.current?.workout;
+
+                // Only mutate if date actually changed
+                if (currentWorkout && !isSameDay(new Date(currentWorkout.scheduledDate), new Date(newDate))) {
+                    reorderMutation.mutate({ workoutId, newDate });
+                }
+            }
+        }
+    };
 
     if (isLoading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading plan...</div>;
 
@@ -104,6 +226,16 @@ export default function PlanPage() {
 
     // Group by Week
     const weeks: Record<string, any[]> = {};
+
+    // Determine start/end of the plan to render
+    // We should render weeks starting from the plan start or today-ish
+    // But sticking to the existing logic: render weeks connected to workouts
+    // PLUS make sure we capture the current week if not present?
+    // Let's iterate through workouts to find min/max, or just map them.
+    // To ensure "Empty" weeks are shown properly (if gaps), we might need robust logic.
+    // For now, simpler: Group workouts by week start. 
+    // And for each week, we iterate 7 days.
+
     workouts.forEach((w: any) => {
         const monday = startOfWeek(new Date(w.scheduledDate), { weekStartsOn: 1 }).toISOString();
         if (!weeks[monday]) weeks[monday] = [];
@@ -141,136 +273,77 @@ export default function PlanPage() {
                     </div>
                 </div>
 
-                {/* Weeks List */}
-                <div className="space-y-6">
-                    {sortedWeeks.map((weekStartIso, index) => {
-                        const weekStart = new Date(weekStartIso);
-                        const weekEnd = addDays(weekStart, 6);
+                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+                    {/* Weeks List */}
+                    <div className="space-y-6">
+                        {sortedWeeks.map((weekStartIso, index) => {
+                            const weekStart = new Date(weekStartIso);
+                            const weekEnd = addDays(weekStart, 6);
+                            const weeksUntilRace = differenceInWeeks(raceDate, weekStart);
+                            const phase = getPhase(weeksUntilRace);
+                            const weekWorkouts = weeks[weekStartIso];
 
-                        const weeksUntilRace = differenceInWeeks(raceDate, weekStart);
-                        const phase = getPhase(weeksUntilRace);
+                            // Calculate Mileage
+                            const weeklyMileage = weekWorkouts.reduce((sum: number, w: any) => {
+                                if (RUN_TYPES.includes(w.workoutType) && w.targetDistance > 0) {
+                                    return sum + w.targetDistance;
+                                }
+                                return sum;
+                            }, 0);
 
-                        const weekWorkouts = weeks[weekStartIso].sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
-
-                        // Calculate Mileage
-                        const weeklyMileage = weekWorkouts.reduce((sum: number, w: any) => {
-                            if (RUN_TYPES.includes(w.workoutType) && w.targetDistance > 0) {
-                                return sum + w.targetDistance;
-                            }
-                            return sum;
-                        }, 0);
-
-                        return (
-                            <div key={weekStartIso} className="glass-card overflow-hidden">
-                                {/* Week Header */}
-                                <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex flex-col">
-                                            <span className="text-white font-semibold">Week {index + 1}</span>
-                                            <span className="text-xs text-gray-400">
-                                                {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
+                            return (
+                                <div key={weekStartIso} className="glass-card overflow-hidden">
+                                    {/* Week Header */}
+                                    <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5 sticky top-0 z-10 backdrop-blur-md">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex flex-col">
+                                                <span className="text-white font-semibold">Week {index + 1}</span>
+                                                <span className="text-xs text-gray-400">
+                                                    {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
+                                                </span>
+                                            </div>
+                                            <div className="px-2 py-1 bg-white/5 rounded text-xs text-gray-300 border border-white/10">
+                                                {(weeklyMileage / 1000).toFixed(1)} km
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span className={`px-2 py-1 rounded text-xs font-bold border ${phase.color}`}>
+                                                {phase.name}
                                             </span>
                                         </div>
-                                        <div className="px-2 py-1 bg-white/5 rounded text-xs text-gray-300 border border-white/10">
-                                            {(weeklyMileage / 1000).toFixed(1)} km
-                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold border ${phase.color} mr-2`}>
-                                            {phase.name}
-                                        </span>
-                                        <button
-                                            onClick={() => handleCreate(weekStart)}
-                                            className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition"
-                                            title="Add Workout"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
 
-                                {/* Workouts */}
-                                <div className="divide-y divide-white/5">
-                                    {weekWorkouts.map((workout: any, wIndex: number) => {
-                                        const wDate = new Date(workout.scheduledDate);
-                                        const isTodayItem = isToday(wDate);
-                                        const isDone = workout.isCompleted;
+                                    {/* Days Grid (List View) */}
+                                    <div className="p-2 space-y-1">
+                                        {Array.from({ length: 7 }).map((_, i) => {
+                                            const dayDate = addDays(weekStart, i);
+                                            const isTodayItem = isToday(dayDate);
+                                            const dayWorkouts = weekWorkouts.filter((w: any) => isSameDay(new Date(w.scheduledDate), dayDate));
 
-                                        const style = workoutStyles[workout.workoutType] || workoutStyles.EASY;
-                                        const Icon = style.icon;
-
-                                        // Generate week days for date picker
-                                        const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
-                                        return (
-                                            <div
-                                                key={workout.id}
-                                                className={`group p-4 flex items-center gap-4 hover:bg-white/5 transition-colors ${isTodayItem ? 'bg-accent-orange/10' : ''}`}
-                                            >
-                                                {/* Drag handle with date selector */}
-                                                <div className="relative">
-                                                    <select
-                                                        value={format(wDate, 'yyyy-MM-dd')}
-                                                        onChange={(e) => {
-                                                            reorderMutation.mutate({
-                                                                workoutId: workout.id,
-                                                                newDate: e.target.value,
-                                                            });
-                                                        }}
-                                                        className="absolute inset-0 opacity-0 cursor-grab w-full h-full"
-                                                        disabled={reorderMutation.isPending}
-                                                    >
-                                                        {weekDays.map(day => (
-                                                            <option key={day.toISOString()} value={format(day, 'yyyy-MM-dd')}>
-                                                                {format(day, 'EEE d')}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    <div className="flex flex-col items-center w-12 text-center cursor-grab">
-                                                        <GripVertical className="w-4 h-4 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity mb-1" />
-                                                        <span className="text-xs text-gray-500 uppercase">{format(wDate, 'EEE')}</span>
-                                                        <span className={`text-lg font-bold ${isTodayItem ? 'text-accent-orange' : 'text-gray-300'}`}>
-                                                            {format(wDate, 'd')}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div
-                                                    className={`w-10 h-10 rounded-full flex items-center justify-center bg-white/5 ${style.color} cursor-pointer`}
-                                                    onClick={() => handleEdit(workout)}
+                                            return (
+                                                <DroppableDay
+                                                    key={dayDate.toISOString()}
+                                                    date={dayDate}
+                                                    isTodayItem={isTodayItem}
+                                                    onAdd={() => handleCreate(dayDate)}
                                                 >
-                                                    <Icon className="w-5 h-5" />
-                                                </div>
-
-                                                <div className="flex-1 cursor-pointer" onClick={() => handleEdit(workout)}>
-                                                    <div className="flex items-center justify-between">
-                                                        <h4 className={`font-medium ${isDone ? 'text-gray-500 line-through' : 'text-white'}`}>
-                                                            {style.label}
-                                                        </h4>
-                                                        <div className="flex items-center gap-2">
-                                                            {workout.targetDistance > 0 && (
-                                                                <span className="text-sm text-gray-400">
-                                                                    {(workout.targetDistance / 1000).toFixed(1)} km
-                                                                </span>
-                                                            )}
-                                                            {workout.targetDistance === 0 && workout.targetDuration > 0 && (
-                                                                <span className="text-sm text-gray-400">
-                                                                    {Math.round(workout.targetDuration / 60)} min
-                                                                </span>
-                                                            )}
-                                                            <Settings className="w-4 h-4 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                        </div>
-                                                    </div>
-                                                    <p className="text-sm text-gray-500 line-clamp-1">{workout.description}</p>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                                    {dayWorkouts.map((workout: any) => (
+                                                        <DraggableWorkout
+                                                            key={workout.id}
+                                                            workout={workout}
+                                                            isTodayItem={isTodayItem}
+                                                            onClick={() => handleEdit(workout)}
+                                                        />
+                                                    ))}
+                                                </DroppableDay>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                            );
+                        })}
+                    </div>
+                </DndContext>
             </div>
 
             <EditWorkoutModal

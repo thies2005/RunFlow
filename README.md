@@ -1,243 +1,98 @@
 # RunFlow
 
-RunFlow is a production-grade running performance dashboard that combines the best of **Runna** (structured training plans) and **Runalyze** (deep analytics). It is containerized with Docker for easy deployment and uses Cloudflare Tunnels for secure external access.
+RunFlow is a production-grade running performance dashboard that combines structured training plans with deep analytics. It is containerized with Docker for easy deployment on any server (VPS, Raspberry Pi, Home Lab).
+
+![RunFlow Dashboard](public/dashboard-preview.png)
 
 ## 🏗️ Architecture
 
-- **Frontend**: Next.js 14 (App Router) with Tailwind CSS & Recharts for visualization.
-- **Backend**: Next.js API Routes.
-- **Database**: PostgreSQL 16 (persisted via Docker volume).
-- **ORM**: Prisma for type-safe database access.
-- **Auth**: NextAuth.js with Strava OAuth provider.
-- **Networking**: Cloudflare Tunnel (`cloudflared`) for secure public access without opening ports.
-
-## 🚀 Deployment & Workflow
-
-We utilize a **Dual-Branch Strategy** to seamlessly handle local development and production deployment.
-
-### Branches
-
-| Branch | Purpose | Docker Composition |
-| :--- | :--- | :--- |
-| **`main`** | Development & Source | Configured to **build** images locally (`build: .`). Changes here trigger builds. |
-| **`dockerhub`** | Production Deployment | Configured to **pull** pre-built images (`image: t23wes3/runflow:TAG`). Best for servers. |
-
-### The Deployment Script
-
-The heart of our workflow is `scripts/deploy.ps1`. This PowerShell script automates the entire release process:
-
-1.  **Bumps the version** in `package.json`.
-2.  **Builds multi-arch images** (amd64/arm64) and pushes them to Docker Hub.
-3.  Configures `docker-compose.yml` for **local build** and pushes to `main`.
-4.  Configures `docker-compose.yml` for **image pull** and pushes to `dockerhub`.
-
-### 🐳 Docker Hub Images
-
-Our automated builds are available on Docker Hub as `t23wes3/runflow`. 
-
-- **Link**: [t23wes3/runflow](https://hub.docker.com/r/t23wes3/runflow)
-- **Architectures**: Multi-arch support for `linux/amd64` and `linux/arm64` (Raspberry Pi, ARM servers).
-
-The `dockerhub` branch is pre-configured to pull these images, making deployment on production servers a simple `docker compose pull && docker compose up -d` process.
-
-#### Usage
-
-To deploy a new version from your development machine:
-
-```powershell
-# 1. Ensure you are on the main branch
-git checkout main
-
-# 2. Run deployment script
-# Usage: .\scripts\deploy.ps1 "Your commit message"
-.\scripts\deploy.ps1 "Added new analytics charts"
-```
-
-If you only changed code/docs and don't need a new Docker build (lighter update):
-
-```powershell
-.\scripts\deploy.ps1 "Update README" -SkipDocker
-```
-
-### 🔧 Deployment Options (Server-Side)
-
-We support two ways to deploy on your server, controlled by which Docker Compose files you use.
-
-#### 1. Standard Deployment (Pull from Hub)
-**Best for**: Production, speed, stability.
-Uses the pre-built image from Docker Hub.
-
-```bash
-# 1. Update repo
-git pull origin main
-
-# 2. Deploy
-docker compose up -d
-```
-
-#### 2. Testing Deployment (Build from Source)
-**Best for**: Testing latest changes before a Docker Hub push, or debugging platform issues.
-Forces a local build of the Docker image on your server.
-
-```bash
-# 1. Update repo
-git pull origin main
-
-# 2. Deploy with Build Override
-docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
-```
-*This command tells Docker: "Use the base config, but apply the build overrides, and force a rebuild."*
+- **Frontend/Backend**: Next.js 14 App Router (Service Layer Architecture).
+- **Database**: PostgreSQL 16.
+- **Physics**: Custom implementation of Runalyze TRIMP, CTL/ATL/TSB, and Effective VO2max.
+- **Images**: Multi-arch support (`linux/amd64`, `linux/arm64`) hosted on Docker Hub.
 
 ---
 
-## 🛠️ Setup Guide
+## 🚀 Server Installation (Docker Hub)
 
-### Prerequisites
+This is the recommended way to install RunFlow on a Linux server or VPS. We pull the heavy application image from Docker Hub, so you don't need to build it.
 
-- **Docker & Docker Compose**: [Install Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- **Node.js** (Optional, for local script execution)
-- **Strava Account**: For API credentials.
-- **Cloudflare Account**: For Tunnels.
+### 1. Prerequisites
+- **Docker Engine** & **Docker Compose** installed.
+- **Git** (to fetch configuration files).
+- **Strava Account** (for API credentials).
 
-### 1. Configuration (.env)
-
-Duplicate `.env.example` to `.env` and configure the following:
-
-| Variable | Description |
-| :--- | :--- |
-| `DATABASE_URL` | Postgres connection string. Default: `postgresql://runflow:runflow@db:5432/runflow` |
-| `NEXTAUTH_URL` | The full public URL of your app (e.g., `https://run.yourdomain.com`). |
-| `NEXTAUTH_SECRET` | A random string for encryption. Generate with `openssl rand -base64 32`. |
-| `STRAVA_CLIENT_ID` | From [Strava API Settings](https://www.strava.com/settings/api). |
-| `STRAVA_CLIENT_SECRET` | From [Strava API Settings](https://www.strava.com/settings/api). |
-| `TUNNEL_TOKEN` | Cloudflare Tunnel token. Get from Zero Trust Dashboard. |
-
-### 2. Running Locally (Development)
-
-Run the app locally with hot-reloading (via Docker mount) or standard build.
+### 2. Install
+On your server, run the following:
 
 ```bash
-# Clone the repository
+# 1. Clone the repository to get configuration files
+# We only need docker-compose.yml and the scripts
 git clone https://github.com/t23wes3/RunFlow.git
 cd RunFlow
 
-# Start services (App, DB, Tunnel)
-docker compose up --build
+# 2. Configure Environment
+# Copy the example file and edit it with your credentials
+cp .env.example .env
+nano .env
 ```
 
-Access the app at `http://localhost:3000`.
+**Required .env Configuration**:
+- `NEXTAUTH_URL`: Must match your server's access URL (e.g., `https://run.yourdomain.com`).
+- `NEXTAUTH_SECRET`: Generate one (e.g., `openssl rand -base64 32`).
+- `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET`: Get these from [Strava Settings](https://www.strava.com/settings/api).
 
-### 3. Deploying to Production (Server)
-
-On your VPS (e.g., Ubuntu, Raspberry Pi), use the `dockerhub` branch for a lightweight deployment.
+### 3. Deploy
+Start the application. Docker will pull the pre-built application image from Docker Hub.
 
 ```bash
-# 1. Clone the repository (first time)
-git clone -b dockerhub https://github.com/t23wes3/RunFlow.git
+docker compose up -d
+```
+
+*Note: The first run will build a small 'migrator' helper container to set up the database schema. This takes a few moments.*
+
+### 4. Updates
+To update to the latest version of RunFlow in the future:
+
+```bash
+# Get latest config (if any)
+git pull origin main
+
+# Pull latest Docker image
+docker compose pull
+
+# Restart
+docker compose up -d
+```
+
+---
+
+## 🛠️ Local Development (Build from Source)
+
+If you are a developer wanting to modify the code:
+
+```bash
+# Clone
+git clone https://github.com/t23wes3/RunFlow.git
 cd RunFlow
 
-# 2. Set up environment
-# Create your .env file here with production credentials
-
-# 3. Pull and Start
-docker compose pull
-docker compose up -d
-```
-
-**Updating Production:**
-
-When you've deployed a new version via the script, simply run this on your server:
-
-```bash
-git pull origin dockerhub
-docker compose pull
-docker compose up -d
+# Start in Dev Mode (Hot-Reloading)
+# Uses docker-compose.dev.yml to mount source code
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 ---
 
-## 🧪 Testing & Quality
+## ⚙️ Advanced Configuration
 
-To ensure stability, RunFlow includes a comprehensive test suite and strict build checks.
+| Variable | Description |
+| :--- | :--- |
+| `DATABASE_URL` | Internal Docker link. Leave default: `postgresql://runflow:runflow@db:5432/runflow` |
+| `TUNNEL_TOKEN` | (Optional) Cloudflare Tunnel token for secure remote access. |
 
-### Basic Testing
-Run unit and snapshot tests using Jest:
+## 💾 Backups
+Automated backups run every 6 hours and are stored in the `./backups` directory on your server.
+To restore:
 ```bash
-npm run test
+./scripts/restore.sh "backup_file_name.sql.gz"
 ```
-
-### Integration Testing
-Run database-connected integration tests:
-```bash
-npm run test:integration
-```
-
-### Production Build Check
-To verify the application compiles correctly and matches production requirements before deploying:
-```bash
-npm run build
-```
-
----
-
-## 📚 Features & Physics
-
-### Key Metrics
-- **TRIMP (Training Impulse)**: Calculated using Banister's formula based on heart rate reserve.
-- **CTL (Chronic Training Load)**: 42-day weighted average of daily stress (Fitness).
-- **ATL (Acute Training Load)**: 7-day weighted average (Fatigue).
-- **TSB (Training Stress Balance)**: CTL - ATL (Form).
-- **Effective VO2max**: Derived from race performances or training data.
-
-### Cross-Training Logic
-Cycling and other aerobic activities contribute to your **Cardiovascular Fitness (CTL)** but are excluded from **Running Impact Stress**. This allows you to track total metabolic fitness while monitoring specific running load to prevent injury.
-
----
-
-## 💾 Backup & Restore
-
-RunFlow includes a fully automated backup system to ensure your training data is never lost.
-
-### Automated Backups
-The system runs a dedicated backup container that:
-- **Schedule**: Creates a backup **every 6 hours**.
-- **Retention**: Implements a smart retention policy:
-  - Keeps last **7 daily** backups.
-  - Keeps last **4 weekly** backups.
-  - Keeps last **6 monthly** backups.
-- **Location**: Backups are stored in the `./backups` directory on the host machine.
-
-### Restoring Data
-
-We provide helper scripts to make restoration easy.
-
-**Warning: Restoration will overwrite the current database.**
-
-#### On Windows
-```powershell
-.\scripts\restore.ps1 "backup_2024-01-01_120000.sql.gz"
-```
-
-#### On Linux / Mac
-```bash
-./scripts/restore.sh "backup_2024-01-01_120000.sql.gz"
-```
-
-### Migrating to a New Server
-Since backups are stored locally in the `./backups` folder:
-1. **Copy the Folder**: You must manually copy the `./backups` folder (or specific files) from your old server to the new one.
-2. **Place**: Put them in the root `RunFlow/backups/` directory on the new server.
-3. **Restore**: Run the restore script as shown above.
-
----
-
-## ❓ Troubleshooting
-
-**Q: Database connection failed?**
-A: Ensure the `db` service is healthy (`docker ps`) and `DATABASE_URL` in `.env` matches the postgres credentials.
-
-**Q: "No matching manifest for linux/arm64..."**
-A: Ensure you used the `deploy.ps1` script which builds multi-arch images. Standard local builds might only be amd64.
-
-**Q: NextAuth "Try signing in with a different account"?**
-A: Check that your `NEXTAUTH_URL` matches exactly the URL you are accessing (including https) and that the callback URL in Strava settings matches `https://your-domain.com/api/auth/callback/strava`.

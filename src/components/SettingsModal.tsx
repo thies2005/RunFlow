@@ -91,6 +91,9 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
             setRidesPerWeek(settingsData.ridesPerWeek);
             setStrengthPerWeek(settingsData.strengthPerWeek);
             setWeeklyMileage(settingsData.weeklyMileageGoal);
+            setTaperWeeks(settingsData.taperWeeks || 2);
+            setPeakWeeks(settingsData.peakWeeks || 4);
+            setBuildWeeks(settingsData.buildWeeks || 4);
         }
     }, [settingsData]);
 
@@ -99,6 +102,11 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
     const [zone2Max, setZone2Max] = useState(70);
     const [zone3Max, setZone3Max] = useState(80);
     const [zone4Max, setZone4Max] = useState(90);
+
+    // Phase Settings
+    const [taperWeeks, setTaperWeeks] = useState(2);
+    const [peakWeeks, setPeakWeeks] = useState(4);
+    const [buildWeeks, setBuildWeeks] = useState(4);
 
     const [message, setMessage] = useState('');
 
@@ -125,6 +133,9 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
                     hrZone2Max: zone2Max,
                     hrZone3Max: zone3Max,
                     hrZone4Max: zone4Max,
+                    taperWeeks,
+                    peakWeeks,
+                    buildWeeks,
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -439,6 +450,59 @@ export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, sh
                                 </div>
                             </div>
                             <p className="text-xs text-gray-600 mt-2">Z5 = above Z4 Max</p>
+                        </div>
+                    </div>
+
+                    {/* Advanced Settings */}
+                    <div className="border-t border-white/10 pt-6">
+                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Advanced Settings (Phases)</h3>
+
+                        {/* Taper Weeks */}
+                        <div className="mb-4">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-gray-400 uppercase">Taper Phase</label>
+                                <span className="text-white font-bold">{taperWeeks} Weeks</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="1"
+                                max="4"
+                                value={taperWeeks}
+                                onChange={(e) => setTaperWeeks(parseInt(e.target.value))}
+                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+                            />
+                        </div>
+
+                        {/* Peak Weeks */}
+                        <div className="mb-4">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-gray-400 uppercase">Peak Phase</label>
+                                <span className="text-white font-bold">{peakWeeks} Weeks</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="2"
+                                max="8"
+                                value={peakWeeks}
+                                onChange={(e) => setPeakWeeks(parseInt(e.target.value))}
+                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+                            />
+                        </div>
+
+                        {/* Build Weeks */}
+                        <div className="mb-4">
+                            <div className="flex justify-between mb-2">
+                                <label className="text-xs text-gray-400 uppercase">Build Phase</label>
+                                <span className="text-white font-bold">{buildWeeks} Weeks</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="2"
+                                max="12"
+                                value={buildWeeks}
+                                onChange={(e) => setBuildWeeks(parseInt(e.target.value))}
+                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+                            />
                         </div>
                     </div>
 

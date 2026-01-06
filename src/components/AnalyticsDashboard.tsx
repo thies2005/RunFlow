@@ -42,8 +42,10 @@ const RANGES = [
 export default function AnalyticsDashboard({ activities, currentVdot }: AnalyticsDashboardProps) {
     const [timeRange, setTimeRange] = useState('12_WEEKS');
 
-    // Filter activities by range
+    // Filter activities by range (and deduplicate by ID just in case)
     const filteredActivities = useMemo(() => {
+        const unique = Array.from(new Map(activities.map(a => [a.id, a])).values());
+
         const now = new Date();
         let cutoff = new Date(0); // Default ALL
 

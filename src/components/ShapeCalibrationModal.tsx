@@ -76,7 +76,8 @@ export default function ShapeCalibrationModal({
     })();
 
     const solvedFactor = raceCalcData?.factor || null;
-    const isRaceInputValid = solvedFactor !== null && solvedFactor >= 0.5 && solvedFactor <= 2.0;
+    // Allow negative factors (faster than optimal) up to 2.0 (slower than predicted)
+    const isRaceInputValid = solvedFactor !== null && solvedFactor >= -2.0 && solvedFactor <= 2.0;
 
     const handleApply = () => {
         const factor = mode === 'RACE' ? solvedFactor : parseFloat(manualFactor);
@@ -177,7 +178,7 @@ export default function ShapeCalibrationModal({
                                     </div>
                                     {!isRaceInputValid && solvedFactor !== null && (
                                         <p className="text-xs text-red-400">
-                                            Factor must be between 0.5x and 2.0x. Your time differs too much from predictions.
+                                            Factor must be between -2.0x and 2.0x. Your time differs drastically from predictions.
                                         </p>
                                     )}
                                     {/* Debug Info */}

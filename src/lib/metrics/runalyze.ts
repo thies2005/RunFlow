@@ -244,8 +244,8 @@ export function solveCalibrationFactor(
     const requiredPenalty = (actualRaceTimeSeconds / optimalSeconds) - 1;
     const factor = requiredPenalty / baseShapePenalty;
 
-    // Clamp to reasonable range
-    return Math.max(0.5, Math.min(2.0, Math.round(factor * 100) / 100));
+    // Clamp to reasonable range (allow negative for faster-than-optimal performance)
+    return Math.max(-2.0, Math.min(2.0, Math.round(factor * 100) / 100));
 }
 
 /**

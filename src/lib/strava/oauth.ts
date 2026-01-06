@@ -109,8 +109,8 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
     });
 
     if (!response.ok) {
-        console.error('Failed to refresh Strava token:', await response.text());
-        return null;
+        const errorText = await response.text();
+        throw new Error(`Failed to refresh Strava token: ${response.status} ${errorText}`);
     }
 
     const data = await response.json();

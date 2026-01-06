@@ -188,6 +188,8 @@ model Goal {
   planWeeks         Int       @default(12)
   runsPerWeek       Int       @default(4)
   ridesPerWeek      Int       @default(0)
+  strengthPerWeek   Int       @default(0)
+  swimsPerWeek      Int       @default(0)
   
   // keeping deprecated fields temporarily to avoid migration friction if db push isn't forced?
   // No, I'll remove them. 'migrator' uses 'db push' which might handle removal.

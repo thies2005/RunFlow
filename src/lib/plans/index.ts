@@ -8,6 +8,8 @@ export type PlanConfig = {
     startDate?: Date; // Defaults to now
     runsPerWeek?: number; // Default 4
     ridesPerWeek?: number; // Default 0
+    strengthPerWeek?: number; // Default 0
+    swimsPerWeek?: number; // Default 0
     weeklyMileageGoal?: number | null; // Max km per week (in meters!)
 };
 
@@ -28,6 +30,8 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const startDate = config.startDate || new Date();
     const runsPerWeek = config.runsPerWeek || 4;
     const ridesPerWeek = config.ridesPerWeek || 0;
+    const strengthPerWeek = config.strengthPerWeek || 0;
+    const swimsPerWeek = config.swimsPerWeek || 0;
 
     // Determine Peak Volume (meters)
     let peakVolume = config.weeklyMileageGoal || 40000;
@@ -74,7 +78,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
         }
 
         // Generate base workouts
-        let weekSchedule = generateWeek(phase, raceType, paces, runsPerWeek, ridesPerWeek);
+        let weekSchedule = generateWeek(phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek);
 
         // Scale runs to fit Volume Cap
         const runningWorkouts = weekSchedule.filter(w => isRun(w.type));
@@ -147,7 +151,9 @@ function generateWeek(
     raceType: RaceType,
     paces: any,
     runsPerWeek: number,
-    ridesPerWeek: number
+    ridesPerWeek: number,
+    strengthPerWeek: number,
+    swimsPerWeek: number
 ): ScheduledWorkout[] {
     const workouts: ScheduledWorkout[] = [];
 
@@ -221,6 +227,48 @@ function generateWeek(
                 targetDuration: 3600 // 60 mins
             });
             ridesAssigned++;
+        }
+    }
+
+    // 3. Assign Strength (Fill remaining free slots)
+    if (strengthPerWeek > 0) {
+        let strengthAssigned = 0;
+        const allDays = [0, 1, 2, 3, 4, 5, 6];
+        const usedDays = workouts.map(w => w.dayOffset);
+        const freeDays = allDays.filter(d => !usedDays.includes(d));
+
+        for (const day of freeDays) {
+            if (strengthAssigned >= strengthPerWeek) break;
+            workouts.push({
+                dayOffset: day,
+                type: WorkoutType.STRENGTH,
+                description: 'Strength: 45min Session',
+                totalDistance: 0,
+                targetPace: 0,
+                targetDuration: 2700 // 45 mins
+            });
+            strengthAssigned++;
+        }
+    }
+
+    // 4. Assign Swim (Fill remaining free slots)
+    if (swimsPerWeek > 0) {
+        let swimsAssigned = 0;
+        const allDays = [0, 1, 2, 3, 4, 5, 6];
+        const usedDays = workouts.map(w => w.dayOffset);
+        const freeDays = allDays.filter(d => !usedDays.includes(d));
+
+        for (const day of freeDays) {
+            if (swimsAssigned >= swimsPerWeek) break;
+            workouts.push({
+                dayOffset: day,
+                type: WorkoutType.SWIM,
+                description: 'Swim: 30min Session',
+                totalDistance: 0,
+                targetPace: 0,
+                targetDuration: 1800 // 30 mins
+            });
+            swimsAssigned++;
         }
     }
 

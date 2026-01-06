@@ -273,8 +273,11 @@ export async function syncUserActivities(userId: string, range?: string): Promis
         let page = 1;
         let hasMore = true;
 
+
         while (hasMore) {
             const activities = await fetchActivities(accessToken, page, after);
+
+            console.log(`Sync page ${page}: Fetched ${activities.length} activities from Strava (after=${after})`);
 
             if (activities.length === 0) {
                 hasMore = false;
@@ -292,6 +295,10 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     // Process if: New OR (Existing but missing Zone data AND has HR)
                     const isNew = !existing;
                     const needsUpdate = existing && existing.hasHeartrate && existing.hrZone1Time === null;
+
+                    if (page === 1 && skipped < 3) {
+                        console.log(`Activity ${activity.id}: isNew=${isNew}, needsUpdate=${needsUpdate}, hasHr=${activity.has_heartrate}, existingZone1=${existing?.hrZone1Time}`);
+                    }
 
                     if (!isNew && !needsUpdate) {
                         skipped++;

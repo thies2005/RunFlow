@@ -176,7 +176,7 @@ export default function AnalyticsPage() {
         // Build weekly volume map (km per week)
         const weeklyVolumeMap = new Map<string, number>();
         const weeklyTimeMap = new Map<string, number>();
-        const weeklyVO2Map = new Map<string, number[]>(); // Store all VO2 values per week for averaging
+        const weeklyVO2Map = new Map<string, { values: number[]; vo2max?: number }>();
 
         runs.forEach(run => {
             const date = new Date(run.startDate);
@@ -196,28 +196,70 @@ export default function AnalyticsPage() {
             if (run.hasHeartrate && run.averageHr && run.distance >= 3000) {
                 const vo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr, maxHR);
                 if (vo2 > 0) {
-                    const existing = weeklyVO2Map.get(weekKey) || [];
-                    existing.push(vo2);
+                    const existing = weeklyVO2Map.get(weekKey) || { values: [] };
+                    existing.values.push(vo2);
                     weeklyVO2Map.set(weekKey, existing);
                 }
             }
         });
 
-        // Build combined data for CombinedAnalyticsChart
-        const combinedData = fitness.map(f => {
-            const vo2Values = weeklyVO2Map.get(f.date) || [];
-            const avgVO2 = vo2Values.length > 0
-                ? Math.round(vo2Values.reduce((a, b) => a + b, 0) / vo2Values.length * 10) / 10
-                : undefined;
+        // Calculate average VO2max for each week
+        weeklyVO2Map.forEach((entry) => {
+            if (entry.values.length > 0) {
+                entry.vo2max = Math.round(entry.values.reduce((a, b) => a + b, 0) / entry.values.length * 10) / 10;
+            }
+        });
+
+        // Create fitness map for easy lookup
+        const fitnessDataMap = new Map(fitness.map(f => [f.date, f]));
+
+        // 3. Create combined data array
+        const allWeekKeys = new Set<string>();
+        weeklyVO2Map.forEach((_, key) => allWeekKeys.add(key));
+        fitnessDataMap.forEach((_, key) => allWeekKeys.add(key));
+        weeklyVolumeMap.forEach((_, key) => allWeekKeys.add(key));
+
+        const weeks = Array.from(allWeekKeys).sort((a, b) => {
+            const dateA = new Date(a);
+            const dateB = new Date(b);
+            return dateA.getTime() - dateB.getTime();
+        });
+
+        const initialCombinedData = weeks.map(week => {
+            const vo2Entry = weeklyVO2Map.get(week);
+            const fitnessEntry = fitnessDataMap.get(week);
+            const volumeEntry = weeklyVolumeMap.get(week);
+            const timeEntry = weeklyTimeMap.get(week);
 
             return {
-                date: f.date,
-                vo2max: avgVO2,
-                ctl: f.ctl,
-                atl: f.atl,
-                tsb: f.tsb,
-                volume: Math.round(weeklyVolumeMap.get(f.date) || 0),
-                trainingTime: Math.round(weeklyTimeMap.get(f.date) || 0),
+                date: week,
+                vo2max: vo2Entry?.vo2max,
+                ctl: fitnessEntry?.ctl,
+                atl: fitnessEntry?.atl,
+                tsb: fitnessEntry?.tsb,
+                volume: Math.round(volumeEntry || 0),
+                trainingTime: Math.round(timeEntry || 0),
+            };
+        });
+
+        // 4. Calculate Rolling Average for VO2max (e.g. 4 weeks)
+        const combinedDataWithRolling = initialCombinedData.map((d, index) => {
+            // Get last 4 valid VO2max values including current
+            const windowSize = 4;
+            let count = 0;
+            let sum = 0;
+
+            // Look backwards
+            for (let i = index; i >= 0 && count < windowSize; i--) {
+                if (initialCombinedData[i].vo2max !== undefined) {
+                    sum += initialCombinedData[i].vo2max!;
+                    count++;
+                }
+            }
+
+            return {
+                ...d,
+                vo2maxRolling: count > 0 ? Math.round(sum / count * 10) / 10 : undefined
             };
         });
 
@@ -239,7 +281,7 @@ export default function AnalyticsPage() {
             shapeTrendData: shapeTrend,
             fitnessData: fitness,
             racePredictions: allPredictions,
-            combinedData
+            combinedData: combinedDataWithRolling
         };
     }, [activitiesData, userData, goalsData, statsData]);
 

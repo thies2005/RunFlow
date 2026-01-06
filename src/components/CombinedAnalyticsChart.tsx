@@ -6,6 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 interface DataPoint {
     date: string;
     vo2max?: number;
+    vo2maxRolling?: number;
     ctl?: number;
     atl?: number;
     tsb?: number;
@@ -27,8 +28,10 @@ const SERIES_CONFIG = {
 };
 
 type SeriesKey = keyof typeof SERIES_CONFIG;
+type TimeRange = 'ALL' | '1Y' | '6M' | '3M' | '1M';
 
 export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartProps) {
+    const [timeRange, setTimeRange] = useState<TimeRange>('ALL');
     const [visibleSeries, setVisibleSeries] = useState<Record<SeriesKey, boolean>>({
         vo2max: true,
         ctl: true,
@@ -45,26 +48,43 @@ export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartP
         }));
     };
 
+    // Filter data based on Time Range
+    const filteredData = useMemo(() => {
+        if (timeRange === 'ALL') return data;
+
+        const now = new Date();
+        const cutoff = new Date();
+
+        switch (timeRange) {
+            case '1Y': cutoff.setFullYear(now.getFullYear() - 1); break;
+            case '6M': cutoff.setMonth(now.getMonth() - 6); break;
+            case '3M': cutoff.setMonth(now.getMonth() - 3); break;
+            case '1M': cutoff.setMonth(now.getMonth() - 1); break;
+        }
+
+        return data.filter(d => new Date(d.date) >= cutoff);
+    }, [data, timeRange]);
+
     // Convert training time to hours for display
     const chartData = useMemo(() => {
-        return data.map(d => ({
+        return filteredData.map(d => ({
             ...d,
             trainingTimeHours: d.trainingTime ? Math.round(d.trainingTime / 60 * 10) / 10 : undefined,
         }));
-    }, [data]);
+    }, [filteredData]);
 
     // Calculate domains for each axis
     const domains = useMemo(() => {
-        const vo2Values = data.filter(d => d.vo2max).map(d => d.vo2max!);
-        const fitnessValues = data.flatMap(d => [d.ctl, d.atl, d.tsb].filter(Boolean) as number[]);
-        const volumeValues = data.filter(d => d.volume).map(d => d.volume!);
+        const vo2Values = filteredData.flatMap(d => [d.vo2max, d.vo2maxRolling].filter(Boolean) as number[]);
+        const fitnessValues = filteredData.flatMap(d => [d.ctl, d.atl, d.tsb].filter(Boolean) as number[]);
+        const volumeValues = filteredData.filter(d => d.volume).map(d => d.volume!);
 
         return {
-            vo2: vo2Values.length ? [Math.min(...vo2Values) - 2, Math.max(...vo2Values) + 2] : [0, 60],
+            vo2: vo2Values.length ? [Math.floor(Math.min(...vo2Values) - 1), Math.ceil(Math.max(...vo2Values) + 1)] : [0, 60],
             fitness: fitnessValues.length ? [Math.min(...fitnessValues) - 5, Math.max(...fitnessValues) + 5] : [-30, 30],
             volume: volumeValues.length ? [0, Math.max(...volumeValues) * 1.2] : [0, 100],
         };
-    }, [data]);
+    }, [filteredData]);
 
     if (!data.length) {
         return (
@@ -77,7 +97,25 @@ export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartP
 
     return (
         <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Combined Analytics Overview</h3>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h3 className="text-lg font-semibold text-white">Combined Analytics Overview</h3>
+
+                {/* Time Range Filter */}
+                <div className="flex bg-[#1f2937] rounded-lg p-1 border border-gray-700">
+                    {(['1M', '3M', '6M', '1Y', 'ALL'] as TimeRange[]).map(range => (
+                        <button
+                            key={range}
+                            onClick={() => setTimeRange(range)}
+                            className={`px-3 py-1 text-xs font-medium rounded transition-all ${timeRange === range
+                                    ? 'bg-[#374151] text-white shadow-sm'
+                                    : 'text-gray-400 hover:text-gray-200'
+                                }`}
+                        >
+                            {range}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             {/* Toggle Controls */}
             <div className="flex flex-wrap gap-2 mb-6">
@@ -86,8 +124,8 @@ export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartP
                         key={key}
                         onClick={() => toggleSeries(key)}
                         className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-2 ${visibleSeries[key]
-                                ? 'bg-white/10 text-white border border-white/20'
-                                : 'bg-transparent text-gray-500 border border-gray-700 hover:border-gray-500'
+                            ? 'bg-white/10 text-white border border-white/20'
+                            : 'bg-transparent text-gray-500 border border-gray-700 hover:border-gray-500'
                             }`}
                     >
                         <span
@@ -147,16 +185,31 @@ export default function CombinedAnalyticsChart({ data }: CombinedAnalyticsChartP
                             labelStyle={{ color: '#9ca3af' }}
                         />
 
-                        {/* VO2max Line */}
+                        {/* VO2max Rolling Average (Smooth Line) */}
+                        {visibleSeries.vo2max && (
+                            <Line
+                                yAxisId="left"
+                                type="monotone"
+                                dataKey="vo2maxRolling"
+                                stroke={SERIES_CONFIG.vo2max.color}
+                                strokeWidth={2}
+                                dot={false}
+                                name="VO2max (Avg)"
+                            />
+                        )}
+
+                        {/* VO2max Raw Dots (No Line) */}
                         {visibleSeries.vo2max && (
                             <Line
                                 yAxisId="left"
                                 type="monotone"
                                 dataKey="vo2max"
-                                stroke={SERIES_CONFIG.vo2max.color}
-                                strokeWidth={2}
-                                dot={{ fill: SERIES_CONFIG.vo2max.color, r: 3 }}
-                                name="VO2max"
+                                stroke="transparent"
+                                strokeWidth={0}
+                                dot={{ fill: SERIES_CONFIG.vo2max.color, r: 3, strokeWidth: 0 }}
+                                activeDot={{ r: 5, strokeWidth: 0 }}
+                                name="VO2max (Raw)"
+                                isAnimationActive={false}
                             />
                         )}
 

@@ -20,7 +20,8 @@ export default function Dashboard() {
     const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useQuery({
         queryKey: ['activities'],
         queryFn: async () => {
-            const res = await fetch('/api/activities?limit=300');
+            // Only fetch runs for the main dashboard to avoid skewing stats with rides/hikes
+            const res = await fetch('/api/activities?limit=300&type=RUN');
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
                 throw new Error(errorData.error || 'Failed to fetch activities');
@@ -146,15 +147,8 @@ export default function Dashboard() {
     // We fetch 300 for analytics, but only show 10 in the list
     const recentActivities = allActivities.slice(0, 10);
 
-    // Mock fitness data (would come from API in production)
-    const fitnessData = allActivities.length > 0
-        ? Array.from({ length: 30 }, (_, i) => ({
-            date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString(),
-            ctl: 40 + Math.random() * 20,
-            atl: 30 + Math.random() * 30,
-            tsb: -10 + Math.random() * 25,
-        }))
-        : [];
+    // Mock fitness data removed - will implement real calculation later if needed
+    const fitnessData: any[] = [];
 
     // Check for any errors
     const hasError = activitiesError || goalsError || syncError || syncMutation.error;

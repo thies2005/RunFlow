@@ -1,5 +1,6 @@
 services:
   app:
+    image: ${DOCKER_HUB_USERNAME:-yourusername}/runflow-app:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,6 +23,7 @@ services:
       - runflow-network
 
   migrator:
+    image: ${DOCKER_HUB_USERNAME:-yourusername}/runflow-migrator:latest
     build:
       context: .
       dockerfile: Dockerfile

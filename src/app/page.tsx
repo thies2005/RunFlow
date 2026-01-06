@@ -4,15 +4,17 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
+import { RefreshCw, Settings, LogOut, AlertCircle, Edit2, Check } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { TodayWorkout, RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo } from '@/components';
+import EditWorkoutModal from '@/components/EditWorkoutModal';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const queryClient = useQueryClient();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [editingWorkout, setEditingWorkout] = useState<any>(null);
 
     // 1. Fetch Stats (Server-calculated)
     const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -102,7 +104,7 @@ export default function Dashboard() {
     const recentActivities = activitiesData?.activities || [];
     const activeGoal = goalsData?.goals?.find((g: any) => g.isActive);
     const todayWorkout = activeGoal?.workouts?.[0] || null;
-    const upcomingWorkouts = activeGoal?.workouts?.slice(0, 3) || [];
+    const weeklyWorkouts = activeGoal?.workouts || [];
 
     // Stats from Server
     const currentWeekMileage = statsData?.currentWeekMileage || 0;
@@ -208,36 +210,50 @@ export default function Dashboard() {
                     <div className="lg:col-span-1">
                         <div className="glass-card p-6">
                             <h2 className="text-lg font-semibold text-gray-300 mb-4">This Week's Workouts</h2>
-                            {upcomingWorkouts.length > 0 ? (
-                                <div className="space-y-3">
-                                    {upcomingWorkouts.map((workout: any, index: number) => (
-                                        <div key={workout.id || index} className={`p-3 rounded-lg border ${index === 0 ? 'bg-accent-orange/10 border-accent-orange/30' : 'bg-white/5 border-white/10'}`}>
+                            {weeklyWorkouts.length > 0 ? (
+                                <div className="space-y-3 max-h-96 overflow-y-auto">
+                                    {weeklyWorkouts.map((workout: any, index: number) => (
+                                        <div key={workout.id || index} className={`p-3 rounded-lg border transition-all ${workout.isCompleted ? 'bg-green-500/5 border-green-500/20' : index === 0 ? 'bg-accent-orange/10 border-accent-orange/30' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${index === 0 ? 'bg-accent-orange/20' : 'bg-white/10'}`}>
-                                                        <span className="text-sm">{workout.type === 'EASY' ? '🏃' : workout.type === 'LONG_RUN' ? '🚀' : workout.type === 'TEMPO' ? '⚡' : workout.type === 'INTERVAL' ? '🔥' : '💪'}</span>
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-green-500/20' : index === 0 ? 'bg-accent-orange/20' : 'bg-white/10'}`}>
+                                                        <span className="text-sm">{workout.workoutType === 'EASY' ? '🏃' : workout.workoutType === 'LONG_RUN' ? '🚀' : workout.workoutType === 'TEMPO' ? '⚡' : workout.workoutType === 'INTERVALS' ? '🔥' : workout.workoutType === 'STRENGTH' ? '💪' : workout.workoutType === 'REST' ? '😴' : workout.workoutType === 'RIDE' ? '🚴' : workout.workoutType === 'SWIM' ? '🏊' : '🎯'}</span>
                                                     </div>
                                                     <div>
-                                                        <p className={`font-medium ${index === 0 ? 'text-accent-orange' : 'text-white'}`}>
-                                                            {workout.name || workout.type?.replace('_', ' ')}
+                                                        <p className={`font-medium ${workout.isCompleted ? 'text-green-400' : index === 0 ? 'text-accent-orange' : 'text-white'}`}>
+                                                            {workout.description || workout.workoutType?.replace('_', ' ')}
                                                         </p>
                                                         <p className="text-xs text-gray-500">
-                                                            {workout.description || (workout.targetDistance ? `${(workout.targetDistance / 1000).toFixed(1)} km` : workout.targetDuration ? `${Math.round(workout.targetDuration / 60)} min` : '')}
+                                                            {workout.targetDistance ? `${(workout.targetDistance / 1000).toFixed(1)} km` : workout.targetDuration ? `${Math.round(workout.targetDuration / 60)} min` : ''}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                {index === 0 && !workout.isCompleted && (
-                                                    <button
-                                                        onClick={() => completeWorkoutMutation.mutate(workout.id)}
-                                                        disabled={completeWorkoutMutation.isPending}
-                                                        className="btn-primary py-1 px-3 text-xs"
-                                                    >
-                                                        {completeWorkoutMutation.isPending ? '...' : 'Done'}
-                                                    </button>
-                                                )}
-                                                {workout.isCompleted && (
-                                                    <span className="text-green-400 text-xs">✓ Completed</span>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    {!workout.isCompleted && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => setEditingWorkout(workout)}
+                                                                className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
+                                                                title="Edit workout"
+                                                            >
+                                                                <Edit2 className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => completeWorkoutMutation.mutate(workout.id)}
+                                                                disabled={completeWorkoutMutation.isPending}
+                                                                className="btn-primary py-1 px-3 text-xs flex items-center gap-1"
+                                                            >
+                                                                <Check className="w-3 h-3" />
+                                                                {completeWorkoutMutation.isPending ? '...' : 'Done'}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {workout.isCompleted && (
+                                                        <span className="text-green-400 text-xs flex items-center gap-1">
+                                                            <Check className="w-3 h-3" /> Done
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -379,6 +395,13 @@ export default function Dashboard() {
                 onClose={() => setIsSettingsOpen(false)}
                 effectiveVO2max={effectiveVO2max}
                 shapePercent={marathonShape.shape}
+            />
+
+            <EditWorkoutModal
+                isOpen={!!editingWorkout}
+                onClose={() => setEditingWorkout(null)}
+                workout={editingWorkout}
+                goalId={activeGoal?.id}
             />
         </div>
     );

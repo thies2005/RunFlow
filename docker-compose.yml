@@ -1,6 +1,5 @@
 services:
   app:
-    image: ${DOCKER_HUB_USERNAME:-yourusername}/runflow-app:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,13 +22,12 @@ services:
       - runflow-network
 
   migrator:
-    image: ${DOCKER_HUB_USERNAME:-yourusername}/runflow-migrator:latest
     build:
       context: .
       dockerfile: Dockerfile
       target: builder
     container_name: runflow-migrator
-    command: npx prisma db push
+    command: npx prisma db push --accept-data-loss
     environment:
       - DATABASE_URL=${DATABASE_URL}
     depends_on:

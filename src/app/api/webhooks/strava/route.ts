@@ -69,10 +69,13 @@ function isValidWebhookPayload(body: unknown): body is {
 }
 
 export async function GET(req: Request) {
-    const { searchParams } = new URL(req.url);
-    const mode = searchParams.get('hub.mode');
-    const token = searchParams.get('hub.verify_token');
-    const challenge = searchParams.get('hub.challenge');
+    const url = new URL(req.url);
+    const mode = url.searchParams.get('hub.mode');
+    const token = url.searchParams.get('hub.verify_token');
+    const challenge = url.searchParams.get('hub.challenge');
+
+    console.log('[Strava Webhook] FULL URL:', req.url);
+    console.log('[Strava Webhook] HEADERS:', Object.fromEntries(req.headers.entries()));
 
     const receivedToken = token?.trim();
     const expectedToken = VERIFY_TOKEN?.trim();

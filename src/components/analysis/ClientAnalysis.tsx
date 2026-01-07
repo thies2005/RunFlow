@@ -55,7 +55,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
                 <div className="glass-card p-4">
                     <div className="flex items-center gap-2 text-gray-400 text-xs uppercase mb-1">
                         <MapPin className="w-3 h-3" /> Distance
@@ -77,11 +77,17 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                         <span className="text-sm font-normal text-gray-500"> /km</span>
                     </div>
                 </div>
-                <div className="glass-card p-4">
-                    <div className="flex items-center gap-2 text-gray-400 text-xs uppercase mb-1">
+                <div className="glass-card p-4 text-center">
+                    <div className="flex items-center justify-center gap-2 text-gray-400 text-xs uppercase mb-1">
                         <Heart className="w-3 h-3" /> Avg HR
                     </div>
                     <div className="text-2xl font-bold">{Math.round(avgHr)} <span className="text-sm font-normal text-gray-500">bpm</span></div>
+                </div>
+                <div className="glass-card p-4 text-center">
+                    <div className="flex items-center justify-center gap-2 text-gray-400 text-xs uppercase mb-1">
+                        <Zap className="w-3 h-3" /> Avg Cadence
+                    </div>
+                    <div className="text-2xl font-bold">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'} <span className="text-sm font-normal text-gray-500">spm</span></div>
                 </div>
             </div>
 
@@ -171,6 +177,35 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     />
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                                     <Area type="monotone" dataKey="altitude" stroke="#9ca3af" fillOpacity={1} fill="url(#colorAlt)" unit=" m" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                )}
+
+                {/* Cadence Graph */}
+                {chartData.some((d: any) => d.cadence) && (
+                    <div className="glass-card p-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-accent-purple" /> Cadence (spm)
+                        </h3>
+                        <div className="h-[200px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorCad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
+                                    <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        labelFormatter={(label) => formatXAxis(label as number)}
+                                    />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                                    <Area type="monotone" dataKey="cadence" stroke="#a855f7" fillOpacity={1} fill="url(#colorCad)" connectNulls />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>

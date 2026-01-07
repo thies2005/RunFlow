@@ -13,6 +13,18 @@ export default function ActivitiesPage() {
     const [filter, setFilter] = useState('RUN'); // Default to RUN
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
+    const { data: statsData } = useQuery({
+        queryKey: ['analytics-stats'],
+        queryFn: async () => {
+            const res = await fetch('/api/analytics/stats');
+            if (!res.ok) throw new Error('Failed to fetch stats');
+            return res.json();
+        },
+        enabled: status === 'authenticated',
+    });
+
+    const userHrMax = statsData?.hrMax || 185;
+
     const { data: activitiesData, isLoading, refetch, isRefetching } = useQuery({
         queryKey: ['activities', 'all', filter],
         queryFn: async () => {
@@ -99,6 +111,7 @@ export default function ActivitiesPage() {
                     <ActivityList
                         activities={activitiesData?.activities || []}
                         isLoading={isLoading}
+                        userHrMax={userHrMax}
                     />
                 </div>
             </div>

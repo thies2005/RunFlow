@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
                     averageSpeed: true,
                     averageHr: true,
                     maxHr: true,
+                    averageCadence: true,
                     hasHeartrate: true,
                     totalElevation: true,
                     trimp: true,

@@ -113,6 +113,7 @@ export default function Dashboard() {
     const tsb = statsData?.tsb || 0;
     const workloadRatio = statsData?.workloadRatio || 0;
     const easyTrimp = statsData?.easyTrimp || 0;
+    const userHrMax = statsData?.hrMax || 185;
 
 
     // Loading State
@@ -249,7 +250,7 @@ export default function Dashboard() {
                             View All
                         </button>
                     </div>
-                    <ActivityList activities={recentActivities} isLoading={activitiesLoading} />
+                    <ActivityList activities={recentActivities} isLoading={activitiesLoading} userHrMax={userHrMax} />
                 </div>
             </main>
 

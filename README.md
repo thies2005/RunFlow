@@ -39,8 +39,24 @@ nano .env
 | `NEXTAUTH_SECRET` | A secret key. Generate with: `openssl rand -base64 32`. |
 | `STRAVA_CLIENT_ID` | From [Strava API Settings](https://www.strava.com/settings/api). |
 | `STRAVA_CLIENT_SECRET` | From [Strava API Settings](https://www.strava.com/settings/api). |
+| `STRAVA_VERIFY_TOKEN` | A custom string you match in Strava Webhook setup (default: "STRAVA"). |
 
-### 3. Build & Deploy
+### 3. Strava Webhooks (Real-time Sync)
+
+To enable real-time activity syncing:
+
+1. Go to your Strava API Application settings.
+2. Ensure your "Authorization Callback Domain" matches your domain.
+3. You must use a tool like Postman or `curl` to subscribe to webhooks (Strava does not have a UI for this):
+```bash
+POST https://www.strava.com/api/v3/push_subscriptions
+client_id: YOUR_CLIENT_ID
+client_secret: YOUR_CLIENT_SECRET
+callback_url: https://your-domain.com/api/webhooks/strava
+verify_token: YOUR_VERIFY_TOKEN
+```
+
+### 4. Build & Deploy
 
 ```bash
 # Build and start (first run takes a few minutes)

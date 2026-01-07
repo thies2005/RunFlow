@@ -244,10 +244,12 @@ function generateWeek(params: {
     // 3. Remaining volume for Easy Runs
     // Total Runs = runsPerWeek. 
     // Key Runs = 1 (Long) + (hasQuality ? 1 : 0).
-    // Easy Runs Count = runsPerWeek - Key Runs. 
-    // Note: If !hasQuality (e.g. Base), the "Quality Slot" becomes an Easy Run, so it counts as an Easy Run.
-    const keyRunsCount = 1 + (hasQuality ? 1 : 0);
-    const easyRunsCount = Math.max(0, runsPerWeek - keyRunsCount) + (!hasQuality && runsPerWeek >= 2 ? 1 : 0);
+    const longRunCount = (runsPerWeek >= 1 ? 1 : 0);
+    const qualityRunCount = (hasQuality ? 1 : 0);
+    const totalKeyRuns = longRunCount + qualityRunCount;
+
+    // Remaining runs are Easy Runs
+    const easyRunsCount = Math.max(0, runsPerWeek - totalKeyRuns);
 
     const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDist);
     const calculatedEasyDist = easyRunsCount > 0 ? remainingVol / easyRunsCount : 5000;

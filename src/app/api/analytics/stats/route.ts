@@ -86,7 +86,8 @@ export async function GET() {
             atl,
             tsb,
             workloadRatio,
-            easyTrimp
+            easyTrimp,
+            hrMax: maxHR
         });
 
     } catch (error) {

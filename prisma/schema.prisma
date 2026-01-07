@@ -135,6 +135,7 @@ model Activity {
   // Heart Rate
   averageHr       Float?
   maxHr           Int?
+  averageCadence  Float?    // steps per minute (spm)
   hasHeartrate    Boolean   @default(false)
   
   // Elevation

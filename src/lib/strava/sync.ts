@@ -89,6 +89,7 @@ export interface StravaActivity {
     elev_low?: number;
     description?: string;
     workout_type?: number;
+    average_cadence?: number;
 }
 
 /**
@@ -528,6 +529,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         gradeAdjustedSpeed: activity.average_grade_adjusted_speed ?? null,
                         averageHr: activity.average_heartrate ?? null,
                         maxHr: activity.max_heartrate ?? null,
+                        averageCadence: activity.average_cadence ? (activity.average_cadence * 2) : null, // Strava returns spm/2 (rpm) for runs
                         hasHeartrate: activity.has_heartrate,
                         totalElevation: activity.total_elevation_gain,
                         elevHigh: activity.elev_high ?? null,
@@ -641,4 +643,155 @@ export async function getSyncStatus(userId: string): Promise<{
         lastSyncAt: user?.lastSyncAt ?? null,
         totalActivities: user?._count?.activities ?? 0,
     };
+}
+
+/**
+ * Sync a single activity by ID (for webhook events)
+ * @param userId - Internal user ID
+ * @param activityId - Strava activity ID
+ */
+export async function syncActivityById(userId: string, activityId: number): Promise<void> {
+    try {
+        // 1. Get valid access token
+        const accessToken = await refreshStravaToken(userId);
+        if (!accessToken) {
+            logger.error(`syncActivityById: Failed to refresh token for user ${userId}`);
+            return;
+        }
+
+        // 2. Fetch user profile data for calculations
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                hrMax: true,
+                hrRest: true,
+                sex: true,
+                hrZone1Max: true,
+                hrZone2Max: true,
+                hrZone3Max: true,
+                hrZone4Max: true,
+            },
+        });
+
+        if (!user) {
+            logger.error(`syncActivityById: User ${userId} not found`);
+            return;
+        }
+
+        // 3. Fetch activity details from Strava
+        await rateLimiter.checkAndWait();
+        const activityResponse = await fetch(
+            `${STRAVA_API_BASE}/activities/${activityId}`,
+            {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            }
+        );
+
+        if (!activityResponse.ok) {
+            logger.error(`syncActivityById: Failed to fetch activity ${activityId}: ${activityResponse.status}`);
+            return;
+        }
+
+        const activity: StravaActivity = await activityResponse.json();
+
+        // 4. Fetch activity streams
+        let streams = null;
+        let zoneTimes = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+
+        if (['Run', 'VirtualRun', 'Ride', 'VirtualRide'].includes(activity.type)) {
+            streams = await fetchActivityStreams(accessToken, activity.id);
+
+            const effectiveHrMax = user.hrMax || 190;
+
+            if (streams && streams.heartrate) {
+                const zoneThresholds = {
+                    z1: user.hrZone1Max ?? 60,
+                    z2: user.hrZone2Max ?? 70,
+                    z3: user.hrZone3Max ?? 80,
+                    z4: user.hrZone4Max ?? 90,
+                };
+                zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, effectiveHrMax, zoneThresholds);
+            }
+        }
+
+        // 5. Calculate TRIMP
+        let trimp: number | null = null;
+        const effectiveHrMax = user.hrMax || 190;
+        const effectiveHrRest = user.hrRest || 60;
+
+        if (activity.has_heartrate && activity.average_heartrate) {
+            const result = calculateTrimp({
+                durationMinutes: activity.moving_time / 60,
+                averageHr: activity.average_heartrate,
+                hrMax: effectiveHrMax,
+                hrRest: effectiveHrRest,
+                sex: (user.sex || 'MALE') as Sex,
+            });
+            trimp = result.trimp;
+        }
+
+        // 6. Calculate running TSS
+        let runningTss: number | null = null;
+        const contribution = getActivityContribution(activity.type);
+        if (contribution.contributesToRunningTss && activity.distance > 0) {
+            const thresholdPace = 300; // Default 5:00/km
+            runningTss = calculateRunningTss(
+                activity.moving_time,
+                activity.distance,
+                thresholdPace
+            );
+        }
+
+        // 7. Build activity data
+        const activityData = {
+            userId,
+            name: activity.name,
+            description: activity.description,
+            type: mapActivityType(activity.type) as any,
+            sportType: activity.sport_type,
+            startDate: new Date(activity.start_date),
+            timezone: activity.timezone,
+            distance: activity.distance,
+            movingTime: activity.moving_time,
+            elapsedTime: activity.elapsed_time,
+            averageSpeed: activity.average_speed,
+            maxSpeed: activity.max_speed,
+            gradeAdjustedSpeed: activity.average_grade_adjusted_speed ?? null,
+            averageHr: activity.average_heartrate ?? null,
+            maxHr: activity.max_heartrate ?? null,
+            averageCadence: activity.average_cadence ? (activity.average_cadence * 2) : null,
+            hasHeartrate: activity.has_heartrate,
+            totalElevation: activity.total_elevation_gain,
+            elevHigh: activity.elev_high ?? null,
+            elevLow: activity.elev_low ?? null,
+            trimp,
+            runningTss,
+            hrZone1Time: zoneTimes.z1,
+            hrZone2Time: zoneTimes.z2,
+            hrZone3Time: zoneTimes.z3,
+            hrZone4Time: zoneTimes.z4,
+            hrZone5Time: zoneTimes.z5,
+            rawJson: activity as any,
+            streams: streams as any,
+            trainingType: determineWorkoutType(activity),
+        };
+
+        // 8. Upsert activity (create or update)
+        await prisma.activity.upsert({
+            where: { stravaId: safeBigInt(activity.id) },
+            create: {
+                stravaId: safeBigInt(activity.id),
+                ...activityData,
+            },
+            update: {
+                ...activityData,
+                updatedAt: new Date(),
+            },
+        });
+
+        logger.info(`syncActivityById: Successfully synced activity ${activityId} for user ${userId}`);
+    } catch (error) {
+        logger.error(`syncActivityById: Error syncing activity ${activityId} for user ${userId}:`, error);
+    }
 }

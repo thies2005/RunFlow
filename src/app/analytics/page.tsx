@@ -124,6 +124,21 @@ export default function AnalyticsPage() {
                 hasHeartrate: a.hasHeartrate,
             }));
 
+        // Include cross-training activities for shape calculation (matches start page)
+        const crossTrainingActivities: ActivityForShape[] = activities
+            .filter((a: Activity) => ['RIDE', 'VIRTUAL_RIDE', 'SWIM', 'WORKOUT'].includes(a.type))
+            .map((a: Activity) => ({
+                startDate: a.startDate,
+                distance: a.distance,
+                movingTime: a.movingTime,
+                averageHr: a.averageHr,
+                hasHeartrate: a.hasHeartrate,
+                type: a.type,
+                hrZone2Time: a.hrZone2Time ?? undefined,
+                hrZone3Time: a.hrZone3Time ?? undefined,
+                hrZone4Time: a.hrZone4Time ?? undefined,
+            }));
+
         const maxHR = userData?.user?.hrMax || 190;
         const activeGoal = goalsData?.goals?.find((g: Goal) => g.isActive);
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
@@ -133,7 +148,8 @@ export default function AnalyticsPage() {
         const localVO2max = calculateWeightedEffectiveVO2max(runs, maxHR);
         const effectiveVO2max = statsData?.effectiveVO2max || localVO2max;
 
-        const shapeResult = calculateMarathonShape(runs, effectiveVO2max);
+        // Include cross-training activities for consistent shape calculation with start page
+        const shapeResult = calculateMarathonShape(runs, effectiveVO2max, crossTrainingActivities);
         const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const trainingPaces = calculateTrainingPaces(effectiveVO2max);

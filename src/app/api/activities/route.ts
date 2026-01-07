@@ -16,10 +16,20 @@ export async function GET(request: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '50');
         const offset = parseInt(searchParams.get('offset') || '0');
         const type = searchParams.get('type'); // Optional filter
+        const raceEligible = searchParams.get('raceEligible') === 'true';
 
         const where: any = { userId: session.user.id };
         if (type) {
             where.type = type;
+        }
+
+        // Race-eligible filter: runs >= 4.5km from last 6 months
+        if (raceEligible) {
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
+            where.type = 'RUN';
+            where.distance = { gte: 4500 }; // >= 4.5km
+            where.startDate = { gte: sixMonthsAgo };
         }
 
         const [activities, total] = await Promise.all([

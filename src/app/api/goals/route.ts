@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { analyzeRace, type RaceDistance } from '@/lib/metrics/vdot';
+import { AnalyticsService } from '@/lib/services/analytics';
 
 import { startOfWeek, endOfWeek } from 'date-fns';
 
@@ -121,6 +122,47 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate Training Plan Workouts
+    // Fallback: Calculate weighted effective VO2max from all activities if no race effort found
+    if (!currentVdot) {
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { hrMax: true, vdotCorrectionFactor: true }
+        });
+
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
+
+        const runActivities = await prisma.activity.findMany({
+            where: {
+                userId: session.user.id,
+                type: 'RUN',
+                startDate: { gte: sixMonthsAgo },
+            },
+            select: {
+                distance: true,
+                movingTime: true,
+                averageHr: true,
+                hasHeartrate: true,
+            },
+            orderBy: { startDate: 'desc' },
+        });
+
+        if (runActivities.length > 0) {
+            const maxHR = user?.hrMax || 185;
+            const correctionFactor = user?.vdotCorrectionFactor || 1.0;
+            const { effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities as any, maxHR, correctionFactor);
+            if (effectiveVO2max > 0) {
+                currentVdot = effectiveVO2max;
+                // Update the goal with the calculated VDOT
+                await prisma.goal.update({
+                    where: { id: goal.id },
+                    data: { currentVdot }
+                });
+                console.log(`Calculated fallback VDOT ${currentVdot} from ${runActivities.length} activities`);
+            }
+        }
+    }
+
     if (currentVdot) {
         // Import dynamically to avoid circular dependencies if any (though here it's fine)
         const { generateTrainingPlan } = await import('@/lib/plans');

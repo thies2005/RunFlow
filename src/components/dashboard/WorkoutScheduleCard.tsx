@@ -1,32 +1,19 @@
 import { Workout } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Edit2, Check } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface WorkoutScheduleCardProps {
     weeklyWorkouts: Workout[];
     today: string;
     onEditWorkout: (workout: Workout) => void;
+    onCompleteWorkout: (workout: Workout) => void;
 }
 
-export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorkout }: WorkoutScheduleCardProps) {
+export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorkout, onCompleteWorkout }: WorkoutScheduleCardProps) {
     const router = useRouter();
-    const queryClient = useQueryClient();
 
     // Find interesting workouts logic moved here
     const firstUncompletedIndex = weeklyWorkouts.findIndex((w: Workout) => !w.isCompleted);
-
-    const completeWorkoutMutation = useMutation({
-        mutationFn: async (workoutId: string) => {
-            const res = await fetch(`/api/workouts/${workoutId}/complete`, { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to complete workout');
-            return res.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['goals'] });
-            queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
-        },
-    });
 
     return (
         <div className="glass-card p-6 h-full flex flex-col">
@@ -71,12 +58,11 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
                                                 <button
-                                                    onClick={() => completeWorkoutMutation.mutate(workout.id)}
-                                                    disabled={completeWorkoutMutation.isPending}
+                                                    onClick={() => onCompleteWorkout(workout)}
                                                     className="btn-primary py-1 px-3 text-xs flex items-center gap-1"
                                                 >
                                                     <Check className="w-3 h-3" />
-                                                    {completeWorkoutMutation.isPending ? '...' : 'Done'}
+                                                    Done
                                                 </button>
                                             </>
                                         )}

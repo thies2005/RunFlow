@@ -11,6 +11,7 @@ interface EditWorkoutModalProps {
     workout?: any; // If editing
     goalId?: string; // If creating
     defaultDate?: Date; // If creating
+    initialComplete?: boolean; // If marking complete immediately
 }
 
 // Map types to labels
@@ -27,7 +28,7 @@ const WORKOUT_TYPES = [
     { value: 'OTHER', label: 'Other' },
 ];
 
-export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, defaultDate }: EditWorkoutModalProps) {
+export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, defaultDate, initialComplete }: EditWorkoutModalProps) {
     const queryClient = useQueryClient();
 
     const [type, setType] = useState('EASY');
@@ -47,7 +48,9 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                 setDate(new Date(workout.scheduledDate).toISOString().split('T')[0]);
                 setDistanceKm((workout.targetDistance / 1000).toString());
                 setDurationMin((workout.targetDuration / 60).toString());
-                setIsCompleted(workout.isCompleted);
+                // If initialComplete is true, we force it to true, but we keep wasCompleted as the ORIGINAL state
+                // This ensures the "ActivityPicker" logic sees it as a NEW completion (isCompleted check, !wasCompleted check)
+                setIsCompleted(initialComplete || workout.isCompleted);
                 setWasCompleted(workout.isCompleted);
                 setLinkedActivityId(workout.linkedActivityId || null);
             } else if (defaultDate) {
@@ -61,7 +64,7 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                 setLinkedActivityId(null);
             }
         }
-    }, [isOpen, workout, defaultDate]);
+    }, [isOpen, workout, defaultDate, initialComplete]);
 
     const saveMutation = useMutation({
         mutationFn: async () => {

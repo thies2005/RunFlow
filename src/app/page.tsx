@@ -21,6 +21,7 @@ export default function Dashboard() {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
+    const [initialComplete, setInitialComplete] = useState(false);
 
     // 1. Unified Dashboard Query
     const { data: dashboardData, isLoading, error } = useQuery({
@@ -181,7 +182,14 @@ export default function Dashboard() {
                             <WorkoutScheduleCard
                                 weeklyWorkouts={weeklyWorkouts}
                                 today={today}
-                                onEditWorkout={setEditingWorkout}
+                                onEditWorkout={(w) => {
+                                    setEditingWorkout(w);
+                                    setInitialComplete(false);
+                                }}
+                                onCompleteWorkout={(w) => {
+                                    setEditingWorkout(w);
+                                    setInitialComplete(true);
+                                }}
                             />
                         </div>
                         <div className="lg:col-span-1">
@@ -223,6 +231,7 @@ export default function Dashboard() {
                     onClose={() => setEditingWorkout(null)}
                     workout={editingWorkout}
                     goalId={activeGoal?.id}
+                    initialComplete={initialComplete}
                 />
 
                 <ProfileModal

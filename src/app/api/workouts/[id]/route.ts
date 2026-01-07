@@ -12,7 +12,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         const { id } = params;
         const body = await req.json();
         // Allow updating type, desc, targets, date, completed
-        const { workoutType, description, targetDistance, targetDuration, scheduledDate, isCompleted } = body;
+        const { workoutType, description, targetDistance, targetDuration, scheduledDate, isCompleted, linkedActivityId } = body;
 
         // Verify ownership
         const workout = await prisma.workout.findUnique({
@@ -24,6 +24,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
+        // If linking an activity, verify ownership
+        if (linkedActivityId) {
+            const activity = await prisma.activity.findUnique({ where: { id: linkedActivityId } });
+            if (!activity || activity.userId !== session.user.id) {
+                return NextResponse.json({ error: 'Activity not found' }, { status: 404 });
+            }
+        }
+
         const updated = await prisma.workout.update({
             where: { id },
             data: {
@@ -32,7 +40,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
                 targetDistance,
                 targetDuration,
                 scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined,
-                isCompleted
+                isCompleted,
+                completedAt: isCompleted ? new Date() : null,
+                linkedActivityId: linkedActivityId ?? null
             }
         });
 

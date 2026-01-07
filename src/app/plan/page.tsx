@@ -41,6 +41,15 @@ function getPhase(weeksUntilRace: number) {
     return { name: 'BASE', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' };
 }
 
+// Helper function to format pace
+function formatPace(distanceMeters: number, timeSeconds: number): string {
+    if (distanceMeters <= 0 || timeSeconds <= 0) return '-';
+    const paceSecsPerKm = timeSeconds / (distanceMeters / 1000);
+    const mins = Math.floor(paceSecsPerKm / 60);
+    const secs = Math.round(paceSecsPerKm % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}/km`;
+}
+
 // --- Draggable Workout Component ---
 function DraggableWorkout({ workout, isTodayItem, onClick }: { workout: any; isTodayItem: boolean; onClick: () => void }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -50,6 +59,7 @@ function DraggableWorkout({ workout, isTodayItem, onClick }: { workout: any; isT
 
     const style = workoutStyles[workout.workoutType] || workoutStyles.EASY;
     const Icon = style.icon;
+    const linkedActivity = workout.linkedActivity;
 
     const dragStyle = transform ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
@@ -102,6 +112,20 @@ function DraggableWorkout({ workout, isTodayItem, onClick }: { workout: any; isT
                     </div>
                 </div>
                 <p className="text-xs text-gray-500 truncate">{workout.description}</p>
+
+                {/* Linked Activity Data */}
+                {linkedActivity && (
+                    <div className="mt-2 pt-2 border-t border-white/10">
+                        <p className="text-xs text-green-400 truncate font-medium">
+                            ✓ {linkedActivity.name}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
+                            <span>{(linkedActivity.distance / 1000).toFixed(1)} km</span>
+                            <span>{Math.floor(linkedActivity.movingTime / 60)}m</span>
+                            <span>{formatPace(linkedActivity.distance, linkedActivity.movingTime)}</span>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

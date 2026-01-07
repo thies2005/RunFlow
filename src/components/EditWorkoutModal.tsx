@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Save, Trash2, Calendar, Activity, Clock, TrendingUp } from 'lucide-react';
-import { format } from 'date-fns';
+import { X, Save, Trash2 } from 'lucide-react';
+import ActivityPicker from './ActivityPicker';
 
 interface EditWorkoutModalProps {
     isOpen: boolean;
@@ -36,6 +36,8 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
     const [distanceKm, setDistanceKm] = useState('0');
     const [durationMin, setDurationMin] = useState('0');
     const [isCompleted, setIsCompleted] = useState(false);
+    const [linkedActivityId, setLinkedActivityId] = useState<string | null>(null);
+    const [wasCompleted, setWasCompleted] = useState(false); // Track initial state
 
     useEffect(() => {
         if (isOpen) {
@@ -46,6 +48,8 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                 setDistanceKm((workout.targetDistance / 1000).toString());
                 setDurationMin((workout.targetDuration / 60).toString());
                 setIsCompleted(workout.isCompleted);
+                setWasCompleted(workout.isCompleted);
+                setLinkedActivityId(workout.linkedActivityId || null);
             } else if (defaultDate) {
                 setType('EASY');
                 setDescription('New Workout');
@@ -53,6 +57,8 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                 setDistanceKm('5');
                 setDurationMin('30');
                 setIsCompleted(false);
+                setWasCompleted(false);
+                setLinkedActivityId(null);
             }
         }
     }, [isOpen, workout, defaultDate]);
@@ -66,6 +72,7 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                 targetDistance: parseFloat(distanceKm) * 1000,
                 targetDuration: parseInt(durationMin) * 60,
                 isCompleted,
+                linkedActivityId: isCompleted ? linkedActivityId : null,
                 goalId // Only for create
             };
 
@@ -83,6 +90,7 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['plan'] });
+            queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
             onClose();
         }
     });
@@ -177,14 +185,26 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
 
                     {/* Status */}
                     {workout && (
-                        <div className="flex items-center gap-2 mt-2">
-                            <input
-                                type="checkbox"
-                                checked={isCompleted}
-                                onChange={(e) => setIsCompleted(e.target.checked)}
-                                className="w-4 h-4 rounded border-gray-500 bg-white/10 accent-accent-orange"
-                            />
-                            <label className="text-sm text-gray-300">Mark as Completed</label>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={isCompleted}
+                                    onChange={(e) => setIsCompleted(e.target.checked)}
+                                    className="w-4 h-4 rounded border-gray-500 bg-white/10 accent-accent-orange"
+                                />
+                                <label className="text-sm text-gray-300">Mark as Completed</label>
+                            </div>
+
+                            {/* Activity Picker - Show when marking complete for first time */}
+                            {isCompleted && !wasCompleted && (
+                                <div className="max-h-64 overflow-y-auto">
+                                    <ActivityPicker
+                                        selectedId={linkedActivityId}
+                                        onSelect={setLinkedActivityId}
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
 

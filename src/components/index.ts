@@ -7,4 +7,5 @@ export { default as OnboardingWizard } from './OnboardingWizard';
 export { default as SettingsModal } from './SettingsModal';
 export { default as EditWorkoutModal } from './EditWorkoutModal';
 export { default as PlanSetupForm } from './PlanSetupForm';
+export { default as ActivityPicker } from './ActivityPicker';
 export * from './StravaLogos';

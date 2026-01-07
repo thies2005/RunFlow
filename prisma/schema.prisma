@@ -62,6 +62,7 @@ model User {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   DailyFitness DailyFitness[]
+  notifications Notification[]
 }
 
 enum Sex {

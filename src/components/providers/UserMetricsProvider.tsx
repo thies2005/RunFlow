@@ -3,7 +3,12 @@
 import { createContext, useContext, ReactNode } from 'react';
 
 interface UserMetrics {
-    marathonShape: { shape: number };
+    marathonShape: {
+        shape: number;
+        mileageScore?: number;
+        longRunScore?: number;
+        crossTrainingScore?: number;
+    };
     effectiveVO2max: number;
     correctionFactor: number;
     ctl: number;
@@ -33,7 +38,7 @@ interface UserMetricsProviderProps {
 export function UserMetricsProvider({ children, stats }: UserMetricsProviderProps) {
     // Extract defaults or fallback values
     const value: UserMetrics = {
-        marathonShape: stats?.marathonShape || { shape: 0 },
+        marathonShape: stats?.marathonShape || { shape: 0, mileageScore: 0, longRunScore: 0, crossTrainingScore: 0 },
         effectiveVO2max: stats?.effectiveVO2max || 0,
         correctionFactor: stats?.vdotCorrectionFactor || 1.0,
         ctl: stats?.ctl || 0,

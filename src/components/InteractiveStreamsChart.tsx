@@ -29,6 +29,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
     const [enabledMetrics, setEnabledMetrics] = useState({
         heartrate: true,
         pace: true,
+        gap: true, // Grade Adjusted Pace
         elevation: true,
         cadence: false
     });
@@ -57,6 +58,44 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                 }
             }
 
+            // GAP: Grade Adjusted Pace (Runalyze/Minetti approach)
+            // Calculate grade from altitude change and use metabolic cost ratio
+            if (streams.velocity_smooth && streams.altitude && streams.velocity_smooth[i] !== undefined) {
+                const mPerS = streams.velocity_smooth[i];
+                if (mPerS > 0.5 && i > 0 && streams.altitude[i] !== undefined && streams.altitude[i - 1] !== undefined) {
+                    // Calculate grade (vertical / horizontal distance)
+                    const timeDelta = streams.time[i] - streams.time[i - 1];
+                    const elevDelta = streams.altitude[i] - streams.altitude[i - 1];
+                    const horizDist = mPerS * timeDelta;
+                    const grade = horizDist > 0 ? (elevDelta / horizDist) * 100 : 0; // as percentage
+
+                    // Minetti metabolic cost formula (simplified)
+                    // Cost ratio relative to flat running
+                    // Uphill: more effort -> GAP faster than actual
+                    // Downhill: less effort (to a point) -> GAP slower than actual
+                    let costRatio = 1.0;
+                    if (grade > 0) {
+                        // Uphill: ~2.5-3% more cost per 1% grade
+                        costRatio = 1 + (grade * 0.03);
+                    } else if (grade < 0) {
+                        // Downhill: optimal around -10%, less cost
+                        const absGrade = Math.abs(grade);
+                        if (absGrade < 10) {
+                            costRatio = 1 - (absGrade * 0.015); // Slight benefit
+                        } else {
+                            costRatio = 0.85 + ((absGrade - 10) * 0.02); // Steeper = harder
+                        }
+                    }
+
+                    // GAP = actual pace / cost ratio (faster if harder effort)
+                    const actualPace = (1000 / mPerS) / 60;
+                    const gapPace = actualPace / costRatio;
+                    point.gap = gapPace > 20 || gapPace < 2 ? null : gapPace;
+                } else {
+                    point.gap = null;
+                }
+            }
+
             // Elevation - check !== undefined since 0 is valid
             if (streams.altitude && streams.altitude[i] !== undefined) {
                 point.elevation = streams.altitude[i];
@@ -74,6 +113,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
     // Determine which streams are available
     const hasHeartrate = Boolean(streams?.heartrate?.length);
     const hasPace = Boolean(streams?.velocity_smooth?.length);
+    const hasGap = Boolean(streams?.velocity_smooth?.length && streams?.altitude?.length);
     const hasElevation = Boolean(streams?.altitude?.length);
     const hasCadence = Boolean(streams?.cadence?.length);
 
@@ -106,8 +146,8 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                     <button
                         onClick={() => setEnabledMetrics(p => ({ ...p, heartrate: !p.heartrate }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.heartrate
-                                ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                                : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
                             }`}
                     >
                         <Heart className="w-3 h-3" /> Heart Rate
@@ -117,19 +157,30 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                     <button
                         onClick={() => setEnabledMetrics(p => ({ ...p, pace: !p.pace }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.pace
-                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
                             }`}
                     >
                         <TrendingUp className="w-3 h-3" /> Pace
+                    </button>
+                )}
+                {hasGap && (
+                    <button
+                        onClick={() => setEnabledMetrics(p => ({ ...p, gap: !p.gap }))}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.gap
+                            ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            }`}
+                    >
+                        <Mountain className="w-3 h-3" /> GAP
                     </button>
                 )}
                 {hasElevation && (
                     <button
                         onClick={() => setEnabledMetrics(p => ({ ...p, elevation: !p.elevation }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.elevation
-                                ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                                : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
                             }`}
                     >
                         <Mountain className="w-3 h-3" /> Elevation
@@ -139,8 +190,8 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                     <button
                         onClick={() => setEnabledMetrics(p => ({ ...p, cadence: !p.cadence }))}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${enabledMetrics.cadence
-                                ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                                : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
+                            ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                            : 'bg-transparent text-gray-500 border-gray-700 hover:text-gray-300'
                             }`}
                     >
                         <Zap className="w-3 h-3" /> Cadence
@@ -168,6 +219,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                             formatter={(value: number, name: string) => {
                                 if (value === null || value === undefined) return ['-', name];
                                 if (name === 'Pace') return [formatPaceAxis(value), 'Pace'];
+                                if (name === 'GAP') return [formatPaceAxis(value), 'GAP'];
                                 if (name === 'Heart Rate') return [`${Math.round(value)} bpm`, 'Heart Rate'];
                                 if (name === 'Elevation') return [`${Math.round(value)} m`, 'Elevation'];
                                 if (name === 'Cadence') return [`${Math.round(value)} spm`, 'Cadence'];
@@ -181,6 +233,9 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                         )}
                         {enabledMetrics.pace && hasPace && (
                             <YAxis yAxisId="pace" domain={[3, 15]} reversed hide />
+                        )}
+                        {enabledMetrics.gap && hasGap && (
+                            <YAxis yAxisId="gap" domain={[3, 15]} reversed hide />
                         )}
                         {enabledMetrics.elevation && hasElevation && (
                             <YAxis yAxisId="elev" domain={['dataMin', 'dataMax']} hide />
@@ -211,6 +266,21 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                                 name="Pace"
                                 stroke="#60A5FA"
                                 strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 4 }}
+                                isAnimationActive={false}
+                                connectNulls
+                            />
+                        )}
+                        {enabledMetrics.gap && hasGap && (
+                            <Line
+                                yAxisId="gap"
+                                type="monotone"
+                                dataKey="gap"
+                                name="GAP"
+                                stroke="#22D3EE"
+                                strokeWidth={2}
+                                strokeDasharray="5 3"
                                 dot={false}
                                 activeDot={{ r: 4 }}
                                 isAnimationActive={false}

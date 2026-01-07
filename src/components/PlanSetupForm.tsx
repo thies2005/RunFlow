@@ -70,8 +70,14 @@ export default function PlanSetupForm({
     const [peakWeeks, setPeakWeeks] = useState(4);
     const [buildWeeks, setBuildWeeks] = useState(4);
 
-    // Heart Rate (collapsible)
-    const [showHeartRate, setShowHeartRate] = useState(false);
+    // Workout Day Scheduling (hidden/advanced section)
+    const [showSchedulingSettings, setShowSchedulingSettings] = useState(false);
+    const [longRunDay, setLongRunDay] = useState(0); // 0 = Sunday
+    const [qualityDay, setQualityDay] = useState(3); // 3 = Wednesday
+    const [restDays, setRestDays] = useState<number[]>([1, 5]); // 1 = Monday, 5 = Friday
+
+    // Heart Rate (visible by default now)
+    const [showHeartRate, setShowHeartRate] = useState(true);
     const [maxHeartRate, setMaxHeartRate] = useState(185);
     const [restingHeartRate, setRestingHeartRate] = useState(55);
     const [weight, setWeight] = useState(70);
@@ -156,6 +162,12 @@ export default function PlanSetupForm({
             setTaperWeeks(settingsData.taperWeeks || 2);
             setPeakWeeks(settingsData.peakWeeks || 4);
             setBuildWeeks(settingsData.buildWeeks || 4);
+            // Scheduling preferences
+            setLongRunDay(settingsData.longRunDay ?? 0);
+            setQualityDay(settingsData.qualityDay ?? 3);
+            if (Array.isArray(settingsData.restDays)) {
+                setRestDays(settingsData.restDays);
+            }
         }
     }, [settingsData]);
 
@@ -264,6 +276,33 @@ export default function PlanSetupForm({
         mutationFn: async () => {
             const timeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
 
+            // Calculate the displayed goal time (either user-selected or projected)
+            // This ensures we always save a targetTime to the goal
+            let computedTargetTime: number | null = goalTimeSeconds;
+            if (!computedTargetTime && effectiveVO2max > 0) {
+                // Compute projection inline if no goal time was explicitly set
+                const raceDistanceMap: Record<string, RaceDistance> = {
+                    'FIVE_K': '5K',
+                    'TEN_K': '10K',
+                    'HALF_MARATHON': 'HALF',
+                    'MARATHON': 'MARATHON',
+                };
+                const mappedDistance = raceDistanceMap[raceType] || 'MARATHON';
+                const weeksUntilRace = calculateWeeksUntilRace(new Date(raceDate));
+                const calibratedVO2max = effectiveVO2max * calibrationFactor;
+                const planSettings: PlanSettings = {
+                    durationWeeks: weeksUntilRace,
+                    runsPerWeek: runsPerWeek,
+                    weeklyMileageGoal: weeklyMileage,
+                    raceDistance: mappedDistance,
+                    taperWeeks: taperWeeks,
+                    peakWeeks: peakWeeks,
+                    buildWeeks: buildWeeks,
+                };
+                const projection = calculateProjectedGoalTime(calibratedVO2max, planSettings, shapePercent);
+                computedTargetTime = projection.projectedTime;
+            }
+
             const res = await fetch('/api/goals', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -279,8 +318,8 @@ export default function PlanSetupForm({
                     peakWeeks,
                     buildWeeks,
                     weeklyMileageGoal: weeklyMileage * 1000, // Convert km to meters
-                    // Include user-selected goal time if set
-                    ...(goalTimeSeconds && { targetTime: goalTimeSeconds }),
+                    // Always include the computed goal time
+                    ...(computedTargetTime && { targetTime: computedTargetTime }),
                     // Include calibration data if provided
                     ...(timeSeconds > 0 && {
                         calibrationTime: timeSeconds,
@@ -331,6 +370,9 @@ export default function PlanSetupForm({
                     peakWeeks,
                     buildWeeks,
                     calibrationFactor,
+                    longRunDay,
+                    qualityDay,
+                    restDays,
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -1003,6 +1045,86 @@ export default function PlanSetupForm({
                 <p className="text-xs text-gray-500 mt-2">Remaining weeks will be Base phase.</p>
             </div>
 
+            {/* Workout Scheduling (Collapsible - Advanced) */}
+            <div className="border-t border-white/10 pt-4">
+                <button
+                    type="button"
+                    onClick={() => setShowSchedulingSettings(!showSchedulingSettings)}
+                    className="flex items-center justify-between w-full text-left py-2"
+                >
+                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Workout Scheduling</h3>
+                    {showSchedulingSettings ? (
+                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                    ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                    )}
+                </button>
+
+                {showSchedulingSettings && (
+                    <div className="space-y-4 mt-4 animate-fade-in">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-2 uppercase">Long Run Day</label>
+                                <select
+                                    value={longRunDay}
+                                    onChange={e => setLongRunDay(parseInt(e.target.value))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                >
+                                    <option value={0}>Sunday</option>
+                                    <option value={1}>Monday</option>
+                                    <option value={2}>Tuesday</option>
+                                    <option value={3}>Wednesday</option>
+                                    <option value={4}>Thursday</option>
+                                    <option value={5}>Friday</option>
+                                    <option value={6}>Saturday</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-2 uppercase">Quality Day</label>
+                                <select
+                                    value={qualityDay}
+                                    onChange={e => setQualityDay(parseInt(e.target.value))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                >
+                                    <option value={0}>Sunday</option>
+                                    <option value={1}>Monday</option>
+                                    <option value={2}>Tuesday</option>
+                                    <option value={3}>Wednesday</option>
+                                    <option value={4}>Thursday</option>
+                                    <option value={5}>Friday</option>
+                                    <option value={6}>Saturday</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs text-gray-400 mb-2 uppercase">Rest Days</label>
+                            <div className="flex flex-wrap gap-2">
+                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
+                                    <button
+                                        key={idx}
+                                        type="button"
+                                        onClick={() => {
+                                            if (restDays.includes(idx)) {
+                                                setRestDays(restDays.filter(d => d !== idx));
+                                            } else {
+                                                setRestDays([...restDays, idx]);
+                                            }
+                                        }}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${restDays.includes(idx)
+                                            ? 'bg-gray-500/20 text-gray-300 border-gray-500/30'
+                                            : 'bg-white/5 text-gray-500 border-white/10 hover:text-gray-300'
+                                            }`}
+                                    >
+                                        {day}
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">Select days you prefer to rest (no running).</p>
+                        </div>
+                    </div>
+                )}
+            </div>
             {/* Heart Rate Settings (Collapsible) */}
             <div className="border-t border-white/10 pt-4">
                 <button

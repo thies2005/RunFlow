@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Save, AlertCircle, User } from 'lucide-react';
+import { X, Save, AlertCircle, User, Trash2 } from 'lucide-react';
+import { signOut } from 'next-auth/react';
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -14,6 +15,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [weight, setWeight] = useState(70);
     const [height, setHeight] = useState(175);
     const [message, setMessage] = useState('');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Fetch existing settings
     const { data: settingsData } = useQuery({
@@ -58,6 +61,29 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             setMessage('Error updating profile. Please try again.');
         }
     });
+
+    const deleteMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch('/api/user/delete', {
+                method: 'DELETE',
+            });
+            if (!res.ok) throw new Error('Failed to delete account');
+            return res.json();
+        },
+        onSuccess: async () => {
+            // Force refresh to handle redirect
+            await signOut({ callbackUrl: '/' });
+        },
+        onError: () => {
+            setMessage('Error deleting account. Please try again.');
+            setIsDeleting(false);
+        }
+    });
+
+    const handleDelete = () => {
+        setIsDeleting(true);
+        deleteMutation.mutate();
+    };
 
     if (!isOpen) return null;
 
@@ -118,6 +144,43 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         {updateMutation.isPending ? <Save className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />}
                         {updateMutation.isPending ? 'Saving...' : 'Save Profile'}
                     </button>
+
+                    <div className="border-t border-white/10 my-4"></div>
+
+                    <div>
+                        <h3 className="text-red-400 font-medium mb-3 text-xs uppercase tracking-wider">Danger Zone</h3>
+                        {!showDeleteConfirm ? (
+                            <button
+                                onClick={() => setShowDeleteConfirm(true)}
+                                className="w-full py-2.5 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Account
+                            </button>
+                        ) : (
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 animate-fade-in">
+                                <p className="text-red-200 text-xs mb-4 leading-relaxed">
+                                    Are you sure? This will details permanently delete your account, activities, and goals. This action cannot be undone.
+                                </p>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        className="flex-1 py-2 bg-white/5 text-white text-xs rounded-md hover:bg-white/10 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleDelete}
+                                        disabled={isDeleting}
+                                        className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white text-xs rounded-md flex items-center justify-center gap-2 transition-colors font-medium shadow-lg shadow-red-500/20"
+                                    >
+                                        {isDeleting ? <AlertCircle className="animate-spin w-3 h-3" /> : <Trash2 className="w-3 h-3" />}
+                                        {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

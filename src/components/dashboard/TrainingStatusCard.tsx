@@ -37,6 +37,7 @@ export default function TrainingStatusCard() {
             {/* Top Metrics Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8 shrink-0">
                 {/* Marathon Shape */}
+                {/* Marathon Shape */}
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-900/20">
                         <TrendingUp className="w-5 h-5 text-white" />
@@ -44,6 +45,13 @@ export default function TrainingStatusCard() {
                     <div>
                         <p className="text-xs text-gray-400 uppercase tracking-widest font-bold leading-tight">Shape</p>
                         <p className="text-2xl font-black text-white leading-tight">{shapePercent}%</p>
+                        <div className="flex gap-2 text-[10px] items-center mt-0.5">
+                            <span className="text-gray-400" title="Running Mileage">Run: <span className="text-white font-bold">{marathonShape?.mileageScore || 0}%</span></span>
+                            <span className="text-gray-400" title="Long Runs">Long: <span className="text-white font-bold">{marathonShape?.longRunScore || 0}%</span></span>
+                        </div>
+                        <div className="text-[10px]">
+                            <span className="text-gray-400" title="Cross-Training / Base">Base: <span className="text-white font-bold">{marathonShape?.crossTrainingScore || 0}%</span></span>
+                        </div>
                     </div>
                 </div>
 

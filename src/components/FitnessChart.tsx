@@ -55,11 +55,11 @@ function CustomTooltip({ active, payload, label }: any) {
                 </p>
                 <div className="space-y-1">
                     <p className="text-sm">
-                        <span className="text-cyan-400">CTL (Fitness):</span>{' '}
+                        <span className="text-blue-400">CTL (Fitness):</span>{' '}
                         <span className="text-white font-medium">{ctl?.toFixed(1)}</span>
                     </p>
                     <p className="text-sm">
-                        <span className="text-pink-400">ATL (Fatigue):</span>{' '}
+                        <span className="text-red-400">ATL (Fatigue):</span>{' '}
                         <span className="text-white font-medium">{atl?.toFixed(1)}</span>
                     </p>
                     <p className="text-sm">
@@ -113,12 +113,12 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
                     <ComposedChart data={chartData}>
                         <defs>
                             <linearGradient id="ctlGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#4cc9f0" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#4cc9f0" stopOpacity={0} />
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                             </linearGradient>
                             <linearGradient id="atlGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#f72585" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#f72585" stopOpacity={0} />
+                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                             </linearGradient>
                         </defs>
 
@@ -153,7 +153,7 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
                         <Area
                             type="monotone"
                             dataKey="ctl"
-                            stroke="#4cc9f0"
+                            stroke="#3b82f6"
                             strokeWidth={2}
                             fill="url(#ctlGradient)"
                         />
@@ -162,7 +162,7 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
                         <Area
                             type="monotone"
                             dataKey="atl"
-                            stroke="#f72585"
+                            stroke="#ef4444"
                             strokeWidth={2}
                             fill="url(#atlGradient)"
                         />
@@ -171,7 +171,7 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
                         <Line
                             type="monotone"
                             dataKey="tsb"
-                            stroke="#facc15"
+                            stroke="#10b981"
                             strokeWidth={2}
                             dot={false}
                         />
@@ -182,17 +182,17 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
             {/* Legend explanation */}
             <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
                 <div className="text-center">
-                    <div className="w-3 h-3 rounded-full bg-cyan-400 mx-auto mb-1" />
+                    <div className="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-1" />
                     <p className="text-gray-400">Fitness</p>
                     <p className="text-xs text-gray-500">42-day average</p>
                 </div>
                 <div className="text-center">
-                    <div className="w-3 h-3 rounded-full bg-pink-500 mx-auto mb-1" />
+                    <div className="w-3 h-3 rounded-full bg-red-500 mx-auto mb-1" />
                     <p className="text-gray-400">Fatigue</p>
                     <p className="text-xs text-gray-500">7-day average</p>
                 </div>
                 <div className="text-center">
-                    <div className="w-3 h-3 rounded-full bg-yellow-400 mx-auto mb-1" />
+                    <div className="w-3 h-3 rounded-full bg-emerald-500 mx-auto mb-1" />
                     <p className="text-gray-400">Form</p>
                     <p className="text-xs text-gray-500">Fitness - Fatigue</p>
                 </div>

@@ -48,7 +48,10 @@ export async function GET() {
             taperWeeks: activeGoal?.taperWeeks,
             peakWeeks: activeGoal?.peakWeeks,
             buildWeeks: activeGoal?.buildWeeks,
-            currentVdot: activeGoal?.currentVdot || 30
+            currentVdot: activeGoal?.currentVdot || 30,
+            longRunDay: activeGoal?.longRunDay ?? 0,
+            qualityDay: activeGoal?.workoutDay ?? 3,
+            restDays: activeGoal?.restDays ?? [1, 5]
         });
     } catch (error) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -74,7 +77,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, taperWeeks, peakWeeks, buildWeeks, calibrationFactor } = body;
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, restDays } = body;
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -187,6 +190,9 @@ export async function POST(req: NextRequest) {
                     taperWeeks: taper,
                     peakWeeks: peak,
                     buildWeeks: build,
+                    ...(typeof longRunDay === 'number' && { longRunDay }),
+                    ...(typeof qualityDay === 'number' && { workoutDay: qualityDay }),
+                    ...(Array.isArray(restDays) && { restDays }),
                 }
             });
 

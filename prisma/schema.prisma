@@ -249,6 +249,7 @@ model Goal {
   // Preferred Training Days (0=Sunday, 1=Monday, ..., 6=Saturday)
   longRunDay Int @default(0) // Default Sunday
   workoutDay Int @default(3) // Default Wednesday
+  restDays   Json @default("[1, 5]") // Default Monday & Friday as rest days
 
   // Status
   isActive    Boolean   @default(true)

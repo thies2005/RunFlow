@@ -160,9 +160,13 @@ export default function AnalyticsPage() {
             .filter(r => r.hasHeartrate && r.averageHr && r.distance >= 3000)
             .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
+        const factor = statsData?.vdotCorrectionFactor || 1.0;
+
         // Calculate raw values first
         const rawVo2Data = sortedRuns.slice(-50).map(run => {
-            const vo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr!, maxHR);
+            const rawVo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr!, maxHR);
+            // Apply global calibration factor to trend points
+            const vo2 = rawVo2 * factor;
             return {
                 date: new Date(run.startDate).toISOString().split('T')[0], // Use ISO date for sorting
                 vo2: vo2 > 0 ? Math.round(vo2 * 10) / 10 : 0

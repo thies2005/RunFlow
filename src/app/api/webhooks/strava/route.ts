@@ -4,6 +4,9 @@ import { syncActivityById } from '@/lib/strava/sync';
 import { createHmac } from 'crypto';
 import { checkRateLimit, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 /**
  * Safely convert a value to BigInt, handling edge cases
  */

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
         // Get options
         const body = await request.json().catch(() => ({}));
-        const range = body.range || 'ALL'; // Default to ALL when sync is triggered manually
+        const range = body.range || 'SINCE_LAST_ACTIVITY'; // Default to incremental sync to save API calls
 
         // Start sync
         console.log(`Starting sync for user ${session.user.id} with range: ${range}`);

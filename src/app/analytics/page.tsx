@@ -583,7 +583,17 @@ export default function AnalyticsPage() {
                                         stroke="#9ca3af"
                                         fontSize={11}
                                         tickLine={false}
-                                        tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        minTickGap={timeRange === '1M' ? 20 : 50}
+                                        tickFormatter={(val) => {
+                                            const date = new Date(val);
+                                            if (timeRange === '1M') {
+                                                return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                                            } else if (['3M', '6M'].includes(timeRange)) {
+                                                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                            } else {
+                                                return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                                            }
+                                        }}
                                     />
                                     <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
                                     <Tooltip
@@ -622,7 +632,17 @@ export default function AnalyticsPage() {
                                         stroke="#9ca3af"
                                         fontSize={11}
                                         tickLine={false}
-                                        tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        minTickGap={timeRange === '1M' ? 20 : 50}
+                                        tickFormatter={(val) => {
+                                            const date = new Date(val);
+                                            if (timeRange === '1M') {
+                                                return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                                            } else if (['3M', '6M'].includes(timeRange)) {
+                                                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                            } else {
+                                                return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                                            }
+                                        }}
                                     />
                                     <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={[0, 120]} />
                                     <Tooltip
@@ -648,7 +668,17 @@ export default function AnalyticsPage() {
                                     stroke="#9ca3af"
                                     fontSize={11}
                                     tickLine={false}
-                                    tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    minTickGap={timeRange === '1M' ? 20 : 50}
+                                    tickFormatter={(val) => {
+                                        const date = new Date(val);
+                                        if (timeRange === '1M') {
+                                            return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                                        } else if (['3M', '6M'].includes(timeRange)) {
+                                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                        } else {
+                                            return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                                        }
+                                    }}
                                 />
                                 <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
                                 <Tooltip

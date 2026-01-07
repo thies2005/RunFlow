@@ -421,6 +421,20 @@ export async function syncUserActivities(userId: string, range?: string): Promis
         if (range) {
             if (range === 'ALL') {
                 after = undefined;
+            } else if (range === 'SINCE_LAST_ACTIVITY') {
+                const lastActivity = await prisma.activity.findFirst({
+                    where: { userId },
+                    orderBy: { startDate: 'desc' },
+                    select: { startDate: true }
+                });
+                // If we have activities, sync from the last one (plus 1 second to avoid dupe check, handled by ID anyway).
+                // Strava 'after' is exclusive usually? Docs say "seconds since epoch".
+                if (lastActivity) {
+                    after = Math.floor(lastActivity.startDate.getTime() / 1000);
+                } else {
+                    // Fallback to fetch all if no activities exist
+                    after = undefined;
+                }
             } else {
                 after = getRangeStartTimestamp(range);
             }
@@ -875,6 +889,12 @@ export async function syncActivityById(userId: string, activityId: number): Prom
         };
 
         // 8. Upsert activity (create or update)
+        // Check if new for notification
+        const existing = await prisma.activity.findUnique({
+            where: { stravaId: safeBigInt(activity.id) },
+            select: { id: true }
+        });
+
         await prisma.activity.upsert({
             where: { stravaId: safeBigInt(activity.id) },
             create: {
@@ -886,6 +906,19 @@ export async function syncActivityById(userId: string, activityId: number): Prom
                 updatedAt: new Date(),
             },
         });
+
+        if (!existing) {
+            try {
+                await prisma.notification.create({
+                    data: {
+                        userId,
+                        message: `New activity imported: ${activityData.name}`,
+                    }
+                });
+            } catch (err) {
+                logger.warn('Failed to create notification', err);
+            }
+        }
 
         logger.info(`syncActivityById: Successfully synced activity ${activityId} for user ${userId}`);
 

@@ -8,7 +8,7 @@ import {
     AlertCircle, Save, Check, Calendar, Target
 } from 'lucide-react';
 import { calculatePredictedTimes, calculateAllRacePredictions } from '@/lib/metrics/runalyze';
-import { formatTime } from '@/lib/metrics/vdot';
+import { formatTime, calculateVdot, predictRaceTime } from '@/lib/metrics/vdot';
 
 interface PlanSetupFormProps {
     mode: 'onboarding' | 'settings';
@@ -156,9 +156,9 @@ export default function PlanSetupForm({
         }
     }, [goalsData]);
 
-    // Update predicted time when distance or fitness changes
+    // Update predicted time when distance or fitness changes (Manual Mode)
     useEffect(() => {
-        if (effectiveVO2max > 0 && calibrationMode === 'manual') {
+        if (effectiveVO2max > 0 && calibrationMode === 'manual' && !selectedActivityId) {
             const getPredictedTimeForDistance = (dist: string) => {
                 const marathonTimes = calculatePredictedTimes(effectiveVO2max, shapePercent);
                 const ratios: Record<string, number> = {
@@ -174,34 +174,39 @@ export default function PlanSetupForm({
             const h = Math.floor(predictedSeconds / 3600);
             const m = Math.floor((predictedSeconds % 3600) / 60);
             const s = predictedSeconds % 60;
-            setHours(h.toString());
-            setMinutes(m.toString());
-            setSeconds(s.toString());
+            // Only update if not already set (to avoid overwriting user input)
+            if (!hours && !minutes && !seconds) {
+                setHours(h.toString());
+                setMinutes(m.toString());
+                setSeconds(s.toString());
+            }
         }
     }, [calibrationDistance, effectiveVO2max, shapePercent, calibrationMode]);
 
-    // Auto-fill time when activity is selected
+    // Auto-fill time when activity is selected (Activity Mode)
     useEffect(() => {
         if (selectedActivityId && activitiesData?.activities) {
             const activity = activitiesData.activities.find((a: RaceActivity) => a.id === selectedActivityId);
             if (activity) {
-                const totalSeconds = activity.movingTime;
-                const h = Math.floor(totalSeconds / 3600);
-                const m = Math.floor((totalSeconds % 3600) / 60);
-                const s = totalSeconds % 60;
+                // 1. Calculate VDOT from this activity
+                // We need to use VDOT formula because activity distance != race distance
+                const vdot = calculateVdot({
+                    distance: activity.distance,
+                    timeSeconds: activity.movingTime
+                });
+
+                // 2. Predict time for the selected Calibration Distance
+                const predictedSeconds = predictRaceTime(vdot, calibrationDistance as any);
+
+                const h = Math.floor(predictedSeconds / 3600);
+                const m = Math.floor((predictedSeconds % 3600) / 60);
+                const s = predictedSeconds % 60;
                 setHours(h.toString());
                 setMinutes(m.toString());
                 setSeconds(s.toString());
-
-                // Auto-detect distance
-                const dist = activity.distance;
-                if (dist >= 40000) setCalibrationDistance('MARATHON');
-                else if (dist >= 19000) setCalibrationDistance('HALF');
-                else if (dist >= 9000) setCalibrationDistance('10K');
-                else setCalibrationDistance('5K');
             }
         }
-    }, [selectedActivityId, activitiesData]);
+    }, [selectedActivityId, activitiesData, calibrationDistance]); // Re-run when dist changes
 
     // Onboarding mutation (create goal)
     const createGoalMutation = useMutation({
@@ -301,6 +306,7 @@ export default function PlanSetupForm({
     };
 
     const isLoading = createGoalMutation.isPending || updateSettingsMutation.isPending;
+    const [isEditingTime, setIsEditingTime] = useState(false);
 
     const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
 
@@ -374,7 +380,10 @@ export default function PlanSetupForm({
                 <div className="flex bg-white/5 rounded-lg p-1 mb-4">
                     <button
                         type="button"
-                        onClick={() => setCalibrationMode('activity')}
+                        onClick={() => {
+                            setCalibrationMode('activity');
+                            setHours(''); setMinutes(''); setSeconds('');
+                        }}
                         className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${calibrationMode === 'activity'
                             ? 'bg-accent-orange text-white'
                             : 'text-gray-400 hover:text-white'
@@ -384,7 +393,11 @@ export default function PlanSetupForm({
                     </button>
                     <button
                         type="button"
-                        onClick={() => setCalibrationMode('manual')}
+                        onClick={() => {
+                            setCalibrationMode('manual');
+                            setSelectedActivityId('');
+                            // Don't clear times, let effect handle or keep existing
+                        }}
                         className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${calibrationMode === 'manual'
                             ? 'bg-accent-orange text-white'
                             : 'text-gray-400 hover:text-white'
@@ -401,7 +414,11 @@ export default function PlanSetupForm({
                             <label className="block text-xs text-gray-400 mb-1 uppercase">Select Race Activity</label>
                             <select
                                 value={selectedActivityId}
-                                onChange={(e) => setSelectedActivityId(e.target.value)}
+                                onChange={(e) => {
+                                    setSelectedActivityId(e.target.value)
+                                    // Auto-detect calibration distance logic (moved to effect)
+                                    // But we can verify if we want to change it instantly
+                                }}
                                 className={inputClass}
                             >
                                 <option value="">-- Select an activity --</option>
@@ -432,7 +449,7 @@ export default function PlanSetupForm({
                                     <option value="MARATHON">Marathon</option>
                                 </select>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    Confirm the race distance for accurate VDOT calculation.
+                                    We'll project your time for this distance based on the selected activity.
                                 </p>
                             </div>
                         )}
@@ -455,67 +472,36 @@ export default function PlanSetupForm({
                                 <option value="MARATHON">Marathon</option>
                             </select>
                         </div>
-
-                        <div className="grid grid-cols-3 gap-2">
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1 uppercase">Hours</label>
-                                <input
-                                    type="number"
-                                    value={hours}
-                                    onChange={e => setHours(e.target.value)}
-                                    className={inputClass}
-                                    min="0"
-                                    placeholder="0"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1 uppercase">Mins</label>
-                                <input
-                                    type="number"
-                                    value={minutes}
-                                    onChange={e => setMinutes(e.target.value)}
-                                    className={inputClass}
-                                    min="0"
-                                    max="59"
-                                    placeholder="00"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1 uppercase">Secs</label>
-                                <input
-                                    type="number"
-                                    value={seconds}
-                                    onChange={e => setSeconds(e.target.value)}
-                                    className={inputClass}
-                                    min="0"
-                                    max="59"
-                                    placeholder="00"
-                                />
-                            </div>
-                        </div>
                     </div>
                 )}
 
-                {/* Goal Time Recommendation Slider */}
-                {effectiveVO2max > 0 && (() => {
-                    // Get predictions for the selected calibration distance
-                    const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapePercent);
-                    const distanceMap: Record<string, string> = {
-                        '5K': '5K',
-                        '10K': '10K',
-                        'HALF': 'Half',
-                        'MARATHON': 'Marathon',
-                    };
-                    const distanceName = distanceMap[calibrationDistance] || 'Marathon';
-                    const distPrediction = allPredictions.find(p => p.distance === distanceName) || { optimal: 0, predicted: 0 };
-
-                    // Calculate optimal (100% shape) and conservative (0% shape) for this distance
-                    const optimalPredictions = calculateAllRacePredictions(effectiveVO2max, 100);
-                    const conservativePredictions = calculateAllRacePredictions(effectiveVO2max, 0);
-                    const optimalForDist = optimalPredictions.find(p => p.distance === distanceName)?.optimal || 0;
-                    const conservativeForDist = Math.round((conservativePredictions.find(p => p.distance === distanceName)?.predicted || 0) * 1.05);
-
+                {/* Goal Time Recommendation Slider & Display */}
+                {(() => {
                     const currentSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
+
+                    // If we have a time, calculate VDOT from IT. Otherwise use user's effective VDOT.
+                    const displayVdot = currentSeconds > 0
+                        ? calculateVdot({ distance: calibrationDistance as any, timeSeconds: currentSeconds })
+                        : effectiveVO2max;
+
+                    // Calculate range based on this VDOT
+                    // Optimal: slightly faster (higher VDOT?) or just +5% performance
+                    // Conservative: slightly slower (-5% performance)
+                    // Let's use VDOT +/- 3 for range
+                    const optimalVdot = displayVdot + 3;
+                    const conservativeVdot = Math.max(0, displayVdot - 3);
+
+                    const optimalTime = predictRaceTime(optimalVdot, calibrationDistance as any);
+                    const conservativeTime = predictRaceTime(conservativeVdot, calibrationDistance as any);
+                    const predictedTime = predictRaceTime(displayVdot, calibrationDistance as any);
+
+                    // Logic for min/max slider
+                    // Slider goes from Optimal (fastest, lowest time) to Conservative (slowest, highest time)
+                    // BUT input type="range" usually goes min -> max (left -> right)
+                    // So left = optimal (low time), right = conservative (high time)
+
+                    const distanceName = calibrationDistance === 'HALF' ? 'Half' :
+                        calibrationDistance === 'MARATHON' ? 'Marathon' : calibrationDistance;
 
                     return (
                         <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
@@ -524,34 +510,67 @@ export default function PlanSetupForm({
                                     ⏱️ Recommended {distanceName} Time
                                 </h4>
                                 <div className="text-right">
-                                    <span className="text-accent-orange font-bold text-sm block">
-                                        {formatTime(currentSeconds)}
-                                    </span>
-                                    <span className="text-[10px] text-gray-500 block">Enter manually or use slider</span>
+                                    {isEditingTime ? (
+                                        <div className="flex gap-1 justify-end">
+                                            <input
+                                                type="number" className="w-8 bg-black/40 border border-white/20 rounded p-1 text-center text-sm"
+                                                placeholder="HH" value={hours} onChange={e => setHours(e.target.value)} min="0"
+                                            />
+                                            <span className="text-white self-center">:</span>
+                                            <input
+                                                type="number" className="w-8 bg-black/40 border border-white/20 rounded p-1 text-center text-sm"
+                                                placeholder="MM" value={minutes} onChange={e => setMinutes(e.target.value)} min="0" max="59"
+                                            />
+                                            <span className="text-white self-center">:</span>
+                                            <input
+                                                type="number" className="w-8 bg-black/40 border border-white/20 rounded p-1 text-center text-sm"
+                                                placeholder="SS" value={seconds} onChange={e => setSeconds(e.target.value)} min="0" max="59"
+                                            />
+                                            <button onClick={() => setIsEditingTime(false)} className="ml-2 text-xs text-green-400"><Check className="w-4 h-4" /></button>
+                                        </div>
+                                    ) : (
+                                        <button onClick={() => setIsEditingTime(true)} className="text-right hover:bg-white/5 p-1 rounded transition-colors group">
+                                            <span className="text-accent-orange font-bold text-sm block group-hover:underline decoration-dashed decoration-white/50 underline-offset-4">
+                                                {formatTime(currentSeconds)}
+                                            </span>
+                                            <span className="text-[10px] text-gray-500 block">Click to edit manually</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                            <input
-                                type="range"
-                                min={optimalForDist}
-                                max={conservativeForDist}
-                                step="15" // 15 second steps for shorter distances
-                                value={currentSeconds || distPrediction.predicted} // Default to recommended
-                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange mb-2"
-                                onChange={(e) => {
-                                    const secs = parseInt(e.target.value);
-                                    const h = Math.floor(secs / 3600);
-                                    const m = Math.floor((secs % 3600) / 60);
-                                    const s = secs % 60;
-                                    setHours(h.toString());
-                                    setMinutes(m.toString());
-                                    setSeconds(s.toString());
-                                }}
-                            />
-                            <div className="flex justify-between text-xs text-gray-500">
-                                <span>{formatTime(optimalForDist)} (Optimal)</span>
-                                <span className="text-accent-orange">{formatTime(distPrediction.predicted)} (Recommended)</span>
-                                <span>{formatTime(conservativeForDist)} (Conservative)</span>
-                            </div>
+
+                            {/* Slider */}
+                            {currentSeconds > 0 && (
+                                <>
+                                    <input
+                                        type="range"
+                                        min={optimalTime} // Lower time (Left)
+                                        max={conservativeTime} // Higher time (Right)
+                                        step="15"
+                                        value={currentSeconds}
+                                        className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange mb-2"
+                                        onChange={(e) => {
+                                            const secs = parseInt(e.target.value);
+                                            const h = Math.floor(secs / 3600);
+                                            const m = Math.floor((secs % 3600) / 60);
+                                            const s = secs % 60;
+                                            setHours(h.toString());
+                                            setMinutes(m.toString());
+                                            setSeconds(s.toString());
+                                        }}
+                                    // Reverse direction? 
+                                    // Standard: Left = Min Value, Right = Max Value.
+                                    // Min Value = Optimal Time (Fastest). Max Value = Conservative Time (Slowest).
+                                    // So Left = Fast, Right = Slow. This feels intuitive for "Time".
+                                    />
+                                    <div className="flex justify-between text-xs text-gray-500">
+                                        <span>{formatTime(optimalTime)} (Optimal)</span>
+                                        {/* Show middle label? */}
+                                        {/* <span>{formatTime(predictedTime)} (Predicted)</span> */}
+                                        <span>{formatTime(conservativeTime)} (Conservative)</span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     );
                 })()}

@@ -47,8 +47,8 @@ export default function TrainingStatusCard({
                         <TrendingUp className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold leading-tight">Shape</p>
-                        <p className="text-xl font-black text-white leading-tight">{shapePercent}%</p>
+                        <p className="text-xs text-gray-400 uppercase tracking-widest font-bold leading-tight">Shape</p>
+                        <p className="text-2xl font-black text-white leading-tight">{shapePercent}%</p>
                     </div>
                 </div>
 
@@ -58,9 +58,9 @@ export default function TrainingStatusCard({
                         <Activity className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold leading-tight">VO2max</p>
+                        <p className="text-xs text-gray-400 uppercase tracking-widest font-bold leading-tight">VO2max</p>
                         <div className="flex items-baseline justify-between">
-                            <p className="text-xl font-black text-white leading-tight">
+                            <p className="text-2xl font-black text-white leading-tight">
                                 {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
                             </p>
                             {correctionFactor !== 1.0 && (
@@ -112,33 +112,33 @@ export default function TrainingStatusCard({
             </div>
 
             {/* Metrics List (Runalyze Style) */}
-            <div className="space-y-4 flex-1 flex flex-col justify-center border-t border-white/5 pt-6">
+            <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-white/5 pt-6">
                 {/* Fatigue (ATL) */}
                 <div className="flex items-center gap-3">
-                    <div className="w-24 text-[10px] text-gray-400 uppercase tracking-tighter font-bold truncate">Fatigue (ATL)</div>
-                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="w-32 text-xs text-gray-400 uppercase tracking-tighter font-bold truncate">Fatigue (ATL)</div>
+                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${Math.min(100, atl)}%` }} />
                     </div>
-                    <div className="w-10 text-right text-xs font-black text-red-400">
+                    <div className="w-14 text-right text-sm font-black text-red-400">
                         {atl > 0 ? `${atl}%` : '-'}
                     </div>
                 </div>
 
                 {/* Fitness (CTL) */}
                 <div className="flex items-center gap-3">
-                    <div className="w-24 text-[10px] text-gray-400 uppercase tracking-tighter font-bold truncate">Fitness (CTL)</div>
-                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="w-32 text-xs text-gray-400 uppercase tracking-tighter font-bold truncate">Fitness (CTL)</div>
+                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${Math.min(100, ctl)}%` }} />
                     </div>
-                    <div className="w-10 text-right text-xs font-black text-blue-400">
+                    <div className="w-14 text-right text-sm font-black text-blue-400">
                         {ctl > 0 ? `${ctl}%` : '-'}
                     </div>
                 </div>
 
                 {/* Stress Balance (TSB) */}
                 <div className="flex items-center gap-3">
-                    <div className="w-24 text-[10px] text-gray-400 uppercase tracking-tighter font-bold truncate">Stress Balance</div>
-                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden relative">
+                    <div className="w-32 text-xs text-gray-400 uppercase tracking-tighter font-bold truncate">Stress Balance</div>
+                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden relative">
                         <div className="absolute left-1/2 w-[1px] h-full bg-white/10" />
                         <div
                             className={`h-full ${tsb >= 0 ? 'bg-emerald-500' : 'bg-orange-500'} absolute transition-all duration-500`}
@@ -148,18 +148,18 @@ export default function TrainingStatusCard({
                             }}
                         />
                     </div>
-                    <div className={`w-10 text-right text-xs font-black ${tsb >= 0 ? 'text-emerald-400' : 'text-orange-400'}`}>
+                    <div className={`w-14 text-right text-sm font-black ${tsb >= 0 ? 'text-emerald-400' : 'text-orange-400'}`}>
                         {tsb >= 0 ? `+${tsb}` : tsb}
                     </div>
                 </div>
 
                 {/* Weekly TRIMP */}
                 <div className="flex items-center gap-3">
-                    <div className="w-24 text-[10px] text-gray-400 uppercase tracking-tighter font-bold truncate">Weekly TRIMP</div>
-                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="w-32 text-xs text-gray-400 uppercase tracking-tighter font-bold truncate">Weekly TRIMP</div>
+                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-purple-500 transition-all duration-500" style={{ width: `${Math.min(100, easyTrimp / 5)}%` }} />
                     </div>
-                    <div className="w-10 text-right text-xs font-black text-purple-400 underline decoration-purple-500/30 underline-offset-2">
+                    <div className="w-14 text-right text-sm font-black text-purple-400 underline decoration-purple-500/30 underline-offset-2">
                         {easyTrimp > 0 ? easyTrimp : '-'}
                     </div>
                 </div>

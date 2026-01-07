@@ -26,12 +26,12 @@ interface ActivityItem {
     averageSpeed: number | null;
     averageHr: number | null;
     maxHr: number | null;
-    averageCadence: number | null;
     hasHeartrate: boolean;
     totalElevation: number | null;
     trimp: number | null;
     runningTss: number | null;
     estimatedVdot: number | null;
+    averageCadence: number | null;
     trainingType: WorkoutType | null;
 }
 
@@ -88,15 +88,14 @@ const getWorkoutTypeStyle = (type: WorkoutType) => {
     }
 };
 
-function ActivityCard({ activity, onClick }: { activity: ActivityItem, onClick: () => void }) {
+function ActivityCard({ activity }: { activity: ActivityItem }) {
     const crossTraining = isCrossTraining(activity.type);
     const showTag = activity.trainingType && activity.trainingType !== 'EASY' && activity.trainingType !== 'OTHER';
 
     return (
         <div
-            className={`w-full text-left glass-card glass-card-hover p-4 transition-all duration-200 cursor-pointer ${crossTraining ? 'recovery-border' : ''
+            className={`w-full text-left glass-card glass-card-hover p-4 transition-all duration-200 ${crossTraining ? 'recovery-border' : ''
                 }`}
-            onClick={onClick}
         >
             <div className="flex items-start gap-4">
                 {/* Activity type icon */}
@@ -234,13 +233,11 @@ export function ActivityList({ activities, isLoading, userHrMax }: ActivityListP
                 {activities.map((activity, index) => (
                     <div
                         key={activity.id}
-                        className="animate-slide-in"
+                        className="animate-slide-in cursor-pointer"
                         style={{ animationDelay: `${index * 0.05}s` }}
+                        onClick={() => setSelectedActivity(activity)}
                     >
-                        <ActivityCard
-                            activity={activity}
-                            onClick={() => setSelectedActivity(activity)}
-                        />
+                        <ActivityCard activity={activity} />
                     </div>
                 ))}
             </div>

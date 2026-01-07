@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Flag, Activity, Clock, Zap, Bike, Mountain, Plus, Dumbbell, Settings, GripVertical, Check } from 'lucide-react';
 import { format, startOfWeek, addDays, isToday, isSameDay, differenceInWeeks, endOfWeek, isBefore } from 'date-fns';
 import { useSession } from 'next-auth/react';
-import { EditWorkoutModal } from '@/components';
+import { EditWorkoutModal, ErrorBoundary } from '@/components';
 import ActivityDetailsModal from '@/components/ActivityDetailsModal';
 import { Footer } from '@/components';
-import { isRunningActivity, isCrossTrainingActivity } from '@/lib/types';
+import { isRunningActivity, isCrossTrainingActivity, type WorkoutWithLinkedActivity, type ActivityListItem } from '@/lib/types';
 import {
     DndContext,
     useSensor,
@@ -21,7 +21,9 @@ import {
     useDroppable,
 } from '@dnd-kit/core';
 
-const workoutStyles: Record<string, { color: string, icon: any, label: string }> = {
+import type { LucideIcon } from 'lucide-react';
+
+const workoutStyles: Record<string, { color: string, icon: LucideIcon, label: string }> = {
     EASY: { color: 'text-green-400', icon: Activity, label: 'Easy Run' },
     LONG_RUN: { color: 'text-blue-400', icon: Mountain, label: 'Long Run' },
     TEMPO: { color: 'text-yellow-400', icon: Zap, label: 'Tempo' },
@@ -69,11 +71,11 @@ function DraggableWorkout({
     onComplete,
     onActivityClick
 }: {
-    workout: any;
+    workout: WorkoutWithLinkedActivity;
     isTodayItem: boolean;
     onClick: () => void;
     onComplete: (e: React.MouseEvent) => void;
-    onActivityClick: (activity: any, e: React.MouseEvent) => void;
+    onActivityClick: (activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, e: React.MouseEvent) => void;
 }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: workout.id,
@@ -126,9 +128,9 @@ function DraggableWorkout({
                         {style.label}
                     </h4>
                     <div className="flex items-center gap-2">
-                        {workout.targetDistance > 0 && (
+                        {(workout.targetDistance ?? 0) > 0 && (
                             <span className="text-xs text-gray-400 whitespace-nowrap">
-                                {(workout.targetDistance / 1000).toFixed(1)}k
+                                {((workout.targetDistance ?? 0) / 1000).toFixed(1)}k
                             </span>
                         )}
                         {!workout.isCompleted && (
@@ -215,12 +217,12 @@ export default function PlanPage() {
 
     // Edit State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editingWorkout, setEditingWorkout] = useState<any>(null);
+    const [editingWorkout, setEditingWorkout] = useState<WorkoutWithLinkedActivity | null>(null);
     const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
     const [initialComplete, setInitialComplete] = useState(false);
 
     // Activity Details State
-    const [selectedActivity, setSelectedActivity] = useState<any>(null);
+    const [selectedActivity, setSelectedActivity] = useState<NonNullable<WorkoutWithLinkedActivity['linkedActivity']> | null>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
 
     // DnD Sensors
@@ -289,9 +291,9 @@ export default function PlanPage() {
     const workouts = goal.workouts || [];
 
     // Group by Week
-    const weeks: Record<string, any[]> = {};
+    const weeks: Record<string, WorkoutWithLinkedActivity[]> = {};
 
-    workouts.forEach((w: any) => {
+    workouts.forEach((w: WorkoutWithLinkedActivity) => {
         const monday = startOfWeek(new Date(w.scheduledDate), { weekStartsOn: 1 }).toISOString();
         if (!weeks[monday]) weeks[monday] = [];
         weeks[monday].push(w);
@@ -347,179 +349,181 @@ export default function PlanPage() {
     const today = new Date();
 
     return (
-        <div className="min-h-screen bg-background p-4 md:p-8">
-            <div className="max-w-4xl mx-auto space-y-8">
-                {/* Header */}
-                <div className="flex items-center gap-4">
-                    <button onClick={() => router.back()} className="text-gray-400 hover:text-white transition-colors">
-                        <ArrowLeft className="w-6 h-6" />
-                    </button>
-                    <div>
-                        <h1 className="text-2xl font-bold text-white">{goal.name} Plan</h1>
-                        <p className="text-gray-400 text-sm flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            Race: {format(raceDate, 'MMMM d, yyyy')}
-                        </p>
+        <ErrorBoundary componentName="Training Plan" showRetry>
+            <div className="min-h-screen bg-background p-4 md:p-8">
+                <div className="max-w-4xl mx-auto space-y-8">
+                    {/* Header */}
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => router.back()} className="text-gray-400 hover:text-white transition-colors">
+                            <ArrowLeft className="w-6 h-6" />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">{goal.name} Plan</h1>
+                            <p className="text-gray-400 text-sm flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                Race: {format(raceDate, 'MMMM d, yyyy')}
+                            </p>
+                        </div>
                     </div>
-                </div>
 
-                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-                    {/* Weeks List */}
-                    <div className="space-y-6">
-                        {sortedWeeks.map((weekStartIso, index) => {
-                            const weekStart = new Date(weekStartIso);
-                            const weekEnd = addDays(weekStart, 6);
-                            const weeksUntilRace = differenceInWeeks(raceDate, weekStart);
-                            const phase = getPhase(weeksUntilRace);
-                            const weekWorkouts = weeks[weekStartIso];
+                    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+                        {/* Weeks List */}
+                        <div className="space-y-6">
+                            {sortedWeeks.map((weekStartIso, index) => {
+                                const weekStart = new Date(weekStartIso);
+                                const weekEnd = addDays(weekStart, 6);
+                                const weeksUntilRace = differenceInWeeks(raceDate, weekStart);
+                                const phase = getPhase(weeksUntilRace);
+                                const weekWorkouts = weeks[weekStartIso];
 
-                            // Check if this week is in the past or current (up to today is usually sufficient to start showing data)
-                            // "when week in plan view is in the past" - technically could mean strictly past.
-                            // But usually users want to see summary of current progress too.
-                            // I'll stick to strict 'end of week is before start of this week' based on request "in the past".
-                            // Wait, "in the past" usually means the week has passed.
-                            // But seeing as user wants metrics, if it's the current week, they might want to see what they've done so far.
-                            // Let's stick to `isBefore(weekEnd, today)` logic: if the week is fully done.
-                            // Actually, let's use `isBefore(weekStart, endOfWeek(today))`?
-                            // Let's stick to: if the week is completely in the past (metrics are final).
-                            // Or partial?
-                            // User said: "when week in plan view is in the past show on top".
-                            // I'll enable it for any week that has started, effectively.
-                            // `isBefore(weekStart, new Date())` is probably best.
-                            const isPastOrCurrent = isBefore(weekStart, new Date());
+                                // Check if this week is in the past or current (up to today is usually sufficient to start showing data)
+                                // "when week in plan view is in the past" - technically could mean strictly past.
+                                // But usually users want to see summary of current progress too.
+                                // I'll stick to strict 'end of week is before start of this week' based on request "in the past".
+                                // Wait, "in the past" usually means the week has passed.
+                                // But seeing as user wants metrics, if it's the current week, they might want to see what they've done so far.
+                                // Let's stick to `isBefore(weekEnd, today)` logic: if the week is fully done.
+                                // Actually, let's use `isBefore(weekStart, endOfWeek(today))`?
+                                // Let's stick to: if the week is completely in the past (metrics are final).
+                                // Or partial?
+                                // User said: "when week in plan view is in the past show on top".
+                                // I'll enable it for any week that has started, effectively.
+                                // `isBefore(weekStart, new Date())` is probably best.
+                                const isPastOrCurrent = isBefore(weekStart, new Date());
 
-                            // Metrics Calculation
-                            let plannedMileage = 0;
-                            let actualRunMileage = 0;
-                            let totalMovingTime = 0;
-                            let runTime = 0;
-                            let crossTime = 0;
-                            let runCount = 0;
-                            let crossCount = 0;
+                                // Metrics Calculation
+                                let plannedMileage = 0;
+                                let actualRunMileage = 0;
+                                let totalMovingTime = 0;
+                                let runTime = 0;
+                                let crossTime = 0;
+                                let runCount = 0;
+                                let crossCount = 0;
 
-                            weekWorkouts.forEach((w: any) => {
-                                // Planned
-                                if (RUN_TYPES.includes(w.workoutType) && w.targetDistance > 0) {
-                                    plannedMileage += w.targetDistance;
-                                }
-
-                                // Actual
-                                if (w.linkedActivity) {
-                                    const act = w.linkedActivity;
-                                    totalMovingTime += act.movingTime;
-
-                                    if (isRunningActivity(act.type)) {
-                                        actualRunMileage += act.distance;
-                                        runTime += act.movingTime;
-                                        runCount++;
-                                    } else if (isCrossTrainingActivity(act.type)) {
-                                        crossTime += act.movingTime;
-                                        crossCount++;
+                                weekWorkouts.forEach((w: any) => {
+                                    // Planned
+                                    if (RUN_TYPES.includes(w.workoutType) && w.targetDistance > 0) {
+                                        plannedMileage += w.targetDistance;
                                     }
-                                }
-                            });
 
-                            const runTimePct = totalMovingTime > 0 ? Math.round((runTime / totalMovingTime) * 100) : 0;
-                            const crossTimePct = totalMovingTime > 0 ? Math.round((crossTime / totalMovingTime) * 100) : 0;
+                                    // Actual
+                                    if (w.linkedActivity) {
+                                        const act = w.linkedActivity;
+                                        totalMovingTime += act.movingTime;
 
-                            return (
-                                <div key={weekStartIso} className="glass-card overflow-hidden">
-                                    {/* Week Header */}
-                                    <div className="p-4 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between bg-white/5 sticky top-0 z-10 backdrop-blur-md gap-2">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex flex-col">
-                                                <span className="text-white font-semibold">Week {index + 1}</span>
-                                                <span className="text-xs text-gray-400">
-                                                    {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
+                                        if (isRunningActivity(act.type)) {
+                                            actualRunMileage += act.distance;
+                                            runTime += act.movingTime;
+                                            runCount++;
+                                        } else if (isCrossTrainingActivity(act.type)) {
+                                            crossTime += act.movingTime;
+                                            crossCount++;
+                                        }
+                                    }
+                                });
+
+                                const runTimePct = totalMovingTime > 0 ? Math.round((runTime / totalMovingTime) * 100) : 0;
+                                const crossTimePct = totalMovingTime > 0 ? Math.round((crossTime / totalMovingTime) * 100) : 0;
+
+                                return (
+                                    <div key={weekStartIso} className="glass-card overflow-hidden">
+                                        {/* Week Header */}
+                                        <div className="p-4 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between bg-white/5 sticky top-0 z-10 backdrop-blur-md gap-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex flex-col">
+                                                    <span className="text-white font-semibold">Week {index + 1}</span>
+                                                    <span className="text-xs text-gray-400">
+                                                        {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
+                                                    </span>
+                                                </div>
+
+                                                {/* Summary Metrics */}
+                                                {isPastOrCurrent ? (
+                                                    <div className="flex flex-col space-y-1 ml-2">
+                                                        <div className="flex items-center gap-2 text-xs">
+                                                            <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded border border-green-500/20">
+                                                                Run: {(actualRunMileage / 1000).toFixed(1)}k
+                                                            </span>
+                                                            <span className="text-gray-500 text-[10px]">
+                                                                / {(plannedMileage / 1000).toFixed(1)}k planned
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                                                            <span>Time: {formatDuration(totalMovingTime)}</span>
+                                                            {totalMovingTime > 0 && (
+                                                                <span className="text-gray-500 text-[10px]">
+                                                                    ({runTimePct}% Run / {crossTimePct}% Cross)
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="px-2 py-1 bg-white/5 rounded text-xs text-gray-300 border border-white/10">
+                                                        {(plannedMileage / 1000).toFixed(1)} km planned
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <span className={`px-2 py-1 rounded text-xs font-bold border ${phase.color}`}>
+                                                    {phase.name}
                                                 </span>
                                             </div>
-
-                                            {/* Summary Metrics */}
-                                            {isPastOrCurrent ? (
-                                                <div className="flex flex-col space-y-1 ml-2">
-                                                    <div className="flex items-center gap-2 text-xs">
-                                                        <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded border border-green-500/20">
-                                                            Run: {(actualRunMileage / 1000).toFixed(1)}k
-                                                        </span>
-                                                        <span className="text-gray-500 text-[10px]">
-                                                            / {(plannedMileage / 1000).toFixed(1)}k planned
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                                                        <span>Time: {formatDuration(totalMovingTime)}</span>
-                                                        {totalMovingTime > 0 && (
-                                                            <span className="text-gray-500 text-[10px]">
-                                                                ({runTimePct}% Run / {crossTimePct}% Cross)
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="px-2 py-1 bg-white/5 rounded text-xs text-gray-300 border border-white/10">
-                                                    {(plannedMileage / 1000).toFixed(1)} km planned
-                                                </div>
-                                            )}
                                         </div>
-                                        <div>
-                                            <span className={`px-2 py-1 rounded text-xs font-bold border ${phase.color}`}>
-                                                {phase.name}
-                                            </span>
+
+                                        {/* Days Grid (List View) */}
+                                        <div className="p-2 space-y-1">
+                                            {Array.from({ length: 7 }).map((_, i) => {
+                                                const dayDate = addDays(weekStart, i);
+                                                const isTodayItem = isToday(dayDate);
+                                                const dayWorkouts = weekWorkouts.filter((w: any) => isSameDay(new Date(w.scheduledDate), dayDate));
+
+                                                return (
+                                                    <DroppableDay
+                                                        key={dayDate.toISOString()}
+                                                        date={dayDate}
+                                                        isTodayItem={isTodayItem}
+                                                        onAdd={() => handleCreate(dayDate)}
+                                                    >
+                                                        {dayWorkouts.map((workout: any) => (
+                                                            <DraggableWorkout
+                                                                key={workout.id}
+                                                                workout={workout}
+                                                                isTodayItem={isTodayItem}
+                                                                onClick={() => handleEdit(workout)}
+                                                                onComplete={(e) => handleComplete(workout, e)}
+                                                                onActivityClick={handleActivityClick}
+                                                            />
+                                                        ))}
+                                                    </DroppableDay>
+                                                );
+                                            })}
                                         </div>
                                     </div>
+                                );
+                            })}
+                        </div>
+                    </DndContext>
+                </div>
 
-                                    {/* Days Grid (List View) */}
-                                    <div className="p-2 space-y-1">
-                                        {Array.from({ length: 7 }).map((_, i) => {
-                                            const dayDate = addDays(weekStart, i);
-                                            const isTodayItem = isToday(dayDate);
-                                            const dayWorkouts = weekWorkouts.filter((w: any) => isSameDay(new Date(w.scheduledDate), dayDate));
+                <EditWorkoutModal
+                    isOpen={isEditModalOpen}
+                    onClose={() => {
+                        setIsEditModalOpen(false);
+                        refetch();
+                    }}
+                    workout={editingWorkout}
+                    defaultDate={createDate}
+                    goalId={goal.id}
+                    initialComplete={initialComplete}
+                />
 
-                                            return (
-                                                <DroppableDay
-                                                    key={dayDate.toISOString()}
-                                                    date={dayDate}
-                                                    isTodayItem={isTodayItem}
-                                                    onAdd={() => handleCreate(dayDate)}
-                                                >
-                                                    {dayWorkouts.map((workout: any) => (
-                                                        <DraggableWorkout
-                                                            key={workout.id}
-                                                            workout={workout}
-                                                            isTodayItem={isTodayItem}
-                                                            onClick={() => handleEdit(workout)}
-                                                            onComplete={(e) => handleComplete(workout, e)}
-                                                            onActivityClick={handleActivityClick}
-                                                        />
-                                                    ))}
-                                                </DroppableDay>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </DndContext>
+                <ActivityDetailsModal
+                    isOpen={isActivityModalOpen}
+                    onClose={() => setIsActivityModalOpen(false)}
+                    activity={selectedActivity as any}
+                />
+                <Footer />
             </div>
-
-            <EditWorkoutModal
-                isOpen={isEditModalOpen}
-                onClose={() => {
-                    setIsEditModalOpen(false);
-                    refetch();
-                }}
-                workout={editingWorkout}
-                defaultDate={createDate}
-                goalId={goal.id}
-                initialComplete={initialComplete}
-            />
-
-            <ActivityDetailsModal
-                isOpen={isActivityModalOpen}
-                onClose={() => setIsActivityModalOpen(false)}
-                activity={selectedActivity}
-            />
-            <Footer />
-        </div>
+        </ErrorBoundary>
     );
 }

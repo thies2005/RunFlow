@@ -3,19 +3,10 @@ import { prisma } from '@/lib/db';
 import { syncActivityById } from '@/lib/strava/sync';
 import { createHmac } from 'crypto';
 import { checkRateLimit, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { safeBigInt } from '@/lib/utils/bigint';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-/**
- * Safely convert a value to BigInt, handling edge cases
- */
-function safeBigInt(value: unknown): bigint {
-    if (typeof value === 'bigint') return value;
-    if (typeof value === 'number') return BigInt(Math.floor(value));
-    if (typeof value === 'string') return BigInt(value);
-    throw new Error(`Cannot convert ${typeof value} to BigInt`);
-}
 
 const VERIFY_TOKEN = process.env.STRAVA_VERIFY_TOKEN || "STRAVA";
 const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;

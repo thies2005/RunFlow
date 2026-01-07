@@ -189,23 +189,37 @@ export function RaceCountdown({
                 )}
             </div>
 
-            {/* Weekly mileage */}
-            {goal.weeklyMileageGoal && (
-                <div className="glass-card p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-400">This Week&apos;s Mileage</span>
-                        <span className="text-sm text-white">
-                            {currentWeekMileage.toFixed(1)} / {(goal.weeklyMileageGoal / 1000).toFixed(1)} km
-                        </span>
+            {/* Weekly mileage - calculated from this week's planned workouts */}
+            {goal.workouts && goal.workouts.length > 0 && (() => {
+                // Calculate planned mileage from this week's workouts (running only)
+                const plannedWeekMileage = goal.workouts.reduce((acc, workout) => {
+                    const isRun = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 'RACE'].includes(workout.workoutType);
+                    if (isRun && workout.targetDistance) {
+                        return acc + workout.targetDistance;
+                    }
+                    return acc;
+                }, 0) / 1000; // Convert to km
+
+                // Only show if there's planned mileage
+                if (plannedWeekMileage <= 0) return null;
+
+                return (
+                    <div className="glass-card p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-gray-400">This Week&apos;s Mileage</span>
+                            <span className="text-sm text-white">
+                                {currentWeekMileage.toFixed(1)} / {plannedWeekMileage.toFixed(1)} km
+                            </span>
+                        </div>
+                        <div className="h-2 bg-background rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-gradient-to-r from-accent-cyan to-green-500 rounded-full transition-all duration-500"
+                                style={{ width: `${Math.min(100, (currentWeekMileage / plannedWeekMileage) * 100)}%` }}
+                            />
+                        </div>
                     </div>
-                    <div className="h-2 bg-background rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-accent-cyan to-green-500 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, (currentWeekMileage / (goal.weeklyMileageGoal / 1000)) * 100)}%` }}
-                        />
-                    </div>
-                </div>
-            )
+                );
+            })()
             }
         </div >
     );

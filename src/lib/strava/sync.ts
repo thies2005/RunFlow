@@ -16,6 +16,7 @@ import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { WorkoutType } from '@/lib/types';
+import { safeBigInt } from '@/lib/utils/bigint';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const MAX_PER_PAGE = 200;
@@ -73,15 +74,7 @@ const rateLimiter = {
     },
 };
 
-/**
- * Safely convert a value to BigInt, handling edge cases
- */
-function safeBigInt(value: unknown): bigint {
-    if (typeof value === 'bigint') return value;
-    if (typeof value === 'number') return BigInt(Math.floor(value));
-    if (typeof value === 'string') return BigInt(value);
-    throw new Error(`Cannot convert ${typeof value} to BigInt`);
-}
+
 
 export interface StravaActivity {
     id: number;
@@ -809,7 +802,7 @@ export async function syncActivityById(userId: string, activityId: number): Prom
         if (['Run', 'VirtualRun', 'Ride', 'VirtualRide'].includes(activity.type)) {
             streams = await fetchActivityStreams(accessToken, activity.id);
 
-            const effectiveHrMax = user.hrMax || 190;
+            const effectiveHrMax = user.hrMax || DEFAULT_HR_MAX;
 
             if (streams && streams.heartrate) {
                 const zoneThresholds = {
@@ -824,7 +817,7 @@ export async function syncActivityById(userId: string, activityId: number): Prom
 
         // 5. Calculate TRIMP
         let trimp: number | null = null;
-        const effectiveHrMax = user.hrMax || 190;
+        const effectiveHrMax = user.hrMax || DEFAULT_HR_MAX;
         const effectiveHrRest = user.hrRest || 60;
 
         if (activity.has_heartrate && activity.average_heartrate) {
@@ -876,7 +869,7 @@ export async function syncActivityById(userId: string, activityId: number): Prom
             trimp,
             runningTss,
             estimatedVdot: (['Run', 'VirtualRun'].includes(activity.type) && activity.has_heartrate && activity.average_heartrate)
-                ? calculateEffectiveVO2max(activity.distance, activity.moving_time, activity.average_heartrate, user.hrMax || 190)
+                ? calculateEffectiveVO2max(activity.distance, activity.moving_time, activity.average_heartrate, user.hrMax || DEFAULT_HR_MAX)
                 : null,
             hrZone1Time: zoneTimes.z1,
             hrZone2Time: zoneTimes.z2,

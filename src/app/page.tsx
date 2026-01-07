@@ -174,7 +174,6 @@ export default function Dashboard() {
                             <WorkoutScheduleCard
                                 weeklyWorkouts={weeklyWorkouts}
                                 today={today}
-                                currentWeekMileage={currentWeekMileage}
                                 onEditWorkout={(w) => {
                                     setEditingWorkout(w);
                                     setInitialComplete(false);

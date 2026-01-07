@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Save, Trash2 } from 'lucide-react';
 import ActivityPicker from './ActivityPicker';
+import type { Workout } from '@/lib/types';
 
 interface EditWorkoutModalProps {
     isOpen: boolean;
     onClose: () => void;
-    workout?: any; // If editing
+    workout?: Workout | null;
     goalId?: string; // If creating
     defaultDate?: Date; // If creating
     initialComplete?: boolean; // If marking complete immediately
@@ -46,8 +47,8 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                 setType(workout.workoutType);
                 setDescription(workout.description);
                 setDate(new Date(workout.scheduledDate).toISOString().split('T')[0]);
-                setDistanceKm((workout.targetDistance / 1000).toString());
-                setDurationMin((workout.targetDuration / 60).toString());
+                setDistanceKm(((workout.targetDistance ?? 0) / 1000).toString());
+                setDurationMin(((workout.targetDuration ?? 0) / 60).toString());
                 // If initialComplete is true, we force it to true, but we keep wasCompleted as the ORIGINAL state
                 // This ensures the "ActivityPicker" logic sees it as a NEW completion (isCompleted check, !wasCompleted check)
                 setIsCompleted(initialComplete || workout.isCompleted);

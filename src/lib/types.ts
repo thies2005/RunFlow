@@ -168,6 +168,45 @@ export interface Workout {
     linkedActivityId: string | null;
 }
 
+/**
+ * Workout with linked activity data included (for plan views)
+ */
+export interface WorkoutWithLinkedActivity extends Workout {
+    linkedActivity?: {
+        id: string;
+        name: string;
+        type: string;
+        distance: number;
+        movingTime: number;
+        averageSpeed?: number | null;
+        averageHr?: number | null;
+    } | null;
+}
+
+/**
+ * Lightweight activity for list displays (dashboard, activity list)
+ */
+export interface ActivityListItem {
+    id: string;
+    stravaId: string;
+    type: 'RUN' | 'VIRTUAL_RIDE' | 'RIDE' | 'WALK' | 'HIKE' | 'SWIM' | 'WORKOUT' | 'OTHER';
+    sportType: string | null;
+    name: string;
+    startDate: string;
+    distance: number;
+    movingTime: number;
+    averageSpeed: number | null;
+    averageHr: number | null;
+    maxHr: number | null;
+    hasHeartrate: boolean;
+    totalElevation: number | null;
+    trimp: number | null;
+    runningTss: number | null;
+    estimatedVdot: number | null;
+    averageCadence: number | null;
+    trainingType: WorkoutType | null;
+}
+
 // ============================================
 // User Types
 // ============================================

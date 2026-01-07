@@ -3,7 +3,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, ArrowLeft, Plus } from 'lucide-react';
-import { ActivityList, ManualActivityModal, Footer } from '@/components';
+import { ActivityList, ManualActivityModal, Footer, ErrorBoundary } from '@/components';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
@@ -70,96 +70,98 @@ export default function ActivitiesPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background p-4 md:p-8">
-            <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="flex items-center text-gray-400 hover:text-white transition-colors gap-2"
-                        >
-                            <ArrowLeft className="w-5 h-5" />
-                        </button>
-                        <h1 className="text-2xl font-bold text-white">Activities</h1>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        {/* Type Filter */}
-                        <div className="flex bg-white/5 p-1 rounded-lg">
+        <ErrorBoundary componentName="Activities Page" showRetry>
+            <div className="min-h-screen bg-background p-4 md:p-8">
+                <div className="max-w-4xl mx-auto space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
                             <button
-                                onClick={() => setFilter('RUN')}
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RUN' ? 'bg-accent-orange text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                                onClick={() => router.back()}
+                                className="flex items-center text-gray-400 hover:text-white transition-colors gap-2"
                             >
-                                Runs
+                                <ArrowLeft className="w-5 h-5" />
                             </button>
-                            <button
-                                onClick={() => setFilter('RIDE')}
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RIDE' ? 'bg-accent-orange text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                Rides
-                            </button>
-                            <button
-                                onClick={() => setFilter('ALL')}
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'ALL' ? 'bg-accent-orange text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                All
-                            </button>
+                            <h1 className="text-2xl font-bold text-white">Activities</h1>
                         </div>
 
-                        <button
-                            onClick={() => setIsManualModalOpen(true)}
-                            className="btn-primary flex items-center gap-2 py-2 px-4 shadow-lg shadow-blue-500/20"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span className="hidden sm:inline">Manual Entry</span>
-                        </button>
+                        <div className="flex items-center gap-4">
+                            {/* Type Filter */}
+                            <div className="flex bg-white/5 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setFilter('RUN')}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RUN' ? 'bg-accent-orange text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    Runs
+                                </button>
+                                <button
+                                    onClick={() => setFilter('RIDE')}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RIDE' ? 'bg-accent-orange text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    Rides
+                                </button>
+                                <button
+                                    onClick={() => setFilter('ALL')}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'ALL' ? 'bg-accent-orange text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    All
+                                </button>
+                            </div>
 
-                        <button
-                            onClick={() => refetch()}
-                            className="p-2 bg-white/5 rounded-lg hover:bg-white/10 text-white transition-colors"
-                            disabled={isRefetching}
-                        >
-                            <RefreshCw className={`w-5 h-5 ${isRefetching ? 'animate-spin' : ''}`} />
-                        </button>
+                            <button
+                                onClick={() => setIsManualModalOpen(true)}
+                                className="btn-primary flex items-center gap-2 py-2 px-4 shadow-lg shadow-blue-500/20"
+                            >
+                                <Plus className="w-4 h-4" />
+                                <span className="hidden sm:inline">Manual Entry</span>
+                            </button>
+
+                            <button
+                                onClick={() => refetch()}
+                                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 text-white transition-colors"
+                                disabled={isRefetching}
+                            >
+                                <RefreshCw className={`w-5 h-5 ${isRefetching ? 'animate-spin' : ''}`} />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="glass-card p-6">
+                        <p className="text-gray-400 mb-4 text-sm">
+                            Showing {allActivities.length} of {totalCount} {filter.toLowerCase() === 'all' ? 'activities' : filter.toLowerCase() + 's'}.
+                        </p>
+                        <ActivityList
+                            activities={allActivities}
+                            isLoading={isLoading}
+                            userHrMax={userHrMax}
+                        />
+
+                        {hasNextPage && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={() => fetchNextPage()}
+                                    disabled={isFetchingNextPage}
+                                    className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center gap-2"
+                                >
+                                    {isFetchingNextPage ? (
+                                        <>
+                                            <RefreshCw className="w-4 h-4 animate-spin" />
+                                            Loading...
+                                        </>
+                                    ) : (
+                                        'Load More'
+                                    )}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="glass-card p-6">
-                    <p className="text-gray-400 mb-4 text-sm">
-                        Showing {allActivities.length} of {totalCount} {filter.toLowerCase() === 'all' ? 'activities' : filter.toLowerCase() + 's'}.
-                    </p>
-                    <ActivityList
-                        activities={allActivities}
-                        isLoading={isLoading}
-                        userHrMax={userHrMax}
-                    />
-
-                    {hasNextPage && (
-                        <div className="mt-8 flex justify-center">
-                            <button
-                                onClick={() => fetchNextPage()}
-                                disabled={isFetchingNextPage}
-                                className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center gap-2"
-                            >
-                                {isFetchingNextPage ? (
-                                    <>
-                                        <RefreshCw className="w-4 h-4 animate-spin" />
-                                        Loading...
-                                    </>
-                                ) : (
-                                    'Load More'
-                                )}
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <ManualActivityModal
+                    isOpen={isManualModalOpen}
+                    onClose={() => setIsManualModalOpen(false)}
+                />
+                <Footer />
             </div>
-
-            <ManualActivityModal
-                isOpen={isManualModalOpen}
-                onClose={() => setIsManualModalOpen(false)}
-            />
-            <Footer />
-        </div>
+        </ErrorBoundary>
     );
 }

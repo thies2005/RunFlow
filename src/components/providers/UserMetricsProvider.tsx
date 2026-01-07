@@ -27,7 +27,7 @@ export function useUserMetrics() {
 
 interface UserMetricsProviderProps {
     children: ReactNode;
-    stats: any; // Using any loosely here for flexibility with API response, or define strict type
+    stats?: any; // Using any loosely here for flexibility with API response, or define strict type
 }
 
 export function UserMetricsProvider({ children, stats }: UserMetricsProviderProps) {

@@ -105,78 +105,78 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-background">
-            <header className="border-b border-white/10 backdrop-blur-md bg-background/80 sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
-                                <span className="text-xl">🏃</span>
-                            </div>
-                            <span className="text-xl font-bold text-white">RunFlow</span>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <button
-                                type="button"
-                                onClick={() => syncMutation.mutate()}
-                                disabled={syncStatus?.syncInProgress || syncMutation.isPending}
-                                className="btn-secondary flex items-center gap-2 py-2 px-4 disabled:opacity-50"
-                            >
-                                <RefreshCw className={`w-4 h-4 ${syncStatus?.syncInProgress || syncMutation.isPending ? 'animate-spin' : ''}`} />
-                                {syncMutation.isPending ? 'Starting...' : syncStatus?.syncInProgress ? 'Syncing...' : 'Sync'}
-                            </button>
-                            <button onClick={() => router.push('/analytics')} className="btn-secondary flex items-center gap-2 py-2 px-4">
-                                📊 Analytics
-                            </button>
-                            <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-gray-400 hover:text-white transition-colors">
-                                <Settings className="w-5 h-5" />
-                            </button>
+            <UserMetricsProvider stats={statsData}>
+                <header className="border-b border-white/10 backdrop-blur-md bg-background/80 sticky top-0 z-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
-                                {session?.user?.image && (
-                                    <button onClick={() => setIsProfileOpen(true)} className="relative group">
-                                        <img
-                                            src={session.user.image}
-                                            alt={session.user.name || 'User'}
-                                            className="w-8 h-8 rounded-full border border-transparent group-hover:border-white transition-all cursor-pointer"
-                                        />
-                                        <div className="absolute inset-0 bg-white/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </button>
-                                )}
-                                <button onClick={() => signOut({ callbackUrl: '/login' })} className="p-2 text-gray-400 hover:text-white transition-colors">
-                                    <LogOut className="w-5 h-5" />
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
+                                    <span className="text-xl">🏃</span>
+                                </div>
+                                <span className="text-xl font-bold text-white">RunFlow</span>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => syncMutation.mutate()}
+                                    disabled={syncStatus?.syncInProgress || syncMutation.isPending}
+                                    className="btn-secondary flex items-center gap-2 py-2 px-4 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${syncStatus?.syncInProgress || syncMutation.isPending ? 'animate-spin' : ''}`} />
+                                    {syncMutation.isPending ? 'Starting...' : syncStatus?.syncInProgress ? 'Syncing...' : 'Sync'}
                                 </button>
+                                <button onClick={() => router.push('/analytics')} className="btn-secondary flex items-center gap-2 py-2 px-4">
+                                    📊 Analytics
+                                </button>
+                                <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-gray-400 hover:text-white transition-colors">
+                                    <Settings className="w-5 h-5" />
+                                </button>
+                                <div className="flex items-center gap-3">
+                                    {session?.user?.image && (
+                                        <button onClick={() => setIsProfileOpen(true)} className="relative group">
+                                            <img
+                                                src={session.user.image}
+                                                alt={session.user.name || 'User'}
+                                                className="w-8 h-8 rounded-full border border-transparent group-hover:border-white transition-all cursor-pointer"
+                                            />
+                                            <div className="absolute inset-0 bg-white/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </button>
+                                    )}
+                                    <button onClick={() => signOut({ callbackUrl: '/login' })} className="p-2 text-gray-400 hover:text-white transition-colors">
+                                        <LogOut className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </header>
+                </header>
 
-            {hasError && (
-                <div className="bg-red-500/10 border-b border-red-500/20 py-3 px-4">
-                    <div className="max-w-7xl mx-auto flex items-center gap-2 text-red-400">
-                        <AlertCircle className="w-5 h-5" />
-                        <span className="text-sm">
-                            {syncMutation.error?.message || error?.message || 'An error occurred'}
-                        </span>
-                        <button onClick={() => { queryClient.invalidateQueries(); syncMutation.reset(); }} className="ml-auto text-sm underline hover:no-underline">
-                            Retry
-                        </button>
+                {hasError && (
+                    <div className="bg-red-500/10 border-b border-red-500/20 py-3 px-4">
+                        <div className="max-w-7xl mx-auto flex items-center gap-2 text-red-400">
+                            <AlertCircle className="w-5 h-5" />
+                            <span className="text-sm">
+                                {syncMutation.error?.message || error?.message || 'An error occurred'}
+                            </span>
+                            <button onClick={() => { queryClient.invalidateQueries(); syncMutation.reset(); }} className="ml-auto text-sm underline hover:no-underline">
+                                Retry
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white mb-2">
-                        Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}! 👋
-                    </h1>
-                    <p className="text-gray-400">
-                        {syncStatus?.totalActivities ? `${syncStatus.totalActivities} activities synced` : 'Sync your Strava activities to get started'}
-                    </p>
-                </div>
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-white mb-2">
+                            Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}! 👋
+                        </h1>
+                        <p className="text-gray-400">
+                            {syncStatus?.totalActivities ? `${syncStatus.totalActivities} activities synced` : 'Sync your Strava activities to get started'}
+                        </p>
+                    </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-                    <UserMetricsProvider stats={statsData}>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                         <div className="lg:col-span-1">
                             <WorkoutScheduleCard
                                 weeklyWorkouts={weeklyWorkouts}
@@ -193,43 +193,43 @@ export default function Dashboard() {
                         <div className="lg:col-span-1 h-full flex flex-col">
                             <TrainingStatusCard />
                         </div>
-                    </UserMetricsProvider>
-                </div>
-
-                <div className="mt-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-semibold text-white">Recent Activities</h2>
-                        <button onClick={() => router.push('/activities')} className="btn-secondary py-2 px-4">
-                            View All
-                        </button>
                     </div>
-                    <ActivityList activities={recentActivities} isLoading={isLoading} userHrMax={userHrMax} />
-                </div>
-            </main>
 
-            <footer className="border-t border-white/10 mt-12 py-8">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-4">
-                    <PoweredByStravaLogo className="h-4" />
-                    <p className="text-gray-500 text-xs">RunFlow • Built with ❤️ for runners</p>
-                </div>
-            </footer>
+                    <div className="mt-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-semibold text-white">Recent Activities</h2>
+                            <button onClick={() => router.push('/activities')} className="btn-secondary py-2 px-4">
+                                View All
+                            </button>
+                        </div>
+                        <ActivityList activities={recentActivities} isLoading={isLoading} userHrMax={userHrMax} />
+                    </div>
+                </main>
 
-            <SettingsModal
-                isOpen={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
-            />
+                <footer className="border-t border-white/10 mt-12 py-8">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-4">
+                        <PoweredByStravaLogo className="h-4" />
+                        <p className="text-gray-500 text-xs">RunFlow • Built with ❤️ for runners</p>
+                    </div>
+                </footer>
 
-            <EditWorkoutModal
-                isOpen={!!editingWorkout}
-                onClose={() => setEditingWorkout(null)}
-                workout={editingWorkout}
-                goalId={activeGoal?.id}
-            />
+                <SettingsModal
+                    isOpen={isSettingsOpen}
+                    onClose={() => setIsSettingsOpen(false)}
+                />
 
-            <ProfileModal
-                isOpen={isProfileOpen}
-                onClose={() => setIsProfileOpen(false)}
-            />
-        </div>
+                <EditWorkoutModal
+                    isOpen={!!editingWorkout}
+                    onClose={() => setEditingWorkout(null)}
+                    workout={editingWorkout}
+                    goalId={activeGoal?.id}
+                />
+
+                <ProfileModal
+                    isOpen={isProfileOpen}
+                    onClose={() => setIsProfileOpen(false)}
+                />
+            </UserMetricsProvider>
+        </div >
     );
 }

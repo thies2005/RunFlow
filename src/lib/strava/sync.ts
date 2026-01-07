@@ -465,7 +465,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     if (activity.max_heartrate && activity.max_heartrate > (currentHrMax || 0)) {
                         // Reasonable upper bound check (e.g. < 250) to avoid spikes? 
                         // Strava max_heartrate is usually reliable enough.
-                        if (activity.max_heartrate < 240) {
+                        if (activity.max_heartrate < 220) {
                             currentHrMax = activity.max_heartrate;
 
                             // Update DB asynchronously to remember for next time

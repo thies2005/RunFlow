@@ -93,24 +93,20 @@ export function calculateEffectiveVO2max(
     // VO2 = -4.60 + 0.182258 * v + 0.000104 * v^2
     const vo2Cost = -4.60 + 0.182258 * velocity + 0.000104 * Math.pow(velocity, 2);
 
-    // === REFINED: Quadratic approximation for %VO2max from %HRmax ===
-    // Based on Swain et al. research for trained athletes
-    // The quadratic model fits the curvilinear relationship better than linear
-    // 
-    // Formula: %VO2max = 1.5472 * (%HRmax)^2 - 1.2888 * (%HRmax) + 0.3648
-    // This captures the reduced O2 extraction efficiency at lower intensities
-    // and the approach to ceiling at high intensities
+    // === STANDARD: Linear approximation ===
+    // Reverted to linear model to avoid spikes at low-medium intensities
+    // This model assumes %VO2max is roughly linear with %HRmax above 60%
     //
-    // Comparison at key points:
-    //   %HRmax | Linear (old) | Quadratic (new)
-    //   60%    | 85.6%        | 79.8%
-    //   70%    | 89.2%        | 86.5%
-    //   80%    | 92.8%        | 93.0%
-    //   90%    | 96.4%        | 99.2%
-    //   100%   | 100%         | 105% (capped to 100%)
+    // Comparison:
+    //   %HRmax | %VO2max
+    //   60%    | 85.6%
+    //   70%    | 89.2%
+    //   80%    | 92.8%
+    //   90%    | 96.4%
+    //   100%   | 100%
     const percentVO2max = Math.min(
-        1.0, // Cap at 100%
-        1.5472 * Math.pow(hrPercent, 2) - 1.2888 * hrPercent + 0.3648
+        1.0,
+        0.36 * hrPercent + 0.64
     );
 
     // Guard: prevent division by zero or near-zero
@@ -121,7 +117,8 @@ export function calculateEffectiveVO2max(
     // Effective VO2max = VO2 cost / %VO2max
     const effectiveVO2max = vo2Cost / percentVO2max;
 
-    return Math.max(0, Math.round(effectiveVO2max * 10) / 10);
+    // Cap at 85 (Elite/World Class) to filter invalid GPS/HR data
+    return Math.min(85, Math.max(0, Math.round(effectiveVO2max * 10) / 10));
 }
 
 /**

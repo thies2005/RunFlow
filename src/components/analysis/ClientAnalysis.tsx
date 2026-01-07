@@ -18,9 +18,11 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
         time: t,
         distance: streams.distance ? streams.distance[i] : 0,
         hr: streams.heartrate ? streams.heartrate[i] : null,
-        pace: streams.velocity_smooth ? (1000 / streams.velocity_smooth[i]) / 60 : null, // min/km
+        pace: (streams.velocity_smooth && streams.velocity_smooth[i] > 0.5)
+            ? Math.min(20, (1000 / streams.velocity_smooth[i]) / 60)
+            : null, // min/km, capped at 20 to avoid outliers
         altitude: streams.altitude ? streams.altitude[i] : null,
-        cadence: streams.cadence ? streams.cadence[i] * 2 : null, // run cadence usually stored as spm/2 in strava sometimes? or just rpm. Strava streams usually spm for run.
+        cadence: streams.cadence ? streams.cadence[i] * 2 : null,
     })).filter((d: any) => d.hr !== null || d.pace !== null) || [];
 
     // Format X axis (time)

@@ -232,6 +232,29 @@ function generateWeek(params: {
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
 
+    // Calculate Dynamic Easy Run Distance
+    // 1. Long Run
+    const longRunDist = getLongRunDistance(raceType, weeklyVolume);
+
+    // 2. Quality Session (if applicable)
+    const hasQuality = runsPerWeek >= 2 && phase !== 'BASE' && phase !== 'TAPER';
+    const qualitySession = getQualitySession(raceType, paces);
+    const qualityDist = hasQuality ? qualitySession.totalDistance : 0;
+
+    // 3. Remaining volume for Easy Runs
+    // Total Runs = runsPerWeek. 
+    // Key Runs = 1 (Long) + (hasQuality ? 1 : 0).
+    // Easy Runs Count = runsPerWeek - Key Runs. 
+    // Note: If !hasQuality (e.g. Base), the "Quality Slot" becomes an Easy Run, so it counts as an Easy Run.
+    const keyRunsCount = 1 + (hasQuality ? 1 : 0);
+    const easyRunsCount = Math.max(0, runsPerWeek - keyRunsCount) + (!hasQuality && runsPerWeek >= 2 ? 1 : 0);
+
+    const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDist);
+    const calculatedEasyDist = easyRunsCount > 0 ? remainingVol / easyRunsCount : 5000;
+
+    // Clamp Easy Run Distance (e.g. 4km - 12km)
+    const easyDist = Math.max(4000, Math.min(Math.round(calculatedEasyDist / 100) * 100, 12000));
+
     // Helper to get next available day, preferring the suggested day
     const getAvailableDay = (preferred: number): number => {
         if (!usedDays.has(preferred)) return preferred;
@@ -278,8 +301,8 @@ function generateWeek(params: {
         workouts.push({
             dayOffset: easyDay,
             type: WorkoutType.EASY,
-            description: 'Easy Run: 5km',
-            totalDistance: 5000,
+            description: `Easy Run: ${(easyDist / 1000).toFixed(1)}km`,
+            totalDistance: easyDist,
             targetPace: paces.easy.avg,
             targetDuration: 0
         });
@@ -296,8 +319,8 @@ function generateWeek(params: {
             workouts.push({
                 dayOffset: day,
                 type: WorkoutType.EASY,
-                description: 'Easy Run: 6km',
-                totalDistance: 6000,
+                description: `Easy Run: ${(easyDist / 1000).toFixed(1)}km`,
+                totalDistance: easyDist,
                 targetPace: paces.easy.avg,
                 targetDuration: 0
             });
@@ -371,8 +394,9 @@ function generateWeek(params: {
 }
 
 function getLongRunDistance(raceType: RaceType, weeklyVolume: number): number {
-    // Dynamic Long Run: ~30-35% of weekly volume
-    let dist = weeklyVolume * 0.35;
+    // Dynamic Long Run: ~40-50% of weekly volume for lower mileage, tapering off?
+    // Let's use 50% cap as a general rule for simple planning, capped by maxDist.
+    let dist = weeklyVolume * 0.50;
 
     // Apply strict ceilings based on Race Type
     let maxDist = 32000;

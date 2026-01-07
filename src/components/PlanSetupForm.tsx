@@ -7,7 +7,7 @@ import {
     Activity, Bike, Move, ChevronDown, ChevronUp,
     AlertCircle, Save, Check, Calendar, Target
 } from 'lucide-react';
-import { calculatePredictedTimes } from '@/lib/metrics/runalyze';
+import { calculatePredictedTimes, calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { formatTime } from '@/lib/metrics/vdot';
 
 interface PlanSetupFormProps {
@@ -483,42 +483,64 @@ export default function PlanSetupForm({
                 )}
 
                 {/* Goal Time Recommendation Slider */}
-                {effectiveVO2max > 0 && (
-                    <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
-                        <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-xs font-semibold text-gray-300 flex items-center gap-1">
-                                ⏱️ Recommended Goal Time
-                            </h4>
-                            <div className="text-right">
-                                <span className="text-accent-orange font-bold text-sm block">
-                                    {formatTime((parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0))}
-                                </span>
-                                <span className="text-[10px] text-gray-500 block">Enter manually or use slider</span>
+                {effectiveVO2max > 0 && (() => {
+                    // Get predictions for the selected calibration distance
+                    const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapePercent);
+                    const distanceMap: Record<string, string> = {
+                        '5K': '5K',
+                        '10K': '10K',
+                        'HALF': 'Half',
+                        'MARATHON': 'Marathon',
+                    };
+                    const distanceName = distanceMap[calibrationDistance] || 'Marathon';
+                    const distPrediction = allPredictions.find(p => p.distance === distanceName) || { optimal: 0, predicted: 0 };
+
+                    // Calculate optimal (100% shape) and conservative (0% shape) for this distance
+                    const optimalPredictions = calculateAllRacePredictions(effectiveVO2max, 100);
+                    const conservativePredictions = calculateAllRacePredictions(effectiveVO2max, 0);
+                    const optimalForDist = optimalPredictions.find(p => p.distance === distanceName)?.optimal || 0;
+                    const conservativeForDist = Math.round((conservativePredictions.find(p => p.distance === distanceName)?.predicted || 0) * 1.05);
+
+                    const currentSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
+
+                    return (
+                        <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-xs font-semibold text-gray-300 flex items-center gap-1">
+                                    ⏱️ Recommended {distanceName} Time
+                                </h4>
+                                <div className="text-right">
+                                    <span className="text-accent-orange font-bold text-sm block">
+                                        {formatTime(currentSeconds)}
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 block">Enter manually or use slider</span>
+                                </div>
+                            </div>
+                            <input
+                                type="range"
+                                min={optimalForDist}
+                                max={conservativeForDist}
+                                step="15" // 15 second steps for shorter distances
+                                value={currentSeconds || distPrediction.predicted} // Default to recommended
+                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange mb-2"
+                                onChange={(e) => {
+                                    const secs = parseInt(e.target.value);
+                                    const h = Math.floor(secs / 3600);
+                                    const m = Math.floor((secs % 3600) / 60);
+                                    const s = secs % 60;
+                                    setHours(h.toString());
+                                    setMinutes(m.toString());
+                                    setSeconds(s.toString());
+                                }}
+                            />
+                            <div className="flex justify-between text-xs text-gray-500">
+                                <span>{formatTime(optimalForDist)} (Optimal)</span>
+                                <span className="text-accent-orange">{formatTime(distPrediction.predicted)} (Recommended)</span>
+                                <span>{formatTime(conservativeForDist)} (Conservative)</span>
                             </div>
                         </div>
-                        <input
-                            type="range"
-                            min={calculatePredictedTimes(effectiveVO2max, 100).optimal} // Fastest (100% shape)
-                            max={Math.round(calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05)} // Slowest (0% shape + 5% buffer)
-                            step="60" // 1 minute steps
-                            value={(parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0)}
-                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange mb-2"
-                            onChange={(e) => {
-                                const secs = parseInt(e.target.value);
-                                const h = Math.floor(secs / 3600);
-                                const m = Math.floor((secs % 3600) / 60);
-                                const s = secs % 60;
-                                setHours(h.toString());
-                                setMinutes(m.toString());
-                                setSeconds(s.toString());
-                            }}
-                        />
-                        <div className="flex justify-between text-xs text-gray-500">
-                            <span>{formatTime(calculatePredictedTimes(effectiveVO2max, 100).optimal)} (Optimal)</span>
-                            <span>{formatTime(Math.round(calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05))} (Conservative)</span>
-                        </div>
-                    </div>
-                )}
+                    );
+                })()}
             </div>
 
             {/* Plan Volume */}

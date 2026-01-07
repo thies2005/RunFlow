@@ -80,7 +80,9 @@ export function RaceCountdown({
     const progressPercent = Math.min(100, (weeksCompleted / totalWeeks) * 100);
 
     // Dynamic Prediction Calculation
-    const currentVdot = effectiveVO2max * correctionFactor;
+    // NOTE: effectiveVO2max already includes the correctionFactor from the API
+    // Do NOT multiply again to avoid compounding
+    const currentVdot = effectiveVO2max;
     const targetDistance = raceDistanceMap[goal.raceType] || 'MARATHON';
 
     // Calculate weeks until race for the projection

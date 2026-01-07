@@ -22,60 +22,19 @@ export default function Dashboard() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
 
-    // 1. Fetch Stats (Server-calculated)
-    const { data: statsData, isLoading: statsLoading } = useQuery({
-        queryKey: ['analytics-stats'],
+    // 1. Unified Dashboard Query
+    const { data: dashboardData, isLoading, error } = useQuery({
+        queryKey: ['dashboard-data'],
         queryFn: async () => {
-            const res = await fetch('/api/analytics/stats');
-            if (!res.ok) throw new Error('Failed to fetch stats');
-            return res.json();
-        },
-        enabled: status === 'authenticated',
-    });
-
-    // 2. Fetch Recent Activities (Limit 10)
-    const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useQuery({
-        queryKey: ['recent-activities'],
-        queryFn: async () => {
-            const res = await fetch('/api/activities?limit=10&type=RUN');
+            const res = await fetch('/api/dashboard');
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to fetch activities');
+                throw new Error(errorData.error || 'Failed to load dashboard');
             }
             return res.json();
         },
         enabled: status === 'authenticated',
-    });
-
-    // 3. Fetch goals
-    const { data: goalsData, isLoading: goalsLoading, error: goalsError } = useQuery({
-        queryKey: ['goals'],
-        queryFn: async () => {
-            const res = await fetch('/api/goals');
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to fetch goals');
-            }
-            return res.json();
-        },
-        enabled: status === 'authenticated',
-        retry: 1,
-    });
-
-    // 4. Fetch sync status
-    const { data: syncStatus, isLoading: syncLoading, error: syncError } = useQuery({
-        queryKey: ['sync-status'],
-        queryFn: async () => {
-            const res = await fetch('/api/sync');
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to fetch sync status');
-            }
-            return res.json() as Promise<{ syncInProgress: boolean; lastSyncAt: string | null; totalActivities: number }>;
-        },
-        enabled: status === 'authenticated',
-        refetchInterval: (query) => query.state.data?.syncInProgress ? 2000 : false,
-        retry: 1,
+        refetchInterval: (query) => query.state.data?.syncStatus?.syncInProgress ? 2000 : false,
     });
 
     const syncMutation = useMutation({
@@ -91,15 +50,19 @@ export default function Dashboard() {
             return res.json();
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
-            queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
-            queryClient.invalidateQueries({ queryKey: ['sync-status'] });
+            // Invalidate the unified query
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
         },
     });
 
-    // Data extraction
-    const recentActivities = activitiesData?.activities || [];
-    const activeGoal: Goal | undefined = goalsData?.goals?.find((g: Goal) => g.isActive);
+    // Data extraction with safe defaults
+    const statsData = dashboardData?.stats;
+    const recentActivities = dashboardData?.recentActivities?.activities || [];
+    const goalsList = dashboardData?.goals?.goals || [];
+    const syncStatus = dashboardData?.syncStatus;
+
+    // Find active goal
+    const activeGoal: Goal | undefined = goalsList.find((g: Goal) => g.isActive);
     const weeklyWorkouts: Workout[] = activeGoal?.workouts || [];
 
     const today = new Date().toDateString();
@@ -118,7 +81,7 @@ export default function Dashboard() {
 
 
     // Loading State
-    if (status === 'loading') {
+    if (status === 'loading' || (status === 'authenticated' && isLoading)) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="animate-pulse text-gray-400">Loading...</div>
@@ -132,13 +95,13 @@ export default function Dashboard() {
         return null;
     }
 
-    // Onboarding Redirect
-    if (status === 'authenticated' && syncStatus && syncStatus.totalActivities === 0 && !syncStatus.syncInProgress && !activitiesLoading) {
+    // Onboarding Redirect (Check sync status from unified response)
+    if (status === 'authenticated' && syncStatus && syncStatus.totalActivities === 0 && !syncStatus.syncInProgress) {
         router.push('/onboarding');
         return null;
     }
 
-    const hasError = activitiesError || goalsError || syncError || syncMutation.error;
+    const hasError = error || syncMutation.error;
 
     return (
         <div className="min-h-screen bg-background">
@@ -193,7 +156,7 @@ export default function Dashboard() {
                     <div className="max-w-7xl mx-auto flex items-center gap-2 text-red-400">
                         <AlertCircle className="w-5 h-5" />
                         <span className="text-sm">
-                            {syncMutation.error?.message || activitiesError?.message || goalsError?.message || syncError?.message || 'An error occurred'}
+                            {syncMutation.error?.message || error?.message || 'An error occurred'}
                         </span>
                         <button onClick={() => { queryClient.invalidateQueries(); syncMutation.reset(); }} className="ml-auto text-sm underline hover:no-underline">
                             Retry
@@ -240,7 +203,7 @@ export default function Dashboard() {
                             View All
                         </button>
                     </div>
-                    <ActivityList activities={recentActivities} isLoading={activitiesLoading} userHrMax={userHrMax} />
+                    <ActivityList activities={recentActivities} isLoading={isLoading} userHrMax={userHrMax} />
                 </div>
             </main>
 

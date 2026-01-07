@@ -12,6 +12,18 @@ describe('Runalyze Metrics', () => {
         it('should return 0 for invalid data', () => {
             expect(calculateEffectiveVO2max(0, 0, 0, 0)).toBe(0);
         });
+
+        it('should return 0 for low intensity runs (HR < 60% maxHR)', () => {
+            // HR 110/200 = 55%
+            expect(calculateEffectiveVO2max(5000, 1200, 110, 200)).toBe(0);
+        });
+
+        it('should return 0 for very short durations or distances', () => {
+            // 5 minutes (300s)
+            expect(calculateEffectiveVO2max(5000, 300, 180, 200)).toBe(0);
+            // 1km (1000m)
+            expect(calculateEffectiveVO2max(1000, 1200, 180, 200)).toBe(0);
+        });
     });
 
     describe('calculateGeneralAerobicScore', () => {

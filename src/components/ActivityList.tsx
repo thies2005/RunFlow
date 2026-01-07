@@ -26,6 +26,7 @@ interface ActivityItem {
     averageSpeed: number | null;
     averageHr: number | null;
     maxHr: number | null;
+    averageCadence: number | null;
     hasHeartrate: boolean;
     totalElevation: number | null;
     trimp: number | null;
@@ -37,6 +38,7 @@ interface ActivityItem {
 interface ActivityListProps {
     activities: ActivityItem[];
     isLoading?: boolean;
+    userHrMax?: number;
 }
 
 const activityIcons: Record<string, React.ReactNode> = {
@@ -50,18 +52,19 @@ const activityIcons: Record<string, React.ReactNode> = {
     OTHER: <Activity className="w-5 h-5" />,
 };
 
-function formatPace(speedMs: number): string {
-    if (speedMs <= 0) return '--:--';
+function formatPace(speedMs: number | null | undefined): string {
+    if (speedMs === null || speedMs === undefined || speedMs <= 0) return '--:--';
     const paceSecsPerKm = 1000 / speedMs;
     const mins = Math.floor(paceSecsPerKm / 60);
     const secs = Math.round(paceSecsPerKm % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}/km`;
 }
 
-function formatDuration(seconds: number): string {
+function formatDuration(seconds: number | null | undefined): string {
+    if (seconds === null || seconds === undefined || seconds <= 0) return '0:00';
     const hours = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
+    const secs = Math.round(seconds % 60);
 
     if (hours > 0) {
         return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -85,22 +88,15 @@ const getWorkoutTypeStyle = (type: WorkoutType) => {
     }
 };
 
-function ActivityCard({ activity }: { activity: ActivityItem }) {
+function ActivityCard({ activity, onClick }: { activity: ActivityItem, onClick: () => void }) {
     const crossTraining = isCrossTraining(activity.type);
     const showTag = activity.trainingType && activity.trainingType !== 'EASY' && activity.trainingType !== 'OTHER';
 
     return (
-        <button
-            className={`w-full text-left glass-card glass-card-hover p-4 transition-all duration-200 ${crossTraining ? 'recovery-border' : ''
+        <div
+            className={`w-full text-left glass-card glass-card-hover p-4 transition-all duration-200 cursor-pointer ${crossTraining ? 'recovery-border' : ''
                 }`}
-            onClick={(e) => {
-                // Determine if we should handle logic here or let parent handle?
-                // ActivityList handles the modal logic, so this button just bubbles up?
-                // Actually ActivityList renders ActivityCard, so we can pass onClick to ActivityCard?
-                // Or since ActivityCard is internal here, we can just assume it's wrapper.
-                // But ActivityCard doesn't receive onClick.
-                // I will modify ActivityCard to accept onClick or just use div in ActivityList wrapper.
-            }}
+            onClick={onClick}
         >
             <div className="flex items-start gap-4">
                 {/* Activity type icon */}
@@ -190,11 +186,11 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                     )}
                 </div>
             </div>
-        </button>
+        </div>
     );
 }
 
-export function ActivityList({ activities, isLoading }: ActivityListProps) {
+export function ActivityList({ activities, isLoading, userHrMax }: ActivityListProps) {
     const [selectedActivity, setSelectedActivity] = useState<ActivityItem | null>(null);
 
     if (isLoading) {
@@ -240,9 +236,11 @@ export function ActivityList({ activities, isLoading }: ActivityListProps) {
                         key={activity.id}
                         className="animate-slide-in"
                         style={{ animationDelay: `${index * 0.05}s` }}
-                        onClick={() => setSelectedActivity(activity)}
                     >
-                        <ActivityCard activity={activity} />
+                        <ActivityCard
+                            activity={activity}
+                            onClick={() => setSelectedActivity(activity)}
+                        />
                     </div>
                 ))}
             </div>
@@ -251,6 +249,7 @@ export function ActivityList({ activities, isLoading }: ActivityListProps) {
                 isOpen={!!selectedActivity}
                 onClose={() => setSelectedActivity(null)}
                 activity={selectedActivity as any}
+                userHrMax={userHrMax}
             />
         </>
     );

@@ -10,9 +10,10 @@ interface ActivityDetailsModalProps {
     isOpen: boolean;
     onClose: () => void;
     activity: Activity | null;
+    userHrMax?: number;
 }
 
-export default function ActivityDetailsModal({ isOpen, onClose, activity }: ActivityDetailsModalProps) {
+export default function ActivityDetailsModal({ isOpen, onClose, activity, userHrMax }: ActivityDetailsModalProps) {
     const [trainingType, setTrainingType] = useState<WorkoutType | null>(null);
     const [isUpdatingType, setIsUpdatingType] = useState(false);
 
@@ -55,12 +56,23 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }: Acti
     };
 
     // Helper to format pace
-    const formatPace = (speedMs: number | null) => {
-        if (!speedMs || speedMs <= 0) return '-';
+    const formatPace = (speedMs: number | null | undefined) => {
+        if (speedMs === null || speedMs === undefined || speedMs <= 0) return '-';
         const paceSecsPerKm = 1000 / speedMs;
         const mins = Math.floor(paceSecsPerKm / 60);
         const secs = Math.round(paceSecsPerKm % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}/km`;
+    };
+
+    // Safe date formatting
+    const getFormattedDate = (dateStr: string | Date) => {
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return 'Invalid Date';
+            return format(date, 'EEEE, MMMM d, yyyy • h:mm a');
+        } catch {
+            return 'Invalid Date';
+        }
     };
 
     return (
@@ -85,7 +97,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }: Acti
                             <h2 className="text-xl font-bold text-white mb-1">{activity.name}</h2>
                             <div className="flex items-center gap-2 text-sm text-gray-400">
                                 <Calendar className="w-4 h-4" />
-                                <span>{format(new Date(activity.startDate), 'EEEE, MMMM d, yyyy • h:mm a')}</span>
+                                <span>{getFormattedDate(activity.startDate)}</span>
                             </div>
                         </div>
                     </div>
@@ -161,6 +173,13 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }: Acti
                             <div className="text-2xl font-bold text-white">{activity.averageHr ? Math.round(activity.averageHr) : '-'}</div>
                             <div className="text-xs text-gray-500">bpm</div>
                         </div>
+                        <div className="glass-card p-4 text-center">
+                            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                                <Zap className="w-3 h-3" /> Cadence
+                            </div>
+                            <div className="text-2xl font-bold text-white">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'}</div>
+                            <div className="text-xs text-gray-500">spm</div>
+                        </div>
                     </div>
 
                     {/* Secondary Stats */}
@@ -200,8 +219,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }: Acti
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Intensity</span>
                                 <span className="text-white font-medium">
-                                    {activity.averageHr && activity.maxHr
-                                        ? `${Math.round((activity.averageHr / activity.maxHr) * 100)}% HRmax`
+                                    {(activity.averageHr && (userHrMax || activity.maxHr))
+                                        ? `${Math.round((activity.averageHr / (userHrMax || activity.maxHr!)) * 100)}% HRmax`
                                         : '-'}
                                 </span>
                             </div>
@@ -217,6 +236,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }: Acti
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Calories</span>
                                 <span className="text-white font-medium">-</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-400">Cadence</span>
+                                <span className="text-white font-medium">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'} spm</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Device</span>

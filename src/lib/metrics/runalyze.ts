@@ -13,7 +13,10 @@ import { calculateVdot, predictRaceTime, type RaceDistance } from './vdot';
 const MIN_DISTANCE_FOR_CALCULATION = 3000; // 3km
 
 /** Minimum activity duration in seconds for inclusion in calculations */
-const MIN_DURATION_FOR_CALCULATION = 600; // 10 minutes
+const MIN_DURATION_FOR_CALCULATION = 720; // 12 minutes
+
+/** Minimum Heart Rate percentage (of maxHR) for inclusion in VO2max calculation */
+const MIN_HR_PERCENT_FOR_CALCULATION = 0.60;
 
 /** Daily decay factor for time-weighted averages (5% per day) */
 const DAILY_DECAY_FACTOR = 0.95;
@@ -64,7 +67,18 @@ export function calculateEffectiveVO2max(
     avgHR: number,
     maxHR: number
 ): number {
-    if (timeSeconds <= 0 || distanceMeters <= 0 || avgHR <= 0 || maxHR <= 0) {
+    // Sanitize inputs: discard very short runs or low intensity efforts
+    if (
+        timeSeconds < MIN_DURATION_FOR_CALCULATION ||
+        distanceMeters < MIN_DISTANCE_FOR_CALCULATION ||
+        avgHR <= 0 ||
+        maxHR <= 0
+    ) {
+        return 0;
+    }
+
+    const hrPercent = avgHR / maxHR;
+    if (hrPercent < MIN_HR_PERCENT_FOR_CALCULATION) {
         return 0;
     }
 
@@ -75,13 +89,10 @@ export function calculateEffectiveVO2max(
     // VO2 = -4.60 + 0.182258 * v + 0.000104 * v^2
     const vo2Cost = -4.60 + 0.182258 * velocity + 0.000104 * Math.pow(velocity, 2);
 
-    // %HRmax = avgHR / maxHR
-    const percentHRmax = avgHR / maxHR;
-
     // %VO2max is approximately linear with %HRmax
     // %VO2max ≈ 1.5 * (%HRmax - 0.5) (simplified approximation)
     // More accurate: %VO2max = 0.64 + 0.36 * %HRmax (for trained athletes)
-    const percentVO2max = 0.64 + 0.36 * percentHRmax;
+    const percentVO2max = 0.64 + 0.36 * hrPercent;
 
     // Guard: prevent division by zero or near-zero
     if (percentVO2max <= 0.1) {
@@ -377,13 +388,17 @@ export function calculateWeightedEffectiveVO2max(
     maxHR: number,
     calibrationFactor: number = 1.0
 ): number {
-    const validActivities = activities.filter(a =>
-        a.hasHeartrate &&
-        a.averageHr &&
-        a.averageHr > 0 &&
-        a.distance >= 3000 && // At least 3km
-        a.movingTime >= 600   // At least 10 minutes
-    );
+    const validActivities = activities.filter(a => {
+        if (!a.hasHeartrate || !a.averageHr || a.averageHr <= 0) return false;
+
+        const hrPercent = a.averageHr / maxHR;
+
+        return (
+            a.distance >= MIN_DISTANCE_FOR_CALCULATION &&
+            a.movingTime >= MIN_DURATION_FOR_CALCULATION &&
+            hrPercent >= MIN_HR_PERCENT_FOR_CALCULATION
+        );
+    });
 
     if (!validActivities.length || maxHR <= 0) return 0;
 

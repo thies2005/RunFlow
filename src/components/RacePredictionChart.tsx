@@ -24,16 +24,22 @@ export default function RacePredictionChart({
     calibrationFactor = 1.0
 }: RacePredictionChartProps) {
     const [shapePercent, setShapePercent] = useState(currentShape);
+    const [simulatedVO2Max, setSimulatedVO2Max] = useState(effectiveVO2max);
+
+    // Sync simulated VO2max when prop changes
+    useMemo(() => {
+        setSimulatedVO2Max(effectiveVO2max);
+    }, [effectiveVO2max]);
 
     const predictions = useMemo(() => {
-        if (effectiveVO2max <= 0) return [];
+        if (simulatedVO2Max <= 0) return [];
 
         const distances: Array<'5K' | '10K' | 'HALF' | 'MARATHON'> = ['5K', '10K', 'HALF', 'MARATHON'];
         const shapeImpacts = { '5K': 0.05, '10K': 0.08, 'HALF': 0.15, 'MARATHON': 0.30 };
         const labels = { '5K': '5K', '10K': '10K', 'HALF': 'Half', 'MARATHON': 'Marathon' };
 
         return distances.map(dist => {
-            const optimalSeconds = predictRaceTime(effectiveVO2max, dist);
+            const optimalSeconds = predictRaceTime(simulatedVO2Max, dist);
             const shapeImpact = shapeImpacts[dist];
             const shapePenalty = (1 - shapePercent / 100) * shapeImpact * calibrationFactor;
             const predictedSeconds = optimalSeconds * (1 + shapePenalty);
@@ -53,7 +59,7 @@ export default function RacePredictionChart({
                 color: RACE_COLORS[labels[dist] as keyof typeof RACE_COLORS],
             };
         });
-    }, [effectiveVO2max, shapePercent, calibrationFactor]);
+    }, [simulatedVO2Max, shapePercent, calibrationFactor]);
 
     if (effectiveVO2max <= 0) {
         return (
@@ -76,8 +82,37 @@ export default function RacePredictionChart({
         <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">Race Predictions</h3>
-                <div className="text-sm text-gray-400">
-                    VO2max: <span className="text-accent-orange font-bold">{effectiveVO2max.toFixed(1)}</span>
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <span>VO2max:</span>
+                    <input
+                        type="number"
+                        value={simulatedVO2Max}
+                        onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value) || 0)}
+                        step="0.1"
+                        className="w-16 bg-transparent text-accent-orange font-bold text-right focus:outline-none focus:border-b focus:border-accent-orange"
+                    />
+                </div>
+            </div>
+
+            {/* VO2 Max Slider */}
+            <div className="mb-4 p-4 bg-white/5 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm text-gray-400">Simulated VO2 Max</label>
+                    <span className="text-lg font-bold text-accent-orange">{simulatedVO2Max.toFixed(1)}</span>
+                </div>
+                <input
+                    type="range"
+                    min="20"
+                    max="80"
+                    step="0.1"
+                    value={simulatedVO2Max}
+                    onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>20 (Low)</span>
+                    <span className="text-accent-orange">Current: {effectiveVO2max.toFixed(1)}</span>
+                    <span>80 (Elite)</span>
                 </div>
             </div>
 
@@ -159,7 +194,7 @@ export default function RacePredictionChart({
             </div>
 
             <p className="text-xs text-gray-500 text-center mt-4">
-                Adjust the shape slider to see how marathon-specific training affects your race predictions
+                Adjust the sliders to see how fitness and shape affect your race predictions
             </p>
         </div>
     );

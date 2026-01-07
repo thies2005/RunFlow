@@ -47,7 +47,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, taperWeeks, peakWeeks, buildWeeks } = body;
+    const {
+        name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks,
+        runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
+        taperWeeks, peakWeeks, buildWeeks,
+        calibrationTime, calibrationDistance
+    } = body;
 
     if (!name || !raceType || !raceDate) {
         return NextResponse.json(
@@ -56,51 +61,72 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    // Calculate current VDOT from recent race effort if available
+    // Calculate current VDOT from calibration data if provided
     let currentVdot: number | null = null;
     let predictedTime: number | null = null;
 
-    // Look for a recent "race-like" run (similar distance, high effort)
-    const distanceMap: Record<string, number> = {
-        'FIVE_K': 5000,
-        'TEN_K': 10000,
-        'HALF_MARATHON': 21097,
-        'MARATHON': 42195,
-    };
-
-    const targetDistance = distanceMap[raceType];
-
-    const recentRaceEffort = await prisma.activity.findFirst({
-        where: {
-            userId: session.user.id,
-            type: 'RUN',
-            distance: {
-                gte: targetDistance * 0.9,
-                lte: targetDistance * 1.1,
-            },
-            startDate: {
-                gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // Last 90 days
-            },
-        },
-        orderBy: { startDate: 'desc' },
-    });
-
-    if (recentRaceEffort) {
-        // Map database enum to RaceDistance type
-        const raceDistanceMap: Record<string, RaceDistance> = {
-            'FIVE_K': '5K',
-            'TEN_K': '10K',
-            'HALF_MARATHON': 'HALF',
+    // If calibration time was provided from the form, use it
+    if (calibrationTime && calibrationTime > 0 && calibrationDistance) {
+        const calibDistanceMap: Record<string, RaceDistance> = {
+            '5K': '5K',
+            '10K': '10K',
+            'HALF': 'HALF',
             'MARATHON': 'MARATHON',
         };
-
-        const targetRaceDistance = raceDistanceMap[raceType] || '5K';
+        const calDist = calibDistanceMap[calibrationDistance] || '5K';
         const result = analyzeRace({
-            distance: targetRaceDistance,
-            timeSeconds: recentRaceEffort.movingTime,
+            distance: calDist,
+            timeSeconds: calibrationTime,
         });
         currentVdot = result.vdot;
-        predictedTime = result.predictions[targetRaceDistance];
+        predictedTime = result.predictions[calDist];
+        console.log(`Calculated VDOT ${currentVdot} from calibration time ${calibrationTime}s at ${calibrationDistance}`);
+    }
+
+    // Only look for race-like activity if no calibration VDOT was provided
+    if (!currentVdot) {
+        // Look for a recent "race-like" run (similar distance, high effort)
+        const distanceMap: Record<string, number> = {
+            'FIVE_K': 5000,
+            'TEN_K': 10000,
+            'HALF_MARATHON': 21097,
+            'MARATHON': 42195,
+        };
+
+        const targetDistance = distanceMap[raceType];
+
+        const recentRaceEffort = await prisma.activity.findFirst({
+            where: {
+                userId: session.user.id,
+                type: 'RUN',
+                distance: {
+                    gte: targetDistance * 0.9,
+                    lte: targetDistance * 1.1,
+                },
+                startDate: {
+                    gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // Last 90 days
+                },
+            },
+            orderBy: { startDate: 'desc' },
+        });
+
+        if (recentRaceEffort) {
+            // Map database enum to RaceDistance type
+            const raceDistanceMap: Record<string, RaceDistance> = {
+                'FIVE_K': '5K',
+                'TEN_K': '10K',
+                'HALF_MARATHON': 'HALF',
+                'MARATHON': 'MARATHON',
+            };
+
+            const targetRaceDistance = raceDistanceMap[raceType] || '5K';
+            const result = analyzeRace({
+                distance: targetRaceDistance,
+                timeSeconds: recentRaceEffort.movingTime,
+            });
+            currentVdot = result.vdot;
+            predictedTime = result.predictions[targetRaceDistance];
+        }
     }
 
     const goal = await prisma.goal.create({

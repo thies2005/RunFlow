@@ -109,7 +109,7 @@ export default function OnboardingWizard() {
                             )}
                         </div>
 
-                        {!syncStatus?.syncInProgress && syncStatus?.totalActivities === 0 && (
+                        {!syncStatus?.syncInProgress && (
                             <div className="space-y-4">
                                 <div className="text-left">
                                     <label className="block text-sm font-medium text-gray-400 mb-1 ml-1">Import Range</label>
@@ -131,7 +131,7 @@ export default function OnboardingWizard() {
                                     disabled={syncMutation.isPending}
                                     className="btn-primary w-full py-3"
                                 >
-                                    {syncMutation.isPending ? 'Starting...' : 'Start Import'}
+                                    {syncMutation.isPending ? 'Starting...' : (syncStatus?.totalActivities || 0) > 0 ? 'Update Import' : 'Start Import'}
                                 </button>
                             </div>
                         )}

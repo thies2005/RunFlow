@@ -362,8 +362,8 @@ export default function PlanSetupForm({
                         type="button"
                         onClick={() => setCalibrationMode('activity')}
                         className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${calibrationMode === 'activity'
-                                ? 'bg-accent-orange text-white'
-                                : 'text-gray-400 hover:text-white'
+                            ? 'bg-accent-orange text-white'
+                            : 'text-gray-400 hover:text-white'
                             }`}
                     >
                         Select Activity
@@ -372,8 +372,8 @@ export default function PlanSetupForm({
                         type="button"
                         onClick={() => setCalibrationMode('manual')}
                         className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${calibrationMode === 'manual'
-                                ? 'bg-accent-orange text-white'
-                                : 'text-gray-400 hover:text-white'
+                            ? 'bg-accent-orange text-white'
+                            : 'text-gray-400 hover:text-white'
                             }`}
                     >
                         Manual Entry
@@ -478,6 +478,44 @@ export default function PlanSetupForm({
                                     placeholder="00"
                                 />
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Goal Time Recommendation Slider */}
+                {effectiveVO2max > 0 && (
+                    <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-xs font-semibold text-gray-300 flex items-center gap-1">
+                                ⏱️ Recommended Goal Time
+                            </h4>
+                            <div className="text-right">
+                                <span className="text-accent-orange font-bold text-sm block">
+                                    {formatTime((parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0))}
+                                </span>
+                                <span className="text-[10px] text-gray-500 block">Enter manually or use slider</span>
+                            </div>
+                        </div>
+                        <input
+                            type="range"
+                            min={calculatePredictedTimes(effectiveVO2max, 100).optimal} // Fastest (100% shape)
+                            max={Math.round(calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05)} // Slowest (0% shape + 5% buffer)
+                            step="60" // 1 minute steps
+                            value={(parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0)}
+                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange mb-2"
+                            onChange={(e) => {
+                                const secs = parseInt(e.target.value);
+                                const h = Math.floor(secs / 3600);
+                                const m = Math.floor((secs % 3600) / 60);
+                                const s = secs % 60;
+                                setHours(h.toString());
+                                setMinutes(m.toString());
+                                setSeconds(s.toString());
+                            }}
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                            <span>{formatTime(calculatePredictedTimes(effectiveVO2max, 100).optimal)} (Optimal)</span>
+                            <span>{formatTime(Math.round(calculatePredictedTimes(effectiveVO2max, 0).predicted * 1.05))} (Conservative)</span>
                         </div>
                     </div>
                 )}
@@ -739,8 +777,8 @@ export default function PlanSetupForm({
             {/* Message */}
             {message && (
                 <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${message.includes('Error') || message.includes('Failed')
-                        ? 'bg-red-500/10 text-red-400'
-                        : 'bg-green-500/10 text-green-400'
+                    ? 'bg-red-500/10 text-red-400'
+                    : 'bg-green-500/10 text-green-400'
                     }`}>
                     <AlertCircle className="w-4 h-4" />
                     {message}

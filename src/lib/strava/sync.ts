@@ -299,6 +299,26 @@ function getRangeStartTimestamp(range?: string): number | undefined {
 /**
  * Sync all activities for a user
  */
+/**
+ * Fetch detailed athlete profile
+ */
+async function fetchAthleteProfile(accessToken: string) {
+    await rateLimiter.checkAndWait();
+    const response = await fetch(`${STRAVA_API_BASE}/athlete`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+        logger.warn(`Failed to fetch athlete profile: ${response.status}`);
+        return null; // Non-fatal
+    }
+
+    return response.json();
+}
+
+/**
+ * Sync all activities for a user
+ */
 export async function syncUserActivities(userId: string, range?: string): Promise<{
     synced: number;
     skipped: number;
@@ -311,9 +331,10 @@ export async function syncUserActivities(userId: string, range?: string): Promis
     });
 
     try {
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
             where: { id: userId },
             select: {
+                id: true,
                 hrMax: true,
                 hrRest: true,
                 sex: true,
@@ -328,6 +349,29 @@ export async function syncUserActivities(userId: string, range?: string): Promis
         const accessToken = await refreshStravaToken(userId);
         if (!accessToken) {
             throw new Error('Failed to get Strava access token');
+        }
+
+        // 1. Fetch Athlete Profile to fill missing user data
+        if (!user?.hrMax || !user?.sex) {
+            try {
+                const profile = await fetchAthleteProfile(accessToken);
+                if (profile) {
+                    const updateData: any = {};
+                    if (!user?.sex && profile.sex) updateData.sex = profile.sex === 'F' ? 'FEMALE' : 'MALE';
+                    // Strava might not return max_heart_rate in basic profile, but we check
+                    if (!user?.hrMax && profile.max_heart_rate) updateData.hrMax = profile.max_heart_rate;
+
+                    if (Object.keys(updateData).length > 0) {
+                        user = await prisma.user.update({
+                            where: { id: userId },
+                            data: updateData,
+                        });
+                        logger.info(`Updated user profile from Strava: ${JSON.stringify(updateData)}`);
+                    }
+                }
+            } catch (err) {
+                logger.warn('Error fetching/updating athlete profile:', err);
+            }
         }
 
         // Calculate "after" timestamp
@@ -354,6 +398,8 @@ export async function syncUserActivities(userId: string, range?: string): Promis
         let page = 1;
         let hasMore = true;
 
+        // Keep track of max HR seen during this sync to auto-detect provided logic
+        let currentHrMax = user?.hrMax || null;
 
         while (hasMore) {
             const activities = await fetchActivities(accessToken, page, after);
@@ -374,8 +420,18 @@ export async function syncUserActivities(userId: string, range?: string): Promis
 
                     // Determine if we need to process this activity
                     // Process if: New OR (Existing but missing Zone data AND has HR)
+                    // We also check for sum of zones being 0, which implies failed calculation previously
                     const isNew = !existing;
-                    const needsUpdate = existing && existing.hasHeartrate && existing.hrZone1Time === null;
+                    let needsUpdate = existing && existing.hasHeartrate && existing.hrZone1Time === null;
+
+                    if (existing && existing.hasHeartrate && !needsUpdate) {
+                        const totalZoneTime = (existing.hrZone1Time || 0) + (existing.hrZone2Time || 0) +
+                            (existing.hrZone3Time || 0) + (existing.hrZone4Time || 0) +
+                            (existing.hrZone5Time || 0);
+                        if (totalZoneTime === 0) {
+                            needsUpdate = true;
+                        }
+                    }
 
                     if (page === 1 && skipped < 3) {
                         logger.info(`Activity ${activity.id}: isNew=${isNew}, needsUpdate=${needsUpdate}, hasHr=${activity.has_heartrate}, existingZone1=${existing?.hrZone1Time}`);
@@ -384,6 +440,24 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     if (!isNew && !needsUpdate) {
                         skipped++;
                         continue;
+                    }
+
+                    // Auto-detect HR Max if missing or found higher
+                    if (activity.max_heartrate && activity.max_heartrate > (currentHrMax || 0)) {
+                        // Reasonable upper bound check (e.g. < 250) to avoid spikes? 
+                        // Strava max_heartrate is usually reliable enough.
+                        if (activity.max_heartrate < 240) {
+                            currentHrMax = activity.max_heartrate;
+
+                            // Update DB asynchronously to remember for next time
+                            // We don't await this to keep sync fast, just fire and forget (or await if safety needed)
+                            await prisma.user.update({
+                                where: { id: userId },
+                                data: { hrMax: currentHrMax }
+                            }).catch(e => logger.warn('Failed to auto-update hrMax', e));
+
+                            logger.info(`Auto-detected new HR Max: ${currentHrMax}`);
+                        }
                     }
 
                     // --- Fetch Streams & Calculate Zones (Expensive operation) ---
@@ -395,27 +469,34 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     if (['Run', 'VirtualRun', 'Ride', 'VirtualRide'].includes(activity.type)) {
                         streams = await fetchActivityStreams(accessToken, activity.id);
 
-                        if (streams && streams.heartrate && user?.hrMax) {
+                        // Use currentHrMax (auto-detected or user set) or fallback
+                        // Fallback to 190 if absolutely nothing known so we at least populate zones
+                        const effectiveHrMax = currentHrMax || 190;
+
+                        if (streams && streams.heartrate) {
                             // Use user-configured zone thresholds or defaults
                             const zoneThresholds = {
-                                z1: user.hrZone1Max ?? 60,
-                                z2: user.hrZone2Max ?? 70,
-                                z3: user.hrZone3Max ?? 80,
-                                z4: user.hrZone4Max ?? 90,
+                                z1: user?.hrZone1Max ?? 60,
+                                z2: user?.hrZone2Max ?? 70,
+                                z3: user?.hrZone3Max ?? 80,
+                                z4: user?.hrZone4Max ?? 90,
                             };
-                            zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, user.hrMax, zoneThresholds);
+                            zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, effectiveHrMax, zoneThresholds);
                         }
                     }
 
                     // Calculate TRIMP
                     let trimp: number | null = null;
-                    if (activity.has_heartrate && activity.average_heartrate && user?.hrMax && user?.hrRest) {
+                    const effectiveHrMax = currentHrMax || 190;
+                    const effectiveHrRest = user?.hrRest || 60; // Default rest HR
+
+                    if (activity.has_heartrate && activity.average_heartrate) {
                         const result = calculateTrimp({
                             durationMinutes: activity.moving_time / 60,
                             averageHr: activity.average_heartrate,
-                            hrMax: user.hrMax,
-                            hrRest: user.hrRest,
-                            sex: (user.sex || 'MALE') as Sex,
+                            hrMax: effectiveHrMax,
+                            hrRest: effectiveHrRest,
+                            sex: (user?.sex || 'MALE') as Sex,
                         });
                         trimp = result.trimp;
                     }

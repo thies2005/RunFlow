@@ -4,12 +4,16 @@ import { Calendar, Target, Timer } from 'lucide-react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Goal } from '@/lib/types';
+import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
+import type { RaceDistance } from '@/lib/metrics/vdot';
 
 interface RaceCountdownProps {
     goal: Goal | null;
     weeklyMileage?: number; // Current week's mileage in km
     className?: string;
     marathonShape?: number;
+    effectiveVO2max?: number;
+    correctionFactor?: number;
 }
 
 const raceLabels: Record<string, string> = {
@@ -17,6 +21,13 @@ const raceLabels: Record<string, string> = {
     TEN_K: '10K',
     HALF_MARATHON: 'Half Marathon',
     MARATHON: 'Marathon',
+};
+
+const raceDistanceMap: Record<string, RaceDistance> = {
+    'FIVE_K': '5K',
+    'TEN_K': '10K',
+    'HALF_MARATHON': 'HALF',
+    'MARATHON': 'MARATHON',
 };
 
 function formatTime(seconds: number): string {
@@ -30,7 +41,14 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function RaceCountdown({ goal, weeklyMileage = 0, className = '', marathonShape = 0 }: RaceCountdownProps) {
+export function RaceCountdown({
+    goal,
+    weeklyMileage = 0,
+    className = '',
+    marathonShape = 0,
+    effectiveVO2max = 30, // Default to avoid division by zero
+    correctionFactor = 1.0
+}: RaceCountdownProps) {
     const router = useRouter();
 
     if (!goal) {
@@ -60,6 +78,33 @@ export function RaceCountdown({ goal, weeklyMileage = 0, className = '', maratho
     const totalWeeks = 12;
     const weeksCompleted = Math.max(0, totalWeeks - weeksToRace);
     const progressPercent = Math.min(100, (weeksCompleted / totalWeeks) * 100);
+
+    // Dynamic Prediction Calculation
+    const currentVdot = effectiveVO2max * correctionFactor;
+    const targetDistance = raceDistanceMap[goal.raceType] || 'MARATHON';
+
+    // Calculate weeks until race for the projection
+    const weeksUntil = calculateWeeksUntilRace(raceDate);
+
+    const planSettings: PlanSettings = {
+        durationWeeks: weeksUntil,
+        runsPerWeek: goal.runsPerWeek || 4,
+        weeklyMileageGoal: (goal.weeklyMileageGoal || 40000) / 1000,
+        raceDistance: targetDistance,
+        taperWeeks: goal.taperWeeks,
+        peakWeeks: goal.peakWeeks,
+        buildWeeks: goal.buildWeeks,
+    };
+
+    // Calculate dynamic projection based on CURRENT fitness + plan improvement
+    const projection = calculateProjectedGoalTime(
+        currentVdot,
+        planSettings,
+        marathonShape, // Use current marathon shape
+        weeklyMileage // Use current weekly mileage
+    );
+
+    const dynamicPredictedTime = projection.projectedTime;
 
     return (
         <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
@@ -125,14 +170,18 @@ export function RaceCountdown({ goal, weeklyMileage = 0, className = '', maratho
                     </div>
                 )}
 
-                {goal.predictedTime && (
+                {dynamicPredictedTime > 0 && (
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
                             <Timer className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400 uppercase tracking-wide">Predicted</p>
-                            <p className="text-xl font-bold text-white">{formatTime(goal.predictedTime)}</p>
+                            <p className="text-xs text-gray-400 uppercase tracking-wide">
+                                Predicted
+                                {correctionFactor !== 1.0 && <span className="ml-1 text-[10px] text-accent-cyan" title="Using calibrated VO2max">●</span>}
+                            </p>
+                            <p className="text-xl font-bold text-white">{formatTime(dynamicPredictedTime)}</p>
+                            <p className="text-[10px] text-gray-500">VO2max {currentVdot.toFixed(1)}</p>
                         </div>
                     </div>
                 )}

@@ -52,8 +52,16 @@ export async function POST(request: NextRequest) {
         name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks,
         runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
         taperWeeks, peakWeeks, buildWeeks,
-        calibrationTime, calibrationDistance
+        calibrationTime, calibrationDistance, calibrationFactor
     } = body;
+
+    // If calibration factor is provided, update global user settings immediately
+    if (calibrationFactor) {
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: { vdotCorrectionFactor: calibrationFactor }
+        });
+    }
 
     if (!name || !raceType || !raceDate) {
         return NextResponse.json(

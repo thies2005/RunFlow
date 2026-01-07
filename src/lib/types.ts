@@ -86,6 +86,9 @@ export interface Goal {
     ridesPerWeek: number;
     strengthPerWeek: number;
     swimsPerWeek: number;
+    taperWeeks?: number;
+    peakWeeks?: number;
+    buildWeeks?: number;
     isActive: boolean;
     completedAt: string | Date | null;
     workouts?: Workout[];

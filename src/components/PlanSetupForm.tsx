@@ -295,6 +295,7 @@ export default function PlanSetupForm({
                     taperWeeks,
                     peakWeeks,
                     buildWeeks,
+                    calibrationFactor,
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });

@@ -219,7 +219,14 @@ export default function Dashboard() {
                         />
                     </div>
                     <div className="lg:col-span-1">
-                        <RaceCountdown goal={activeGoal ?? null} weeklyMileage={currentWeekMileage} className="h-full" marathonShape={marathonShape.shape} />
+                        <RaceCountdown
+                            goal={activeGoal ?? null}
+                            weeklyMileage={currentWeekMileage}
+                            className="h-full"
+                            marathonShape={marathonShape.shape}
+                            effectiveVO2max={effectiveVO2max}
+                            correctionFactor={correctionFactor}
+                        />
                     </div>
                     <div className="lg:col-span-1 h-full flex flex-col">
                         <TrainingStatusCard

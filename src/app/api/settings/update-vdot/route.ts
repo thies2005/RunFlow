@@ -61,7 +61,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, taperWeeks, peakWeeks, buildWeeks } = await req.json();
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, taperWeeks, peakWeeks, buildWeeks, calibrationFactor } = await req.json();
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -74,6 +74,7 @@ export async function POST(req: Request) {
         await prisma.user.update({
             where: { id: session.user.id },
             data: {
+                ...(calibrationFactor && { vdotCorrectionFactor: calibrationFactor }),
                 ...(maxHeartRate && { hrMax: maxHeartRate }),
                 ...(restingHeartRate && { hrRest: restingHeartRate }),
                 ...(weight && { weight: parseFloat(weight) }),

@@ -1,4 +1,4 @@
-import { TrendingUp, Activity } from 'lucide-react';
+import { TrendingUp, Activity, Gauge, Zap } from 'lucide-react';
 
 interface TrainingStatusCardProps {
     marathonShape: { shape: number };
@@ -23,37 +23,49 @@ export default function TrainingStatusCard({
 }: TrainingStatusCardProps) {
     const shapePercent = marathonShape?.shape || 0;
 
+    const workloadStatus = (ratio: number) => {
+        if (ratio <= 0) return { label: 'No Data', color: 'text-gray-500', bg: 'bg-gray-500' };
+        if (ratio < 0.8) return { label: 'Recovery', color: 'text-teal-400', bg: 'bg-teal-500' };
+        if (ratio <= 1.3) return { label: 'Optimal', color: 'text-green-500', bg: 'bg-green-500' };
+        if (ratio <= 1.5) return { label: 'Caution', color: 'text-orange-400', bg: 'bg-orange-500' };
+        return { label: 'Overload', color: 'text-red-500', bg: 'bg-red-500' };
+    };
+
+    const status = workloadStatus(workloadRatio);
+    // Linear mapping: 0.0 -> 0%, 1.0 -> 50%, 2.0+ -> 100%
+    const markerPos = Math.min(100, (workloadRatio / 2) * 100);
+
     return (
-        <div className="glass-card p-6 h-full flex flex-col justify-center">
-            <h2 className="text-lg font-semibold text-gray-300 mb-4">Training Status</h2>
+        <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px]">
+            <h2 className="text-lg font-semibold text-gray-300 mb-6 shrink-0">Training Status</h2>
 
             {/* Top Metrics Grid */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-8 shrink-0">
                 {/* Marathon Shape */}
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-900/20">
                         <TrendingUp className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium leading-tight">Marathon Shape</p>
-                        <p className="text-xl font-bold text-white leading-tight">{shapePercent}%</p>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold leading-tight">Shape</p>
+                        <p className="text-xl font-black text-white leading-tight">{shapePercent}%</p>
                     </div>
                 </div>
 
                 {/* Effective VO2max */}
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shrink-0 shadow-lg shadow-teal-900/20">
                         <Activity className="w-5 h-5 text-white" />
                     </div>
-                    <div>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wide font-medium leading-tight">Effective VO2max</p>
-                        <div className="flex items-baseline gap-1">
-                            <p className="text-xl font-bold text-white leading-tight">
+                    <div className="flex-1">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold leading-tight">VO2max</p>
+                        <div className="flex items-baseline justify-between">
+                            <p className="text-xl font-black text-white leading-tight">
                                 {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
                             </p>
                             {correctionFactor !== 1.0 && (
-                                <span className="text-[10px] text-gray-500">
-                                    {correctionFactor.toFixed(2)}x
+                                <span className="text-[10px] text-accent-cyan font-bold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
+                                    {correctionFactor.toFixed(1)}x
                                 </span>
                             )}
                         </div>
@@ -61,69 +73,93 @@ export default function TrainingStatusCard({
                 </div>
             </div>
 
+            {/* Workload Balance Diagram */}
+            <div className="bg-white/5 rounded-2xl p-4 mb-8 border border-white/5 relative group overflow-hidden shrink-0">
+                <div className={`absolute -right-4 -top-4 w-16 h-16 rounded-full blur-2xl ${status.bg} opacity-10 transition-all duration-1000 group-hover:opacity-20`} />
+
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <Gauge className={`w-3.5 h-3.5 ${status.color}`} />
+                        <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Workload Balance</span>
+                    </div>
+                    <span className={`text-[10px] font-black ${status.color} px-2 py-0.5 rounded-full bg-white/5 border border-white/10 uppercase tracking-tighter`}>
+                        {status.label}
+                    </span>
+                </div>
+
+                <div className="relative h-2 w-full bg-white/5 rounded-full mb-3 shadow-inner">
+                    {/* Zones */}
+                    <div className="absolute left-0 w-[40%] h-full bg-gray-500/10 rounded-l-full border-r border-white/5" />
+                    <div className="absolute left-[40%] w-[25%] h-full bg-green-500/20" />
+                    <div className="absolute left-[65%] w-[10%] h-full bg-orange-500/20" />
+                    <div className="absolute left-[75%] w-[25%] h-full bg-red-500/20 rounded-r-full border-l border-white/5" />
+
+                    {/* Sweet Spot Guide */}
+                    <div className="absolute left-[40%] -top-1 w-[25%] h-4 border-x border-white/10 pointer-events-none" />
+
+                    {/* Marker */}
+                    <div
+                        className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full border-2 ${status.bg} shadow-[0_0_12px_rgba(255,255,255,0.4)] z-20 transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)]`}
+                        style={{ left: `calc(${markerPos}% - 8px)` }}
+                    />
+                </div>
+
+                <div className="flex justify-between text-[8px] text-gray-500 font-black uppercase tracking-widest px-1">
+                    <span>Low</span>
+                    <span className="text-green-500/60 font-black">Sweet Spot (0.8 - 1.3)</span>
+                    <span>{workloadRatio > 2 ? workloadRatio.toFixed(2) : '2.0+'}</span>
+                </div>
+            </div>
+
             {/* Metrics List (Runalyze Style) */}
-            <div className="space-y-4">
+            <div className="space-y-4 flex-1 flex flex-col justify-center border-t border-white/5 pt-6">
                 {/* Fatigue (ATL) */}
                 <div className="flex items-center gap-3">
-                    <div className="w-28 text-xs text-gray-400 truncate">Fatigue (ATL)</div>
-                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                        <div className="h-full bg-red-500 rounded-full" style={{ width: `${Math.min(100, atl)}%` }} />
+                    <div className="w-24 text-[10px] text-gray-400 uppercase tracking-tighter font-bold truncate">Fatigue (ATL)</div>
+                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${Math.min(100, atl)}%` }} />
                     </div>
-                    <div className="w-12 text-right text-sm font-bold text-red-400">
+                    <div className="w-10 text-right text-xs font-black text-red-400">
                         {atl > 0 ? `${atl}%` : '-'}
                     </div>
                 </div>
 
                 {/* Fitness (CTL) */}
                 <div className="flex items-center gap-3">
-                    <div className="w-28 text-xs text-gray-400 truncate">Fitness (CTL)</div>
-                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, ctl)}%` }} />
+                    <div className="w-24 text-[10px] text-gray-400 uppercase tracking-tighter font-bold truncate">Fitness (CTL)</div>
+                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${Math.min(100, ctl)}%` }} />
                     </div>
-                    <div className="w-12 text-right text-sm font-bold text-blue-400">
+                    <div className="w-10 text-right text-xs font-black text-blue-400">
                         {ctl > 0 ? `${ctl}%` : '-'}
                     </div>
                 </div>
 
                 {/* Stress Balance (TSB) */}
                 <div className="flex items-center gap-3">
-                    <div className="w-28 text-xs text-gray-400 truncate">Stress Balance</div>
-                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden relative">
-                        <div className="absolute left-1/2 w-0.5 h-full bg-gray-600" />
+                    <div className="w-24 text-[10px] text-gray-400 uppercase tracking-tighter font-bold truncate">Stress Balance</div>
+                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden relative">
+                        <div className="absolute left-1/2 w-[1px] h-full bg-white/10" />
                         <div
-                            className={`h-full ${tsb >= 0 ? 'bg-green-500' : 'bg-orange-500'} rounded-full absolute`}
+                            className={`h-full ${tsb >= 0 ? 'bg-emerald-500' : 'bg-orange-500'} absolute transition-all duration-500`}
                             style={{
                                 width: `${Math.min(50, Math.abs(tsb))}%`,
                                 left: tsb >= 0 ? '50%' : `${50 - Math.min(50, Math.abs(tsb))}%`
                             }}
                         />
                     </div>
-                    <div className={`w-12 text-right text-sm font-bold ${tsb >= 0 ? 'text-green-400' : 'text-orange-400'}`}>
+                    <div className={`w-10 text-right text-xs font-black ${tsb >= 0 ? 'text-emerald-400' : 'text-orange-400'}`}>
                         {tsb >= 0 ? `+${tsb}` : tsb}
                     </div>
                 </div>
 
-                {/* Workload Ratio */}
+                {/* Weekly TRIMP */}
                 <div className="flex items-center gap-3">
-                    <div className="w-28 text-xs text-gray-400 truncate">Workload Ratio</div>
-                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full rounded-full ${workloadRatio >= 0.8 && workloadRatio <= 1.3 ? 'bg-green-500' : workloadRatio > 1.5 ? 'bg-red-500' : 'bg-yellow-500'}`}
-                            style={{ width: `${Math.min(100, workloadRatio * 50)}%` }}
-                        />
+                    <div className="w-24 text-[10px] text-gray-400 uppercase tracking-tighter font-bold truncate">Weekly TRIMP</div>
+                    <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-purple-500 transition-all duration-500" style={{ width: `${Math.min(100, easyTrimp / 5)}%` }} />
                     </div>
-                    <div className="w-12 text-right text-sm font-bold text-yellow-400">
-                        {workloadRatio > 0 ? workloadRatio.toFixed(2) : '-'}
-                    </div>
-                </div>
-
-                {/* Easy TRIMP */}
-                <div className="flex items-center gap-3">
-                    <div className="w-28 text-xs text-gray-400 truncate">Weekly TRIMP</div>
-                    <div className="flex-1 h-2 bg-gray-700/50 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(100, easyTrimp / 5)}%` }} />
-                    </div>
-                    <div className="w-12 text-right text-sm font-bold text-purple-400">
+                    <div className="w-10 text-right text-xs font-black text-purple-400 underline decoration-purple-500/30 underline-offset-2">
                         {easyTrimp > 0 ? easyTrimp : '-'}
                     </div>
                 </div>

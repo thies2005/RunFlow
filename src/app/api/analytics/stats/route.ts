@@ -50,6 +50,7 @@ export async function GET() {
                 startDate: true,
                 distance: true,
                 movingTime: true,
+                trimp: true, // M-01: Include stored TRIMP for fitness calculations
                 averageHr: true,
                 hasHeartrate: true,
                 hrZone2Time: true,

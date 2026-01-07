@@ -157,9 +157,23 @@ export async function POST(req: NextRequest) {
             const mileageGoal = weeklyMileageGoal || null; // meters
 
             // Phase settings (use provided or defaults)
-            const taper = taperWeeks || 2;
-            const peak = peakWeeks || 4;
-            const build = buildWeeks || 4;
+            let taper = taperWeeks || 2;
+            let peak = peakWeeks || 4;
+            let build = buildWeeks || 4;
+
+            // M-07: Validate that phase weeks don't exceed available weeks
+            const weeksUntilRace = Math.floor(
+                (new Date(activeGoal.raceDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 7)
+            );
+            const totalPhaseWeeks = taper + peak + build;
+
+            if (weeksUntilRace > 0 && totalPhaseWeeks > weeksUntilRace) {
+                // Scale down proportionally to fit available weeks
+                const scale = weeksUntilRace / totalPhaseWeeks;
+                taper = Math.max(1, Math.round(taper * scale));
+                peak = Math.max(1, Math.round(peak * scale));
+                build = Math.max(0, weeksUntilRace - taper - peak);
+            }
 
             // Update Goal Settings
             await prisma.goal.update({
@@ -207,21 +221,19 @@ export async function POST(req: NextRequest) {
                 buildWeeks: build,
             });
 
-            // Save workouts
-            await prisma.$transaction(
-                workouts.map(w => prisma.workout.create({
-                    data: {
-                        goalId: activeGoal.id,
-                        scheduledDate: w.date,
-                        workoutType: w.type as WorkoutType,
-                        description: w.description,
-                        targetDistance: w.totalDistance,
-                        targetPace: w.targetPace || 0,
-                        targetDuration: 0,
-                        isCompleted: false
-                    }
+            // Save workouts (M-08: Use createMany for batch insert instead of transaction)
+            await prisma.workout.createMany({
+                data: workouts.map(w => ({
+                    goalId: activeGoal.id,
+                    scheduledDate: w.date,
+                    workoutType: w.type as WorkoutType,
+                    description: w.description,
+                    targetDistance: w.totalDistance,
+                    targetPace: w.targetPace || 0,
+                    targetDuration: w.targetDuration || 0,
+                    isCompleted: false
                 }))
-            );
+            });
         }
 
         return NextResponse.json({ success: true, vdot: newVdot });

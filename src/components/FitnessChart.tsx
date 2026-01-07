@@ -34,18 +34,18 @@ function CustomTooltip({ active, payload, label }: any) {
 
         let tsbStatus = 'Neutral';
         let tsbColor = '#facc15';
-        if (tsb >= 10) {
-            tsbStatus = 'Fresh';
-            tsbColor = '#4ade80';
-        } else if (tsb >= 25) {
+        if (tsb >= 25) {
             tsbStatus = 'Peaked';
             tsbColor = '#4ade80';
-        } else if (tsb <= -10) {
-            tsbStatus = 'Fatigued';
-            tsbColor = '#fb923c';
+        } else if (tsb >= 10) {
+            tsbStatus = 'Fresh';
+            tsbColor = '#4ade80';
         } else if (tsb <= -25) {
             tsbStatus = 'Very Fatigued';
             tsbColor = '#ef4444';
+        } else if (tsb <= -10) {
+            tsbStatus = 'Fatigued';
+            tsbColor = '#fb923c';
         }
 
         return (

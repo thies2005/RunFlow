@@ -6,6 +6,42 @@
 import { ActivityType as PrismaActivityType } from '@prisma/client';
 
 // ============================================
+// Activity Type Utilities (M-09)
+// ============================================
+
+/**
+ * Normalize activity type to uppercase for consistent comparison
+ * Use this instead of inline toUpperCase() calls for consistency
+ */
+export function normalizeActivityType(type: string | null | undefined): string {
+    return (type || 'OTHER').toUpperCase();
+}
+
+/**
+ * Check if activity type is a running activity
+ */
+export function isRunningActivity(type: string | null | undefined): boolean {
+    const normalized = normalizeActivityType(type);
+    return ['RUN', 'VIRTUAL_RUN', 'TRAIL_RUN'].includes(normalized);
+}
+
+/**
+ * Check if activity type is a cycling activity
+ */
+export function isCyclingActivity(type: string | null | undefined): boolean {
+    const normalized = normalizeActivityType(type);
+    return ['RIDE', 'VIRTUAL_RIDE', 'CYCLING', 'INDOOR_CYCLING'].includes(normalized);
+}
+
+/**
+ * Check if activity type is cross-training (non-running cardio)
+ */
+export function isCrossTrainingActivity(type: string | null | undefined): boolean {
+    const normalized = normalizeActivityType(type);
+    return isCyclingActivity(type) || ['SWIM', 'ROWING', 'ELLIPTICAL', 'WORKOUT'].includes(normalized);
+}
+
+// ============================================
 // Activity Types
 // ============================================
 

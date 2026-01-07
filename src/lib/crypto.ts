@@ -42,7 +42,10 @@ function getEncryptionKey(): Buffer | null {
 export function encryptToken(plaintext: string): string {
     const key = getEncryptionKey();
     if (!key) {
-        // Encryption not configured - return plaintext (development mode)
+        // Encryption not configured
+        if (process.env.NODE_ENV === 'production') {
+            console.error('CRITICAL SECURITY WARNING: ENCRYPTION_KEY not set in production! OAuth tokens stored unencrypted.');
+        }
         return plaintext;
     }
 

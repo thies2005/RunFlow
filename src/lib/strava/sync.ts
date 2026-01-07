@@ -13,6 +13,7 @@ import { refreshStravaToken } from './oauth';
 import { calculateTrimp, type Sex } from '@/lib/metrics/trimp';
 import { calculateRunningTss, getActivityContribution } from '@/lib/metrics/fitness';
 import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
+import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { WorkoutType } from '@/lib/types';
 
@@ -21,6 +22,11 @@ const MAX_PER_PAGE = 200;
 const RATE_LIMIT_REQUESTS = 95; // 5% buffer under Strava's 100 req/15min limit
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const MAX_RETRIES = 3; // Maximum retry attempts for rate-limited requests
+
+// Default HR values - extracted from magic numbers per L-03
+const DEFAULT_HR_MAX = 185; // Conservative default when user hasn't configured
+const DEFAULT_HR_REST = 60; // Default resting heart rate
+const HR_MAX_UPPER_BOUND = 220; // Maximum valid HR max to prevent sensor spikes
 
 // Conditional logger - suppresses in production
 const logger = {
@@ -33,7 +39,14 @@ const logger = {
     error: (...args: unknown[]) => console.error('[Strava]', ...args),
 };
 
-// Simple in-memory rate limiter
+/**
+ * Simple in-memory rate limiter
+ * 
+ * LIMITATION (M-04): This rate limiter is per-process. In multi-instance deployments
+ * (e.g., Kubernetes, multiple serverless functions), each instance maintains its own
+ * counter, potentially exceeding Strava's global limit. For production at scale,
+ * consider using Redis-based rate limiting.
+ */
 const rateLimiter = {
     requests: 0,
     windowStart: Date.now(),
@@ -347,6 +360,11 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 hrZone2Max: true,
                 hrZone3Max: true,
                 hrZone4Max: true,
+                goals: {
+                    where: { isActive: true },
+                    select: { currentVdot: true, isActive: true },
+                    take: 1
+                },
             },
         });
 
@@ -366,10 +384,26 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     if (!user?.hrMax && profile.max_heart_rate) updateData.hrMax = profile.max_heart_rate;
 
                     if (Object.keys(updateData).length > 0) {
-                        user = await prisma.user.update({
+                        const updatedUser = await prisma.user.update({
                             where: { id: userId },
                             data: updateData,
+                            include: {
+                                goals: {
+                                    where: { isActive: true },
+                                    select: { currentVdot: true, isActive: true },
+                                    take: 1
+                                }
+                            }
                         });
+                        // Merge updated fields while preserving goals and zone settings
+                        user = {
+                            ...user,
+                            ...updatedUser,
+                            hrZone1Max: user?.hrZone1Max ?? updatedUser.hrZone1Max,
+                            hrZone2Max: user?.hrZone2Max ?? updatedUser.hrZone2Max,
+                            hrZone3Max: user?.hrZone3Max ?? updatedUser.hrZone3Max,
+                            hrZone4Max: user?.hrZone4Max ?? updatedUser.hrZone4Max,
+                        };
                         logger.info(`Updated user profile from Strava: ${JSON.stringify(updateData)}`);
                     }
                 }
@@ -461,22 +495,25 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         continue;
                     }
 
-                    // Auto-detect HR Max if missing or found higher
-                    if (activity.max_heartrate && activity.max_heartrate > (currentHrMax || 0)) {
-                        // Reasonable upper bound check (e.g. < 250) to avoid spikes? 
-                        // Strava max_heartrate is usually reliable enough.
-                        if (activity.max_heartrate < 220) {
-                            currentHrMax = activity.max_heartrate;
+                    // Auto-detect HR Max if missing or found higher (H-02 fix)
+                    // Only update if:
+                    // 1. Activity has HR data
+                    // 2. New value is higher than current
+                    // 3. Value is within reasonable bounds (< HR_MAX_UPPER_BOUND)
+                    // 4. Value is at least 5 bpm higher to avoid noise
+                    if (activity.max_heartrate &&
+                        activity.max_heartrate > (currentHrMax || 0) + 5 &&
+                        activity.max_heartrate < HR_MAX_UPPER_BOUND) {
 
-                            // Update DB asynchronously to remember for next time
-                            // We don't await this to keep sync fast, just fire and forget (or await if safety needed)
-                            await prisma.user.update({
-                                where: { id: userId },
-                                data: { hrMax: currentHrMax }
-                            }).catch(e => logger.warn('Failed to auto-update hrMax', e));
+                        currentHrMax = activity.max_heartrate;
 
-                            logger.info(`Auto-detected new HR Max: ${currentHrMax}`);
-                        }
+                        // Update DB to remember for next time
+                        await prisma.user.update({
+                            where: { id: userId },
+                            data: { hrMax: currentHrMax }
+                        }).catch(e => logger.warn('Failed to auto-update hrMax', e));
+
+                        logger.info(`Auto-detected new HR Max: ${currentHrMax}`);
                     }
 
                     // --- Fetch Streams & Calculate Zones (Expensive operation) ---
@@ -488,9 +525,9 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     if (['Run', 'VirtualRun', 'Ride', 'VirtualRide'].includes(activity.type)) {
                         streams = await fetchActivityStreams(accessToken, activity.id);
 
-                        // Use currentHrMax (auto-detected or user set) or fallback
-                        // Fallback to 190 if absolutely nothing known so we at least populate zones
-                        const effectiveHrMax = currentHrMax || 190;
+                        // Use currentHrMax (auto-detected or user set) or fallback (H-03 fix)
+                        // Use conservative DEFAULT_HR_MAX instead of hardcoded 190
+                        const effectiveHrMax = currentHrMax || DEFAULT_HR_MAX;
 
                         if (streams && streams.heartrate) {
                             // Use user-configured zone thresholds or defaults
@@ -506,8 +543,8 @@ export async function syncUserActivities(userId: string, range?: string): Promis
 
                     // Calculate TRIMP
                     let trimp: number | null = null;
-                    const effectiveHrMax = currentHrMax || 190;
-                    const effectiveHrRest = user?.hrRest || 60; // Default rest HR
+                    const effectiveHrMax = currentHrMax || DEFAULT_HR_MAX;
+                    const effectiveHrRest = user?.hrRest || DEFAULT_HR_REST;
 
                     if (activity.has_heartrate && activity.average_heartrate) {
                         const result = calculateTrimp({
@@ -524,7 +561,16 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     let runningTss: number | null = null;
                     const contribution = getActivityContribution(activity.type);
                     if (contribution.contributesToRunningTss && activity.distance > 0) {
-                        const thresholdPace = 300; // Default 5:00/km
+                        // M-05: Use VDOT-based threshold pace if user has a goal with VDOT
+                        let thresholdPace = 300; // Default 5:00/km
+                        if (user?.goals && user.goals.length > 0) {
+                            const activeGoal = user.goals.find((g: any) => g.isActive);
+                            if (activeGoal?.currentVdot && activeGoal.currentVdot > 0) {
+                                // Import is already at top of file
+                                const paces = calculateTrainingPaces(activeGoal.currentVdot);
+                                thresholdPace = paces.threshold;
+                            }
+                        }
                         runningTss = calculateRunningTss(
                             activity.moving_time,
                             activity.distance,
@@ -535,7 +581,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     // Calculate Effective VO2max (estimatedVdot)
                     let estimatedVdot: number | null = null;
                     if ((activity.type === 'Run' || activity.type === 'VirtualRun') && activity.has_heartrate && activity.average_heartrate) {
-                        const maxHrForCalc = currentHrMax || 190;
+                        const maxHrForCalc = currentHrMax || DEFAULT_HR_MAX;
                         const result = calculateEffectiveVO2max(
                             activity.distance,
                             activity.moving_time,
@@ -636,11 +682,15 @@ export async function syncUserActivities(userId: string, range?: string): Promis
 
         return { synced, skipped, errors };
     } catch (err) {
-        // Reset sync flag on error
-        await prisma.user.update({
-            where: { id: userId },
-            data: { syncInProgress: false },
-        });
+        // Reset sync flag on error (H-01 fix: wrap in try-catch to prevent stuck state)
+        try {
+            await prisma.user.update({
+                where: { id: userId },
+                data: { syncInProgress: false },
+            });
+        } catch (resetErr) {
+            logger.error('Failed to reset syncInProgress flag:', resetErr);
+        }
         throw err;
     }
 }

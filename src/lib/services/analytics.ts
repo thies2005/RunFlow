@@ -4,26 +4,36 @@ import { calculateWeightedEffectiveVO2max, calculateMarathonShape } from '@/lib/
 
 /**
  * Service to handle analytics calculations
+ * 
+ * Note on Calibration/Correction Factor (H-05):
+ * The vdotCorrectionFactor is applied ONLY in calculateVO2max().
+ * Raw VO2max is calculated first, then multiplied by the correction factor.
+ * This ensures calibration is applied consistently in one place.
  */
 export class AnalyticsService {
     /**
      * Calculate Fitness (CTL), Fatigue (ATL), and Form (TSB)
      * using the standard exponential weighted moving average method.
+     * 
+     * M-01: Uses stored TRIMP when available from HR data,
+     * falls back to simplistic approximation when no HR data.
      */
-    static calculateFitnessMetrics(activities: Pick<Activity, 'startDate' | 'movingTime'>[], referenceDate: Date = new Date()) {
+    static calculateFitnessMetrics(
+        activities: Pick<Activity, 'startDate' | 'movingTime' | 'trimp'>[],
+        referenceDate: Date = new Date()
+    ) {
         const dailyLoads = new Map<string, number>();
         const ninetyDaysAgo = new Date(referenceDate);
         ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - METRICS.CTL_DECAY_DAYS * 2); // Look back enough to stabilize
 
         // 1. Aggregation: Sum daily load (TRIMP)
-        // TODO: Replace 'movingTime / 60' with proper HR-based TRIMP when available in DB
         activities.forEach(activity => {
             const date = new Date(activity.startDate);
             if (date < ninetyDaysAgo) return;
 
             const dateKey = date.toISOString().split('T')[0];
-            // Simple TRIMP approximation: 1 hour = 60 points
-            const trimp = activity.movingTime / 60;
+            // Use stored TRIMP if available, otherwise fall back to simplistic approximation
+            const trimp = activity.trimp ?? (activity.movingTime / 60);
             dailyLoads.set(dateKey, (dailyLoads.get(dateKey) || 0) + trimp);
         });
 

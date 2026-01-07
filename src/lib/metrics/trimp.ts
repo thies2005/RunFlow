@@ -33,8 +33,12 @@ export function calculateHRReserve(
     hrMax: number,
     hrRest: number
 ): number {
+    // Validate inputs - return 0 for invalid configurations
+    if (hrMax <= 0 || hrRest < 0 || averageHr <= 0) return 0;
+    if (hrMax <= hrRest) return 0; // Invalid: max must be greater than rest
+
     const hrReserve = hrMax - hrRest;
-    if (hrReserve <= 0) return 0;
+    // This is now guaranteed to be > 0 due to validation above
 
     const hrr = (averageHr - hrRest) / hrReserve;
     return Math.max(0, Math.min(1, hrr)); // Clamp between 0 and 1

@@ -1,0 +1,73 @@
+# Role: Senior Backend Engineer / Systems Architect
+# Task: Implement Dynamic Goal Target Time Calculation ("Option A")
+
+## Context
+We are refactoring the goal-setting flow. Instead of the user manually inputting a target time, the system will calculate a realistic target based on their physiological potential and the specific settings of the training plan they are configuring.
+
+## Core Requirement
+You must implement a dynamic calculation for `GoalTargetTime` that updates in real-time as the user adjusts their plan settings (Duration, Frequency, Volume).
+
+## Strict Constraint (DRY Principle)
+Do **not** write new math logic for race predictions. You must locate and import the existing prediction modules utilized elsewhere in the app (likely named `VDOTCalculator`, `RacePredictor`, or `PerformanceMath`). We must use the same **Effective VO2 max** and **Marathon Shape** coefficients used in the main dashboard.
+
+## Implementation Logic
+Please build a service method or utility function (e.g., `calculate_projected_goal_time`) that accepts the `UserProfile` and the proposed `PlanSettings`.
+
+### The Algorithm Steps:
+
+1.  **Retrieve Baseline:**
+    * Fetch the user's current **Effective VO2 max** (or VDOT) from their profile/history.
+
+2.  **Calculate Physiological Improvement (The Engine):**
+    * Determine a *progression coefficient* based on the plan settings.
+    * *Longer Plan Duration (Weeks)* = Higher improvement factor.
+    * *Higher Intensity/Frequency* = Higher improvement factor.
+    * Apply this factor to the baseline VDOT to get `ProjectedVDOT`.
+
+3.  **Calculate Theoretical Time:**
+    * Use the existing `VDOTCalculator` module to convert `ProjectedVDOT` into a race time for the target distance (e.g., Marathon).
+
+4.  **Apply Endurance Reality Check (The Chassis):**
+    * Reuse the existing **Marathon Shape / Endurance Decay** logic.
+    * Compare the plan's `TargetWeeklyVolume` and `LongRunDistance` against the race distance.
+    * If the volume is insufficient for the distance, apply the penalty multiplier (degrading the theoretical time).
+
+5.  **Output:**
+    * Return the final `GoalTargetTime`.
+
+## Pseudocode Reference
+Use this structure as a guide for the logic flow, adapting it to our current codebase syntax:
+
+```python
+def calculate_dynamic_goal(current_user, plan_settings):
+    # 1. Reuse Existing Modules
+    from core.logic import VDOTEngine, MarathonShapePredictor
+
+    # 2. Get Baseline
+    current_vdot = current_user.stats.effective_vo2_max
+
+    # 3. Calculate Gain
+    # Logic: How much does VDOT improve over X weeks at Y intensity?
+    improvement_factor = VDOTEngine.calculate_progression(
+        weeks=plan_settings.duration_weeks,
+        intensity=plan_settings.intensity_level
+    )
+    future_vdot = current_vdot + improvement_factor
+
+    # 4. Get Raw Time (Perfect Scenario)
+    raw_time_seconds = VDOTEngine.get_time_from_vdot(
+        vdot=future_vdot, 
+        distance=plan_settings.race_distance
+    )
+
+    # 5. Apply "Marathon Shape" Penalty
+    # Logic: Penalize if volume is too low for the distance
+    endurance_penalty = MarathonShapePredictor.get_penalty_factor(
+        target_distance=plan_settings.race_distance,
+        planned_weekly_volume=plan_settings.max_weekly_volume
+    )
+
+    # 6. Final Calculation
+    realistic_goal_time = raw_time_seconds * endurance_penalty
+
+    return realistic_goal_time

@@ -32,7 +32,9 @@ export interface ProjectedGoalResult {
     projectedTime: number;      // Realistic based on plan + current shape
     conservativeTime: number;   // Slower estimate (safety margin)
     projectedVdot: number;      // Expected VDOT at race time
-    improvementPercent: number; // % improvement from current
+    improvementPercent: number; // % improvement from current VDOT
+    projectedShape: number;     // Expected shape at race time
+    shapeImprovementPercent: number; // % shape improvement from training
 }
 
 // ============================================
@@ -58,6 +60,20 @@ const SHAPE_IMPACT: Record<RaceDistance, number> = {
     'HALF': 0.15,   // 15% penalty at 0% shape
     'MARATHON': 0.30, // 30% penalty at 0% shape
 };
+
+/** 
+ * Shape improvement rate from weekly mileage
+ * Based on: Marathon shape improves ~2% per 10km/week increase
+ * E.g., going from 30km/week to 50km/week adds ~4% shape
+ */
+const SHAPE_IMPROVEMENT_PER_10KM = 2.0;
+
+/**
+ * Shape improvement rate from training duration
+ * Consistent training over time builds endurance base
+ * ~1% shape improvement per 4 weeks of training
+ */
+const SHAPE_IMPROVEMENT_PER_4WEEKS = 1.0;
 
 // ============================================
 // Core Functions
@@ -133,16 +149,19 @@ export function calculateShapePenalty(
  * 1. Current VO2max/VDOT
  * 2. Projected improvement from training plan
  * 3. Shape penalty for the target distance
+ * 4. Shape improvement from training mileage
  * 
  * @param currentVO2max - User's current effective VO2max
  * @param planSettings - Training plan configuration
  * @param currentShapePercent - Current marathon shape percentage (default 70)
+ * @param currentWeeklyKm - Current average weekly mileage (default: half of target)
  * @returns Projected goal times (optimal, realistic, conservative)
  */
 export function calculateProjectedGoalTime(
     currentVO2max: number,
     planSettings: PlanSettings,
-    currentShapePercent: number = 70
+    currentShapePercent: number = 70,
+    currentWeeklyKm?: number
 ): ProjectedGoalResult {
     // Default result for invalid inputs
     if (currentVO2max <= 0 || planSettings.durationWeeks <= 0) {
@@ -152,6 +171,8 @@ export function calculateProjectedGoalTime(
             conservativeTime: 0,
             projectedVdot: 0,
             improvementPercent: 0,
+            projectedShape: 0,
+            shapeImprovementPercent: 0,
         };
     }
 
@@ -166,18 +187,31 @@ export function calculateProjectedGoalTime(
     const projectedVdot = currentVO2max * progressionFactor;
     const improvementPercent = (progressionFactor - 1) * 100;
 
-    // Step 3: Calculate optimal time (at 100% shape with full improvement)
+    // Step 3: Calculate shape improvement from increased mileage
+    // Assume current mileage is half of target if not provided
+    const effectiveCurrentKm = currentWeeklyKm ?? (planSettings.weeklyMileageGoal * 0.5);
+    const mileageIncrease = Math.max(0, planSettings.weeklyMileageGoal - effectiveCurrentKm);
+
+    // Shape improvement from mileage increase: 2% per 10km/week increase
+    const shapeFromMileage = (mileageIncrease / 10) * SHAPE_IMPROVEMENT_PER_10KM;
+
+    // Shape improvement from training duration: 1% per 4 weeks
+    const shapeFromDuration = (planSettings.durationWeeks / 4) * SHAPE_IMPROVEMENT_PER_4WEEKS;
+
+    // Total shape improvement (capped so we don't exceed 100%)
+    const totalShapeImprovement = shapeFromMileage + shapeFromDuration;
+    const projectedShape = Math.min(100, currentShapePercent + totalShapeImprovement);
+    const shapeImprovementPercent = projectedShape - currentShapePercent;
+
+    // Step 4: Calculate optimal time (at 100% shape with full VDOT improvement)
     // This represents the theoretical best the athlete can achieve
     const optimalTime = predictRaceTime(projectedVdot, planSettings.raceDistance);
 
-    // Step 4: Calculate projected time (accounting for realistic shape improvement)
-    // We assume shape will improve somewhat but not to 100%
-    // Use a "projected shape" that's halfway between current and 100%
-    const projectedShape = Math.min(100, currentShapePercent + (100 - currentShapePercent) * 0.5);
+    // Step 5: Calculate projected time (using calculated shape improvement)
     const projectedPenalty = calculateShapePenalty(planSettings.raceDistance, projectedShape);
     const projectedTime = Math.round(optimalTime * (1 + projectedPenalty));
 
-    // Step 5: Calculate conservative time (assumes less improvement)
+    // Step 6: Calculate conservative time (assumes less improvement)
     // Use current shape with only half the VDOT improvement
     const conservativeVdot = currentVO2max * (1 + (progressionFactor - 1) * 0.5);
     const conservativeBase = predictRaceTime(conservativeVdot, planSettings.raceDistance);
@@ -190,6 +224,8 @@ export function calculateProjectedGoalTime(
         conservativeTime,
         projectedVdot: Math.round(projectedVdot * 10) / 10,
         improvementPercent: Math.round(improvementPercent * 10) / 10,
+        projectedShape: Math.round(projectedShape),
+        shapeImprovementPercent: Math.round(shapeImprovementPercent * 10) / 10,
     };
 }
 

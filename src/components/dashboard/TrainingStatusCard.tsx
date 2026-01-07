@@ -1,26 +1,19 @@
-import { TrendingUp, Activity, Gauge, Zap } from 'lucide-react';
+import { TrendingUp, Activity, Gauge } from 'lucide-react';
+import { useUserMetrics } from '../providers/UserMetricsProvider';
+import { interpretTsb } from '@/lib/metrics/fitness';
 
-interface TrainingStatusCardProps {
-    marathonShape: { shape: number };
-    effectiveVO2max: number;
-    correctionFactor: number;
-    ctl: number;
-    atl: number;
-    tsb: number;
-    workloadRatio: number;
-    easyTrimp: number;
-}
+export default function TrainingStatusCard() {
+    const {
+        marathonShape,
+        effectiveVO2max,
+        correctionFactor,
+        ctl,
+        atl,
+        tsb,
+        workloadRatio,
+        easyTrimp
+    } = useUserMetrics();
 
-export default function TrainingStatusCard({
-    marathonShape,
-    effectiveVO2max,
-    correctionFactor,
-    ctl,
-    atl,
-    tsb,
-    workloadRatio,
-    easyTrimp
-}: TrainingStatusCardProps) {
     const shapePercent = marathonShape?.shape || 0;
 
     const workloadStatus = (ratio: number) => {
@@ -34,6 +27,8 @@ export default function TrainingStatusCard({
     const status = workloadStatus(workloadRatio);
     // Linear mapping: 0.0 -> 0%, 1.0 -> 50%, 2.0+ -> 100%
     const markerPos = Math.min(100, (workloadRatio / 2) * 100);
+
+    const tsbStatus = interpretTsb(tsb);
 
     return (
         <div className="glass-card p-6 h-full flex flex-col justify-between min-h-[400px]">
@@ -64,7 +59,7 @@ export default function TrainingStatusCard({
                                 {effectiveVO2max > 0 ? effectiveVO2max.toFixed(1) : '-'}
                             </p>
                             {correctionFactor !== 1.0 && (
-                                <span className="text-[10px] text-accent-cyan font-bold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
+                                <span className="text-xs text-accent-cyan font-bold bg-accent-cyan/10 px-1 py-0.5 rounded leading-none shrink-0 border border-accent-cyan/20">
                                     {correctionFactor.toFixed(1)}x
                                 </span>
                             )}
@@ -80,9 +75,9 @@ export default function TrainingStatusCard({
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         <Gauge className={`w-3.5 h-3.5 ${status.color}`} />
-                        <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Workload Balance</span>
+                        <span className="text-xs text-gray-400 uppercase tracking-widest font-bold">Workload Balance</span>
                     </div>
-                    <span className={`text-[10px] font-black ${status.color} px-2 py-0.5 rounded-full bg-white/5 border border-white/10 uppercase tracking-tighter`}>
+                    <span className={`text-xs font-black ${status.color} px-2 py-0.5 rounded-full bg-white/5 border border-white/10 uppercase tracking-tighter`}>
                         {status.label}
                     </span>
                 </div>
@@ -104,7 +99,7 @@ export default function TrainingStatusCard({
                     />
                 </div>
 
-                <div className="flex justify-between text-[8px] text-gray-500 font-black uppercase tracking-widest px-1">
+                <div className="flex justify-between text-xs text-gray-500 font-black uppercase tracking-widest px-1">
                     <span>Low</span>
                     <span className="text-green-500/60 font-black">Sweet Spot (0.8 - 1.3)</span>
                     <span>{workloadRatio > 2 ? workloadRatio.toFixed(2) : '2.0+'}</span>
@@ -148,7 +143,7 @@ export default function TrainingStatusCard({
                             }}
                         />
                     </div>
-                    <div className={`w-14 text-right text-sm font-black ${tsb >= 0 ? 'text-emerald-400' : 'text-orange-400'}`}>
+                    <div className={`w-14 text-right text-sm font-black ${tsbStatus.color}`}>
                         {tsb >= 0 ? `+${tsb}` : tsb}
                     </div>
                 </div>

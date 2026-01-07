@@ -11,6 +11,7 @@ import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
+import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
 import type { Workout, Goal } from '@/lib/types';
 
 export default function Dashboard() {
@@ -212,35 +213,24 @@ export default function Dashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-                    <div className="lg:col-span-1">
-                        <WorkoutScheduleCard
-                            weeklyWorkouts={weeklyWorkouts}
-                            today={today}
-                            onEditWorkout={setEditingWorkout}
-                        />
-                    </div>
-                    <div className="lg:col-span-1">
-                        <RaceCountdown
-                            goal={activeGoal ?? null}
-                            weeklyMileage={currentWeekMileage}
-                            className="h-full"
-                            marathonShape={marathonShape.shape}
-                            effectiveVO2max={effectiveVO2max}
-                            correctionFactor={correctionFactor}
-                        />
-                    </div>
-                    <div className="lg:col-span-1 h-full flex flex-col">
-                        <TrainingStatusCard
-                            marathonShape={marathonShape}
-                            effectiveVO2max={effectiveVO2max}
-                            correctionFactor={correctionFactor}
-                            ctl={ctl}
-                            atl={atl}
-                            tsb={tsb}
-                            workloadRatio={workloadRatio}
-                            easyTrimp={easyTrimp}
-                        />
-                    </div>
+                    <UserMetricsProvider stats={statsData}>
+                        <div className="lg:col-span-1">
+                            <WorkoutScheduleCard
+                                weeklyWorkouts={weeklyWorkouts}
+                                today={today}
+                                onEditWorkout={setEditingWorkout}
+                            />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <RaceCountdown
+                                goal={activeGoal ?? null}
+                                className="h-full"
+                            />
+                        </div>
+                        <div className="lg:col-span-1 h-full flex flex-col">
+                            <TrainingStatusCard />
+                        </div>
+                    </UserMetricsProvider>
                 </div>
 
                 <div className="mt-8">
@@ -264,8 +254,6 @@ export default function Dashboard() {
             <SettingsModal
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
-                effectiveVO2max={effectiveVO2max}
-                shapePercent={marathonShape.shape}
             />
 
             <EditWorkoutModal

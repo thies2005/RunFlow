@@ -6,6 +6,8 @@
  * Where k = 1.92 for men, 1.67 for women
  */
 
+export const FALLBACK_TRIMP_PER_MINUTE = 2.5;
+
 export type Sex = 'MALE' | 'FEMALE';
 
 export interface TrimpInput {

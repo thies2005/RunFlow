@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
         name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks,
         runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
         taperWeeks, peakWeeks, buildWeeks,
+        longRunDay, workoutDay, // L-03: Flexible Days
         calibrationTime, calibrationDistance, calibrationFactor
     } = body;
 
@@ -184,6 +185,8 @@ export async function POST(request: NextRequest) {
             ridesPerWeek: ridesPerWeek ?? 0,
             strengthPerWeek: strengthPerWeek ?? 0,
             swimsPerWeek: swimsPerWeek ?? 0,
+            longRunDay: longRunDay ?? 0,
+            workoutDay: workoutDay ?? 3,
             currentVdot,
             predictedTime,
         },
@@ -248,6 +251,8 @@ export async function POST(request: NextRequest) {
                 taperWeeks: taperWeeks ?? 2,
                 peakWeeks: peakWeeks ?? 4,
                 buildWeeks: buildWeeks ?? 4,
+                longRunDay: longRunDay ?? 0,
+                workoutDay: workoutDay ?? 3,
             });
 
             if (workouts.length > 0) {

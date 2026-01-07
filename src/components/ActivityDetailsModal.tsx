@@ -14,16 +14,23 @@ interface ActivityDetailsModalProps {
 }
 
 export default function ActivityDetailsModal({ isOpen, onClose, activity, userHrMax }: ActivityDetailsModalProps) {
+    const [mounted, setMounted] = useState(false);
     const [trainingType, setTrainingType] = useState<WorkoutType | null>(null);
     const [isUpdatingType, setIsUpdatingType] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         if (activity) {
             setTrainingType(activity.trainingType || 'EASY');
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
         }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
     }, [activity]);
 
-    if (!isOpen || !activity) return null;
+    if (!isOpen || !activity || !mounted) return null;
 
     const handleTypeChange = async (newType: WorkoutType) => {
         const previousType = trainingType;
@@ -76,11 +83,14 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-2xl bg-[#0f1115] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+    // Portal Implementation
+    const { createPortal } = require('react-dom');
+
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="relative w-full max-w-2xl bg-[#0f1115] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="relative p-6 border-b border-white/10 bg-gradient-to-r from-accent-purple/10 to-accent-pink/10">
+                <div className="relative p-6 border-b border-white/10 bg-gradient-to-r from-accent-purple/10 to-accent-pink/10 shrink-0">
                     <button
                         onClick={onClose}
                         className="absolute right-4 top-4 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -104,7 +114,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     </div>
                 </div>
 
-                <div className="p-6 overflow-y-auto max-h-[80vh]">
+                <div className="p-6 overflow-y-auto custom-scrollbar">
                     {/* Actions Row */}
                     <div className="flex flex-wrap items-center gap-4 mb-6">
                         <Link
@@ -278,6 +288,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

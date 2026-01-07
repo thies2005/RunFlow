@@ -37,7 +37,7 @@ const ATL_TIME_CONSTANT = 7;
  * Calculate exponential decay factor
  * decay = e^(-1/timeConstant)
  */
-function calculateDecayFactor(timeConstant: number): number {
+export function calculateDecayFactor(timeConstant: number): number {
     return Math.exp(-1 / timeConstant);
 }
 
@@ -48,7 +48,9 @@ function calculateDecayFactor(timeConstant: number): number {
 export function calculateFitnessHistory(
     dailyLoads: DailyLoad[],
     initialCtl: number = 0,
-    initialAtl: number = 0
+    initialAtl: number = 0,
+    initialCtlRunning: number = 0,
+    startDate?: Date
 ): FitnessHistory[] {
     if (dailyLoads.length === 0) return [];
 
@@ -57,7 +59,7 @@ export function calculateFitnessHistory(
 
     let ctl = initialCtl;
     let atl = initialAtl;
-    let ctlRunning = initialCtl;
+    let ctlRunning = initialCtlRunning;
 
     const history: FitnessHistory[] = [];
 
@@ -69,11 +71,20 @@ export function calculateFitnessHistory(
     });
 
     // Determine range
-    const timestamps = dailyLoads.map(d => new Date(d.date).getTime());
-    const minDate = new Date(Math.min(...timestamps));
+    // If startDate is provided (e.g. for incremental updates), use it.
+    // Otherwise derive from first activity.
+    let minDate: Date;
+
+    if (startDate) {
+        minDate = new Date(startDate);
+    } else {
+        const timestamps = dailyLoads.map(d => new Date(d.date).getTime());
+        minDate = timestamps.length > 0 ? new Date(Math.min(...timestamps)) : new Date();
+    }
+
     const now = new Date();
 
-    // Iterate from first activity to today (to ensure decay is calculated up to now)
+    // Iterate from start date to today
     for (let d = new Date(minDate); d <= now; d.setDate(d.getDate() + 1)) {
         const dateKey = d.toISOString().split('T')[0];
         const dayLoad = loadMap.get(dateKey);
@@ -218,33 +229,33 @@ export function interpretTsb(tsb: number): {
         return {
             status: 'peaked',
             description: 'Peaked - Ready to race!',
-            color: '#4ade80', // Green
+            color: 'text-green-400', // Green
         };
     }
     if (tsb >= 5) {
         return {
             status: 'fresh',
             description: 'Fresh - Good form',
-            color: '#a3e635', // Lime
+            color: 'text-lime-400', // Lime
         };
     }
     if (tsb >= -10) {
         return {
             status: 'neutral',
             description: 'Optimal training zone',
-            color: '#facc15', // Yellow
+            color: 'text-yellow-400', // Yellow
         };
     }
     if (tsb >= -30) {
         return {
             status: 'fatigued',
             description: 'Fatigued - Monitor recovery',
-            color: '#fb923c', // Orange
+            color: 'text-orange-400', // Orange
         };
     }
     return {
         status: 'very_fatigued',
         description: 'Very fatigued - Risk of overtraining',
-        color: '#ef4444', // Red
+        color: 'text-red-500', // Red
     };
 }

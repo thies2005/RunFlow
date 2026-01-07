@@ -3,14 +3,16 @@
 import { X } from 'lucide-react';
 import PlanSetupForm from './PlanSetupForm';
 
+import { useUserMetrics } from './providers/UserMetricsProvider';
+
 interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
-    effectiveVO2max?: number;
-    shapePercent?: number;
 }
 
-export default function SettingsModal({ isOpen, onClose, effectiveVO2max = 0, shapePercent = 0 }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+    const { effectiveVO2max, marathonShape } = useUserMetrics();
+    const shapePercent = marathonShape?.shape || 0;
     if (!isOpen) return null;
 
     return (

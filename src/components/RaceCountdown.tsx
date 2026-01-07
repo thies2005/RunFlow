@@ -1,19 +1,15 @@
-'use client';
-
 import { Calendar, Target, Timer } from 'lucide-react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Goal } from '@/lib/types';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import type { RaceDistance } from '@/lib/metrics/vdot';
+import { useUserMetrics } from './providers/UserMetricsProvider';
 
 interface RaceCountdownProps {
     goal: Goal | null;
-    weeklyMileage?: number; // Current week's mileage in km
     className?: string;
-    marathonShape?: number;
-    effectiveVO2max?: number;
-    correctionFactor?: number;
+    // Removed props that now come from context
 }
 
 const raceLabels: Record<string, string> = {
@@ -43,13 +39,17 @@ function formatTime(seconds: number): string {
 
 export function RaceCountdown({
     goal,
-    weeklyMileage = 0,
     className = '',
-    marathonShape = 0,
-    effectiveVO2max = 30, // Default to avoid division by zero
-    correctionFactor = 1.0
 }: RaceCountdownProps) {
     const router = useRouter();
+    const {
+        marathonShape,
+        effectiveVO2max,
+        correctionFactor,
+        currentWeekMileage
+    } = useUserMetrics();
+
+    const shapePercent = marathonShape?.shape || 0;
 
     if (!goal) {
         return (
@@ -102,8 +102,8 @@ export function RaceCountdown({
     const projection = calculateProjectedGoalTime(
         currentVdot,
         planSettings,
-        marathonShape, // Use current marathon shape
-        weeklyMileage // Use current weekly mileage
+        shapePercent, // Use current marathon shape
+        currentWeekMileage // Use current weekly mileage
     );
 
     const dynamicPredictedTime = projection.projectedTime;
@@ -195,13 +195,13 @@ export function RaceCountdown({
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-400">This Week&apos;s Mileage</span>
                         <span className="text-sm text-white">
-                            {weeklyMileage.toFixed(1)} / {(goal.weeklyMileageGoal / 1000).toFixed(1)} km
+                            {currentWeekMileage.toFixed(1)} / {(goal.weeklyMileageGoal / 1000).toFixed(1)} km
                         </span>
                     </div>
                     <div className="h-2 bg-background rounded-full overflow-hidden">
                         <div
                             className="h-full bg-gradient-to-r from-accent-cyan to-green-500 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(100, (weeklyMileage / (goal.weeklyMileageGoal / 1000)) * 100)}%` }}
+                            style={{ width: `${Math.min(100, (currentWeekMileage / (goal.weeklyMileageGoal / 1000)) * 100)}%` }}
                         />
                     </div>
                 </div>

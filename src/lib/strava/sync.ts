@@ -13,6 +13,7 @@ import { refreshStravaToken } from './oauth';
 import { calculateTrimp, type Sex } from '@/lib/metrics/trimp';
 import { calculateRunningTss, getActivityContribution } from '@/lib/metrics/fitness';
 import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
+import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { WorkoutType } from '@/lib/types';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
@@ -400,6 +401,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
         let errors = 0;
         let page = 1;
         let hasMore = true;
+        const modifiedActivities: any[] = [];
 
         // Keep track of max HR seen during this sync to auto-detect provided logic
         let currentHrMax = user?.hrMax || null;
@@ -598,6 +600,10 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         synced++; // Count updates as synced
                     }
 
+                    if (isNew || needsUpdate) {
+                        modifiedActivities.push({ startDate: new Date(activity.start_date) });
+                    }
+
                 } catch (err) {
                     console.error(`Error syncing activity ${activity.id}:`, err);
                     errors++;
@@ -621,6 +627,12 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 syncInProgress: false,
             },
         });
+
+        // Update Fitness Cache if needed
+        if (modifiedActivities.length > 0) {
+            await updateFitnessCache(userId, modifiedActivities);
+            logger.info(`Updated fitness cache for ${modifiedActivities.length} activities`);
+        }
 
         return { synced, skipped, errors };
     } catch (err) {
@@ -826,6 +838,10 @@ export async function syncActivityById(userId: string, activityId: number): Prom
         });
 
         logger.info(`syncActivityById: Successfully synced activity ${activityId} for user ${userId}`);
+
+        // Update Fitness Cache
+        await updateFitnessCache(userId, [{ startDate: new Date(activity.start_date) }]);
+
     } catch (error) {
         logger.error(`syncActivityById: Error syncing activity ${activityId} for user ${userId}:`, error);
     }

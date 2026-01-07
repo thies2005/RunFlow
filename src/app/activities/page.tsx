@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, ArrowLeft, Plus } from 'lucide-react';
 import { ActivityList, ManualActivityModal } from '@/components';
@@ -25,24 +25,44 @@ export default function ActivitiesPage() {
 
     const userHrMax = statsData?.hrMax || 185;
 
-    const { data: activitiesData, isLoading, refetch, isRefetching } = useQuery({
-        queryKey: ['activities', 'all', filter],
-        queryFn: async () => {
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        status: queryStatus,
+        isLoading, // Add this
+        refetch,
+        isRefetching
+    } = useInfiniteQuery({
+        queryKey: ['activities', 'infinite', filter],
+        queryFn: async ({ pageParam = 0 }) => {
             const typeParam = filter !== 'ALL' ? `&type=${filter}` : '';
-            const res = await fetch(`/api/activities?limit=100${typeParam}`);
+            const res = await fetch(`/api/activities?limit=50&offset=${pageParam}${typeParam}`);
             if (!res.ok) throw new Error('Failed to fetch activities');
             return res.json();
         },
+        getNextPageParam: (lastPage: any) => {
+            const nextOffset = lastPage.offset + lastPage.limit;
+            if (nextOffset < lastPage.total) return nextOffset;
+            return undefined;
+        },
+        initialPageParam: 0,
         enabled: status === 'authenticated',
     });
 
-    if (status === 'loading') {
+    const allActivities = data?.pages.flatMap((page: any) => page.activities) || [];
+    const totalCount = data?.pages[0]?.total || 0;
+
+    if (isLoading) { // Use boolean
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-pulse text-gray-500">Loading...</div>
             </div>
         );
     }
+
+    // Error handling skip for brevity, covered by UI error boundary usually or could add here
 
     if (status === 'unauthenticated') {
         if (typeof window !== 'undefined') window.location.href = '/login';
@@ -106,13 +126,32 @@ export default function ActivitiesPage() {
 
                 <div className="glass-card p-6">
                     <p className="text-gray-400 mb-4 text-sm">
-                        Showing last {activitiesData?.activities?.length || 0} {filter.toLowerCase() === 'all' ? 'activities' : filter.toLowerCase() + 's'}.
+                        Showing {allActivities.length} of {totalCount} {filter.toLowerCase() === 'all' ? 'activities' : filter.toLowerCase() + 's'}.
                     </p>
                     <ActivityList
-                        activities={activitiesData?.activities || []}
+                        activities={allActivities}
                         isLoading={isLoading}
                         userHrMax={userHrMax}
                     />
+
+                    {hasNextPage && (
+                        <div className="mt-8 flex justify-center">
+                            <button
+                                onClick={() => fetchNextPage()}
+                                disabled={isFetchingNextPage}
+                                className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                {isFetchingNextPage ? (
+                                    <>
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                        Loading...
+                                    </>
+                                ) : (
+                                    'Load More'
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 

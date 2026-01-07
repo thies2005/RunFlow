@@ -30,8 +30,8 @@ export default function PlanSetupForm({
     mode,
     onSuccess,
     onCancel,
-    effectiveVO2max = 0,
-    shapePercent = 0
+    effectiveVO2max: propEffectiveVO2max = 0,
+    shapePercent: propShapePercent = 0
 }: PlanSetupFormProps) {
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -85,6 +85,20 @@ export default function PlanSetupForm({
             return res.json();
         },
     });
+
+    // Fetch analytics stats (for both modes to get effectiveVO2max if not passed)
+    const { data: internalStatsData } = useQuery({
+        queryKey: ['analytics-stats'],
+        queryFn: async () => {
+            const res = await fetch('/api/analytics/stats');
+            if (!res.ok) throw new Error('Failed to fetch stats');
+            return res.json();
+        },
+    });
+
+    // Use props if provided, otherwise fall back to internally fetched stats
+    const effectiveVO2max = propEffectiveVO2max > 0 ? propEffectiveVO2max : (internalStatsData?.effectiveVO2max || 0);
+    const shapePercent = propShapePercent > 0 ? propShapePercent : (internalStatsData?.marathonShape?.shape || 0);
 
     // Fetch existing settings (for settings mode)
     const { data: settingsData } = useQuery({

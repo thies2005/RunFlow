@@ -51,8 +51,8 @@ export default function OnboardingWizard() {
         }
     }, [syncStatus, step]);
 
-    // Analysis Logic (Step 2) - fetch stats for VO2max
-    const { data: statsData } = useQuery({
+    // Analysis Logic (Step 2 and 3) - fetch stats for VO2max
+    const { data: statsData, isLoading: statsLoading } = useQuery({
         queryKey: ['analytics-stats'],
         queryFn: async () => {
             const res = await fetch('/api/analytics/stats');

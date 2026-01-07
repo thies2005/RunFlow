@@ -94,46 +94,49 @@ export default function RacePredictionChart({
                 </div>
             </div>
 
-            {/* VO2 Max Slider */}
-            <div className="mb-4 p-4 bg-white/5 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm text-gray-400">Simulated VO2 Max</label>
-                    <span className="text-lg font-bold text-accent-orange">{simulatedVO2Max.toFixed(1)}</span>
+            {/* Sliders Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* VO2 Max Slider */}
+                <div className="p-3 bg-white/5 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs text-gray-400">Simulated VO2 Max</label>
+                        <span className="text-base font-bold text-accent-orange">{simulatedVO2Max.toFixed(1)}</span>
+                    </div>
+                    <input
+                        type="range"
+                        min="20"
+                        max="80"
+                        step="0.1"
+                        value={simulatedVO2Max}
+                        onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value))}
+                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                    />
+                    <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+                        <span>20 (Low)</span>
+                        <span className="text-accent-orange">Current: {effectiveVO2max.toFixed(1)}</span>
+                        <span>80 (Elite)</span>
+                    </div>
                 </div>
-                <input
-                    type="range"
-                    min="20"
-                    max="80"
-                    step="0.1"
-                    value={simulatedVO2Max}
-                    onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent-orange"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>20 (Low)</span>
-                    <span className="text-accent-orange">Current: {effectiveVO2max.toFixed(1)}</span>
-                    <span>80 (Elite)</span>
-                </div>
-            </div>
 
-            {/* Shape Slider */}
-            <div className="mb-6 p-4 bg-white/5 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm text-gray-400">Marathon Shape</label>
-                    <span className="text-lg font-bold text-accent-cyan">{shapePercent}%</span>
-                </div>
-                <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={shapePercent}
-                    onChange={(e) => setShapePercent(parseInt(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>0% (Unfit)</span>
-                    <span className="text-accent-cyan">Current: {currentShape}%</span>
-                    <span>100% (Peak)</span>
+                {/* Shape Slider */}
+                <div className="p-3 bg-white/5 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs text-gray-400">Marathon Shape</label>
+                        <span className="text-base font-bold text-accent-cyan">{shapePercent}%</span>
+                    </div>
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={shapePercent}
+                        onChange={(e) => setShapePercent(parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
+                    />
+                    <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+                        <span>0% (Unfit)</span>
+                        <span className="text-accent-cyan">Current: {currentShape}%</span>
+                        <span>100% (Peak)</span>
+                    </div>
                 </div>
             </div>
 

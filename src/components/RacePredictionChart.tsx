@@ -128,7 +128,15 @@ export default function RacePredictionChart({
                         <XAxis type="number" stroke="#9ca3af" fontSize={12} tickFormatter={(v) => `${Math.round(v)}m`} />
                         <YAxis type="category" dataKey="name" stroke="#9ca3af" fontSize={12} width={60} />
                         <Tooltip
-                            contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                            contentStyle={{
+                                backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                                border: '1px solid rgba(255, 255, 255, 0.1)',
+                                borderRadius: '12px',
+                                backdropFilter: 'blur(8px)',
+                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+                            }}
+                            itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                            labelStyle={{ color: '#9ca3af', marginBottom: '8px', fontWeight: 'bold' }}
                             formatter={(value: number, name: string) => {
                                 const totalSecs = Math.round(value * 60);
                                 const hours = Math.floor(totalSecs / 3600);
@@ -137,7 +145,7 @@ export default function RacePredictionChart({
                                 const timeStr = hours > 0
                                     ? `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
                                     : `${mins}:${secs.toString().padStart(2, '0')}`;
-                                return [timeStr, name === 'predictedMin' ? 'Predicted' : 'Optimal'];
+                                return [timeStr, name];
                             }}
                         />
                         <Bar dataKey="optimalMin" fill="#4ade80" opacity={0.3} name="Optimal" radius={[0, 4, 4, 0]} />

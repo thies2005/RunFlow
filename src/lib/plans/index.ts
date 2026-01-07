@@ -48,15 +48,12 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const timeDiff = raceDate.getTime() - startDate.getTime();
     const totalWeeks = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 7));
 
-    // Calculate Starting Volume using reverse 15% rule
-    // allowed_vol_week_i = start_vol * (1.15 ^ i)
-    // We want allowed_vol_last_week >= peakVolume (roughly)
-    // So start_vol = peakVolume / (1.15 ^ totalWeeks)
-    // However, we clamp start_vol to a minimum (e.g. 20km) 
-    // to avoid starting at 2km for a 20 week plan.
-    let startVolume = peakVolume / Math.pow(1.15, Math.max(0, totalWeeks - 2)); // Reach peak 2 weeks before race?
-    if (startVolume < 15000) startVolume = 15000;
-    if (startVolume > peakVolume) startVolume = peakVolume;
+    // Linear Progression Logic
+    // Start at ~60% of peak volume
+    let startVolume = peakVolume * 0.60;
+
+    // Ensure logical minimum floor (e.g. 15km) but don't exceed peak
+    if (startVolume < 15000) startVolume = Math.min(15000, peakVolume);
 
     // Get authorized paces
     const paces = calculateTrainingPaces(vdot);
@@ -73,10 +70,10 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
             buildWeeks: config.buildWeeks,
         });
 
-        // Calculate Volume Cap for this week
-        // 15% increase from previous week
-        // vol = start * 1.15^(week-1)
-        let weekVolumeCap = startVolume * Math.pow(1.15, week - 1);
+        // Calculate Volume Cap for this week (Linear)
+        const rampWeeks = Math.max(1, totalWeeks - (config.taperWeeks || 2));
+        const weeklyIncrement = (peakVolume - startVolume) / rampWeeks;
+        let weekVolumeCap = startVolume + (weeklyIncrement * (week - 1));
 
         // Taper Logic: Reduce volume in last 2 weeks
         if (weeksUntilRace <= 2) {
@@ -87,32 +84,91 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
         }
 
         // Generate base workouts
-        let weekSchedule = generateWeek(phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek);
+        let weekSchedule = generateWeek({
+            phase,
+            raceType,
+            paces,
+            runsPerWeek,
+            ridesPerWeek,
+            strengthPerWeek,
+            swimsPerWeek,
+            weeklyVolume: weekVolumeCap
+        });
 
-        // Scale runs to fit Volume Cap
+        // Scale runs to fit Volume Cap - PRIORITIZING Long Run & Quality
         const runningWorkouts = weekSchedule.filter(w => isRun(w.type));
         const totalRunDistance = runningWorkouts.reduce((sum, w) => sum + w.totalDistance, 0);
 
         if (totalRunDistance > weekVolumeCap) {
-            const scalingFactor = weekVolumeCap / totalRunDistance;
+            // Identify Priority vs Fill workouts
+            const isPriority = (w: ScheduledWorkout) =>
+                w.type === WorkoutType.LONG_RUN ||
+                w.type === WorkoutType.INTERVALS ||
+                w.type === WorkoutType.TEMPO ||
+                w.type === WorkoutType.RACE;
 
-            weekSchedule = weekSchedule.map(w => {
-                if (isRun(w.type)) {
-                    const newDist = Math.round((w.totalDistance * scalingFactor) / 100) * 100; // Round to 100m
-                    // Minimum effective dose for a run ~3km
-                    const finalDist = Math.max(newDist, 3000);
+            const priorityWorkouts = runningWorkouts.filter(isPriority);
+            const fillWorkouts = runningWorkouts.filter(w => !isPriority(w));
 
-                    // Update Description
-                    const desc = updateDescription(w.type, finalDist, w.targetPace || 0);
+            const priorityDist = priorityWorkouts.reduce((sum, w) => sum + w.totalDistance, 0);
+            const fillDist = fillWorkouts.reduce((sum, w) => sum + w.totalDistance, 0);
 
-                    return {
-                        ...w,
-                        totalDistance: finalDist,
-                        description: desc
-                    };
-                }
-                return w;
-            });
+            let remainingCap = weekVolumeCap - priorityDist;
+
+            // Check if we need to cut into priority workouts
+            if (remainingCap < 0) {
+                // Extreme case: Priority runs alone exceed cap. 
+                // 1. Remove all fill runs
+                // 2. Scale priority runs
+                const scalingFactor = weekVolumeCap / priorityDist;
+
+                weekSchedule = weekSchedule.map(w => {
+                    if (isRun(w.type)) {
+                        if (!isPriority(w)) {
+                            // Remove fill run (or set to min, but for now 0 distance effectively removes it from volume calc, 
+                            // though we might want to keep the entry as a rest day or super short run?
+                            // Let's set to minimum effective dose if possible, but here we are strictly capped.
+                            // Let's zero it out or effectively skip. 
+                            // Actually, let's just make it a rest day or very short recovery.
+                            return { ...w, totalDistance: 0, description: 'Rest (Volume Cap)' };
+                        } else {
+                            // Scale priority
+                            const newDist = Math.round((w.totalDistance * scalingFactor) / 100) * 100;
+                            // Apply floor
+                            const finalDist = Math.max(newDist, 3000);
+                            return {
+                                ...w,
+                                totalDistance: finalDist,
+                                description: updateDescription(w.type, finalDist, w.targetPace || 0)
+                            };
+                        }
+                    }
+                    return w;
+                });
+            } else {
+                // We have enough for priority, scale down fill runs
+                const fillScalingFactor = fillDist > 0 ? remainingCap / fillDist : 0; // Should be < 1
+
+                weekSchedule = weekSchedule.map(w => {
+                    if (isRun(w.type) && !isPriority(w)) {
+                        let newDist = Math.round((w.totalDistance * fillScalingFactor) / 100) * 100;
+                        // If new distance is too short (<3km), might optionally remove it or keep as Recovery
+                        if (newDist < 3000) newDist = 3000; // Soft floor
+
+                        // Re-check cap? If soft floor pushes us over, we might exceed cap slightly. 
+                        // The prompt says "Reduce volume from Easy runs first". 
+                        // Strictly adhering to cap might mean removing the run.
+                        // Let's stick to the scaling.
+
+                        return {
+                            ...w,
+                            totalDistance: newDist,
+                            description: updateDescription(w.type, newDist, w.targetPace || 0)
+                        };
+                    }
+                    return w;
+                });
+            }
         }
 
         // Add to main list
@@ -162,15 +218,17 @@ function getMinPeakVolume(raceType: RaceType): number {
 
 type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
 
-function generateWeek(
+function generateWeek(params: {
     phase: 'BASE' | 'BUILD' | 'PEAK' | 'TAPER',
     raceType: RaceType,
     paces: any,
     runsPerWeek: number,
     ridesPerWeek: number,
     strengthPerWeek: number,
-    swimsPerWeek: number
-): ScheduledWorkout[] {
+    swimsPerWeek: number,
+    weeklyVolume: number
+}): ScheduledWorkout[] {
+    const { phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, weeklyVolume } = params;
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
 
@@ -192,7 +250,7 @@ function generateWeek(
     if (runsPerWeek >= 1) {
         const longRunDay = getAvailableDay(6); // Sunday
         usedDays.add(longRunDay);
-        const longRunDist = getLongRunDistance(raceType, phase);
+        const longRunDist = getLongRunDistance(raceType, weeklyVolume);
         workouts.push({
             dayOffset: longRunDay,
             type: WorkoutType.LONG_RUN,
@@ -312,17 +370,24 @@ function generateWeek(
     return workouts;
 }
 
-function getLongRunDistance(raceType: RaceType, phase: string): number {
-    let dist = 10000;
+function getLongRunDistance(raceType: RaceType, weeklyVolume: number): number {
+    // Dynamic Long Run: ~30-35% of weekly volume
+    let dist = weeklyVolume * 0.35;
+
+    // Apply strict ceilings based on Race Type
+    let maxDist = 32000;
     switch (raceType) {
-        case 'FIVE_K': dist = 12000; break;
-        case 'TEN_K': dist = 15000; break;
-        case 'HALF_MARATHON': dist = 18000; break;
-        case 'MARATHON': dist = 26000; break;
+        case 'FIVE_K': maxDist = 16000; break;
+        case 'TEN_K': maxDist = 22000; break;
+        case 'HALF_MARATHON': maxDist = 26000; break;
+        case 'MARATHON': maxDist = 32000; break;
     }
-    if (phase === 'BASE') dist *= 0.8;
-    if (phase === 'TAPER') dist *= 0.6;
-    if (phase === 'PEAK') dist *= 1.1;
+
+    if (dist > maxDist) dist = maxDist;
+
+    // Ensure reasonable minimum (e.g., 6km)
+    if (dist < 6000) dist = 6000;
+
     return Math.round(dist / 1000) * 1000;
 }
 

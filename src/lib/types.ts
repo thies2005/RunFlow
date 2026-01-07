@@ -35,6 +35,7 @@ export interface Activity {
     totalElevation: number | null;
     elevHigh: number | null;
     elevLow: number | null;
+    calories: number | null;
     trimp: number | null;
     runningTss: number | null;
     estimatedVdot: number | null;

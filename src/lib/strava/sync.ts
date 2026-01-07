@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { refreshStravaToken } from './oauth';
 import { calculateTrimp, type Sex } from '@/lib/metrics/trimp';
 import { calculateRunningTss, getActivityContribution } from '@/lib/metrics/fitness';
+import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import { WorkoutType } from '@/lib/types';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
@@ -90,6 +91,7 @@ export interface StravaActivity {
     description?: string;
     workout_type?: number;
     average_cadence?: number;
+    calories?: number;
 }
 
 /**
@@ -425,12 +427,26 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     const isNew = !existing;
                     let needsUpdate = existing && existing.hasHeartrate && existing.hrZone1Time === null;
 
-                    if (existing && existing.hasHeartrate && !needsUpdate) {
-                        const totalZoneTime = (existing.hrZone1Time || 0) + (existing.hrZone2Time || 0) +
-                            (existing.hrZone3Time || 0) + (existing.hrZone4Time || 0) +
-                            (existing.hrZone5Time || 0);
-                        if (totalZoneTime === 0) {
+                    if (existing && !needsUpdate) {
+                        // Check missing new fields (calories, estimatedVdot) or missing zones
+                        // Only backfill calories for activities that should have them (Run, Ride)
+                        const calorieActivityTypes = ['RUN', 'RIDE', 'VIRTUAL_RIDE'];
+                        if (calorieActivityTypes.includes(existing.type) && existing.calories === null) {
                             needsUpdate = true;
+                        }
+
+                        // Backfill estimatedVdot for runs with HR data
+                        if (existing.type === 'RUN' && existing.hasHeartrate && existing.estimatedVdot === null) {
+                            needsUpdate = true;
+                        }
+
+                        if (existing.hasHeartrate) {
+                            const totalZoneTime = (existing.hrZone1Time || 0) + (existing.hrZone2Time || 0) +
+                                (existing.hrZone3Time || 0) + (existing.hrZone4Time || 0) +
+                                (existing.hrZone5Time || 0);
+                            if (totalZoneTime === 0) {
+                                needsUpdate = true;
+                            }
                         }
                     }
 
@@ -514,6 +530,19 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         );
                     }
 
+                    // Calculate Effective VO2max (estimatedVdot)
+                    let estimatedVdot: number | null = null;
+                    if ((activity.type === 'Run' || activity.type === 'VirtualRun') && activity.has_heartrate && activity.average_heartrate) {
+                        const maxHrForCalc = currentHrMax || 190;
+                        const result = calculateEffectiveVO2max(
+                            activity.distance,
+                            activity.moving_time,
+                            activity.average_heartrate,
+                            maxHrForCalc
+                        );
+                        if (result > 0) estimatedVdot = result;
+                    }
+
                     const activityData = {
                         name: activity.name,
                         description: activity.description,
@@ -534,8 +563,10 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         totalElevation: activity.total_elevation_gain,
                         elevHigh: activity.elev_high ?? null,
                         elevLow: activity.elev_low ?? null,
+                        calories: activity.calories ?? null,
                         trimp,
                         runningTss,
+                        estimatedVdot,
                         hrZone1Time: zoneTimes.z1,
                         hrZone2Time: zoneTimes.z2,
                         hrZone3Time: zoneTimes.z3,
@@ -765,8 +796,12 @@ export async function syncActivityById(userId: string, activityId: number): Prom
             totalElevation: activity.total_elevation_gain,
             elevHigh: activity.elev_high ?? null,
             elevLow: activity.elev_low ?? null,
+            calories: activity.calories ?? null,
             trimp,
             runningTss,
+            estimatedVdot: (['Run', 'VirtualRun'].includes(activity.type) && activity.has_heartrate && activity.average_heartrate)
+                ? calculateEffectiveVO2max(activity.distance, activity.moving_time, activity.average_heartrate, user.hrMax || 190)
+                : null,
             hrZone1Time: zoneTimes.z1,
             hrZone2Time: zoneTimes.z2,
             hrZone3Time: zoneTimes.z3,

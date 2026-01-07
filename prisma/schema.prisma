@@ -142,6 +142,7 @@ model Activity {
   totalElevation  Float?    // meters gained
   elevHigh        Float?
   elevLow         Float?
+  calories        Float?
   
   // Calculated metrics
   trimp           Float?    // HR-based training impulse

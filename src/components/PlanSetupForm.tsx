@@ -8,7 +8,7 @@ import {
     AlertCircle, Save, Check, Calendar, Target, TrendingUp
 } from 'lucide-react';
 import { calculatePredictedTimes, calculateAllRacePredictions } from '@/lib/metrics/runalyze';
-import { formatTime, calculateVdot, predictRaceTime, type RaceDistance } from '@/lib/metrics/vdot';
+import { formatTime, calculateVdot, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
 import {
     calculateProjectedGoalTime,
     calculateWeeksUntilRace,
@@ -204,19 +204,37 @@ export default function PlanSetupForm({
         if (selectedActivityId && activitiesData?.activities) {
             const activity = activitiesData.activities.find((a: RaceActivity) => a.id === selectedActivityId);
             if (activity) {
-                // 1. Calculate VDOT from this activity
-                // We need to use VDOT formula because activity distance != race distance
-                const vdot = calculateVdot({
-                    distance: activity.distance,
-                    timeSeconds: activity.movingTime
-                });
+                const targetMeters = DISTANCES[calibrationDistance as RaceDistance] || 42195;
+                // If activity distance is within 15% of target distance, assume it's a correction (e.g. GPS error)
+                // Otherwise treat it as a projection from one distance to another
+                const isCorrection = Math.abs(activity.distance - targetMeters) < (targetMeters * 0.15);
 
-                // 2. Predict time for the selected Calibration Distance
-                const predictedSeconds = predictRaceTime(vdot, calibrationDistance as any);
+                let vdot: number;
+                let displaySeconds: number;
 
-                const h = Math.floor(predictedSeconds / 3600);
-                const m = Math.floor((predictedSeconds % 3600) / 60);
-                const s = predictedSeconds % 60;
+                if (isCorrection) {
+                    // CORRECTION: activity was actually this distance
+                    // Use the calibration distance + activity time to calculate VDOT
+                    vdot = calculateVdot({
+                        distance: calibrationDistance as any,
+                        timeSeconds: activity.movingTime
+                    });
+                    displaySeconds = activity.movingTime;
+                } else {
+                    // PROJECTION: activity was what it says it was
+                    // 1. Calculate VDOT from this activity's actual distance
+                    vdot = calculateVdot({
+                        distance: activity.distance,
+                        timeSeconds: activity.movingTime
+                    });
+
+                    // 2. Predict time for the selected Calibration Distance
+                    displaySeconds = predictRaceTime(vdot, calibrationDistance as any);
+                }
+
+                const h = Math.floor(displaySeconds / 3600);
+                const m = Math.floor((displaySeconds % 3600) / 60);
+                const s = displaySeconds % 60;
                 setHours(h.toString());
                 setMinutes(m.toString());
                 setSeconds(s.toString());
@@ -227,7 +245,7 @@ export default function PlanSetupForm({
                 }
             }
         }
-    }, [selectedActivityId, activitiesData, calibrationDistance]); // Re-run when dist changes
+    }, [selectedActivityId, activitiesData, calibrationDistance, effectiveVO2max]); // Re-run when dist changes
 
     // Onboarding mutation (create goal)
     const createGoalMutation = useMutation({

@@ -1,10 +1,12 @@
 'use client';
 
+import { useMemo, useCallback } from 'react';
 import { Activity } from '@/lib/types';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { ArrowLeft, Calendar, MapPin, Clock, Zap, Heart, Mountain } from 'lucide-react';
 import Link from 'next/link';
+import InteractiveStreamsChart from '@/components/InteractiveStreamsChart';
 
 interface ClientAnalysisProps {
     activity: Activity;
@@ -13,26 +15,28 @@ interface ClientAnalysisProps {
 export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
     const streams = activity.streams as any;
 
-    // Prepare data for charts
-    const chartData = streams?.time?.map((t: number, i: number) => ({
-        time: t,
-        distance: streams.distance ? streams.distance[i] : 0,
-        hr: streams.heartrate ? streams.heartrate[i] : null,
-        pace: (streams.velocity_smooth && streams.velocity_smooth[i] > 0.5)
-            ? Math.min(20, (1000 / streams.velocity_smooth[i]) / 60)
-            : null, // min/km, capped at 20 to avoid outliers
-        altitude: streams.altitude ? streams.altitude[i] : null,
-        cadence: streams.cadence ? streams.cadence[i] * 2 : null,
-    })).filter((d: any) => d.hr !== null || d.pace !== null) || [];
+    // Memoize chart data transformation to avoid recalculation on re-render
+    const chartData = useMemo(() => {
+        if (!streams?.time) return [];
 
-    // Format X axis (time)
-    const formatXAxis = (tickItem: number) => {
+        return streams.time.map((t: number, i: number) => ({
+            time: t,
+            distance: streams.distance ? streams.distance[i] : 0,
+            hr: streams.heartrate ? streams.heartrate[i] : null,
+            pace: (streams.velocity_smooth && streams.velocity_smooth[i] > 0.5)
+                ? Math.min(20, (1000 / streams.velocity_smooth[i]) / 60)
+                : null,
+            altitude: streams.altitude ? streams.altitude[i] : null,
+            cadence: streams.cadence ? streams.cadence[i] * 2 : null,
+        })).filter((d: any) => d.hr !== null || d.pace !== null);
+    }, [streams]);
+
+    // Memoize formatXAxis to avoid recreating on every render
+    const formatXAxis = useCallback((tickItem: number) => {
         const mins = Math.floor(tickItem / 60);
         return `${mins}m`;
-    };
+    }, []);
 
-    // calculate averages/max for summary if not in activity
-    const maxHr = Math.max(...(chartData.map((d: any) => d.hr || 0)));
     const avgHr = activity.averageHr || 0;
 
     return (
@@ -89,6 +93,12 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                     </div>
                     <div className="text-2xl font-bold">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'} <span className="text-sm font-normal text-gray-500">spm</span></div>
                 </div>
+            </div>
+
+            {/* Combined Interactive Chart */}
+            <div className="glass-card p-6 mb-8">
+                <h3 className="text-lg font-semibold mb-4">Detailed Analysis</h3>
+                <InteractiveStreamsChart streams={streams} />
             </div>
 
             {/* Graphs */}
@@ -154,7 +164,6 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                 </div>
 
                 {/* Altitude Graph */}
-                {/* Only show if we have altitude data that varies */}
                 {chartData.some((d: any) => d.altitude) && (
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">

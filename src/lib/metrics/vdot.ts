@@ -33,7 +33,7 @@ export interface PaceRange {
 }
 
 // Race distances in meters
-const DISTANCES: Record<RaceDistance, number> = {
+export const DISTANCES: Record<RaceDistance, number> = {
     '5K': 5000,
     '10K': 10000,
     'HALF': 21097.5,

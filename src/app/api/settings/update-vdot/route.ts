@@ -61,29 +61,77 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, taperWeeks, peakWeeks, buildWeeks, calibrationFactor } = await req.json();
+        const body = await req.json();
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, taperWeeks, peakWeeks, buildWeeks, calibrationFactor } = body;
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
         }
 
+        // Validate raceDistance is a valid enum value
+        const validDistances = ['5K', '10K', 'HALF', 'MARATHON'];
+        if (!validDistances.includes(raceDistance)) {
+            return NextResponse.json({ error: 'Invalid race distance' }, { status: 400 });
+        }
+
+        // Validate timeSeconds is a positive number
+        if (typeof timeSeconds !== 'number' || timeSeconds <= 0 || timeSeconds > 86400) {
+            return NextResponse.json({ error: 'Time must be between 1 second and 24 hours' }, { status: 400 });
+        }
+
         // 1. Calculate new VDOT
         const newVdot = calculateVdot({ distance: raceDistance as RaceDistance, timeSeconds });
 
-        // 2. Update User HR settings if provided
-        await prisma.user.update({
-            where: { id: session.user.id },
-            data: {
-                ...(calibrationFactor && { vdotCorrectionFactor: calibrationFactor }),
-                ...(maxHeartRate && { hrMax: maxHeartRate }),
-                ...(restingHeartRate && { hrRest: restingHeartRate }),
-                ...(weight && { weight: parseFloat(weight) }),
-                ...(hrZone1Max && { hrZone1Max }),
-                ...(hrZone2Max && { hrZone2Max }),
-                ...(hrZone3Max && { hrZone3Max }),
-                ...(hrZone4Max && { hrZone4Max }),
-            }
+        // 2. Build user update data with explicit validation
+        const userUpdateData: Record<string, unknown> = {};
+
+        // Calibration factor: 0.5 to 2.0
+        if (typeof calibrationFactor === 'number' && calibrationFactor >= 0.5 && calibrationFactor <= 2.0) {
+            userUpdateData.vdotCorrectionFactor = calibrationFactor;
+        }
+
+        // Max Heart Rate: 100-250 bpm
+        if (typeof maxHeartRate === 'number' && maxHeartRate >= 100 && maxHeartRate <= 250) {
+            userUpdateData.hrMax = Math.round(maxHeartRate);
+        }
+
+        // Resting Heart Rate: 30-100 bpm
+        if (typeof restingHeartRate === 'number' && restingHeartRate >= 30 && restingHeartRate <= 100) {
+            userUpdateData.hrRest = Math.round(restingHeartRate);
+        }
+
+        // Weight: 30-300 kg
+        const parsedWeight = typeof weight === 'number' ? weight : parseFloat(String(weight));
+        if (!isNaN(parsedWeight) && parsedWeight >= 30 && parsedWeight <= 300) {
+            userUpdateData.weight = parsedWeight;
+        }
+
+        // HR Zone thresholds: 40-100%
+        const validateZone = (val: unknown): number | null => {
+            if (typeof val !== 'number') return null;
+            if (val >= 40 && val <= 100) return Math.round(val);
+            return null;
+        };
+
+        const zoneUpdates = {
+            hrZone1Max: validateZone(hrZone1Max),
+            hrZone2Max: validateZone(hrZone2Max),
+            hrZone3Max: validateZone(hrZone3Max),
+            hrZone4Max: validateZone(hrZone4Max),
+        };
+
+        Object.entries(zoneUpdates).forEach(([key, value]) => {
+            if (value !== null) userUpdateData[key] = value;
         });
+
+        // Update user if there's anything to update
+        if (Object.keys(userUpdateData).length > 0) {
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: userUpdateData
+            });
+        }
+
 
         // 3. Find Active Goal
         const activeGoal = await prisma.goal.findFirst({
@@ -167,6 +215,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, vdot: newVdot });
     } catch (error) {
         console.error('Settings update error:', error);
-        return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

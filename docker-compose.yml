@@ -39,13 +39,13 @@
     container_name: runflow-db
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=runflow
-      - POSTGRES_PASSWORD=runflow
-      - POSTGRES_DB=runflow
+      - POSTGRES_USER=${POSTGRES_USER:-runflow}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-runflow}
+      - POSTGRES_DB=${POSTGRES_DB:-runflow}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U runflow -d runflow" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-runflow} -d ${POSTGRES_DB:-runflow}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -58,9 +58,9 @@
     restart: unless-stopped
     environment:
       - POSTGRES_HOST=db
-      - POSTGRES_DB=runflow
-      - POSTGRES_USER=runflow
-      - POSTGRES_PASSWORD=runflow
+      - POSTGRES_DB=${POSTGRES_DB:-runflow}
+      - POSTGRES_USER=${POSTGRES_USER:-runflow}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-runflow}
       - SCHEDULE=@every 6h
       - BACKUP_KEEP_DAYS=7
       - BACKUP_KEEP_WEEKS=4

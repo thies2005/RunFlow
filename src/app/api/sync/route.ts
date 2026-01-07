@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         console.error('Sync error:', error);
         return NextResponse.json(
-            { error: 'Failed to sync activities', details: String(error) },
+            { error: 'Failed to sync activities' },
             { status: 500 }
         );
     }
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('Sync status error:', error);
         return NextResponse.json(
-            { error: 'Failed to get sync status', details: String(error) },
+            { error: 'Failed to get sync status' },
             { status: 500 }
         );
     }

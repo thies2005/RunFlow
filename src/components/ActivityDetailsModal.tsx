@@ -1,7 +1,7 @@
 'use client';
 
-import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Mountain, Zap, BarChart2, Tag } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Zap, BarChart2, Tag } from 'lucide-react';
+import { format } from 'date-fns';
 import { Activity, WorkoutType } from '@/lib/types';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -26,7 +26,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     if (!isOpen || !activity) return null;
 
     const handleTypeChange = async (newType: WorkoutType) => {
-        setTrainingType(newType);
+        const previousType = trainingType;
+        setTrainingType(newType); // Optimistic update
         setIsUpdatingType(true);
         try {
             const res = await fetch(`/api/activities/${activity.id}/type`, {
@@ -36,8 +37,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             });
             if (!res.ok) throw new Error('Failed to update type');
         } catch (error) {
-            console.error(error);
-            // Revert on error?
+            console.error('Failed to update training type:', error);
+            setTrainingType(previousType); // Revert on error
         } finally {
             setIsUpdatingType(false);
         }
@@ -76,7 +77,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="relative w-full max-w-2xl bg-[#0f1115] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="relative p-6 border-b border-white/10 bg-gradient-to-r from-accent-purple/10 to-accent-pink/10">
@@ -235,7 +236,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2">Details</h3>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Calories</span>
-                                <span className="text-white font-medium">-</span>
+                                <span className="text-white font-medium">{activity.calories ? Math.round(activity.calories) : '-'} kcal</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-400">Cadence</span>

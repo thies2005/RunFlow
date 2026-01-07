@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { syncActivityById } from '@/lib/strava/sync';
+import { createHmac } from 'crypto';
 
 /**
  * Safely convert a value to BigInt, handling edge cases
@@ -13,7 +14,58 @@ function safeBigInt(value: unknown): bigint {
 }
 
 const VERIFY_TOKEN = process.env.STRAVA_VERIFY_TOKEN || "STRAVA";
+const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
 
+/**
+ * Verify Strava webhook signature using HMAC-SHA256
+ * Strava signs webhooks with: HMAC-SHA256(client_secret, body)
+ */
+function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
+    if (!CLIENT_SECRET) {
+        console.warn('STRAVA_CLIENT_SECRET not set, skipping signature verification');
+        return true; // Allow in development without secret
+    }
+
+    if (!signature) {
+        console.warn('No signature provided in webhook request');
+        return false;
+    }
+
+    const expectedSignature = createHmac('sha256', CLIENT_SECRET)
+        .update(rawBody)
+        .digest('hex');
+
+    // Constant-time comparison to prevent timing attacks
+    if (signature.length !== expectedSignature.length) {
+        return false;
+    }
+
+    let result = 0;
+    for (let i = 0; i < signature.length; i++) {
+        result |= signature.charCodeAt(i) ^ expectedSignature.charCodeAt(i);
+    }
+
+    return result === 0;
+}
+
+/**
+ * Validate webhook payload structure
+ */
+function isValidWebhookPayload(body: unknown): body is {
+    object_type: string;
+    aspect_type?: string;
+    object_id?: number;
+    owner_id: number;
+    updates?: Record<string, unknown>;
+} {
+    if (!body || typeof body !== 'object') return false;
+    const payload = body as Record<string, unknown>;
+
+    if (typeof payload.object_type !== 'string') return false;
+    if (typeof payload.owner_id !== 'number') return false;
+
+    return true;
+}
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -34,10 +86,32 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
+        // Get raw body for signature verification
+        const rawBody = await req.text();
+
+        // Verify webhook signature
+        const signature = req.headers.get('x-hub-signature');
+        if (!verifyWebhookSignature(rawBody, signature)) {
+            console.error('Webhook signature verification failed');
+            return new NextResponse('Forbidden', { status: 403 });
+        }
+
+        // Parse and validate body
+        let body: unknown;
+        try {
+            body = JSON.parse(rawBody);
+        } catch {
+            return new NextResponse('Invalid JSON', { status: 400 });
+        }
+
+        if (!isValidWebhookPayload(body)) {
+            console.error('Invalid webhook payload structure');
+            return new NextResponse('Bad Request', { status: 400 });
+        }
+
         const { object_type, aspect_type, object_id, owner_id, updates } = body;
 
-        console.log('Webhook received:', body);
+        console.log('Webhook received:', { object_type, aspect_type, owner_id });
 
         // Handle Deauthorization
         // Event: object_type='athlete', updates={ authorized: 'false' }
@@ -66,7 +140,7 @@ export async function POST(req: Request) {
         }
 
         // Handle Activity Events (create, update, delete)
-        if (object_type === 'activity') {
+        if (object_type === 'activity' && object_id && aspect_type) {
             const stravaAthleteId = owner_id.toString();
 
             // Find user by Strava account
@@ -102,4 +176,3 @@ export async function POST(req: Request) {
         return new NextResponse('Internal Server Error', { status: 500 });
     }
 }
-

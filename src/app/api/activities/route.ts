@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('Activities error:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch activities', details: String(error) },
+            { error: 'Failed to fetch activities' },
             { status: 500 }
         );
     }
@@ -93,9 +93,49 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { name, date, type, distance, duration, hr } = body;
 
-        // Validation
+        // === Input Validation ===
+
+        // Required fields check
         if (!name || !date || !distance || !duration) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        // Name: string, 1-200 characters
+        if (typeof name !== 'string' || name.length < 1 || name.length > 200) {
+            return NextResponse.json({ error: 'Name must be 1-200 characters' }, { status: 400 });
+        }
+
+        // Date: valid date
+        const parsedDate = new Date(date);
+        if (isNaN(parsedDate.getTime())) {
+            return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+        }
+
+        // Distance: positive number, max 500km
+        const parsedDistance = parseFloat(String(distance));
+        if (isNaN(parsedDistance) || parsedDistance <= 0 || parsedDistance > 500) {
+            return NextResponse.json({ error: 'Distance must be between 0.001 and 500 km' }, { status: 400 });
+        }
+
+        // Duration: positive integer, max 48 hours in minutes
+        const parsedDuration = parseInt(String(duration), 10);
+        if (isNaN(parsedDuration) || parsedDuration <= 0 || parsedDuration > 2880) {
+            return NextResponse.json({ error: 'Duration must be between 1 and 2880 minutes' }, { status: 400 });
+        }
+
+        // Type: validate against enum
+        const validTypes = ['RUN', 'VIRTUAL_RIDE', 'RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER'];
+        const activityType = type && validTypes.includes(String(type).toUpperCase())
+            ? String(type).toUpperCase()
+            : 'RUN';
+
+        // HR: optional, positive number, 30-250 bpm
+        let parsedHr: number | null = null;
+        if (hr !== undefined && hr !== null && hr !== '') {
+            parsedHr = parseFloat(String(hr));
+            if (isNaN(parsedHr) || parsedHr < 30 || parsedHr > 250) {
+                return NextResponse.json({ error: 'Heart rate must be between 30 and 250 bpm' }, { status: 400 });
+            }
         }
 
         // Generate fake Strava ID (use timestamp)
@@ -105,14 +145,14 @@ export async function POST(request: NextRequest) {
             data: {
                 userId: session.user.id,
                 stravaId,
-                name,
-                type: type || 'RUN',
-                startDate: new Date(date),
-                distance: parseFloat(distance) * 1000, // km -> meters
-                movingTime: parseInt(duration) * 60,   // min -> seconds
-                elapsedTime: parseInt(duration) * 60,
-                averageHr: hr ? parseFloat(hr) : null,
-                hasHeartrate: !!hr,
+                name: name.trim().substring(0, 200), // Sanitize
+                type: activityType as any,
+                startDate: parsedDate,
+                distance: parsedDistance * 1000, // km -> meters
+                movingTime: parsedDuration * 60,   // min -> seconds
+                elapsedTime: parsedDuration * 60,
+                averageHr: parsedHr,
+                hasHeartrate: parsedHr !== null,
 
                 // Defaults for manual entry
                 totalElevation: 0,
@@ -130,3 +170,4 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to create activity' }, { status: 500 });
     }
 }
+

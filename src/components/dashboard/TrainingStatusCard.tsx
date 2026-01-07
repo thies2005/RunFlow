@@ -45,13 +45,6 @@ export default function TrainingStatusCard() {
                     <div>
                         <p className="text-xs text-gray-400 uppercase tracking-widest font-bold leading-tight">Shape</p>
                         <p className="text-2xl font-black text-white leading-tight">{shapePercent}%</p>
-                        <div className="flex gap-2 text-[10px] items-center mt-0.5">
-                            <span className="text-gray-400" title="Running Mileage">Run: <span className="text-white font-bold">{marathonShape?.mileageScore || 0}%</span></span>
-                            <span className="text-gray-400" title="Long Runs">Long: <span className="text-white font-bold">{marathonShape?.longRunScore || 0}%</span></span>
-                        </div>
-                        <div className="text-[10px]">
-                            <span className="text-gray-400" title="Cross-Training / Base">Base: <span className="text-white font-bold">{marathonShape?.crossTrainingScore || 0}%</span></span>
-                        </div>
                     </div>
                 </div>
 

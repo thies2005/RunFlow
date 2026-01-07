@@ -220,6 +220,11 @@ export default function PlanSetupForm({
                 setHours(h.toString());
                 setMinutes(m.toString());
                 setSeconds(s.toString());
+
+                // 3. Update Calibration Factor
+                if (effectiveVO2max > 0) {
+                    setCalibrationFactor(vdot / effectiveVO2max);
+                }
             }
         }
     }, [selectedActivityId, activitiesData, calibrationDistance]); // Re-run when dist changes

@@ -48,6 +48,9 @@ export default function PlanSetupForm({
     const [raceDate, setRaceDate] = useState(
         new Date(Date.now() + 12 * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     );
+    const [planStartDate, setPlanStartDate] = useState(
+        new Date().toISOString().split('T')[0]
+    );
 
     // Calibration Mode
     const [calibrationMode, setCalibrationMode] = useState<'activity' | 'manual'>('manual');
@@ -310,6 +313,7 @@ export default function PlanSetupForm({
                     name: goalName,
                     raceType,
                     raceDate,
+                    planStartDate,
                     planWeeks: 12,
                     runsPerWeek,
                     ridesPerWeek,
@@ -463,6 +467,17 @@ export default function PlanSetupForm({
                                 className={inputClass}
                             />
                         </div>
+                    </div>
+
+                    <div className="mt-4">
+                        <label className="block text-xs text-gray-400 mb-1 uppercase">Plan Start Date</label>
+                        <input
+                            type="date"
+                            value={planStartDate}
+                            onChange={(e) => setPlanStartDate(e.target.value)}
+                            className={inputClass}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">When should your training plan begin?</p>
                     </div>
                 </div>
             )}

@@ -198,19 +198,18 @@ export async function POST(req: NextRequest) {
 
             // Regenerate Plan
 
-            // Delete existing FUTURE & INCOMPLETE workouts for this goal
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
+            // Delete ALL incomplete workouts for this goal before regenerating
+            // This prevents duplicates from week boundary alignment issues
+            // We keep completed workouts to preserve history
             await prisma.workout.deleteMany({
                 where: {
                     goalId: activeGoal.id,
-                    isCompleted: false,
-                    scheduledDate: { gte: today }
+                    isCompleted: false
                 }
             });
 
-            // Generate new plan (offset to start TODAY)
+            // Generate new plan starting from today
+            // The plan generator will align to the start of the week
             const startDate = new Date();
 
             const workouts = generateTrainingPlan({

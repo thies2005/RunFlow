@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
         runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
         taperWeeks, peakWeeks, buildWeeks,
         longRunDay, workoutDay, // L-03: Flexible Days
-        calibrationTime, calibrationDistance, calibrationFactor
+        calibrationTime, calibrationDistance, calibrationFactor,
+        planStartDate // Optional custom start date
     } = body;
 
     // If calibration factor is provided, update global user settings immediately
@@ -243,7 +244,7 @@ export async function POST(request: NextRequest) {
                 vdot: currentVdot,
                 raceType: raceType as any,
                 raceDate: new Date(raceDate),
-                startDate: new Date(),
+                startDate: planStartDate ? new Date(planStartDate) : new Date(),
                 runsPerWeek: runsPerWeek ?? 4,
                 ridesPerWeek: ridesPerWeek ?? 0,
                 strengthPerWeek: strengthPerWeek ?? 0,

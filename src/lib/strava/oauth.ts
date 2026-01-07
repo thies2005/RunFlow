@@ -6,6 +6,7 @@ import { AuthOptions } from 'next-auth';
 import StravaProvider from 'next-auth/providers/strava';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
+import { encryptToken, decryptToken } from '@/lib/crypto';
 
 export const authOptions: AuthOptions = {
     adapter: PrismaAdapter(prisma) as any,
@@ -27,6 +28,15 @@ export const authOptions: AuthOptions = {
             if (account && 'athlete' in account) {
                 delete (account as any).athlete;
             }
+
+            // Encrypt tokens before they're stored by the adapter
+            if (account?.access_token) {
+                account.access_token = encryptToken(account.access_token);
+            }
+            if (account?.refresh_token) {
+                account.refresh_token = encryptToken(account.refresh_token);
+            }
+
             return true;
         },
         async session({ session, user }) {
@@ -77,6 +87,7 @@ export const authOptions: AuthOptions = {
 
 /**
  * Refresh Strava access token if expired
+ * Handles encrypted tokens - decrypts for use, encrypts when storing
  */
 export async function refreshStravaToken(userId: string): Promise<string | null> {
     const account = await prisma.account.findFirst({
@@ -90,10 +101,14 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
         return null;
     }
 
+    // Decrypt refresh token for use
+    const decryptedRefreshToken = decryptToken(account.refresh_token);
+
     // Check if token is still valid (with 5 min buffer)
     // expires_at is in seconds (Unix timestamp)
     if (account.expires_at && account.expires_at * 1000 > Date.now() + 5 * 60 * 1000) {
-        return account.access_token;
+        // Decrypt access token before returning
+        return account.access_token ? decryptToken(account.access_token) : null;
     }
 
     // Refresh the token
@@ -104,7 +119,7 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
             client_id: process.env.STRAVA_CLIENT_ID,
             client_secret: process.env.STRAVA_CLIENT_SECRET,
             grant_type: 'refresh_token',
-            refresh_token: account.refresh_token,
+            refresh_token: decryptedRefreshToken,
         }),
     });
 
@@ -115,18 +130,19 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
 
     const data = await response.json();
 
-    // Update account with new tokens
+    // Encrypt tokens before storing
     await prisma.account.update({
         where: {
             id: account.id
         },
         data: {
-            access_token: data.access_token,
-            refresh_token: data.refresh_token,
+            access_token: encryptToken(data.access_token),
+            refresh_token: encryptToken(data.refresh_token),
             expires_at: data.expires_at,
         },
     });
 
+    // Return the plaintext access token for immediate use
     return data.access_token;
 }
 

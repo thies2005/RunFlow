@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo } from '@/components';
+import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo, Footer } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
@@ -118,15 +118,7 @@ export default function Dashboard() {
                             </div>
 
                             <div className="flex items-center gap-4">
-                                <button
-                                    type="button"
-                                    onClick={() => syncMutation.mutate()}
-                                    disabled={syncStatus?.syncInProgress || syncMutation.isPending}
-                                    className="btn-secondary flex items-center gap-2 py-2 px-4 disabled:opacity-50"
-                                >
-                                    <RefreshCw className={`w-4 h-4 ${syncStatus?.syncInProgress || syncMutation.isPending ? 'animate-spin' : ''}`} />
-                                    {syncMutation.isPending ? 'Starting...' : syncStatus?.syncInProgress ? 'Syncing...' : 'Sync'}
-                                </button>
+
                                 <button onClick={() => router.push('/analytics')} className="btn-secondary flex items-center gap-2 py-2 px-4">
                                     📊 Analytics
                                 </button>
@@ -182,6 +174,7 @@ export default function Dashboard() {
                             <WorkoutScheduleCard
                                 weeklyWorkouts={weeklyWorkouts}
                                 today={today}
+                                currentWeekMileage={currentWeekMileage}
                                 onEditWorkout={(w) => {
                                     setEditingWorkout(w);
                                     setInitialComplete(false);
@@ -206,20 +199,26 @@ export default function Dashboard() {
                     <div className="mt-8">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-semibold text-white">Recent Activities</h2>
-                            <button onClick={() => router.push('/activities')} className="btn-secondary py-2 px-4">
-                                View All
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => syncMutation.mutate()}
+                                    disabled={syncStatus?.syncInProgress || syncMutation.isPending}
+                                    className="btn-secondary flex items-center gap-2 py-2 px-4 disabled:opacity-50"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${syncStatus?.syncInProgress || syncMutation.isPending ? 'animate-spin' : ''}`} />
+                                    {syncMutation.isPending ? 'Starting...' : syncStatus?.syncInProgress ? 'Syncing...' : 'Sync'}
+                                </button>
+                                <button onClick={() => router.push('/activities')} className="btn-secondary py-2 px-4">
+                                    View All
+                                </button>
+                            </div>
                         </div>
                         <ActivityList activities={recentActivities} isLoading={isLoading} userHrMax={userHrMax} />
                     </div>
                 </main>
 
-                <footer className="border-t border-white/10 mt-12 py-8">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-4">
-                        <PoweredByStravaLogo className="h-4" />
-                        <p className="text-gray-500 text-xs">RunFlow • Built with ❤️ for runners</p>
-                    </div>
-                </footer>
+                <Footer />
 
                 <SettingsModal
                     isOpen={isSettingsOpen}

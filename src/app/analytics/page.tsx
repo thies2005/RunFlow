@@ -12,6 +12,7 @@ import {
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import RacePredictionChart from '@/components/RacePredictionChart';
 import CombinedAnalyticsChart, { TimeRange } from '@/components/CombinedAnalyticsChart';
+import { Footer } from '@/components';
 import {
     calculateWeightedEffectiveVO2max,
     calculateMarathonShape,
@@ -435,7 +436,7 @@ export default function AnalyticsPage() {
                             <span>Mileage: {runalyzeMetrics.mileageScore}%</span>
                             <span>Long Runs: {runalyzeMetrics.longRunScore}%</span>
                             {runalyzeMetrics.crossTrainingScore > 0 && (
-                                <span className="text-accent-blue">X-Train: {runalyzeMetrics.crossTrainingScore}%</span>
+                                <span>X-Train: {runalyzeMetrics.crossTrainingScore}%</span>
                             )}
                         </div>
                     </div>
@@ -721,6 +722,7 @@ export default function AnalyticsPage() {
                 shapePercent={runalyzeMetrics.shape}
                 activities={activitiesData?.activities || []}
             />
+            <Footer />
         </div>
     );
 }

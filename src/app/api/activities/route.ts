@@ -63,10 +63,20 @@ export async function GET(request: NextRequest) {
             prisma.activity.count({ where }),
         ]);
 
-        // Convert BigInt to string for JSON serialization
+        const activityIds = activities.map(a => a.id);
+        const linkedWorkouts = await prisma.workout.findMany({
+            where: {
+                linkedActivityId: { in: activityIds }
+            },
+            select: { linkedActivityId: true }
+        });
+        const linkedActivityIds = new Set(linkedWorkouts.map(w => w.linkedActivityId));
+
+        // Convert BigInt to string and add isLinked flag
         const serialized = activities.map(a => ({
             ...a,
             stravaId: a.stravaId.toString(),
+            isLinked: linkedActivityIds.has(a.id)
         }));
 
         return NextResponse.json({

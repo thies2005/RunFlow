@@ -16,6 +16,7 @@ interface RecentActivity {
     distance: number;
     movingTime: number;
     type: string;
+    isLinked?: boolean;
 }
 
 function formatPace(distanceMeters: number, timeSeconds: number): string {
@@ -62,7 +63,10 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
         );
     }
 
-    const activities: RecentActivity[] = data.activities;
+    // Filter out linked activities, unless it's the currently selected one
+    const activities: RecentActivity[] = data.activities.filter((a: RecentActivity) =>
+        !a.isLinked || a.id === selectedId
+    );
 
     return (
         <div className="space-y-2">
@@ -75,8 +79,8 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
                 type="button"
                 onClick={() => onSelect(null)}
                 className={`w-full p-3 rounded-lg border text-left transition-all ${selectedId === null
-                        ? 'border-accent-orange bg-accent-orange/10'
-                        : 'border-white/10 bg-white/5 hover:bg-white/10'
+                    ? 'border-accent-orange bg-accent-orange/10'
+                    : 'border-white/10 bg-white/5 hover:bg-white/10'
                     }`}
             >
                 <div className="flex items-center gap-3">
@@ -99,8 +103,8 @@ export default function ActivityPicker({ selectedId, onSelect }: ActivityPickerP
                     type="button"
                     onClick={() => onSelect(activity.id)}
                     className={`w-full p-3 rounded-lg border text-left transition-all ${selectedId === activity.id
-                            ? 'border-accent-orange bg-accent-orange/10'
-                            : 'border-white/10 bg-white/5 hover:bg-white/10'
+                        ? 'border-accent-orange bg-accent-orange/10'
+                        : 'border-white/10 bg-white/5 hover:bg-white/10'
                         }`}
                 >
                     <div className="flex items-center gap-3">

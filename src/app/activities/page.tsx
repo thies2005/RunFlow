@@ -3,7 +3,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, ArrowLeft, Plus } from 'lucide-react';
-import { ActivityList, ManualActivityModal } from '@/components';
+import { ActivityList, ManualActivityModal, Footer } from '@/components';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
@@ -159,6 +159,7 @@ export default function ActivitiesPage() {
                 isOpen={isManualModalOpen}
                 onClose={() => setIsManualModalOpen(false)}
             />
+            <Footer />
         </div>
     );
 }

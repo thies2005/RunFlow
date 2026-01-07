@@ -242,7 +242,32 @@ export default function PlanPage() {
         weeks[monday].push(w);
     });
 
-    const sortedWeeks = Object.keys(weeks).sort();
+    const sortedWeeks = Object.keys(weeks).sort().filter(weekStartIso => {
+        const weekStart = new Date(weekStartIso);
+        // If plan has a start date, filter out weeks entirely before it
+        // (Allows the week containing the start date to appear)
+        if (goal.planStartDate) {
+            const planStart = startOfWeek(new Date(goal.planStartDate), { weekStartsOn: 1 });
+            if (weekStart < planStart) return false;
+        }
+
+        // Also check if the week has ANY active workouts (not just REST)
+        // If a week only has REST days and is in the past, maybe hide it? 
+        // User said "dont show weeks where there is no training". 
+        // So we filter out weeks that consist ONLY of Rest Days, unless it's current or future week?
+        // Actually, let's keep it simple: if planStartDate is set, use it.
+        // If not, we just rely on standard behavior, but user specifically asked this.
+
+        const weekWorkouts = weeks[weekStartIso];
+        const hasActiveWorkouts = weekWorkouts.some((w: any) => w.workoutType !== 'REST');
+
+        // If week has no active workouts AND is before this week, hide it?
+        // Or just hide "empty" weeks in general unless manually populated?
+        // Let's filter out weeks that have NO active workouts (only REST), as that implies "no training".
+        if (!hasActiveWorkouts) return false;
+
+        return true;
+    });
 
     const handleEdit = (workout: any) => {
         setEditingWorkout(workout);

@@ -149,7 +149,9 @@ export default function AnalyticsPage() {
         const effectiveVO2max = statsData?.effectiveVO2max || localVO2max;
 
         // Include cross-training activities for consistent shape calculation with start page
-        const shapeResult = calculateMarathonShape(runs, effectiveVO2max, crossTrainingActivities);
+        const localShapeResult = calculateMarathonShape(runs, effectiveVO2max, crossTrainingActivities);
+        // Use server-provided shape if available (unified metric), otherwise fallback to local
+        const shapeResult = statsData?.marathonShape || localShapeResult;
         const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const trainingPaces = calculateTrainingPaces(effectiveVO2max);

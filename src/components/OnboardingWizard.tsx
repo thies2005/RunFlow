@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowRight, RefreshCw, BarChart2, Calendar } from 'lucide-react';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import PlanSetupForm from './PlanSetupForm';
+import { useEffect } from 'react';
 
 export default function OnboardingWizard() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const searchParams = useSearchParams();
     const { data: session } = useSession();
     const [step, setStep] = useState(() => {
@@ -32,7 +34,22 @@ export default function OnboardingWizard() {
             body: JSON.stringify({ range: importRange }),
             headers: { 'Content-Type': 'application/json' }
         }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sync-status'] });
+        }
     });
+
+    // Auto-advance to step 2 when sync completes
+    useEffect(() => {
+        if (step === 1 && !syncStatus?.syncInProgress && (syncStatus?.totalActivities || 0) > 0) {
+            // Optional: small delay to let user see "Done" or just auto-advance
+            // For now, let's just let the user click "Analyze Data" as it was before,
+            // BUT we ensure the UI updates to show that button.
+            // The user request said "to get to next screen you have to refresh",
+            // implying the button didn't appear.
+            // Invalidating the query should fix that.
+        }
+    }, [syncStatus, step]);
 
     // Analysis Logic (Step 2) - fetch stats for VO2max
     const { data: statsData } = useQuery({

@@ -246,54 +246,44 @@ export default function AnalyticsPage() {
             atl = atl + (load - atl) / 7;
             const tsb = ctl - atl;
 
-            if (d.getDay() === 0) { // Weekly sample
-                fitness.push({
-                    date: d.toISOString().split('T')[0], // ISO Date
-                    ctl: Math.round(ctl),
-                    atl: Math.round(atl),
-                    tsb: Math.round(tsb)
-                });
-            }
+            fitness.push({
+                date: dateKey,
+                ctl: Math.round(ctl),
+                atl: Math.round(atl),
+                tsb: Math.round(tsb)
+            });
         }
 
-        // Build weekly volume map (km per week)
-        const weeklyVolumeMap = new Map<string, number>();
-        const weeklyTimeMap = new Map<string, number>();
-        const weeklyVO2Map = new Map<string, { values: number[]; vo2max?: number }>();
+        // Build daily volume map (km per day)
+        const dailyVolumeMap = new Map<string, number>();
+        const dailyTimeMap = new Map<string, number>();
+        const dailyVO2Map = new Map<string, { values: number[]; vo2max?: number }>();
 
         activities.forEach(activity => {
-            const date = new Date(activity.startDate);
-            const weekStart = new Date(date);
-            const day = weekStart.getDay();
-            weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1)); // Monday
-
-            // Use Sunday as the key to match fitness data
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekEnd.getDate() + 6); // Sunday
-            const weekKey = weekEnd.toISOString().split('T')[0]; // ISO Date
+            const dateKey = new Date(activity.startDate).toISOString().split('T')[0];
 
             // Always add to Training Time (minutes) - All Activity Types
             const minutes = activity.movingTime / 60;
-            weeklyTimeMap.set(weekKey, (weeklyTimeMap.get(weekKey) || 0) + minutes);
+            dailyTimeMap.set(dateKey, (dailyTimeMap.get(dateKey) || 0) + minutes);
 
             // Run-specific metrics (Volume, VO2)
             if (activity.type === 'RUN') {
-                weeklyVolumeMap.set(weekKey, (weeklyVolumeMap.get(weekKey) || 0) + activity.distance / 1000);
+                dailyVolumeMap.set(dateKey, (dailyVolumeMap.get(dateKey) || 0) + activity.distance / 1000);
 
                 // Calculate VO2max for this run if it has HR
                 if (activity.hasHeartrate && activity.averageHr && activity.distance >= 3000) {
                     const vo2 = calculateEffectiveVO2max(activity.distance, activity.movingTime, activity.averageHr, maxHR);
                     if (vo2 > 0) {
-                        const existing = weeklyVO2Map.get(weekKey) || { values: [] };
+                        const existing = dailyVO2Map.get(dateKey) || { values: [] };
                         existing.values.push(vo2);
-                        weeklyVO2Map.set(weekKey, existing);
+                        dailyVO2Map.set(dateKey, existing);
                     }
                 }
             }
         });
 
-        // Calculate average VO2max for each week
-        weeklyVO2Map.forEach((entry) => {
+        // Calculate average VO2max for each day
+        dailyVO2Map.forEach((entry) => {
             if (entry.values.length > 0) {
                 entry.vo2max = Math.round(entry.values.reduce((a, b) => a + b, 0) / entry.values.length * 10) / 10;
             }
@@ -302,45 +292,43 @@ export default function AnalyticsPage() {
         // Create fitness map for easy lookup
         const fitnessDataMap = new Map(fitness.map(f => [f.date, f]));
 
-        // 3. Create combined data array
-        const allWeekKeys = new Set<string>();
-        weeklyVO2Map.forEach((_, key) => allWeekKeys.add(key));
-        fitnessDataMap.forEach((_, key) => allWeekKeys.add(key));
-        weeklyVolumeMap.forEach((_, key) => allWeekKeys.add(key));
-        weeklyTimeMap.forEach((_, key) => allWeekKeys.add(key));
+        // 3. Create combined data array (Daily)
+        const allDayKeys = new Set<string>();
+        dailyVO2Map.forEach((_, key) => allDayKeys.add(key));
+        fitnessDataMap.forEach((_, key) => allDayKeys.add(key));
+        dailyVolumeMap.forEach((_, key) => allDayKeys.add(key));
+        dailyTimeMap.forEach((_, key) => allDayKeys.add(key));
 
-        const weeks = Array.from(allWeekKeys).sort((a, b) => {
+        const days = Array.from(allDayKeys).sort((a, b) => {
             const dateA = new Date(a);
             const dateB = new Date(b);
             return dateA.getTime() - dateB.getTime();
         });
 
-        const initialCombinedData = weeks.map(week => {
-            const vo2Entry = weeklyVO2Map.get(week);
-            const fitnessEntry = fitnessDataMap.get(week);
-            const volumeEntry = weeklyVolumeMap.get(week);
-            const timeEntry = weeklyTimeMap.get(week);
+        const initialCombinedData = days.map(day => {
+            const vo2Entry = dailyVO2Map.get(day);
+            const fitnessEntry = fitnessDataMap.get(day);
+            const volumeEntry = dailyVolumeMap.get(day);
+            const timeEntry = dailyTimeMap.get(day);
 
             return {
-                date: week,
+                date: day,
                 vo2max: vo2Entry?.vo2max,
                 ctl: fitnessEntry?.ctl,
                 atl: fitnessEntry?.atl,
                 tsb: fitnessEntry?.tsb,
-                volume: Math.round(volumeEntry || 0),
+                volume: volumeEntry ? Math.round(volumeEntry * 10) / 10 : 0,
                 trainingTime: Math.round(timeEntry || 0),
             };
         });
 
-        // 4. Calculate Rolling Average for VO2max (e.g. 4 weeks)
+        // 4. Calculate Rolling Average for VO2max (28 day window for daily data)
         const combinedDataWithRolling = initialCombinedData.map((d, index) => {
-            // Get last 4 valid VO2max values including current
-            const windowSize = 4;
+            const windowSize = 28; // 4 weeks of days
             let count = 0;
             let sum = 0;
 
-            // Look backwards
-            for (let i = index; i >= 0 && count < windowSize; i--) {
+            for (let i = index; i >= 0 && count < 10; i--) { // Limit to 10 actual VO2max readings back
                 if (initialCombinedData[i].vo2max !== undefined) {
                     sum += initialCombinedData[i].vo2max!;
                     count++;

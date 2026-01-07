@@ -11,6 +11,7 @@
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}
       - STRAVA_CLIENT_SECRET=${STRAVA_CLIENT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     depends_on:
       db:
         condition: service_healthy

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { analyzeRace, type RaceDistance } from '@/lib/metrics/vdot';
 import { AnalyticsService } from '@/lib/services/analytics';
+import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 
 import { startOfWeek, endOfWeek } from 'date-fns';
 
@@ -129,13 +130,46 @@ export async function POST(request: NextRequest) {
         }
     }
 
+    // Calculate projected target time if not manually provided
+    let calculatedTargetTime: number | null = null;
+    if (!targetTime && currentVdot) {
+        // Map raceType to RaceDistance for projection
+        const projectionDistanceMap: Record<string, RaceDistance> = {
+            'FIVE_K': '5K',
+            'TEN_K': '10K',
+            'HALF_MARATHON': 'HALF',
+            'MARATHON': 'MARATHON',
+        };
+        const projectionDistance = projectionDistanceMap[raceType] || 'MARATHON';
+
+        // Calculate weeks until race
+        const weeksUntilRace = calculateWeeksUntilRace(new Date(raceDate));
+
+        // Build plan settings
+        const planSettings: PlanSettings = {
+            durationWeeks: weeksUntilRace,
+            runsPerWeek: runsPerWeek ?? 4,
+            weeklyMileageGoal: (weeklyMileageGoal || 40000) / 1000, // Convert to km
+            raceDistance: projectionDistance,
+            taperWeeks: taperWeeks ?? 2,
+            peakWeeks: peakWeeks ?? 4,
+            buildWeeks: buildWeeks ?? 4,
+        };
+
+        // Calculate projection (assume 70% starting shape if not known)
+        const projection = calculateProjectedGoalTime(currentVdot, planSettings, 70);
+        calculatedTargetTime = projection.projectedTime;
+
+        console.log(`Calculated projected target time: ${calculatedTargetTime}s (VDOT ${currentVdot} -> ${projection.projectedVdot})`);
+    }
+
     const goal = await prisma.goal.create({
         data: {
             userId: session.user.id,
             name,
             raceType,
             raceDate: new Date(raceDate),
-            targetTime: targetTime || null,
+            targetTime: targetTime || calculatedTargetTime || null,
             weeklyMileageGoal: weeklyMileageGoal || null,
             planWeeks: planWeeks || 12,
             runsPerWeek: runsPerWeek ?? 4,

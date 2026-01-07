@@ -1,14 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import {
     Activity, Bike, Move, ChevronDown, ChevronUp,
-    AlertCircle, Save, Check, Calendar, Target
+    AlertCircle, Save, Check, Calendar, Target, TrendingUp
 } from 'lucide-react';
 import { calculatePredictedTimes, calculateAllRacePredictions } from '@/lib/metrics/runalyze';
-import { formatTime, calculateVdot, predictRaceTime } from '@/lib/metrics/vdot';
+import { formatTime, calculateVdot, predictRaceTime, type RaceDistance } from '@/lib/metrics/vdot';
+import {
+    calculateProjectedGoalTime,
+    calculateWeeksUntilRace,
+    type PlanSettings,
+    type ProjectedGoalResult
+} from '@/lib/metrics/goalProjection';
 
 interface PlanSetupFormProps {
     mode: 'onboarding' | 'settings';
@@ -368,6 +374,105 @@ export default function PlanSetupForm({
                     </div>
                 </div>
             )}
+
+            {/* Dynamic Projected Race Time - Onboarding Mode */}
+            {mode === 'onboarding' && effectiveVO2max > 0 && (() => {
+                // Map raceType enum to RaceDistance
+                const raceDistanceMap: Record<string, RaceDistance> = {
+                    'FIVE_K': '5K',
+                    'TEN_K': '10K',
+                    'HALF_MARATHON': 'HALF',
+                    'MARATHON': 'MARATHON',
+                };
+                const mappedDistance = raceDistanceMap[raceType] || 'MARATHON';
+
+                // Calculate weeks until race
+                const weeksUntilRace = calculateWeeksUntilRace(new Date(raceDate));
+
+                // Build plan settings from form state
+                const planSettings: PlanSettings = {
+                    durationWeeks: weeksUntilRace,
+                    runsPerWeek: runsPerWeek,
+                    weeklyMileageGoal: weeklyMileage,
+                    raceDistance: mappedDistance,
+                    taperWeeks: taperWeeks,
+                    peakWeeks: peakWeeks,
+                    buildWeeks: buildWeeks,
+                };
+
+                // Calculate projection
+                const projection = calculateProjectedGoalTime(
+                    effectiveVO2max,
+                    planSettings,
+                    shapePercent
+                );
+
+                const distanceName = mappedDistance === 'HALF' ? 'Half Marathon' :
+                    mappedDistance === 'MARATHON' ? 'Marathon' : mappedDistance;
+
+                return (
+                    <div className="p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-white/10">
+                        <div className="flex items-center gap-2 text-accent-cyan mb-3">
+                            <TrendingUp className="w-5 h-5" />
+                            <h3 className="text-sm font-semibold uppercase tracking-wide">Projected {distanceName} Time</h3>
+                        </div>
+
+                        <div className="text-center mb-4">
+                            <div className="text-3xl font-bold text-white mb-1">
+                                {formatTime(projection.projectedTime)}
+                            </div>
+                            <p className="text-xs text-gray-400">
+                                Based on {weeksUntilRace} weeks of training • {projection.improvementPercent > 0 ? `+${projection.improvementPercent}%` : 'No'} projected improvement
+                            </p>
+                        </div>
+
+                        {/* Time Range Visualization */}
+                        <div className="relative mb-3">
+                            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-green-500 via-accent-cyan to-accent-orange rounded-full"
+                                    style={{ width: '100%' }}
+                                />
+                            </div>
+                            {/* Marker for projected time */}
+                            <div
+                                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full border-2 border-accent-cyan shadow-lg"
+                                style={{
+                                    left: `${Math.min(100, Math.max(0, ((projection.conservativeTime - projection.projectedTime) / (projection.conservativeTime - projection.optimalTime)) * 100))}%`
+                                }}
+                            />
+                        </div>
+
+                        {/* Time Range Labels */}
+                        <div className="flex justify-between text-xs mb-4">
+                            <div className="text-left">
+                                <span className="text-green-400 font-semibold">{formatTime(projection.optimalTime)}</span>
+                                <span className="text-gray-500 block">Optimal</span>
+                            </div>
+                            <div className="text-center">
+                                <span className="text-accent-cyan font-semibold">{formatTime(projection.projectedTime)}</span>
+                                <span className="text-gray-500 block">Projected</span>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-accent-orange font-semibold">{formatTime(projection.conservativeTime)}</span>
+                                <span className="text-gray-500 block">Conservative</span>
+                            </div>
+                        </div>
+
+                        {/* Info */}
+                        <div className="text-xs text-gray-500 bg-white/5 rounded-lg p-3">
+                            <p className="mb-1">
+                                <span className="text-gray-400">Current VO2max:</span> {effectiveVO2max.toFixed(1)} →
+                                <span className="text-accent-cyan ml-1">Projected: {projection.projectedVdot}</span>
+                            </p>
+                            <p>
+                                Projection based on {runsPerWeek} runs/week and {weeklyMileage}km peak volume.
+                                Adjust settings below to see how it affects your goal time.
+                            </p>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* VDOT Calibration */}
             <div className="border-t border-white/10 pt-6">

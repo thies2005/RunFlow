@@ -229,6 +229,41 @@ function getPhase(
     return 'BASE';
 }
 
+/**
+ * Distributes workouts evenly across available days to maximize spacing.
+ * Uses interval-based approach for optimal recovery between same-type workouts.
+ * 
+ * @param count - Number of workouts to schedule
+ * @param usedDays - Set of days already occupied by other workouts
+ * @returns Array of day offsets (0=Sun, 1=Mon, ..., 6=Sat) for the workouts
+ */
+function getDistributedDays(count: number, usedDays: Set<number>): number[] {
+    if (count <= 0) return [];
+
+    // Get available days (0-6, excluding used days)
+    const availableDays: number[] = [];
+    for (let d = 0; d < 7; d++) {
+        if (!usedDays.has(d)) availableDays.push(d);
+    }
+
+    if (availableDays.length === 0) return [];
+    if (count >= availableDays.length) return availableDays;
+
+    // Calculate ideal interval between workouts
+    // For n workouts in m available days, ideal spacing = m / n
+    const idealInterval = availableDays.length / count;
+
+    const selectedDays: number[] = [];
+    for (let i = 0; i < count; i++) {
+        // Pick day at ideal interval positions
+        const targetIndex = Math.floor(i * idealInterval);
+        const clampedIndex = Math.min(targetIndex, availableDays.length - 1);
+        selectedDays.push(availableDays[clampedIndex]);
+    }
+
+    return selectedDays;
+}
+
 type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
 
 import { TrainingPaces } from '../metrics/vdot';
@@ -327,71 +362,49 @@ function generateWeek(params: {
         });
     }
 
-    // Additional runs
-    // Distribute them evenly. 
-    // Logic: Identify empty days and pick best spread?
-    // Be simple: use a preference list relative to key days? 
-    // Hardcoded list is okay for now but let's try to be smarter or stick to the old list adjusted.
-    // Old list: [1, 3, 5, 0, 4] (Tue, Thu, Sat, Mon, Fri) -> assummed Sun/Wed occupied.
-    // If Sun/Wed changed, this list isn't optimal.
-    // Let's just iterate 0..6 and pick unused days?
-    // Better: Pick unused days maximizing spacing?
-    // Simple fallback: iterate through [Mon, Tue, Wed, Thu, Fri, Sat, Sun] and pick unused.
-    const allDays = [1, 2, 3, 4, 5, 6, 0]; // Mon-Sun
-    let additionalRuns = Math.max(0, runsPerWeek - 2);
-
-    for (const d of allDays) {
-        if (additionalRuns <= 0) break;
-        if (!usedDays.has(d)) {
-            usedDays.add(d);
-            workouts.push({
-                dayOffset: d,
-                type: WorkoutType.EASY,
-                description: `Easy Run: ${(easyDist / 1000).toFixed(1)}km`,
-                totalDistance: easyDist,
-                targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
-                targetDuration: 0
-            });
-            additionalRuns--;
-        }
+    // Additional runs - distribute evenly for optimal recovery
+    const additionalRunsCount = Math.max(0, runsPerWeek - 2);
+    const easyRunDays = getDistributedDays(additionalRunsCount, usedDays);
+    for (const d of easyRunDays) {
+        usedDays.add(d);
+        workouts.push({
+            dayOffset: d,
+            type: WorkoutType.EASY,
+            description: `Easy Run: ${(easyDist / 1000).toFixed(1)}km`,
+            totalDistance: easyDist,
+            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+            targetDuration: 0
+        });
     }
 
     // === 2. STRENGTH TRAINING ===
-    // Prefer empty days
-    let strengthRemaining = strengthPerWeek;
-    for (const d of allDays) {
-        if (strengthRemaining <= 0) break;
-        if (!usedDays.has(d)) {
-            usedDays.add(d);
-            workouts.push({
-                dayOffset: d,
-                type: WorkoutType.STRENGTH,
-                description: 'Strength: 45min Session',
-                totalDistance: 0,
-                targetPace: 0,
-                targetDuration: 2700
-            });
-            strengthRemaining--;
-        }
+    // Distribute strength sessions evenly throughout the week
+    const strengthDays = getDistributedDays(strengthPerWeek, usedDays);
+    for (const d of strengthDays) {
+        usedDays.add(d);
+        workouts.push({
+            dayOffset: d,
+            type: WorkoutType.STRENGTH,
+            description: 'Strength: 45min Session',
+            totalDistance: 0,
+            targetPace: 0,
+            targetDuration: 2700
+        });
     }
 
     // === 3. CROSS TRAINING ===
-    let ridesRemaining = ridesPerWeek + swimsPerWeek; // Combine for now or separate logic
-    // Actually keep separate if possible but simple filling works
-    for (const d of allDays) {
-        if (ridesRemaining <= 0) break;
-        if (!usedDays.has(d)) {
-            usedDays.add(d);
-            workouts.push({
-                dayOffset: d,
-                type: WorkoutType.RIDE,
-                description: 'Cross Train: 60min (Zone 1-2)',
-                totalDistance: 0,
-                targetPace: 0,
-                targetDuration: 3600
-            });
-            ridesRemaining--;
-        }
+    // Distribute cross-training sessions evenly throughout the week
+    const crossTrainDays = getDistributedDays(ridesPerWeek + swimsPerWeek, usedDays);
+    for (const d of crossTrainDays) {
+        usedDays.add(d);
+        workouts.push({
+            dayOffset: d,
+            type: WorkoutType.RIDE,
+            description: 'Cross Train: 60min (Zone 1-2)',
+            totalDistance: 0,
+            targetPace: 0,
+            targetDuration: 3600
+        });
     }
 
     return workouts;

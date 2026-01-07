@@ -30,6 +30,7 @@ export interface Activity {
     gradeAdjustedSpeed: number | null;
     averageHr: number | null;
     maxHr: number | null;
+    averageCadence: number | null;
     hasHeartrate: boolean;
     totalElevation: number | null;
     elevHigh: number | null;

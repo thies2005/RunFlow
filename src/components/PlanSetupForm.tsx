@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import {
@@ -89,6 +89,7 @@ export default function PlanSetupForm({
 
     // Calibration Result
     const [calibrationFactor, setCalibrationFactor] = useState<number>(1.0);
+    const lastAutoTime = useRef<number>(0);
 
     const [message, setMessage] = useState('');
 
@@ -176,28 +177,39 @@ export default function PlanSetupForm({
     useEffect(() => {
         if (effectiveVO2max > 0 && calibrationMode === 'manual' && !selectedActivityId) {
             const getPredictedTimeForDistance = (dist: string) => {
-                const marathonTimes = calculatePredictedTimes(effectiveVO2max, shapePercent);
-                const ratios: Record<string, number> = {
-                    'MARATHON': 1,
-                    'HALF': 0.45,
-                    '10K': 0.19,
-                    '5K': 0.09,
+                const predictions = calculateAllRacePredictions(effectiveVO2max, shapePercent);
+                const mapping: Record<string, string> = {
+                    'MARATHON': 'Marathon',
+                    'HALF': 'Half',
+                    '10K': '10K',
+                    '5K': '5K'
                 };
-                return Math.round(marathonTimes.predicted * (ratios[dist] || 1));
+                const pred = predictions.find(p => p.distance === mapping[dist]);
+                return pred ? Math.round(pred.predicted) : 0;
             };
 
             const predictedSeconds = getPredictedTimeForDistance(calibrationDistance);
-            const h = Math.floor(predictedSeconds / 3600);
-            const m = Math.floor((predictedSeconds % 3600) / 60);
-            const s = predictedSeconds % 60;
-            // Only update if not already set (to avoid overwriting user input)
-            if (!hours && !minutes && !seconds) {
-                setHours(h.toString());
-                setMinutes(m.toString());
-                setSeconds(s.toString());
+            if (predictedSeconds === 0) return;
+
+            // Current form seconds
+            const currentSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
+
+            // Only update if current time is zero OR matches our last auto-fill (user hasn't manually edited it significantly)
+            if (currentSeconds === 0 || currentSeconds === lastAutoTime.current) {
+                const h = Math.floor(predictedSeconds / 3600);
+                const m = Math.floor((predictedSeconds % 3600) / 60);
+                const s = predictedSeconds % 60;
+
+                setHours(h > 0 ? h.toString() : '');
+                setMinutes(m.toString().padStart(2, '0'));
+                setSeconds(s.toString().padStart(2, '0'));
+                lastAutoTime.current = predictedSeconds;
+
+                // Also update calibration factor to 1.0 since we are using the predicted time
+                setCalibrationFactor(1.0);
             }
         }
-    }, [calibrationDistance, effectiveVO2max, shapePercent, calibrationMode]);
+    }, [calibrationDistance, effectiveVO2max, shapePercent, calibrationMode, selectedActivityId]);
 
     // Auto-fill time when activity is selected (Activity Mode)
     useEffect(() => {

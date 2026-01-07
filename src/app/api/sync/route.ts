@@ -2,9 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { syncUserActivities, getSyncStatus } from '@/lib/strava/sync';
+import { checkRateLimit, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting check
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = checkRateLimit(clientId, RATE_LIMITS.sync);
+
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+            );
+        }
+
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
@@ -33,7 +45,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             ...result,
-        });
+        }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {
         console.error('Sync error:', error);
         return NextResponse.json(

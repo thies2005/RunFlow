@@ -3,8 +3,9 @@ import { prisma } from '@/lib/db';
 import { calculateVdot, RaceDistance } from '@/lib/metrics/vdot';
 import { generateTrainingPlan } from '@/lib/plans';
 import { authOptions } from '@/lib/strava/oauth';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { WorkoutType } from '@prisma/client';
+import { checkRateLimit, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function GET() {
     try {
@@ -54,8 +55,19 @@ export async function GET() {
     }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
+        // Rate limiting check
+        const clientId = getClientIdentifier(req);
+        const rateLimitResult = checkRateLimit(clientId, RATE_LIMITS.settings);
+
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+            );
+        }
+
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

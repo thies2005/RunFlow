@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { syncActivityById } from '@/lib/strava/sync';
 import { createHmac } from 'crypto';
+import { checkRateLimit, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 /**
  * Safely convert a value to BigInt, handling edge cases
@@ -84,8 +85,19 @@ export async function GET(req: Request) {
     return new NextResponse('Forbidden', { status: 403 });
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     try {
+        // Rate limiting check (generous limit for webhooks)
+        const clientId = getClientIdentifier(req);
+        const rateLimitResult = checkRateLimit(clientId, RATE_LIMITS.webhooks);
+
+        if (!rateLimitResult.allowed) {
+            return new NextResponse('Too Many Requests', {
+                status: 429,
+                headers: rateLimitHeaders(rateLimitResult)
+            });
+        }
+
         // Get raw body for signature verification
         const rawBody = await req.text();
 

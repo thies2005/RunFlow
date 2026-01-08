@@ -508,12 +508,12 @@ export default function AnalyticsPage() {
 
                 {/* Training Paces & Heart Rate Section */}
                 <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Training Paces & Heart Rate</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Training Paces & Heart Rate</h3>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         {/* Easy */}
                         <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
                             <p className="text-green-400 text-xs font-semibold mb-1 uppercase tracking-wider">Easy (E)</p>
-                            <p className="text-white font-bold text-lg">
+                            <p className="text-foreground font-bold text-lg">
                                 {runalyzeMetrics.effectiveVO2max > 0
                                     ? `${formatPace(trainingPaces?.easy.min || 0)} - ${formatPace(trainingPaces?.easy.max || 0)}`
                                     : '-'}
@@ -521,55 +521,55 @@ export default function AnalyticsPage() {
                             <p className="text-green-300 text-sm mt-1">
                                 {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.65)}-${Math.round(userData.user.hrMax * 0.79)} bpm` : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-0.5">65-79% HRmax</p>
+                            <p className="text-[10px] text-foreground-muted mt-0.5">65-79% HRmax</p>
                         </div>
 
                         {/* Marathon */}
                         <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
                             <p className="text-blue-400 text-xs font-semibold mb-1 uppercase tracking-wider">Marathon (M)</p>
-                            <p className="text-white font-bold text-lg">
+                            <p className="text-foreground font-bold text-lg">
                                 {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.marathon || 0) : '-'}
                             </p>
                             <p className="text-blue-300 text-sm mt-1">
                                 {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.78)}-${Math.round(userData.user.hrMax * 0.82)} bpm` : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-0.5">78-82% HRmax</p>
+                            <p className="text-[10px] text-foreground-muted mt-0.5">78-82% HRmax</p>
                         </div>
 
                         {/* Threshold */}
                         <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
                             <p className="text-yellow-400 text-xs font-semibold mb-1 uppercase tracking-wider">Threshold (T)</p>
-                            <p className="text-white font-bold text-lg">
+                            <p className="text-foreground font-bold text-lg">
                                 {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.threshold || 0) : '-'}
                             </p>
                             <p className="text-yellow-300 text-sm mt-1">
                                 {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.88)}-${Math.round(userData.user.hrMax * 0.92)} bpm` : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-0.5">88-92% HRmax</p>
+                            <p className="text-[10px] text-foreground-muted mt-0.5">88-92% HRmax</p>
                         </div>
 
                         {/* Interval */}
                         <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
                             <p className="text-orange-400 text-xs font-semibold mb-1 uppercase tracking-wider">Interval (I)</p>
-                            <p className="text-white font-bold text-lg">
+                            <p className="text-foreground font-bold text-lg">
                                 {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.interval || 0) : '-'}
                             </p>
                             <p className="text-orange-300 text-sm mt-1">
                                 {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.98)}-${Math.round(userData.user.hrMax * 1.0)} bpm` : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-0.5">98-100% HRmax</p>
+                            <p className="text-[10px] text-foreground-muted mt-0.5">98-100% HRmax</p>
                         </div>
 
                         {/* Repetition */}
                         <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
                             <p className="text-red-400 text-xs font-semibold mb-1 uppercase tracking-wider">Repetition (R)</p>
-                            <p className="text-white font-bold text-lg">
+                            <p className="text-foreground font-bold text-lg">
                                 {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.repetition || 0) : '-'}
                             </p>
                             <p className="text-red-300 text-sm mt-1">
                                 {userData?.user?.hrMax ? `>${Math.round(userData.user.hrMax * 1.0)} bpm` : '-'}
                             </p>
-                            <p className="text-[10px] text-gray-500 mt-0.5">100%+ HRmax</p>
+                            <p className="text-[10px] text-foreground-muted mt-0.5">100%+ HRmax</p>
                         </div>
                     </div>
                 </div>
@@ -578,7 +578,7 @@ export default function AnalyticsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* VO2max Trend (Rolling Average) */}
                     <div className="glass-card p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Effective VO2max Trend</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Effective VO2max Trend</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={filteredVo2Trend}>
@@ -627,7 +627,7 @@ export default function AnalyticsPage() {
 
                     {/* Shape Trend */}
                     <div className="glass-card p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Marathon Shape Trend</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Marathon Shape Trend</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={filteredShapeTrend}>

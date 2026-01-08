@@ -19,17 +19,24 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
     const chartData = useMemo(() => {
         if (!streams?.time) return [];
 
-        return streams.time.map((t: number, i: number) => ({
-            time: t,
-            distance: streams.distance ? streams.distance[i] : 0,
-            hr: streams.heartrate ? streams.heartrate[i] : null,
-            pace: (streams.velocity_smooth && streams.velocity_smooth[i] > 0.5)
-                ? Math.min(20, (1000 / streams.velocity_smooth[i]) / 60)
-                : null,
-            altitude: streams.altitude ? streams.altitude[i] : null,
-            cadence: streams.cadence ? streams.cadence[i] * 2 : null,
-        })).filter((d: any) => d.hr !== null || d.pace !== null);
-    }, [streams]);
+        return streams.time.map((t: number, i: number) => {
+            // Determine max pace based on activity type
+            const trainingType = activity.trainingType || 'RUN';
+            // 10 min/km for running, 15 min/km for others (like hiking/walking)
+            const maxPace = (trainingType === 'RUN' || trainingType === 'EASY' || trainingType.includes('RUN')) ? 10 : 15;
+
+            return {
+                time: t,
+                distance: streams.distance ? streams.distance[i] : 0,
+                hr: streams.heartrate ? streams.heartrate[i] : null,
+                pace: (streams.velocity_smooth && streams.velocity_smooth[i] > 0.5)
+                    ? Math.min(maxPace, (1000 / streams.velocity_smooth[i]) / 60)
+                    : null,
+                altitude: streams.altitude ? streams.altitude[i] : null,
+                cadence: streams.cadence ? streams.cadence[i] * 2 : null,
+            };
+        }).filter((d: any) => d.hr !== null || d.pace !== null);
+    }, [streams, activity.trainingType]);
 
     // Memoize formatXAxis to avoid recreating on every render
     const formatXAxis = useCallback((tickItem: number) => {

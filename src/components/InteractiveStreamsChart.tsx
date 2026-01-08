@@ -213,8 +213,15 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                             minTickGap={30}
                         />
                         <Tooltip
-                            contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '0.5rem' }}
-                            labelStyle={{ color: '#9CA3AF', marginBottom: '0.25rem' }}
+                            contentStyle={{
+                                backgroundColor: 'var(--glass-bg)',
+                                border: '1px solid var(--glass-border)',
+                                borderRadius: '0.5rem',
+                                backdropFilter: 'blur(12px)',
+                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                            }}
+                            labelStyle={{ color: 'var(--foreground-muted)', marginBottom: '0.25rem' }}
+                            itemStyle={{ color: 'var(--foreground)' }}
                             labelFormatter={formatXAxis}
                             formatter={(value: number, name: string) => {
                                 if (value === null || value === undefined) return ['-', name];
@@ -232,10 +239,22 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                             <YAxis yAxisId="hr" domain={['dataMin - 10', 'dataMax + 10']} hide />
                         )}
                         {enabledMetrics.pace && hasPace && (
-                            <YAxis yAxisId="pace" domain={[3, 15]} reversed hide />
+                            <YAxis
+                                yAxisId="pace"
+                                domain={[3, 15]}
+                                reversed
+                                hide
+                                ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]}
+                            />
                         )}
                         {enabledMetrics.gap && hasGap && (
-                            <YAxis yAxisId="gap" domain={[3, 15]} reversed hide />
+                            <YAxis
+                                yAxisId="gap"
+                                domain={[3, 15]}
+                                reversed
+                                hide
+                                ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]}
+                            />
                         )}
                         {enabledMetrics.elevation && hasElevation && (
                             <YAxis yAxisId="elev" domain={['dataMin', 'dataMax']} hide />

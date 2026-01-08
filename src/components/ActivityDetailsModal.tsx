@@ -1,10 +1,11 @@
 'use client';
 
-import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Zap, BarChart2, Tag } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Zap, BarChart2, Tag, Edit2, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { Activity, WorkoutType } from '@/lib/types';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface ActivityDetailsModalProps {
     isOpen: boolean;
@@ -17,11 +18,16 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     const [mounted, setMounted] = useState(false);
     const [trainingType, setTrainingType] = useState<WorkoutType | null>(null);
     const [isUpdatingType, setIsUpdatingType] = useState(false);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [name, setName] = useState('');
+    const [isSavingName, setIsSavingName] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         setMounted(true);
         if (activity) {
             setTrainingType(activity.trainingType || 'EASY');
+            setName(activity.name);
             // Prevent body scroll when modal is open
             document.body.style.overflow = 'hidden';
         }
@@ -48,6 +54,29 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             setTrainingType(previousType); // Revert on error
         } finally {
             setIsUpdatingType(false);
+        }
+    };
+
+    const handleSaveName = async () => {
+        if (!activity || !name.trim()) return;
+
+        setIsSavingName(true);
+        try {
+            const res = await fetch(`/api/activities/${activity.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name.trim() }),
+            });
+
+            if (!res.ok) throw new Error('Failed to update name');
+
+            setIsEditingName(false);
+            router.refresh(); // Refresh server components to show new name globally
+        } catch (error) {
+            console.error('Failed to update name:', error);
+            // Optionally add toast here
+        } finally {
+            setIsSavingName(false);
         }
     };
 
@@ -105,7 +134,50 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     <ActivityIcon className="w-6 h-6 text-white" />}
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-foreground mb-1">{activity.name}</h2>
+                            {isEditingName ? (
+                                <div className="flex items-center gap-2 mb-1">
+                                    <input
+                                        type="text"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="text-xl font-bold text-foreground bg-background-secondary border border-glass-border rounded px-2 py-1 focus:outline-none focus:border-accent-purple w-full"
+                                        autoFocus
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') handleSaveName();
+                                            if (e.key === 'Escape') {
+                                                setIsEditingName(false);
+                                                setName(activity.name);
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        onClick={handleSaveName}
+                                        disabled={isSavingName}
+                                        className="p-1.5 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded transition-colors"
+                                    >
+                                        <Check className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setIsEditingName(false);
+                                            setName(activity.name);
+                                        }}
+                                        className="p-1.5 hover:bg-surface-hover text-foreground-muted hover:text-foreground rounded transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-start gap-2 mb-1 group">
+                                    <h2 className="text-xl font-bold text-foreground">{name}</h2>
+                                    <button
+                                        onClick={() => setIsEditingName(true)}
+                                        className="p-1 text-foreground-muted opacity-0 group-hover:opacity-100 hover:text-foreground transition-all"
+                                    >
+                                        <Edit2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
                             <div className="flex items-center gap-2 text-sm text-foreground-muted">
                                 <Calendar className="w-4 h-4" />
                                 <span>{getFormattedDate(activity.startDate)}</span>

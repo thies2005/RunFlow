@@ -127,7 +127,15 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                 <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
                                 <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                    contentStyle={{
+                                        backgroundColor: 'var(--glass-bg)',
+                                        border: '1px solid var(--glass-border)',
+                                        borderRadius: '8px',
+                                        backdropFilter: 'blur(12px)',
+                                        color: 'var(--foreground)'
+                                    }}
+                                    itemStyle={{ color: 'var(--foreground)' }}
+                                    labelStyle={{ color: 'var(--foreground-muted)' }}
                                     labelFormatter={(label) => formatXAxis(label as number)}
                                 />
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -152,11 +160,18 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     </linearGradient>
                                 </defs>
                                 <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
-                                <YAxis domain={['dataMax', 'dataMin']} stroke="#6b7280" />
+                                <YAxis domain={['dataMax', 'dataMin']} stroke="#6b7280" ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]} />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                    contentStyle={{
+                                        backgroundColor: 'var(--glass-bg)',
+                                        border: '1px solid var(--glass-border)',
+                                        borderRadius: '8px',
+                                        backdropFilter: 'blur(12px)',
+                                        color: 'var(--foreground)'
+                                    }}
+                                    itemStyle={{ color: 'var(--foreground)' }}
+                                    labelStyle={{ color: 'var(--foreground-muted)' }}
                                     labelFormatter={(label) => formatXAxis(label as number)}
-                                    itemStyle={{ color: '#60a5fa' }}
                                     formatter={(value: number) => {
                                         const mins = Math.floor(value);
                                         const secs = Math.round((value % 1) * 60).toString().padStart(2, '0');
@@ -188,7 +203,15 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
                                     <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        contentStyle={{
+                                            backgroundColor: 'var(--glass-bg)',
+                                            border: '1px solid var(--glass-border)',
+                                            borderRadius: '8px',
+                                            backdropFilter: 'blur(12px)',
+                                            color: 'var(--foreground)'
+                                        }}
+                                        itemStyle={{ color: 'var(--foreground)' }}
+                                        labelStyle={{ color: 'var(--foreground-muted)' }}
                                         labelFormatter={(label) => formatXAxis(label as number)}
                                     />
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -217,7 +240,15 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
                                     <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                                        contentStyle={{
+                                            backgroundColor: 'var(--glass-bg)',
+                                            border: '1px solid var(--glass-border)',
+                                            borderRadius: '8px',
+                                            backdropFilter: 'blur(12px)',
+                                            color: 'var(--foreground)'
+                                        }}
+                                        itemStyle={{ color: 'var(--foreground)' }}
+                                        labelStyle={{ color: 'var(--foreground-muted)' }}
                                         labelFormatter={(label) => formatXAxis(label as number)}
                                     />
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />

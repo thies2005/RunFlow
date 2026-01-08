@@ -410,7 +410,7 @@ export default function PlanSetupForm({
     const isLoading = createGoalMutation.isPending || updateSettingsMutation.isPending;
     const [isEditingTime, setIsEditingTime] = useState(false);
 
-    const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
 
     const raceActivities: RaceActivity[] = activitiesData?.activities?.filter((a: RaceActivity) =>
         a.distance >= 4500
@@ -434,7 +434,7 @@ export default function PlanSetupForm({
                     </div>
 
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase">Goal Name</label>
+                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Goal Name</label>
                         <input
                             type="text"
                             value={goalName}
@@ -446,7 +446,7 @@ export default function PlanSetupForm({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Distance</label>
+                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Distance</label>
                             <select
                                 value={raceType}
                                 onChange={(e) => setRaceType(e.target.value)}
@@ -459,7 +459,7 @@ export default function PlanSetupForm({
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Race Date</label>
+                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Race Date</label>
                             <input
                                 type="date"
                                 value={raceDate}
@@ -483,14 +483,14 @@ export default function PlanSetupForm({
             )}
 
             {/* Performance Calibration - First so it can feed into Goal Time */}
-            <div className="border-t border-white/10 pt-6">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2">Performance Calibration</h3>
-                <p className="text-sm text-gray-500 mb-4">
+            <div className="border-t border-glass-border pt-6">
+                <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Performance Calibration</h3>
+                <p className="text-sm text-foreground-muted mb-4">
                     Fine-tune predictions based on a recent race or time trial result.
                 </p>
 
                 {/* Calibration Mode Toggle */}
-                <div className="flex bg-white/5 rounded-lg p-1 mb-4">
+                <div className="flex bg-surface rounded-lg p-1 mb-4">
                     <button
                         type="button"
                         onClick={() => {
@@ -500,7 +500,7 @@ export default function PlanSetupForm({
                         }}
                         className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${calibrationMode === 'activity'
                             ? 'bg-accent-orange text-white'
-                            : 'text-gray-400 hover:text-white'
+                            : 'text-foreground-muted hover:text-foreground'
                             }`}
                     >
                         Select Activity
@@ -513,7 +513,7 @@ export default function PlanSetupForm({
                         }}
                         className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${calibrationMode === 'manual'
                             ? 'bg-accent-orange text-white'
-                            : 'text-gray-400 hover:text-white'
+                            : 'text-foreground-muted hover:text-foreground'
                             }`}
                     >
                         Manual Entry
@@ -579,11 +579,11 @@ export default function PlanSetupForm({
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Your Race Time</label>
+                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Your Race Time</label>
                             <div className="flex gap-2 items-center">
                                 <input
                                     type="number"
-                                    className="w-16 bg-white/5 border border-white/10 rounded-lg p-3 text-white text-center"
+                                    className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
                                     placeholder="HH"
                                     value={hours}
                                     onChange={e => {
@@ -597,10 +597,10 @@ export default function PlanSetupForm({
                                     }}
                                     min="0"
                                 />
-                                <span className="text-white">:</span>
+                                <span className="text-foreground-muted">:</span>
                                 <input
                                     type="number"
-                                    className="w-16 bg-white/5 border border-white/10 rounded-lg p-3 text-white text-center"
+                                    className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
                                     placeholder="MM"
                                     value={minutes}
                                     onChange={e => {
@@ -614,10 +614,10 @@ export default function PlanSetupForm({
                                     min="0"
                                     max="59"
                                 />
-                                <span className="text-white">:</span>
+                                <span className="text-foreground-muted">:</span>
                                 <input
                                     type="number"
-                                    className="w-16 bg-white/5 border border-white/10 rounded-lg p-3 text-white text-center"
+                                    className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
                                     placeholder="SS"
                                     value={seconds}
                                     onChange={e => {
@@ -659,25 +659,25 @@ export default function PlanSetupForm({
                     if (currentSeconds <= 0) return null;
 
                     return (
-                        <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
-                            <h4 className="text-xs font-semibold text-gray-300 mb-3">
+                        <div className="mt-4 p-4 bg-surface rounded-lg border border-glass-border">
+                            <h4 className="text-xs font-semibold text-foreground-muted mb-3">
                                 📊 Calibration Result
                             </h4>
 
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-400">Your {distanceName} VDOT:</span>
+                                    <span className="text-sm text-foreground-muted">Your {distanceName} VDOT:</span>
                                     <span className="text-lg font-bold text-accent-cyan">{raceVdot.toFixed(1)}</span>
                                 </div>
 
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-400">Training VO2max:</span>
-                                    <span className="text-sm text-white">{effectiveVO2max.toFixed(1)}</span>
+                                    <span className="text-sm text-foreground-muted">Training VO2max:</span>
+                                    <span className="text-sm text-foreground">{effectiveVO2max.toFixed(1)}</span>
                                 </div>
 
-                                <div className="border-t border-white/10 pt-3">
+                                <div className="border-t border-glass-border pt-3">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-sm text-gray-400">Calibrated VO2max:</span>
+                                        <span className="text-sm text-foreground-muted">Calibrated VO2max:</span>
                                         <span className={`text-lg font-bold ${factorPercent >= 0 ? 'text-green-400' : 'text-amber-400'}`}>
                                             {raceVdot.toFixed(1)} ({factorPercent >= 0 ? '+' : ''}{factorPercent.toFixed(1)}%)
                                         </span>
@@ -783,7 +783,7 @@ export default function PlanSetupForm({
                 };
 
                 return (
-                    <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-white/10">
+                    <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2 text-accent-orange">
                                 <Target className="w-5 h-5" />
@@ -792,7 +792,7 @@ export default function PlanSetupForm({
                             {goalTimeSeconds !== null && (
                                 <button
                                     onClick={resetToProjected}
-                                    className="text-xs text-gray-500 hover:text-accent-cyan transition-colors"
+                                    className="text-xs text-foreground-muted hover:text-accent-cyan transition-colors"
                                 >
                                     Reset to projected
                                 </button>
@@ -849,12 +849,12 @@ export default function PlanSetupForm({
                             ) : (
                                 <button
                                     onClick={startEditing}
-                                    className="group hover:bg-white/5 p-2 rounded-lg transition-colors"
+                                    className="group hover:bg-surface-hover p-2 rounded-lg transition-colors"
                                 >
-                                    <div className="text-3xl font-bold text-white mb-1 group-hover:text-accent-orange transition-colors">
+                                    <div className="text-3xl font-bold text-foreground mb-1 group-hover:text-accent-orange transition-colors">
                                         {formatTime(displayGoalTime)}
                                     </div>
-                                    <span className="text-xs text-gray-500 group-hover:text-gray-400">
+                                    <span className="text-xs text-foreground-muted group-hover:text-foreground">
                                         Click to edit manually
                                     </span>
                                 </button>
@@ -911,13 +911,13 @@ export default function PlanSetupForm({
             })()}
 
             {/* Plan Volume */}
-            <div className="border-t border-white/10 pt-6">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Plan Volume</h3>
+            <div className="border-t border-glass-border pt-6">
+                <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-4">Plan Volume</h3>
 
                 {/* Runs Per Week */}
                 <div className="mb-6">
                     <div className="flex justify-between mb-2">
-                        <label className="text-xs text-gray-400 uppercase flex items-center gap-1">
+                        <label className="text-xs text-foreground-muted uppercase flex items-center gap-1">
                             <Activity className="w-3 h-3" /> Runs / Week
                         </label>
                         <span className="text-accent-orange font-bold">{runsPerWeek}</span>
@@ -940,7 +940,7 @@ export default function PlanSetupForm({
                 {/* Rides Per Week */}
                 <div className="mb-6">
                     <div className="flex justify-between mb-2">
-                        <label className="text-xs text-gray-400 uppercase flex items-center gap-1">
+                        <label className="text-xs text-foreground-muted uppercase flex items-center gap-1">
                             <Bike className="w-3 h-3" /> Rides / Week
                         </label>
                         <span className="text-accent-cyan font-bold">{ridesPerWeek}</span>
@@ -951,9 +951,9 @@ export default function PlanSetupForm({
                         max="3"
                         value={ridesPerWeek}
                         onChange={(e) => setRidesPerWeek(parseInt(e.target.value))}
-                        className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-cyan"
+                        className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-accent-cyan"
                     />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <div className="flex justify-between text-xs text-foreground-muted mt-1">
                         <span>0</span>
                         <span>1</span>
                         <span>2</span>
@@ -964,7 +964,7 @@ export default function PlanSetupForm({
                 {/* Strength Per Week */}
                 <div className="mb-6">
                     <div className="flex justify-between mb-2">
-                        <label className="text-xs text-gray-400 uppercase flex items-center gap-1">
+                        <label className="text-xs text-foreground-muted uppercase flex items-center gap-1">
                             💪 Strength / Week
                         </label>
                         <span className="text-purple-400 font-bold">{strengthPerWeek}</span>
@@ -975,9 +975,9 @@ export default function PlanSetupForm({
                         max="4"
                         value={strengthPerWeek}
                         onChange={(e) => setStrengthPerWeek(parseInt(e.target.value))}
-                        className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                        className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-purple-500"
                     />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <div className="flex justify-between text-xs text-foreground-muted mt-1">
                         <span>0</span>
                         <span>2</span>
                         <span>4</span>
@@ -987,7 +987,7 @@ export default function PlanSetupForm({
                 {/* Peak Mileage */}
                 <div className="mb-4">
                     <div className="flex justify-between mb-2">
-                        <label className="text-xs text-gray-400 uppercase flex items-center gap-1">
+                        <label className="text-xs text-foreground-muted uppercase flex items-center gap-1">
                             <Move className="w-3 h-3" /> Peak Mileage Goal
                         </label>
                         <span className="text-green-400 font-bold">{weeklyMileage} km</span>
@@ -999,9 +999,9 @@ export default function PlanSetupForm({
                         step="5"
                         value={weeklyMileage}
                         onChange={(e) => setWeeklyMileage(parseInt(e.target.value))}
-                        className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-green-500"
+                        className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-green-500"
                     />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <div className="flex justify-between text-xs text-foreground-muted mt-1">
                         <span>20km</span>
                         <span>60km</span>
                         <span>100km</span>
@@ -1010,13 +1010,13 @@ export default function PlanSetupForm({
             </div>
 
             {/* Training Phases */}
-            <div className="border-t border-white/10 pt-6">
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Training Phases</h3>
+            <div className="border-t border-glass-border pt-6">
+                <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-4">Training Phases</h3>
 
                 <div className="grid grid-cols-3 gap-4">
                     <div>
                         <div className="flex justify-between mb-2">
-                            <label className="text-xs text-gray-400 uppercase">Taper</label>
+                            <label className="text-xs text-foreground-muted uppercase">Taper</label>
                             <span className="text-teal-400 font-bold">{taperWeeks}w</span>
                         </div>
                         <input
@@ -1025,12 +1025,12 @@ export default function PlanSetupForm({
                             max="3"
                             value={taperWeeks}
                             onChange={(e) => setTaperWeeks(parseInt(e.target.value))}
-                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-teal-500"
+                            className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-teal-500"
                         />
                     </div>
                     <div>
                         <div className="flex justify-between mb-2">
-                            <label className="text-xs text-gray-400 uppercase">Peak</label>
+                            <label className="text-xs text-foreground-muted uppercase">Peak</label>
                             <span className="text-purple-400 font-bold">{peakWeeks}w</span>
                         </div>
                         <input
@@ -1039,12 +1039,12 @@ export default function PlanSetupForm({
                             max="6"
                             value={peakWeeks}
                             onChange={(e) => setPeakWeeks(parseInt(e.target.value))}
-                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                            className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-purple-500"
                         />
                     </div>
                     <div>
                         <div className="flex justify-between mb-2">
-                            <label className="text-xs text-gray-400 uppercase">Build</label>
+                            <label className="text-xs text-foreground-muted uppercase">Build</label>
                             <span className="text-orange-400 font-bold">{buildWeeks}w</span>
                         </div>
                         <input
@@ -1053,25 +1053,25 @@ export default function PlanSetupForm({
                             max="8"
                             value={buildWeeks}
                             onChange={(e) => setBuildWeeks(parseInt(e.target.value))}
-                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                            className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-orange-500"
                         />
                     </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">Remaining weeks will be Base phase.</p>
+                <p className="text-xs text-foreground-muted mt-2">Remaining weeks will be Base phase.</p>
             </div>
 
             {/* Workout Scheduling (Collapsible - Advanced) */}
-            <div className="border-t border-white/10 pt-4">
+            <div className="border-t border-glass-border pt-4">
                 <button
                     type="button"
                     onClick={() => setShowSchedulingSettings(!showSchedulingSettings)}
                     className="flex items-center justify-between w-full text-left py-2"
                 >
-                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Workout Scheduling</h3>
+                    <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide">Workout Scheduling</h3>
                     {showSchedulingSettings ? (
-                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                        <ChevronUp className="w-4 h-4 text-foreground-muted" />
                     ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                        <ChevronDown className="w-4 h-4 text-foreground-muted" />
                     )}
                 </button>
 
@@ -1079,11 +1079,11 @@ export default function PlanSetupForm({
                     <div className="space-y-4 mt-4 animate-fade-in">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs text-gray-400 mb-2 uppercase">Long Run Day</label>
+                                <label className="block text-xs text-foreground-muted mb-2 uppercase">Long Run Day</label>
                                 <select
                                     value={longRunDay}
                                     onChange={e => setLongRunDay(parseInt(e.target.value))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                    className="w-full bg-surface border border-glass-border rounded-lg p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-none"
                                 >
                                     <option value={0}>Sunday</option>
                                     <option value={1}>Monday</option>
@@ -1095,11 +1095,11 @@ export default function PlanSetupForm({
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-400 mb-2 uppercase">Quality Day</label>
+                                <label className="block text-xs text-foreground-muted mb-2 uppercase">Quality Day</label>
                                 <select
                                     value={qualityDay}
                                     onChange={e => setQualityDay(parseInt(e.target.value))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                    className="w-full bg-surface border border-glass-border rounded-lg p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-none"
                                 >
                                     <option value={0}>Sunday</option>
                                     <option value={1}>Monday</option>
@@ -1113,7 +1113,7 @@ export default function PlanSetupForm({
                         </div>
 
                         <div>
-                            <label className="block text-xs text-gray-400 mb-2 uppercase">Rest Days</label>
+                            <label className="block text-xs text-foreground-muted mb-2 uppercase">Rest Days</label>
                             <div className="flex flex-wrap gap-2">
                                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
                                     <button
@@ -1141,17 +1141,17 @@ export default function PlanSetupForm({
                 )}
             </div>
             {/* Heart Rate Settings (Collapsible) */}
-            <div className="border-t border-white/10 pt-4">
+            <div className="border-t border-glass-border pt-4">
                 <button
                     type="button"
                     onClick={() => setShowHeartRate(!showHeartRate)}
                     className="flex items-center justify-between w-full text-left py-2"
                 >
-                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Heart Rate Settings</h3>
+                    <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide">Heart Rate Settings</h3>
                     {showHeartRate ? (
-                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                        <ChevronUp className="w-4 h-4 text-foreground-muted" />
                     ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                        <ChevronDown className="w-4 h-4 text-foreground-muted" />
                     )}
                 </button>
 
@@ -1159,7 +1159,7 @@ export default function PlanSetupForm({
                     <div className="space-y-4 mt-4 animate-fade-in">
                         <div className="grid grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1 uppercase">Max HR</label>
+                                <label className="block text-xs text-foreground-muted mb-1 uppercase">Max HR</label>
                                 <input
                                     type="number"
                                     value={maxHeartRate}
@@ -1170,7 +1170,7 @@ export default function PlanSetupForm({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1 uppercase">Resting HR</label>
+                                <label className="block text-xs text-foreground-muted mb-1 uppercase">Resting HR</label>
                                 <input
                                     type="number"
                                     value={restingHeartRate}
@@ -1181,7 +1181,7 @@ export default function PlanSetupForm({
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1 uppercase">Weight (kg)</label>
+                                <label className="block text-xs text-foreground-muted mb-1 uppercase">Weight (kg)</label>
                                 <input
                                     type="number"
                                     value={weight}
@@ -1194,7 +1194,7 @@ export default function PlanSetupForm({
                         </div>
 
                         <div>
-                            <p className="text-xs text-gray-500 mb-3">Zone thresholds (% of Max HR)</p>
+                            <p className="text-xs text-foreground-muted mb-3">Zone thresholds (% of Max HR)</p>
                             <div className="grid grid-cols-4 gap-2">
                                 <div>
                                     <label className="block text-xs text-green-400 mb-1 text-center">Z1 Max</label>
@@ -1237,7 +1237,7 @@ export default function PlanSetupForm({
                                     />
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-600 mt-2">Z5 = above Z4 Max</p>
+                            <p className="text-xs text-foreground-muted mt-2">Z5 = above Z4 Max</p>
                         </div>
                     </div>
                 )}
@@ -1274,7 +1274,7 @@ export default function PlanSetupForm({
             </button>
 
             {mode === 'settings' && (
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-xs text-foreground-muted text-center">
                     Adjusting settings will regenerate future workouts. Completed workouts are preserved.
                 </p>
             )}

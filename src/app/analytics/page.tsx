@@ -482,7 +482,7 @@ export default function AnalyticsPage() {
                                         </span>
                                     )}
                                 </p>
-                                <p className="text-2xl font-bold text-white">
+                                <p className="text-2xl font-bold text-foreground">
                                     {runalyzeMetrics.predictedTime > 0 ? formatTime(runalyzeMetrics.predictedTime) : '-'}
                                 </p>
                             </div>
@@ -582,10 +582,10 @@ export default function AnalyticsPage() {
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={filteredVo2Trend}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
                                     <XAxis
                                         dataKey="date"
-                                        stroke="#9ca3af"
+                                        stroke="var(--foreground-muted)"
                                         fontSize={11}
                                         tickLine={false}
                                         minTickGap={timeRange === '1M' ? 20 : 50}
@@ -602,7 +602,9 @@ export default function AnalyticsPage() {
                                     />
                                     <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                        contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                        labelStyle={{ color: 'var(--foreground)' }}
+                                        itemStyle={{ color: 'var(--foreground)' }}
                                         labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                     />
                                     <Line
@@ -649,9 +651,11 @@ export default function AnalyticsPage() {
                                             }
                                         }}
                                     />
-                                    <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={[0, 120]} />
+                                    <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={[0, 120]} />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                        contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                        labelStyle={{ color: 'var(--foreground)' }}
+                                        itemStyle={{ color: 'var(--foreground)' }}
                                         labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                     />
                                     <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
@@ -663,14 +667,14 @@ export default function AnalyticsPage() {
 
                 {/* === FITNESS & FORM === */}
                 <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Fitness & Form (CTL / ATL / TSB)</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-4">Fitness & Form (CTL / ATL / TSB)</h3>
                     <div className="h-72">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={filteredFitness}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
                                 <XAxis
                                     dataKey="date"
-                                    stroke="#9ca3af"
+                                    stroke="var(--foreground-muted)"
                                     fontSize={11}
                                     tickLine={false}
                                     minTickGap={timeRange === '1M' ? 20 : 50}
@@ -687,7 +691,9 @@ export default function AnalyticsPage() {
                                 />
                                 <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                    contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                    labelStyle={{ color: 'var(--foreground)' }}
+                                    itemStyle={{ color: 'var(--foreground)' }}
                                     labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 />
                                 <Legend />
@@ -707,19 +713,19 @@ export default function AnalyticsPage() {
                     <div className="grid grid-cols-4 gap-4 text-center text-sm">
                         <div>
                             <p className="text-gray-500">Avg Weekly</p>
-                            <p className="text-white font-semibold">{runalyzeMetrics.details.avgWeeklyKm} km</p>
+                            <p className="text-foreground font-semibold">{runalyzeMetrics.details.avgWeeklyKm} km</p>
                         </div>
                         <div>
                             <p className="text-gray-500">Target Weekly</p>
-                            <p className="text-white font-semibold">{runalyzeMetrics.details.targetWeeklyKm} km</p>
+                            <p className="text-foreground font-semibold">{runalyzeMetrics.details.targetWeeklyKm} km</p>
                         </div>
                         <div>
                             <p className="text-gray-500">Long Run Points</p>
-                            <p className="text-white font-semibold">{runalyzeMetrics.details.longRunPoints} / 10</p>
+                            <p className="text-foreground font-semibold">{runalyzeMetrics.details.longRunPoints} / 10</p>
                         </div>
                         <div>
                             <p className="text-gray-500">Calibration</p>
-                            <p className="text-white font-semibold">{runalyzeMetrics.calibrationFactor.toFixed(2)}x</p>
+                            <p className="text-foreground font-semibold">{runalyzeMetrics.calibrationFactor.toFixed(2)}x</p>
                         </div>
                     </div>
                 </div>

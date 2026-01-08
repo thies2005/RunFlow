@@ -149,7 +149,7 @@ export default function Dashboard() {
 
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-white mb-2">
+                        <h1 className="text-3xl font-bold text-foreground mb-2">
                             Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}! 👋
                         </h1>
                         <p className="text-gray-400">
@@ -185,7 +185,7 @@ export default function Dashboard() {
 
                     <div className="mt-8">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold text-white">Recent Activities</h2>
+                            <h2 className="text-xl font-semibold text-foreground">Recent Activities</h2>
                             <div className="flex items-center gap-3">
                                 <button
                                     type="button"

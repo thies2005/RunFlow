@@ -109,7 +109,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                 {/* Activity details */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-white font-semibold truncate">{activity.name}</h4>
+                        <h4 className="text-foreground font-semibold truncate">{activity.name}</h4>
                         {crossTraining && (
                             <span className="badge badge-recovery text-xs">Recovery</span>
                         )}
@@ -130,23 +130,23 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                     <div className="flex flex-wrap items-center gap-4 mt-3">
                         {/* Distance */}
                         <div className="flex items-center gap-1">
-                            <TrendingUp className="w-4 h-4 text-gray-500" />
-                            <span className="text-white font-medium">
+                            <TrendingUp className="w-4 h-4 text-foreground-muted" />
+                            <span className="text-foreground font-medium">
                                 {(activity.distance / 1000).toFixed(2)} km
                             </span>
                         </div>
 
                         {/* Duration */}
                         <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4 text-gray-500" />
-                            <span className="text-white font-medium">
+                            <Clock className="w-4 h-4 text-foreground-muted" />
+                            <span className="text-foreground font-medium">
                                 {formatDuration(activity.movingTime)}
                             </span>
                         </div>
 
                         {/* Pace (for runs) */}
                         {activity.type === 'RUN' && activity.averageSpeed && (
-                            <div className="text-gray-300">
+                            <div className="text-foreground-muted">
                                 {formatPace(activity.averageSpeed)}
                             </div>
                         )}
@@ -155,15 +155,15 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                         {activity.hasHeartrate && activity.averageHr && (
                             <div className="flex items-center gap-1">
                                 <Heart className="w-4 h-4 text-red-400" />
-                                <span className="text-gray-300">{Math.round(activity.averageHr)} bpm</span>
+                                <span className="text-foreground-muted">{Math.round(activity.averageHr)} bpm</span>
                             </div>
                         )}
 
                         {/* Elevation */}
                         {activity.totalElevation && activity.totalElevation > 10 && (
                             <div className="flex items-center gap-1">
-                                <Mountain className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-300">{Math.round(activity.totalElevation)}m</span>
+                                <Mountain className="w-4 h-4 text-foreground-muted" />
+                                <span className="text-foreground-muted">{Math.round(activity.totalElevation)}m</span>
                             </div>
                         )}
                     </div>
@@ -219,8 +219,8 @@ export function ActivityList({ activities, isLoading, userHrMax }: ActivityListP
         return (
             <div className="glass-card p-8 text-center">
                 <span className="text-4xl mb-4 block">🏃</span>
-                <p className="text-gray-400">No activities yet</p>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-foreground-muted">No activities yet</p>
+                <p className="text-sm text-foreground-muted mt-2">
                     Connect Strava and sync your activities to get started
                 </p>
             </div>

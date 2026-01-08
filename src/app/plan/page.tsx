@@ -95,8 +95,8 @@ export default function PlanPage() {
     if (!data?.goal) {
         return (
             <div className="min-h-screen p-8 flex flex-col items-center justify-center text-center">
-                <h1 className="text-2xl text-white font-bold mb-4">No Active Plan</h1>
-                <p className="text-gray-400 mb-6">You don't have an active training goal.</p>
+                <h1 className="text-2xl text-foreground font-bold mb-4">No Active Plan</h1>
+                <p className="text-foreground-muted mb-6">You don't have an active training goal.</p>
                 <button onClick={() => router.push('/onboarding?step=3')} className="btn-primary">Create Goal</button>
             </div>
         );
@@ -172,8 +172,8 @@ export default function PlanPage() {
                             <ArrowLeft className="w-6 h-6" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-bold text-white">{goal.name} Plan</h1>
-                            <p className="text-gray-400 text-sm flex items-center gap-2">
+                            <h1 className="text-2xl font-bold text-foreground">{goal.name} Plan</h1>
+                            <p className="text-foreground-muted text-sm flex items-center gap-2">
                                 <Calendar className="w-4 h-4" />
                                 Race: {format(raceDate, 'MMMM d, yyyy')}
                             </p>
@@ -225,11 +225,11 @@ export default function PlanPage() {
                                 return (
                                     <div key={weekStartIso} className="glass-card overflow-hidden">
                                         {/* Week Header */}
-                                        <div className="p-4 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between bg-white/5 sticky top-0 z-10 backdrop-blur-md gap-2">
+                                        <div className="p-4 border-b border-glass-border flex flex-col md:flex-row md:items-center justify-between bg-surface sticky top-0 z-10 backdrop-blur-md gap-2">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex flex-col">
-                                                    <span className="text-white font-semibold">Week {index + 1}</span>
-                                                    <span className="text-xs text-gray-400">
+                                                    <span className="text-foreground font-semibold">Week {index + 1}</span>
+                                                    <span className="text-xs text-foreground-muted">
                                                         {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
                                                     </span>
                                                 </div>
@@ -255,7 +255,7 @@ export default function PlanPage() {
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="px-2 py-1 bg-white/5 rounded text-xs text-gray-300 border border-white/10">
+                                                    <div className="px-2 py-1 bg-surface rounded text-xs text-foreground-muted border border-glass-border">
                                                         {(plannedMileage / 1000).toFixed(1)} km planned
                                                     </div>
                                                 )}

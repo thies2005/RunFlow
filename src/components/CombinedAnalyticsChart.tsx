@@ -133,12 +133,11 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
                         key={key}
                         onClick={() => toggleSeries(key)}
                         className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-2 border ${visibleSeries[key]
-                            ? 'text-white border-transparent'
+                            ? 'bg-surface-hover text-foreground border-accent-purple/50'
                             : 'bg-transparent text-foreground-muted border-glass-border hover:border-foreground-muted'
                             }`}
                         style={{
-                            backgroundColor: visibleSeries[key] ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                            borderColor: visibleSeries[key] ? 'rgba(255, 255, 255, 0.2)' : undefined
+                            backgroundColor: visibleSeries[key] ? 'var(--surface-hover)' : 'transparent',
                         }}
                     >
                         <span

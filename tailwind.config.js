@@ -8,19 +8,23 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                // Deep dark theme
+                // Adaptive theme
                 background: {
-                    DEFAULT: '#0a0a0f',
-                    secondary: '#12121a',
-                    tertiary: '#1a1a25',
+                    DEFAULT: 'var(--background)',
+                    secondary: 'var(--background-secondary)',
+                    tertiary: 'var(--background-tertiary)',
+                },
+                foreground: {
+                    DEFAULT: 'var(--foreground)',
+                    muted: 'var(--foreground-muted)',
                 },
                 // Vibrant accent gradients
                 accent: {
-                    orange: '#ff6b35',
-                    pink: '#f72585',
-                    purple: '#7209b7',
+                    orange: 'var(--accent-orange)',
+                    pink: 'var(--accent-pink)',
+                    purple: 'var(--accent-purple)',
                     blue: '#3a0ca3',
-                    cyan: '#4cc9f0',
+                    cyan: 'var(--accent-cyan)',
                 },
                 // Running zones
                 zone: {
@@ -32,9 +36,9 @@ module.exports = {
                 },
                 // Surface colors
                 surface: {
-                    DEFAULT: 'rgba(255, 255, 255, 0.05)',
-                    hover: 'rgba(255, 255, 255, 0.08)',
-                    active: 'rgba(255, 255, 255, 0.12)',
+                    DEFAULT: 'var(--glass-bg)',
+                    hover: 'var(--glass-bg-hover)',
+                    active: 'var(--glass-border)',
                 },
             },
             backgroundImage: {

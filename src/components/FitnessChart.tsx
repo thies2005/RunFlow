@@ -49,23 +49,23 @@ function CustomTooltip({ active, payload, label }: any) {
         }
 
         return (
-            <div className="glass-card p-4 border border-white/10">
-                <p className="text-gray-400 text-sm mb-2">
+            <div className="glass-card p-4">
+                <p className="text-foreground-muted text-sm mb-2">
                     {format(new Date(label), 'MMM d, yyyy')}
                 </p>
                 <div className="space-y-1">
                     <p className="text-sm">
-                        <span className="text-blue-400">CTL (Fitness):</span>{' '}
-                        <span className="text-white font-medium">{ctl?.toFixed(1)}</span>
+                        <span className="text-blue-500">CTL (Fitness):</span>{' '}
+                        <span className="text-foreground font-medium">{ctl?.toFixed(1)}</span>
                     </p>
                     <p className="text-sm">
-                        <span className="text-red-400">ATL (Fatigue):</span>{' '}
-                        <span className="text-white font-medium">{atl?.toFixed(1)}</span>
+                        <span className="text-red-500">ATL (Fatigue):</span>{' '}
+                        <span className="text-foreground font-medium">{atl?.toFixed(1)}</span>
                     </p>
                     <p className="text-sm">
                         <span style={{ color: tsbColor }}>TSB (Form):</span>{' '}
-                        <span className="text-white font-medium">{tsb?.toFixed(1)}</span>
-                        <span className="text-gray-400 ml-2">({tsbStatus})</span>
+                        <span className="text-foreground font-medium">{tsb?.toFixed(1)}</span>
+                        <span className="text-foreground-muted ml-2">({tsbStatus})</span>
                     </p>
                 </div>
             </div>
@@ -85,7 +85,7 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
     if (isLoading) {
         return (
             <div className="glass-card p-6 h-80 flex items-center justify-center">
-                <div className="animate-pulse text-gray-500">Loading fitness data...</div>
+                <div className="animate-pulse text-foreground-muted">Loading fitness data...</div>
             </div>
         );
     }
@@ -94,8 +94,8 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
         return (
             <div className="glass-card p-6 h-80 flex flex-col items-center justify-center">
                 <span className="text-4xl mb-4">📊</span>
-                <p className="text-gray-400">Not enough data for fitness chart</p>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-foreground-muted">Not enough data for fitness chart</p>
+                <p className="text-sm text-foreground-muted mt-2">
                     Sync more activities with heart rate data
                 </p>
             </div>
@@ -104,7 +104,7 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
 
     return (
         <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-gray-300 mb-4">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
                 Fitness & Form (CTL / ATL / TSB)
             </h3>
 
@@ -124,14 +124,14 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
 
                         <XAxis
                             dataKey="dateFormatted"
-                            stroke="#52525b"
-                            tick={{ fill: '#71717a', fontSize: 12 }}
-                            axisLine={{ stroke: '#27272a' }}
+                            stroke="var(--foreground-muted)"
+                            tick={{ fill: 'var(--foreground-muted)', fontSize: 12 }}
+                            axisLine={{ stroke: 'var(--glass-border)' }}
                         />
                         <YAxis
-                            stroke="#52525b"
-                            tick={{ fill: '#71717a', fontSize: 12 }}
-                            axisLine={{ stroke: '#27272a' }}
+                            stroke="var(--foreground-muted)"
+                            tick={{ fill: 'var(--foreground-muted)', fontSize: 12 }}
+                            axisLine={{ stroke: 'var(--glass-border)' }}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend
@@ -142,12 +142,12 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
                                     atl: 'Fatigue (ATL)',
                                     tsb: 'Form (TSB)',
                                 };
-                                return <span className="text-gray-400">{labels[value] || value}</span>;
+                                return <span className="text-foreground-muted">{labels[value] || value}</span>;
                             }}
                         />
 
                         {/* Zero line for TSB reference */}
-                        <ReferenceLine y={0} stroke="#52525b" strokeDasharray="3 3" />
+                        <ReferenceLine y={0} stroke="var(--foreground-muted)" strokeDasharray="3 3" />
 
                         {/* CTL - Chronic Training Load (Fitness) */}
                         <Area
@@ -183,18 +183,18 @@ export function FitnessChart({ data, isLoading }: FitnessChartProps) {
             <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
                 <div className="text-center">
                     <div className="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-1" />
-                    <p className="text-gray-400">Fitness</p>
-                    <p className="text-xs text-gray-500">42-day average</p>
+                    <p className="text-foreground-muted">Fitness</p>
+                    <p className="text-xs text-foreground-muted opacity-70">42-day average</p>
                 </div>
                 <div className="text-center">
                     <div className="w-3 h-3 rounded-full bg-red-500 mx-auto mb-1" />
-                    <p className="text-gray-400">Fatigue</p>
-                    <p className="text-xs text-gray-500">7-day average</p>
+                    <p className="text-foreground-muted">Fatigue</p>
+                    <p className="text-xs text-foreground-muted opacity-70">7-day average</p>
                 </div>
                 <div className="text-center">
                     <div className="w-3 h-3 rounded-full bg-emerald-500 mx-auto mb-1" />
-                    <p className="text-gray-400">Form</p>
-                    <p className="text-xs text-gray-500">Fitness - Fatigue</p>
+                    <p className="text-foreground-muted">Form</p>
+                    <p className="text-xs text-foreground-muted opacity-70">Fitness - Fatigue</p>
                 </div>
             </div>
         </div>

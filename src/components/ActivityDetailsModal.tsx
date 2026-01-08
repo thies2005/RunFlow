@@ -87,13 +87,13 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     const { createPortal } = require('react-dom');
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-2xl bg-[#0f1115] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="relative w-full max-w-2xl bg-background border border-glass-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="relative p-6 border-b border-white/10 bg-gradient-to-r from-accent-purple/10 to-accent-pink/10 shrink-0">
+                <div className="relative p-6 border-b border-glass-border bg-gradient-to-r from-accent-purple/10 to-accent-pink/10 shrink-0">
                     <button
                         onClick={onClose}
-                        className="absolute right-4 top-4 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                        className="absolute right-4 top-4 p-2 text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -105,8 +105,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     <ActivityIcon className="w-6 h-6 text-white" />}
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white mb-1">{activity.name}</h2>
-                            <div className="flex items-center gap-2 text-sm text-gray-400">
+                            <h2 className="text-xl font-bold text-foreground mb-1">{activity.name}</h2>
+                            <div className="flex items-center gap-2 text-sm text-foreground-muted">
                                 <Calendar className="w-4 h-4" />
                                 <span>{getFormattedDate(activity.startDate)}</span>
                             </div>
@@ -126,70 +126,70 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                         </Link>
 
                         <div className="relative group">
-                            <div className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-colors cursor-pointer">
-                                <Tag className="w-4 h-4 text-gray-400" />
+                            <div className="flex items-center gap-2 px-3 py-2 bg-background-tertiary hover:bg-background-secondary rounded-lg border border-glass-border transition-colors cursor-pointer">
+                                <Tag className="w-4 h-4 text-foreground-muted" />
                                 <select
                                     value={trainingType || 'EASY'}
                                     onChange={(e) => handleTypeChange(e.target.value as WorkoutType)}
-                                    className="bg-transparent border-none text-sm text-white focus:ring-0 cursor-pointer appearance-none pr-8"
+                                    className="bg-transparent border-none text-sm text-foreground focus:ring-0 cursor-pointer appearance-none pr-8 outline-none"
                                     disabled={isUpdatingType}
                                 >
                                     {WORKOUT_TYPES.map(type => (
-                                        <option key={type} value={type} className="bg-gray-900 text-white">
+                                        <option key={type} value={type} className="bg-background-secondary text-foreground">
                                             {type.replace('_', ' ')}
                                         </option>
                                     ))}
-                                    <option value="RIDE" className="bg-gray-900 text-white">RIDE</option>
-                                    <option value="SWIM" className="bg-gray-900 text-white">SWIM</option>
-                                    <option value="STRENGTH" className="bg-gray-900 text-white">STRENGTH</option>
-                                    <option value="OTHER" className="bg-gray-900 text-white">OTHER</option>
+                                    <option value="RIDE" className="bg-background-secondary text-foreground">RIDE</option>
+                                    <option value="SWIM" className="bg-background-secondary text-foreground">SWIM</option>
+                                    <option value="STRENGTH" className="bg-background-secondary text-foreground">STRENGTH</option>
+                                    <option value="OTHER" className="bg-background-secondary text-foreground">OTHER</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     {/* Description if available */}
                     {activity.description && (
-                        <div className="mb-8 bg-white/5 rounded-xl p-4">
-                            <p className="text-gray-300 italic">"{activity.description}"</p>
+                        <div className="mb-8 bg-background-tertiary rounded-xl p-4 border border-glass-border">
+                            <p className="text-foreground italic">"{activity.description}"</p>
                         </div>
                     )}
 
                     {/* Primary Stats Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                         <div className="glass-card p-4 text-center">
-                            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                            <div className="text-foreground-muted text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                                 <MapPin className="w-3 h-3" /> Distance
                             </div>
-                            <div className="text-2xl font-bold text-white">{(activity.distance / 1000).toFixed(2)}</div>
-                            <div className="text-xs text-gray-500">km</div>
+                            <div className="text-2xl font-bold text-foreground">{(activity.distance / 1000).toFixed(2)}</div>
+                            <div className="text-xs text-foreground-muted">km</div>
                         </div>
                         <div className="glass-card p-4 text-center">
-                            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                            <div className="text-foreground-muted text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                                 <Clock className="w-3 h-3" /> Time
                             </div>
-                            <div className="text-2xl font-bold text-white">{formatDuration(activity.movingTime)}</div>
-                            <div className="text-xs text-gray-500">moving</div>
+                            <div className="text-2xl font-bold text-foreground">{formatDuration(activity.movingTime)}</div>
+                            <div className="text-xs text-foreground-muted">moving</div>
                         </div>
                         <div className="glass-card p-4 text-center">
-                            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                            <div className="text-foreground-muted text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                                 <TrendingUp className="w-3 h-3" /> Pace
                             </div>
-                            <div className="text-2xl font-bold text-white">{formatPace(activity.averageSpeed)}</div>
-                            <div className="text-xs text-gray-500">avg</div>
+                            <div className="text-2xl font-bold text-foreground">{formatPace(activity.averageSpeed)}</div>
+                            <div className="text-xs text-foreground-muted">avg</div>
                         </div>
                         <div className="glass-card p-4 text-center">
-                            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                            <div className="text-foreground-muted text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                                 <Heart className="w-3 h-3" /> Heart Rate
                             </div>
-                            <div className="text-2xl font-bold text-white">{activity.averageHr ? Math.round(activity.averageHr) : '-'}</div>
-                            <div className="text-xs text-gray-500">bpm</div>
+                            <div className="text-2xl font-bold text-foreground">{activity.averageHr ? Math.round(activity.averageHr) : '-'}</div>
+                            <div className="text-xs text-foreground-muted">bpm</div>
                         </div>
                         <div className="glass-card p-4 text-center">
-                            <div className="text-gray-400 text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
+                            <div className="text-foreground-muted text-xs uppercase tracking-wider mb-1 flex items-center justify-center gap-1">
                                 <Zap className="w-3 h-3" /> Cadence
                             </div>
-                            <div className="text-2xl font-bold text-white">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'}</div>
-                            <div className="text-xs text-gray-500">spm</div>
+                            <div className="text-2xl font-bold text-foreground">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'}</div>
+                            <div className="text-xs text-foreground-muted">spm</div>
                         </div>
                     </div>
 
@@ -197,68 +197,68 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         {/* Elevation Stats */}
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2">Elevation</h3>
+                            <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest border-b border-glass-border pb-2">Elevation</h3>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">Total Gain</span>
-                                <span className="text-white font-medium">{activity.totalElevation ? Math.round(activity.totalElevation) : 0} m</span>
+                                <span className="text-foreground-muted">Total Gain</span>
+                                <span className="text-foreground font-medium">{activity.totalElevation ? Math.round(activity.totalElevation) : 0} m</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">High Point</span>
-                                <span className="text-white font-medium">{activity.elevHigh ? Math.round(activity.elevHigh) : '-'} m</span>
+                                <span className="text-foreground-muted">High Point</span>
+                                <span className="text-foreground font-medium">{activity.elevHigh ? Math.round(activity.elevHigh) : '-'} m</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">Low Point</span>
-                                <span className="text-white font-medium">{activity.elevLow ? Math.round(activity.elevLow) : '-'} m</span>
+                                <span className="text-foreground-muted">Low Point</span>
+                                <span className="text-foreground font-medium">{activity.elevLow ? Math.round(activity.elevLow) : '-'} m</span>
                             </div>
-                            <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-2">
-                                <span className="text-gray-400">GAP</span>
+                            <div className="flex justify-between items-center border-t border-glass-border pt-2 mt-2">
+                                <span className="text-foreground-muted">GAP</span>
                                 <span className="text-accent-cyan font-medium">{formatPace(activity.gradeAdjustedSpeed)}</span>
                             </div>
                         </div>
 
                         {/* Training Load */}
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2">Training Load</h3>
+                            <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest border-b border-glass-border pb-2">Training Load</h3>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">TRIMP</span>
+                                <span className="text-foreground-muted">TRIMP</span>
                                 <span className="text-accent-cyan font-medium">{activity.trimp ? activity.trimp.toFixed(0) : '-'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">rTSS</span>
+                                <span className="text-foreground-muted">rTSS</span>
                                 <span className="text-accent-orange font-medium">{activity.runningTss ? activity.runningTss.toFixed(0) : '-'}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">Intensity</span>
-                                <span className="text-white font-medium">
+                                <span className="text-foreground-muted">Intensity</span>
+                                <span className="text-foreground font-medium">
                                     {(activity.averageHr && (userHrMax || activity.maxHr))
                                         ? `${Math.round((activity.averageHr / (userHrMax || activity.maxHr!)) * 100)}% HRmax`
                                         : '-'}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center border-t border-white/5 pt-2 mt-2">
-                                <span className="text-gray-400">Eff. VO2 Max</span>
+                            <div className="flex justify-between items-center border-t border-glass-border pt-2 mt-2">
+                                <span className="text-foreground-muted">Eff. VO2 Max</span>
                                 <span className="text-accent-purple font-medium">{activity.estimatedVdot ? activity.estimatedVdot.toFixed(1) : '-'}</span>
                             </div>
                         </div>
 
                         {/* Device / Other */}
                         <div className="space-y-4">
-                            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2">Details</h3>
+                            <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest border-b border-glass-border pb-2">Details</h3>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">Calories</span>
-                                <span className="text-white font-medium">{activity.calories ? Math.round(activity.calories) : '-'} kcal</span>
+                                <span className="text-foreground-muted">Calories</span>
+                                <span className="text-foreground font-medium">{activity.calories ? Math.round(activity.calories) : '-'} kcal</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">Cadence</span>
-                                <span className="text-white font-medium">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'} spm</span>
+                                <span className="text-foreground-muted">Cadence</span>
+                                <span className="text-foreground font-medium">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'} spm</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">Device</span>
-                                <span className="text-white font-medium text-xs truncate max-w-[120px]">Strava Sync</span>
+                                <span className="text-foreground-muted">Device</span>
+                                <span className="text-foreground font-medium text-xs truncate max-w-[120px]">Strava Sync</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-400">ID</span>
-                                <span className="text-white font-mono text-xs text-opacity-50">{activity.id.slice(0, 8)}</span>
+                                <span className="text-foreground-muted">ID</span>
+                                <span className="text-foreground font-mono text-xs opacity-50">{activity.id.slice(0, 8)}</span>
                             </div>
                         </div>
                     </div>
@@ -266,12 +266,12 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     {/* Zone Distribution Visualization (if available) - simplified */}
                     {(activity.hrZone1Time || activity.hrZone2Time) && (
                         <div className="mt-6">
-                            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2 mb-4">Heart Rate Zones</h3>
-                            <div className="flex h-4 rounded-full overflow-hidden w-full bg-white/5">
+                            <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest border-b border-glass-border pb-2 mb-4">Heart Rate Zones</h3>
+                            <div className="flex h-4 rounded-full overflow-hidden w-full bg-background-tertiary">
                                 {[
-                                    { color: 'bg-gray-400', time: activity.hrZone1Time },
-                                    { color: 'bg-blue-400', time: activity.hrZone2Time },
-                                    { color: 'bg-green-400', time: activity.hrZone3Time },
+                                    { color: 'bg-green-400', time: activity.hrZone1Time },
+                                    { color: 'bg-lime-400', time: activity.hrZone2Time },
+                                    { color: 'bg-yellow-400', time: activity.hrZone3Time },
                                     { color: 'bg-orange-400', time: activity.hrZone4Time },
                                     { color: 'bg-red-500', time: activity.hrZone5Time }
                                 ].map((zone, i) => {
@@ -281,7 +281,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     return <div key={i} className={`${zone.color}`} style={{ width: `${pct}%` }} title={`Zone ${i + 1}: ${Math.round(pct)}%`} />;
                                 })}
                             </div>
-                            <div className="flex justify-between mt-2 text-xs text-gray-500 px-1">
+                            <div className="flex justify-between mt-2 text-xs text-foreground-muted px-1">
                                 <span>Z1</span><span>Z2</span><span>Z3</span><span>Z4</span><span>Z5</span>
                             </div>
                         </div>

@@ -97,8 +97,8 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
     if (!data.length) {
         return (
             <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Combined Analytics</h3>
-                <p className="text-gray-400">No data available</p>
+                <h3 className="text-lg font-semibold text-foreground mb-4">Combined Analytics</h3>
+                <p className="text-foreground-muted">No data available</p>
             </div>
         );
     }
@@ -106,18 +106,19 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
     return (
         <div className="glass-card p-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <h3 className="text-lg font-semibold text-white">Combined Analytics Overview</h3>
+                <h3 className="text-lg font-semibold text-foreground">Combined Analytics Overview</h3>
 
                 {/* Time Range Filter */}
-                <div className="flex bg-[#1f2937] rounded-lg p-1 border border-gray-700">
+                <div className="flex bg-background-secondary rounded-lg p-1 border border-glass-border">
                     {(['1M', '3M', '6M', '1Y', 'ALL'] as TimeRange[]).map(range => (
                         <button
                             key={range}
                             onClick={() => onTimeRangeChange(range)}
                             className={`px-3 py-1 text-xs font-medium rounded transition-all ${timeRange === range
-                                ? 'bg-[#374151] text-white shadow-sm'
-                                : 'text-gray-400 hover:text-gray-200'
+                                ? 'bg-zinc-700 text-white shadow-sm' // Active state can stay distinct or use generic active var
+                                : 'text-foreground-muted hover:text-foreground'
                                 }`}
+                            style={timeRange === range ? { backgroundColor: 'var(--accent-purple)' } : {}}
                         >
                             {range}
                         </button>
@@ -131,16 +132,22 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
                     <button
                         key={key}
                         onClick={() => toggleSeries(key)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-2 ${visibleSeries[key]
-                            ? 'bg-white/10 text-white border border-white/20'
-                            : 'bg-transparent text-gray-500 border border-gray-700 hover:border-gray-500'
+                        className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-2 border ${visibleSeries[key]
+                            ? 'text-white border-transparent'
+                            : 'bg-transparent text-foreground-muted border-glass-border hover:border-foreground-muted'
                             }`}
+                        style={{
+                            backgroundColor: visibleSeries[key] ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                            borderColor: visibleSeries[key] ? 'rgba(255, 255, 255, 0.2)' : undefined
+                        }}
                     >
                         <span
                             className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: visibleSeries[key] ? SERIES_CONFIG[key].color : '#6b7280' }}
+                            style={{ backgroundColor: visibleSeries[key] ? SERIES_CONFIG[key].color : 'var(--foreground-muted)' }}
                         />
-                        {SERIES_CONFIG[key].name}
+                        <span style={{ color: visibleSeries[key] ? 'var(--foreground)' : 'var(--foreground-muted)' }}>
+                            {SERIES_CONFIG[key].name}
+                        </span>
                     </button>
                 ))}
             </div>
@@ -155,10 +162,10 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
                                 <stop offset="95%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" />
                         <XAxis
                             dataKey="date"
-                            stroke="#9ca3af"
+                            stroke="var(--foreground-muted)"
                             fontSize={11}
                             tickLine={false}
                             minTickGap={timeRange === '1M' ? 20 : 50}
@@ -211,8 +218,15 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
                         />
 
                         <Tooltip
-                            contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                            labelStyle={{ color: '#9ca3af' }}
+                            contentStyle={{
+                                backgroundColor: 'var(--glass-bg)',
+                                border: '1px solid var(--glass-border)',
+                                borderRadius: '8px',
+                                boxShadow: 'var(--card-shadow)',
+                                backdropFilter: 'blur(12px)'
+                            }}
+                            itemStyle={{ color: 'var(--foreground)' }}
+                            labelStyle={{ color: 'var(--foreground-muted)' }}
                             labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         />
 
@@ -319,7 +333,7 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
             </div>
 
             {/* Legend */}
-            <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-gray-400">
+            <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-foreground-muted">
                 <span>🟡 VO2max = Aerobic power</span>
                 <span>🟢 CTL = Long-term fitness</span>
                 <span>🔴 ATL = Short-term fatigue</span>

@@ -34,30 +34,30 @@ export default function LoginPage() {
                         <span className="text-4xl">🏃</span>
                     </div>
 
-                    <h1 className="text-4xl font-bold text-white mb-4">
+                    <h1 className="text-4xl font-bold text-foreground mb-4">
                         RunFlow
                     </h1>
-                    <p className="text-xl text-gray-400 mb-8">
+                    <p className="text-xl text-foreground-muted mb-8">
                         Your running performance dashboard
                     </p>
 
                     {/* Features */}
                     <div className="grid grid-cols-2 gap-4 mb-8">
                         <div className="glass-card p-4 text-center">
-                            <Activity className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-300">Strava Sync</p>
+                            <Activity className="w-6 h-6 text-cyan-500 mx-auto mb-2" />
+                            <p className="text-sm text-foreground-muted">Strava Sync</p>
                         </div>
                         <div className="glass-card p-4 text-center">
-                            <Target className="w-6 h-6 text-pink-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-300">Race Goals</p>
+                            <Target className="w-6 h-6 text-pink-500 mx-auto mb-2" />
+                            <p className="text-sm text-foreground-muted">Race Goals</p>
                         </div>
                         <div className="glass-card p-4 text-center">
-                            <TrendingUp className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-300">VDOT Tracking</p>
+                            <TrendingUp className="w-6 h-6 text-green-500 mx-auto mb-2" />
+                            <p className="text-sm text-foreground-muted">VDOT Tracking</p>
                         </div>
                         <div className="glass-card p-4 text-center">
-                            <Zap className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-300">CTL/ATL/TSB</p>
+                            <Zap className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
+                            <p className="text-sm text-foreground-muted">CTL/ATL/TSB</p>
                         </div>
                     </div>
 
@@ -68,7 +68,7 @@ export default function LoginPage() {
                         />
                     </div>
 
-                    <p className="text-sm text-gray-500 mt-6">
+                    <p className="text-sm text-foreground-muted mt-6">
                         We&apos;ll sync your activities to provide personalized training insights
                     </p>
                 </div>
@@ -76,7 +76,7 @@ export default function LoginPage() {
 
             {/* Footer */}
             <footer className="py-6 text-center">
-                <p className="text-gray-600 text-sm">
+                <p className="text-foreground-muted text-sm">
                     RunFlow respects your privacy. We only read your activity data.
                 </p>
             </footer>

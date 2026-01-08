@@ -11,7 +11,9 @@ interface DataPoint {
     atl?: number;
     tsb?: number;
     volume?: number;
+    volumeRolling?: number;
     trainingTime?: number; // minutes
+    trainingTimeRolling?: number; // minutes
 }
 
 export type TimeRange = 'ALL' | '1Y' | '6M' | '3M' | '1M';
@@ -72,6 +74,7 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
         return filteredData.map(d => ({
             ...d,
             trainingTimeHours: d.trainingTime ? Math.round(d.trainingTime / 60 * 10) / 10 : undefined,
+            trainingTimeRollingHours: d.trainingTimeRolling ? Math.round(d.trainingTimeRolling / 60 * 10) / 10 : undefined,
         }));
     }, [filteredData]);
 
@@ -79,13 +82,14 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
     const domains = useMemo(() => {
         const vo2Values = filteredData.flatMap(d => [d.vo2max, d.vo2maxRolling].filter(Boolean) as number[]);
         const fitnessValues = filteredData.flatMap(d => [d.ctl, d.atl, d.tsb].filter(Boolean) as number[]);
-        const volumeValues = filteredData.filter(d => d.volume).map(d => d.volume!);
+        const volumeValues = filteredData.flatMap(d => [d.volume, d.volumeRolling].filter(Boolean) as number[]);
+        const timeValues = chartData.flatMap(d => [d.trainingTimeHours, d.trainingTimeRollingHours].filter(Boolean) as number[]);
 
         return {
             vo2: vo2Values.length ? [Math.floor(Math.min(...vo2Values) - 1), Math.ceil(Math.max(...vo2Values) + 1)] : [0, 60],
             fitness: fitnessValues.length ? [Math.min(...fitnessValues) - 5, Math.max(...fitnessValues) + 5] : [-30, 30],
-            volume: [...volumeValues, ...chartData.map(d => d.trainingTimeHours).filter(Boolean) as number[]].length
-                ? [0, Math.max(...volumeValues, ...chartData.map(d => d.trainingTimeHours).filter(Boolean) as number[]) * 1.2]
+            volume: [...volumeValues, ...timeValues].length
+                ? [0, Math.max(...volumeValues, ...timeValues) * 1.1]
                 : [0, 100],
         };
     }, [filteredData, chartData]);
@@ -260,30 +264,54 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
                             />
                         )}
 
-                        {/* Volume Bar */}
-                        {visibleSeries.volume && (
+                        {/* Volume Bar (Only visible in 1M view OR if explicitly enabled in other views - but user request implies specific handling) */}
+                        {visibleSeries.volume && timeRange === '1M' && (
                             <Bar
                                 yAxisId="volume"
                                 dataKey="volume"
                                 fill={SERIES_CONFIG.volume.color}
                                 opacity={0.3}
-                                name="Volume (km)"
+                                name="Daily Volume (km)"
                                 radius={[4, 4, 0, 0]}
                             />
                         )}
 
-                        {/* Training Time (Area with Gradient) */}
-                        {visibleSeries.trainingTime && (
+                        {/* Volume Rolling Line (Weekly Volume) */}
+                        {visibleSeries.volume && (
+                            <Line
+                                yAxisId="volume"
+                                type="monotone"
+                                dataKey="volumeRolling"
+                                stroke={SERIES_CONFIG.volume.color}
+                                strokeWidth={2}
+                                dot={false}
+                                name="Weekly Volume (km)"
+                            />
+                        )}
+
+                        {/* Training Time (Area - Daily - Only in 1M view) */}
+                        {visibleSeries.trainingTime && timeRange === '1M' && (
                             <Area
                                 yAxisId="volume"
                                 type="monotone"
                                 dataKey="trainingTimeHours"
-                                stroke={SERIES_CONFIG.trainingTime.color}
+                                stroke="none"
                                 fill="url(#colorTrainingTime)"
+                                fillOpacity={0.6}
+                                name="Daily Time (h)"
+                            />
+                        )}
+
+                        {/* Training Time Rolling Line */}
+                        {visibleSeries.trainingTime && (
+                            <Line
+                                yAxisId="volume"
+                                type="monotone"
+                                dataKey="trainingTimeRollingHours"
+                                stroke={SERIES_CONFIG.trainingTime.color}
                                 strokeWidth={2}
-                                dot={{ r: 3, fill: SERIES_CONFIG.trainingTime.color, strokeWidth: 0 }}
-                                activeDot={{ r: 5, strokeWidth: 0 }}
-                                name="Training Time (h)"
+                                dot={false}
+                                name="Weekly Time (h)"
                             />
                         )}
                     </ComposedChart>

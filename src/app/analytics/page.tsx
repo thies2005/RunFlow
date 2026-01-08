@@ -325,22 +325,36 @@ export default function AnalyticsPage() {
             };
         });
 
-        // 4. Calculate Rolling Average for VO2max (28 day window for daily data)
+        // 4. Calculate Rolling Averages
         const combinedDataWithRolling = initialCombinedData.map((d, index) => {
-            const windowSize = 28; // 4 weeks of days
-            let count = 0;
-            let sum = 0;
+            // VO2max Rolling (28 days)
+            const vo2Window = 28;
+            let vo2Count = 0;
+            let vo2Sum = 0;
 
-            for (let i = index; i >= 0 && count < 10; i--) { // Limit to 10 actual VO2max readings back
+            for (let i = index; i >= 0 && vo2Count < 10; i--) { // Limit to 10 actual VO2max readings back
                 if (initialCombinedData[i].vo2max !== undefined) {
-                    sum += initialCombinedData[i].vo2max!;
-                    count++;
+                    vo2Sum += initialCombinedData[i].vo2max!;
+                    vo2Count++;
                 }
+            }
+
+            // Volume & Time Rolling (7 days sum = "Weekly" equivalent)
+            const weeklyWindow = 7;
+            let volSum = 0;
+            let timeSum = 0;
+
+            // Look back 6 days + current day
+            for (let i = index; i >= 0 && i > index - weeklyWindow; i--) {
+                volSum += initialCombinedData[i].volume || 0;
+                timeSum += initialCombinedData[i].trainingTime || 0;
             }
 
             return {
                 ...d,
-                vo2maxRolling: count > 0 ? Math.round(sum / count * 10) / 10 : undefined
+                vo2maxRolling: vo2Count > 0 ? Math.round(vo2Sum / vo2Count * 10) / 10 : undefined,
+                volumeRolling: Math.round(volSum * 10) / 10,
+                trainingTimeRolling: Math.round(timeSum)
             };
         });
 

@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
 import { NotificationProvider } from '@/components/providers/NotificationProvider';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
@@ -20,11 +21,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <SessionProvider>
             <QueryClientProvider client={queryClient}>
-                <NotificationProvider>
-                    <UserMetricsProvider>
-                        {children}
-                    </UserMetricsProvider>
-                </NotificationProvider>
+                <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                    <NotificationProvider>
+                        <UserMetricsProvider>
+                            {children}
+                        </UserMetricsProvider>
+                    </NotificationProvider>
+                </ThemeProvider>
             </QueryClientProvider>
         </SessionProvider>
     );

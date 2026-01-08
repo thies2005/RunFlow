@@ -10,4 +10,5 @@ export { default as PlanSetupForm } from './PlanSetupForm';
 export { default as ActivityPicker } from './ActivityPicker';
 export * from './StravaLogos';
 export { Footer } from './Footer';
+export { UserMenu } from './UserMenu';
 export { ErrorBoundary, ChartErrorBoundary } from './ErrorBoundary';

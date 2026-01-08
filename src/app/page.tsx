@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo, Footer } from '@/components';
+import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo, Footer, UserMenu } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
@@ -126,19 +126,7 @@ export default function Dashboard() {
                                     <Settings className="w-5 h-5" />
                                 </button>
                                 <div className="flex items-center gap-3">
-                                    {session?.user?.image && (
-                                        <button onClick={() => setIsProfileOpen(true)} className="relative group">
-                                            <img
-                                                src={session.user.image}
-                                                alt={session.user.name || 'User'}
-                                                className="w-8 h-8 rounded-full border border-transparent group-hover:border-white transition-all cursor-pointer"
-                                            />
-                                            <div className="absolute inset-0 bg-white/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </button>
-                                    )}
-                                    <button onClick={() => signOut({ callbackUrl: '/login' })} className="p-2 text-gray-400 hover:text-white transition-colors">
-                                        <LogOut className="w-5 h-5" />
-                                    </button>
+                                    <UserMenu onOpenProfile={() => setIsProfileOpen(true)} />
                                 </div>
                             </div>
                         </div>

@@ -18,7 +18,7 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
     return (
         <div className="glass-card p-6 h-full flex flex-col">
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-300">This Week&apos;s Workouts</h2>
+                <h2 className="text-lg font-semibold text-foreground">This Week&apos;s Workouts</h2>
             </div>
             {weeklyWorkouts.length > 0 ? (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -36,23 +36,23 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                                     ? 'bg-accent-orange/10 border-accent-orange/50 shadow-[0_0_15px_rgba(249,115,22,0.3)]'
                                     : isNextPending
                                         ? 'bg-accent-orange/10 border-accent-orange/30'
-                                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                        : 'bg-surface border-glass-border hover:bg-surface-hover'
                                 }`}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-green-500/20' : (isTodayPending || isNextPending) ? 'bg-accent-orange/20' : 'bg-white/10'}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-green-500/20' : (isTodayPending || isNextPending) ? 'bg-accent-orange/20' : 'bg-surface'}`}>
                                             <span className="text-sm">{workout.workoutType === 'EASY' ? '🏃' : workout.workoutType === 'LONG_RUN' ? '🚀' : workout.workoutType === 'TEMPO' ? '⚡' : workout.workoutType === 'INTERVALS' ? '🔥' : workout.workoutType === 'STRENGTH' ? '💪' : workout.workoutType === 'REST' ? '😴' : workout.workoutType === 'RIDE' ? '🚴' : workout.workoutType === 'SWIM' ? '🏊' : '🎯'}</span>
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <p className={`font-medium ${workout.isCompleted ? 'text-green-400' : (isTodayPending || isNextPending) ? 'text-accent-orange' : 'text-white'}`}>
+                                                <p className={`font-medium ${workout.isCompleted ? 'text-green-400' : (isTodayPending || isNextPending) ? 'text-accent-orange' : 'text-foreground'}`}>
                                                     {workout.description || workout.workoutType?.replace('_', ' ')}
                                                 </p>
                                                 {isWorkoutToday && (
                                                     <span className="text-[10px] bg-accent-orange/20 text-accent-orange px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">Today</span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-gray-500">
+                                            <p className="text-xs text-foreground-muted">
                                                 {workout.targetDistance ? `${(workout.targetDistance / 1000).toFixed(1)} km` : workout.targetDuration ? `${Math.round(workout.targetDuration / 60)} min` : ''}
                                             </p>
                                         </div>
@@ -62,7 +62,7 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                                             <>
                                                 <button
                                                     onClick={() => onEditWorkout(workout)}
-                                                    className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
+                                                    className="p-1.5 text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded transition-colors"
                                                     title="Edit workout"
                                                 >
                                                     <Edit2 className="w-4 h-4" />
@@ -89,7 +89,7 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                 </div>
             ) : (
                 <div className="text-center py-6">
-                    <p className="text-gray-500 text-sm">No workouts scheduled</p>
+                    <p className="text-foreground-muted text-sm">No workouts scheduled</p>
                     <button onClick={() => router.push('/onboarding?step=3')} className="text-xs text-accent-orange mt-2 hover:underline">
                         Set up a training plan
                     </button>

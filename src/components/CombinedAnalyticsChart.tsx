@@ -84,9 +84,11 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
         return {
             vo2: vo2Values.length ? [Math.floor(Math.min(...vo2Values) - 1), Math.ceil(Math.max(...vo2Values) + 1)] : [0, 60],
             fitness: fitnessValues.length ? [Math.min(...fitnessValues) - 5, Math.max(...fitnessValues) + 5] : [-30, 30],
-            volume: volumeValues.length ? [0, Math.max(...volumeValues) * 1.2] : [0, 100],
+            volume: [...volumeValues, ...chartData.map(d => d.trainingTimeHours).filter(Boolean) as number[]].length
+                ? [0, Math.max(...volumeValues, ...chartData.map(d => d.trainingTimeHours).filter(Boolean) as number[]) * 1.2]
+                : [0, 100],
         };
-    }, [filteredData]);
+    }, [filteredData, chartData]);
 
     if (!data.length) {
         return (
@@ -143,6 +145,12 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
             <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartData}>
+                        <defs>
+                            <linearGradient id="colorTrainingTime" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0.3} />
+                                <stop offset="95%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                         <XAxis
                             dataKey="date"
@@ -186,7 +194,7 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
                             hide={!visibleSeries.ctl && !visibleSeries.atl && !visibleSeries.tsb}
                         />
 
-                        {/* Volume Y-Axis (hidden, uses right side) */}
+                        {/* Volume Y-Axis (hidden, used for scaling Volume and Time) */}
                         <YAxis
                             yAxisId="volume"
                             orientation="right"
@@ -216,8 +224,6 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
                                 name="VO2max (Avg)"
                             />
                         )}
-
-
 
                         {/* Fitness Lines */}
                         {visibleSeries.ctl && (
@@ -262,19 +268,21 @@ export default function CombinedAnalyticsChart({ data, timeRange, onTimeRangeCha
                                 fill={SERIES_CONFIG.volume.color}
                                 opacity={0.3}
                                 name="Volume (km)"
+                                radius={[4, 4, 0, 0]}
                             />
                         )}
 
-                        {/* Training Time */}
+                        {/* Training Time (Area with Gradient) */}
                         {visibleSeries.trainingTime && (
-                            <Line
+                            <Area
                                 yAxisId="volume"
                                 type="monotone"
                                 dataKey="trainingTimeHours"
                                 stroke={SERIES_CONFIG.trainingTime.color}
+                                fill="url(#colorTrainingTime)"
                                 strokeWidth={2}
-                                strokeDasharray="5 5"
-                                dot={false}
+                                dot={{ r: 3, fill: SERIES_CONFIG.trainingTime.color, strokeWidth: 0 }}
+                                activeDot={{ r: 5, strokeWidth: 0 }}
                                 name="Training Time (h)"
                             />
                         )}

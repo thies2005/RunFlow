@@ -119,7 +119,7 @@ export default function Dashboard() {
 
                             <div className="flex items-center gap-4">
 
-                                <button onClick={() => router.push('/analytics')} className="btn-secondary flex items-center gap-2 py-2 px-4">
+                                <button onClick={() => router.push('/analytics')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-4">
                                     📊 Analytics
                                 </button>
                                 <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-foreground-muted hover:text-foreground transition-colors">

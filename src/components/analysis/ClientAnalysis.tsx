@@ -40,15 +40,15 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
     const avgHr = activity.averageHr || 0;
 
     return (
-        <div className="min-h-screen bg-background text-white p-6">
+        <div className="min-h-screen bg-background text-foreground p-6">
             {/* Header */}
             <div className="mb-8 flex items-center gap-4">
-                <Link href="/" className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <Link href="/" className="p-2 hover:bg-surface-hover rounded-lg transition-colors">
                     <ArrowLeft className="w-6 h-6" />
                 </Link>
                 <div>
                     <h1 className="text-2xl font-bold">{activity.name}</h1>
-                    <div className="flex items-center gap-2 text-gray-400 text-sm">
+                    <div className="flex items-center gap-2 text-foreground-muted text-sm">
                         <Calendar className="w-4 h-4" />
                         <span>{format(new Date(activity.startDate), 'PPP p')}</span>
                         <span className="px-2 py-0.5 rounded-full bg-accent-purple/20 text-accent-purple text-xs border border-accent-purple/50">
@@ -61,37 +61,37 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
             {/* Summary Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
                 <div className="glass-card p-4">
-                    <div className="flex items-center gap-2 text-gray-400 text-xs uppercase mb-1">
+                    <div className="flex items-center gap-2 text-foreground-muted text-xs uppercase mb-1">
                         <MapPin className="w-3 h-3" /> Distance
                     </div>
-                    <div className="text-2xl font-bold">{(activity.distance / 1000).toFixed(2)} <span className="text-sm font-normal text-gray-500">km</span></div>
+                    <div className="text-2xl font-bold">{(activity.distance / 1000).toFixed(2)} <span className="text-sm font-normal text-foreground-muted">km</span></div>
                 </div>
                 <div className="glass-card p-4">
-                    <div className="flex items-center gap-2 text-gray-400 text-xs uppercase mb-1">
+                    <div className="flex items-center gap-2 text-foreground-muted text-xs uppercase mb-1">
                         <Clock className="w-3 h-3" /> Duration
                     </div>
-                    <div className="text-2xl font-bold">{(activity.movingTime / 60).toFixed(0)} <span className="text-sm font-normal text-gray-500">min</span></div>
+                    <div className="text-2xl font-bold">{(activity.movingTime / 60).toFixed(0)} <span className="text-sm font-normal text-foreground-muted">min</span></div>
                 </div>
                 <div className="glass-card p-4">
-                    <div className="flex items-center gap-2 text-gray-400 text-xs uppercase mb-1">
+                    <div className="flex items-center gap-2 text-foreground-muted text-xs uppercase mb-1">
                         <Zap className="w-3 h-3" /> Avg Pace
                     </div>
                     <div className="text-2xl font-bold">
                         {activity.averageSpeed ? Math.floor(16.6667 / activity.averageSpeed) + ':' + Math.round((16.6667 / activity.averageSpeed % 1) * 60).toString().padStart(2, '0') : '-'}
-                        <span className="text-sm font-normal text-gray-500"> /km</span>
+                        <span className="text-sm font-normal text-foreground-muted"> /km</span>
                     </div>
                 </div>
                 <div className="glass-card p-4 text-center">
-                    <div className="flex items-center justify-center gap-2 text-gray-400 text-xs uppercase mb-1">
+                    <div className="flex items-center justify-center gap-2 text-foreground-muted text-xs uppercase mb-1">
                         <Heart className="w-3 h-3" /> Avg HR
                     </div>
-                    <div className="text-2xl font-bold">{Math.round(avgHr)} <span className="text-sm font-normal text-gray-500">bpm</span></div>
+                    <div className="text-2xl font-bold">{Math.round(avgHr)} <span className="text-sm font-normal text-foreground-muted">bpm</span></div>
                 </div>
                 <div className="glass-card p-4 text-center">
-                    <div className="flex items-center justify-center gap-2 text-gray-400 text-xs uppercase mb-1">
+                    <div className="flex items-center justify-center gap-2 text-foreground-muted text-xs uppercase mb-1">
                         <Zap className="w-3 h-3" /> Avg Cadence
                     </div>
-                    <div className="text-2xl font-bold">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'} <span className="text-sm font-normal text-gray-500">spm</span></div>
+                    <div className="text-2xl font-bold">{activity.averageCadence ? Math.round(activity.averageCadence) : '-'} <span className="text-sm font-normal text-foreground-muted">spm</span></div>
                 </div>
             </div>
 
@@ -167,7 +167,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                 {chartData.some((d: any) => d.altitude) && (
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                            <Mountain className="w-4 h-4 text-gray-400" /> Elevation
+                            <Mountain className="w-4 h-4 text-foreground-muted" /> Elevation
                         </h3>
                         <div className="h-[200px] w-full">
                             <ResponsiveContainer width="100%" height="100%">

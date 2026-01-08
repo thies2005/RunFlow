@@ -120,7 +120,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                         )}
                     </div>
 
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-foreground-muted">
                         {formatDistanceToNow(new Date(activity.startDate), { addSuffix: true })}
                         {' • '}
                         {format(new Date(activity.startDate), 'EEE, MMM d')}

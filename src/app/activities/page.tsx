@@ -77,31 +77,31 @@ export default function ActivitiesPage() {
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => router.back()}
-                                className="flex items-center text-gray-400 hover:text-white transition-colors gap-2"
+                                className="flex items-center text-foreground-muted hover:text-foreground transition-colors gap-2"
                             >
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
-                            <h1 className="text-2xl font-bold text-white">Activities</h1>
+                            <h1 className="text-2xl font-bold text-foreground">Activities</h1>
                         </div>
 
                         <div className="flex items-center gap-4">
                             {/* Type Filter */}
-                            <div className="flex bg-white/5 p-1 rounded-lg">
+                            <div className="flex bg-surface p-1 rounded-lg border border-glass-border">
                                 <button
                                     onClick={() => setFilter('RUN')}
-                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RUN' ? 'bg-accent-orange text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RUN' ? 'bg-accent-orange text-white shadow-lg' : 'text-foreground-muted hover:text-foreground'}`}
                                 >
                                     Runs
                                 </button>
                                 <button
                                     onClick={() => setFilter('RIDE')}
-                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RIDE' ? 'bg-accent-orange text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'RIDE' ? 'bg-accent-orange text-white shadow-lg' : 'text-foreground-muted hover:text-foreground'}`}
                                 >
                                     Rides
                                 </button>
                                 <button
                                     onClick={() => setFilter('ALL')}
-                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'ALL' ? 'bg-accent-orange text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                                    className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'ALL' ? 'bg-accent-orange text-white shadow-lg' : 'text-foreground-muted hover:text-foreground'}`}
                                 >
                                     All
                                 </button>
@@ -117,7 +117,7 @@ export default function ActivitiesPage() {
 
                             <button
                                 onClick={() => refetch()}
-                                className="p-2 bg-white/5 rounded-lg hover:bg-white/10 text-white transition-colors"
+                                className="p-2 bg-surface hover:bg-surface-hover text-foreground transition-colors border border-glass-border rounded-lg"
                                 disabled={isRefetching}
                             >
                                 <RefreshCw className={`w-5 h-5 ${isRefetching ? 'animate-spin' : ''}`} />
@@ -140,7 +140,7 @@ export default function ActivitiesPage() {
                                 <button
                                     onClick={() => fetchNextPage()}
                                     disabled={isFetchingNextPage}
-                                    className="px-6 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors flex items-center gap-2"
+                                    className="px-6 py-2 bg-surface hover:bg-surface-hover text-foreground rounded-lg transition-colors flex items-center gap-2 border border-glass-border"
                                 >
                                     {isFetchingNextPage ? (
                                         <>

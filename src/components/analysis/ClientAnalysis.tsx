@@ -22,8 +22,8 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
         return streams.time.map((t: number, i: number) => {
             // Determine max pace based on activity type
             const trainingType = activity.trainingType || 'RUN';
-            // 10 min/km for running, 15 min/km for others (like hiking/walking)
-            const maxPace = (trainingType === 'RUN' || trainingType === 'EASY' || trainingType.includes('RUN')) ? 10 : 15;
+            // 15 min/km for running, 20 min/km for others (like hiking/walking)
+            const maxPace = (trainingType === 'RUN' || trainingType === 'EASY' || trainingType.includes('RUN')) ? 15 : 20;
 
             return {
                 time: t,
@@ -160,7 +160,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     </linearGradient>
                                 </defs>
                                 <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
-                                <YAxis domain={['dataMax', 'dataMin']} stroke="#6b7280" ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]} />
+                                <YAxis domain={['dataMax', 'dataMin']} stroke="#6b7280" ticks={[0, 3, 6, 9, 12, 15]} />
                                 <Tooltip
                                     contentStyle={{
                                         backgroundColor: 'var(--glass-bg)',

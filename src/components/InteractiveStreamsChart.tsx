@@ -244,7 +244,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                                 domain={[3, 15]}
                                 reversed
                                 hide
-                                ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]}
+                                ticks={[0, 3, 6, 9, 12, 15]}
                             />
                         )}
                         {enabledMetrics.gap && hasGap && (
@@ -253,7 +253,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                                 domain={[3, 15]}
                                 reversed
                                 hide
-                                ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]}
+                                ticks={[0, 3, 6, 9, 12, 15]}
                             />
                         )}
                         {enabledMetrics.elevation && hasElevation && (

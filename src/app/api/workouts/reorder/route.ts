@@ -2,10 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
+import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 // PATCH - Reorder workouts (update scheduledDate)
 export async function PATCH(request: NextRequest) {
     try {
+        // Rate limiting check (async for Redis support)
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.general);
+
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+            );
+        }
+
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {

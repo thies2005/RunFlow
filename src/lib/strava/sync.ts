@@ -17,6 +17,7 @@ import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { WorkoutType } from '@/lib/types';
 import { safeBigInt } from '@/lib/utils/bigint';
+import { acquireLock, releaseLock } from '@/lib/redis';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const MAX_PER_PAGE = 200;

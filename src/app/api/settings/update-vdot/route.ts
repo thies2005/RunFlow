@@ -5,7 +5,7 @@ import { generateTrainingPlan } from '@/lib/plans';
 import { authOptions } from '@/lib/strava/oauth';
 import { NextRequest, NextResponse } from 'next/server';
 import { WorkoutType } from '@prisma/client';
-import { checkRateLimit, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function GET() {
     try {
@@ -60,9 +60,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     try {
-        // Rate limiting check
+        // Rate limiting check (async for Redis support)
         const clientId = getClientIdentifier(req);
-        const rateLimitResult = checkRateLimit(clientId, RATE_LIMITS.settings);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.settings);
 
         if (!rateLimitResult.allowed) {
             return NextResponse.json(

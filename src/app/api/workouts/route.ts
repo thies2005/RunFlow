@@ -3,9 +3,21 @@ import { prisma } from '@/lib/db';
 import { authOptions } from '@/lib/strava/oauth';
 import { NextResponse } from 'next/server';
 import { WorkoutType } from '@prisma/client';
+import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
     try {
+        // Rate limiting check (async for Redis support)
+        const clientId = getClientIdentifier(req);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.general);
+
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+            );
+        }
+
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

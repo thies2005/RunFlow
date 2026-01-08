@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { syncUserActivities, getSyncStatus } from '@/lib/strava/sync';
-import { checkRateLimit, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
     try {
-        // Rate limiting check
+        // Rate limiting check (async for Redis support)
         const clientId = getClientIdentifier(request);
-        const rateLimitResult = checkRateLimit(clientId, RATE_LIMITS.sync);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.sync);
 
         if (!rateLimitResult.allowed) {
             return NextResponse.json(

@@ -3,12 +3,23 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
-import { Activity } from '@/lib/types';
+import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
+        // Rate limiting check (async for Redis support)
+        const clientId = getClientIdentifier(req);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.general);
+
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+            );
+        }
+
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

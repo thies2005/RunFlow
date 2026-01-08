@@ -3,13 +3,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Flag, Activity, Clock, Zap, Bike, Mountain, Plus, Dumbbell, Settings, GripVertical, Check } from 'lucide-react';
-import { format, startOfWeek, addDays, isToday, isSameDay, differenceInWeeks, endOfWeek, isBefore } from 'date-fns';
+import { ArrowLeft, Calendar } from 'lucide-react';
+import { format, startOfWeek, addDays, isToday, isSameDay, differenceInWeeks, isBefore } from 'date-fns';
 import { useSession } from 'next-auth/react';
-import { EditWorkoutModal, ErrorBoundary } from '@/components';
+import { EditWorkoutModal, ErrorBoundary, Footer } from '@/components';
 import ActivityDetailsModal from '@/components/ActivityDetailsModal';
-import { Footer } from '@/components';
-import { isRunningActivity, isCrossTrainingActivity, type WorkoutWithLinkedActivity, type ActivityListItem } from '@/lib/types';
+import { isRunningActivity, isCrossTrainingActivity, type WorkoutWithLinkedActivity, type PlanResponse } from '@/lib/types';
 import {
     DndContext,
     useSensor,
@@ -17,198 +16,11 @@ import {
     DragEndEvent,
     PointerSensor,
     TouchSensor,
-    useDraggable,
-    useDroppable,
 } from '@dnd-kit/core';
 
-import type { LucideIcon } from 'lucide-react';
-
-const workoutStyles: Record<string, { color: string, icon: LucideIcon, label: string }> = {
-    EASY: { color: 'text-green-400', icon: Activity, label: 'Easy Run' },
-    LONG_RUN: { color: 'text-blue-400', icon: Mountain, label: 'Long Run' },
-    TEMPO: { color: 'text-yellow-400', icon: Zap, label: 'Tempo' },
-    INTERVALS: { color: 'text-red-400', icon: Zap, label: 'Intervals' },
-    RECOVERY: { color: 'text-teal-400', icon: Activity, label: 'Recovery' },
-    REST: { color: 'text-gray-500', icon: Clock, label: 'Rest Day' },
-    RIDE: { color: 'text-orange-400', icon: Bike, label: 'Bike Ride' },
-    SWIM: { color: 'text-cyan-400', icon: Activity, label: 'Swim' },
-    STRENGTH: { color: 'text-pink-400', icon: Dumbbell, label: 'Strength' },
-    OTHER: { color: 'text-gray-400', icon: Activity, label: 'Other' },
-    RACE: { color: 'text-purple-400', icon: Flag, label: 'Race' },
-};
-
-const RUN_TYPES = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 'RACE', 'REPETITIONS'];
-
-function getPhase(weeksUntilRace: number) {
-    if (weeksUntilRace <= 2) return { name: 'TAPER', color: 'text-teal-400 border-teal-500/30 bg-teal-500/10' };
-    if (weeksUntilRace <= 6) return { name: 'PEAK', color: 'text-purple-400 border-purple-500/30 bg-purple-500/10' };
-    if (weeksUntilRace <= 10) return { name: 'BUILD', color: 'text-orange-400 border-orange-500/30 bg-orange-500/10' };
-    return { name: 'BASE', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' };
-}
-
-// Helper function to format pace
-function formatPace(distanceMeters: number, timeSeconds: number): string {
-    if (distanceMeters <= 0 || timeSeconds <= 0) return '-';
-    const paceSecsPerKm = timeSeconds / (distanceMeters / 1000);
-    const mins = Math.floor(paceSecsPerKm / 60);
-    const secs = Math.round(paceSecsPerKm % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}/km`;
-}
-
-// Helper to format duration like 1:30 or 0:45
-function formatDuration(seconds: number): string {
-    if (!seconds) return '0:00';
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    return `${hours}:${mins.toString().padStart(2, '0')}`;
-}
-
-// --- Draggable Workout Component ---
-function DraggableWorkout({
-    workout,
-    isTodayItem,
-    onClick,
-    onComplete,
-    onActivityClick
-}: {
-    workout: WorkoutWithLinkedActivity;
-    isTodayItem: boolean;
-    onClick: () => void;
-    onComplete: (e: React.MouseEvent) => void;
-    onActivityClick: (activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, e: React.MouseEvent) => void;
-}) {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-        id: workout.id,
-        data: { workout },
-    });
-
-    const style = workoutStyles[workout.workoutType] || workoutStyles.EASY;
-    const Icon = style.icon;
-    const linkedActivity = workout.linkedActivity;
-
-    const dragStyle = transform ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        zIndex: 50,
-        opacity: 0.9,
-    } : undefined;
-
-    if (isDragging) {
-        return (
-            <div ref={setNodeRef} style={dragStyle} className="bg-gray-800 p-4 rounded-lg shadow-xl border border-white/20 flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-white/5 ${style.color}`}>
-                    <Icon className="w-5 h-5" />
-                </div>
-                <div>
-                    <h4 className="font-medium text-white">{style.label}</h4>
-                </div>
-            </div>
-        )
-    }
-
-    return (
-        <div
-            ref={setNodeRef}
-            style={dragStyle}
-            className={`group p-3 rounded-lg flex items-center gap-3 hover:bg-white/5 transition-colors border border-transparent ${isDragging ? 'opacity-0' : ''} ${isTodayItem ? 'bg-accent-orange/5 border-accent-orange/20' : 'bg-white/5'}`}
-        >
-            <div className="cursor-grab text-gray-600 hover:text-white" {...listeners} {...attributes}>
-                <GripVertical className="w-4 h-4" />
-            </div>
-
-            <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center bg-white/5 ${style.color} cursor-pointer`}
-                onClick={onClick}
-            >
-                <Icon className="w-4 h-4" />
-            </div>
-
-            <div className="flex-1 cursor-pointer min-w-0" onClick={onClick}>
-                <div className="flex items-center justify-between">
-                    <h4 className={`text-sm font-medium truncate ${workout.isCompleted ? 'text-gray-500 line-through' : 'text-white'}`}>
-                        {style.label}
-                    </h4>
-                    <div className="flex items-center gap-2">
-                        {(workout.targetDistance ?? 0) > 0 && (
-                            <span className="text-xs text-gray-400 whitespace-nowrap">
-                                {((workout.targetDistance ?? 0) / 1000).toFixed(1)}k
-                            </span>
-                        )}
-                        {!workout.isCompleted && (
-                            <button
-                                onClick={onComplete}
-                                className="p-1 hover:bg-green-500/20 text-gray-500 hover:text-green-400 rounded transition-colors"
-                                title="Mark as Complete"
-                            >
-                                <Check className="w-4 h-4" />
-                            </button>
-                        )}
-                        <Settings className="w-3 h-3 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                </div>
-                <p className="text-xs text-gray-500 truncate">{workout.description}</p>
-
-                {/* Linked Activity Data */}
-                {linkedActivity && (
-                    <div
-                        className="mt-2 pt-2 border-t border-white/10 cursor-pointer hover:bg-white/5 transition-colors rounded -mx-1 px-1"
-                        onClick={(e) => onActivityClick(linkedActivity, e)}
-                    >
-                        <p className="text-xs text-green-400 truncate font-medium flex items-center gap-1">
-                            <Check className="w-3 h-3" /> {linkedActivity.name}
-                        </p>
-                        <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
-                            <span>{(linkedActivity.distance / 1000).toFixed(1)} km</span>
-                            <span>{Math.floor(linkedActivity.movingTime / 60)}m</span>
-                            <span>{formatPace(linkedActivity.distance, linkedActivity.movingTime)}</span>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-// --- Droppable Day Component ---
-function DroppableDay({ date, children, isTodayItem, onAdd }: { date: Date; children: React.ReactNode; isTodayItem: boolean; onAdd: () => void }) {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const { setNodeRef, isOver } = useDroppable({
-        id: `day-${dateStr}`,
-        data: { date: dateStr },
-    });
-
-    return (
-        <div
-            ref={setNodeRef}
-            className={`flex gap-2 p-2 rounded-lg min-h-[80px] transition-colors border ${isOver ? 'bg-white/10 border-accent-orange/50' : 'border-transparent hover:bg-white/5'} ${isTodayItem ? 'bg-accent-orange/5' : ''}`}
-        >
-            {/* Date Column */}
-            <div className="flex flex-col items-center w-12 pt-2 shrink-0">
-                <span className="text-[10px] text-gray-500 uppercase">{format(date, 'EEE')}</span>
-                <span className={`text-lg font-bold ${isTodayItem ? 'text-accent-orange' : 'text-gray-300'}`}>
-                    {format(date, 'd')}
-                </span>
-                <button
-                    onClick={onAdd}
-                    className="mt-2 text-gray-600 hover:text-white transition-colors"
-                >
-                    <Plus className="w-4 h-4" />
-                </button>
-            </div>
-
-            {/* Workouts Column */}
-            <div className="flex-1 space-y-2">
-                {children}
-                {/* Empty State Placeholder (only if no children) */}
-                {Array.isArray(children) && children.length === 0 && (
-                    <div className="h-full flex items-center justify-center border border-dashed border-white/10 rounded-lg text-xs text-gray-600">
-                        Rest Day
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
+import { DraggableWorkout } from './components/DraggableWorkout';
+import { DroppableDay } from './components/DroppableDay';
+import { getPhase, formatDuration, RUN_TYPES } from '@/lib/plan/utils';
 
 export default function PlanPage() {
     const router = useRouter();
@@ -249,9 +61,13 @@ export default function PlanPage() {
         },
     });
 
-    const { data, isLoading, refetch } = useQuery({
+    const { data, isLoading, refetch } = useQuery<PlanResponse>({
         queryKey: ['plan'],
-        queryFn: async () => (await fetch('/api/plan')).json(),
+        queryFn: async () => {
+            const res = await fetch('/api/plan');
+            if (!res.ok) throw new Error('Failed to fetch plan');
+            return res.json();
+        },
         enabled: status === 'authenticated'
     });
 
@@ -264,7 +80,7 @@ export default function PlanPage() {
 
             if (overId.startsWith('day-')) {
                 const newDate = overId.replace('day-', '');
-                const currentWorkout = active.data.current?.workout;
+                const currentWorkout = active.data.current?.workout as WorkoutWithLinkedActivity;
 
                 // Only mutate if date actually changed
                 if (currentWorkout && !isSameDay(new Date(currentWorkout.scheduledDate), new Date(newDate))) {
@@ -293,7 +109,7 @@ export default function PlanPage() {
     // Group by Week
     const weeks: Record<string, WorkoutWithLinkedActivity[]> = {};
 
-    workouts.forEach((w: WorkoutWithLinkedActivity) => {
+    workouts.forEach((w) => {
         const monday = startOfWeek(new Date(w.scheduledDate), { weekStartsOn: 1 }).toISOString();
         if (!weeks[monday]) weeks[monday] = [];
         weeks[monday].push(w);
@@ -319,14 +135,14 @@ export default function PlanPage() {
         return true;
     });
 
-    const handleEdit = (workout: any) => {
+    const handleEdit = (workout: WorkoutWithLinkedActivity) => {
         setEditingWorkout(workout);
         setCreateDate(undefined);
         setInitialComplete(false);
         setIsEditModalOpen(true);
     };
 
-    const handleComplete = (workout: any, e: React.MouseEvent) => {
+    const handleComplete = (workout: WorkoutWithLinkedActivity, e: React.MouseEvent) => {
         e.stopPropagation();
         setEditingWorkout(workout);
         setCreateDate(undefined);
@@ -340,13 +156,11 @@ export default function PlanPage() {
         setIsEditModalOpen(true);
     };
 
-    const handleActivityClick = (activity: any, e: React.MouseEvent) => {
+    const handleActivityClick = (activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, e: React.MouseEvent) => {
         e.stopPropagation();
         setSelectedActivity(activity);
         setIsActivityModalOpen(true);
     };
-
-    const today = new Date();
 
     return (
         <ErrorBoundary componentName="Training Plan" showRetry>
@@ -376,19 +190,6 @@ export default function PlanPage() {
                                 const phase = getPhase(weeksUntilRace);
                                 const weekWorkouts = weeks[weekStartIso];
 
-                                // Check if this week is in the past or current (up to today is usually sufficient to start showing data)
-                                // "when week in plan view is in the past" - technically could mean strictly past.
-                                // But usually users want to see summary of current progress too.
-                                // I'll stick to strict 'end of week is before start of this week' based on request "in the past".
-                                // Wait, "in the past" usually means the week has passed.
-                                // But seeing as user wants metrics, if it's the current week, they might want to see what they've done so far.
-                                // Let's stick to `isBefore(weekEnd, today)` logic: if the week is fully done.
-                                // Actually, let's use `isBefore(weekStart, endOfWeek(today))`?
-                                // Let's stick to: if the week is completely in the past (metrics are final).
-                                // Or partial?
-                                // User said: "when week in plan view is in the past show on top".
-                                // I'll enable it for any week that has started, effectively.
-                                // `isBefore(weekStart, new Date())` is probably best.
                                 const isPastOrCurrent = isBefore(weekStart, new Date());
 
                                 // Metrics Calculation
@@ -397,13 +198,11 @@ export default function PlanPage() {
                                 let totalMovingTime = 0;
                                 let runTime = 0;
                                 let crossTime = 0;
-                                let runCount = 0;
-                                let crossCount = 0;
 
-                                weekWorkouts.forEach((w: any) => {
+                                weekWorkouts.forEach((w) => {
                                     // Planned
-                                    if (RUN_TYPES.includes(w.workoutType) && w.targetDistance > 0) {
-                                        plannedMileage += w.targetDistance;
+                                    if (RUN_TYPES.includes(w.workoutType) && (w.targetDistance ?? 0) > 0) {
+                                        plannedMileage += (w.targetDistance ?? 0);
                                     }
 
                                     // Actual
@@ -414,10 +213,8 @@ export default function PlanPage() {
                                         if (isRunningActivity(act.type)) {
                                             actualRunMileage += act.distance;
                                             runTime += act.movingTime;
-                                            runCount++;
                                         } else if (isCrossTrainingActivity(act.type)) {
                                             crossTime += act.movingTime;
-                                            crossCount++;
                                         }
                                     }
                                 });
@@ -475,7 +272,7 @@ export default function PlanPage() {
                                             {Array.from({ length: 7 }).map((_, i) => {
                                                 const dayDate = addDays(weekStart, i);
                                                 const isTodayItem = isToday(dayDate);
-                                                const dayWorkouts = weekWorkouts.filter((w: any) => isSameDay(new Date(w.scheduledDate), dayDate));
+                                                const dayWorkouts = weekWorkouts.filter((w) => isSameDay(new Date(w.scheduledDate), dayDate));
 
                                                 return (
                                                     <DroppableDay
@@ -484,7 +281,7 @@ export default function PlanPage() {
                                                         isTodayItem={isTodayItem}
                                                         onAdd={() => handleCreate(dayDate)}
                                                     >
-                                                        {dayWorkouts.map((workout: any) => (
+                                                        {dayWorkouts.map((workout) => (
                                                             <DraggableWorkout
                                                                 key={workout.id}
                                                                 workout={workout}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
-import { checkRateLimit, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function GET(request: NextRequest) {
     try {
@@ -21,7 +21,11 @@ export async function GET(request: NextRequest) {
 
         const where: any = { userId: session.user.id };
         if (type) {
-            where.type = type;
+            // Validate type against allowed values to prevent Prisma errors
+            const validTypes = ['RUN', 'VIRTUAL_RIDE', 'RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER'];
+            if (validTypes.includes(type.toUpperCase())) {
+                where.type = type.toUpperCase();
+            }
         }
 
         // Race-eligible filter: runs >= 4.5km from last 6 months
@@ -96,9 +100,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        // Rate limiting check
+        // Rate limiting check (async for Redis support)
         const clientId = getClientIdentifier(request);
-        const rateLimitResult = checkRateLimit(clientId, RATE_LIMITS.activities);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.activities);
 
         if (!rateLimitResult.allowed) {
             return NextResponse.json(
@@ -160,8 +164,11 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Generate fake Strava ID (use timestamp)
-        const stravaId = BigInt(Date.now());
+        // Generate manual activity ID using negative BigInt
+        // Negative IDs will never collide with real Strava IDs (which are positive)
+        // Combine timestamp with random component for uniqueness across concurrent requests
+        const randomSuffix = Math.floor(Math.random() * 1000000);
+        const stravaId = BigInt(-1) * BigInt(`${Date.now()}${randomSuffix.toString().padStart(6, '0')}`);
 
         const activity = await prisma.activity.create({
             data: {

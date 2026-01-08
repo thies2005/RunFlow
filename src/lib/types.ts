@@ -175,11 +175,12 @@ export interface WorkoutWithLinkedActivity extends Workout {
     linkedActivity?: {
         id: string;
         name: string;
-        type: string;
+        startDate: string | Date;
         distance: number;
         movingTime: number;
-        averageSpeed?: number | null;
-        averageHr?: number | null;
+        averageSpeed: number | null;
+        averageHr: number | null;
+        type: string;
     } | null;
 }
 
@@ -242,6 +243,7 @@ export interface AnalyticsStats {
     tsb: number;
     workloadRatio: number;
     easyTrimp: number;
+    hrMax?: number;
 }
 
 export interface MarathonShape {
@@ -262,11 +264,6 @@ export interface MarathonShape {
 // API Response Types
 // ============================================
 
-export interface ActivitiesResponse {
-    activities: Activity[];
-    total?: number;
-}
-
 export interface GoalsResponse {
     goals: Goal[];
 }
@@ -276,3 +273,18 @@ export interface SyncStatus {
     lastSyncAt: string | null;
     totalActivities: number;
 }
+
+export interface PlanResponse {
+    goal: (Goal & {
+        workouts: WorkoutWithLinkedActivity[];
+        planStartDate?: string | Date | null;
+    }) | null;
+}
+
+export interface ActivitiesResponse {
+    activities: ActivityListItem[];
+    total: number;
+    limit: number;
+    offset: number;
+}
+

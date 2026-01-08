@@ -1,8 +1,11 @@
 /**
- * Simple in-memory rate limiter for API routes
- * No external dependencies required - works for single-instance deployments
+ * Rate Limiter with Optional Redis Support
  * 
- * Uses a sliding window algorithm with automatic cleanup
+ * Supports two modes:
+ * 1. In-memory: Works for single-instance deployments (default)
+ * 2. Redis: For distributed/serverless environments (when REDIS_URL is set)
+ * 
+ * Uses a fixed window algorithm with automatic cleanup
  */
 
 type RateLimitRecord = {
@@ -10,8 +13,46 @@ type RateLimitRecord = {
     resetAt: number;
 };
 
-// In-memory store for rate limit records
+// In-memory store for rate limit records (fallback when Redis unavailable)
 const rateLimitStore = new Map<string, RateLimitRecord>();
+
+// Redis client (lazy loaded when REDIS_URL is configured)
+let redisClient: any = null;
+let redisInitialized = false;
+
+/**
+ * Initialize Redis client if REDIS_URL is configured
+ * Returns true if Redis is available, false otherwise
+ * 
+ * NOTE: This uses eval() to prevent webpack from bundling @upstash/redis.
+ * The package is truly optional - Redis will only be used if:
+ * 1. REDIS_URL environment variable is set
+ * 2. @upstash/redis package is installed
+ */
+async function initRedis(): Promise<boolean> {
+    if (redisInitialized) return !!redisClient;
+
+    redisInitialized = true;
+
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+        console.log('[RateLimit] REDIS_URL not configured, using in-memory store');
+        return false;
+    }
+
+    try {
+        // Use eval to prevent webpack from bundling @upstash/redis
+        // This makes the dependency truly optional at build time
+        const dynamicRequire = eval('require');
+        const { Redis } = dynamicRequire('@upstash/redis');
+        redisClient = new Redis({ url: redisUrl, token: process.env.REDIS_TOKEN || '' });
+        console.log('[RateLimit] Redis client initialized');
+        return true;
+    } catch (error) {
+        console.warn('[RateLimit] Failed to initialize Redis, falling back to in-memory:', error);
+        return false;
+    }
+}
 
 // Cleanup interval (every 5 minutes, remove expired entries)
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
@@ -60,18 +101,58 @@ export type RateLimitResult = {
 };
 
 /**
- * Check if a request should be rate limited
- * 
- * @param identifier - Unique identifier for the client (e.g., IP address, user ID)
- * @param config - Rate limit configuration
- * @returns Rate limit result with allowed status and metadata
+ * Check rate limit using Redis (distributed)
  */
-export function checkRateLimit(
-    identifier: string,
-    config: RateLimitConfig
+async function checkRateLimitRedis(
+    key: string,
+    limit: number,
+    windowSeconds: number
+): Promise<RateLimitResult> {
+    const now = Date.now();
+    const windowMs = windowSeconds * 1000;
+
+    try {
+        // Use Redis atomic increment with expiry
+        const currentCount = await redisClient.incr(key);
+
+        // Set expiry on first request
+        if (currentCount === 1) {
+            await redisClient.expire(key, windowSeconds);
+        }
+
+        const ttl = await redisClient.ttl(key);
+        const resetAt = now + (ttl > 0 ? ttl * 1000 : windowMs);
+
+        if (currentCount > limit) {
+            return {
+                allowed: false,
+                remaining: 0,
+                resetAt: Math.floor(resetAt / 1000),
+                limit,
+            };
+        }
+
+        return {
+            allowed: true,
+            remaining: limit - currentCount,
+            resetAt: Math.floor(resetAt / 1000),
+            limit,
+        };
+    } catch (error) {
+        console.error('[RateLimit] Redis error, falling back to in-memory:', error);
+        // Fall back to in-memory on Redis failure
+        return checkRateLimitInMemory(key, limit, windowSeconds);
+    }
+}
+
+/**
+ * Check rate limit using in-memory store (single instance)
+ */
+function checkRateLimitInMemory(
+    key: string,
+    limit: number,
+    windowSeconds: number
 ): RateLimitResult {
-    const { limit, windowSeconds, prefix = '' } = config;
-    const key = `${prefix}:${identifier}`;
     const now = Date.now();
     const windowMs = windowSeconds * 1000;
 
@@ -107,6 +188,47 @@ export function checkRateLimit(
         resetAt: Math.floor(existing.resetAt / 1000),
         limit,
     };
+}
+
+/**
+ * Check if a request should be rate limited
+ * 
+ * Uses Redis if configured (REDIS_URL), otherwise uses in-memory store.
+ * Automatically falls back to in-memory if Redis fails.
+ * 
+ * @param identifier - Unique identifier for the client (e.g., IP address, user ID)
+ * @param config - Rate limit configuration
+ * @returns Rate limit result with allowed status and metadata
+ */
+export function checkRateLimit(
+    identifier: string,
+    config: RateLimitConfig
+): RateLimitResult {
+    const { limit, windowSeconds, prefix = '' } = config;
+    const key = `ratelimit:${prefix}:${identifier}`;
+
+    // For sync usage, always use in-memory (Redis is async)
+    // The checkRateLimitAsync can be used for async contexts
+    return checkRateLimitInMemory(key, limit, windowSeconds);
+}
+
+/**
+ * Async version of checkRateLimit that supports Redis
+ * Use this in async contexts where Redis is preferred
+ */
+export async function checkRateLimitAsync(
+    identifier: string,
+    config: RateLimitConfig
+): Promise<RateLimitResult> {
+    const { limit, windowSeconds, prefix = '' } = config;
+    const key = `ratelimit:${prefix}:${identifier}`;
+
+    const hasRedis = await initRedis();
+    if (hasRedis && redisClient) {
+        return checkRateLimitRedis(key, limit, windowSeconds);
+    }
+
+    return checkRateLimitInMemory(key, limit, windowSeconds);
 }
 
 /**

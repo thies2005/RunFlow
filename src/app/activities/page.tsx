@@ -1,11 +1,12 @@
 'use client';
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, InfiniteData } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, ArrowLeft, Plus } from 'lucide-react';
 import { ActivityList, ManualActivityModal, Footer, ErrorBoundary } from '@/components';
 import { useSession } from 'next-auth/react';
 import { useState } from 'react';
+import { ActivityListItem, AnalyticsStats, ActivitiesResponse } from '@/lib/types';
 
 export default function ActivitiesPage() {
     const { status } = useSession();
@@ -13,7 +14,7 @@ export default function ActivitiesPage() {
     const [filter, setFilter] = useState('RUN'); // Default to RUN
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
 
-    const { data: statsData } = useQuery({
+    const { data: statsData } = useQuery<AnalyticsStats>({
         queryKey: ['analytics-stats'],
         queryFn: async () => {
             const res = await fetch('/api/analytics/stats');
@@ -31,18 +32,19 @@ export default function ActivitiesPage() {
         hasNextPage,
         isFetchingNextPage,
         status: queryStatus,
-        isLoading, // Add this
+        isLoading,
         refetch,
         isRefetching
-    } = useInfiniteQuery({
+    } = useInfiniteQuery<ActivitiesResponse>({
         queryKey: ['activities', 'infinite', filter],
         queryFn: async ({ pageParam = 0 }) => {
+            const param = pageParam as number;
             const typeParam = filter !== 'ALL' ? `&type=${filter}` : '';
-            const res = await fetch(`/api/activities?limit=50&offset=${pageParam}${typeParam}`);
+            const res = await fetch(`/api/activities?limit=50&offset=${param}${typeParam}`);
             if (!res.ok) throw new Error('Failed to fetch activities');
             return res.json();
         },
-        getNextPageParam: (lastPage: any) => {
+        getNextPageParam: (lastPage) => {
             const nextOffset = lastPage.offset + lastPage.limit;
             if (nextOffset < lastPage.total) return nextOffset;
             return undefined;
@@ -51,18 +53,16 @@ export default function ActivitiesPage() {
         enabled: status === 'authenticated',
     });
 
-    const allActivities = data?.pages.flatMap((page: any) => page.activities) || [];
+    const allActivities = data?.pages.flatMap((page) => page.activities) || [];
     const totalCount = data?.pages[0]?.total || 0;
 
-    if (isLoading) { // Use boolean
+    if (isLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="animate-pulse text-gray-500">Loading...</div>
             </div>
         );
     }
-
-    // Error handling skip for brevity, covered by UI error boundary usually or could add here
 
     if (status === 'unauthenticated') {
         if (typeof window !== 'undefined') window.location.href = '/login';

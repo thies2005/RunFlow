@@ -5,11 +5,23 @@ import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
+import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
+        // Rate limiting check (async for Redis support)
+        const clientId = getClientIdentifier(req);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.general);
+
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+            );
+        }
+
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { syncActivityById } from '@/lib/strava/sync';
 import { createHmac } from 'crypto';
-import { checkRateLimit, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { safeBigInt } from '@/lib/utils/bigint';
+import { runBackgroundTask } from '@/lib/utils/backgroundTask';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const VERIFY_TOKEN = process.env.STRAVA_VERIFY_TOKEN || "STRAVA";
+const VERIFY_TOKEN = process.env.STRAVA_VERIFY_TOKEN;
 const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
 
 /**
@@ -17,8 +18,13 @@ const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
  */
 function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
     if (!CLIENT_SECRET) {
-        console.warn('STRAVA_CLIENT_SECRET not set, skipping signature verification');
-        return true; // Allow in development without secret
+        // SECURITY: Fail closed in production - reject webhooks if secret is missing
+        if (process.env.NODE_ENV === 'production') {
+            console.error('CRITICAL: STRAVA_CLIENT_SECRET not set in production!');
+            return false;
+        }
+        console.warn('STRAVA_CLIENT_SECRET not set, skipping signature verification (dev only)');
+        return true;
     }
 
     if (!signature) {
@@ -68,6 +74,12 @@ export async function GET(req: Request) {
     const token = url.searchParams.get('hub.verify_token');
     const challenge = url.searchParams.get('hub.challenge');
 
+    // SECURITY: Fail closed if VERIFY_TOKEN is not configured
+    if (!VERIFY_TOKEN) {
+        console.error('CRITICAL: STRAVA_VERIFY_TOKEN not set!');
+        return new NextResponse('Server Configuration Error', { status: 500 });
+    }
+
     console.log('[Strava Webhook] FULL URL:', req.url);
     console.log('[Strava Webhook] HEADERS:', Object.fromEntries(req.headers.entries()));
 
@@ -94,9 +106,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: NextRequest) {
     try {
-        // Rate limiting check (generous limit for webhooks)
+        // Rate limiting check (async for Redis support)
         const clientId = getClientIdentifier(req);
-        const rateLimitResult = checkRateLimit(clientId, RATE_LIMITS.webhooks);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.webhooks);
 
         if (!rateLimitResult.allowed) {
             return new NextResponse('Too Many Requests', {
@@ -172,10 +184,18 @@ export async function POST(req: NextRequest) {
 
             if (account) {
                 if (aspect_type === 'create' || aspect_type === 'update') {
-                    // Fire-and-forget: sync the activity without awaiting
-                    // This ensures we return 200 immediately to Strava
-                    syncActivityById(account.userId, object_id).catch((error) => {
-                        console.error(`Webhook sync error for activity ${object_id}:`, error);
+                    // Use background task utility for reliable sync in serverless
+                    // This ensures the sync survives the response lifecycle on Vercel
+                    // NOTE: For guaranteed execution, upgrade to Next.js 15+ and use after() API
+                    const userId = account.userId;
+                    const activityId = object_id;
+                    runBackgroundTask(async () => {
+                        try {
+                            await syncActivityById(userId, activityId);
+                            console.log(`[BackgroundTask] Synced activity ${activityId} for user ${userId}`);
+                        } catch (error) {
+                            console.error(`[BackgroundTask] Failed to sync activity ${activityId}:`, error);
+                        }
                     });
                 } else if (aspect_type === 'delete') {
                     // Delete the activity from our database

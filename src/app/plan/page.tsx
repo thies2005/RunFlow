@@ -168,7 +168,7 @@ export default function PlanPage() {
                 <div className="max-w-4xl mx-auto space-y-8">
                     {/* Header */}
                     <div className="flex items-center gap-4">
-                        <button onClick={() => router.back()} className="text-gray-400 hover:text-white transition-colors">
+                        <button onClick={() => router.back()} className="text-foreground-muted hover:text-foreground transition-colors">
                             <ArrowLeft className="w-6 h-6" />
                         </button>
                         <div>

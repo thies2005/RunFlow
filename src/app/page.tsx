@@ -107,14 +107,14 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen bg-background">
             <UserMetricsProvider stats={statsData}>
-                <header className="border-b border-white/10 backdrop-blur-md bg-background/80 sticky top-0 z-50">
+                <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
                                     <span className="text-xl">🏃</span>
                                 </div>
-                                <span className="text-xl font-bold text-white">RunFlow</span>
+                                <span className="text-xl font-bold text-foreground">RunFlow</span>
                             </div>
 
                             <div className="flex items-center gap-4">
@@ -122,7 +122,7 @@ export default function Dashboard() {
                                 <button onClick={() => router.push('/analytics')} className="btn-secondary flex items-center gap-2 py-2 px-4">
                                     📊 Analytics
                                 </button>
-                                <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-gray-400 hover:text-white transition-colors">
+                                <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-foreground-muted hover:text-foreground transition-colors">
                                     <Settings className="w-5 h-5" />
                                 </button>
                                 <div className="flex items-center gap-3">

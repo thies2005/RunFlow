@@ -405,14 +405,14 @@ export default function AnalyticsPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            <header className="border-b border-white/10 backdrop-blur-md bg-background/80 sticky top-0 z-50">
+            <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => router.push('/')} className="p-2 text-gray-400 hover:text-white transition-colors">
+                            <button onClick={() => router.push('/')} className="p-2 text-foreground-muted hover:text-foreground transition-colors">
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
-                            <h1 className="text-xl font-bold text-white">Performance Analytics</h1>
+                            <h1 className="text-xl font-bold text-foreground">Performance Analytics</h1>
                         </div>
                         <button
                             onClick={() => recalculateMutation.mutate()}
@@ -431,22 +431,22 @@ export default function AnalyticsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Effective VO2max */}
                     <div className="glass-card p-6 text-center">
-                        <p className="text-gray-400 text-sm mb-2">Effective VO2max</p>
-                        <p className="text-4xl font-bold text-white">
+                        <p className="text-foreground-muted text-sm mb-2">Effective VO2max</p>
+                        <p className="text-4xl font-bold text-foreground">
                             {runalyzeMetrics.effectiveVO2max > 0 ? runalyzeMetrics.effectiveVO2max.toFixed(1) : '-'}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">Pace + Heart Rate based</p>
+                        <p className="text-xs text-foreground-muted mt-1">Pace + Heart Rate based</p>
                     </div>
 
                     {/* Marathon Shape */}
                     <div className="glass-card p-6 text-center">
-                        <p className="text-gray-400 text-sm mb-2">Marathon Shape</p>
+                        <p className="text-foreground-muted text-sm mb-2">Marathon Shape</p>
                         <p className={`text-4xl font-bold ${runalyzeMetrics.shape >= 100 ? 'text-green-400' :
                             runalyzeMetrics.shape >= 70 ? 'text-yellow-400' : 'text-red-400'
                             }`}>
                             {runalyzeMetrics.shape}%
                         </p>
-                        <div className="flex justify-center gap-4 mt-2 text-xs text-gray-500">
+                        <div className="flex justify-center gap-4 mt-2 text-xs text-foreground-muted">
                             <span>Mileage: {runalyzeMetrics.mileageScore}%</span>
                             <span>Long Runs: {runalyzeMetrics.longRunScore}%</span>
                             {runalyzeMetrics.crossTrainingScore > 0 && (

@@ -139,7 +139,12 @@ fun ProfileContent(
     var height by remember { mutableStateOf(profile.height?.toString() ?: "") }
     
     var thresholdHr by remember { mutableStateOf(profile.thresholdHr?.toString() ?: "") }
-    var thresholdPace by remember { mutableStateOf(profile.thresholdPace?.toString() ?: "") }
+    var thresholdHr by remember { mutableStateOf(profile.thresholdHr?.toString() ?: "") }
+    
+    // Threshold Pace split into Min/Sec
+    val initialPaceSeconds = profile.thresholdPace ?: 0
+    var thresholdPaceMin by remember { mutableStateOf(if (initialPaceSeconds > 0) (initialPaceSeconds / 60).toString() else "") }
+    var thresholdPaceSec by remember { mutableStateOf(if (initialPaceSeconds > 0) (initialPaceSeconds % 60).toString() else "") }
     var hrZone1Max by remember { mutableStateOf(profile.hrZone1Max.toString()) }
     var hrZone2Max by remember { mutableStateOf(profile.hrZone2Max.toString()) }
     var hrZone3Max by remember { mutableStateOf(profile.hrZone3Max.toString()) }
@@ -293,16 +298,34 @@ fun ProfileContent(
                 singleLine = true
             )
 
-            // Threshold Pace Input
-            OutlinedTextField(
-                value = thresholdPace,
-                onValueChange = { thresholdPace = it },
-                label = { Text("Threshold Pace (sec/km)") },
-                leadingIcon = { Icon(Icons.Default.Timer, null) },
-                supportingText = { Text("Functional Threshold Pace (approx 1h race pace)") },
+            // Threshold Pace Input (Min:Sec)
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                singleLine = true
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = thresholdPaceMin,
+                    onValueChange = { thresholdPaceMin = it },
+                    label = { Text("Pace (min)") },
+                    leadingIcon = { Icon(Icons.Default.Timer, null) },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = thresholdPaceSec,
+                    onValueChange = { thresholdPaceSec = it },
+                    label = { Text("Pace (sec)") },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    singleLine = true
+                )
+            }
+            Text(
+                text = "Functional Threshold Pace (approx 1h race pace)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -417,7 +440,13 @@ fun ProfileContent(
                     hrZone5Max.toIntOrNull(),
                     hrZone6Max.toIntOrNull(),
                     thresholdHr.toIntOrNull(),
-                    thresholdPace.toIntOrNull(),
+                    thresholdHr.toIntOrNull(),
+                    // Recombine Min:Sec to Total Seconds
+                    if (thresholdPaceMin.isNotBlank() || thresholdPaceSec.isNotBlank()) {
+                        val min = thresholdPaceMin.toIntOrNull() ?: 0
+                        val sec = thresholdPaceSec.toIntOrNull() ?: 0
+                        (min * 60) + sec
+                    } else null,
                     vdotCorrection.toFloatOrNull()
                 )
             },

@@ -20,6 +20,7 @@ data class UserProfile(
     val hrZone4Max: Int = 160,
     val hrZone5Max: Int = 178,
     val hrZone6Max: Int = 187,
+    @SerialName("thresholdHeartRate")
     val thresholdHr: Int? = null,
     val thresholdPace: Int? = null,
     val vdotCorrectionFactor: Float = 1.0f

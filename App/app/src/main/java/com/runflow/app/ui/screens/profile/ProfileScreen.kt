@@ -400,7 +400,7 @@ fun ProfileContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Correction Factor: ${String.format("%.2f", vdotCorrection.toFloatOrNull() ?: 1f)}",
                         style = MaterialTheme.typography.bodyLarge
@@ -411,6 +411,7 @@ fun ProfileContent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                Spacer(modifier = Modifier.width(16.dp))
                 Button(
                     onClick = { showCalibrationDialog = true }
                 ) {

@@ -76,6 +76,7 @@ class ProfileViewModel @Inject constructor(
         vdotCorrectionFactor: Float? = null
     ) {
         viewModelScope.launch {
+            val previousActivities = (_uiState.value as? ProfileUiState.Success)?.recentActivities ?: emptyList()
             _uiState.value = ProfileUiState.Saving
             when (val result = userRepository.updateUserProfile(
                 UpdateProfileRequest(
@@ -98,7 +99,7 @@ class ProfileViewModel @Inject constructor(
                 )
             )) {
                 is ApiResult.Success -> {
-                    _uiState.value = ProfileUiState.Success(result.data)
+                    _uiState.value = ProfileUiState.Success(result.data, previousActivities)
                 }
                 is ApiResult.Error -> {
                     _uiState.value = ProfileUiState.Error(result.message)

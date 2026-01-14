@@ -289,6 +289,7 @@ private fun VDOTCorrectionContent(
                                     )
                                 }
                             },
+                            onClick = {
                                 onActivitySelected(activity)
                                 onActivityDropdownChange(false)
                             }

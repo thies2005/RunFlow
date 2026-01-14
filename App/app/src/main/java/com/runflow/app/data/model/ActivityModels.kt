@@ -32,7 +32,14 @@ data class Activity(
     val gearId: String? = null,
     val locationCity: String? = null,
     val locationState: String? = null,
-    val locationCountry: String? = null
+    val locationCountry: String? = null,
+    val hrZone1Time: Int? = null,
+    val hrZone2Time: Int? = null,
+    val hrZone3Time: Int? = null,
+    val hrZone4Time: Int? = null,
+    val hrZone5Time: Int? = null,
+    val hrZone6Time: Int? = null,
+    val hrZone7Time: Int? = null
 )
 
 /**

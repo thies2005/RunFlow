@@ -368,16 +368,18 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     { color: 'bg-lime-400', time: activity.hrZone2Time },
                                     { color: 'bg-yellow-400', time: activity.hrZone3Time },
                                     { color: 'bg-orange-400', time: activity.hrZone4Time },
-                                    { color: 'bg-red-500', time: activity.hrZone5Time }
+                                    { color: 'bg-red-500', time: activity.hrZone5Time },
+                                    { color: 'bg-indigo-500', time: activity.hrZone6Time },
+                                    { color: 'bg-purple-600', time: activity.hrZone7Time }
                                 ].map((zone, i) => {
-                                    const total = (activity.hrZone1Time || 0) + (activity.hrZone2Time || 0) + (activity.hrZone3Time || 0) + (activity.hrZone4Time || 0) + (activity.hrZone5Time || 0);
+                                    const total = (activity.hrZone1Time || 0) + (activity.hrZone2Time || 0) + (activity.hrZone3Time || 0) + (activity.hrZone4Time || 0) + (activity.hrZone5Time || 0) + (activity.hrZone6Time || 0) + (activity.hrZone7Time || 0);
                                     if (!total || !zone.time) return null;
                                     const pct = (zone.time / total) * 100;
                                     return <div key={i} className={`${zone.color} hover:brightness-110 transition-all`} style={{ width: `${pct}%` }} title={`Zone ${i + 1}: ${formatDuration(zone.time)} (${Math.round(pct)}%)`} />;
                                 })}
                             </div>
                             <div className="flex justify-between mt-2 text-xs text-foreground-muted px-1">
-                                <span>Z1</span><span>Z2</span><span>Z3</span><span>Z4</span><span>Z5</span>
+                                <span>Z1</span><span>Z2</span><span>Z3</span><span>Z4</span><span>Z5</span><span>Z6</span><span>Z7</span>
                             </div>
                         </div>
                     )}

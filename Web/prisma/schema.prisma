@@ -163,6 +163,8 @@ model Activity {
   hrZone3Time Int?
   hrZone4Time Int?
   hrZone5Time Int?
+  hrZone6Time Int?
+  hrZone7Time Int?
 
   // Raw Strava response
   rawJson Json?

@@ -102,6 +102,11 @@ fun ActivityDetailContent(
         if (activity.estimatedVdot != null || activity.trimp != null) {
             PerformanceMetrics(activity)
         }
+
+        // Detailed Analysis
+        if (!activity.streams.isNullOrEmpty()) {
+            InteractiveStreamsChart(streams = activity.streams)
+        }
     }
 }
 
@@ -263,6 +268,58 @@ fun HeartRateSection(activity: Activity) {
                         label = "Max HR",
                         value = "${activity.maxHr} bpm"
                     )
+                }
+            }
+
+            // Zones
+            if (activity.hrZone1Time != null || activity.hrZone2Time != null) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Heart Rate Zones",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                val z1 = activity.hrZone1Time ?: 0
+                val z2 = activity.hrZone2Time ?: 0
+                val z3 = activity.hrZone3Time ?: 0
+                val z4 = activity.hrZone4Time ?: 0
+                val z5 = activity.hrZone5Time ?: 0
+                val z6 = activity.hrZone6Time ?: 0
+                val z7 = activity.hrZone7Time ?: 0
+                val totalTime = (z1 + z2 + z3 + z4 + z5 + z6 + z7).toFloat()
+                
+                if (totalTime > 0) {
+                    Divider(color = Color.Transparent, thickness = 8.dp) // Spacer
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(30.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
+                        if (z1 > 0) Box(modifier = Modifier.weight(z1 / totalTime).fillMaxHeight().background(Color(0xFF4CAF50)))
+                        if (z2 > 0) Box(modifier = Modifier.weight(z2 / totalTime).fillMaxHeight().background(Color(0xFFCDDC39)))
+                        if (z3 > 0) Box(modifier = Modifier.weight(z3 / totalTime).fillMaxHeight().background(Color(0xFFFFC107)))
+                        if (z4 > 0) Box(modifier = Modifier.weight(z4 / totalTime).fillMaxHeight().background(Color(0xFFFF9800)))
+                        if (z5 > 0) Box(modifier = Modifier.weight(z5 / totalTime).fillMaxHeight().background(Color(0xFFF44336)))
+                        if (z6 > 0) Box(modifier = Modifier.weight(z6 / totalTime).fillMaxHeight().background(Color(0xFF3F51B5)))
+                        if (z7 > 0) Box(modifier = Modifier.weight(z7 / totalTime).fillMaxHeight().background(Color(0xFF673AB7)))
+                    }
+                    
+                    // Legend
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Z1", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Z2", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Z3", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Z4", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Z5", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Z6", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Z7", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }

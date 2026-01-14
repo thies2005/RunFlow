@@ -77,6 +77,8 @@ export async function GET(request: NextRequest) {
                     hrZone3Time: true,
                     hrZone4Time: true,
                     hrZone5Time: true,
+                    hrZone6Time: true,
+                    hrZone7Time: true,
                 },
             }),
             prisma.activity.count({ where }),

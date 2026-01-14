@@ -88,6 +88,8 @@ export interface Activity {
     hrZone3Time: number | null;
     hrZone4Time: number | null;
     hrZone5Time: number | null;
+    hrZone6Time: number | null;
+    hrZone7Time: number | null;
     streams: any | null; // Using any for Json type, or could define a more specific type
     trainingType: WorkoutType | null;
     createdAt: string | Date;
@@ -225,6 +227,8 @@ export interface ActivityListItem {
     hrZone3Time: number | null;
     hrZone4Time: number | null;
     hrZone5Time: number | null;
+    hrZone6Time: number | null;
+    hrZone7Time: number | null;
 }
 
 // ============================================

@@ -1,6 +1,7 @@
 import { Activity, MarathonShape } from '@/lib/types';
 import { METRICS } from '@/lib/constants';
 import { calculateWeightedEffectiveVO2max, calculateMarathonShape } from '@/lib/metrics/runalyze';
+import { calculateFitnessHistory, DailyLoad, FitnessHistory } from '@/lib/metrics/fitness';
 
 /**
  * Service to handle analytics calculations
@@ -64,6 +65,35 @@ export class AnalyticsService {
             tsb: Math.round(tsb),
             workloadRatio
         };
+    }
+
+    /**
+     * Calculate fitness history for the given period
+     * 
+     * Includes a warm-up period implicitly handled by calculateFitnessHistory
+     * if the activities list includes prior data.
+     */
+    static calculateHistory(
+        activities: Pick<Activity, 'startDate' | 'movingTime' | 'trimp' | 'type'>[],
+        startDate: Date,
+        endDate: Date
+    ): FitnessHistory[] {
+        // Transform activities to DailyLoad
+        const dailyLoads: DailyLoad[] = activities.map(activity => ({
+            date: new Date(activity.startDate),
+            trimp: activity.trimp ?? (activity.movingTime / 60),
+            runningTss: 0, // Not needed for general fitness graph currently
+            activityTypes: [activity.type]
+        }));
+
+        // Calculate history
+        // fitness.ts handles the accumulation from the earliest activity
+        const fullHistory = calculateFitnessHistory(dailyLoads);
+
+        // Filter for requested range
+        return fullHistory.filter(h =>
+            h.date >= startDate && h.date <= endDate
+        );
     }
 
     /**

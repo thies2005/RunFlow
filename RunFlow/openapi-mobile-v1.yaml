@@ -373,6 +373,46 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '500':
           $ref: '#/components/responses/InternalError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /analytics/history:
+    get:
+      tags: [Analytics]
+      summary: Get fitness history
+      description: Returns calculated fitness metrics (CTL, ATL, TSB) for a date range
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Fitness history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FitnessHistory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /analytics/stats:
     get:
@@ -629,6 +669,27 @@ components:
         trainingType:
           type: string
           nullable: true
+        trainingType:
+          type: string
+          nullable: true
+
+    FitnessHistory:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        metrics:
+          type: object
+          properties:
+            ctl:
+              type: number
+            atl:
+              type: number
+            tsb:
+              type: number
+            ctlRunning:
+              type: number
 
     ActivitiesResponse:
       type: object

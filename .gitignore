@@ -1,0 +1,32 @@
+# IDE
+.vscode/
+.claude/
+.idea/
+*.swp
+*.swo
+
+# Node / Web
+node_modules/
+dist/
+.next/
+out/
+build/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Android
+.gradle/
+local.properties
+capture/
+memory_heap_dumps/
+*.jks
+*.keystore
+*.apk
+*.aar
+
+# OS
+.DS_Store
+Thumbs.db

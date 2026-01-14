@@ -22,22 +22,40 @@ export async function POST(request: NextRequest) {
             hrZone3Max,
             hrZone4Max,
             hrZone5Max,
-            hrZone6Max
+            hrZone6Max,
+            hrZone7Max
         } = body;
+
+        // Helper to parse int safely
+        const parseIntSafe = (val: any) => {
+            if (val === undefined || val === null || val === '') return undefined;
+            const parsed = parseInt(String(val), 10);
+            return isNaN(parsed) ? undefined : parsed;
+        };
+
+        // Helper to parse float safely
+        const parseFloatSafe = (val: any) => {
+            if (val === undefined || val === null || val === '') return undefined;
+            const parsed = parseFloat(String(val));
+            return isNaN(parsed) ? undefined : parsed;
+        };
 
         await prisma.user.update({
             where: { id: session.user.id },
             data: {
-                weight: weight || undefined,
-                height: height || undefined,
-                thresholdHeartRate: thresholdHeartRate || undefined,
-                thresholdPace: thresholdPace || undefined,
-                hrZone1Max: hrZone1Max || undefined,
-                hrZone2Max: hrZone2Max || undefined,
-                hrZone3Max: hrZone3Max || undefined,
-                hrZone4Max: hrZone4Max || undefined,
-                hrZone5Max: hrZone5Max || undefined,
-                hrZone6Max: hrZone6Max || undefined,
+                weight: parseFloatSafe(weight),
+                height: parseFloatSafe(height),
+                thresholdHeartRate: parseIntSafe(thresholdHeartRate),
+                thresholdPace: parseIntSafe(thresholdPace),
+                hrZone1Max: parseIntSafe(hrZone1Max),
+                hrZone2Max: parseIntSafe(hrZone2Max),
+                hrZone3Max: parseIntSafe(hrZone3Max),
+                hrZone4Max: parseIntSafe(hrZone4Max),
+                hrZone5Max: parseIntSafe(hrZone5Max),
+                hrZone6Max: parseIntSafe(hrZone6Max),
+                // hrZone7Max is implied as > hrZone6Max, usually not stored as a max boundary if it's the last one, 
+                // but if schema has it (schema didn't show it), we can ignore or add if exists.
+                // Schema inspection showed hrZone6Max. Zone 7 is infinite/above.
             },
         });
 

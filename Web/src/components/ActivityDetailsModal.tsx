@@ -5,7 +5,8 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import type { ActivityListItem, WorkoutType } from '@/lib/types';
+import type { ActivityListItem, WorkoutType, Activity } from '@/lib/types';
+import InteractiveStreamsChart from './InteractiveStreamsChart';
 
 interface ActivityDetailsModalProps {
     isOpen: boolean;
@@ -21,6 +22,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     const [isEditingName, setIsEditingName] = useState(false);
     const [name, setName] = useState('');
     const [isSavingName, setIsSavingName] = useState(false);
+    const [detailedActivity, setDetailedActivity] = useState<Activity | null>(null);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -30,6 +33,23 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             setName(activity.name);
             // Prevent body scroll when modal is open
             document.body.style.overflow = 'hidden';
+
+            // Fetch full details including streams
+            const fetchDetails = async () => {
+                setIsLoadingDetails(true);
+                try {
+                    const res = await fetch(`/api/activities/${activity.id}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setDetailedActivity(data);
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch activity details:', error);
+                } finally {
+                    setIsLoadingDetails(false);
+                }
+            };
+            fetchDetails();
         }
         return () => {
             document.body.style.overflow = 'unset';
@@ -340,9 +360,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
 
                     {/* Zone Distribution Visualization (if available) - simplified */}
                     {(activity.hrZone1Time || activity.hrZone2Time) && (
-                        <div className="mt-6">
+                        <div className="mt-6 mb-8">
                             <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest border-b border-glass-border pb-2 mb-4">Heart Rate Zones</h3>
-                            <div className="flex h-4 rounded-full overflow-hidden w-full bg-background-tertiary">
+                            <div className="flex h-8 rounded-lg overflow-hidden w-full bg-background-tertiary">
                                 {[
                                     { color: 'bg-green-400', time: activity.hrZone1Time },
                                     { color: 'bg-lime-400', time: activity.hrZone2Time },
@@ -353,7 +373,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     const total = (activity.hrZone1Time || 0) + (activity.hrZone2Time || 0) + (activity.hrZone3Time || 0) + (activity.hrZone4Time || 0) + (activity.hrZone5Time || 0);
                                     if (!total || !zone.time) return null;
                                     const pct = (zone.time / total) * 100;
-                                    return <div key={i} className={`${zone.color}`} style={{ width: `${pct}%` }} title={`Zone ${i + 1}: ${Math.round(pct)}%`} />;
+                                    return <div key={i} className={`${zone.color} hover:brightness-110 transition-all`} style={{ width: `${pct}%` }} title={`Zone ${i + 1}: ${formatDuration(zone.time)} (${Math.round(pct)}%)`} />;
                                 })}
                             </div>
                             <div className="flex justify-between mt-2 text-xs text-foreground-muted px-1">
@@ -361,6 +381,22 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             </div>
                         </div>
                     )}
+
+                    {/* Detailed Analysis Chart */}
+                    <div className="mb-8">
+                        <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest border-b border-glass-border pb-2 mb-4">Detailed Analysis</h3>
+                        {isLoadingDetails ? (
+                            <div className="h-[400px] flex items-center justify-center bg-background-tertiary rounded-xl border border-glass-border">
+                                <div className="text-foreground-muted animate-pulse">Loading detailed analysis...</div>
+                            </div>
+                        ) : detailedActivity?.streams ? (
+                            <InteractiveStreamsChart streams={detailedActivity.streams} />
+                        ) : (
+                            <div className="h-32 flex items-center justify-center bg-background-tertiary rounded-xl border border-glass-border">
+                                <div className="text-foreground-muted italic">Detailed analysis data not available</div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>,

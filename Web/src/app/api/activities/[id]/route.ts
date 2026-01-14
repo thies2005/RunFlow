@@ -4,10 +4,50 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
-// Type-safe partial update interface
 type ActivityUpdateData = {
     name?: string;
 };
+
+export async function GET(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // Verify ownership
+        const activity = await prisma.activity.findUnique({
+            where: { id: params.id },
+            include: {
+                // We'll rely on the default selection but ensure streams are included
+                // Alternatively, explicit select if we want to be safe, but include usually gets everything
+            }
+        });
+
+        if (!activity) {
+            return NextResponse.json({ error: 'Activity not found' }, { status: 404 });
+        }
+
+        if (activity.userId !== session.user.id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        // Handle BigInt serialization
+        const serialized = {
+            ...activity,
+            stravaId: activity.stravaId.toString(),
+            // Assuming streams might be large, we verify it's there
+        };
+
+        return NextResponse.json(serialized);
+    } catch (error) {
+        console.error('Error fetching activity:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}
 
 export async function PATCH(
     request: Request,

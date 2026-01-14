@@ -36,8 +36,8 @@ class UserRepository @Inject constructor(
             emit(ApiResult.Loading)
             when (val result = safeApiCall { apiService.getUserProfile() }) {
                 is ApiResult.Success -> {
-                    cacheProfile(result.data)
-                    emit(result)
+                    cacheProfile(result.data.user)
+                    emit(ApiResult.Success(result.data.user))
                 }
                 is ApiResult.Error -> {
                     if (cached == null) {
@@ -55,7 +55,12 @@ class UserRepository @Inject constructor(
      * Legacy method for compatibility.
      */
     suspend fun getUserProfile(): ApiResult<UserProfile> {
-        return safeApiCall { apiService.getUserProfile() }
+        val result = safeApiCall { apiService.getUserProfile() }
+        return if (result is ApiResult.Success) {
+            ApiResult.Success(result.data.user)
+        } else {
+            result as ApiResult<UserProfile>
+        }
     }
 
     /**
@@ -67,10 +72,12 @@ class UserRepository @Inject constructor(
             return ApiResult.Error("Cannot update profile while offline")
         }
         val result = safeApiCall { apiService.updateUserProfile(request) }
-        if (result is ApiResult.Success) {
-            cacheProfile(result.data)
+        return if (result is ApiResult.Success) {
+            cacheProfile(result.data.user)
+            ApiResult.Success(result.data.user)
+        } else {
+            result as ApiResult<UserProfile>
         }
-        return result
     }
 
     /**
@@ -79,10 +86,12 @@ class UserRepository @Inject constructor(
     suspend fun refreshProfile(): ApiResult<UserProfile> {
         cacheManager.invalidateCache(CacheType.USER_PROFILE)
         val result = safeApiCall { apiService.getUserProfile() }
-        if (result is ApiResult.Success) {
-            cacheProfile(result.data)
+        return if (result is ApiResult.Success) {
+            cacheProfile(result.data.user)
+            ApiResult.Success(result.data.user)
+        } else {
+            result as ApiResult<UserProfile>
         }
-        return result
     }
 
     private suspend fun getCachedProfile(): UserProfile? {

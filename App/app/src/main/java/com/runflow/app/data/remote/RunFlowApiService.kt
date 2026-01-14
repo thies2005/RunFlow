@@ -105,10 +105,10 @@ interface RunFlowApiService {
 
     // ==================== USER PROFILE ====================
     @GET("mobile/v1/user/profile")
-    suspend fun getUserProfile(): Response<UserProfile>
+    suspend fun getUserProfile(): Response<UserProfileResponse>
 
     @PATCH("mobile/v1/user/profile")
-    suspend fun updateUserProfile(@Body request: UpdateProfileRequest): Response<UserProfile>
+    suspend fun updateUserProfile(@Body request: UpdateProfileRequest): Response<UserProfileResponse>
 }
 
 // Helper class for API responses

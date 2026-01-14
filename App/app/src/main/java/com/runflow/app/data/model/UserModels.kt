@@ -26,6 +26,11 @@ data class UserProfile(
 )
 
 @Serializable
+data class UserProfileResponse(
+    val user: UserProfile
+)
+
+@Serializable
 data class UpdateProfileRequest(
     val name: String? = null,
     val sex: Sex? = null,

@@ -46,6 +46,10 @@ export async function GET(request: NextRequest) {
                 hrZone2Max: true,
                 hrZone3Max: true,
                 hrZone4Max: true,
+                hrZone5Max: true,
+                hrZone6Max: true,
+                thresholdHeartRate: true,
+                thresholdPace: true,
                 vdotCorrectionFactor: true,
                 lastSyncAt: true,
                 createdAt: true,
@@ -93,7 +97,8 @@ export async function PUT(request: NextRequest) {
         const body = await request.json();
         const {
             name, sex, birthDate, hrMax, hrRest, weight, height,
-            hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max,
+            hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
+            thresholdHeartRate, thresholdPace,
             vdotCorrectionFactor
         } = body;
 
@@ -115,11 +120,15 @@ export async function PUT(request: NextRequest) {
                 hrRest: hrRest !== undefined ? hrRest : undefined,
                 weight: weight !== undefined ? weight : undefined,
                 height: height !== undefined ? height : undefined,
-                hrZone1Max: hrZone1Max !== undefined ? hrZone1Max : undefined,
-                hrZone2Max: hrZone2Max !== undefined ? hrZone2Max : undefined,
-                hrZone3Max: hrZone3Max !== undefined ? hrZone3Max : undefined,
-                hrZone4Max: hrZone4Max !== undefined ? hrZone4Max : undefined,
-                vdotCorrectionFactor: vdotCorrectionFactor !== undefined ? vdotCorrectionFactor : undefined,
+                hrZone1Max: undefined !== hrZone1Max ? hrZone1Max : undefined,
+                hrZone2Max: undefined !== hrZone2Max ? hrZone2Max : undefined,
+                hrZone3Max: undefined !== hrZone3Max ? hrZone3Max : undefined,
+                hrZone4Max: undefined !== hrZone4Max ? hrZone4Max : undefined,
+                hrZone5Max: undefined !== hrZone5Max ? hrZone5Max : undefined,
+                hrZone6Max: undefined !== hrZone6Max ? hrZone6Max : undefined,
+                thresholdHeartRate: undefined !== thresholdHeartRate ? thresholdHeartRate : undefined,
+                thresholdPace: undefined !== thresholdPace ? thresholdPace : undefined,
+                vdotCorrectionFactor: undefined !== vdotCorrectionFactor ? vdotCorrectionFactor : undefined,
             },
             select: {
                 id: true,
@@ -136,6 +145,10 @@ export async function PUT(request: NextRequest) {
                 hrZone2Max: true,
                 hrZone3Max: true,
                 hrZone4Max: true,
+                hrZone5Max: true,
+                hrZone6Max: true,
+                thresholdHeartRate: true,
+                thresholdPace: true,
                 vdotCorrectionFactor: true,
             }
         });

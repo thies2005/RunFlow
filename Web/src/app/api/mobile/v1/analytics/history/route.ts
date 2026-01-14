@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
         }
 
         // Fetch data with 90 days buffer for accurate ATL/CTL calculation
-        // CTL (fitness) has a time constant of 42 days, so 90 days (~2x) is sufficient for stabilization
         const bufferDays = 90;
         const fetchStartDate = new Date(startDate);
         fetchStartDate.setDate(fetchStartDate.getDate() - bufferDays);
@@ -66,14 +65,76 @@ export async function GET(request: NextRequest) {
             }
         });
 
-        // Calculate history
-        const history = AnalyticsService.calculateHistory(
+        // 1. Calculate Fitness History (CTL, ATL, TSB)
+        const fitnessHistory = AnalyticsService.calculateHistory(
             activities,
             startDate,
             endDate
         );
 
-        return NextResponse.json(history, { headers: rateLimitHeaders(rateLimitResult) });
+        // Map to Android response format (separate lists, yyyy-MM-dd dates)
+        const ctl = fitnessHistory.map(h => ({
+            date: h.date.toISOString().split('T')[0],
+            value: h.metrics.ctl
+        }));
+
+        const atl = fitnessHistory.map(h => ({
+            date: h.date.toISOString().split('T')[0],
+            value: h.metrics.atl
+        }));
+
+        const tsb = fitnessHistory.map(h => ({
+            date: h.date.toISOString().split('T')[0],
+            value: h.metrics.tsb
+        }));
+
+        // 2. Calculate Weekly Totals (Mileage & Time)
+        // Group by week start (Monday)
+        const weeklyData = new Map<string, { mileage: number, seconds: number }>();
+
+        activities.forEach(activity => {
+            if (activity.startDate < startDate) return; // Skip buffer activities for volume
+
+            const d = new Date(activity.startDate);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
+            const monday = new Date(d.setDate(diff));
+            monday.setHours(0, 0, 0, 0);
+            const weekKey = monday.toISOString().split('T')[0];
+
+            const current = weeklyData.get(weekKey) || { mileage: 0, seconds: 0 };
+
+            // Mileage (km)
+            current.mileage += (activity.distance || 0) / 1000;
+
+            // Time (seconds)
+            current.seconds += (activity.movingTime || 0);
+
+            weeklyData.set(weekKey, current);
+        });
+
+        const weeklyMileage = Array.from(weeklyData.entries()).map(([week, data]) => ({
+            week,
+            mileage: parseFloat(data.mileage.toFixed(1))
+        })).sort((a, b) => a.week.localeCompare(b.week));
+
+        const totalTime = Array.from(weeklyData.entries()).map(([week, data]) => ({
+            week,
+            seconds: Math.round(data.seconds)
+        })).sort((a, b) => a.week.localeCompare(b.week));
+
+        // 3. Construct Response
+        // Note: vo2max history is omitted for now (empty list) as it requires more complex calculation
+        const response = {
+            vo2max: [],
+            ctl,
+            atl,
+            tsb,
+            weeklyMileage,
+            totalTime
+        };
+
+        return NextResponse.json(response, { headers: rateLimitHeaders(rateLimitResult) });
 
     } catch (error) {
         return handleApiError(error, {

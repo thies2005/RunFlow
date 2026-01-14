@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
     Activity,
@@ -67,7 +67,8 @@ const getWorkoutTypeStyle = (type: WorkoutType) => {
     }
 };
 
-function ActivityCard({ activity }: { activity: ActivityListItem }) {
+// ⚡ Bolt: Wrapped in memo to prevent unnecessary re-renders during list updates
+const ActivityCard = memo(function ActivityCard({ activity }: { activity: ActivityListItem }) {
     const crossTraining = isCrossTraining(activity.type);
     const showTag = activity.trainingType && activity.trainingType !== 'EASY' && activity.trainingType !== 'OTHER';
 
@@ -175,7 +176,9 @@ function ActivityCard({ activity }: { activity: ActivityListItem }) {
             </div>
         </div>
     );
-}
+});
+
+ActivityCard.displayName = 'ActivityCard';
 
 export function ActivityList({ activities, isLoading, userHrMax }: ActivityListProps) {
     const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);

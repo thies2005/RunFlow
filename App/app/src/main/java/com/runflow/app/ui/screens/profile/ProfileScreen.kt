@@ -139,7 +139,6 @@ fun ProfileContent(
     var height by remember { mutableStateOf(profile.height?.toString() ?: "") }
     
     var thresholdHr by remember { mutableStateOf(profile.thresholdHr?.toString() ?: "") }
-    var thresholdHr by remember { mutableStateOf(profile.thresholdHr?.toString() ?: "") }
     
     // Threshold Pace split into Min/Sec
     val initialPaceSeconds = profile.thresholdPace ?: 0
@@ -439,7 +438,6 @@ fun ProfileContent(
                     hrZone4Max.toIntOrNull(),
                     hrZone5Max.toIntOrNull(),
                     hrZone6Max.toIntOrNull(),
-                    thresholdHr.toIntOrNull(),
                     thresholdHr.toIntOrNull(),
                     // Recombine Min:Sec to Total Seconds
                     if (thresholdPaceMin.isNotBlank() || thresholdPaceSec.isNotBlank()) {

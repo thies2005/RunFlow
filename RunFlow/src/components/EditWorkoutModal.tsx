@@ -137,7 +137,11 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
             <div className="glass-card w-full max-w-md p-6 relative animate-slide-in">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+                    aria-label="Close modal"
+                >
                     <X className="w-5 h-5" />
                 </button>
 
@@ -148,8 +152,9 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                 <div className="space-y-4">
                     {/* Type */}
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase">Type</label>
+                        <label htmlFor="workout-type" className="block text-xs text-gray-400 mb-1 uppercase">Type</label>
                         <select
+                            id="workout-type"
                             value={type}
                             onChange={(e) => setType(e.target.value)}
                             className={inputClass}
@@ -162,8 +167,9 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
 
                     {/* Date */}
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase">Date</label>
+                        <label htmlFor="workout-date" className="block text-xs text-gray-400 mb-1 uppercase">Date</label>
                         <input
+                            id="workout-date"
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
@@ -173,8 +179,9 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
 
                     {/* Description */}
                     <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase">Description</label>
+                        <label htmlFor="workout-description" className="block text-xs text-gray-400 mb-1 uppercase">Description</label>
                         <input
+                            id="workout-description"
                             type="text"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -185,10 +192,11 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                     <div className="grid grid-cols-2 gap-4">
                         {/* Distance */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">
+                            <label htmlFor="workout-distance" className="block text-xs text-gray-400 mb-1 uppercase">
                                 {isSwim ? 'Distance (m)' : 'Distance (km)'}
                             </label>
                             <input
+                                id="workout-distance"
                                 type="number"
                                 step={isSwim ? '50' : '0.1'}
                                 value={isSwim ? distanceM : distanceKm}
@@ -201,8 +209,9 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                         </div>
                         {/* Duration */}
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Duration (min)</label>
+                            <label htmlFor="workout-duration" className="block text-xs text-gray-400 mb-1 uppercase">Duration (min)</label>
                             <input
+                                id="workout-duration"
                                 type="number"
                                 value={durationMin}
                                 onChange={(e) => setDurationMin(e.target.value)}
@@ -216,12 +225,13 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                         <div className="space-y-4">
                             <div className="flex items-center gap-2">
                                 <input
+                                    id="workout-completed"
                                     type="checkbox"
                                     checked={isCompleted}
                                     onChange={(e) => setIsCompleted(e.target.checked)}
                                     className="w-4 h-4 rounded border-gray-500 bg-white/10 accent-accent-orange"
                                 />
-                                <label className="text-sm text-gray-300">Mark as Completed</label>
+                                <label htmlFor="workout-completed" className="text-sm text-gray-300">Mark as Completed</label>
                             </div>
 
                             {/* Activity Picker - Show when marking complete for first time */}
@@ -241,6 +251,8 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                             <button
                                 onClick={() => deleteMutation.mutate()}
                                 className="px-4 py-3 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                                aria-label="Delete workout"
+                                title="Delete workout"
                             >
                                 <Trash2 className="w-5 h-5" />
                             </button>

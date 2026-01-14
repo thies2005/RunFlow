@@ -74,6 +74,13 @@ export default function OnboardingWizard() {
     const effectiveVO2max = statsData?.effectiveVO2max || 0;
     const shapePercent = statsData?.marathonShape?.shape || 0;
 
+    // Fetch User Profile for Calibration
+    const { data: profile } = useQuery({
+        queryKey: ['user-profile'],
+        queryFn: async () => (await fetch('/api/settings/profile')).json(),
+        enabled: step >= 2,
+    });
+
     return (
         <div className="min-h-screen bg-background text-white flex flex-col">
             {/* Progress Bar */}
@@ -157,6 +164,8 @@ export default function OnboardingWizard() {
 
                         <AnalyticsDashboard
                             currentVdot={currentVdot}
+                            initialThresholdHr={profile?.thresholdHeartRate}
+                            initialThresholdPace={profile?.thresholdPace}
                         />
 
                         <div className="flex justify-center mt-8">

@@ -1,6 +1,7 @@
 package com.runflow.app.ui.screens.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -61,9 +62,11 @@ fun ProfileScreen(
                     profile = state.profile,
                     recentActivities = state.recentActivities,
                     onSave = { name, sex, birthDate, hrMax, hrRest, weight, height,
-                                hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, vdotCorrection ->
+                                hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
+                                thresholdHr, thresholdPace, vdotCorrection ->
                         viewModel.updateProfile(name, sex, birthDate, hrMax, hrRest, weight, height,
-                            hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, vdotCorrection)
+                            hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
+                            thresholdHr, thresholdPace, vdotCorrection)
                     },
                     onLogout = { viewModel.logout() },
                     modifier = Modifier
@@ -113,6 +116,7 @@ fun ProfileScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
     profile: com.runflow.app.data.model.UserProfile,
@@ -120,7 +124,8 @@ fun ProfileContent(
     onSave: (
         name: String?, sex: Sex?, birthDate: String?, hrMax: Int?, hrRest: Int?,
         weight: Float?, height: Float?, hrZone1Max: Int?, hrZone2Max: Int?,
-        hrZone3Max: Int?, hrZone4Max: Int?, vdotCorrection: Float?
+        hrZone3Max: Int?, hrZone4Max: Int?, hrZone5Max: Int?, hrZone6Max: Int?,
+        thresholdHr: Int?, thresholdPace: Int?, vdotCorrection: Float?
     ) -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier
@@ -132,14 +137,58 @@ fun ProfileContent(
     var hrRest by remember { mutableStateOf(profile.hrRest?.toString() ?: "") }
     var weight by remember { mutableStateOf(profile.weight?.toString() ?: "") }
     var height by remember { mutableStateOf(profile.height?.toString() ?: "") }
+    
+    var thresholdHr by remember { mutableStateOf(profile.thresholdHr?.toString() ?: "") }
+    var thresholdPace by remember { mutableStateOf(profile.thresholdPace?.toString() ?: "") }
     var hrZone1Max by remember { mutableStateOf(profile.hrZone1Max.toString()) }
     var hrZone2Max by remember { mutableStateOf(profile.hrZone2Max.toString()) }
     var hrZone3Max by remember { mutableStateOf(profile.hrZone3Max.toString()) }
     var hrZone4Max by remember { mutableStateOf(profile.hrZone4Max.toString()) }
+    var hrZone5Max by remember { mutableStateOf(profile.hrZone5Max.toString()) }
+    var hrZone6Max by remember { mutableStateOf(profile.hrZone6Max.toString()) }
+    
     var vdotCorrection by remember { mutableStateOf(profile.vdotCorrectionFactor.toString()) }
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showCalibrationDialog by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    // Date Picker State
+    val datePickerState = rememberDatePickerState()
+    
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val formatter = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+                            birthDate = formatter.format(java.util.Date(millis))
+                        }
+                        showDatePicker = false
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // Auto-calculate zones logic
+    fun calculateZones(threshold: Int) {
+        if (threshold > 0) {
+            hrZone1Max = (threshold * 0.75).toInt().toString()
+            hrZone2Max = (threshold * 0.87).toInt().toString()
+            hrZone3Max = (threshold * 0.94).toInt().toString()
+            hrZone4Max = (threshold * 1.00).toInt().toString()
+            hrZone5Max = (threshold * 1.05).toInt().toString()
+            hrZone6Max = (threshold * 1.10).toInt().toString()
+        }
+    }
 
     Column(
         modifier = modifier
@@ -164,11 +213,20 @@ fun ProfileContent(
                 onSexSelected = { sex = it }
             )
 
-            ProfileTextField(
+             // Date Picker Field
+            OutlinedTextField(
                 value = birthDate,
-                onValueChange = { birthDate = it },
-                label = "Birth Date (YYYY-MM-DD)",
-                icon = Icons.Default.Cake
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Birth Date (YYYY-MM-DD)") },
+                leadingIcon = { Icon(Icons.Default.Cake, null) },
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.DateRange, null)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
+                singleLine = true
             )
         }
 
@@ -208,45 +266,109 @@ fun ProfileContent(
                 icon = Icons.Default.FavoriteBorder,
                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
             )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Training Zones",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            // Threshold Input with Auto-Calc
+            OutlinedTextField(
+                value = thresholdHr,
+                onValueChange = { 
+                    thresholdHr = it
+                    it.toIntOrNull()?.let { input -> calculateZones(input) }
+                },
+                label = { Text("Threshold Heart Rate (LTHR)") },
+                leadingIcon = { Icon(Icons.Default.Speed, null) },
+                supportingText = { Text("Enter LTHR to auto-calculate zones") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                singleLine = true
+            )
+
+            // Threshold Pace Input
+            OutlinedTextField(
+                value = thresholdPace,
+                onValueChange = { thresholdPace = it },
+                label = { Text("Threshold Pace (sec/km)") },
+                leadingIcon = { Icon(Icons.Default.Timer, null) },
+                supportingText = { Text("Functional Threshold Pace (approx 1h race pace)") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                singleLine = true
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Heart Rate Zone Thresholds",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
 
-            ProfileTextField(
-                value = hrZone1Max,
-                onValueChange = { hrZone1Max = it },
-                label = "Zone 1 Max (bpm)",
-                icon = Icons.Default.LooksOne,
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-            )
-
-            ProfileTextField(
-                value = hrZone2Max,
-                onValueChange = { hrZone2Max = it },
-                label = "Zone 2 Max (bpm)",
-                icon = Icons.Default.LooksTwo,
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-            )
-
-            ProfileTextField(
-                value = hrZone3Max,
-                onValueChange = { hrZone3Max = it },
-                label = "Zone 3 Max (bpm)",
-                icon = Icons.Default.Looks3,
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-            )
-
-            ProfileTextField(
-                value = hrZone4Max,
-                onValueChange = { hrZone4Max = it },
-                label = "Zone 4 Max (bpm)",
-                icon = Icons.Default.Looks4,
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(modifier = Modifier.weight(1f)) {
+                    ProfileTextField(
+                        value = hrZone1Max,
+                        onValueChange = { hrZone1Max = it },
+                        label = "Z1 (<75%) Max",
+                        icon = Icons.Default.LooksOne,
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                     ProfileTextField(
+                        value = hrZone2Max,
+                        onValueChange = { hrZone2Max = it },
+                        label = "Z2 (76-87%) Max",
+                        icon = Icons.Default.LooksTwo,
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                }
+            }
+            
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(modifier = Modifier.weight(1f)) {
+                    ProfileTextField(
+                        value = hrZone3Max,
+                        onValueChange = { hrZone3Max = it },
+                        label = "Z3 (88-94%) Max",
+                        icon = Icons.Default.Looks3,
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                     ProfileTextField(
+                        value = hrZone4Max,
+                        onValueChange = { hrZone4Max = it },
+                        label = "Z4 (95-100%) Max",
+                        icon = Icons.Default.Looks4,
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                }
+            }
+            
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(modifier = Modifier.weight(1f)) {
+                    ProfileTextField(
+                        value = hrZone5Max,
+                        onValueChange = { hrZone5Max = it },
+                        label = "Z5 (101-105%) Max",
+                        icon = Icons.Default.Looks5,
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                     ProfileTextField(
+                        value = hrZone6Max,
+                        onValueChange = { hrZone6Max = it },
+                        label = "Z6 (106-110%) Max",
+                        icon = Icons.Default.Looks6,
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                }
+            }
         }
 
         // VDOT Calibration Section
@@ -292,6 +414,10 @@ fun ProfileContent(
                     hrZone2Max.toIntOrNull(),
                     hrZone3Max.toIntOrNull(),
                     hrZone4Max.toIntOrNull(),
+                    hrZone5Max.toIntOrNull(),
+                    hrZone6Max.toIntOrNull(),
+                    thresholdHr.toIntOrNull(),
+                    thresholdPace.toIntOrNull(),
                     vdotCorrection.toFloatOrNull()
                 )
             },

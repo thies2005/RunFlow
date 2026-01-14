@@ -18,6 +18,10 @@ data class UserProfile(
     val hrZone2Max: Int = 140,
     val hrZone3Max: Int = 150,
     val hrZone4Max: Int = 160,
+    val hrZone5Max: Int = 178,
+    val hrZone6Max: Int = 187,
+    val thresholdHr: Int? = null,
+    val thresholdPace: Int? = null,
     val vdotCorrectionFactor: Float = 1.0f
 )
 
@@ -34,5 +38,9 @@ data class UpdateProfileRequest(
     val hrZone2Max: Int? = null,
     val hrZone3Max: Int? = null,
     val hrZone4Max: Int? = null,
+    val hrZone5Max: Int? = null,
+    val hrZone6Max: Int? = null,
+    val thresholdHr: Int? = null,
+    val thresholdPace: Int? = null,
     val vdotCorrectionFactor: Float? = null
 )

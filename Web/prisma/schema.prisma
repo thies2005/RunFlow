@@ -36,12 +36,17 @@ model User {
   weight    Float? // kg
   height    Float? // cm
 
-  // HR Zone thresholds (% of hrMax)
-  hrZone1Max Int @default(60) // Z1 ends at 60%
-  hrZone2Max Int @default(70) // Z2 ends at 70%
-  hrZone3Max Int @default(80) // Z3 ends at 80%
-  hrZone4Max Int @default(90) // Z4 ends at 90%
-  // Z5 = 90%+ (implied)
+  // HR Zone thresholds (% of hrMax or absolute if thresholdHr is set)
+  thresholdHeartRate Int? // LTHR
+  thresholdPace      Int? // seconds/km (Threshold Pace)
+
+  hrZone1Max Int @default(130)
+  hrZone2Max Int @default(148)
+  hrZone3Max Int @default(160)
+  hrZone4Max Int @default(170)
+  hrZone5Max Int @default(178)
+  hrZone6Max Int @default(187)
+  // Zone 7 is > Zone 6
 
   // VO2max correction based on reference race
   vdotCorrectionFactor  Float     @default(1.0)

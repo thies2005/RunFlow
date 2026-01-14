@@ -69,6 +69,10 @@ class ProfileViewModel @Inject constructor(
         hrZone2Max: Int? = null,
         hrZone3Max: Int? = null,
         hrZone4Max: Int? = null,
+        hrZone5Max: Int? = null,
+        hrZone6Max: Int? = null,
+        thresholdHr: Int? = null,
+        thresholdPace: Int? = null,
         vdotCorrectionFactor: Float? = null
     ) {
         viewModelScope.launch {
@@ -86,6 +90,10 @@ class ProfileViewModel @Inject constructor(
                     hrZone2Max = hrZone2Max,
                     hrZone3Max = hrZone3Max,
                     hrZone4Max = hrZone4Max,
+                    hrZone5Max = hrZone5Max,
+                    hrZone6Max = hrZone6Max,
+                    thresholdHr = thresholdHr,
+                    thresholdPace = thresholdPace,
                     vdotCorrectionFactor = vdotCorrectionFactor
                 )
             )) {

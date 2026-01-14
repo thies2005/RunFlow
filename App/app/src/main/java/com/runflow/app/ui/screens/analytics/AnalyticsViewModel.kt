@@ -37,8 +37,21 @@ class AnalyticsViewModel @Inject constructor(
             // 1. Fetch Scalars
             val statsResult = analyticsRepository.getAnalyticsStats()
             if (statsResult is ApiResult.Success) {
-                // Initialize with scalars
-                _analyticsData.value = statsResult.data
+                // Initialize with scalars and calculate local metrics
+                val rawStats = statsResult.data
+                val paces = com.runflow.app.data.util.VdotCalculator.calculateTrainingPaces(rawStats.effectiveVO2max)
+                val marathonDist = com.runflow.app.data.util.VdotCalculator.DISTANCE_MARATHON
+                val optimal = com.runflow.app.data.util.VdotCalculator.predictRaceTime(rawStats.effectiveVO2max.toDouble(), marathonDist)
+                
+                // For predicted, we arguably should adjust by shape, but for now using optimal as base
+                // or if backend sends prediction in future use that.
+                val derivedStats = rawStats.copy(
+                    trainingPaces = paces,
+                    optimalTime = optimal,
+                    predictedTime = optimal // Placeholder: Implement shape-based prediction if needed
+                )
+                
+                _analyticsData.value = derivedStats
                 
                 // 2. Fetch History based on current range
                 fetchHistoryForRange(_selectedTimeRange.value)
@@ -61,13 +74,12 @@ class AnalyticsViewModel @Inject constructor(
         
         // Calculate dates
         val endDate = java.time.LocalDate.now()
-        val startDate = if (range.days != null) {
-            endDate.minusDays(range.days.toLong())
-        } else {
-            null // All time
+        val startDate = when {
+            range.days != null -> endDate.minusDays(range.days.toLong())
+            else -> endDate.minusYears(2) // "ALL" - use 2 years as reasonable max
         }
         
-        val startStr = startDate?.toString()
+        val startStr = startDate.toString()
         val endStr = endDate.toString()
         
         // We set UI to loading? Or just keep showing old data + loading indicator?

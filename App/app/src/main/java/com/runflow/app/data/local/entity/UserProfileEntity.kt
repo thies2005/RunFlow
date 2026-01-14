@@ -24,6 +24,10 @@ data class UserProfileEntity(
     val hrZone2Max: Int,
     val hrZone3Max: Int,
     val hrZone4Max: Int,
+    val hrZone5Max: Int = 178,
+    val hrZone6Max: Int = 187,
+    val thresholdHr: Int? = null,
+    val thresholdPace: Int? = null,
     val vdotCorrectionFactor: Float,
     val cachedAt: Long = System.currentTimeMillis()
 )

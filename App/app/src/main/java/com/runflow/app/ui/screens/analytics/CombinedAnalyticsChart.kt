@@ -4,7 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -16,6 +18,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -44,8 +47,8 @@ fun CombinedAnalyticsChart(
     var showCtl by remember { mutableStateOf(true) }
     var showAtl by remember { mutableStateOf(true) }
     var showTsb by remember { mutableStateOf(true) }
-    var showVolume by remember { mutableStateOf(false) }
-    var showDuration by remember { mutableStateOf(false) }
+    var showVolume by remember { mutableStateOf(true) }
+    var showDuration by remember { mutableStateOf(true) }
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -71,6 +74,8 @@ fun CombinedAnalyticsChart(
                 // Time Range Selector
                 Row(
                     modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
                         .border(1.dp, Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
                         .clip(RoundedCornerShape(8.dp))
                 ) {
@@ -96,12 +101,12 @@ fun CombinedAnalyticsChart(
                                     else Color.Transparent
                                 )
                                 .clickable { onTimeRangeSelected(range) }
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                .padding(horizontal = 16.dp, vertical = 10.dp), // Check internal padding
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = label,
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (selectedTimeRange == range) FontWeight.Bold else FontWeight.Normal,
                                 color = if (selectedTimeRange == range) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
@@ -124,26 +129,41 @@ fun CombinedAnalyticsChart(
                 MetricToggle("Fatigue (ATL)", showAtl, FatigueOrange) { showAtl = it }
                 MetricToggle("Form (TSB)", showTsb, FormCyan) { showTsb = it }
                 MetricToggle("Weekly Volume (km)", showVolume, Color.Gray) { showVolume = it }
-                MetricToggle("Training Time (h)", showDuration, Color.DarkGray) { showDuration = it }
+                MetricToggle("Training Time (h)", showDuration, Color(0xFF673AB7)) { showDuration = it }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             // Chart
+            // Chart
+            val hasData = data.vo2maxHistory.isNotEmpty() || 
+                          data.ctlHistory.isNotEmpty() || 
+                          data.weeklyMileageHistory.isNotEmpty() ||
+                          data.totalTimeHistory.isNotEmpty()
+            
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp)
+                    .height(300.dp),
+                contentAlignment = Alignment.Center
             ) {
-                RobustMultiAxisChartCanvas(
-                    data = data,
-                    showVo2max = showVo2max,
-                    showCtl = showCtl,
-                    showAtl = showAtl,
-                    showTsb = showTsb,
-                    showVolume = showVolume,
-                    showDuration = showDuration
-                )
+                if (!hasData) {
+                    Text(
+                        text = "No analytics data available for this period",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    RobustMultiAxisChartCanvas(
+                        data = data,
+                        showVo2max = showVo2max,
+                        showCtl = showCtl,
+                        showAtl = showAtl,
+                        showTsb = showTsb,
+                        showVolume = showVolume,
+                        showDuration = showDuration
+                    )
+                }
             }
         }
     }
@@ -416,6 +436,8 @@ fun RobustMultiAxisChartCanvas(
         if (showAtl) allDates.addAll(data.atlHistory.map { it.date })
         if (showTsb) allDates.addAll(data.tsbHistory.map { it.date })
         if (showVo2max) allDates.addAll(data.vo2maxHistory.map { it.date })
+        if (showVolume) allDates.addAll(data.weeklyMileageHistory.map { it.week })
+        if (showDuration) allDates.addAll(data.totalTimeHistory.map { it.week })
         
         // Sort unique dates to create the X-axis
         val sortedDates = allDates.toList().sorted()
@@ -434,6 +456,13 @@ fun RobustMultiAxisChartCanvas(
         val leftMin = (leftValues.minOrNull() ?: 0f) * 0.9f
         val leftMax = (leftValues.maxOrNull() ?: 100f) * 1.1f
         val leftRange = (leftMax - leftMin).coerceAtLeast(1f)
+
+        // Volume / Duration Ranges
+        val volValues = if(showVolume) data.weeklyMileageHistory.map { it.mileage } else emptyList()
+        val durValues = if(showDuration) data.totalTimeHistory.map { it.seconds / 3600f } else emptyList() // WeeklyTime uses seconds
+        
+        val volMax = (volValues.maxOrNull() ?: 10f) * 1.5f // Scale so bars take ~2/3 height max
+        val durMax = (durValues.maxOrNull() ?: 5f) * 1.5f  // Scale so line takes ~2/3 height max
 
         // Right Axis: TSB
         val rightValues = mutableListOf<Float>()
@@ -576,6 +605,51 @@ fun RobustMultiAxisChartCanvas(
              }
         }
         
+
+        
+        // --- Volume (Bars) ---
+        if (showVolume && data.weeklyMileageHistory.isNotEmpty()) {
+            val barWidth = (chartWidth / dateCount.coerceAtLeast(1)) * 0.5f
+            data.weeklyMileageHistory
+                .filter { dateToIndex.containsKey(it.week) }
+                .forEach { item ->
+                    val x = getX(item.week)
+                    if (x != null) {
+                        val barHeight = (item.mileage / volMax) * chartHeight
+                        drawContext.canvas.nativeCanvas.drawRect(
+                            x - barWidth/2,
+                            height - paddingBottom - barHeight,
+                            x + barWidth/2,
+                            height - paddingBottom,
+                            android.graphics.Paint().apply {
+                                color = android.graphics.Color.LTGRAY
+                                alpha = 80 // Transparent
+                            }
+                        )
+                    }
+                }
+        }
+
+        // --- Duration (Line) ---
+        if (showDuration && data.totalTimeHistory.isNotEmpty()) {
+             val path = Path()
+             var isFirst = true
+             data.totalTimeHistory
+                 .filter { dateToIndex.containsKey(it.week) }
+                 .sortedBy { dateToIndex[it.week] }
+                 .forEach { point ->
+                    val x = getX(point.week)
+                     if (x != null) {
+                         // Normalize duration to chart height using durMax
+                         val y = height - paddingBottom - ((point.seconds / 3600f) / durMax) * chartHeight
+                         if (isFirst) { path.moveTo(x, y); isFirst = false } else path.lineTo(x, y)
+                     }
+                 }
+             if (!isFirst) {
+                drawPath(path = path, color = Color(0xFF673AB7), style = Stroke(width = 3.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f))) // Dashed Purple for Time
+             }
+        }
+
         if (showVo2max && data.vo2maxHistory.isNotEmpty()) {
              val path = Path()
              var isFirst = true
@@ -610,4 +684,5 @@ fun RobustMultiAxisChartCanvas(
             )
         }
     }
+
 }

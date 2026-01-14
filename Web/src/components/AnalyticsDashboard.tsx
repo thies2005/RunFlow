@@ -1,15 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     AreaChart, Area, LineChart, Line
 } from 'recharts';
 import { predictRaceTime, formatTime, formatPace } from '@/lib/metrics/vdot';
+import { Save, Check, BarChart2 } from 'lucide-react';
 
 type AnalyticsDashboardProps = {
     currentVdot: number | null;
+    initialThresholdHr?: number;
+    initialThresholdPace?: number;
 };
 
 const RANGES = [
@@ -28,8 +31,63 @@ interface HistoryResponse {
     totals: { distance: number; activities: number; averagePace: number };
 }
 
-export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardProps) {
+export default function AnalyticsDashboard({ currentVdot, initialThresholdHr, initialThresholdPace }: AnalyticsDashboardProps) {
     const [timeRange, setTimeRange] = useState('12_WEEKS');
+    const queryClient = useQueryClient();
+
+    // Calibration State
+    const [thresholdHr, setThresholdHr] = useState<string>(initialThresholdHr?.toString() || '');
+    const [thresholdPace, setThresholdPace] = useState<string>(initialThresholdPace?.toString() || '');
+    const [zones, setZones] = useState<{ min: number; max: number; label: string }[]>([]);
+
+    useEffect(() => {
+        if (initialThresholdHr) setThresholdHr(initialThresholdHr.toString());
+        if (initialThresholdPace) setThresholdPace(initialThresholdPace.toString());
+    }, [initialThresholdHr, initialThresholdPace]);
+
+    // Auto-calculate zones when HR changes
+    useEffect(() => {
+        const val = parseInt(thresholdHr);
+        if (!isNaN(val) && val > 0) {
+            setZones([
+                { label: 'Zone 1 (Recovery)', min: 0, max: Math.round(val * 0.75) },
+                { label: 'Zone 2 (Aerobic)', min: Math.round(val * 0.75) + 1, max: Math.round(val * 0.87) },
+                { label: 'Zone 3 (Tempo)', min: Math.round(val * 0.87) + 1, max: Math.round(val * 0.94) },
+                { label: 'Zone 4 (Threshold)', min: Math.round(val * 0.94) + 1, max: Math.round(val * 1.00) },
+                { label: 'Zone 5 (VO2max)', min: Math.round(val * 1.00) + 1, max: Math.round(val * 1.05) },
+                { label: 'Zone 6 (Anaerobic)', min: Math.round(val * 1.05) + 1, max: Math.round(val * 1.10) },
+                { label: 'Zone 7 (Neuromuscular)', min: Math.round(val * 1.10) + 1, max: 999 },
+            ]);
+        } else {
+            setZones([]);
+        }
+    }, [thresholdHr]);
+
+    // Save Profile Mutation
+    const saveProfileMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch('/api/settings/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    thresholdHeartRate: parseInt(thresholdHr) || null,
+                    thresholdPace: parseInt(thresholdPace) || null,
+                    // Auto-save calculated maxes as well to keep DB in sync
+                    hrZone1Max: zones[0]?.max || undefined,
+                    hrZone2Max: zones[1]?.max || undefined,
+                    hrZone3Max: zones[2]?.max || undefined,
+                    hrZone4Max: zones[3]?.max || undefined,
+                    hrZone5Max: zones[4]?.max || undefined,
+                    hrZone6Max: zones[5]?.max || undefined,
+                })
+            });
+            if (!res.ok) throw new Error('Failed to save profile');
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+        }
+    });
 
     // Fetch Aggregated History
     const { data, isLoading } = useQuery<HistoryResponse>({
@@ -192,6 +250,83 @@ export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardPr
                     </div>
                 </div>
             )}
+
+            {/* Calibration Section */}
+            <div className="glass-card p-6 border border-white/10">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 className="text-lg font-semibold text-white">Performance Calibration</h3>
+                        <p className="text-gray-400 text-sm">Fine-tune your zones based on your threshold values.</p>
+                    </div>
+                    <button
+                        onClick={() => saveProfileMutation.mutate()}
+                        disabled={saveProfileMutation.isPending}
+                        className="btn-primary py-2 px-4 flex items-center gap-2 text-sm"
+                    >
+                        {saveProfileMutation.isPending ? 'Saving...' : saveProfileMutation.isSuccess ? 'Saved!' : 'Save Calibration'}
+                        {saveProfileMutation.isSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Threshold Heart Rate (LTHR)</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={thresholdHr}
+                                    onChange={(e) => setThresholdHr(e.target.value)}
+                                    placeholder="e.g. 170"
+                                    className="bg-black/20 border border-white/10 rounded-lg p-3 w-full text-white focus:ring-2 focus:ring-accent-orange outline-none"
+                                />
+                                <span className="absolute right-3 top-3 text-gray-500 text-sm">bpm</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Your Lactate Threshold Heart Rate. Zone 4 ends here.
+                            </p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Threshold Pace</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    value={thresholdPace}
+                                    onChange={(e) => setThresholdPace(e.target.value)}
+                                    placeholder="e.g. 240"
+                                    className="bg-black/20 border border-white/10 rounded-lg p-3 w-full text-white focus:ring-2 focus:ring-accent-orange outline-none"
+                                />
+                                <span className="absolute right-3 top-3 text-gray-500 text-sm">sec/km</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Your functional threshold pace (approx 1h race pace).
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="bg-black/20 rounded-xl p-4 border border-white/5">
+                        <h4 className="text-sm font-medium text-gray-400 mb-4 uppercase tracking-wider">Calculated Heart Rate Zones</h4>
+                        {zones.length > 0 ? (
+                            <div className="space-y-2">
+                                {zones.map((zone, i) => (
+                                    <div key={i} className="flex justify-between items-center text-sm p-2 hover:bg-white/5 rounded">
+                                        <span className="text-gray-300 font-medium">{zone.label}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-white font-mono">{zone.min} - {zone.max === 999 ? '+' : zone.max}</span>
+                                            <span className="text-gray-500 text-xs">bpm</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-2 min-h-[200px]">
+                                <BarChart2 className="w-8 h-8 opacity-20" />
+                                <p className="text-sm">Enter LTHR to calculate zones</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

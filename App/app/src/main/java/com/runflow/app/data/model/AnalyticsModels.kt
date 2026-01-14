@@ -24,7 +24,26 @@ data class AnalyticsStats(
     val tsbHistory: List<FatiguePoint> = emptyList(),
     val weeklyMileageHistory: List<WeeklyMileage> = emptyList(),
     val totalTimeHistory: List<WeeklyTime> = emptyList(),
-    val racePredictions: Map<String, Int> = emptyMap()
+    val racePredictions: Map<String, Int> = emptyMap(),
+    // Calculated locally based on effectiveVO2max
+    val trainingPaces: TrainingPaces? = null,
+    val optimalTime: Int = 0, // Marathon optimal
+    val predictedTime: Int = 0 // Marathon predicted
+)
+
+@Serializable
+data class TrainingPaces(
+    val easy: PaceRange,
+    val marathon: Int,
+    val threshold: Int,
+    val interval: Int,
+    val repetition: Int
+)
+
+@Serializable
+data class PaceRange(
+    val min: Int, // sec/km (slower)
+    val max: Int  // sec/km (faster)
 )
 
 @Serializable
@@ -64,3 +83,4 @@ enum class TimeRange(val displayName: String, val days: Int?) {
     YEAR("This Year", 365),
     ALL("All Time", null)
 }
+

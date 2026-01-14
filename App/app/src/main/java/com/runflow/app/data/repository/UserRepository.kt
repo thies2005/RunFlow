@@ -115,6 +115,10 @@ class UserRepository @Inject constructor(
             hrZone2Max = hrZone2Max,
             hrZone3Max = hrZone3Max,
             hrZone4Max = hrZone4Max,
+            hrZone5Max = hrZone5Max,
+            hrZone6Max = hrZone6Max,
+            thresholdHr = thresholdHr,
+            thresholdPace = thresholdPace,
             vdotCorrectionFactor = vdotCorrectionFactor
         )
     }
@@ -135,6 +139,10 @@ class UserRepository @Inject constructor(
             hrZone2Max = hrZone2Max,
             hrZone3Max = hrZone3Max,
             hrZone4Max = hrZone4Max,
+            hrZone5Max = hrZone5Max,
+            hrZone6Max = hrZone6Max,
+            thresholdHr = thresholdHr,
+            thresholdPace = thresholdPace,
             vdotCorrectionFactor = vdotCorrectionFactor
         )
     }

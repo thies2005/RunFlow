@@ -112,106 +112,26 @@ fun AnalyticsContent(
             onTimeRangeSelected = onTimeRangeSelected
         )
 
-        // Effective VO2max Trend
-        if (data.vo2maxHistory.isNotEmpty()) {
-            LineChartCard(
-                title = "Effective VO2max Trend",
-                data = data.vo2maxHistory.map { ChartPoint(it.date, it.vo2max) },
-                color = MaterialTheme.colorScheme.primary
-            )
+        // Training Paces & Heart Rate
+        if (data.trainingPaces != null) {
+            TrainingPacesSection(paces = data.trainingPaces)
         }
 
-        // Training Time Trend
-        if (data.totalTimeHistory.isNotEmpty()) {
-             LineChartCard(
-                title = "Training Time (Hours)",
-                data = data.totalTimeHistory.map { 
-                    ChartPoint(it.week, it.seconds / 3600f) 
-                },
-                color = MaterialTheme.colorScheme.secondary
-            )
-        }
+        // Race Predictions (Interactive)
+        val shapeScore = data.marathonShape?.shape?.toFloat() ?: 0f
+        RacePredictionsSection(
+            effectiveVo2max = data.effectiveVO2max,
+            marathonShapeScore = shapeScore
+        )
 
-        // Race Predictions
-        if (data.racePredictions.isNotEmpty()) {
-            RacePredictionsCard(data.racePredictions)
-        }
-
-        // Marathon Shape
+        // Marathon Shape Card
         MarathonShapeCard(data.marathonShape ?: MarathonShape())
     }
 }
 
 
 
-
-
-@Composable
-fun LineChartCard(
-    title: String,
-    data: List<ChartPoint>,
-    color: Color
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            SimpleLineChart(
-                data = data,
-                color = color,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            )
-        }
-    }
-}
-
-
-
-@Composable
-fun RacePredictionsCard(predictions: Map<String, Int>) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Race Predictions",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            predictions.forEach { (race, timeSeconds) ->
-                RacePredictionRow(race, timeSeconds)
-                if (race != predictions.keys.last()) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun RacePredictionRow(race: String, timeSeconds: Int) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = race,
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Text(
-            text = formatTime(timeSeconds),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary
-        )
-    }
-}
+// Legacy components removed
 
 @Composable
 fun MarathonShapeCard(marathonShape: com.runflow.app.data.model.MarathonShape) {

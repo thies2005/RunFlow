@@ -15,7 +15,7 @@ import com.runflow.app.data.local.entity.*
         CacheMetadataEntity::class,
         AnalyticsStatsEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

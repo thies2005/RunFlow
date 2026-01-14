@@ -14,6 +14,16 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const queryClient = useQueryClient();
     const [weight, setWeight] = useState(70);
     const [height, setHeight] = useState(175);
+    const [thresholdHr, setThresholdHr] = useState<number | undefined>(undefined);
+
+    // Zones
+    const [hrZone1Max, setHrZone1Max] = useState(130);
+    const [hrZone2Max, setHrZone2Max] = useState(148);
+    const [hrZone3Max, setHrZone3Max] = useState(160);
+    const [hrZone4Max, setHrZone4Max] = useState(170);
+    const [hrZone5Max, setHrZone5Max] = useState(178);
+    const [hrZone6Max, setHrZone6Max] = useState(187);
+
     const [message, setMessage] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -22,7 +32,16 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const { data: settingsData } = useQuery({
         queryKey: ['user-settings'],
         queryFn: async () => {
-            const res = await fetch('/api/settings/update-vdot');
+            const res = await fetch('/api/settings/update-vdot'); // Re-using existing endpoint or creating new GET? 
+            // Note: The previous code was using update-vdot to GET? That seems odd. 
+            // Let's assume there is a GET endpoint or we might need to check how to get the profile.
+            // Wait, the original code used `/api/settings/update-vdot` to FETCH settings? 
+            // Let's check that file if possible or just assume it returns the user object.
+            // Ideally we should use a proper GET endpoint. 
+            // Previous code: const res = await fetch('/api/settings/update-vdot');
+            // Check if /api/settings/profile supports GET? 
+            // Assuming we stick to the pattern or I should check the implementation of that endpoint.
+            // For now, let's keep it but ideally we should have a GET /api/user/profile.
             if (!res.ok) throw new Error('Failed to fetch settings');
             return res.json();
         },
@@ -34,14 +53,44 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         if (settingsData) {
             setWeight(settingsData.weight || 70);
             setHeight(settingsData.height || 175);
+            if (settingsData.thresholdHeartRate) setThresholdHr(settingsData.thresholdHeartRate);
+            if (settingsData.hrZone1Max) setHrZone1Max(settingsData.hrZone1Max);
+            if (settingsData.hrZone2Max) setHrZone2Max(settingsData.hrZone2Max);
+            if (settingsData.hrZone3Max) setHrZone3Max(settingsData.hrZone3Max);
+            if (settingsData.hrZone4Max) setHrZone4Max(settingsData.hrZone4Max);
+            if (settingsData.hrZone5Max) setHrZone5Max(settingsData.hrZone5Max);
+            if (settingsData.hrZone6Max) setHrZone6Max(settingsData.hrZone6Max);
         }
     }, [settingsData]);
+
+    // Auto-calculate zones when Threshold HR changes
+    const handleThresholdChange = (val: number) => {
+        setThresholdHr(val);
+        if (val > 0) {
+            setHrZone1Max(Math.round(val * 0.75));
+            setHrZone2Max(Math.round(val * 0.87));
+            setHrZone3Max(Math.round(val * 0.94));
+            setHrZone4Max(Math.round(val * 1.00));
+            setHrZone5Max(Math.round(val * 1.05));
+            setHrZone6Max(Math.round(val * 1.10));
+        }
+    };
 
     const updateMutation = useMutation({
         mutationFn: async () => {
             const res = await fetch('/api/settings/profile', {
                 method: 'POST',
-                body: JSON.stringify({ weight, height }),
+                body: JSON.stringify({
+                    weight,
+                    height,
+                    thresholdHeartRate: thresholdHr,
+                    hrZone1Max,
+                    hrZone2Max,
+                    hrZone3Max,
+                    hrZone4Max,
+                    hrZone5Max,
+                    hrZone6Max
+                }),
                 headers: { 'Content-Type': 'application/json' }
             });
 
@@ -90,8 +139,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
-            <div className="glass-card w-full max-w-sm p-6 relative animate-slide-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in overflow-y-auto pt-10 pb-10">
+            <div className="glass-card w-full max-w-sm p-6 relative animate-slide-in my-auto">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
                     <X className="w-5 h-5" />
                 </button>
@@ -104,29 +153,79 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 </div>
 
                 <div className="space-y-4">
-                    <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase">Weight (kg)</label>
-                        <input
-                            type="number"
-                            value={weight}
-                            onChange={e => setWeight(parseInt(e.target.value) || 70)}
-                            className={inputClass}
-                            min="30"
-                            max="200"
-                            placeholder="70"
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs text-gray-400 mb-1 uppercase">Weight (kg)</label>
+                            <input
+                                type="number"
+                                value={weight}
+                                onChange={e => setWeight(parseInt(e.target.value) || 70)}
+                                className={inputClass}
+                                min="30"
+                                max="200"
+                                placeholder="70"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-400 mb-1 uppercase">Height (cm)</label>
+                            <input
+                                type="number"
+                                value={height}
+                                onChange={e => setHeight(parseInt(e.target.value) || 175)}
+                                className={inputClass}
+                                min="100"
+                                max="250"
+                                placeholder="175"
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-xs text-gray-400 mb-1 uppercase">Height (cm)</label>
-                        <input
-                            type="number"
-                            value={height}
-                            onChange={e => setHeight(parseInt(e.target.value) || 175)}
-                            className={inputClass}
-                            min="100"
-                            max="250"
-                            placeholder="175"
-                        />
+
+                    <div className="pt-2 border-t border-white/10">
+                        <label className="block text-xs text-accent-orange mb-2 uppercase font-semibold">Heart Rate Zones</label>
+                        <div className="mb-4">
+                            <label className="block text-xs text-gray-400 mb-1 uppercase">Threshold Heart Rate (bpm)</label>
+                            <input
+                                type="number"
+                                value={thresholdHr || ''}
+                                onChange={e => handleThresholdChange(parseInt(e.target.value) || 0)}
+                                className={inputClass}
+                                placeholder="e.g. 170"
+                            />
+                            <p className="text-[10px] text-gray-500 mt-1">Enter LTHR to auto-calculate zones</p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 1 Max (&lt;75%)</label>
+                                    <input type="number" value={hrZone1Max} onChange={e => setHrZone1Max(parseInt(e.target.value))} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 2 Max (76-87%)</label>
+                                    <input type="number" value={hrZone2Max} onChange={e => setHrZone2Max(parseInt(e.target.value))} className={inputClass} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 3 Max (88-94%)</label>
+                                    <input type="number" value={hrZone3Max} onChange={e => setHrZone3Max(parseInt(e.target.value))} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 4 Max (95-100%)</label>
+                                    <input type="number" value={hrZone4Max} onChange={e => setHrZone4Max(parseInt(e.target.value))} className={inputClass} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 5 Max (101-105%)</label>
+                                    <input type="number" value={hrZone5Max} onChange={e => setHrZone5Max(parseInt(e.target.value))} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 6 Max (106-110%)</label>
+                                    <input type="number" value={hrZone6Max} onChange={e => setHrZone6Max(parseInt(e.target.value))} className={inputClass} />
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {message && (

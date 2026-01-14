@@ -1,0 +1,347 @@
+// Database schema for RunFlow
+// Stores Strava activities, race goals, and training metrics
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User & Authentication
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+
+  // Strava OAuth tokens
+  stravaId           String?   @unique
+  stravaAccessToken  String?
+  stravaRefreshToken String?
+  stravaTokenExpiry  DateTime?
+
+  // Athlete profile for calculations
+  sex       Sex       @default(MALE)
+  birthDate DateTime?
+  hrMax     Int? // Maximum heart rate
+  hrRest    Int? // Resting heart rate
+  weight    Float? // kg
+  height    Float? // cm
+
+  // HR Zone thresholds (% of hrMax)
+  hrZone1Max Int @default(60) // Z1 ends at 60%
+  hrZone2Max Int @default(70) // Z2 ends at 70%
+  hrZone3Max Int @default(80) // Z3 ends at 80%
+  hrZone4Max Int @default(90) // Z4 ends at 90%
+  // Z5 = 90%+ (implied)
+
+  // VO2max correction based on reference race
+  vdotCorrectionFactor  Float     @default(1.0)
+  vdotReferenceRaceDate DateTime?
+  vdotReferenceRaceTime Int? // seconds
+  vdotReferenceRaceType String? // "5K", "10K", "HALF", "MARATHON"
+
+  // Sync status
+  lastSyncAt     DateTime?
+  syncInProgress Boolean   @default(false)
+
+  // Relations
+  accounts   Account[]
+  sessions   Session[]
+  activities Activity[]
+  goals      Goal[]
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  DailyFitness DailyFitness[]
+  notifications Notification[]
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// Activities
+// ============================================
+
+model Activity {
+  id       String @id @default(cuid())
+  userId   String
+  stravaId BigInt @unique
+
+  // Activity type
+  type      ActivityType
+  sportType String? // Strava's sport_type field
+
+  // Basic metrics
+  name        String
+  description String?
+  startDate   DateTime
+  timezone    String?
+
+  // Distance & Duration
+  distance    Float // meters
+  movingTime  Int // seconds
+  elapsedTime Int // seconds
+
+  // Pace/Speed
+  averageSpeed       Float? // m/s
+  maxSpeed           Float? // m/s
+  gradeAdjustedSpeed Float? // m/s (GAP)
+
+  // Heart Rate
+  averageHr      Float?
+  maxHr          Int?
+  averageCadence Float? // steps per minute (spm)
+  hasHeartrate   Boolean @default(false)
+
+  // Elevation
+  totalElevation Float? // meters gained
+  elevHigh       Float?
+  elevLow        Float?
+  calories       Float?
+
+  // Calculated metrics
+  trimp         Float? // HR-based training impulse
+  runningTss    Float? // Running-specific stress (null for non-runs)
+  estimatedVdot Float? // VDOT from this activity if race effort
+
+  // HR Zone breakdown (in seconds)
+  hrZone1Time Int?
+  hrZone2Time Int?
+  hrZone3Time Int?
+  hrZone4Time Int?
+  hrZone5Time Int?
+
+  // Raw Strava response
+  rawJson Json?
+  streams Json? // Stored streams (time, hr, distance, altitude, velocity_smooth)
+
+  // Training Classification
+  trainingType WorkoutType? // Auto-tagged or manual override
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, startDate])
+  @@index([type])
+  @@index([userId, type, startDate]) // For filtering by type within date range
+  @@index([userId, hasHeartrate]) // For HR-based metrics queries
+  @@index([userId, estimatedVdot]) // For VDOT trend analytics
+}
+
+enum ActivityType {
+  RUN
+  VIRTUAL_RIDE
+  RIDE
+  WALK
+  HIKE
+  SWIM
+  WORKOUT
+  OTHER
+}
+
+// ============================================
+// Metrics Caching
+// ============================================
+
+model DailyFitness {
+  id     String   @id @default(cuid())
+  userId String
+  date   DateTime
+
+  // Metrics
+  ctl        Float @default(0)
+  atl        Float @default(0)
+  tsb        Float @default(0)
+  ctlRunning Float @default(0)
+
+  // Daily load (source data)
+  trimp      Float @default(0)
+  runningTss Float @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+// ============================================
+// Goals & Training Plans
+// ============================================
+
+model Goal {
+  id     String @id @default(cuid())
+  userId String
+
+  // Race details
+  name     String
+  raceType RaceType
+  raceDate DateTime
+
+  // Target
+  targetTime Int? // seconds (optional, can just be "finish")
+
+  // Current predictions based on VDOT
+  currentVdot         Float?
+  predictedTime       Int? // seconds
+  marathonShapeFactor Float  @default(1.0) // Correction Multiplier
+
+  // Training plan settings
+  weeklyMileageGoal Float? // km per week at peak
+  planWeeks         Int    @default(12)
+  runsPerWeek       Int    @default(4)
+  ridesPerWeek      Int    @default(0)
+  strengthPerWeek   Int    @default(0)
+  swimsPerWeek      Int    @default(0)
+
+  // Phase Customization
+  taperWeeks Int @default(2)
+  peakWeeks  Int @default(4)
+  buildWeeks Int @default(4)
+
+  // Preferred Training Days (0=Sunday, 1=Monday, ..., 6=Saturday)
+  longRunDay Int @default(0) // Default Sunday
+  workoutDay Int @default(3) // Default Wednesday
+  restDays   Json @default("[1, 5]") // Default Monday & Friday as rest days
+
+  // Status
+  isActive    Boolean   @default(true)
+  completedAt DateTime?
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workouts Workout[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isActive])
+}
+
+enum RaceType {
+  FIVE_K
+  TEN_K
+  HALF_MARATHON
+  MARATHON
+}
+
+model Workout {
+  id     String @id @default(cuid())
+  goalId String
+
+  // Scheduling
+  scheduledDate DateTime
+
+  // Workout details
+  workoutType WorkoutType
+  description String
+  phase       PlanPhase @default(BASE)
+  order       Int       @default(0)
+  notes       String?
+
+  // Targets
+  targetDistance Float? // meters
+  targetDuration Int? // seconds
+  targetPace     Float? // sec/km
+  targetHrZone   Int? // 1-5
+
+  // Completion
+  isCompleted      Boolean   @default(false)
+  completedAt      DateTime?
+  linkedActivityId String? // Link to actual activity
+
+  // Relations
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([goalId, scheduledDate])
+}
+
+enum WorkoutType {
+  EASY
+  LONG_RUN
+  TEMPO
+  INTERVALS
+  REPETITIONS
+  RECOVERY
+  RACE
+  REST
+  CROSS_TRAIN
+  RIDE
+  SWIM
+  STRENGTH
+  OTHER
+}
+
+enum PlanPhase {
+  BASE
+  BUILD
+  PEAK
+  TAPER
+  RACE_WEEK
+  RECOVERY
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}

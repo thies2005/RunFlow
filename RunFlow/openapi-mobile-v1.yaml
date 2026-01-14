@@ -1,0 +1,1048 @@
+openapi: 3.0.3
+info:
+  title: RunFlow Mobile API
+  description: |
+    RESTful API for the RunFlow Android mobile application.
+
+    ## Authentication
+    All endpoints require authentication via JWT token in the Authorization header:
+    ```
+    Authorization: Bearer <access_token>
+    ```
+
+    ## Rate Limiting
+    The API implements rate limiting per endpoint. Response includes retry headers:
+    - `X-RateLimit-Remaining`: Remaining requests
+    - `X-RateLimit-Reset`: Unix timestamp when limit resets
+
+  version: 1.0.0
+  contact:
+    name: RunFlow API
+
+servers:
+  - url: https://api.runflow.app/api/mobile/v1
+    description: Production
+  - url: http://localhost:3000/api/mobile/v1
+    description: Development
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Dashboard
+    description: Dashboard data aggregation
+  - name: Activities
+    description: Activity management
+  - name: Goals
+    description: Training goals
+  - name: Workouts
+    description: Workout management
+  - name: Sync
+    description: Strava synchronization
+  - name: Analytics
+    description: Training analytics
+  - name: User
+    description: User profile
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with Strava
+      description: Exchange Strava authorization code for JWT tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Get dashboard data
+      description: Returns aggregated dashboard data including stats, recent activities, goals, and sync status
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Dashboard data retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /activities:
+    get:
+      tags: [Activities]
+      summary: List activities
+      description: Get paginated list of user activities
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: type
+          in: query
+          description: Filter by activity type
+          schema:
+            type: string
+            enum: [RUN, RIDE, VIRTUAL_RIDE, WALK, HIKE, SWIM, WORKOUT, OTHER]
+      responses:
+        '200':
+          description: Activities retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivitiesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /activities/{id}:
+    get:
+      tags: [Activities]
+      summary: Get activity details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Activity details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /goals:
+    get:
+      tags: [Goals]
+      summary: List goals
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Goals retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags: [Goals]
+      summary: Create goal
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGoalRequest'
+      responses:
+        '200':
+          description: Goal created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Goal'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /goals/{id}:
+    get:
+      tags: [Goals]
+      summary: Get goal details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Goal details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Goal'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags: [Goals]
+      summary: Update goal
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGoalRequest'
+      responses:
+        '200':
+          description: Goal updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Goal'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    delete:
+      tags: [Goals]
+      summary: Delete goal
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Goal deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /workouts:
+    get:
+      tags: [Workouts]
+      summary: List workouts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: goalId
+          in: query
+          schema:
+            type: string
+        - name: weekStart
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: weekEnd
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Workouts retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /sync:
+    get:
+      tags: [Sync]
+      summary: Get sync status
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sync status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags: [Sync]
+      summary: Trigger Strava sync
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                range:
+                  type: string
+                  enum: [SINCE_LAST_ACTIVITY, LAST_7_DAYS, LAST_30_DAYS, ALL]
+                  default: SINCE_LAST_ACTIVITY
+      responses:
+        '200':
+          description: Sync completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /analytics/stats:
+    get:
+      tags: [Analytics]
+      summary: Get training analytics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /user/profile:
+    get:
+      tags: [User]
+      summary: Get user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    put:
+      tags: [User]
+      summary: Update user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiError:
+      type: object
+      required:
+        - error
+        - timestamp
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          enum:
+            - UNAUTHORIZED
+            - INVALID_TOKEN
+            - TOKEN_EXPIRED
+            - FORBIDDEN
+            - BAD_REQUEST
+            - VALIDATION_ERROR
+            - NOT_FOUND
+            - CONFLICT
+            - RATE_LIMITED
+            - INTERNAL_ERROR
+            - SERVICE_UNAVAILABLE
+            - DATABASE_ERROR
+          description: Machine-readable error code
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error context
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+          description: Request path for debugging
+
+    LoginRequest:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: Strava authorization code
+
+    LoginResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - expiresIn
+        - tokenType
+        - user
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        tokenType:
+          type: string
+          enum: [Bearer]
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        image:
+          type: string
+          format: uri
+          nullable: true
+        sex:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        hrMax:
+          type: integer
+          nullable: true
+        hrRest:
+          type: integer
+          nullable: true
+        weight:
+          type: number
+          nullable: true
+        height:
+          type: number
+          nullable: true
+        vdotCorrectionFactor:
+          type: number
+          nullable: true
+        lastSyncAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    DashboardResponse:
+      type: object
+      properties:
+        stats:
+          $ref: '#/components/schemas/AnalyticsStats'
+        recentActivities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+        goals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Goal'
+        syncStatus:
+          $ref: '#/components/schemas/SyncStatus'
+        user:
+          $ref: '#/components/schemas/User'
+
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+        stravaId:
+          type: string
+        type:
+          type: string
+          enum: [RUN, RIDE, VIRTUAL_RIDE, WALK, HIKE, SWIM, WORKOUT, OTHER]
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        distance:
+          type: number
+          description: Distance in meters
+        movingTime:
+          type: integer
+          description: Duration in seconds
+        averageSpeed:
+          type: number
+          nullable: true
+        averageHr:
+          type: number
+          nullable: true
+        maxHr:
+          type: integer
+          nullable: true
+        averageCadence:
+          type: number
+          nullable: true
+        hasHeartrate:
+          type: boolean
+        totalElevation:
+          type: number
+          description: Elevation gain in meters
+        trimp:
+          type: number
+          nullable: true
+        runningTss:
+          type: number
+          nullable: true
+        estimatedVdot:
+          type: number
+          nullable: true
+        trainingType:
+          type: string
+          nullable: true
+
+    ActivitiesResponse:
+      type: object
+      required:
+        - activities
+        - total
+        - limit
+        - offset
+        - hasMore
+      properties:
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+        total:
+          type: integer
+          description: Total number of activities
+        limit:
+          type: integer
+          description: Number of items per page
+        offset:
+          type: integer
+          description: Number of items skipped
+        hasMore:
+          type: boolean
+          description: Whether more pages are available
+
+    RaceType:
+      type: string
+      enum:
+        - FIVE_K
+        - TEN_K
+        - HALF_MARATHON
+        - MARATHON
+
+    Goal:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        name:
+          type: string
+        raceType:
+          $ref: '#/components/schemas/RaceType'
+        raceDate:
+          type: string
+          format: date-time
+        targetTime:
+          type: integer
+          nullable: true
+          description: Target time in seconds
+        weeklyMileageGoal:
+          type: number
+          nullable: true
+        planWeeks:
+          type: integer
+        runsPerWeek:
+          type: integer
+        longRunDay:
+          type: integer
+        workoutDay:
+          type: integer
+        currentVdot:
+          type: number
+          nullable: true
+        predictedTime:
+          type: integer
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        workouts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workout'
+
+    GoalsResponse:
+      type: object
+      properties:
+        goals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Goal'
+
+    CreateGoalRequest:
+      type: object
+      required:
+        - name
+        - raceType
+        - raceDate
+      properties:
+        name:
+          type: string
+        raceType:
+          $ref: '#/components/schemas/RaceType'
+        raceDate:
+          type: string
+          format: date-time
+        targetTime:
+          type: integer
+          nullable: true
+        weeklyMileageGoal:
+          type: number
+          nullable: true
+        planWeeks:
+          type: integer
+        runsPerWeek:
+          type: integer
+
+    UpdateGoalRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        targetTime:
+          type: integer
+        isActive:
+          type: boolean
+        currentVdot:
+          type: number
+
+    WorkoutType:
+      type: string
+      enum:
+        - EASY
+        - LONG
+        - TEMPO
+        - INTERVAL
+        - RECOVERY
+        - RACE
+
+    Workout:
+      type: object
+      properties:
+        id:
+          type: string
+        goalId:
+          type: string
+        scheduledDate:
+          type: string
+          format: date-time
+        workoutType:
+          $ref: '#/components/schemas/WorkoutType'
+        description:
+          type: string
+        targetDistance:
+          type: number
+          description: Target distance in meters
+        targetPace:
+          type: number
+          description: Target pace in seconds per km
+        targetDuration:
+          type: integer
+          description: Target duration in seconds
+        isCompleted:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        activityId:
+          type: string
+          nullable: true
+
+    WorkoutsResponse:
+      type: object
+      properties:
+        workouts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workout'
+
+    SyncStatus:
+      type: object
+      properties:
+        syncInProgress:
+          type: boolean
+        lastSyncAt:
+          type: string
+          format: date-time
+          nullable: true
+        totalActivities:
+          type: integer
+
+    SyncResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        activitiesSynced:
+          type: integer
+        lastSyncAt:
+          type: string
+          format: date-time
+
+    AnalyticsStats:
+      type: object
+      properties:
+        currentWeekMileage:
+          type: number
+          description: Current week mileage in km
+        effectiveVO2max:
+          type: number
+        rawVO2max:
+          type: number
+        vdotCorrectionFactor:
+          type: number
+        marathonShape:
+          type: object
+          properties:
+            shape:
+              type: number
+            mileageScore:
+              type: number
+            longRunScore:
+              type: number
+            crossTrainingScore:
+              type: number
+        currentVdot:
+          type: number
+          nullable: true
+        ctl:
+          type: number
+          description: Chronic Training Load
+        atl:
+          type: number
+          description: Acute Training Load
+        tsb:
+          type: number
+          description: Training Stress Balance
+        workloadRatio:
+          type: number
+        easyTrimp:
+          type: number
+        hrMax:
+          type: integer
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        image:
+          type: string
+          format: uri
+          nullable: true
+        sex:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        hrMax:
+          type: integer
+          nullable: true
+        hrRest:
+          type: integer
+          nullable: true
+        weight:
+          type: number
+          nullable: true
+        height:
+          type: number
+          nullable: true
+        hrZone1Max:
+          type: integer
+        hrZone2Max:
+          type: integer
+        hrZone3Max:
+          type: integer
+        hrZone4Max:
+          type: integer
+        vdotCorrectionFactor:
+          type: number
+        lastSyncAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        sex:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+        birthDate:
+          type: string
+          format: date
+        hrMax:
+          type: integer
+          minimum: 100
+          maximum: 250
+        hrRest:
+          type: integer
+        weight:
+          type: number
+        height:
+          type: number
+        hrZone1Max:
+          type: integer
+        hrZone2Max:
+          type: integer
+        hrZone3Max:
+          type: integer
+        hrZone4Max:
+          type: integer
+        vdotCorrectionFactor:
+          type: number
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "Bad request"
+            code: "BAD_REQUEST"
+            timestamp: "2024-01-01T00:00:00Z"
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "Unauthorized"
+            code: "UNAUTHORIZED"
+            timestamp: "2024-01-01T00:00:00Z"
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "Forbidden"
+            code: "FORBIDDEN"
+            timestamp: "2024-01-01T00:00:00Z"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "Resource not found"
+            code: "NOT_FOUND"
+            timestamp: "2024-01-01T00:00:00Z"
+
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "Resource conflict"
+            code: "CONFLICT"
+            timestamp: "2024-01-01T00:00:00Z"
+
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "Too many requests. Please try again later."
+            code: "RATE_LIMITED"
+            timestamp: "2024-01-01T00:00:00Z"
+      headers:
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Remaining requests
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Unix timestamp when limit resets
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            error: "Internal server error"
+            code: "INTERNAL_ERROR"
+            timestamp: "2024-01-01T00:00:00Z"

@@ -1,0 +1,195 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ArrowRight, RefreshCw, BarChart2, Calendar } from 'lucide-react';
+import AnalyticsDashboard from './AnalyticsDashboard';
+import PlanSetupForm from './PlanSetupForm';
+import { useEffect } from 'react';
+
+export default function OnboardingWizard() {
+    const router = useRouter();
+    const queryClient = useQueryClient();
+    const searchParams = useSearchParams();
+    const { data: session } = useSession();
+    const [step, setStep] = useState(() => {
+        const p = searchParams.get('step');
+        return p ? parseInt(p) : 1;
+    });
+
+    // Sync Logic (Step 1)
+    const { data: syncStatus } = useQuery({
+        queryKey: ['sync-status'],
+        queryFn: async () => (await fetch('/api/sync')).json(),
+        refetchInterval: (query) => query.state.data?.syncInProgress ? 1000 : false,
+    });
+
+    const [importRange, setImportRange] = useState('ALL');
+
+    const syncMutation = useMutation({
+        mutationFn: async () => await fetch('/api/sync', {
+            method: 'POST',
+            body: JSON.stringify({ range: importRange }),
+            headers: { 'Content-Type': 'application/json' }
+        }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sync-status'] });
+        }
+    });
+
+    // Auto-advance to step 2 when sync completes
+    useEffect(() => {
+        if (step === 1 && !syncStatus?.syncInProgress && (syncStatus?.totalActivities || 0) > 0) {
+            // Optional: small delay to let user see "Done" or just auto-advance
+            // For now, let's just let the user click "Analyze Data" as it was before,
+            // BUT we ensure the UI updates to show that button.
+            // The user request said "to get to next screen you have to refresh",
+            // implying the button didn't appear.
+            // Invalidating the query should fix that.
+        }
+    }, [syncStatus, step]);
+
+    // Analysis Logic (Step 2 and 3) - fetch stats for VO2max
+    const { data: statsData, isLoading: statsLoading } = useQuery({
+        queryKey: ['analytics-stats'],
+        queryFn: async () => {
+            const res = await fetch('/api/analytics/stats');
+            if (!res.ok) throw new Error('Failed to fetch stats');
+            return res.json();
+        },
+        enabled: step >= 2,
+    });
+
+    // Fetch activities for analysis display
+    const { data: activitiesData } = useQuery({
+        queryKey: ['activities', 'run'],
+        queryFn: async () => (await fetch('/api/activities?limit=100')).json(),
+        enabled: step >= 2,
+    });
+
+    // Helper to calculate VDOT from activities
+    const currentVdot = activitiesData?.activities?.[0]?.estimatedVdot || null;
+    const effectiveVO2max = statsData?.effectiveVO2max || 0;
+    const shapePercent = statsData?.marathonShape?.shape || 0;
+
+    return (
+        <div className="min-h-screen bg-background text-white flex flex-col">
+            {/* Progress Bar */}
+            <div className="w-full h-1 bg-gray-800">
+                <div
+                    className="h-full bg-accent-orange transition-all duration-500 ease-out"
+                    style={{ width: `${(step / 3) * 100}%` }}
+                />
+            </div>
+
+            <div className="flex-1 max-w-5xl mx-auto w-full p-6 flex flex-col justify-center">
+                {/* Step 1: Sync */}
+                {step === 1 && (
+                    <div className="max-w-md mx-auto text-center space-y-6 animate-fade-in">
+                        <div className="w-16 h-16 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-6">
+                            <RefreshCw className={`w-8 h-8 ${syncStatus?.syncInProgress ? 'animate-spin' : ''}`} />
+                        </div>
+
+                        <h1 className="text-3xl font-bold">Import your history</h1>
+                        <p className="text-gray-400">
+                            RunFlow needs your Strava history to start your adaptive training plan.
+                        </p>
+
+                        <div className="glass-card p-6">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-gray-300">Activities found</span>
+                                <span className="text-2xl font-bold">{syncStatus?.totalActivities || 0}</span>
+                            </div>
+                            {syncStatus?.syncInProgress && (
+                                <p className="text-sm text-blue-400 animate-pulse">
+                                    Syncing active... this might take a minute.
+                                </p>
+                            )}
+                        </div>
+
+                        {!syncStatus?.syncInProgress && (
+                            <div className="space-y-4">
+                                <div className="text-left">
+                                    <label className="block text-sm font-medium text-gray-400 mb-1 ml-1">Import Range</label>
+                                    <select
+                                        value={importRange}
+                                        onChange={(e) => setImportRange(e.target.value)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-accent-orange outline-none"
+                                    >
+                                        <option value="1_MONTH">Last Month</option>
+                                        <option value="3_MONTHS">Last 3 Months</option>
+                                        <option value="6_MONTHS">Last 6 Months</option>
+                                        <option value="1_YEAR">Last Year</option>
+                                        <option value="2_YEARS">Last 2 Years</option>
+                                        <option value="ALL">All History</option>
+                                    </select>
+                                </div>
+                                <button
+                                    onClick={() => syncMutation.mutate()}
+                                    disabled={syncMutation.isPending}
+                                    className="btn-primary w-full py-3"
+                                >
+                                    {syncMutation.isPending ? 'Starting...' : (syncStatus?.totalActivities || 0) > 0 ? 'Update Import' : 'Start Import'}
+                                </button>
+                            </div>
+                        )}
+
+                        {!syncStatus?.syncInProgress && (syncStatus?.totalActivities || 0) > 0 && (
+                            <button
+                                onClick={() => setStep(2)}
+                                className="btn-primary w-full py-3 flex items-center justify-center gap-2"
+                            >
+                                Analyze Data <ArrowRight className="w-4 h-4" />
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {/* Step 2: Analyze */}
+                {step === 2 && (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="text-center mb-8">
+                            <h1 className="text-3xl font-bold mb-2">Your Running Profile</h1>
+                            <p className="text-gray-400">Based on your last {activitiesData?.activities?.length || 0} activities</p>
+                        </div>
+
+                        <AnalyticsDashboard
+                            currentVdot={currentVdot}
+                        />
+
+                        <div className="flex justify-center mt-8">
+                            <button
+                                onClick={() => setStep(3)}
+                                className="btn-primary py-3 px-8 flex items-center justify-center gap-2"
+                            >
+                                Build My Plan <ArrowRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 3: Plan Setup - Using unified PlanSetupForm */}
+                {step === 3 && (
+                    <div className="max-w-xl mx-auto animate-fade-in">
+                        <div className="text-center mb-8">
+                            <Calendar className="w-12 h-12 text-accent-orange mx-auto mb-4" />
+                            <h1 className="text-3xl font-bold mb-2">Build Your Plan</h1>
+                            <p className="text-gray-400">Set up your race goal and training preferences.</p>
+                        </div>
+
+                        <div className="glass-card p-6">
+                            <PlanSetupForm
+                                mode="onboarding"
+                                onSuccess={() => router.push('/')}
+                                effectiveVO2max={effectiveVO2max}
+                                shapePercent={shapePercent}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

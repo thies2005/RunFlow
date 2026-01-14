@@ -1,0 +1,101 @@
+﻿services:
+  app:
+    build: .
+    container_name: runflow-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}
+      - STRAVA_CLIENT_SECRET=${STRAVA_CLIENT_SECRET}
+      - STRAVA_VERIFY_TOKEN=${STRAVA_VERIFY_TOKEN}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - runflow-network
+    volumes:
+      - ./backups:/app/backups
+
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: runflow-migrator
+    command: sh -c "node_modules/.bin/prisma db push --accept-data-loss"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - runflow-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: runflow-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-runflow}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-runflow}
+      - POSTGRES_DB=${POSTGRES_DB:-runflow}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-runflow} -d ${POSTGRES_DB:-runflow}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - runflow-network
+
+  backup:
+    image: prodrigestivill/postgres-backup-local
+    container_name: runflow-backup
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=${POSTGRES_DB:-runflow}
+      - POSTGRES_USER=${POSTGRES_USER:-runflow}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-runflow}
+      - SCHEDULE=@every 6h
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+      - HEALTHCHECK_PORT=8080
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - runflow-network
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: runflow-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - app
+    networks:
+      - runflow-network
+
+networks:
+  runflow-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

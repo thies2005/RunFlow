@@ -1,0 +1,107 @@
+/**
+ * Admin Stats Endpoint
+ * 
+ * GET /api/admin/stats
+ * 
+ * Returns dashboard statistics: user count, session count, etc.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin/auth';
+import { prisma } from '@/lib/db';
+import * as fs from 'fs';
+import * as path from 'path';
+
+export async function GET(request: NextRequest) {
+    // Require admin authentication
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+        return authResult.error;
+    }
+
+    try {
+        const now = new Date();
+        const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        // Get user statistics
+        const [
+            totalUsers,
+            newUsersToday,
+            totalActivities,
+            activitiesLast7d,
+            totalSessions,
+            activeSessions
+        ] = await Promise.all([
+            prisma.user.count(),
+            prisma.user.count({
+                where: { createdAt: { gte: last24h } }
+            }),
+            prisma.activity.count(),
+            prisma.activity.count({
+                where: { createdAt: { gte: last7d } }
+            }),
+            prisma.session.count(),
+            prisma.session.count({
+                where: { expires: { gt: now } }
+            })
+        ]);
+
+        // Get last sync info
+        const lastSync = await prisma.user.findFirst({
+            where: { lastSyncAt: { not: null } },
+            orderBy: { lastSyncAt: 'desc' },
+            select: { lastSyncAt: true }
+        });
+
+        // Get backup info
+        let backupCount = 0;
+        let lastBackupAt: string | null = null;
+        const backupsDir = path.join(process.cwd(), 'backups');
+
+        if (fs.existsSync(backupsDir)) {
+            const files = fs.readdirSync(backupsDir)
+                .filter(f => f.endsWith('.sql.gz') || f.endsWith('.sql'))
+                .map(f => ({
+                    name: f,
+                    time: fs.statSync(path.join(backupsDir, f)).mtime
+                }))
+                .sort((a, b) => b.time.getTime() - a.time.getTime());
+
+            backupCount = files.length;
+            if (files.length > 0) {
+                lastBackupAt = files[0].time.toISOString();
+            }
+        }
+
+        return NextResponse.json({
+            users: {
+                total: totalUsers,
+                newToday: newUsersToday,
+            },
+            activities: {
+                total: totalActivities,
+                last7Days: activitiesLast7d,
+            },
+            sessions: {
+                total: totalSessions,
+                active: activeSessions,
+            },
+            sync: {
+                lastSyncAt: lastSync?.lastSyncAt?.toISOString() ?? null,
+            },
+            backups: {
+                count: backupCount,
+                lastBackupAt,
+            },
+            timestamp: now.toISOString(),
+        });
+
+    } catch (error) {
+        console.error('[Admin Stats] Error:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch statistics' },
+            { status: 500 }
+        );
+    }
+}

@@ -35,7 +35,7 @@ function DashboardContent() {
     const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     // Fetch data
-    const fetchAllData = async () => {
+    const fetchAllData = React.useCallback(async () => {
         try {
             setLoading(true);
             const [statsRes, usersRes, backupsRes] = await Promise.all([
@@ -63,11 +63,11 @@ function DashboardContent() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [router]);
 
     useEffect(() => {
         fetchAllData();
-    }, []);
+    }, [fetchAllData]);
 
     const handleDeleteUser = async (userId: string) => {
         if (!confirm('Are you sure you want to delete this user? This action CANNOT be undone.')) return;
@@ -252,6 +252,7 @@ function DashboardContent() {
                                                     <div className="flex items-center">
                                                         <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
                                                             {user.image ? (
+
                                                                 <img src={user.image} alt="" className="w-full h-full object-cover" />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -393,3 +394,4 @@ export default function AdminDashboard() {
         </Suspense>
     );
 }
+

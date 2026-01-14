@@ -225,7 +225,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     {/* Description if available */}
                     {activity.description && (
                         <div className="mb-8 bg-background-tertiary rounded-xl p-4 border border-glass-border">
-                            <p className="text-foreground italic">"{activity.description}"</p>
+                            <p className="text-foreground italic">&quot;{activity.description}&quot;</p>
                         </div>
                     )}
 

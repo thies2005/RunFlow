@@ -226,7 +226,7 @@ export default function PlanSetupForm({
                 setCalibrationFactor(1.0);
             }
         }
-    }, [calibrationDistance, effectiveVO2max, shapePercent, calibrationMode, selectedActivityId]);
+    }, [calibrationDistance, effectiveVO2max, shapePercent, calibrationMode, selectedActivityId, hours, minutes, seconds]);
 
     // Auto-fill time when activity is selected (Activity Mode)
     useEffect(() => {

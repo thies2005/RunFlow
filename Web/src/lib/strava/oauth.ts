@@ -22,7 +22,7 @@ export const authOptions: AuthOptions = {
         }),
     ],
     callbacks: {
-        async signIn({ user, account }) {
+        async signIn({ user, account }: { user: any, account: any }) {
             // Fix: Strava Provider returns 'athlete' object which breaks PrismaAdapter
             // We must remove it before NextAuth tries to save the account
             if (account && 'athlete' in account) {
@@ -39,7 +39,7 @@ export const authOptions: AuthOptions = {
 
             return true;
         },
-        async session({ session, user }) {
+        async session({ session, user }: { session: any, user: any }) {
             // Ensure user ID is always set
             if (session.user && user) {
                 session.user.id = user.id;
@@ -146,16 +146,4 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
     return data.access_token;
 }
 
-// Extend NextAuth types
-declare module 'next-auth' {
-    interface Session {
-        user: {
-            id: string;
-            name?: string | null;
-            email?: string | null;
-            image?: string | null;
-            hasStrava: boolean;
-            lastSyncAt: string | null;
-        };
-    }
-}
+

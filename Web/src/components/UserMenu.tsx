@@ -29,6 +29,7 @@ export function UserMenu({ onOpenProfile }: { onOpenProfile: () => void }) {
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-hover transition-colors border border-transparent hover:border-glass-border"
             >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src={session.user.image || ''}
                     alt={session.user.name || 'User'}
@@ -68,8 +69,8 @@ export function UserMenu({ onOpenProfile }: { onOpenProfile: () => void }) {
                                         key={t.id}
                                         onClick={() => setTheme(t.id)}
                                         className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs transition-all ${theme === t.id
-                                                ? 'bg-background shadow-sm text-foreground'
-                                                : 'text-foreground-muted hover:text-foreground hover:bg-surface-hover'
+                                            ? 'bg-background shadow-sm text-foreground'
+                                            : 'text-foreground-muted hover:text-foreground hover:bg-surface-hover'
                                             }`}
                                     >
                                         <t.icon className="w-3.5 h-3.5" />

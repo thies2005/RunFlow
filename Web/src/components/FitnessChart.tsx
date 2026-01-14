@@ -82,7 +82,7 @@ function FitnessChart({ data, isLoading }: FitnessChartProps) {
             ...d,
             dateFormatted: format(new Date(d.date), 'MMM d'),
         }));
-    }, [data.map(d => `${d.date}:${d.ctl}:${d.atl}:${d.tsb}`).join(',')]);
+    }, [data]);
 
     if (isLoading) {
         return (

@@ -19,11 +19,6 @@ export default function AdminLayout({
     const router = useRouter();
     const pathname = usePathname();
 
-    // Skip layout for login page
-    if (pathname === '/admin/login') {
-        return <>{children}</>;
-    }
-
     // Client-side auth check
     useEffect(() => {
         // Simple check for cookie existence not possible in client (httpOnly)
@@ -31,6 +26,11 @@ export default function AdminLayout({
         // Or we can check if we have seen a successful login recently?
         // Better: let the page load, fetches will fail if not auth'd.
     }, []);
+
+    // Skip layout for login page
+    if (pathname === '/admin/login') {
+        return <>{children}</>;
+    }
 
     const navItems = [
         { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },

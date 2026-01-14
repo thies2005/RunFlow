@@ -450,7 +450,7 @@ private fun VDOTCorrectionContent(
                                 .padding(8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Race VDOT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Effective VO2max", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(String.format("%.1f", raceVdot), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         }
                         

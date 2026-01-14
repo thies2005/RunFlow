@@ -11,12 +11,30 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 
-// JWT configuration
-const JWT_SECRET = new TextEncoder().encode(
-    process.env.JWT_SECRET || 'development-secret-change-in-production-min-32-chars'
-);
+// JWT configuration - uses lazy initialization to avoid build-time errors
+let _jwtSecret: Uint8Array | null = null;
+
+function getJwtSecret(): Uint8Array {
+    if (_jwtSecret) return _jwtSecret;
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret && process.env.NODE_ENV === 'production') {
+        throw new Error(
+            '[SECURITY] JWT_SECRET environment variable is required in production. ' +
+            'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"'
+        );
+    }
+
+    _jwtSecret = new TextEncoder().encode(
+        secret || 'development-secret-change-in-production-min-32-chars'
+    );
+    return _jwtSecret;
+}
+
 const JWT_ISSUER = 'runflow';
 const JWT_AUDIENCE = 'runflow-mobile';
+
+
 
 // Token expiry durations
 const ACCESS_TOKEN_EXPIRY = process.env.JWT_ACCESS_EXPIRY || '24h';
@@ -51,7 +69,7 @@ export async function signAccessToken(userId: string): Promise<string> {
         .setAudience(JWT_AUDIENCE)
         .setIssuedAt()
         .setExpirationTime(ACCESS_TOKEN_EXPIRY)
-        .sign(JWT_SECRET);
+        .sign(getJwtSecret());
 }
 
 /**
@@ -64,7 +82,7 @@ export async function signRefreshToken(userId: string): Promise<string> {
         .setAudience(JWT_AUDIENCE)
         .setIssuedAt()
         .setExpirationTime(REFRESH_TOKEN_EXPIRY)
-        .sign(JWT_SECRET);
+        .sign(getJwtSecret());
 }
 
 /**
@@ -73,7 +91,7 @@ export async function signRefreshToken(userId: string): Promise<string> {
  */
 export async function verifyJWT(token: string): Promise<RunFlowJWTPayload | null> {
     try {
-        const { payload } = await jwtVerify(token, JWT_SECRET, {
+        const { payload } = await jwtVerify(token, getJwtSecret(), {
             issuer: JWT_ISSUER,
             audience: JWT_AUDIENCE,
         });

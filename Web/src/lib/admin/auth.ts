@@ -9,12 +9,29 @@ import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
-// JWT configuration
-const JWT_SECRET = new TextEncoder().encode(
-    process.env.JWT_SECRET || 'development-secret-change-in-production-min-32-chars'
-);
+// JWT configuration - uses lazy initialization to avoid build-time errors
+let _jwtSecret: Uint8Array | null = null;
+
+function getJwtSecret(): Uint8Array {
+    if (_jwtSecret) return _jwtSecret;
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret && process.env.NODE_ENV === 'production') {
+        throw new Error(
+            '[SECURITY] JWT_SECRET environment variable is required in production. ' +
+            'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"'
+        );
+    }
+
+    _jwtSecret = new TextEncoder().encode(
+        secret || 'development-secret-change-in-production-min-32-chars'
+    );
+    return _jwtSecret;
+}
+
 const JWT_ISSUER = 'runflow-admin';
 const JWT_AUDIENCE = 'runflow-admin';
+
 const ADMIN_TOKEN_EXPIRY = '24h';
 const ADMIN_COOKIE_NAME = 'runflow_admin_token';
 
@@ -58,7 +75,7 @@ export async function signAdminToken(username: string): Promise<string> {
         .setAudience(JWT_AUDIENCE)
         .setIssuedAt()
         .setExpirationTime(ADMIN_TOKEN_EXPIRY)
-        .sign(JWT_SECRET);
+        .sign(getJwtSecret());
 }
 
 /**
@@ -66,7 +83,7 @@ export async function signAdminToken(username: string): Promise<string> {
  */
 export async function verifyAdminToken(token: string): Promise<AdminJWTPayload | null> {
     try {
-        const { payload } = await jwtVerify(token, JWT_SECRET, {
+        const { payload } = await jwtVerify(token, getJwtSecret(), {
             issuer: JWT_ISSUER,
             audience: JWT_AUDIENCE,
         });

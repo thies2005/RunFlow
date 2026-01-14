@@ -316,3 +316,34 @@ export function rateLimitHeaders(result: RateLimitResult): Record<string, string
         'X-RateLimit-Reset': result.resetAt.toString(),
     };
 }
+
+/**
+ * Higher-order function for rate-limited API handlers
+ * 
+ * Reduces boilerplate by handling rate limit checking automatically.
+ * 
+ * @example
+ * ```ts
+ * export const GET = withRateLimit(RATE_LIMITS.general, async (request, rateLimitResult) => {
+ *     // Your handler logic here
+ *     return NextResponse.json({ data }, { headers: rateLimitHeaders(rateLimitResult) });
+ * });
+ * ```
+ */
+export function withRateLimit<T>(
+    config: RateLimitConfig,
+    handler: (request: Request, rateLimitResult: RateLimitResult) => Promise<Response>
+): (request: Request) => Promise<Response> {
+    return async (request: Request): Promise<Response> => {
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = await checkRateLimitAsync(clientId, config);
+
+        if (!rateLimitResult.allowed) {
+            // Import errorResponses lazily to avoid circular dependencies
+            const { errorResponses } = await import('@/lib/api/apiResponse');
+            return errorResponses.rateLimited(rateLimitResult.retryAfter);
+        }
+
+        return handler(request, rateLimitResult);
+    };
+}

@@ -49,10 +49,20 @@ export async function POST(request: NextRequest) {
         const result = await syncUserActivities(user.id, range);
         console.log(`[Mobile API] Sync complete for user ${user.id}:`, result);
 
+        // Get updated sync status for response
+        const updatedStatus = await getSyncStatus(user.id);
+
         return NextResponse.json({
             success: true,
-            ...result,
+            // Android QuickSyncResponse compatibility
+            syncStarted: true,
+            activitiesSynced: result.synced || 0,
+            lastSyncAt: updatedStatus.lastSyncAt?.toISOString() || null,
+            // Original fields for backward compatibility
+            synced: result.synced,
+            skipped: result.skipped,
         }, { headers: rateLimitHeaders(rateLimitResult) });
+
 
     } catch (error) {
         return handleApiError(error, {

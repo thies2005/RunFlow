@@ -16,18 +16,35 @@ data class Goal(
     val weeklyMileageGoal: Float?,
     val planWeeks: Int,
     val runsPerWeek: Int,
+    // Cross-training settings
+    val ridesPerWeek: Int = 0,
+    val strengthPerWeek: Int = 0,
+    val swimsPerWeek: Int = 0,
+    // Phase customization
+    val taperWeeks: Int = 2,
+    val peakWeeks: Int = 4,
+    val buildWeeks: Int = 4,
+    // Day preferences
     val longRunDay: Int = 0,
+    val workoutDay: Int = 3,
+    val restDays: List<Int> = listOf(1, 5),
+    // Legacy day fields (kept for backward compatibility)
     val easyDay1: Int = 1,
     val easyDay2: Int = 3,
     val tempoDay: Int = 2,
     val intervalDay: Int = 4,
     val restDay: Int = 6,
+    // Marathon shape factor
+    val marathonShapeFactor: Float = 1.0f,
+    // Status
     val isActive: Boolean,
     val isCompleted: Boolean = false,
-    val workouts: List<Workout>,
+    val completedAt: String? = null,
+    val workouts: List<Workout> = emptyList(),
     val createdAt: String,
     val updatedAt: String
 )
+
 
 /**
  * Race distance types.

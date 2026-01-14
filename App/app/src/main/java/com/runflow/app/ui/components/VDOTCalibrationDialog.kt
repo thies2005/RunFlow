@@ -151,8 +151,14 @@ fun VDOTCalibrationDialog(
                             
                             onApplyCalibration(
                                 factor ?: currentCorrectionFactor,
-                                if (selectedTab == 0 && timeSeconds > 0) timeSeconds else null,
-                                if (selectedTab == 0) distance else null
+                                if (selectedTab == 0) {
+                                    if (selectedActivity != null) selectedActivity!!.movingTime
+                                    else if (timeSeconds > 0) timeSeconds else null
+                                } else null,
+                                if (selectedTab == 0) {
+                                    if (selectedActivity != null) selectedActivity!!.distance.toString()
+                                    else distance
+                                } else null
                             )
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -232,7 +238,15 @@ private fun VDOTCorrectionContent(
                 value = selectedActivity?.name ?: "Select an activity...",
                 onValueChange = {},
                 readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(activityDropdownExpanded) },
+                trailingIcon = { 
+                    if (selectedActivity != null) {
+                        IconButton(onClick = { onActivitySelected(null) }) {
+                            Icon(Icons.Default.Clear, "Clear selection")
+                        }
+                    } else {
+                        ExposedDropdownMenuDefaults.TrailingIcon(activityDropdownExpanded) 
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor()
@@ -244,7 +258,7 @@ private fun VDOTCorrectionContent(
                 // Filter RUN activities - be more lenient, just require type RUN
                 val runActivities = recentActivities.filter { 
                     it.type.name.uppercase().contains("RUN")
-                }.take(15)
+                }.take(50)
                 
                 if (runActivities.isEmpty()) {
                     DropdownMenuItem(
@@ -275,14 +289,8 @@ private fun VDOTCorrectionContent(
                                     )
                                 }
                             },
-                            onClick = {
                                 onActivitySelected(activity)
                                 onActivityDropdownChange(false)
-                                // Auto-fill time from activity
-                                val totalSeconds = activity.movingTime
-                                onHoursChange((totalSeconds / 3600).toString())
-                                onMinutesChange(((totalSeconds % 3600) / 60).toString())
-                                onSecondsChange((totalSeconds % 60).toString())
                             }
                         )
                     }
@@ -290,68 +298,70 @@ private fun VDOTCorrectionContent(
             }
         }
         
-        // Distance selector
-        Text(
-            "Distance",
-            style = MaterialTheme.typography.labelMedium
-        )
-        
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ExposedDropdownMenuBox(
-                expanded = distanceDropdownExpanded,
-                onExpandedChange = onDistanceDropdownChange,
-                modifier = Modifier.weight(1f)
-            ) {
-                OutlinedTextField(
-                    value = selectedDistance,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(distanceDropdownExpanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-                ExposedDropdownMenu(
+        if (selectedActivity == null) {
+            // Distance selector
+            Text(
+                "Distance",
+                style = MaterialTheme.typography.labelMedium
+            )
+            
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ExposedDropdownMenuBox(
                     expanded = distanceDropdownExpanded,
-                    onDismissRequest = { onDistanceDropdownChange(false) }
+                    onExpandedChange = onDistanceDropdownChange,
+                    modifier = Modifier.weight(1f)
                 ) {
-                    (distances + "Custom").forEach { dist ->
-                        DropdownMenuItem(
-                            text = { Text(dist) },
-                            onClick = {
-                                onDistanceSelected(dist)
-                                onDistanceDropdownChange(false)
-                            }
-                        )
+                    OutlinedTextField(
+                        value = selectedDistance,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(distanceDropdownExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = distanceDropdownExpanded,
+                        onDismissRequest = { onDistanceDropdownChange(false) }
+                    ) {
+                        (distances + "Custom").forEach { dist ->
+                            DropdownMenuItem(
+                                text = { Text(dist) },
+                                onClick = {
+                                    onDistanceSelected(dist)
+                                    onDistanceDropdownChange(false)
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                if (showCustomDistance) {
+                    OutlinedTextField(
+                        value = customDistance,
+                        onValueChange = onCustomDistanceChange,
+                        placeholder = { Text("meters") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    TextButton(onClick = { onDistanceSelected("Custom") }) {
+                        Text("Custom")
                     }
                 }
             }
             
-            if (showCustomDistance) {
-                OutlinedTextField(
-                    value = customDistance,
-                    onValueChange = onCustomDistanceChange,
-                    placeholder = { Text("meters") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f)
-                )
-            } else {
-                TextButton(onClick = { onDistanceSelected("Custom") }) {
-                    Text("Custom")
-                }
+            // Time input
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TimeInputField(value = hours, onValueChange = onHoursChange, placeholder = "HH")
+                Text(":", fontWeight = FontWeight.Bold)
+                TimeInputField(value = minutes, onValueChange = onMinutesChange, placeholder = "MM")
+                Text(":", fontWeight = FontWeight.Bold)
+                TimeInputField(value = seconds, onValueChange = onSecondsChange, placeholder = "SS")
             }
-        }
-        
-        // Time input
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TimeInputField(value = hours, onValueChange = onHoursChange, placeholder = "HH")
-            Text(":", fontWeight = FontWeight.Bold)
-            TimeInputField(value = minutes, onValueChange = onMinutesChange, placeholder = "MM")
-            Text(":", fontWeight = FontWeight.Bold)
-            TimeInputField(value = seconds, onValueChange = onSecondsChange, placeholder = "SS")
         }
     }
 }

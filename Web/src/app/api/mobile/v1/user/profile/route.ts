@@ -3,6 +3,7 @@
  * 
  * GET /api/mobile/v1/user/profile - Get user profile
  * PUT /api/mobile/v1/user/profile - Update user profile
+ * PATCH /api/mobile/v1/user/profile - Update user profile (Alias for PUT)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -165,4 +166,9 @@ export async function PUT(request: NextRequest) {
             path: '/api/mobile/v1/user/profile'
         });
     }
+}
+
+// Alias PATCH to PUT since they perform the same update logic here
+export async function PATCH(request: NextRequest) {
+    return PUT(request);
 }

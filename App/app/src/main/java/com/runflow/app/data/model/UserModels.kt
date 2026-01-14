@@ -1,5 +1,6 @@
 package com.runflow.app.data.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -46,6 +47,7 @@ data class UpdateProfileRequest(
     val hrZone4Max: Int? = null,
     val hrZone5Max: Int? = null,
     val hrZone6Max: Int? = null,
+    @SerialName("thresholdHeartRate")
     val thresholdHr: Int? = null,
     val thresholdPace: Int? = null,
     val vdotCorrectionFactor: Float? = null

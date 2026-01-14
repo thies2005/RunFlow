@@ -98,6 +98,10 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
+    // Security (EncryptedSharedPreferences)
+    implementation(libs.androidx.security.crypto)
+
+
     // Navigation
     implementation(libs.androidx.navigation.compose)
 

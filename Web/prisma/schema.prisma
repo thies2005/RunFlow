@@ -307,6 +307,7 @@ model Workout {
   updatedAt DateTime @updatedAt
 
   @@index([goalId, scheduledDate])
+  @@index([goalId, isCompleted])
 }
 
 enum WorkoutType {

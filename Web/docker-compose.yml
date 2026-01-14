@@ -21,10 +21,21 @@
         condition: service_healthy
       migrator:
         condition: service_completed_successfully
+      permissions-fixer:
+        condition: service_completed_successfully
     networks:
       - runflow-network
     volumes:
       - ./backups:/app/backups
+
+  permissions-fixer:
+    image: alpine:latest
+    container_name: runflow-permissions-fixer
+    command: sh -c "mkdir -p /backups && chown -R 1001:1001 /backups && chmod -R 775 /backups"
+    volumes:
+      - ./backups:/backups
+    networks:
+      - runflow-network
 
   migrator:
     build:

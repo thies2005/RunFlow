@@ -7,7 +7,7 @@
 
 import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import crypto from 'crypto';
 
 // JWT configuration
 const JWT_SECRET = new TextEncoder().encode(
@@ -36,10 +36,16 @@ export function verifyAdminCredentials(username: string, password: string): bool
     }
 
     // Constant-time comparison to prevent timing attacks
-    const usernameMatch = username === adminUsername;
-    const passwordMatch = password === adminPassword;
+    const safeCompare = (a: string, b: string) => {
+        const bufA = Buffer.from(a);
+        const bufB = Buffer.from(b);
+        return bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);
+    };
 
-    return usernameMatch && passwordMatch;
+    const usernameValid = safeCompare(username, adminUsername);
+    const passwordValid = safeCompare(password, adminPassword);
+
+    return usernameValid && passwordValid;
 }
 
 /**

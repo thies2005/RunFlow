@@ -338,7 +338,7 @@ fun WeeklyStatsCard(
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
-                    text = "${String.format("%.1f", mileage)} km",
+                    text = "${String.format(java.util.Locale.US, "%.1f", mileage)} km",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -403,7 +403,7 @@ fun ShapeCard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "${String.format("%.0f", shapeLevel)}%",
+                    text = "${String.format(java.util.Locale.US, "%.0f", shapeLevel)}%",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface 
@@ -441,7 +441,7 @@ fun CompactVO2maxCard(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.ShowChart, // Or Activity like icon
+                    imageVector = Icons.AutoMirrored.Filled.ShowChart, // Or Activity like icon
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSecondary,
                     modifier = Modifier.size(24.dp)
@@ -456,7 +456,7 @@ fun CompactVO2maxCard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = String.format("%.1f", vo2max),
+                    text = String.format(java.util.Locale.US, "%.1f", vo2max),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface

@@ -209,7 +209,7 @@ fun PlanContent(
                         onMoveWorkout = onMoveWorkout,
                         onActivityClick = onActivityClick
                     )
-                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
             }
             
@@ -250,7 +250,7 @@ fun WeekHeaderRow(
         ) {
             if (showNav) {
                 IconButton(onClick = onPreviousWeek) {
-                    Icon(Icons.Default.ChevronLeft, "Previous")
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Previous")
                 }
             }
             
@@ -273,7 +273,7 @@ fun WeekHeaderRow(
 
             if (showNav) {
                 IconButton(onClick = onNextWeek) {
-                    Icon(Icons.Default.ChevronRight, "Next")
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Next")
                 }
             }
         }
@@ -336,7 +336,7 @@ fun DayPlanSection(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (items.isEmpty()) {
-                 Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(top = 12.dp))
+                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(top = 12.dp))
             } else {
                 items.forEach { item ->
                     when (item) {
@@ -480,7 +480,7 @@ fun PlannedWorkoutCard(
                  val safeProgress = if (progress.isNaN()) 0f else progress
                  
                  LinearProgressIndicator(
-                     progress = safeProgress,
+                     progress = { safeProgress },
                      modifier = Modifier.fillMaxWidth().height(2.dp),
                      color = if (safeProgress >= 1f) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
                      trackColor = Color.Transparent
@@ -508,7 +508,7 @@ fun UnlinkedActivityCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
              Icon(
-                imageVector = Icons.Default.DirectionsRun,
+                imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp)
@@ -605,7 +605,7 @@ fun GoalSelector(
 
 private fun formatDistance(distanceMeters: Float): String {
     return if (distanceMeters >= 1000) {
-        String.format("%.1fkm", distanceMeters / 1000f)
+        String.format(java.util.Locale.US, "%.1fkm", distanceMeters / 1000f)
     } else {
         "${distanceMeters.toInt()}m"
     }

@@ -7,6 +7,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.outlined.DirectionsRun
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -30,7 +32,7 @@ enum class MainNavItem(
     val route: String
 ) {
     HOME("Home", Icons.Filled.Home, Icons.Outlined.Home, Screen.Dashboard.route),
-    ACTIVITIES("Activities", Icons.Filled.DirectionsRun, Icons.Outlined.DirectionsRun, Screen.Activities.route),
+    ACTIVITIES("Activities", Icons.AutoMirrored.Filled.DirectionsRun, Icons.AutoMirrored.Outlined.DirectionsRun, Screen.Activities.route),
     PLAN("Plan", Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth, Screen.Plan.route),
     ANALYTICS("Analytics", Icons.Filled.Analytics, Icons.Outlined.Analytics, Screen.Analytics.route)
 }

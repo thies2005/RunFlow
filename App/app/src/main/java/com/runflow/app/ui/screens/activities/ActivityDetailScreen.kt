@@ -293,7 +293,7 @@ fun HeartRateSection(activity: Activity) {
                 val totalTime = (z1 + z2 + z3 + z4 + z5 + z6 + z7).toFloat()
                 
                 if (totalTime > 0) {
-                    Divider(color = Color.Transparent, thickness = 8.dp) // Spacer
+                    Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -346,14 +346,14 @@ fun PerformanceMetrics(activity: Activity) {
                     StatItem(
                         icon = Icons.Default.EmojiEvents,
                         label = "VDOT",
-                        value = String.format("%.1f", activity.estimatedVdot)
+                        value = String.format(java.util.Locale.US, "%.1f", activity.estimatedVdot)
                     )
                 }
                 if (activity.trimp != null) {
                     StatItem(
                         icon = Icons.Default.FitnessCenter,
                         label = "TRIMP",
-                        value = String.format("%.0f", activity.trimp)
+                        value = String.format(java.util.Locale.US, "%.0f", activity.trimp)
                     )
                 }
             }

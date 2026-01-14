@@ -60,6 +60,10 @@ fun ProfileScreen(
             is ProfileUiState.Success -> {
                 ProfileContent(
                     profile = state.profile,
+                    onLogout = { viewModel.logout() },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                     recentActivities = state.recentActivities,
                     onSave = { name, sex, birthDate, hrMax, hrRest, weight, height,
                                 hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
@@ -67,11 +71,7 @@ fun ProfileScreen(
                         viewModel.updateProfile(name, sex, birthDate, hrMax, hrRest, weight, height,
                             hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
                             thresholdHr, thresholdPace, vdotCorrection)
-                    },
-                    onLogout = { viewModel.logout() },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
+                    }
                 )
             }
             is ProfileUiState.Saving -> {
@@ -120,15 +120,15 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     profile: com.runflow.app.data.model.UserProfile,
+    onLogout: () -> Unit,
+    modifier: Modifier = Modifier,
     recentActivities: List<com.runflow.app.data.model.Activity> = emptyList(),
     onSave: (
         name: String?, sex: Sex?, birthDate: String?, hrMax: Int?, hrRest: Int?,
         weight: Float?, height: Float?, hrZone1Max: Int?, hrZone2Max: Int?,
         hrZone3Max: Int?, hrZone4Max: Int?, hrZone5Max: Int?, hrZone6Max: Int?,
         thresholdHr: Int?, thresholdPace: Int?, vdotCorrection: Float?
-    ) -> Unit,
-    onLogout: () -> Unit,
-    modifier: Modifier = Modifier
+    ) -> Unit
 ) {
     var name by remember { mutableStateOf(profile.name ?: "") }
     var sex by remember { mutableStateOf(profile.sex) }
@@ -272,7 +272,7 @@ fun ProfileContent(
             )
             
             Spacer(modifier = Modifier.height(8.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
@@ -402,7 +402,7 @@ fun ProfileContent(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Correction Factor: ${String.format("%.2f", vdotCorrection.toFloatOrNull() ?: 1f)}",
+                        text = "Correction Factor: ${String.format(java.util.Locale.US, "%.2f", vdotCorrection.toFloatOrNull() ?: 1f)}",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
@@ -500,7 +500,7 @@ fun ProfileContent(
             currentCorrectionFactor = vdotCorrection.toFloatOrNull() ?: 1f,
             thresholdPace = ((thresholdPaceMin.toIntOrNull() ?: 0) * 60) + (thresholdPaceSec.toIntOrNull() ?: 0),
             onDismiss = { showCalibrationDialog = false },
-            onApplyCalibration = { factor, calibrationTime, calibrationDistance ->
+            onApplyCalibration = { factor, _, _ ->
                 vdotCorrection = factor.toString()
                 showCalibrationDialog = false
                 // Could call API to update correction factor

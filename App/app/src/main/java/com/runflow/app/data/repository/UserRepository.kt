@@ -59,6 +59,7 @@ class UserRepository @Inject constructor(
         return if (result is ApiResult.Success) {
             ApiResult.Success(result.data.user)
         } else {
+            @Suppress("UNCHECKED_CAST")
             result as ApiResult<UserProfile>
         }
     }
@@ -76,6 +77,7 @@ class UserRepository @Inject constructor(
             cacheProfile(result.data.user)
             ApiResult.Success(result.data.user)
         } else {
+            @Suppress("UNCHECKED_CAST")
             result as ApiResult<UserProfile>
         }
     }
@@ -90,6 +92,7 @@ class UserRepository @Inject constructor(
             cacheProfile(result.data.user)
             ApiResult.Success(result.data.user)
         } else {
+            @Suppress("UNCHECKED_CAST")
             result as ApiResult<UserProfile>
         }
     }

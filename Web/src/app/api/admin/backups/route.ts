@@ -184,6 +184,17 @@ export async function POST(request: NextRequest) {
                     message: `Database restored from ${backupName}`,
                 });
             } catch (execError: any) {
+                // pg_restore exit code 1 means "completed with warnings"
+                // This often happens with version mismatches (e.g. ignoring transaction_timeout)
+                // We should treat this as success but log the warning
+                if (execError.code === 1) {
+                    console.warn('[Admin Backups] pg_restore completed with warnings:', execError.stderr);
+                    return NextResponse.json({
+                        success: true,
+                        message: `Database restored from ${backupName} (with warnings)`,
+                    });
+                }
+
                 console.error('[Admin Backups] Restore failed:', execError);
                 return NextResponse.json(
                     { error: 'Restore failed. Check backup file format.', details: execError.message },

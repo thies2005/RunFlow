@@ -29,7 +29,7 @@ fun WorkloadBalanceCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1E1E1E) // Darker background for contrast
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -53,7 +53,7 @@ fun WorkloadBalanceCard(
                     Text(
                         text = "WORKLOAD BALANCE",
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color.LightGray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -180,7 +180,7 @@ fun WorkloadBalanceCard(
                 Text(
                     text = String.format("%.2f", workloadRatio),
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold
                 )
             }

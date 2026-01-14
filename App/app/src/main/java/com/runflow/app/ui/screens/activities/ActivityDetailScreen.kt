@@ -293,34 +293,82 @@ fun HeartRateSection(activity: Activity) {
                 val totalTime = (z1 + z2 + z3 + z4 + z5 + z6 + z7).toFloat()
                 
                 if (totalTime > 0) {
+                    // Build list of zones with data
+                    data class ZoneData(val name: String, val time: Int, val color: Color)
+                    val zones = listOfNotNull(
+                        if (z1 > 0) ZoneData("Z1", z1, Color(0xFF4CAF50)) else null,
+                        if (z2 > 0) ZoneData("Z2", z2, Color(0xFFCDDC39)) else null,
+                        if (z3 > 0) ZoneData("Z3", z3, Color(0xFFFFC107)) else null,
+                        if (z4 > 0) ZoneData("Z4", z4, Color(0xFFFF9800)) else null,
+                        if (z5 > 0) ZoneData("Z5", z5, Color(0xFFF44336)) else null,
+                        if (z6 > 0) ZoneData("Z6", z6, Color(0xFF3F51B5)) else null,
+                        if (z7 > 0) ZoneData("Z7", z7, Color(0xFF673AB7)) else null
+                    )
+                    
                     Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Horizontal bar with zone labels inside
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(30.dp)
+                            .height(36.dp)
                             .clip(RoundedCornerShape(8.dp))
                     ) {
-                        if (z1 > 0) Box(modifier = Modifier.weight(z1 / totalTime).fillMaxHeight().background(Color(0xFF4CAF50)))
-                        if (z2 > 0) Box(modifier = Modifier.weight(z2 / totalTime).fillMaxHeight().background(Color(0xFFCDDC39)))
-                        if (z3 > 0) Box(modifier = Modifier.weight(z3 / totalTime).fillMaxHeight().background(Color(0xFFFFC107)))
-                        if (z4 > 0) Box(modifier = Modifier.weight(z4 / totalTime).fillMaxHeight().background(Color(0xFFFF9800)))
-                        if (z5 > 0) Box(modifier = Modifier.weight(z5 / totalTime).fillMaxHeight().background(Color(0xFFF44336)))
-                        if (z6 > 0) Box(modifier = Modifier.weight(z6 / totalTime).fillMaxHeight().background(Color(0xFF3F51B5)))
-                        if (z7 > 0) Box(modifier = Modifier.weight(z7 / totalTime).fillMaxHeight().background(Color(0xFF673AB7)))
+                        zones.forEach { zone ->
+                            val weight = zone.time / totalTime
+                            Box(
+                                modifier = Modifier
+                                    .weight(weight)
+                                    .fillMaxHeight()
+                                    .background(zone.color),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                // Only show label if zone is wide enough
+                                if (weight >= 0.08f) {
+                                    Text(
+                                        text = zone.name,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
                     }
                     
-                    // Legend
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Z1", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Z2", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Z3", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Z4", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Z5", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Z6", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Z7", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    // Zone breakdown - only show zones with data
+                    Spacer(modifier = Modifier.height(12.dp))
+                    zones.forEach { zone ->
+                        val percentage = (zone.time / totalTime * 100).toInt()
+                        val minutes = zone.time / 60
+                        val seconds = zone.time % 60
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(zone.color)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = zone.name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            Text(
+                                text = "${minutes}:${String.format(java.util.Locale.US, "%02d", seconds)} ($percentage%)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

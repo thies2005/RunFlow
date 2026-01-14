@@ -316,7 +316,8 @@ private fun VDOTCorrectionContent(
             )
             ExposedDropdownMenu(
                 expanded = activityDropdownExpanded,
-                onDismissRequest = { onActivityDropdownChange(false) }
+                onDismissRequest = { onActivityDropdownChange(false) },
+                modifier = Modifier.heightIn(max = 300.dp)
             ) {
                 // Filter RUN activities - be more lenient, just require type RUN
                 val runActivities = recentActivities.filter { 

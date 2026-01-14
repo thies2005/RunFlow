@@ -498,6 +498,7 @@ fun ProfileContent(
         com.runflow.app.ui.components.VDOTCalibrationDialog(
             recentActivities = recentActivities,
             currentCorrectionFactor = vdotCorrection.toFloatOrNull() ?: 1f,
+            thresholdPace = thresholdPace.toIntOrNull(),
             onDismiss = { showCalibrationDialog = false },
             onApplyCalibration = { factor, calibrationTime, calibrationDistance ->
                 vdotCorrection = factor.toString()

@@ -28,6 +28,7 @@ import com.runflow.app.data.model.Activity
 fun VDOTCalibrationDialog(
     recentActivities: List<Activity>,
     currentCorrectionFactor: Float,
+    thresholdPace: Int?,
     onDismiss: () -> Unit,
     onApplyCalibration: (correctionFactor: Float, calibrationTime: Int?, calibrationDistance: String?) -> Unit
 ) {
@@ -120,7 +121,9 @@ fun VDOTCalibrationDialog(
                         onHoursChange = { hours = it },
                         onMinutesChange = { minutes = it },
                         onSecondsChange = { seconds = it },
-                        distances = distances
+                        distances = distances,
+                        currentCorrectionFactor = currentCorrectionFactor,
+                        thresholdPace = thresholdPace
                     )
                     1 -> ShapeFactorContent()
                     2 -> ManualContent(
@@ -147,10 +150,35 @@ fun VDOTCalibrationDialog(
                                     (seconds.toIntOrNull() ?: 0)
                             
                             val distance = if (showCustomDistance) customDistance else selectedDistance
-                            val factor = if (selectedTab == 2) manualFactor.toFloatOrNull() ?: 1f else null
+                            
+                            // Calculate proper factor if VDOT tab and valid
+                            val manualFactorVal = if (selectedTab == 2) manualFactor.toFloatOrNull() ?: 1f else null
+                            
+                            // Calculate implied factor for VDOT tab
+                            val vdotFactor = if (selectedTab == 0) {
+                                val distMeters = if (selectedActivity != null) selectedActivity!!.distance
+                                else if (showCustomDistance) customDistance.toFloatOrNull() ?: 0f
+                                else when (distance) {
+                                    "5K" -> 5000f
+                                    "10K" -> 10000f
+                                    "Half Marathon" -> 21097.5f
+                                    "Marathon" -> 42195f
+                                    else -> 0f
+                                }
+                                
+                                val durationSec = if (selectedActivity != null) selectedActivity!!.movingTime
+                                else timeSeconds
+                                
+                                if (distMeters > 0 && durationSec > 0 && thresholdPace != null && thresholdPace > 0) {
+                                    val raceVdot = calculateVdot(distMeters, durationSec)
+                                    val effectiveVdot = calculateEffectiveVdotFromPace(thresholdPace)
+                                    val baseVdot = effectiveVdot / currentCorrectionFactor
+                                    if (baseVdot > 0) raceVdot / baseVdot else null
+                                } else null
+                            } else null
                             
                             onApplyCalibration(
-                                factor ?: currentCorrectionFactor,
+                                vdotFactor ?: manualFactorVal ?: currentCorrectionFactor,
                                 if (selectedTab == 0) {
                                     if (selectedActivity != null) selectedActivity!!.movingTime
                                     else if (timeSeconds > 0) timeSeconds else null
@@ -194,8 +222,43 @@ private fun VDOTCorrectionContent(
     onHoursChange: (String) -> Unit,
     onMinutesChange: (String) -> Unit,
     onSecondsChange: (String) -> Unit,
-    distances: List<String>
+    distances: List<String>,
+    currentCorrectionFactor: Float,
+    thresholdPace: Int? // seconds per km
 ) {
+    // Calculate VDOT data
+    val vdotData = remember(selectedActivity, selectedDistance, customDistance, hours, minutes, seconds, thresholdPace, currentCorrectionFactor) {
+        val distMeters = if (selectedActivity != null) {
+            selectedActivity.distance
+        } else if (showCustomDistance) {
+            customDistance.toFloatOrNull() ?: 0f
+        } else {
+            when (selectedDistance) {
+                "5K" -> 5000f
+                "10K" -> 10000f
+                "Half Marathon" -> 21097.5f
+                "Marathon" -> 42195f
+                else -> 0f
+            }
+        }
+        
+        val durationSec = if (selectedActivity != null) {
+            selectedActivity.movingTime
+        } else {
+            (hours.toIntOrNull() ?: 0) * 3600 +
+            (minutes.toIntOrNull() ?: 0) * 60 +
+            (seconds.toIntOrNull() ?: 0)
+        }
+        
+        if (distMeters > 0 && durationSec > 0 && thresholdPace != null && thresholdPace > 0) {
+            val raceVdot = calculateVdot(distMeters, durationSec)
+            val effectiveVdot = calculateEffectiveVdotFromPace(thresholdPace)
+            val baseVdot = effectiveVdot / currentCorrectionFactor
+            val newFactor = if (baseVdot > 0) raceVdot / baseVdot else 0f
+            Triple(raceVdot, baseVdot, newFactor)
+        } else null
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // Info box
         Card(
@@ -364,7 +427,116 @@ private fun VDOTCorrectionContent(
                 TimeInputField(value = seconds, onValueChange = onSecondsChange, placeholder = "SS")
             }
         }
+        
+        // Results Visualization
+        if (vdotData != null) {
+            val (raceVdot, baseVdot, newFactor) = vdotData
+            val isFactorValid = newFactor in 0.5f..1.5f
+            
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            ) {
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Race VDOT
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
+                                .padding(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Race VDOT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(String.format("%.1f", raceVdot), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        }
+                        
+                        // Current VDOT
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
+                                .padding(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Current VDOT", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(String.format("%.1f", baseVdot), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        
+                        // Correction
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
+                                .padding(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("Correction", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                String.format("%.3fx", newFactor), 
+                                style = MaterialTheme.typography.titleMedium, 
+                                fontWeight = FontWeight.Bold,
+                                color = if (isFactorValid) Color(0xFF4CAF50) else Color(0xFFEF5350)
+                            )
+                        }
+                    }
+                    
+                    if (!isFactorValid) {
+                        Text(
+                            "Correction factor must be between 0.5x and 1.5x.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFFEF5350)
+                        )
+                    }
+                    
+                    Text(
+                        "Current correction: ${String.format("%.3fx", currentCorrectionFactor)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
     }
+}
+
+private fun calculateVdot(distanceMeters: Float, timeSeconds: Int): Float {
+    if (timeSeconds <= 0) return 0f
+    
+    val timeMinutes = timeSeconds / 60.0
+    val velocity = distanceMeters / timeMinutes
+    
+    // VO2 = -4.60 + 0.182258 * v + 0.000104 * v^2
+    val vo2 = -4.60 + 0.182258 * velocity + 0.000104 * (velocity * velocity)
+    
+    // Percent VO2max
+    val percentVo2Max = 0.8 + 
+        0.1894393 * kotlin.math.exp(-0.012778 * timeMinutes) + 
+        0.2989558 * kotlin.math.exp(-0.1932605 * timeMinutes)
+        
+    val vdot = vo2 / percentVo2Max
+    return kotlin.math.max(0.0, vdot).toFloat()
+}
+
+// Calculate Effective VDOT from Threshold Pace (which corresponds to ~88% VO2max)
+private fun calculateEffectiveVdotFromPace(paceSecondsPerKm: Int): Float {
+    if (paceSecondsPerKm <= 0) return 0f
+    
+    // Velocity in meters/min
+    val velocity = (1000.0 / paceSecondsPerKm) * 60.0
+    
+    // VO2 at this velocity
+    val vo2 = -4.60 + 0.182258 * velocity + 0.000104 * (velocity * velocity)
+    
+    // Threshold is ~88% of VO2max (Effective VDOT)
+    val vdot = vo2 / 0.88
+    
+    return kotlin.math.max(0.0, vdot).toFloat()
 }
 
 @Composable

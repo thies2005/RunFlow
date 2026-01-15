@@ -1,0 +1,19 @@
+  Γû▓ Next.js 14.2.35
+  - Environments: .env
+
+   Creating an optimized production build ...
+ Γ£ô (pwa) Compiling for server...
+ Γ£ô (pwa) Compiling for server...
+ Γ£ô (pwa) Compiling for client (static)...
+ Γùï (pwa) Service worker: C:\Users\thies\Antigravity\Full RunFlow\Web\public\sw.js
+ Γùï (pwa)   URL: /sw.js
+ Γùï (pwa)   Scope: /
+ Γùï (pwa) This app will fallback to these precached routes when fetching from the cache and the network fails:
+ Γùï (pwa)   Documents (pages): /~offline
+Failed to compile.
+
+Please check your GenerateSW plugin configuration:
+[WebpackGenerateSW] 'extendDefaultRuntimeCaching' property is not expected to be here. Did you mean property 'runtimeCaching'?
+
+
+> Build failed because of webpack errors

@@ -72,3 +72,8 @@ promt
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# PWA
+public/sw.js
+public/workbox-*.js
+public/swe-worker-*.js

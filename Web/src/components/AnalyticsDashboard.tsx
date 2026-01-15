@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    AreaChart, Area, LineChart, Line
+    AreaChart, Area, LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
 import { predictRaceTime, formatTime, formatPace } from '@/lib/metrics/vdot';
 import { Save, Check, BarChart2 } from 'lucide-react';
@@ -173,6 +173,95 @@ export default function AnalyticsDashboard({ currentVdot, initialThresholdHr, in
                     </div>
                 </div>
             </div>
+
+            {/* Time in Zones Pie Chart */}
+            {zoneTrend.length > 0 && (() => {
+                // Aggregate zone times from zoneTrend
+                const zoneTotals = zoneTrend.reduce((acc, week) => ({
+                    Z1: acc.Z1 + (week.Z1 || 0),
+                    Z2: acc.Z2 + (week.Z2 || 0),
+                    Z3: acc.Z3 + (week.Z3 || 0),
+                    Z4: acc.Z4 + (week.Z4 || 0),
+                    Z5: acc.Z5 + (week.Z5 || 0),
+                }), { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0 });
+
+                const total = zoneTotals.Z1 + zoneTotals.Z2 + zoneTotals.Z3 + zoneTotals.Z4 + zoneTotals.Z5;
+                if (total === 0) return null;
+
+                const pieData = [
+                    { name: 'Z1 Recovery', value: zoneTotals.Z1, color: '#10b981' },
+                    { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: '#84cc16' },
+                    { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308' },
+                    { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316' },
+                    { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444' },
+                ].filter(d => d.value > 0);
+
+                const formatZoneTime = (minutes: number) => {
+                    if (minutes >= 60) {
+                        const hours = Math.floor(minutes / 60);
+                        const mins = Math.round(minutes % 60);
+                        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                    }
+                    return `${Math.round(minutes)}m`;
+                };
+
+                return (
+                    <div className="glass-card p-6">
+                        <h3 className="text-lg font-semibold text-white mb-4">Time in Zones Distribution</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Pie Chart */}
+                            <div className="h-64">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={pieData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={50}
+                                            outerRadius={90}
+                                            paddingAngle={2}
+                                            dataKey="value"
+                                            label={({ name, percent }) => percent > 0.05 ? `${Math.round(percent * 100)}%` : ''}
+                                            labelLine={false}
+                                        >
+                                            {pieData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                            formatter={(value: number) => formatZoneTime(value)}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            {/* Legend & Breakdown */}
+                            <div className="flex flex-col justify-center space-y-2">
+                                {pieData.map((zone, i) => {
+                                    const pct = (zone.value / total) * 100;
+                                    return (
+                                        <div key={i} className="flex items-center justify-between p-2 hover:bg-white/5 rounded">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: zone.color }} />
+                                                <span className="text-gray-300 text-sm">{zone.name}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-white font-mono text-sm">{formatZoneTime(zone.value)}</span>
+                                                <span className="text-gray-500 text-xs w-12 text-right">{Math.round(pct)}%</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                <div className="border-t border-gray-700 pt-2 mt-2 flex justify-between">
+                                    <span className="text-gray-400 text-sm">Total</span>
+                                    <span className="text-white font-mono text-sm">{formatZoneTime(total)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

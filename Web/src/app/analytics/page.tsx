@@ -23,6 +23,10 @@ import {
     type ActivityForShape
 } from '@/lib/metrics/runalyze';
 import {
+    calculateTrimpFromZones,
+    FALLBACK_TRIMP_PER_MINUTE
+} from '@/lib/metrics/trimp';
+import {
     formatTime,
     calculateTrainingPaces,
     formatPace,
@@ -226,16 +230,32 @@ export default function AnalyticsPage() {
         let ctl = 0, atl = 0;
         const dailyLoads: Map<string, number> = new Map();
 
-        runs.forEach(run => {
-            const dateKey = new Date(run.startDate).toISOString().split('T')[0];
-            const trimp = run.movingTime / 60; // Simplified TRIMP
+        activities.forEach(activity => {
+            const dateKey = new Date(activity.startDate).toISOString().split('T')[0];
+
+            // Calculate TRIMP (Training Impulse)
+            // We merge Z5, Z6, Z7 into the highest zone for the 5-zone generic TRIMP formula
+            // This ensures high-intensity intervals are weighed heavily
+            let trimp = calculateTrimpFromZones(
+                activity.hrZone1Time,
+                activity.hrZone2Time,
+                activity.hrZone3Time,
+                activity.hrZone4Time,
+                (activity.hrZone5Time || 0) + (activity.hrZone6Time || 0) + (activity.hrZone7Time || 0)
+            );
+
+            // Fallback if no heart rate data: use duration * factor
+            if (trimp === 0 && activity.movingTime > 0) {
+                trimp = (activity.movingTime / 60) * FALLBACK_TRIMP_PER_MINUTE;
+            }
+
             dailyLoads.set(dateKey, (dailyLoads.get(dateKey) || 0) + trimp);
         });
 
-        const earliestRun = runs.length > 0
-            ? runs.reduce((min, r) => new Date(r.startDate) < new Date(min.startDate) ? r : min)
+        const earliestActivity = activities.length > 0
+            ? activities.reduce((min, a) => new Date(a.startDate) < new Date(min.startDate) ? a : min)
             : null;
-        const earliestDate = earliestRun ? new Date(earliestRun.startDate) : now;
+        const earliestDate = earliestActivity ? new Date(earliestActivity.startDate) : now;
         const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
         // Start from earliest activity or 1 year ago, whichever is earlier

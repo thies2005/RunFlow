@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     title: 'RunFlow | Your Running Performance Dashboard',
     description: 'Runna-style training interface with Runalyze-grade analytics. Track your running performance, cross-training, and race predictions.',
     keywords: ['running', 'training', 'Strava', 'VDOT', 'marathon', 'trimp', 'fitness'],
-    manifest: '/manifest.json',
+    manifest: '/manifest.webmanifest',
     appleWebApp: {
         capable: true,
         statusBarStyle: "default",

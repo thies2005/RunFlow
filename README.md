@@ -1,9 +1,9 @@
 # RunFlow
 
-RunFlow is a production-grade running performance dashboard that combines structured training plans with deep analytics. It features a robust web platform and a companion Android application.
+RunFlow is a production-grade running performance dashboard that combines structured training plans with deep analytics. It features a robust web platform and an Android application (Alpha).
 
-- **Web Platform**: Containerized Next.js application for easy deployment (VPS, Home Lab).
-- **Mobile App**: Native Android application for training management on the go.
+- **Web Platform & PWA**: Containerized Next.js application for easy deployment. Our primary focus is on the web experience and the PWA for mobile devices.
+- **Mobile App (Android)**: Native Android application for training management. (Currently in Alpha and development is paused).
 
 [**>>> Full Documentation <<<**](Web/DOCUMENTATION.md) — API reference, metrics formulas, and architecture.
 [**>>> Mobile API Documentation <<<**](Web/MOBILE_API.md) — Protocol for App-Server communication.
@@ -67,6 +67,9 @@ docker compose up -d --build
 ---
 
 ## 📱 Mobile App (Android)
+
+> [!IMPORTANT]
+> The native Android app is currently in **Alpha** status. Active development is currently **paused** as the focus has shifted towards the Web platform and PWA (Progressive Web App) for mobile use.
 
 The Android app is built with Kotlin and Jetpack Compose.
 

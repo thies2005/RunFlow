@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { Settings, LogOut, User, Moon, Sun, Monitor, ChevronDown } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-export function UserMenu({ onOpenProfile }: { onOpenProfile: () => void }) {
+export function UserMenu({ onOpenProfile, onOpenSettings }: { onOpenProfile: () => void; onOpenSettings: () => void }) {
     const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const { theme, setTheme } = useTheme();
@@ -46,6 +46,17 @@ export function UserMenu({ onOpenProfile }: { onOpenProfile: () => void }) {
                     </div>
 
                     <div className="p-2 space-y-1">
+                        <button
+                            onClick={() => {
+                                onOpenSettings();
+                                setIsOpen(false);
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-surface-hover rounded-lg transition-colors"
+                        >
+                            <Settings className="w-4 h-4 text-accent-orange" />
+                            <span>Plan Settings</span>
+                        </button>
+
                         <button
                             onClick={() => {
                                 onOpenProfile();

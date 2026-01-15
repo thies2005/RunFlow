@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Settings, LogOut, AlertCircle } from 'lucide-react';
+import { RefreshCw, Settings, LogOut, AlertCircle, BarChart3 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo, Footer, UserMenu } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
@@ -118,15 +118,15 @@ export default function Dashboard() {
                             </div>
 
                             <div className="flex items-center gap-4">
-
-                                <button onClick={() => router.push('/analytics')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-4">
-                                    📊 Analytics
-                                </button>
-                                <button onClick={() => setIsSettingsOpen(true)} className="p-2 text-foreground-muted hover:text-foreground transition-colors">
-                                    <Settings className="w-5 h-5" />
+                                <button onClick={() => router.push('/analytics')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
+                                    <BarChart3 className="w-5 h-5" />
+                                    <span className="hidden sm:inline">Analytics</span>
                                 </button>
                                 <div className="flex items-center gap-3">
-                                    <UserMenu onOpenProfile={() => setIsProfileOpen(true)} />
+                                    <UserMenu
+                                        onOpenProfile={() => setIsProfileOpen(true)}
+                                        onOpenSettings={() => setIsSettingsOpen(true)}
+                                    />
                                 </div>
                             </div>
                         </div>

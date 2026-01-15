@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, RefreshCw, Settings2 } from 'lucide-react';
 import {
     LineChart, Line, AreaChart, Area, BarChart, Bar,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+    PieChart, Pie, Cell
 } from 'recharts';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import RacePredictionChart from '@/components/RacePredictionChart';
@@ -358,9 +359,17 @@ export default function AnalyticsPage() {
             };
         });
 
-        // 5. Filter data based on TimeRange
-        // Note: CombinedAnalyticsChart does internal filtering based on its prop, but we need to filter
-        // the other datasets (trend charts) here.
+        // 5. Calculate Zone Distribution from activities
+        const zoneDistribution = activities.reduce((acc: Record<string, number>, activity: Activity) => {
+            acc.Z1 = (acc.Z1 || 0) + (activity.hrZone1Time || 0);
+            acc.Z2 = (acc.Z2 || 0) + (activity.hrZone2Time || 0);
+            acc.Z3 = (acc.Z3 || 0) + (activity.hrZone3Time || 0);
+            acc.Z4 = (acc.Z4 || 0) + (activity.hrZone4Time || 0);
+            acc.Z5 = (acc.Z5 || 0) + (activity.hrZone5Time || 0);
+            acc.Z6 = (acc.Z6 || 0) + (activity.hrZone6Time || 0);
+            acc.Z7 = (acc.Z7 || 0) + (activity.hrZone7Time || 0);
+            return acc;
+        }, {});
 
         return {
             runalyzeMetrics: {
@@ -381,7 +390,8 @@ export default function AnalyticsPage() {
             fitnessData: fitness,
             racePredictions: allPredictions,
             trainingPaces,
-            combinedData: combinedDataWithRolling
+            combinedData: combinedDataWithRolling,
+            zoneDistribution
         };
     }, [activitiesData, userData, goalsData, statsData]);
 
@@ -499,6 +509,114 @@ export default function AnalyticsPage() {
                     onTimeRangeChange={setTimeRange}
                 />
 
+                {/* Time in Zones Pie Chart */}
+                {(() => {
+                    // Filter activities by time range
+                    const activities: Activity[] = activitiesData?.activities || [];
+                    const now = new Date();
+                    const cutoff = new Date();
+                    switch (timeRange) {
+                        case '1Y': cutoff.setFullYear(now.getFullYear() - 1); break;
+                        case '6M': cutoff.setMonth(now.getMonth() - 6); break;
+                        case '3M': cutoff.setMonth(now.getMonth() - 3); break;
+                        case '1M': cutoff.setMonth(now.getMonth() - 1); break;
+                        default: cutoff.setTime(0); // ALL
+                    }
+
+                    const filteredActivities = timeRange === 'ALL'
+                        ? activities
+                        : activities.filter(a => new Date(a.startDate) >= cutoff);
+
+                    // Aggregate zone times
+                    const zoneTotals = filteredActivities.reduce((acc, activity) => ({
+                        Z1: acc.Z1 + (activity.hrZone1Time || 0),
+                        Z2: acc.Z2 + (activity.hrZone2Time || 0),
+                        Z3: acc.Z3 + (activity.hrZone3Time || 0),
+                        Z4: acc.Z4 + (activity.hrZone4Time || 0),
+                        Z5: acc.Z5 + (activity.hrZone5Time || 0),
+                        Z6: acc.Z6 + (activity.hrZone6Time || 0),
+                        Z7: acc.Z7 + (activity.hrZone7Time || 0),
+                    }), { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0, Z6: 0, Z7: 0 });
+
+                    const total = Object.values(zoneTotals).reduce((sum, v) => sum + v, 0);
+                    if (total === 0) return null;
+
+                    const pieData = [
+                        { name: 'Z1 Recovery', value: zoneTotals.Z1, color: '#10b981' },
+                        { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: '#84cc16' },
+                        { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308' },
+                        { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316' },
+                        { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444' },
+                        { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: '#6366f1' },
+                        { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: '#9333ea' },
+                    ].filter(d => d.value > 0);
+
+                    const formatZoneTime = (seconds: number) => {
+                        const hours = Math.floor(seconds / 3600);
+                        const mins = Math.floor((seconds % 3600) / 60);
+                        if (hours > 0) {
+                            return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                        }
+                        return `${mins}m`;
+                    };
+
+                    return (
+                        <div className="glass-card p-6">
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Time in Zones Distribution</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Pie Chart */}
+                                <div className="h-64">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={pieData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={50}
+                                                outerRadius={90}
+                                                paddingAngle={2}
+                                                dataKey="value"
+                                                label={({ percent }) => percent > 0.05 ? `${Math.round(percent * 100)}%` : ''}
+                                                labelLine={false}
+                                            >
+                                                {pieData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                                formatter={(value: number) => formatZoneTime(value)}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+
+                                {/* Legend & Breakdown */}
+                                <div className="flex flex-col justify-center space-y-2">
+                                    {pieData.map((zone, i) => {
+                                        const pct = (zone.value / total) * 100;
+                                        return (
+                                            <div key={i} className="flex items-center justify-between p-2 hover:bg-white/5 rounded">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: zone.color }} />
+                                                    <span className="text-foreground-muted text-sm">{zone.name}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-foreground font-mono text-sm">{formatZoneTime(zone.value)}</span>
+                                                    <span className="text-foreground-muted text-xs w-12 text-right">{Math.round(pct)}%</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    <div className="border-t border-glass-border pt-2 mt-2 flex justify-between">
+                                        <span className="text-foreground-muted text-sm">Total</span>
+                                        <span className="text-foreground font-mono text-sm">{formatZoneTime(total)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
                 {/* Race Prediction Chart with Shape Slider */}
                 <RacePredictionChart
                     effectiveVO2max={runalyzeMetrics.effectiveVO2max}

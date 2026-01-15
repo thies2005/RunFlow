@@ -102,6 +102,88 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                 </div>
             </div>
 
+            {/* Time in Zones Section */}
+            {(activity.hrZone1Time || activity.hrZone2Time) && (() => {
+                const zones = [
+                    { name: 'Z1', label: 'Recovery', color: 'bg-green-400', textColor: 'text-green-400', time: activity.hrZone1Time || 0 },
+                    { name: 'Z2', label: 'Aerobic', color: 'bg-lime-400', textColor: 'text-lime-400', time: activity.hrZone2Time || 0 },
+                    { name: 'Z3', label: 'Tempo', color: 'bg-yellow-400', textColor: 'text-yellow-400', time: activity.hrZone3Time || 0 },
+                    { name: 'Z4', label: 'Threshold', color: 'bg-orange-400', textColor: 'text-orange-400', time: activity.hrZone4Time || 0 },
+                    { name: 'Z5', label: 'VO2max', color: 'bg-red-500', textColor: 'text-red-500', time: activity.hrZone5Time || 0 },
+                    { name: 'Z6', label: 'Anaerobic', color: 'bg-indigo-500', textColor: 'text-indigo-500', time: activity.hrZone6Time || 0 },
+                    { name: 'Z7', label: 'Neuromuscular', color: 'bg-purple-600', textColor: 'text-purple-600', time: activity.hrZone7Time || 0 }
+                ];
+                const total = zones.reduce((sum, z) => sum + z.time, 0);
+                const activeZones = zones.filter(z => z.time > 0);
+
+                if (total === 0) return null;
+
+                const formatZoneTime = (seconds: number) => {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    if (mins >= 60) {
+                        const hours = Math.floor(mins / 60);
+                        const remainMins = mins % 60;
+                        return `${hours}h ${remainMins}m`;
+                    }
+                    return mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
+                };
+
+                return (
+                    <div className="glass-card p-6 mb-8">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <Heart className="w-4 h-4 text-red-500" /> Time in Zones
+                        </h3>
+
+                        {/* Horizontal Stacked Bar */}
+                        <div className="flex h-12 rounded-lg overflow-hidden w-full bg-background-tertiary mb-4">
+                            {activeZones.map((zone, i) => {
+                                const pct = (zone.time / total) * 100;
+                                return (
+                                    <div
+                                        key={i}
+                                        className={`${zone.color} hover:brightness-110 transition-all flex items-center justify-center`}
+                                        style={{ width: `${pct}%` }}
+                                        title={`${zone.name} ${zone.label}: ${formatZoneTime(zone.time)} (${Math.round(pct)}%)`}
+                                    >
+                                        {pct >= 8 && (
+                                            <span className="text-xs font-bold text-white drop-shadow-md">{zone.name}</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Zone Breakdown Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {activeZones.map((zone, i) => {
+                                const pct = (zone.time / total) * 100;
+                                return (
+                                    <div key={i} className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
+                                        <div className={`w-3 h-3 rounded-sm ${zone.color}`} />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-1">
+                                                <span className={`font-medium text-sm ${zone.textColor}`}>{zone.name}</span>
+                                                <span className="text-foreground-muted text-xs truncate">{zone.label}</span>
+                                            </div>
+                                            <div className="text-foreground text-sm font-mono">
+                                                {formatZoneTime(zone.time)} <span className="text-foreground-muted">({Math.round(pct)}%)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Totals */}
+                        <div className="mt-4 pt-4 border-t border-glass-border flex justify-between text-sm">
+                            <span className="text-foreground-muted">Total time in zones:</span>
+                            <span className="font-mono font-medium">{formatZoneTime(total)}</span>
+                        </div>
+                    </div>
+                );
+            })()}
+
             {/* Combined Interactive Chart */}
             <div className="glass-card p-6 mb-8">
                 <h3 className="text-lg font-semibold mb-4">Detailed Analysis</h3>

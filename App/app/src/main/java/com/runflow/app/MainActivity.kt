@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -36,7 +37,11 @@ import com.runflow.app.ui.screens.plan.PlanScreen
 import com.runflow.app.ui.screens.profile.ProfileScreen
 import com.runflow.app.ui.screens.MainScreen
 import com.runflow.app.ui.theme.RunFlowTheme
+import com.runflow.app.ui.util.FrameRateManager
+import com.runflow.app.ui.util.FrameRateMode
+import com.runflow.app.ui.util.LocalFrameRateMode
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import javax.inject.Inject
@@ -48,23 +53,45 @@ class MainActivity : ComponentActivity() {
     lateinit var stravaOAuthManager: StravaOAuthManager
 
     private var oauthCallbackResult: ((Result<String>) -> Unit)? = null
+    
+    // Frame rate management
+    private lateinit var frameRateManager: FrameRateManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize frame rate manager
+        frameRateManager = FrameRateManager(this)
+        
+        // Apply frame rate changes when mode changes
+        lifecycleScope.launch {
+            frameRateManager.currentMode.collectLatest { mode ->
+                frameRateManager.applyToWindow(window)
+            }
+        }
 
         // Check if this intent is from OAuth callback
         handleOAuthIntent(intent)
 
         setContent {
-            RunFlowTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    RunFlowAppNav()
+            val frameRateMode by frameRateManager.currentMode.collectAsState()
+            
+            CompositionLocalProvider(LocalFrameRateMode provides frameRateMode) {
+                RunFlowTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        RunFlowAppNav(frameRateManager = frameRateManager)
+                    }
                 }
             }
         }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        frameRateManager.cleanup()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -100,7 +127,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun RunFlowAppNav() {
+fun RunFlowAppNav(frameRateManager: FrameRateManager) {
     val navController = rememberNavController()
     val activity = androidx.compose.ui.platform.LocalContext.current as? MainActivity
     val authViewModel: com.runflow.app.ui.screens.auth.AuthViewModel = hiltViewModel()
@@ -221,7 +248,8 @@ fun RunFlowAppNav() {
                     navController.navigate(Screen.Welcome.route) {
                         popUpTo(0)
                     }
-                }
+                },
+                frameRateManager = frameRateManager
             )
         }
     }

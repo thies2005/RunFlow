@@ -89,6 +89,16 @@ export default function PlanSetupForm({
     const [zone2Max, setZone2Max] = useState(70);
     const [zone3Max, setZone3Max] = useState(80);
     const [zone4Max, setZone4Max] = useState(90);
+    const [zone5Max, setZone5Max] = useState(95);
+    const [zone6Max, setZone6Max] = useState(100);
+
+    // Threshold values for zone calculation
+    const [thresholdHR, setThresholdHR] = useState<string>('');
+    const [thresholdPaceMin, setThresholdPaceMin] = useState<string>('');
+    const [thresholdPaceSec, setThresholdPaceSec] = useState<string>('');
+
+    // Calculated 7 zones from LTHR
+    const [calculatedZones, setCalculatedZones] = useState<{ label: string; min: number; max: number }[]>([]);
 
     // Goal Time State (editable)
     const [goalTimeSeconds, setGoalTimeSeconds] = useState<number | null>(null);
@@ -159,6 +169,8 @@ export default function PlanSetupForm({
             setZone2Max(settingsData.hrZone2Max || 70);
             setZone3Max(settingsData.hrZone3Max || 80);
             setZone4Max(settingsData.hrZone4Max || 90);
+            setZone5Max(settingsData.hrZone5Max || 95);
+            setZone6Max(settingsData.hrZone6Max || 100);
             setRunsPerWeek(settingsData.runsPerWeek || 4);
             setRidesPerWeek(settingsData.ridesPerWeek || 0);
             setSwimsPerWeek(settingsData.swimsPerWeek || 0);
@@ -173,8 +185,35 @@ export default function PlanSetupForm({
             if (Array.isArray(settingsData.restDays)) {
                 setRestDays(settingsData.restDays);
             }
+            // Threshold values
+            if (settingsData.thresholdHeartRate) {
+                setThresholdHR(settingsData.thresholdHeartRate.toString());
+            }
+            if (settingsData.thresholdPace) {
+                const paceSeconds = settingsData.thresholdPace;
+                setThresholdPaceMin(Math.floor(paceSeconds / 60).toString());
+                setThresholdPaceSec((paceSeconds % 60).toString().padStart(2, '0'));
+            }
         }
     }, [settingsData]);
+
+    // Auto-calculate 7 zones from LTHR
+    useEffect(() => {
+        const lthr = parseInt(thresholdHR);
+        if (!isNaN(lthr) && lthr > 0) {
+            setCalculatedZones([
+                { label: 'Z1 Recovery', min: 0, max: Math.round(lthr * 0.75) },
+                { label: 'Z2 Aerobic', min: Math.round(lthr * 0.75) + 1, max: Math.round(lthr * 0.87) },
+                { label: 'Z3 Tempo', min: Math.round(lthr * 0.87) + 1, max: Math.round(lthr * 0.94) },
+                { label: 'Z4 Threshold', min: Math.round(lthr * 0.94) + 1, max: lthr },
+                { label: 'Z5 VO2max', min: lthr + 1, max: Math.round(lthr * 1.05) },
+                { label: 'Z6 Anaerobic', min: Math.round(lthr * 1.05) + 1, max: Math.round(lthr * 1.10) },
+                { label: 'Z7 Neuromuscular', min: Math.round(lthr * 1.10) + 1, max: 999 },
+            ]);
+        } else {
+            setCalculatedZones([]);
+        }
+    }, [thresholdHR]);
 
     // Populate goal data for settings mode
     useEffect(() => {
@@ -374,6 +413,12 @@ export default function PlanSetupForm({
                     hrZone2Max: zone2Max,
                     hrZone3Max: zone3Max,
                     hrZone4Max: zone4Max,
+                    hrZone5Max: zone5Max,
+                    hrZone6Max: zone6Max,
+                    thresholdHeartRate: parseInt(thresholdHR) || undefined,
+                    thresholdPace: thresholdPaceMin || thresholdPaceSec
+                        ? (parseInt(thresholdPaceMin) || 0) * 60 + (parseInt(thresholdPaceSec) || 0)
+                        : undefined,
                     taperWeeks,
                     peakWeeks,
                     buildWeeks,
@@ -1175,7 +1220,7 @@ export default function PlanSetupForm({
                     onClick={() => setShowHeartRate(!showHeartRate)}
                     className="flex items-center justify-between w-full text-left py-2"
                 >
-                    <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide">Heart Rate Settings</h3>
+                    <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide">Heart Rate & Zone Settings</h3>
                     {showHeartRate ? (
                         <ChevronUp className="w-4 h-4 text-foreground-muted" />
                     ) : (
@@ -1184,7 +1229,8 @@ export default function PlanSetupForm({
                 </button>
 
                 {showHeartRate && (
-                    <div className="space-y-4 mt-4 animate-fade-in">
+                    <div className="space-y-6 mt-4 animate-fade-in">
+                        {/* Basic HR Settings */}
                         <div className="grid grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-xs text-foreground-muted mb-1 uppercase">Max HR</label>
@@ -1221,11 +1267,81 @@ export default function PlanSetupForm({
                             </div>
                         </div>
 
-                        <div>
-                            <p className="text-xs text-foreground-muted mb-3">Zone thresholds (% of Max HR)</p>
-                            <div className="grid grid-cols-4 gap-2">
+                        {/* Threshold Values */}
+                        <div className="bg-surface/50 rounded-lg p-4 border border-glass-border">
+                            <h4 className="text-xs font-semibold text-accent-orange mb-3 uppercase tracking-wide">Threshold Values</h4>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs text-green-400 mb-1 text-center">Z1 Max</label>
+                                    <label className="block text-xs text-foreground-muted mb-1 uppercase">Lactate Threshold HR (LTHR)</label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            value={thresholdHR}
+                                            onChange={e => setThresholdHR(e.target.value)}
+                                            placeholder="e.g. 170"
+                                            className={inputClass}
+                                            min="100"
+                                            max="220"
+                                        />
+                                        <span className="absolute right-3 top-3 text-foreground-muted text-xs">bpm</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Zone 4 ends at LTHR</p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-foreground-muted mb-1 uppercase">Threshold Pace</label>
+                                    <div className="flex gap-1 items-center">
+                                        <input
+                                            type="number"
+                                            value={thresholdPaceMin}
+                                            onChange={e => setThresholdPaceMin(e.target.value)}
+                                            placeholder="4"
+                                            className={`${inputClass} w-16 text-center`}
+                                            min="2"
+                                            max="10"
+                                        />
+                                        <span className="text-foreground-muted">:</span>
+                                        <input
+                                            type="number"
+                                            value={thresholdPaceSec}
+                                            onChange={e => setThresholdPaceSec(e.target.value)}
+                                            placeholder="30"
+                                            className={`${inputClass} w-16 text-center`}
+                                            min="0"
+                                            max="59"
+                                        />
+                                        <span className="text-foreground-muted text-xs">/km</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">~1 hour race pace</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Calculated 7 Zones Display */}
+                        {calculatedZones.length > 0 && (
+                            <div className="bg-black/20 rounded-lg p-4 border border-white/5">
+                                <h4 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wide">Calculated HR Zones (7-Zone Model)</h4>
+                                <div className="space-y-1">
+                                    {calculatedZones.map((zone, i) => {
+                                        const colors = ['text-green-400', 'text-lime-400', 'text-yellow-400', 'text-orange-400', 'text-red-400', 'text-indigo-400', 'text-purple-400'];
+                                        return (
+                                            <div key={i} className="flex justify-between items-center text-sm p-2 hover:bg-white/5 rounded">
+                                                <span className={`${colors[i]} font-medium`}>{zone.label}</span>
+                                                <span className="text-white font-mono">
+                                                    {zone.min} - {zone.max === 999 ? '∞' : zone.max} <span className="text-gray-500 text-xs">bpm</span>
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Manual Zone Overrides (% of Max HR) */}
+                        <div>
+                            <p className="text-xs text-foreground-muted mb-3">Zone thresholds (% of Max HR) - Manual override</p>
+                            <div className="grid grid-cols-6 gap-2">
+                                <div>
+                                    <label className="block text-xs text-green-400 mb-1 text-center">Z1</label>
                                     <input
                                         type="number"
                                         value={zone1Max}
@@ -1235,7 +1351,7 @@ export default function PlanSetupForm({
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-blue-400 mb-1 text-center">Z2 Max</label>
+                                    <label className="block text-xs text-lime-400 mb-1 text-center">Z2</label>
                                     <input
                                         type="number"
                                         value={zone2Max}
@@ -1245,7 +1361,7 @@ export default function PlanSetupForm({
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-amber-400 mb-1 text-center">Z3 Max</label>
+                                    <label className="block text-xs text-yellow-400 mb-1 text-center">Z3</label>
                                     <input
                                         type="number"
                                         value={zone3Max}
@@ -1255,7 +1371,7 @@ export default function PlanSetupForm({
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-red-400 mb-1 text-center">Z4 Max</label>
+                                    <label className="block text-xs text-orange-400 mb-1 text-center">Z4</label>
                                     <input
                                         type="number"
                                         value={zone4Max}
@@ -1264,8 +1380,28 @@ export default function PlanSetupForm({
                                         min="80" max="100"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-xs text-red-400 mb-1 text-center">Z5</label>
+                                    <input
+                                        type="number"
+                                        value={zone5Max}
+                                        onChange={e => setZone5Max(parseInt(e.target.value) || 95)}
+                                        className={`${inputClass} text-center text-sm`}
+                                        min="85" max="105"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-indigo-400 mb-1 text-center">Z6</label>
+                                    <input
+                                        type="number"
+                                        value={zone6Max}
+                                        onChange={e => setZone6Max(parseInt(e.target.value) || 100)}
+                                        className={`${inputClass} text-center text-sm`}
+                                        min="90" max="110"
+                                    />
+                                </div>
                             </div>
-                            <p className="text-xs text-foreground-muted mt-2">Z5 = above Z4 Max</p>
+                            <p className="text-xs text-foreground-muted mt-2">Z7 = above Z6 Max</p>
                         </div>
                     </div>
                 )}

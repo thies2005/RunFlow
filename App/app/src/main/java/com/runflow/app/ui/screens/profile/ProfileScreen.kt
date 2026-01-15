@@ -23,11 +23,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.runflow.app.data.model.Sex
+import com.runflow.app.ui.util.FrameRateManager
+import com.runflow.app.ui.util.FrameRateMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onNavigateBack: () -> Unit,
+    frameRateManager: FrameRateManager? = null,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -69,6 +72,7 @@ fun ProfileScreen(
                         .fillMaxSize()
                         .padding(padding),
                     recentActivities = state.recentActivities,
+                    frameRateManager = frameRateManager,
                     onSave = { name, sex, birthDate, hrMax, hrRest, weight, height,
                                 hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
                                 thresholdHr, thresholdPace, vdotCorrection ->
@@ -127,6 +131,7 @@ fun ProfileContent(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
     recentActivities: List<com.runflow.app.data.model.Activity> = emptyList(),
+    frameRateManager: FrameRateManager? = null,
     onSave: (
         name: String?, sex: Sex?, birthDate: String?, hrMax: Int?, hrRest: Int?,
         weight: Float?, height: Float?, hrZone1Max: Int?, hrZone2Max: Int?,
@@ -422,6 +427,127 @@ fun ProfileContent(
                     Icon(Icons.Default.Speed, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Calibrate")
+                }
+            }
+        }
+
+        // Display Settings Section (Frame Rate)
+        frameRateManager?.let { manager ->
+            val currentMode by manager.currentMode.collectAsState()
+            val userSelectedMode by manager.userSelectedMode.collectAsState()
+            val isAdaptiveEnabled by manager.isAdaptiveEnabled.collectAsState()
+            
+            SectionCard(title = "Display Settings") {
+                Text(
+                    text = "Frame Rate",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Current mode indicator
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            MaterialTheme.shapes.small
+                        )
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Speed,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Current: ${manager.getFrameRateLabel(currentMode)}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        if (isAdaptiveEnabled && currentMode != userSelectedMode) {
+                            Text(
+                                text = "Automatically reduced due to battery",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Frame rate mode options
+                Text(
+                    text = "Preferred Mode",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                FrameRateMode.entries.forEach { mode ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { manager.setFrameRateMode(mode) }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = userSelectedMode == mode,
+                            onClick = { manager.setFrameRateMode(mode) }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = manager.getFrameRateLabel(mode),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = when (mode) {
+                                    FrameRateMode.HIGH_PERFORMANCE -> "Best for smooth animations, uses more battery"
+                                    FrameRateMode.BALANCED -> "Good balance of smoothness and battery life"
+                                    FrameRateMode.POWER_SAVER -> "Maximum battery savings, lower refresh rate"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Adaptive toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Adaptive Frame Rate",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "Automatically reduce frame rate when battery is low",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = isAdaptiveEnabled,
+                        onCheckedChange = { manager.setAdaptiveEnabled(it) }
+                    )
                 }
             }
         }

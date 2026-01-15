@@ -358,31 +358,73 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                         </div>
                     </div>
 
-                    {/* Zone Distribution Visualization (if available) - simplified */}
-                    {(activity.hrZone1Time || activity.hrZone2Time) && (
-                        <div className="mt-6 mb-8">
-                            <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest border-b border-glass-border pb-2 mb-4">Heart Rate Zones</h3>
-                            <div className="flex h-8 rounded-lg overflow-hidden w-full bg-background-tertiary">
-                                {[
-                                    { color: 'bg-green-400', time: activity.hrZone1Time },
-                                    { color: 'bg-lime-400', time: activity.hrZone2Time },
-                                    { color: 'bg-yellow-400', time: activity.hrZone3Time },
-                                    { color: 'bg-orange-400', time: activity.hrZone4Time },
-                                    { color: 'bg-red-500', time: activity.hrZone5Time },
-                                    { color: 'bg-indigo-500', time: activity.hrZone6Time },
-                                    { color: 'bg-purple-600', time: activity.hrZone7Time }
-                                ].map((zone, i) => {
-                                    const total = (activity.hrZone1Time || 0) + (activity.hrZone2Time || 0) + (activity.hrZone3Time || 0) + (activity.hrZone4Time || 0) + (activity.hrZone5Time || 0) + (activity.hrZone6Time || 0) + (activity.hrZone7Time || 0);
-                                    if (!total || !zone.time) return null;
-                                    const pct = (zone.time / total) * 100;
-                                    return <div key={i} className={`${zone.color} hover:brightness-110 transition-all`} style={{ width: `${pct}%` }} title={`Zone ${i + 1}: ${formatDuration(zone.time)} (${Math.round(pct)}%)`} />;
-                                })}
+                    {/* Zone Distribution Visualization - Enhanced 7-Zone Display */}
+                    {(activity.hrZone1Time || activity.hrZone2Time) && (() => {
+                        const zones = [
+                            { name: 'Z1', label: 'Recovery', color: 'bg-green-400', textColor: 'text-green-400', time: activity.hrZone1Time || 0 },
+                            { name: 'Z2', label: 'Aerobic', color: 'bg-lime-400', textColor: 'text-lime-400', time: activity.hrZone2Time || 0 },
+                            { name: 'Z3', label: 'Tempo', color: 'bg-yellow-400', textColor: 'text-yellow-400', time: activity.hrZone3Time || 0 },
+                            { name: 'Z4', label: 'Threshold', color: 'bg-orange-400', textColor: 'text-orange-400', time: activity.hrZone4Time || 0 },
+                            { name: 'Z5', label: 'VO2max', color: 'bg-red-500', textColor: 'text-red-500', time: activity.hrZone5Time || 0 },
+                            { name: 'Z6', label: 'Anaerobic', color: 'bg-indigo-500', textColor: 'text-indigo-500', time: activity.hrZone6Time || 0 },
+                            { name: 'Z7', label: 'Neuromuscular', color: 'bg-purple-600', textColor: 'text-purple-600', time: activity.hrZone7Time || 0 }
+                        ];
+                        const total = zones.reduce((sum, z) => sum + z.time, 0);
+                        const activeZones = zones.filter(z => z.time > 0);
+
+                        if (total === 0) return null;
+
+                        return (
+                            <div className="mt-6 mb-8">
+                                <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest border-b border-glass-border pb-2 mb-4">Heart Rate Zones</h3>
+
+                                {/* Horizontal Bar Chart */}
+                                <div className="flex h-10 rounded-lg overflow-hidden w-full bg-background-tertiary">
+                                    {activeZones.map((zone, i) => {
+                                        const pct = (zone.time / total) * 100;
+                                        return (
+                                            <div
+                                                key={i}
+                                                className={`${zone.color} hover:brightness-110 transition-all flex items-center justify-center`}
+                                                style={{ width: `${pct}%` }}
+                                                title={`${zone.name} ${zone.label}: ${formatDuration(zone.time)} (${Math.round(pct)}%)`}
+                                            >
+                                                {pct >= 10 && (
+                                                    <span className="text-xs font-bold text-white drop-shadow-md">{zone.name}</span>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Detailed Zone Breakdown */}
+                                <div className="mt-4 space-y-1">
+                                    {activeZones.map((zone, i) => {
+                                        const pct = (zone.time / total) * 100;
+                                        const mins = Math.floor(zone.time / 60);
+                                        const secs = zone.time % 60;
+                                        return (
+                                            <div key={i} className="flex items-center justify-between py-1.5 px-2 hover:bg-white/5 rounded text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-3 h-3 rounded-sm ${zone.color}`} />
+                                                    <span className={`font-medium ${zone.textColor}`}>{zone.name}</span>
+                                                    <span className="text-foreground-muted text-xs">{zone.label}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-foreground font-mono text-xs">
+                                                        {mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`}
+                                                    </span>
+                                                    <span className="text-foreground-muted text-xs w-10 text-right">
+                                                        {Math.round(pct)}%
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                            <div className="flex justify-between mt-2 text-xs text-foreground-muted px-1">
-                                <span>Z1</span><span>Z2</span><span>Z3</span><span>Z4</span><span>Z5</span><span>Z6</span><span>Z7</span>
-                            </div>
-                        </div>
-                    )}
+                        );
+                    })()}
 
                     {/* Detailed Analysis Chart */}
                     <div className="mb-8">

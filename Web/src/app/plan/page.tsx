@@ -38,7 +38,7 @@ export default function PlanPage() {
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
 
     // Show Unlinked Activities Toggle
-    const [showUnlinked, setShowUnlinked] = useState(false);
+    const [showUnlinked, setShowUnlinked] = useState(true);
 
     // DnD Sensors
     const sensors = useSensors(

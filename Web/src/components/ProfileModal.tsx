@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Save, AlertCircle, User, Trash2 } from 'lucide-react';
+import { X, Save, AlertCircle, User, Trash2, RefreshCw } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
 interface ProfileModalProps {
@@ -108,6 +108,30 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         },
         onError: () => {
             setMessage('Error updating profile. Please try again.');
+        }
+    });
+
+    const resyncMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch('/api/sync', {
+                method: 'POST',
+                body: JSON.stringify({ range: 'ALL' }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to resync activities');
+            }
+            return res.json();
+        },
+        onSuccess: () => {
+            setMessage('Full resync started! This may take a few minutes.');
+            queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+        },
+        onError: (err) => {
+            setMessage(`Resync failed: ${err.message}`);
         }
     });
 
@@ -245,6 +269,18 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     </button>
 
                     <div className="border-t border-white/10 my-4"></div>
+
+                    <div className="mb-4">
+                        <h3 className="text-gray-400 font-medium mb-3 text-xs uppercase tracking-wider">Data Management</h3>
+                        <button
+                            onClick={() => resyncMutation.mutate()}
+                            disabled={resyncMutation.isPending}
+                            className="w-full py-2.5 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm flex items-center justify-center gap-2"
+                        >
+                            <RefreshCw className={`w-4 h-4 ${resyncMutation.isPending ? 'animate-spin' : ''}`} />
+                            {resyncMutation.isPending ? 'Syncing...' : 'Resync All Activities'}
+                        </button>
+                    </div>
 
                     <div>
                         <h3 className="text-red-400 font-medium mb-3 text-xs uppercase tracking-wider">Danger Zone</h3>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle, BarChart3 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
@@ -111,9 +112,13 @@ export default function Dashboard() {
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center">
-                                    <span className="text-xl">🏃</span>
-                                </div>
+                                <Image
+                                    src="/icons/app-icon-192.png"
+                                    alt="RunFlow"
+                                    width={40}
+                                    height={40}
+                                    className="rounded-xl"
+                                />
                                 <span className="text-xl font-bold text-foreground">RunFlow</span>
                             </div>
 

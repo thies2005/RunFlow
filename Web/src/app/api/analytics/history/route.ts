@@ -98,6 +98,8 @@ export async function GET(request: Request) {
                     hrZone3Time: true,
                     hrZone4Time: true,
                     hrZone5Time: true,
+                    hrZone6Time: true,
+                    hrZone7Time: true,
                 },
                 orderBy: { startDate: 'asc' }
             });
@@ -203,6 +205,8 @@ export async function GET(request: Request) {
                 hrZone3Time: true,
                 hrZone4Time: true,
                 hrZone5Time: true,
+                hrZone6Time: true,
+                hrZone7Time: true,
                 estimatedVdot: true,
             },
             orderBy: { startDate: 'asc' },
@@ -210,7 +214,7 @@ export async function GET(request: Request) {
 
         // Compute Volume/Zones from viewActivities
         const weeklyVolumeMap: Record<string, number> = {};
-        const weeklyZonesMap: Record<string, { z1: number; z2: number; z3: number; z4: number; z5: number }> = {};
+        const weeklyZonesMap: Record<string, { z1: number; z2: number; z3: number; z4: number; z5: number; z6: number; z7: number }> = {};
         let totalDistance = 0;
         let totalMovingTime = 0;
         let totalActivities = 0;
@@ -233,12 +237,14 @@ export async function GET(request: Request) {
             }
 
             // Zone Trend
-            if (!weeklyZonesMap[weekKey]) weeklyZonesMap[weekKey] = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+            if (!weeklyZonesMap[weekKey]) weeklyZonesMap[weekKey] = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0, z6: 0, z7: 0 };
             weeklyZonesMap[weekKey].z1 += (a.hrZone1Time || 0) / 60;
             weeklyZonesMap[weekKey].z2 += (a.hrZone2Time || 0) / 60;
             weeklyZonesMap[weekKey].z3 += (a.hrZone3Time || 0) / 60;
             weeklyZonesMap[weekKey].z4 += (a.hrZone4Time || 0) / 60;
             weeklyZonesMap[weekKey].z5 += (a.hrZone5Time || 0) / 60;
+            weeklyZonesMap[weekKey].z6 += (a.hrZone6Time || 0) / 60;
+            weeklyZonesMap[weekKey].z7 += (a.hrZone7Time || 0) / 60;
         });
 
         // Format Outputs
@@ -258,6 +264,8 @@ export async function GET(request: Request) {
                 Z3: Math.round(zones.z3),
                 Z4: Math.round(zones.z4),
                 Z5: Math.round(zones.z5),
+                Z6: Math.round(zones.z6),
+                Z7: Math.round(zones.z7),
             }));
 
         const vdotTrend = viewActivities

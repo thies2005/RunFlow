@@ -255,22 +255,22 @@ function calculateZoneTimes(
     heartrates: number[],
     times: number[],
     hrMax: number,
-    zoneThresholds: { z1: number; z2: number; z3: number; z4: number } = { z1: 60, z2: 70, z3: 80, z4: 90 }
-): { z1: number; z2: number; z3: number; z4: number; z5: number } {
-    const zones = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+    zoneThresholds: { z1: number; z2: number; z3: number; z4: number; z5: number; z6: number } = { z1: 60, z2: 70, z3: 80, z4: 90, z5: 95, z6: 100 }
+): { z1: number; z2: number; z3: number; z4: number; z5: number; z6: number; z7: number } {
+    const zones = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0, z6: 0, z7: 0 };
 
-    // Use user-configured percentages or defaults
-    const z1Ceil = Math.floor(hrMax * (zoneThresholds.z1 / 100));
-    const z2Ceil = Math.floor(hrMax * (zoneThresholds.z2 / 100));
-    const z3Ceil = Math.floor(hrMax * (zoneThresholds.z3 / 100));
-    const z4Ceil = Math.floor(hrMax * (zoneThresholds.z4 / 100));
+    // Use user-configured absolute HR values as ceiling for each zone
+    // Zone thresholds are expected to be absolute HR values (hrZone1Max, hrZone2Max, etc.)
+    const z1Ceil = zoneThresholds.z1;
+    const z2Ceil = zoneThresholds.z2;
+    const z3Ceil = zoneThresholds.z3;
+    const z4Ceil = zoneThresholds.z4;
+    const z5Ceil = zoneThresholds.z5;
+    const z6Ceil = zoneThresholds.z6;
 
     for (let i = 0; i < heartrates.length; i++) {
         // Calculate duration of this point
         // Stream time is cumulative relative to start
-        // We assume constant sampling or take diff to next point?
-        // Strava streams usually align. Let's take diff to next, or 1s if last
-        // Actually, just assumed 1s for simplicity usually works, but streams can be sparse.
         // Better: (nextTime - currTime)
         const duration = (i < times.length - 1)
             ? Math.min(times[i + 1] - times[i], 10) // Cap gaps at 10s to avoid paused time skew
@@ -282,7 +282,9 @@ function calculateZoneTimes(
         else if (hr <= z2Ceil) zones.z2 += duration;
         else if (hr <= z3Ceil) zones.z3 += duration;
         else if (hr <= z4Ceil) zones.z4 += duration;
-        else zones.z5 += duration;
+        else if (hr <= z5Ceil) zones.z5 += duration;
+        else if (hr <= z6Ceil) zones.z6 += duration;
+        else zones.z7 += duration;
     }
 
     return zones;
@@ -354,6 +356,8 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 hrZone2Max: true,
                 hrZone3Max: true,
                 hrZone4Max: true,
+                hrZone5Max: true,
+                hrZone6Max: true,
                 goals: {
                     where: { isActive: true },
                     select: { currentVdot: true, isActive: true },
@@ -533,7 +537,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     }
 
                     // --- Fetch Streams & Calculate Zones (Expensive operation) ---
-                    let zoneTimes = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+                    let zoneTimes = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0, z6: 0, z7: 0 };
                     let streams = null;
 
                     // Always fetch streams for analysis if we can (limit to runs/rides involving HR or heavy data?)
@@ -546,12 +550,14 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         const effectiveHrMax = currentHrMax || DEFAULT_HR_MAX;
 
                         if (streams && streams.heartrate) {
-                            // Use user-configured zone thresholds or defaults
+                            // Use user-configured zone thresholds (absolute HR values) or defaults
                             const zoneThresholds = {
-                                z1: user?.hrZone1Max ?? 60,
-                                z2: user?.hrZone2Max ?? 70,
-                                z3: user?.hrZone3Max ?? 80,
-                                z4: user?.hrZone4Max ?? 90,
+                                z1: user?.hrZone1Max ?? 130,
+                                z2: user?.hrZone2Max ?? 148,
+                                z3: user?.hrZone3Max ?? 160,
+                                z4: user?.hrZone4Max ?? 170,
+                                z5: user?.hrZone5Max ?? 178,
+                                z6: user?.hrZone6Max ?? 187,
                             };
                             zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, effectiveHrMax, zoneThresholds);
                         }
@@ -636,6 +642,8 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         hrZone3Time: zoneTimes.z3,
                         hrZone4Time: zoneTimes.z4,
                         hrZone5Time: zoneTimes.z5,
+                        hrZone6Time: zoneTimes.z6,
+                        hrZone7Time: zoneTimes.z7,
 
                         rawJson: activity as any,
                         streams: streams as any,
@@ -780,6 +788,8 @@ export async function syncActivityById(userId: string, activityId: number): Prom
                 hrZone2Max: true,
                 hrZone3Max: true,
                 hrZone4Max: true,
+                hrZone5Max: true,
+                hrZone6Max: true,
             },
         });
 
@@ -806,7 +816,7 @@ export async function syncActivityById(userId: string, activityId: number): Prom
 
         // 4. Fetch activity streams
         let streams = null;
-        let zoneTimes = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0 };
+        let zoneTimes = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0, z6: 0, z7: 0 };
 
         if (['Run', 'VirtualRun', 'Ride', 'VirtualRide'].includes(activity.type)) {
             streams = await fetchActivityStreams(accessToken, activity.id);
@@ -815,10 +825,12 @@ export async function syncActivityById(userId: string, activityId: number): Prom
 
             if (streams && streams.heartrate) {
                 const zoneThresholds = {
-                    z1: user.hrZone1Max ?? 60,
-                    z2: user.hrZone2Max ?? 70,
-                    z3: user.hrZone3Max ?? 80,
-                    z4: user.hrZone4Max ?? 90,
+                    z1: user.hrZone1Max ?? 130,
+                    z2: user.hrZone2Max ?? 148,
+                    z3: user.hrZone3Max ?? 160,
+                    z4: user.hrZone4Max ?? 170,
+                    z5: user.hrZone5Max ?? 178,
+                    z6: user.hrZone6Max ?? 187,
                 };
                 zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, effectiveHrMax, zoneThresholds);
             }
@@ -885,6 +897,8 @@ export async function syncActivityById(userId: string, activityId: number): Prom
             hrZone3Time: zoneTimes.z3,
             hrZone4Time: zoneTimes.z4,
             hrZone5Time: zoneTimes.z5,
+            hrZone6Time: zoneTimes.z6,
+            hrZone7Time: zoneTimes.z7,
             rawJson: activity as any,
             streams: streams as any,
             trainingType: determineWorkoutType(activity),

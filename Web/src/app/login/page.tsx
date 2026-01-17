@@ -4,6 +4,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Activity, Target, TrendingUp, Zap } from 'lucide-react';
+import Image from 'next/image';
 import { ConnectWithStravaButton } from '@/components';
 
 export default function LoginPage() {
@@ -30,9 +31,13 @@ export default function LoginPage() {
             <div className="flex-1 flex items-center justify-center px-4">
                 <div className="max-w-md w-full text-center">
                     {/* Logo */}
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent-orange to-accent-pink flex items-center justify-center mx-auto mb-8 animate-pulse-glow">
-                        <span className="text-4xl">🏃</span>
-                    </div>
+                    <Image
+                        src="/icons/app-icon-192.png"
+                        alt="RunFlow"
+                        width={80}
+                        height={80}
+                        className="rounded-2xl mx-auto mb-8 animate-pulse-glow"
+                    />
 
                     <h1 className="text-4xl font-bold text-foreground mb-4">
                         RunFlow

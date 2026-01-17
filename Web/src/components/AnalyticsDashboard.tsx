@@ -25,7 +25,7 @@ const RANGES = [
 
 interface HistoryResponse {
     weeklyVolume: { date: string; km: number }[];
-    zoneTrend: { date: string; Z1: number; Z2: number; Z3: number; Z4: number; Z5: number }[];
+    zoneTrend: { date: string; Z1: number; Z2: number; Z3: number; Z4: number; Z5: number; Z6: number; Z7: number }[];
     fitnessTrend: { date: string; ctl: number; atl: number; tsb: number }[];
     vdotTrend: { date: string; vdot: number }[];
     totals: { distance: number; activities: number; averagePace: number };
@@ -148,10 +148,12 @@ export default function AnalyticsDashboard({ currentVdot, initialThresholdHr, in
                                     return `${Math.round(value)}m`;
                                 }} />
                                 <Area type="monotone" dataKey="Z1" stackId="1" stroke="#10b981" fill="#10b981" name="Z1 Recovery" />
-                                <Area type="monotone" dataKey="Z2" stackId="1" stroke="#3b82f6" fill="#3b82f6" name="Z2 Aerobic" />
-                                <Area type="monotone" dataKey="Z3" stackId="1" stroke="#f59e0b" fill="#f59e0b" name="Z3 Tempo" />
-                                <Area type="monotone" dataKey="Z4" stackId="1" stroke="#ef4444" fill="#ef4444" name="Z4 Threshold" />
-                                <Area type="monotone" dataKey="Z5" stackId="1" stroke="#7f1d1d" fill="#7f1d1d" name="Z5 VO2max" />
+                                <Area type="monotone" dataKey="Z2" stackId="1" stroke="#84cc16" fill="#84cc16" name="Z2 Aerobic" />
+                                <Area type="monotone" dataKey="Z3" stackId="1" stroke="#eab308" fill="#eab308" name="Z3 Tempo" />
+                                <Area type="monotone" dataKey="Z4" stackId="1" stroke="#f97316" fill="#f97316" name="Z4 Threshold" />
+                                <Area type="monotone" dataKey="Z5" stackId="1" stroke="#ef4444" fill="#ef4444" name="Z5 VO2max" />
+                                <Area type="monotone" dataKey="Z6" stackId="1" stroke="#6366f1" fill="#6366f1" name="Z6 Anaerobic" />
+                                <Area type="monotone" dataKey="Z7" stackId="1" stroke="#9333ea" fill="#9333ea" name="Z7 Neuromuscular" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -183,9 +185,11 @@ export default function AnalyticsDashboard({ currentVdot, initialThresholdHr, in
                     Z3: acc.Z3 + (week.Z3 || 0),
                     Z4: acc.Z4 + (week.Z4 || 0),
                     Z5: acc.Z5 + (week.Z5 || 0),
-                }), { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0 });
+                    Z6: acc.Z6 + (week.Z6 || 0),
+                    Z7: acc.Z7 + (week.Z7 || 0),
+                }), { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0, Z6: 0, Z7: 0 });
 
-                const total = zoneTotals.Z1 + zoneTotals.Z2 + zoneTotals.Z3 + zoneTotals.Z4 + zoneTotals.Z5;
+                const total = zoneTotals.Z1 + zoneTotals.Z2 + zoneTotals.Z3 + zoneTotals.Z4 + zoneTotals.Z5 + zoneTotals.Z6 + zoneTotals.Z7;
                 if (total === 0) return null;
 
                 const pieData = [
@@ -194,6 +198,8 @@ export default function AnalyticsDashboard({ currentVdot, initialThresholdHr, in
                     { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308' },
                     { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316' },
                     { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444' },
+                    { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: '#6366f1' },
+                    { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: '#9333ea' },
                 ].filter(d => d.value > 0);
 
                 const formatZoneTime = (minutes: number) => {

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload } from 'lucide-react';
+import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus } from 'lucide-react';
 
 // Components
 const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (
@@ -335,7 +335,7 @@ function DashboardContent() {
                                         disabled={processing}
                                         className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center disabled:opacity-50"
                                     >
-                                        <Download className="w-4 h-4 mr-2" />
+                                        <Plus className="w-4 h-4 mr-2" />
                                         Create
                                     </button>
                                 </div>
@@ -358,6 +358,14 @@ function DashboardContent() {
                                                 </div>
                                             </div>
                                             <div className="flex items-center space-x-2">
+                                                <a
+                                                    href={`/api/admin/backups/${backup.name}`}
+                                                    className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 border border-gray-200 rounded-lg transition flex items-center"
+                                                    title="Download Backup"
+                                                >
+                                                    <Download className="w-3 h-3 mr-1" />
+                                                    Download
+                                                </a>
                                                 <button
                                                     onClick={() => handleBackupAction('restore', backup.name)}
                                                     disabled={processing}

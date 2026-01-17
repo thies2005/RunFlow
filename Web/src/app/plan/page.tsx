@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Eye, EyeOff } from 'lucide-react';
@@ -124,6 +124,18 @@ export default function PlanPage() {
         setSelectedActivity(activity);
         setIsActivityModalOpen(true);
     }, []);
+
+    // Scroll to today on load
+    useEffect(() => {
+        if (!isLoading && data) {
+            const todayElement = document.getElementById('plan-today-anchor');
+            if (todayElement) {
+                setTimeout(() => {
+                    todayElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+        }
+    }, [isLoading, data]);
 
     if (isLoading) return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading plan...</div>;
 
@@ -315,6 +327,7 @@ export default function PlanPage() {
                                                         date={dayDate}
                                                         isTodayItem={isTodayItem}
                                                         onAdd={handleCreate}
+                                                        id={isTodayItem ? 'plan-today-anchor' : undefined}
                                                     >
                                                         {dayWorkouts.map((workout) => (
                                                             <DraggableWorkout

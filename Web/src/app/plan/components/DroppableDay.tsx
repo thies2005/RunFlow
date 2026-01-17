@@ -8,9 +8,10 @@ interface DroppableDayProps {
     children: React.ReactNode;
     isTodayItem: boolean;
     onAdd: (date: Date) => void;
+    id?: string;
 }
 
-export function DroppableDay({ date, children, isTodayItem, onAdd }: DroppableDayProps) {
+export function DroppableDay({ date, children, isTodayItem, onAdd, id }: DroppableDayProps) {
     const dateStr = format(date, 'yyyy-MM-dd');
     const { setNodeRef, isOver } = useDroppable({
         id: `day-${dateStr}`,
@@ -25,6 +26,7 @@ export function DroppableDay({ date, children, isTodayItem, onAdd }: DroppableDa
 
     return (
         <div
+            id={id}
             ref={setNodeRef}
             className={`flex gap-2 p-2 rounded-lg min-h-[80px] transition-colors border ${isOver ? 'bg-surface-hover border-accent-orange/50' : 'border-transparent hover:bg-surface-hover'} ${isTodayItem ? 'bg-accent-orange/5' : ''}`}
         >

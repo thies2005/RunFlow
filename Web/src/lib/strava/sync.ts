@@ -481,7 +481,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     // Process if: New OR (Existing but missing Zone data AND has HR)
                     // We also check for sum of zones being 0, which implies failed calculation previously
                     const isNew = !existing;
-                    let needsUpdate = existing && existing.hasHeartrate && existing.hrZone1Time === null;
+                    let needsUpdate = existing && existing.hasHeartrate && (existing.hrZone1Time === null || existing.hrZone6Time === null);
 
                     if (existing && !needsUpdate) {
                         // Check missing new fields (calories, estimatedVdot) or missing zones

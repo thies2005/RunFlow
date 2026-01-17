@@ -163,8 +163,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in overflow-y-auto pt-10 pb-10">
-            <div className="glass-card w-full max-w-sm p-6 relative animate-slide-in my-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in overflow-y-auto pt-10 pb-10">
+            <div className="glass-card w-full max-w-sm p-6 relative animate-slide-in my-auto !bg-[#12121a]/95 border-white/10">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
                     <X className="w-5 h-5" />
                 </button>

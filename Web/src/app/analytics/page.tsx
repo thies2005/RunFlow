@@ -40,6 +40,7 @@ export default function AnalyticsPage() {
     const queryClient = useQueryClient();
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
     const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
+    const [zonesTimeRange, setZonesTimeRange] = useState<'1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'>('1Y');
 
     // Filter helpers
     const filterByTimeRange = <T extends { date?: string; week?: string }>(data: T[], range: TimeRange): T[] => {
@@ -140,6 +141,7 @@ export default function AnalyticsPage() {
                 averageHr: a.averageHr,
                 hasHeartrate: a.hasHeartrate,
                 type: a.type,
+                hrZone1Time: a.hrZone1Time ?? undefined,
                 hrZone2Time: a.hrZone2Time ?? undefined,
                 hrZone3Time: a.hrZone3Time ?? undefined,
                 hrZone4Time: a.hrZone4Time ?? undefined,
@@ -547,19 +549,20 @@ export default function AnalyticsPage() {
 
                 {/* Time in Zones Pie Chart */}
                 {(() => {
-                    // Filter activities by time range
+                    // Filter activities by zones time range (separate from main chart)
                     const activities: Activity[] = activitiesData?.activities || [];
                     const now = new Date();
                     const cutoff = new Date();
-                    switch (timeRange) {
+                    switch (zonesTimeRange) {
                         case '1Y': cutoff.setFullYear(now.getFullYear() - 1); break;
                         case '6M': cutoff.setMonth(now.getMonth() - 6); break;
                         case '3M': cutoff.setMonth(now.getMonth() - 3); break;
                         case '1M': cutoff.setMonth(now.getMonth() - 1); break;
+                        case '1W': cutoff.setDate(now.getDate() - 7); break;
                         default: cutoff.setTime(0); // ALL
                     }
 
-                    const filteredActivities = timeRange === 'ALL'
+                    const filteredActivities = zonesTimeRange === 'ALL'
                         ? activities
                         : activities.filter(a => new Date(a.startDate) >= cutoff);
 
@@ -577,14 +580,22 @@ export default function AnalyticsPage() {
                     const total = Object.values(zoneTotals).reduce((sum, v) => sum + v, 0);
                     if (total === 0) return null;
 
+                    // Get HR zone thresholds from userData
+                    const z1Max = userData?.hrZone1Max || 130;
+                    const z2Max = userData?.hrZone2Max || 148;
+                    const z3Max = userData?.hrZone3Max || 160;
+                    const z4Max = userData?.hrZone4Max || 170;
+                    const z5Max = userData?.hrZone5Max || 178;
+                    const z6Max = userData?.hrZone6Max || 187;
+
                     const pieData = [
-                        { name: 'Z1 Recovery', value: zoneTotals.Z1, color: '#10b981' },
-                        { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: '#84cc16' },
-                        { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308' },
-                        { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316' },
-                        { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444' },
-                        { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: '#6366f1' },
-                        { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: '#9333ea' },
+                        { name: 'Z1 Recovery', value: zoneTotals.Z1, color: '#10b981', hrRange: `<${z1Max}` },
+                        { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: '#84cc16', hrRange: `${z1Max}-${z2Max}` },
+                        { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308', hrRange: `${z2Max}-${z3Max}` },
+                        { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316', hrRange: `${z3Max}-${z4Max}` },
+                        { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444', hrRange: `${z4Max}-${z5Max}` },
+                        { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: '#6366f1', hrRange: `${z5Max}-${z6Max}` },
+                        { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: '#9333ea', hrRange: `>${z6Max}` },
                     ].filter(d => d.value > 0);
 
                     const formatZoneTime = (seconds: number) => {
@@ -596,9 +607,28 @@ export default function AnalyticsPage() {
                         return `${mins}m`;
                     };
 
+                    const zonesRanges: ('1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL')[] = ['1W', '1M', '3M', '6M', '1Y', 'ALL'];
+
                     return (
                         <div className="glass-card p-6">
-                            <h3 className="text-lg font-semibold text-foreground mb-4">Time in Zones Distribution</h3>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-semibold text-foreground">Time in Zones Distribution</h3>
+                                <div className="flex bg-background-secondary rounded-lg p-1 border border-glass-border">
+                                    {zonesRanges.map(range => (
+                                        <button
+                                            key={range}
+                                            onClick={() => setZonesTimeRange(range)}
+                                            className={`px-2 py-1 text-xs font-medium rounded transition-all ${zonesTimeRange === range
+                                                    ? 'bg-zinc-700 text-white shadow-sm'
+                                                    : 'text-foreground-muted hover:text-foreground'
+                                                }`}
+                                            style={zonesTimeRange === range ? { backgroundColor: 'var(--accent-purple)' } : {}}
+                                        >
+                                            {range}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Pie Chart */}
                                 <div className="h-64">
@@ -627,7 +657,7 @@ export default function AnalyticsPage() {
                                     </ResponsiveContainer>
                                 </div>
 
-                                {/* Legend & Breakdown */}
+                                {/* Legend & Breakdown with HR Ranges */}
                                 <div className="flex flex-col justify-center space-y-2">
                                     {pieData.map((zone, i) => {
                                         const pct = (zone.value / total) * 100;
@@ -636,6 +666,7 @@ export default function AnalyticsPage() {
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: zone.color }} />
                                                     <span className="text-foreground-muted text-sm">{zone.name}</span>
+                                                    <span className="text-foreground-muted text-[10px] opacity-60">({zone.hrRange} bpm)</span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-foreground font-mono text-sm">{formatZoneTime(zone.value)}</span>

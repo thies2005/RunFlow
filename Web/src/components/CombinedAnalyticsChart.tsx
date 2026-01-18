@@ -49,11 +49,10 @@ const SeriesToggleButtons = memo(({
                 <button
                     key={key}
                     onClick={() => onToggle(key)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-2 border ${
-                        visibleSeries[key]
+                    className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-2 border ${visibleSeries[key]
                             ? 'bg-surface-hover text-foreground border-accent-purple/50'
                             : 'bg-transparent text-foreground-muted border-glass-border hover:border-foreground-muted'
-                    }`}
+                        }`}
                     style={{
                         backgroundColor: visibleSeries[key] ? 'var(--surface-hover)' : 'transparent',
                     }}
@@ -89,11 +88,10 @@ const TimeRangeButtons = memo(({
                 <button
                     key={range}
                     onClick={() => onTimeRangeChange(range)}
-                    className={`px-3 py-1 text-xs font-medium rounded transition-all ${
-                        timeRange === range
+                    className={`px-3 py-1 text-xs font-medium rounded transition-all ${timeRange === range
                             ? 'bg-zinc-700 text-white shadow-sm'
                             : 'text-foreground-muted hover:text-foreground'
-                    }`}
+                        }`}
                     style={timeRange === range ? { backgroundColor: 'var(--accent-purple)' } : {}}
                 >
                     {range}
@@ -261,6 +259,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                             tickLine={false}
                             axisLine={false}
                             hide={!visibleSeries.ctl && !visibleSeries.atl && !visibleSeries.tsb}
+                            tickFormatter={(val) => val.toFixed(0)}
                         />
 
                         {/* Volume Y-Axis (hidden, used for scaling Volume and Time) */}

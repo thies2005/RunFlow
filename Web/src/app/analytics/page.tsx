@@ -741,7 +741,7 @@ export default function AnalyticsPage() {
                                         }
                                     }}
                                 />
-                                <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
+                                <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} tickFormatter={(val) => val.toFixed(0)} />
                                 <Tooltip
                                     contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
                                     labelStyle={{ color: 'var(--foreground)' }}

@@ -193,9 +193,9 @@ export async function GET(request: Request) {
 
         const filteredFitness = cachedFitness.map(h => ({
             date: h.date.toISOString().split('T')[0],
-            ctl: h.ctl,
-            atl: h.atl,
-            tsb: h.tsb,
+            ctl: Math.round(h.ctl),
+            atl: Math.round(h.atl),
+            tsb: Math.round(h.tsb),
         }));
 
 

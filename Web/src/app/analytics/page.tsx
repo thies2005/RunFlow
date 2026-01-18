@@ -169,15 +169,12 @@ export default function AnalyticsPage() {
                 windowValues.push(serverVo2Trend[i].vo2);
             }
             if (windowValues.length > 0) {
-                windowValues.sort((a: number, b: number) => a - b);
-                const mid = Math.floor(windowValues.length / 2);
-                const median = windowValues.length % 2 !== 0
-                    ? windowValues[mid]
-                    : (windowValues[mid - 1] + windowValues[mid]) / 2;
+                const sum = windowValues.reduce((a, b) => a + b, 0);
+                const avg = sum / windowValues.length;
                 vo2Trend.push({
                     date: point.week,
                     vo2: point.vo2,
-                    vo2Rolling: Math.round(median * 10) / 10
+                    vo2Rolling: Math.round(avg * 10) / 10
                 });
             } else {
                 vo2Trend.push({ date: point.week, vo2: point.vo2 });
@@ -663,16 +660,16 @@ export default function AnalyticsPage() {
                                         type="monotone"
                                         dataKey="vo2"
                                         stroke="none"
-                                        dot={{ r: 3, fill: '#3b82f6', fillOpacity: 0.4 }}
+                                        dot={{ r: 3, fill: '#f59e0b', fillOpacity: 1 }}
                                         name="VO2max (Run)"
                                     />
                                     <Line
                                         type="monotone"
                                         dataKey="vo2Rolling"
-                                        stroke="#3b82f6"
+                                        stroke="#f59e0b"
                                         strokeWidth={2}
                                         dot={false}
-                                        name="Trend (Median)"
+                                        name="VO2max (Avg)"
                                     />
                                 </LineChart>
                             </ResponsiveContainer>

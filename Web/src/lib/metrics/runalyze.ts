@@ -145,16 +145,15 @@ export function calculateGeneralAerobicScore(
         return activityDate >= cutoffDate && !runningTypes.includes(type);
     });
 
-    // Sum Z1, Z2, Z3, Z4 time (in seconds) - include Z1 as it contributes to aerobic base
+    // Sum Z2, Z3, Z4 time (in seconds) - aerobic training zones
     let totalZoneSeconds = 0;
     const activityTypesSet = new Set<string>();
 
     relevantActivities.forEach(a => {
-        const z1 = a.hrZone1Time || 0;
         const z2 = a.hrZone2Time || 0;
         const z3 = a.hrZone3Time || 0;
         const z4 = a.hrZone4Time || 0;
-        totalZoneSeconds += (z1 + z2 + z3 + z4);
+        totalZoneSeconds += (z2 + z3 + z4);
         if (a.type) activityTypesSet.add(a.type);
     });
 

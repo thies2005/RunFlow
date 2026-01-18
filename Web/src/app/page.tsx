@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle, BarChart3 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import { format } from 'date-fns';
 import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo, Footer, UserMenu } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
@@ -28,7 +29,8 @@ export default function Dashboard() {
     const { data: dashboardData, isLoading, error } = useQuery({
         queryKey: ['dashboard-data'],
         queryFn: async () => {
-            const res = await fetch('/api/dashboard');
+            const todayStr = format(new Date(), 'yyyy-MM-dd');
+            const res = await fetch(`/api/dashboard?date=${todayStr}`);
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
                 throw new Error(errorData.error || 'Failed to load dashboard');

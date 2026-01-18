@@ -30,6 +30,14 @@ export async function GET(req: NextRequest) {
         const userId = session.user.id;
 
         // --- PARALLEL DATA FETCHING ---
+        // Parse 'date' query param to anchor "current week"
+        const url = new URL(req.url);
+        const dateParam = url.searchParams.get('date');
+        const refDate = dateParam ? new Date(dateParam) : new Date();
+
+        // Check if refDate is valid
+        const validRefDate = !isNaN(refDate.getTime()) ? refDate : new Date();
+
         // 1. User Settings & Active Goals
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
@@ -40,12 +48,12 @@ export async function GET(req: NextRequest) {
             where: { userId, isActive: true },
             orderBy: { raceDate: 'asc' },
             include: {
-                // Optimized: Fetch workouts only for current week
+                // Optimized: Fetch workouts only for current week (anchored to client date)
                 workouts: {
                     where: {
                         scheduledDate: {
-                            gte: startOfWeek(new Date(), { weekStartsOn: 1 }),
-                            lte: endOfWeek(new Date(), { weekStartsOn: 1 }),
+                            gte: startOfWeek(validRefDate, { weekStartsOn: 1 }),
+                            lte: endOfWeek(validRefDate, { weekStartsOn: 1 }),
                         }
                     },
                     orderBy: { scheduledDate: 'asc' }

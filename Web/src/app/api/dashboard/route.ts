@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         // 1. User Settings & Active Goals
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true }
+            select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true }
         });
 
         const activeGoalsPromise = prisma.goal.findMany({
@@ -115,6 +115,7 @@ export async function GET(req: NextRequest) {
         // --- METRIC CALCULATION (Server-Side) ---
         const maxHR = user?.hrMax || 185;
         const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
+        const includeCrossTraining = user?.includeCrossTraining ?? true;
 
         // Split for stats logic
         const runActivities = statsActivities.filter(a => a.type === 'RUN');
@@ -124,7 +125,12 @@ export async function GET(req: NextRequest) {
 
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
         const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
-        const marathonShape = AnalyticsService.calculateShape(runActivities, crossTrainingActivities, effectiveVO2max);
+        // Conditionally include cross-training based on user preference
+        const marathonShape = AnalyticsService.calculateShape(
+            runActivities,
+            includeCrossTraining ? crossTrainingActivities : [],
+            effectiveVO2max
+        );
         const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 

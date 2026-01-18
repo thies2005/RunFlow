@@ -24,7 +24,11 @@ export async function GET() {
                 hrZone1Max: true,
                 hrZone2Max: true,
                 hrZone3Max: true,
-                hrZone4Max: true
+                hrZone4Max: true,
+                hrZone5Max: true,
+                hrZone6Max: true,
+                thresholdHeartRate: true,
+                includeCrossTraining: true,
             }
         });
 
@@ -37,10 +41,14 @@ export async function GET() {
             hrRest: user?.hrRest || 55,
             weight: user?.weight || 70,
             height: user?.height || 175,
-            hrZone1Max: user?.hrZone1Max || 60,
-            hrZone2Max: user?.hrZone2Max || 70,
-            hrZone3Max: user?.hrZone3Max || 80,
-            hrZone4Max: user?.hrZone4Max || 90,
+            thresholdHeartRate: user?.thresholdHeartRate,
+            hrZone1Max: user?.hrZone1Max || 130,
+            hrZone2Max: user?.hrZone2Max || 148,
+            hrZone3Max: user?.hrZone3Max || 160,
+            hrZone4Max: user?.hrZone4Max || 170,
+            hrZone5Max: user?.hrZone5Max || 178,
+            hrZone6Max: user?.hrZone6Max || 187,
+            includeCrossTraining: user?.includeCrossTraining ?? true,
             runsPerWeek: activeGoal?.runsPerWeek || 4,
             ridesPerWeek: activeGoal?.ridesPerWeek || 0,
             strengthPerWeek: activeGoal?.strengthPerWeek || 0,

@@ -24,6 +24,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [hrZone5Max, setHrZone5Max] = useState(178);
     const [hrZone6Max, setHrZone6Max] = useState(187);
 
+    // Marathon Shape settings
+    const [includeCrossTraining, setIncludeCrossTraining] = useState(true);
+
     const [message, setMessage] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -60,6 +63,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             if (settingsData.hrZone4Max) setHrZone4Max(settingsData.hrZone4Max);
             if (settingsData.hrZone5Max) setHrZone5Max(settingsData.hrZone5Max);
             if (settingsData.hrZone6Max) setHrZone6Max(settingsData.hrZone6Max);
+            if (typeof settingsData.includeCrossTraining === 'boolean') {
+                setIncludeCrossTraining(settingsData.includeCrossTraining);
+            }
         }
     }, [settingsData]);
 
@@ -89,7 +95,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     hrZone3Max,
                     hrZone4Max,
                     hrZone5Max,
-                    hrZone6Max
+                    hrZone6Max,
+                    includeCrossTraining
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -249,6 +256,28 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     <input type="number" value={hrZone6Max} onChange={e => setHrZone6Max(parseInt(e.target.value))} className={inputClass} />
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Marathon Shape Settings */}
+                    <div className="pt-2 border-t border-white/10">
+                        <label className="block text-xs text-accent-orange mb-3 uppercase font-semibold">Marathon Shape</label>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                            <div>
+                                <p className="text-sm text-white">Include Cross-Training</p>
+                                <p className="text-[10px] text-gray-500">Count cycling, swimming, etc. towards marathon shape</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIncludeCrossTraining(!includeCrossTraining)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeCrossTraining ? 'bg-accent-orange' : 'bg-white/20'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeCrossTraining ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
                         </div>
                     </div>
 

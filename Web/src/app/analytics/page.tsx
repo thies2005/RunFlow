@@ -145,7 +145,8 @@ export default function AnalyticsPage() {
                 hrZone4Time: a.hrZone4Time ?? undefined,
             }));
 
-        const maxHR = userData?.user?.hrMax || 190;
+        const maxHR = userData?.user?.hrMax || userData?.hrMax || 190;
+        const includeCrossTraining = userData?.includeCrossTraining ?? true;
         const activeGoal = goalsData?.goals?.find((g: Goal) => g.isActive);
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
 
@@ -155,7 +156,12 @@ export default function AnalyticsPage() {
         const effectiveVO2max = statsData?.effectiveVO2max || localVO2max;
 
         // Include cross-training activities for consistent shape calculation with start page
-        const localShapeResult = calculateMarathonShape(runs, effectiveVO2max, crossTrainingActivities);
+        // Conditionally include based on user preference
+        const localShapeResult = calculateMarathonShape(
+            runs,
+            effectiveVO2max,
+            includeCrossTraining ? crossTrainingActivities : undefined
+        );
         // Use server-provided shape if available (unified metric), otherwise fallback to local
         const shapeResult = statsData?.marathonShape || localShapeResult;
         const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
@@ -217,8 +223,18 @@ export default function AnalyticsPage() {
                 const d = new Date(r.startDate);
                 return d >= weekStart && d <= weekEnd;
             });
+            // Also filter cross-training activities for the same period
+            const weekCrossTraining = crossTrainingActivities.filter(a => {
+                const d = new Date(a.startDate);
+                return d >= weekStart && d <= weekEnd;
+            });
             const tempVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);
-            const tempShape = calculateMarathonShape(weekRuns, tempVO2 || effectiveVO2max);
+            // Include cross-training for consistency with the main card calculation (if enabled)
+            const tempShape = calculateMarathonShape(
+                weekRuns,
+                tempVO2 || effectiveVO2max,
+                includeCrossTraining ? weekCrossTraining : undefined
+            );
             shapeTrend.push({
                 week: weekEnd.toISOString().split('T')[0], // ISO Date
                 shape: tempShape.shape

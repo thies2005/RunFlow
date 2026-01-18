@@ -31,16 +31,16 @@ export async function GET(req: Request) {
         const [user, activeGoal] = await Promise.all([
             prisma.user.findUnique({
                 where: { id: userId },
-                select: { hrMax: true, vdotCorrectionFactor: true }
+                select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true }
             }),
             prisma.goal.findFirst({
                 where: { userId, isActive: true },
             })
         ]);
 
-        // Defaults
         const maxHR = user?.hrMax || 185;
         const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
+        const includeCrossTraining = user?.includeCrossTraining ?? true;
         const currentVdot = activeGoal?.currentVdot || null;
         // The original code used marathonShapeFactor as 'calibrationFactor' passed to VO2max calc.
         // We will pass 1.0 to raw calculation and handle correction separately as per service.
@@ -87,7 +87,12 @@ export async function GET(req: Request) {
         // 4. Compute Metrics via Service
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
         const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
-        const marathonShape = AnalyticsService.calculateShape(runActivities, crossTrainingActivities, effectiveVO2max);
+        // Conditionally include cross-training based on user preference
+        const marathonShape = AnalyticsService.calculateShape(
+            runActivities,
+            includeCrossTraining ? crossTrainingActivities : [],
+            effectiveVO2max
+        );
 
         // CTL/ATL uses run activities primarily for specificity, or all?
         // Original code used runActivities only. Keeping that behavior.

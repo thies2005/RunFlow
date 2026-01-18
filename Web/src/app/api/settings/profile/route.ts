@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
             hrZone4Max,
             hrZone5Max,
             hrZone6Max,
-            hrZone7Max
+            hrZone7Max,
+            includeCrossTraining
         } = body;
 
         // Helper to parse int safely
@@ -53,9 +54,8 @@ export async function POST(request: NextRequest) {
                 hrZone4Max: parseIntSafe(hrZone4Max),
                 hrZone5Max: parseIntSafe(hrZone5Max),
                 hrZone6Max: parseIntSafe(hrZone6Max),
-                // hrZone7Max is implied as > hrZone6Max, usually not stored as a max boundary if it's the last one, 
-                // but if schema has it (schema didn't show it), we can ignore or add if exists.
-                // Schema inspection showed hrZone6Max. Zone 7 is infinite/above.
+                // Only update includeCrossTraining if explicitly provided (boolean)
+                ...(typeof includeCrossTraining === 'boolean' && { includeCrossTraining }),
             },
         });
 

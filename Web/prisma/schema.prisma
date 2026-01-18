@@ -54,6 +54,9 @@ model User {
   vdotReferenceRaceTime Int? // seconds
   vdotReferenceRaceType String? // "5K", "10K", "HALF", "MARATHON"
 
+  // Marathon Shape settings
+  includeCrossTraining Boolean @default(true) // Include cross-training in marathon shape
+
   // Sync status
   lastSyncAt     DateTime?
   syncInProgress Boolean   @default(false)

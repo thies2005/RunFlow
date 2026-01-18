@@ -192,7 +192,7 @@ export async function GET(request: Request) {
         });
 
         const filteredFitness = cachedFitness.map(h => ({
-            date: h.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+            date: h.date.toISOString().split('T')[0],
             ctl: h.ctl,
             atl: h.atl,
             tsb: h.tsb,

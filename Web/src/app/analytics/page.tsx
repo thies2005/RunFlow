@@ -164,8 +164,8 @@ export default function AnalyticsPage() {
             effectiveVO2max,
             includeCrossTraining ? crossTrainingActivities : undefined
         );
-        // Use server-provided shape if available (unified metric), otherwise fallback to local
-        const shapeResult = statsData?.marathonShape || localShapeResult;
+        // Always use local calculation for consistency between card and trend chart
+        const shapeResult = localShapeResult;
         const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapeResult.shape, calibrationFactor);
         const trainingPaces = calculateTrainingPaces(effectiveVO2max);
@@ -619,8 +619,8 @@ export default function AnalyticsPage() {
                                             key={range}
                                             onClick={() => setZonesTimeRange(range)}
                                             className={`px-2 py-1 text-xs font-medium rounded transition-all ${zonesTimeRange === range
-                                                    ? 'bg-zinc-700 text-white shadow-sm'
-                                                    : 'text-foreground-muted hover:text-foreground'
+                                                ? 'bg-zinc-700 text-white shadow-sm'
+                                                : 'text-foreground-muted hover:text-foreground'
                                                 }`}
                                             style={zonesTimeRange === range ? { backgroundColor: 'var(--accent-purple)' } : {}}
                                         >

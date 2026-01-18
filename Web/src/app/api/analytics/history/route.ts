@@ -305,9 +305,13 @@ export async function GET(request: Request) {
                 type: true,
                 averageHr: true,
                 hasHeartrate: true,
+                hrZone1Time: true,
                 hrZone2Time: true,
                 hrZone3Time: true,
                 hrZone4Time: true,
+                hrZone5Time: true,
+                hrZone6Time: true,
+                hrZone7Time: true,
             },
             orderBy: { startDate: 'asc' }
         });
@@ -332,9 +336,13 @@ export async function GET(request: Request) {
                 averageHr: a.averageHr,
                 hasHeartrate: a.hasHeartrate,
                 type: a.type,
+                hrZone1Time: a.hrZone1Time ?? undefined,
                 hrZone2Time: a.hrZone2Time ?? undefined,
                 hrZone3Time: a.hrZone3Time ?? undefined,
                 hrZone4Time: a.hrZone4Time ?? undefined,
+                hrZone5Time: a.hrZone5Time ?? undefined,
+                hrZone6Time: a.hrZone6Time ?? undefined,
+                hrZone7Time: a.hrZone7Time ?? undefined,
             }));
 
         // Calculate weekly shape trend (last 12 weeks)

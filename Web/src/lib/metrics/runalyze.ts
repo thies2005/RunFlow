@@ -50,6 +50,9 @@ export type ActivityForShape = {
     hrZone2Time?: number;    // seconds in Zone 2
     hrZone3Time?: number;    // seconds in Zone 3  
     hrZone4Time?: number;    // seconds in Zone 4
+    hrZone5Time?: number;    // seconds in Zone 5
+    hrZone6Time?: number;    // seconds in Zone 6
+    hrZone7Time?: number;    // seconds in Zone 7
 };
 
 /**
@@ -150,10 +153,24 @@ export function calculateGeneralAerobicScore(
     const activityTypesSet = new Set<string>();
 
     relevantActivities.forEach(a => {
+        // Use all zones for total aerobic volume
+        const z1 = a.hrZone1Time || 0;
         const z2 = a.hrZone2Time || 0;
         const z3 = a.hrZone3Time || 0;
         const z4 = a.hrZone4Time || 0;
-        totalZoneSeconds += (z2 + z3 + z4);
+        const z5 = a.hrZone5Time || 0;
+        const z6 = a.hrZone6Time || 0;
+        const z7 = a.hrZone7Time || 0;
+
+        const zoneSum = z1 + z2 + z3 + z4 + z5 + z6 + z7;
+
+        // If we have zone data, use it. Otherwise fallback to movingTime (e.g. Swimming without HR)
+        if (zoneSum > 0) {
+            totalZoneSeconds += zoneSum;
+        } else {
+            totalZoneSeconds += a.movingTime;
+        }
+
         if (a.type) activityTypesSet.add(a.type);
     });
 

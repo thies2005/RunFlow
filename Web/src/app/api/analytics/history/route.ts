@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         const [user, activeGoal] = await Promise.all([
             prisma.user.findUnique({
                 where: { id: userId },
-                select: { hrMax: true, includeCrossTraining: true }
+                select: { hrMax: true, includeCrossTraining: true, vdotCorrectionFactor: true }
             }),
             prisma.goal.findFirst({
                 where: { userId, isActive: true },
@@ -32,6 +32,7 @@ export async function GET(request: Request) {
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
         const maxHR = user?.hrMax || 185;
         const includeCrossTraining = user?.includeCrossTraining ?? true;
+        const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
 
         const { searchParams } = new URL(request.url);
         const range = searchParams.get('range') || '1_YEAR'; // Default to 1 year
@@ -355,8 +356,9 @@ export async function GET(request: Request) {
                 return d >= weekStart && d <= weekEnd;
             });
 
-            const tempVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);
-            const effectiveVO2 = tempVO2 || 0;
+            // Calculate raw VO2 and apply correction factor (matching stats API)
+            const rawVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);
+            const effectiveVO2 = rawVO2 ? rawVO2 * vdotCorrectionFactor : 0;
 
             // Respect user's cross-training preference
             const tempShape = calculateMarathonShape(

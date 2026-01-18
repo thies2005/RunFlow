@@ -15,17 +15,10 @@ import RacePredictionChart from '@/components/RacePredictionChart';
 import CombinedAnalyticsChart, { TimeRange } from '@/components/CombinedAnalyticsChart';
 import { Footer } from '@/components';
 import {
-    calculateWeightedEffectiveVO2max,
-    calculateMarathonShape,
     calculatePredictedTimes,
     calculateAllRacePredictions,
     calculateEffectiveVO2max,
-    type ActivityForShape
 } from '@/lib/metrics/runalyze';
-import {
-    calculateTrimpFromZones,
-    FALLBACK_TRIMP_PER_MINUTE
-} from '@/lib/metrics/trimp';
 import {
     formatTime,
     calculateTrainingPaces,
@@ -95,12 +88,30 @@ export default function AnalyticsPage() {
         enabled: status === 'authenticated',
     });
 
-    // Fetch analytics stats for VDOT correction factor
+    // Fetch analytics stats for VDOT correction factor and current metrics
     const { data: statsData } = useQuery({
         queryKey: ['analytics-stats'],
         queryFn: async () => {
             const res = await fetch('/api/analytics/stats');
             if (!res.ok) throw new Error('Failed to fetch stats');
+            return res.json();
+        },
+        enabled: status === 'authenticated',
+    });
+
+    // Fetch analytics history for server-calculated trends (shape, VO2, fitness)
+    const { data: historyData } = useQuery({
+        queryKey: ['analytics-history', timeRange],
+        queryFn: async () => {
+            const rangeMap: Record<string, string> = {
+                'ALL': 'ALL',
+                '1Y': '1_YEAR',
+                '6M': '6_MONTHS',
+                '3M': '12_WEEKS',
+                '1M': '4_WEEKS'
+            };
+            const res = await fetch(`/api/analytics/history?range=${rangeMap[timeRange] || '1_YEAR'}`);
+            if (!res.ok) throw new Error('Failed to fetch history');
             return res.json();
         },
         enabled: status === 'authenticated',
@@ -118,188 +129,76 @@ export default function AnalyticsPage() {
         },
     });
 
-    // Calculated data
+    // Calculated data - uses server data where available, local calculations for derived values only
     const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions, combinedData, trainingPaces } = useMemo(() => {
         const activities: Activity[] = activitiesData?.activities || [];
-        const runs: ActivityForShape[] = activities
-            .filter((a: Activity) => a.type === 'RUN')
-            .map((a: Activity) => ({
-                startDate: a.startDate,
-                distance: a.distance,
-                movingTime: a.movingTime,
-                averageHr: a.averageHr,
-                hasHeartrate: a.hasHeartrate,
-            }));
 
-        // Include cross-training activities for shape calculation (matches start page)
-        const crossTrainingActivities: ActivityForShape[] = activities
-            .filter((a: Activity) => ['RIDE', 'VIRTUAL_RIDE', 'SWIM', 'WORKOUT'].includes(a.type))
-            .map((a: Activity) => ({
-                startDate: a.startDate,
-                distance: a.distance,
-                movingTime: a.movingTime,
-                averageHr: a.averageHr,
-                hasHeartrate: a.hasHeartrate,
-                type: a.type,
-                hrZone1Time: a.hrZone1Time ?? undefined,
-                hrZone2Time: a.hrZone2Time ?? undefined,
-                hrZone3Time: a.hrZone3Time ?? undefined,
-                hrZone4Time: a.hrZone4Time ?? undefined,
-            }));
-
-        const maxHR = userData?.user?.hrMax || userData?.hrMax || 190;
-        const includeCrossTraining = userData?.includeCrossTraining ?? true;
+        // Get values from server APIs
+        const effectiveVO2max = statsData?.effectiveVO2max || 0;
         const activeGoal = goalsData?.goals?.find((g: Goal) => g.isActive);
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
 
-        // Use corrected effectiveVO2max from stats API (includes vdotCorrectionFactor)
-        // Fall back to local calculation if stats not loaded
-        const localVO2max = calculateWeightedEffectiveVO2max(runs, maxHR);
-        const effectiveVO2max = statsData?.effectiveVO2max || localVO2max;
+        // Use server-provided marathon shape
+        const shapeFromServer = statsData?.marathonShape || { shape: 0, mileageScore: 0, longRunScore: 0, crossTrainingScore: 0, details: {} };
 
-        // Include cross-training activities for consistent shape calculation with start page
-        // Conditionally include based on user preference
-        const localShapeResult = calculateMarathonShape(
-            runs,
-            effectiveVO2max,
-            includeCrossTraining ? crossTrainingActivities : undefined
-        );
-        // Always use local calculation for consistency between card and trend chart
-        const shapeResult = localShapeResult;
-        const times = calculatePredictedTimes(effectiveVO2max, shapeResult.shape, calibrationFactor);
-        const allPredictions = calculateAllRacePredictions(effectiveVO2max, shapeResult.shape, calibrationFactor);
-        const trainingPaces = calculateTrainingPaces(effectiveVO2max);
+        // Calculate race predictions and training paces from server values
+        const times = effectiveVO2max > 0
+            ? calculatePredictedTimes(effectiveVO2max, shapeFromServer.shape, calibrationFactor)
+            : { optimal: 0, predicted: 0 };
+        const allPredictions = effectiveVO2max > 0
+            ? calculateAllRacePredictions(effectiveVO2max, shapeFromServer.shape, calibrationFactor)
+            : [];
+        const trainingPaces = effectiveVO2max > 0
+            ? calculateTrainingPaces(effectiveVO2max)
+            : null;
 
-        // === VO2max Trend (with Rolling Average) ===
+        // Use server-provided trend data
+        const serverShapeTrend = historyData?.shapeTrend || [];
+        const shapeTrend: { week: string; shape: number }[] = serverShapeTrend.map((s: { week: string; shape: number }) => ({
+            week: s.week,
+            shape: s.shape
+        }));
+
+        // Use server-provided VO2 trend (weekly) with rolling average
+        const serverVo2Trend = historyData?.vo2Trend || [];
         const vo2Trend: { date: string; vo2: number; vo2Rolling?: number }[] = [];
-        const sortedRuns = [...runs]
-            .filter(r => r.hasHeartrate && r.averageHr && r.distance >= 3000)
-            .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-
-        const factor = statsData?.vdotCorrectionFactor || 1.0;
-
-        // Calculate raw values first
-        const rawVo2Data = sortedRuns.slice(-50).map(run => {
-            const rawVo2 = calculateEffectiveVO2max(run.distance, run.movingTime, run.averageHr!, maxHR);
-            // Apply global calibration factor to trend points
-            const vo2 = rawVo2 * factor;
-            return {
-                date: new Date(run.startDate).toISOString().split('T')[0], // Use ISO date for sorting
-                vo2: vo2 > 0 ? Math.round(vo2 * 10) / 10 : 0
-            };
-        }).filter(d => d.vo2 > 0);
-
-        // Calculate rolling median
-        rawVo2Data.forEach((point, index) => {
+        serverVo2Trend.forEach((point: { week: string; vo2: number }, index: number) => {
             const windowSize = 4;
             const windowValues: number[] = [];
-
             for (let i = index; i >= 0 && windowValues.length < windowSize; i--) {
-                windowValues.push(rawVo2Data[i].vo2);
+                windowValues.push(serverVo2Trend[i].vo2);
             }
-
             if (windowValues.length > 0) {
-                // Calculate Median
-                windowValues.sort((a, b) => a - b);
+                windowValues.sort((a: number, b: number) => a - b);
                 const mid = Math.floor(windowValues.length / 2);
                 const median = windowValues.length % 2 !== 0
                     ? windowValues[mid]
                     : (windowValues[mid - 1] + windowValues[mid]) / 2;
-
                 vo2Trend.push({
-                    ...point,
+                    date: point.week,
+                    vo2: point.vo2,
                     vo2Rolling: Math.round(median * 10) / 10
                 });
             } else {
-                vo2Trend.push(point);
+                vo2Trend.push({ date: point.week, vo2: point.vo2 });
             }
         });
 
-        // === Shape Trend (Weekly) ===
-        const shapeTrend: { week: string; shape: number }[] = [];
-        const now = new Date();
-        for (let i = 11; i >= 0; i--) {
-            const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-            const weekStart = new Date(weekEnd.getTime() - 182 * 24 * 60 * 60 * 1000);
-            const weekRuns = runs.filter(r => {
-                const d = new Date(r.startDate);
-                return d >= weekStart && d <= weekEnd;
-            });
-            // Also filter cross-training activities for the same period
-            const weekCrossTraining = crossTrainingActivities.filter(a => {
-                const d = new Date(a.startDate);
-                return d >= weekStart && d <= weekEnd;
-            });
-            const tempVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);
-            // Include cross-training for consistency with the main card calculation (if enabled)
-            const tempShape = calculateMarathonShape(
-                weekRuns,
-                tempVO2 || effectiveVO2max,
-                includeCrossTraining ? weekCrossTraining : undefined
-            );
-            shapeTrend.push({
-                week: weekEnd.toISOString().split('T')[0], // ISO Date
-                shape: tempShape.shape
-            });
-        }
+        // Use server-provided fitness trend
+        const serverFitnessTrend = historyData?.fitnessTrend || [];
+        const fitness: { date: string; ctl: number; atl: number; tsb: number }[] = serverFitnessTrend.map((f: { date: string; ctl: number; atl: number; tsb: number }) => ({
+            date: f.date,
+            ctl: f.ctl,
+            atl: f.atl,
+            tsb: f.tsb
+        }));
 
-        // === CTL/ATL/TSB (Fitness & Form) ===
-        const fitness: { date: string; ctl: number; atl: number; tsb: number }[] = [];
-        let ctl = 0, atl = 0;
-        const dailyLoads: Map<string, number> = new Map();
-
-        activities.forEach(activity => {
-            const dateKey = new Date(activity.startDate).toISOString().split('T')[0];
-
-            // Calculate TRIMP (Training Impulse)
-            // We merge Z5, Z6, Z7 into the highest zone for the 5-zone generic TRIMP formula
-            // This ensures high-intensity intervals are weighed heavily
-            let trimp = calculateTrimpFromZones(
-                activity.hrZone1Time,
-                activity.hrZone2Time,
-                activity.hrZone3Time,
-                activity.hrZone4Time,
-                (activity.hrZone5Time || 0) + (activity.hrZone6Time || 0) + (activity.hrZone7Time || 0)
-            );
-
-            // Fallback if no heart rate data: use duration * factor
-            if (trimp === 0 && activity.movingTime > 0) {
-                trimp = (activity.movingTime / 60) * FALLBACK_TRIMP_PER_MINUTE;
-            }
-
-            dailyLoads.set(dateKey, (dailyLoads.get(dateKey) || 0) + trimp);
-        });
-
-        const earliestActivity = activities.length > 0
-            ? activities.reduce((min, a) => new Date(a.startDate) < new Date(min.startDate) ? a : min)
-            : null;
-        const earliestDate = earliestActivity ? new Date(earliestActivity.startDate) : now;
-        const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-
-        // Start from earliest activity or 1 year ago, whichever is earlier
-        // ensuring we have coverage for the 1Y chart view
-        const startDate = new Date(Math.min(earliestDate.getTime(), oneYearAgo.getTime()));
-        // Buffer a few days for initial values
-        startDate.setDate(startDate.getDate() - 1);
-        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
-            const dateKey = d.toISOString().split('T')[0];
-            const load = dailyLoads.get(dateKey) || 0;
-            ctl = ctl + (load - ctl) / 42;
-            atl = atl + (load - atl) / 7;
-            const tsb = ctl - atl;
-
-            fitness.push({
-                date: dateKey,
-                ctl: Math.round(ctl),
-                atl: Math.round(atl),
-                tsb: Math.round(tsb)
-            });
-        }
-
-        // Build daily volume map (km per day)
+        // === Combined Data for Charts (Volume + Training Time) - still local ===
         const dailyVolumeMap = new Map<string, number>();
         const dailyTimeMap = new Map<string, number>();
         const dailyVO2Map = new Map<string, { values: number[]; vo2max?: number }>();
+        const maxHR = userData?.user?.hrMax || userData?.hrMax || 190;
+        const factor = statsData?.vdotCorrectionFactor || 1.0;
 
         activities.forEach(activity => {
             const dateKey = new Date(activity.startDate).toISOString().split('T')[0];
@@ -312,12 +211,12 @@ export default function AnalyticsPage() {
             if (activity.type === 'RUN') {
                 dailyVolumeMap.set(dateKey, (dailyVolumeMap.get(dateKey) || 0) + activity.distance / 1000);
 
-                // Calculate VO2max for this run if it has HR
+                // Calculate VO2max for this run if it has HR (for detailed daily trend)
                 if (activity.hasHeartrate && activity.averageHr && activity.distance >= 3000) {
                     const vo2 = calculateEffectiveVO2max(activity.distance, activity.movingTime, activity.averageHr, maxHR);
                     if (vo2 > 0) {
                         const existing = dailyVO2Map.get(dateKey) || { values: [] };
-                        existing.values.push(vo2);
+                        existing.values.push(vo2 * factor);
                         dailyVO2Map.set(dateKey, existing);
                     }
                 }
@@ -331,62 +230,30 @@ export default function AnalyticsPage() {
             }
         });
 
-        // Create fitness map for easy lookup
-        const fitnessDataMap = new Map(fitness.map(f => [f.date, f]));
+        // Build combined data array
+        const allDates = new Set([...Array.from(dailyVolumeMap.keys()), ...Array.from(dailyTimeMap.keys())]);
+        const combinedDataRaw = Array.from(allDates).sort().map(date => ({
+            date,
+            volume: dailyVolumeMap.get(date) || 0,
+            trainingTime: dailyTimeMap.get(date) || 0,
+            vo2max: dailyVO2Map.get(date)?.vo2max,
+            ctl: serverFitnessTrend.find((f: { date: string }) => f.date === date)?.ctl,
+            atl: serverFitnessTrend.find((f: { date: string }) => f.date === date)?.atl,
+            tsb: serverFitnessTrend.find((f: { date: string }) => f.date === date)?.tsb,
+        }));
 
-        // 3. Create combined data array (Daily)
-        const allDayKeys = new Set<string>();
-        dailyVO2Map.forEach((_, key) => allDayKeys.add(key));
-        fitnessDataMap.forEach((_, key) => allDayKeys.add(key));
-        dailyVolumeMap.forEach((_, key) => allDayKeys.add(key));
-        dailyTimeMap.forEach((_, key) => allDayKeys.add(key));
+        // Calculate rolling averages for combined data
+        const combinedDataWithRolling = combinedDataRaw.map((d, index) => {
+            const windowSize = 7;
+            let volSum = 0, timeSum = 0, vo2Sum = 0, vo2Count = 0;
 
-        const days = Array.from(allDayKeys).sort((a, b) => {
-            const dateA = new Date(a);
-            const dateB = new Date(b);
-            return dateA.getTime() - dateB.getTime();
-        });
-
-        const initialCombinedData = days.map(day => {
-            const vo2Entry = dailyVO2Map.get(day);
-            const fitnessEntry = fitnessDataMap.get(day);
-            const volumeEntry = dailyVolumeMap.get(day);
-            const timeEntry = dailyTimeMap.get(day);
-
-            return {
-                date: day,
-                vo2max: vo2Entry?.vo2max,
-                ctl: fitnessEntry?.ctl,
-                atl: fitnessEntry?.atl,
-                tsb: fitnessEntry?.tsb,
-                volume: volumeEntry ? Math.round(volumeEntry * 10) / 10 : 0,
-                trainingTime: Math.round(timeEntry || 0),
-            };
-        });
-
-        // 4. Calculate Rolling Averages
-        const combinedDataWithRolling = initialCombinedData.map((d, index) => {
-            // VO2max Rolling (28 days)
-            const vo2Window = 28;
-            let vo2Count = 0;
-            let vo2Sum = 0;
-
-            for (let i = index; i >= 0 && vo2Count < 10; i--) { // Limit to 10 actual VO2max readings back
-                if (initialCombinedData[i].vo2max !== undefined) {
-                    vo2Sum += initialCombinedData[i].vo2max!;
+            for (let i = index; i >= 0 && index - i < windowSize; i--) {
+                volSum += combinedDataRaw[i].volume;
+                timeSum += combinedDataRaw[i].trainingTime;
+                if (combinedDataRaw[i].vo2max) {
+                    vo2Sum += combinedDataRaw[i].vo2max!;
                     vo2Count++;
                 }
-            }
-
-            // Volume & Time Rolling (7 days sum = "Weekly" equivalent)
-            const weeklyWindow = 7;
-            let volSum = 0;
-            let timeSum = 0;
-
-            // Look back 6 days + current day
-            for (let i = index; i >= 0 && i > index - weeklyWindow; i--) {
-                volSum += initialCombinedData[i].volume || 0;
-                timeSum += initialCombinedData[i].trainingTime || 0;
             }
 
             return {
@@ -397,7 +264,7 @@ export default function AnalyticsPage() {
             };
         });
 
-        // 5. Calculate Zone Distribution from activities
+        // Zone distribution from activities
         const zoneDistribution = activities.reduce((acc: Record<string, number>, activity: Activity) => {
             acc.Z1 = (acc.Z1 || 0) + (activity.hrZone1Time || 0);
             acc.Z2 = (acc.Z2 || 0) + (activity.hrZone2Time || 0);
@@ -412,13 +279,13 @@ export default function AnalyticsPage() {
         return {
             runalyzeMetrics: {
                 effectiveVO2max,
-                rawVO2max: statsData?.rawVO2max || localVO2max,
+                rawVO2max: statsData?.rawVO2max || 0,
                 vdotCorrectionFactor: statsData?.vdotCorrectionFactor || 1.0,
-                shape: shapeResult.shape,
-                mileageScore: shapeResult.mileageScore,
-                longRunScore: shapeResult.longRunScore,
-                crossTrainingScore: shapeResult.crossTrainingScore || 0,
-                details: shapeResult.details,
+                shape: shapeFromServer.shape,
+                mileageScore: shapeFromServer.mileageScore,
+                longRunScore: shapeFromServer.longRunScore,
+                crossTrainingScore: shapeFromServer.crossTrainingScore || 0,
+                details: shapeFromServer.details,
                 optimalTime: times.optimal,
                 predictedTime: times.predicted,
                 calibrationFactor
@@ -431,7 +298,7 @@ export default function AnalyticsPage() {
             combinedData: combinedDataWithRolling,
             zoneDistribution
         };
-    }, [activitiesData, userData, goalsData, statsData]);
+    }, [activitiesData, userData, goalsData, statsData, historyData]);
 
     // Apply filtering to the data used in stand-alone charts
     const filteredVo2Trend = useMemo(() => filterByTimeRange(vo2TrendData, timeRange), [vo2TrendData, timeRange]);

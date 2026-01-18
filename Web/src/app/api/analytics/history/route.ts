@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { calculateTrimpFromZones, FALLBACK_TRIMP_PER_MINUTE } from '@/lib/metrics/trimp';
 import { calculateFitnessHistory, getActivityContribution, calculateRunningTss, type DailyLoad } from '@/lib/metrics/fitness';
+import { calculateMarathonShape, calculateWeightedEffectiveVO2max, type ActivityForShape } from '@/lib/metrics/runalyze';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,12 +17,21 @@ export async function GET(request: Request) {
 
         const userId = session.user.id;
 
-        // Fetch calibration factor
-        const activeGoal = await prisma.goal.findFirst({
-            where: { userId, isActive: true },
-            select: { marathonShapeFactor: true }
-        });
+        // Fetch user settings and calibration factor
+        const [user, activeGoal] = await Promise.all([
+            prisma.user.findUnique({
+                where: { id: userId },
+                select: { hrMax: true, includeCrossTraining: true }
+            }),
+            prisma.goal.findFirst({
+                where: { userId, isActive: true },
+                select: { marathonShapeFactor: true }
+            })
+        ]);
+
         const calibrationFactor = activeGoal?.marathonShapeFactor || 1.0;
+        const maxHR = user?.hrMax || 185;
+        const includeCrossTraining = user?.includeCrossTraining ?? true;
 
         const { searchParams } = new URL(request.url);
         const range = searchParams.get('range') || '1_YEAR'; // Default to 1 year
@@ -277,11 +287,100 @@ export async function GET(request: Request) {
 
         const averagePace = totalDistance > 0 ? (totalMovingTime / totalDistance) * 1000 : 0; // sec/km
 
+        // --- C. Calculate Marathon Shape & VO2max Trends ---
+        // Need all activities for 6-month lookback for shape calculation
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
+
+        const allActivitiesForShape = await prisma.activity.findMany({
+            where: {
+                userId,
+                startDate: { gte: sixMonthsAgo }
+            },
+            select: {
+                startDate: true,
+                distance: true,
+                movingTime: true,
+                type: true,
+                averageHr: true,
+                hasHeartrate: true,
+                hrZone2Time: true,
+                hrZone3Time: true,
+                hrZone4Time: true,
+            },
+            orderBy: { startDate: 'asc' }
+        });
+
+        // Map to ActivityForShape type
+        const runActivitiesForShape: ActivityForShape[] = allActivitiesForShape
+            .filter(a => a.type === 'RUN')
+            .map(a => ({
+                startDate: a.startDate,
+                distance: a.distance,
+                movingTime: a.movingTime,
+                averageHr: a.averageHr,
+                hasHeartrate: a.hasHeartrate,
+            }));
+
+        const crossTrainingActivitiesForShape: ActivityForShape[] = allActivitiesForShape
+            .filter(a => ['RIDE', 'VIRTUAL_RIDE', 'SWIM', 'WORKOUT'].includes(a.type))
+            .map(a => ({
+                startDate: a.startDate,
+                distance: a.distance,
+                movingTime: a.movingTime,
+                averageHr: a.averageHr,
+                hasHeartrate: a.hasHeartrate,
+                type: a.type,
+                hrZone2Time: a.hrZone2Time ?? undefined,
+                hrZone3Time: a.hrZone3Time ?? undefined,
+                hrZone4Time: a.hrZone4Time ?? undefined,
+            }));
+
+        // Calculate weekly shape trend (last 12 weeks)
+        const shapeTrend: { week: string; shape: number }[] = [];
+        const vo2Trend: { week: string; vo2: number }[] = [];
+        const now2 = new Date();
+
+        for (let i = 11; i >= 0; i--) {
+            const weekEnd = new Date(now2.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+            const weekStart = new Date(weekEnd.getTime() - 182 * 24 * 60 * 60 * 1000); // 6 month lookback for each point
+
+            const weekRuns = runActivitiesForShape.filter(r => {
+                const d = new Date(r.startDate);
+                return d >= weekStart && d <= weekEnd;
+            });
+
+            const weekCrossTraining = crossTrainingActivitiesForShape.filter(a => {
+                const d = new Date(a.startDate);
+                return d >= weekStart && d <= weekEnd;
+            });
+
+            const tempVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);
+            const effectiveVO2 = tempVO2 || 0;
+
+            // Respect user's cross-training preference
+            const tempShape = calculateMarathonShape(
+                weekRuns,
+                effectiveVO2 || 40, // fallback VO2 for calculation
+                includeCrossTraining ? weekCrossTraining : undefined
+            );
+
+            const weekLabel = weekEnd.toISOString().split('T')[0];
+            shapeTrend.push({ week: weekLabel, shape: tempShape.shape });
+
+            if (effectiveVO2 > 0) {
+                vo2Trend.push({ week: weekLabel, vo2: Math.round(effectiveVO2 * 10) / 10 });
+            }
+        }
+
         return NextResponse.json({
             weeklyVolume,
             zoneTrend,
             fitnessTrend: filteredFitness,
             vdotTrend,
+            shapeTrend,
+            vo2Trend,
+            includeCrossTraining, // Let client know the preference used
             totals: {
                 distance: Math.round(totalDistance / 1000), // km
                 activities: totalActivities,

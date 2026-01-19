@@ -1,4 +1,6 @@
 
+
+import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/db';
 import { AuthCodeType } from '@prisma/client';
 
@@ -13,9 +15,10 @@ export const CODE_EXPIRY_MINUTES = 15;
  */
 export function generateAuthCode(): string {
     const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const bytes = randomBytes(6);
     let code = '';
     for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
+        code += chars.charAt(bytes[i] % chars.length);
     }
     return code;
 }

@@ -88,7 +88,6 @@ export async function GET(req: Request) {
 
     console.log('[Strava Webhook] Comparing tokens:', {
         received: receivedToken,
-        expected: expectedToken,
         match: receivedToken === expectedToken
     });
 

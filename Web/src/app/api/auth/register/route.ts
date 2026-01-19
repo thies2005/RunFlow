@@ -11,9 +11,18 @@ import { hashPassword, validateEmail, validatePassword } from '@/lib/auth/auth-e
 import { createAuthCode } from '@/lib/auth/tokens';
 import { sendWelcomeEmail } from '@/lib/email';
 import { AuthCodeType } from '@prisma/client';
+import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting check
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = await checkRateLimitAsync(clientId, { limit: 5, windowSeconds: 3600, prefix: 'register' });
+
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json({ error: 'Too many registration attempts. Please try again later.' }, { status: 429 });
+        }
+
         const body = await request.json();
         const { email, password, name } = body;
 

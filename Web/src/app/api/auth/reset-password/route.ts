@@ -4,9 +4,18 @@ import { prisma } from '@/lib/db';
 import { verifyAuthCode } from '@/lib/auth/tokens';
 import { hashPassword } from '@/lib/auth/auth-email';
 import { AuthCodeType } from '@prisma/client';
+import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting check
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = await checkRateLimitAsync(clientId, { limit: 5, windowSeconds: 900, prefix: 'reset_pw' }); // 5 attempts per 15 mins
+
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
+
         const { email, code, password } = await request.json();
 
         if (!email || !code || !password) {

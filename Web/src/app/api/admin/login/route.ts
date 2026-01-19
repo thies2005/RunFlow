@@ -15,8 +15,6 @@ export async function POST(request: NextRequest) {
         const { username, password } = body;
 
         console.log('[Admin Login] Attempt for:', username);
-        console.log('[Admin Login] Env Username configured:', !!process.env.ADMIN_USERNAME);
-        console.log('[Admin Login] Env Password configured:', !!process.env.ADMIN_PASSWORD);
 
         // Validate required fields
         if (!username || !password) {

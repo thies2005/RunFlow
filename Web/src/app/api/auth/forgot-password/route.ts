@@ -37,7 +37,11 @@ export async function POST(request: NextRequest) {
             const code = await createAuthCode(user.email!, AuthCodeType.PASSWORD_RESET);
 
             // Send email (don't await to not block response? actually better to await to catch errors)
-            await sendPasswordResetEmail(user.email!, code);
+            try {
+                await sendPasswordResetEmail(user.email!, code);
+            } catch (emailError) {
+                console.error(`[Auth ForgotPassword] Failed to send reset email to ${user.email}:`, emailError);
+            }
         }
 
         return NextResponse.json({

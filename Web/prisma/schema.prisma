@@ -339,6 +339,7 @@ model Workout {
 
   @@index([goalId, scheduledDate])
   @@index([goalId, isCompleted])
+  @@index([linkedActivityId])
 }
 
 enum WorkoutType {

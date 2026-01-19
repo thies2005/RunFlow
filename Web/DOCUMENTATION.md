@@ -17,6 +17,7 @@
 9. [Development Guide](#9-development-guide)
 10. [Deployment](#10-deployment)
 11. [Troubleshooting](#11-troubleshooting)
+12. [Mobile App (Capacitor)](#12-mobile-app-capacitor)
 
 ---
 
@@ -24,7 +25,7 @@
 
 RunFlow is a production-grade **running performance dashboard** that combines structured training plans with deep analytics. It is designed for runners who want to:
 
-- **Sync activities automatically** from Strava
+- **Sync activities automatically** from Strava or Google Health Connect
 - **Track fitness metrics** using scientifically-established models
 - **Create training plans** for races (5K, 10K, Half Marathon, Marathon)
 - **Analyze performance trends** and training effectiveness
@@ -60,6 +61,7 @@ Database & ORM:
 Authentication:
   - NextAuth.js
   - Strava OAuth
+  - Email (Magic Code / Password)
 
 Infrastructure:
   - Docker (multi-stage builds)
@@ -81,6 +83,7 @@ RunFlow/
 ├── scripts/
 │   ├── restore.sh             # Database restore script
 │   └── entrypoint.sh          # Container entry point
+├── android/                   # Native Android wrapper (Capacitor)
 ├── src/
 │   ├── app/                   # Next.js App Router
 │   │   ├── api/               # API routes
@@ -227,6 +230,8 @@ model User {
   hrZone3Max    Int       @default(80)  // Z3: Tempo
   hrZone4Max    Int       @default(90)  // Z4: Threshold
   // Z5: 90%+ (VO2max)
+  // RunFlow uses a 7-Zone model internally mapping these 5 values.
+  // Z6 (Anaerobic) and Z7 (Neuromuscular) are derived above Z5.
 
   // VDOT Correction
   vdotCorrectionFactor    Float     @default(1.0)
@@ -596,11 +601,16 @@ Different activities contribute differently to training load:
 ### 5.1 Authentication
 
 All API routes use NextAuth.js session authentication.
+Supports:
+- **Strava OAuth**: For main activity syncing.
+- **Email/Password**: Traditional login.
+- **Magic Link**: Passwordless login via email.
 
 ```
 GET /api/auth/signin  - Sign in page
 GET /api/auth/signout - Sign out
 GET /api/auth/session - Get current session
+POST /api/auth/callback/credentials - Email login
 ```
 
 ### 5.2 Dashboard API
@@ -1393,6 +1403,35 @@ TSB = CTL - ATL
 - **Strava API Documentation**: https://developers.strava.com/
 - **Next.js Documentation**: https://nextjs.org/docs
 - **Prisma Documentation**: https://www.prisma.io/docs
+
+---
+
+## 12. Mobile App (Capacitor)
+
+RunFlow uses **Capacitor** to wrap the Next.js web application into a native Android app. This allows for a unified codebase while leveraging native device features.
+
+### 12.1 Health Connect Integration
+
+The mobile app integrates with **Google Health Connect** to sync workouts from other apps (like Garmin, Peloton, etc.) directly into RunFlow.
+
+- **Plugin**: `@capacitor-community/health-connect` (or similar wrapper)
+- **Data Flow**: `Health Connect -> Android App -> RunFlow Web API` -> Database
+- **Sync Logic**: Checks for new activities on app launch or manual sync trigger.
+
+### 12.2 Build Process
+
+To build the Android app:
+
+```bash
+# 1. Build the Next.js web app (static export)
+npm run build
+
+# 2. Sync with Capacitor
+npx cap sync
+
+# 3. Open Android Studio to build APK/Bundle
+npx cap open android
+```
 
 ---
 

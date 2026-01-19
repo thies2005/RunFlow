@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus } from 'lucide-react';
+import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail } from 'lucide-react';
 
 // Components
 const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (
@@ -68,6 +68,25 @@ function DashboardContent() {
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
+
+    const handleResetPassword = async (userId: string, userEmail: string) => {
+        if (!confirm(`Are you sure you want to send a password reset email to ${userEmail}?`)) return;
+
+        setProcessing(true);
+        setActionMessage(null);
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/reset-password`, { method: 'POST' });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.error || 'Failed to send reset email');
+
+            setActionMessage({ type: 'success', text: `Reset email sent to ${userEmail}` });
+        } catch (error: any) {
+            setActionMessage({ type: 'error', text: error.message });
+        } finally {
+            setProcessing(false);
+        }
+    };
 
     const handleDeleteUser = async (userId: string) => {
         if (!confirm('Are you sure you want to delete this user? This action CANNOT be undone.')) return;
@@ -276,14 +295,24 @@ function DashboardContent() {
                                                     {user.activityCount}
                                                 </td>
                                                 <td className="py-4 text-right">
-                                                    <button
-                                                        onClick={() => handleDeleteUser(user.id)}
-                                                        disabled={processing}
-                                                        className="text-gray-400 hover:text-red-500 transition p-2 hover:bg-red-50 rounded-lg"
-                                                        title="Delete User"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
+                                                    <div className="flex justify-end space-x-2">
+                                                        <button
+                                                            onClick={() => handleResetPassword(user.id, user.email)}
+                                                            disabled={processing}
+                                                            className="text-gray-400 hover:text-emerald-500 transition p-2 hover:bg-emerald-50 rounded-lg"
+                                                            title="Send Reset Password Email"
+                                                        >
+                                                            <Mail className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteUser(user.id)}
+                                                            disabled={processing}
+                                                            className="text-gray-400 hover:text-red-500 transition p-2 hover:bg-red-50 rounded-lg"
+                                                            title="Delete User"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}

@@ -22,7 +22,7 @@ RunFlow is a production-grade running performance dashboard that combines struct
 ## 📂 Directory Structure
 
 - **`Web/`**: The web application (Next.js), DB schema (Prisma), and API backend.
-- **`App/`**: The Android mobile application source code.
+- **`Web/android/`**: The Capacitor Android project (Java/Kotlin wrapper).
 
 ---
 
@@ -68,25 +68,27 @@ docker compose up -d --build
 
 ## 📱 Mobile App (Android)
 
-> [!IMPORTANT]
-> The native Android app is currently in **Alpha** status. Active development is currently **paused** as the focus has shifted towards the Web platform and PWA (Progressive Web App) for mobile use.
+> [!NOTE]
+> RunFlow has transitioned to a **Hybrid Mobile App** architecture using **Capacitor**. The previous native Kotlin app is deprecated.
 
-The Android app is built with Kotlin and Jetpack Compose.
+The Android application is now a native wrapper around the web platform, providing the same rich UI with added native capabilities like **Health Connect** integration.
 
-### 1. Requirements
-- **Android Studio** (Koala or newer recommended).
-- **JDK 17**.
+### Features
+- **Unified Experience**: Same powerful interface as the web.
+- **Health Connect**: Sync activities from Garmin, Peloton, and other apps directly on your phone.
+- **Native Notifications**: Stay updated on training plan progress.
 
-### 2. Setup
-1. Open the project in Android Studio by selecting the `App` directory.
-2. Allow Gradle to sync and download dependencies.
-3. Configure the backend URL in the app settings or build config if necessary (refer to `App` source for endpoint configuration, typically dynamic).
+### Build Instructions
+The mobile app project is located in `Web/android`.
 
-### 3. Build
-Build the APK using Gradle:
 ```bash
-cd App
-./gradlew assembleDebug
+cd Web
+# Build web assets
+npm run build
+# Sync to Android project
+npx cap sync
+# Open in Android Studio
+npx cap open android
 ```
 
 ---

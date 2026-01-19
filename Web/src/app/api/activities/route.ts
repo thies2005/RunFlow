@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { name, date, type, distance, duration, hr } = body;
+        const { name, date, type, distance, duration, hr, hrZones } = body;
 
         // === Input Validation ===
 
@@ -231,6 +231,15 @@ export async function POST(request: NextRequest) {
                 elapsedTime: parsedDuration * 60,
                 averageHr: parsedHr,
                 hasHeartrate: parsedHr !== null,
+
+                // HR Zones
+                hrZone1Time: hrZones?.z1,
+                hrZone2Time: hrZones?.z2,
+                hrZone3Time: hrZones?.z3,
+                hrZone4Time: hrZones?.z4,
+                hrZone5Time: hrZones?.z5,
+                hrZone6Time: hrZones?.z6,
+                hrZone7Time: hrZones?.z7,
 
                 // Defaults for manual entry
                 totalElevation: 0,

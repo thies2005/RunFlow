@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
             const code = await createAuthCode(user.email!, AuthCodeType.VERIFY_EMAIL);
             await sendWelcomeEmail(user.email!, code);
         } catch (emailError) {
-            console.error('Failed to send welcome email:', emailError);
+            console.error(`[Auth Register] Failed to send welcome email to ${user.email}:`, emailError);
             // We don't fail the request, but the user will need to request a new code later
         }
 

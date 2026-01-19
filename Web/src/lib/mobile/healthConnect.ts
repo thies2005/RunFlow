@@ -46,6 +46,24 @@ export interface HealthActivity {
     duration: number; // seconds
     calories?: number;
     averageHr?: number; // bpm
+    hrZones?: {
+        z1: number;
+        z2: number;
+        z3: number;
+        z4: number;
+        z5: number;
+        z6: number;
+        z7: number;
+    };
+}
+
+export interface ZoneSettings {
+    z1: number;
+    z2: number;
+    z3: number;
+    z4: number;
+    z5: number;
+    z6: number;
 }
 
 /**
@@ -119,9 +137,77 @@ async function getAverageHeartRate(startDate: Date, endDate: Date): Promise<numb
 }
 
 /**
+ * Calculate time in zones from HR samples
+ */
+async function getHeartRateZones(
+    startDate: Date,
+    endDate: Date,
+    settings?: ZoneSettings
+): Promise<HealthActivity['hrZones'] | undefined> {
+    try {
+        const result = await Health.readSamples({
+            dataType: 'heartRate',
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            limit: 500,
+        });
+
+        if (!result.samples || result.samples.length === 0) {
+            return undefined;
+        }
+
+        const zones = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0, z6: 0, z7: 0 };
+        const thresholds = settings || { z1: 130, z2: 148, z3: 160, z4: 170, z5: 178, z6: 187 };
+
+        // Sort samples by date
+        const sortedSamples = [...result.samples].sort((a, b) =>
+            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        );
+
+        for (let i = 0; i < sortedSamples.length; i++) {
+            const sample = sortedSamples[i];
+            const hr = sample.value;
+
+            // Calculate duration (seconds between samples)
+            let duration = 0;
+            if (i < sortedSamples.length - 1) {
+                const nextSample = sortedSamples[i + 1];
+                duration = (new Date(nextSample.startDate).getTime() - new Date(sample.startDate).getTime()) / 1000;
+                // Cap at 30s to avoid skewing for gaps
+                duration = Math.min(duration, 30);
+            } else {
+                // Last sample - use 1s
+                duration = 1;
+            }
+
+            if (hr <= thresholds.z1) zones.z1 += duration;
+            else if (hr <= thresholds.z2) zones.z2 += duration;
+            else if (hr <= thresholds.z3) zones.z3 += duration;
+            else if (hr <= thresholds.z4) zones.z4 += duration;
+            else if (hr <= thresholds.z5) zones.z5 += duration;
+            else if (hr <= thresholds.z6) zones.z6 += duration;
+            else zones.z7 += duration;
+        }
+
+        return {
+            z1: Math.round(zones.z1),
+            z2: Math.round(zones.z2),
+            z3: Math.round(zones.z3),
+            z4: Math.round(zones.z4),
+            z5: Math.round(zones.z5),
+            z6: Math.round(zones.z6),
+            z7: Math.round(zones.z7),
+        };
+    } catch (error) {
+        console.error('Failed to calculate HR zones:', error);
+        return undefined;
+    }
+}
+
+/**
  * Fetch workout activities from Health Connect
  */
-export async function fetchHealthActivities(days = 30): Promise<HealthActivity[]> {
+export async function fetchHealthActivities(days = 30, settings?: ZoneSettings): Promise<HealthActivity[]> {
     if (!isMobile()) return [];
 
     const end = new Date();
@@ -157,8 +243,9 @@ export async function fetchHealthActivities(days = 30): Promise<HealthActivity[]
             const workoutName = workout.sourceName ||
                 `${workout.workoutType.charAt(0).toUpperCase() + workout.workoutType.slice(1)} Activity`;
 
-            // Fetch average heart rate for this workout's time window
+            // Fetch average heart rate and zones
             const averageHr = await getAverageHeartRate(startDate, endDate);
+            const hrZones = await getHeartRateZones(startDate, endDate, settings);
 
             activities.push({
                 name: workoutName,
@@ -169,6 +256,7 @@ export async function fetchHealthActivities(days = 30): Promise<HealthActivity[]
                 duration: workout.duration,
                 calories: workout.totalEnergyBurned || undefined,
                 averageHr,
+                hrZones,
             });
         }
 
@@ -183,12 +271,15 @@ export async function fetchHealthActivities(days = 30): Promise<HealthActivity[]
  * Sync Health Connect activities to RunFlow API
  * Returns number of activities synced (excluding duplicates)
  */
-export async function syncHealthData(days = 30): Promise<{ synced: number; errors: number; skipped: number }> {
+export async function syncHealthData(
+    days = 30,
+    settings?: ZoneSettings
+): Promise<{ synced: number; errors: number; skipped: number }> {
     if (!isMobile()) {
         return { synced: 0, errors: 0, skipped: 0 };
     }
 
-    const activities = await fetchHealthActivities(days);
+    const activities = await fetchHealthActivities(days, settings);
     let synced = 0;
     let errors = 0;
     let skipped = 0;
@@ -207,6 +298,7 @@ export async function syncHealthData(days = 30): Promise<{ synced: number; error
                     distance: activity.distance ? activity.distance / 1000 : 0, // API expects km
                     duration: Math.round(activity.duration / 60), // API expects minutes
                     hr: activity.averageHr, // Include heart rate if available
+                    hrZones: activity.hrZones, // Include zone breakdown
                 }),
             });
 

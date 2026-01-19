@@ -151,7 +151,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 throw new Error('Health Connect permissions not granted');
             }
             // Sync activities
-            const result = await syncHealthData(90); // Last 90 days
+            const result = await syncHealthData(90, {
+                z1: hrZone1Max,
+                z2: hrZone2Max,
+                z3: hrZone3Max,
+                z4: hrZone4Max,
+                z5: hrZone5Max,
+                z6: hrZone6Max,
+            }); // Last 90 days
             return result;
         },
         onSuccess: (result) => {

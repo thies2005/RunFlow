@@ -82,7 +82,7 @@ export default function OnboardingWizard() {
     const { data: profile } = useQuery({
         queryKey: ['user-profile'],
         queryFn: async () => (await fetch('/api/settings/profile')).json(),
-        enabled: step >= 2,
+        enabled: !!session,
     });
 
     return (
@@ -105,6 +105,14 @@ export default function OnboardingWizard() {
                         <SyncPlatformSelector
                             connectedPlatforms={hasStrava ? ['strava'] : []}
                             onSkip={() => setStep(1)}
+                            zoneSettings={profile ? {
+                                z1: profile.hrZone1Max,
+                                z2: profile.hrZone2Max,
+                                z3: profile.hrZone3Max,
+                                z4: profile.hrZone4Max,
+                                z5: profile.hrZone5Max,
+                                z6: profile.hrZone6Max,
+                            } : undefined}
                         />
                     </div>
                 )}

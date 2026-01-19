@@ -8,6 +8,7 @@ import {
     isHealthConnectAvailable,
     requestHealthPermissions,
     syncHealthData,
+    type ZoneSettings,
 } from '@/lib/mobile/healthConnect';
 
 interface SyncPlatform {
@@ -85,6 +86,7 @@ interface SyncPlatformSelectorProps {
     onHealthConnectSynced?: (count: number) => void;
     connectedPlatforms?: string[];
     onSkip?: () => void;
+    zoneSettings?: ZoneSettings;
 }
 
 export default function SyncPlatformSelector({
@@ -92,6 +94,7 @@ export default function SyncPlatformSelector({
     onHealthConnectSynced,
     connectedPlatforms = [],
     onSkip,
+    zoneSettings,
 }: SyncPlatformSelectorProps) {
     const [healthConnectAvailable, setHealthConnectAvailable] = useState(false);
     const [healthConnectSyncing, setHealthConnectSyncing] = useState(false);
@@ -127,13 +130,16 @@ export default function SyncPlatformSelector({
                 }
 
                 // Sync activities
-                const result = await syncHealthData(30); // Last 30 days
+                const result = await syncHealthData(30, zoneSettings); // Last 30 days
 
-                if (result.synced > 0) {
+                if (result.synced > 0 || result.skipped > 0) {
                     setHealthConnectSynced(true);
-                    onHealthConnectSynced?.(result.synced);
+                    // Report total activities processed (new + already synced)
+                    onHealthConnectSynced?.(result.synced + result.skipped);
                 } else if (result.errors > 0) {
-                    setHealthConnectError(`Sync completed with ${result.errors} errors.`);
+                    setHealthConnectError(
+                        `Sync completed with ${result.errors} error${result.errors > 1 ? 's' : ''}.`
+                    );
                 } else {
                     setHealthConnectError('No activities found in Health Connect.');
                 }

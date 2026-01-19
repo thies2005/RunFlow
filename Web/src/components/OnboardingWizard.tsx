@@ -196,8 +196,6 @@ export default function OnboardingWizard() {
 
                         <AnalyticsDashboard
                             currentVdot={currentVdot}
-                            initialThresholdHr={profile?.thresholdHeartRate}
-                            initialThresholdPace={profile?.thresholdPace}
                         />
 
                         <div className="flex justify-center mt-8">

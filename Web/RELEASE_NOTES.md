@@ -20,6 +20,10 @@
 - **Onboarding**: Improved empty-state handling for new users without Strava history.
 - **Top Bar**: Fixed overlap issues on mobile devices (Safe Area Insets).
 
+### 👮 Administration
+- **User Management**: Admins can now manually trigger password reset emails for users from the dashboard.
+- **Observability**: Enhanced email system logging for better troubleshooting of delivery issues.
+
 ---
 
 > Please report any issues on [GitHub](https://github.com/thies2005/RunFlow/issues).

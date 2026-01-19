@@ -249,12 +249,21 @@ export default function SyncPlatformSelector({
                                         Syncing...
                                     </button>
                                 ) : (
-                                    <button
-                                        onClick={() => handleConnect(platform.id)}
-                                        className="w-full py-2 px-3 bg-accent-orange text-white rounded-lg text-sm font-medium hover:bg-accent-orange/90 transition-colors"
-                                    >
-                                        Connect
-                                    </button>
+                                    platform.id === 'strava' ? (
+                                        <button
+                                            onClick={() => handleConnect(platform.id)}
+                                            className="w-full py-2 px-3 bg-[#FC4C02] text-white rounded-lg text-sm font-bold hover:bg-[#E34402] transition-colors flex items-center justify-center gap-1"
+                                        >
+                                            Connect with <span className="uppercase">Strava</span>
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleConnect(platform.id)}
+                                            className="w-full py-2 px-3 bg-accent-orange text-white rounded-lg text-sm font-medium hover:bg-accent-orange/90 transition-colors"
+                                        >
+                                            Connect
+                                        </button>
+                                    )
                                 )
                             ) : (
                                 <button

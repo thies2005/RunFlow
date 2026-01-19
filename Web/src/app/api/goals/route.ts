@@ -238,12 +238,38 @@ export async function POST(request: NextRequest) {
                 const { effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities as any, maxHR, correctionFactor);
                 if (effectiveVO2max > 0) {
                     currentVdot = effectiveVO2max;
-                    await prisma.goal.update({
-                        where: { id: goal.id },
-                        data: { currentVdot }
-                    });
                 }
             }
+        }
+
+        // Failsafe: If VDOT is still missing, calculate from Target Time or default to 30
+        if (!currentVdot) {
+            if (targetTime) {
+                // Reverse engineer VDOT from the user's target time
+                const raceDistanceMap: Record<string, RaceDistance> = {
+                    'FIVE_K': '5K',
+                    'TEN_K': '10K',
+                    'HALF_MARATHON': 'HALF',
+                    'MARATHON': 'MARATHON',
+                };
+                const dist = raceDistanceMap[raceType] || 'MARATHON';
+                const result = analyzeRace({
+                    distance: dist,
+                    timeSeconds: targetTime,
+                });
+                currentVdot = result.vdot;
+            } else {
+                // Absolute fallback: Default to VDOT 30 (Beginner)
+                // This ensures a plan is ALWAYS generated
+                console.log('No VDOT data available. Defaulting to VDOT 30.');
+                currentVdot = 30.0;
+            }
+
+            // Update the goal with the determined VDOT
+            await prisma.goal.update({
+                where: { id: goal.id },
+                data: { currentVdot }
+            });
         }
 
         if (currentVdot) {

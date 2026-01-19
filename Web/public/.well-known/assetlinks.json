@@ -1,0 +1,14 @@
+[
+    {
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.runflow.app",
+            "sha256_cert_fingerprints": [
+                "9F:AA:A7:A9:6C:F8:99:0F:08:0E:41:2B:14:B2:23:1B:F1:D8:E2:CE:11:DB:CA:F8:AF:1D:72:D3:2E:92:93:53"
+            ]
+        }
+    }
+]

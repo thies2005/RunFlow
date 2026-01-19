@@ -1,0 +1,75 @@
+
+> Configure project :app
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Task :app:signingReport
+Variant: debug
+Config: debug
+Store: C:\Users\thies\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: 01:19:AE:12:59:49:4C:D0:E3:44:64:58:8B:EC:5B:72
+SHA1: 23:8E:55:75:A6:9B:0F:FA:60:13:01:B2:1A:10:56:D6:6E:BC:87:89
+SHA-256: 9F:AA:A7:A9:6C:F8:99:0F:08:0E:41:2B:14:B2:23:1B:F1:D8:E2:CE:11:DB:CA:F8:AF:1D:72:D3:2E:92:93:53
+Valid until: Thursday, 6 January 2056
+----------
+Variant: release
+Config: null
+Store: null
+Alias: null
+----------
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\thies\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: 01:19:AE:12:59:49:4C:D0:E3:44:64:58:8B:EC:5B:72
+SHA1: 23:8E:55:75:A6:9B:0F:FA:60:13:01:B2:1A:10:56:D6:6E:BC:87:89
+SHA-256: 9F:AA:A7:A9:6C:F8:99:0F:08:0E:41:2B:14:B2:23:1B:F1:D8:E2:CE:11:DB:CA:F8:AF:1D:72:D3:2E:92:93:53
+Valid until: Thursday, 6 January 2056
+----------
+
+> Task :capacitor-android:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\thies\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: 01:19:AE:12:59:49:4C:D0:E3:44:64:58:8B:EC:5B:72
+SHA1: 23:8E:55:75:A6:9B:0F:FA:60:13:01:B2:1A:10:56:D6:6E:BC:87:89
+SHA-256: 9F:AA:A7:A9:6C:F8:99:0F:08:0E:41:2B:14:B2:23:1B:F1:D8:E2:CE:11:DB:CA:F8:AF:1D:72:D3:2E:92:93:53
+Valid until: Thursday, 6 January 2056
+----------
+
+> Task :capacitor-cordova-android-plugins:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\thies\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: 01:19:AE:12:59:49:4C:D0:E3:44:64:58:8B:EC:5B:72
+SHA1: 23:8E:55:75:A6:9B:0F:FA:60:13:01:B2:1A:10:56:D6:6E:BC:87:89
+SHA-256: 9F:AA:A7:A9:6C:F8:99:0F:08:0E:41:2B:14:B2:23:1B:F1:D8:E2:CE:11:DB:CA:F8:AF:1D:72:D3:2E:92:93:53
+Valid until: Thursday, 6 January 2056
+----------
+
+> Task :capgo-capacitor-health:signingReport
+Variant: debugAndroidTest
+Config: debug
+Store: C:\Users\thies\.android\debug.keystore
+Alias: AndroidDebugKey
+MD5: 01:19:AE:12:59:49:4C:D0:E3:44:64:58:8B:EC:5B:72
+SHA1: 23:8E:55:75:A6:9B:0F:FA:60:13:01:B2:1A:10:56:D6:6E:BC:87:89
+SHA-256: 9F:AA:A7:A9:6C:F8:99:0F:08:0E:41:2B:14:B2:23:1B:F1:D8:E2:CE:11:DB:CA:F8:AF:1D:72:D3:2E:92:93:53
+Valid until: Thursday, 6 January 2056
+----------
+
+[Incubating] Problems report is available at: file:///C:/Users/thies/Antigravity/Full%20RunFlow/Web/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1s
+4 actionable tasks: 4 executed

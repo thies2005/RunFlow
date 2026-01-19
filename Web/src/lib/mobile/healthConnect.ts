@@ -45,6 +45,7 @@ export interface HealthActivity {
     distance?: number; // meters
     duration: number; // seconds
     calories?: number;
+    averageHr?: number; // bpm
 }
 
 /**
@@ -91,6 +92,33 @@ export async function requestHealthPermissions(): Promise<boolean> {
 }
 
 /**
+ * Get average heart rate for a given time window
+ */
+async function getAverageHeartRate(startDate: Date, endDate: Date): Promise<number | undefined> {
+    try {
+        const result = await Health.readSamples({
+            dataType: 'heartRate',
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+            limit: 500, // Get up to 500 HR samples
+        });
+
+        if (!result.samples || result.samples.length === 0) {
+            return undefined;
+        }
+
+        // Calculate average heart rate
+        const totalHr = result.samples.reduce((sum, sample) => sum + sample.value, 0);
+        const averageHr = Math.round(totalHr / result.samples.length);
+
+        return averageHr;
+    } catch (error) {
+        console.error('Failed to get heart rate data:', error);
+        return undefined;
+    }
+}
+
+/**
  * Fetch workout activities from Health Connect
  */
 export async function fetchHealthActivities(days = 30): Promise<HealthActivity[]> {
@@ -129,6 +157,9 @@ export async function fetchHealthActivities(days = 30): Promise<HealthActivity[]
             const workoutName = workout.sourceName ||
                 `${workout.workoutType.charAt(0).toUpperCase() + workout.workoutType.slice(1)} Activity`;
 
+            // Fetch average heart rate for this workout's time window
+            const averageHr = await getAverageHeartRate(startDate, endDate);
+
             activities.push({
                 name: workoutName,
                 type: runflowType,
@@ -137,6 +168,7 @@ export async function fetchHealthActivities(days = 30): Promise<HealthActivity[]
                 distance: workout.totalDistance || undefined,
                 duration: workout.duration,
                 calories: workout.totalEnergyBurned || undefined,
+                averageHr,
             });
         }
 
@@ -174,6 +206,7 @@ export async function syncHealthData(days = 30): Promise<{ synced: number; error
                     type: activity.type,
                     distance: activity.distance ? activity.distance / 1000 : 0, // API expects km
                     duration: Math.round(activity.duration / 60), // API expects minutes
+                    hr: activity.averageHr, // Include heart rate if available
                 }),
             });
 

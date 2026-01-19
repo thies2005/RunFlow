@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X, Save, AlertCircle, User, Trash2, RefreshCw } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import { requestHealthPermissions, syncHealthData, isMobile } from '@/lib/mobile/healthConnect';
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -139,6 +140,32 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         },
         onError: (err) => {
             setMessage(`Resync failed: ${err.message}`);
+        }
+    });
+
+    const healthConnectSyncMutation = useMutation({
+        mutationFn: async () => {
+            // Request permissions (opens Health Connect settings)
+            const permitted = await requestHealthPermissions();
+            if (!permitted) {
+                throw new Error('Health Connect permissions not granted');
+            }
+            // Sync activities
+            const result = await syncHealthData(90); // Last 90 days
+            return result;
+        },
+        onSuccess: (result) => {
+            if (result.synced > 0) {
+                setMessage(`Synced ${result.synced} activities from Health Connect!`);
+            } else {
+                setMessage('No new activities found in Health Connect.');
+            }
+            queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            queryClient.invalidateQueries({ queryKey: ['activities'] });
+        },
+        onError: (err) => {
+            setMessage(`Health Connect sync failed: ${err.message}`);
         }
     });
 
@@ -301,14 +328,24 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                     <div className="mb-4">
                         <h3 className="text-gray-400 font-medium mb-3 text-xs uppercase tracking-wider">Data Management</h3>
-                        <button
-                            onClick={() => resyncMutation.mutate()}
-                            disabled={resyncMutation.isPending}
-                            className="w-full py-2.5 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm flex items-center justify-center gap-2"
-                        >
-                            <RefreshCw className={`w-4 h-4 ${resyncMutation.isPending ? 'animate-spin' : ''}`} />
-                            {resyncMutation.isPending ? 'Syncing...' : 'Resync All Activities'}
-                        </button>
+                        <div className="space-y-2">
+                            <button
+                                onClick={() => resyncMutation.mutate()}
+                                disabled={resyncMutation.isPending}
+                                className="w-full py-2.5 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm flex items-center justify-center gap-2"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${resyncMutation.isPending ? 'animate-spin' : ''}`} />
+                                {resyncMutation.isPending ? 'Syncing...' : 'Sync from Strava'}
+                            </button>
+                            <button
+                                onClick={() => healthConnectSyncMutation.mutate()}
+                                disabled={healthConnectSyncMutation.isPending}
+                                className="w-full py-2.5 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${healthConnectSyncMutation.isPending ? 'animate-spin' : ''}`} />
+                                {healthConnectSyncMutation.isPending ? 'Syncing...' : 'Sync from Health Connect'}
+                            </button>
+                        </div>
                     </div>
 
                     <div>

@@ -21,7 +21,8 @@ export const config = {
          * - manifest.json (PWA manifest)
          * - sw.js (Service Worker)
          * - swe-worker (Service Worker Workbox)
+         * - .well-known (Android App Links / iOS Universal Links)
          */
-        '/((?!api/auth|api/webhooks|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker).*)',
+        '/((?!api/auth|api/webhooks|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker|.well-known).*)',
     ],
 }

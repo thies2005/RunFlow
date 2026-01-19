@@ -190,7 +190,7 @@ export default function OnboardingWizard() {
                             {(activitiesData?.activities?.length || 0) > 0 ? (
                                 <p className="text-gray-400">Based on your last {activitiesData?.activities?.length} activities</p>
                             ) : (
-                                <p className="text-gray-400">No activities found yet. We'll use default values to get you started.</p>
+                                <p className="text-gray-400">No activities found yet. We&apos;ll use default values to get you started.</p>
                             )}
                         </div>
 

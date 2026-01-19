@@ -15,6 +15,7 @@ import { calculateRunningTss, getActivityContribution } from '@/lib/metrics/fitn
 import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
+import { calculateCalories, calculateAge, type ActivityType as CalorieActivityType } from '@/lib/metrics/calories';
 import { WorkoutType } from '@/lib/types';
 import { safeBigInt } from '@/lib/utils/bigint';
 import { acquireLock, releaseLock } from '@/lib/redis';
@@ -351,6 +352,8 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 hrMax: true,
                 hrRest: true,
                 sex: true,
+                weight: true,
+                birthDate: true,
                 lastSyncAt: true,
                 hrZone1Max: true,
                 hrZone2Max: true,
@@ -579,6 +582,23 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         trimp = result.trimp;
                     }
 
+                    // Calculate Calories (if Strava didn't provide them)
+                    let calculatedCalories: number | null = activity.calories ?? null;
+                    if (calculatedCalories === null || calculatedCalories === 0) {
+                        const activityTypeForCalories = mapActivityType(activity.type) as CalorieActivityType;
+                        const calorieResult = calculateCalories({
+                            durationMinutes: activity.moving_time / 60,
+                            activityType: activityTypeForCalories,
+                            weightKg: user?.weight ?? undefined,
+                            averageHr: activity.average_heartrate,
+                            age: user?.birthDate ? calculateAge(user.birthDate) : undefined,
+                            sex: (user?.sex || 'MALE') as 'MALE' | 'FEMALE',
+                            averageSpeedMps: activity.average_speed,
+                        });
+                        calculatedCalories = calorieResult.calories;
+                        logger.info(`Calculated calories for activity ${activity.id}: ${calculatedCalories} (method: ${calorieResult.method}, confidence: ${calorieResult.confidence})`);
+                    }
+
                     // Calculate running TSS
                     let runningTss: number | null = null;
                     const contribution = getActivityContribution(activity.type);
@@ -633,7 +653,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         totalElevation: activity.total_elevation_gain,
                         elevHigh: activity.elev_high ?? null,
                         elevLow: activity.elev_low ?? null,
-                        calories: activity.calories ?? null,
+                        calories: calculatedCalories,
                         trimp,
                         runningTss,
                         estimatedVdot,
@@ -784,6 +804,8 @@ export async function syncActivityById(userId: string, activityId: number): Prom
                 hrMax: true,
                 hrRest: true,
                 sex: true,
+                weight: true,
+                birthDate: true,
                 hrZone1Max: true,
                 hrZone2Max: true,
                 hrZone3Max: true,
@@ -864,7 +886,23 @@ export async function syncActivityById(userId: string, activityId: number): Prom
             );
         }
 
-        // 7. Build activity data
+        // 6b. Calculate Calories (if Strava didn't provide them)
+        let calculatedCalories: number | null = activity.calories ?? null;
+        if (calculatedCalories === null || calculatedCalories === 0) {
+            const activityTypeForCalories = mapActivityType(activity.type) as CalorieActivityType;
+            const calorieResult = calculateCalories({
+                durationMinutes: activity.moving_time / 60,
+                activityType: activityTypeForCalories,
+                weightKg: user.weight ?? undefined,
+                averageHr: activity.average_heartrate,
+                age: user.birthDate ? calculateAge(user.birthDate) : undefined,
+                sex: (user.sex || 'MALE') as 'MALE' | 'FEMALE',
+                averageSpeedMps: activity.average_speed,
+            });
+            calculatedCalories = calorieResult.calories;
+            logger.info(`Calculated calories for activity ${activity.id}: ${calculatedCalories} (method: ${calorieResult.method})`);
+        }
+
         const activityData = {
             userId,
             name: activity.name,
@@ -886,7 +924,7 @@ export async function syncActivityById(userId: string, activityId: number): Prom
             totalElevation: activity.total_elevation_gain,
             elevHigh: activity.elev_high ?? null,
             elevLow: activity.elev_low ?? null,
-            calories: activity.calories ?? null,
+            calories: calculatedCalories,
             trimp,
             runningTss,
             estimatedVdot: (['Run', 'VirtualRun'].includes(activity.type) && activity.has_heartrate && activity.average_heartrate)

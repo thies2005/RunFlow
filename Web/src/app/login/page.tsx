@@ -43,7 +43,8 @@ export default function LoginPage() {
             if (result?.error) {
                 setError('Invalid email or password');
             } else {
-                router.push('/onboarding');
+                // Redirect to home - it will handle onboarding check if needed
+                router.push('/');
             }
         } catch (err) {
             setError('An error occurred. Please try again.');
@@ -128,7 +129,7 @@ export default function LoginPage() {
                         <div className="space-y-4 animate-fade-in">
                             <div className="flex justify-center">
                                 <ConnectWithStravaButton
-                                    onClick={() => signIn('strava', { callbackUrl: '/onboarding' })}
+                                    onClick={() => signIn('strava', { callbackUrl: '/' })}
                                 />
                             </div>
                             <p className="text-sm text-foreground-muted">

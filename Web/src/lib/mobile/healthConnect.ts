@@ -149,16 +149,17 @@ export async function fetchHealthActivities(days = 30): Promise<HealthActivity[]
 
 /**
  * Sync Health Connect activities to RunFlow API
- * Returns number of activities synced
+ * Returns number of activities synced (excluding duplicates)
  */
-export async function syncHealthData(days = 30): Promise<{ synced: number; errors: number }> {
+export async function syncHealthData(days = 30): Promise<{ synced: number; errors: number; skipped: number }> {
     if (!isMobile()) {
-        return { synced: 0, errors: 0 };
+        return { synced: 0, errors: 0, skipped: 0 };
     }
 
     const activities = await fetchHealthActivities(days);
     let synced = 0;
     let errors = 0;
+    let skipped = 0;
 
     console.log(`Found ${activities.length} activities in Health Connect`);
 
@@ -177,7 +178,12 @@ export async function syncHealthData(days = 30): Promise<{ synced: number; error
             });
 
             if (response.ok) {
-                synced++;
+                const data = await response.json();
+                if (data.duplicate) {
+                    skipped++;
+                } else {
+                    synced++;
+                }
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 console.error('Failed to sync activity:', activity.name, errorData);
@@ -189,6 +195,6 @@ export async function syncHealthData(days = 30): Promise<{ synced: number; error
         }
     }
 
-    console.log(`Health Connect sync complete: ${synced} synced, ${errors} errors`);
-    return { synced, errors };
+    console.log(`Health Connect sync complete: ${synced} new, ${skipped} skipped, ${errors} errors`);
+    return { synced, errors, skipped };
 }

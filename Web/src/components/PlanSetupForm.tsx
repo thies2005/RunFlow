@@ -959,6 +959,61 @@ export default function PlanSetupForm({
                 );
             })()}
 
+            {/* Fallback Goal Time Entry for users without VO2max data */}
+            {mode === 'onboarding' && effectiveVO2max <= 0 && (
+                <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
+                    <div className="flex items-center gap-2 text-accent-orange mb-3">
+                        <Target className="w-5 h-5" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide">Goal Time (Optional)</h3>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-4">
+                        No fitness data available for predictions. You can enter a goal time manually or skip this.
+                    </p>
+                    <div className="flex gap-2 items-center justify-center">
+                        <input
+                            type="number"
+                            className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                            placeholder="HH"
+                            value={goalTimeHours}
+                            onChange={e => setGoalTimeHours(e.target.value)}
+                            min="0"
+                        />
+                        <span className="text-foreground-muted">:</span>
+                        <input
+                            type="number"
+                            className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                            placeholder="MM"
+                            value={goalTimeMinutes}
+                            onChange={e => setGoalTimeMinutes(e.target.value)}
+                            min="0"
+                            max="59"
+                        />
+                        <span className="text-foreground-muted">:</span>
+                        <input
+                            type="number"
+                            className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                            placeholder="SS"
+                            value={goalTimeSecs}
+                            onChange={e => {
+                                setGoalTimeSecs(e.target.value);
+                                // Calculate and set goalTimeSeconds when user enters values
+                                const totalSecs = (parseInt(goalTimeHours) || 0) * 3600 +
+                                    (parseInt(goalTimeMinutes) || 0) * 60 +
+                                    (parseInt(e.target.value) || 0);
+                                if (totalSecs > 0) {
+                                    setGoalTimeSeconds(totalSecs);
+                                }
+                            }}
+                            min="0"
+                            max="59"
+                        />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2 text-center">
+                        Enter your target finish time (leave blank to skip)
+                    </p>
+                </div>
+            )}
+
             {/* Plan Volume */}
             <div className="border-t border-glass-border pt-6">
                 <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-4">Plan Volume</h3>

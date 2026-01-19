@@ -99,8 +99,9 @@ export default function Dashboard() {
         return null;
     }
 
-    // Onboarding Redirect (Check sync status from unified response)
-    if (status === 'authenticated' && syncStatus && syncStatus.totalActivities === 0 && !syncStatus.syncInProgress) {
+    // Onboarding Redirect (Check if user has completed onboarding by having an active goal)
+    // Users with an active goal have completed onboarding - don't redirect them
+    if (status === 'authenticated' && !isLoading && !activeGoal) {
         router.push('/onboarding');
         return null;
     }

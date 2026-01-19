@@ -187,6 +187,32 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        // === Duplicate Check ===
+        // Check if an activity with the same start date (within 1 minute) and type already exists
+        const startTime = parsedDate.getTime();
+        const oneMinute = 60 * 1000;
+
+        const existingActivity = await prisma.activity.findFirst({
+            where: {
+                userId: session.user.id,
+                type: activityType as ActivityType,
+                startDate: {
+                    gte: new Date(startTime - oneMinute),
+                    lte: new Date(startTime + oneMinute),
+                }
+            }
+        });
+
+        if (existingActivity) {
+            // Return the existing activity instead of creating a duplicate
+            return NextResponse.json({
+                ...existingActivity,
+                stravaId: existingActivity.stravaId.toString(),
+                duplicate: true,
+                message: 'Activity already exists'
+            });
+        }
+
         // Generate manual activity ID using negative BigInt
         // Negative IDs will never collide with real Strava IDs (which are positive)
         // Combine timestamp with random component for uniqueness across concurrent requests

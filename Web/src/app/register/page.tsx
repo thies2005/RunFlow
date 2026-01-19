@@ -71,150 +71,150 @@ export default function RegisterPage() {
             } else {
                 // Instead of redirecting immediately, show verification modal
                 setShowVerification(true);
-            } catch (err) {
-                setError('An error occurred. Please try again.');
-            } finally {
-                setIsLoading(false);
             }
-        };
+        } catch (err) {
+            setError('An error occurred. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        return (
-            <div className="min-h-screen bg-background flex flex-col">
-                <div className="flex-1 flex items-center justify-center px-4 py-8">
-                    <div className="max-w-md w-full">
-                        {/* Logo */}
-                        <div className="text-center mb-8">
-                            <Image
-                                src="/icons/app-icon-192.png"
-                                alt="RunFlow"
-                                width={64}
-                                height={64}
-                                className="rounded-xl mx-auto mb-4"
+    return (
+        <div className="min-h-screen bg-background flex flex-col">
+            <div className="flex-1 flex items-center justify-center px-4 py-8">
+                <div className="max-w-md w-full">
+                    {/* Logo */}
+                    <div className="text-center mb-8">
+                        <Image
+                            src="/icons/app-icon-192.png"
+                            alt="RunFlow"
+                            width={64}
+                            height={64}
+                            className="rounded-xl mx-auto mb-4"
+                        />
+                        <h1 className="text-3xl font-bold text-foreground mb-2">
+                            Create your account
+                        </h1>
+                        <p className="text-foreground-muted">
+                            Join RunFlow to track your running performance
+                        </p>
+                    </div>
+
+                    <form onSubmit={handleRegister} className="space-y-4">
+                        {/* Name (optional) */}
+                        <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="Name (optional)"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
                             />
-                            <h1 className="text-3xl font-bold text-foreground mb-2">
-                                Create your account
-                            </h1>
-                            <p className="text-foreground-muted">
-                                Join RunFlow to track your running performance
-                            </p>
                         </div>
 
-                        <form onSubmit={handleRegister} className="space-y-4">
-                            {/* Name (optional) */}
-                            <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Name (optional)"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
-                                />
+                        {/* Email */}
+                        <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Email address"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
+                                required
+                            />
+                        </div>
+
+                        {/* Password */}
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Password"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
+                                required
+                            />
+                        </div>
+
+                        {/* Password Requirements */}
+                        {password.length > 0 && (
+                            <div className="glass-card p-3 space-y-1">
+                                {passwordRequirements.map((req, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 text-sm">
+                                        <Check className={`w-4 h-4 ${req.met ? 'text-green-500' : 'text-gray-500'}`} />
+                                        <span className={req.met ? 'text-green-400' : 'text-foreground-muted'}>
+                                            {req.label}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
+                        )}
 
-                            {/* Email */}
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Email address"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
-                                    required
-                                />
-                            </div>
+                        {/* Confirm Password */}
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                            <input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="Confirm password"
+                                className={`w-full bg-white/5 border rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none ${confirmPassword.length > 0
+                                    ? passwordsMatch
+                                        ? 'border-green-500/50'
+                                        : 'border-red-500/50'
+                                    : 'border-white/10'
+                                    }`}
+                                required
+                            />
+                        </div>
 
-                            {/* Password */}
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Password"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
-                                    required
-                                />
-                            </div>
+                        {error && (
+                            <p className="text-red-400 text-sm text-center">{error}</p>
+                        )}
 
-                            {/* Password Requirements */}
-                            {password.length > 0 && (
-                                <div className="glass-card p-3 space-y-1">
-                                    {passwordRequirements.map((req, idx) => (
-                                        <div key={idx} className="flex items-center gap-2 text-sm">
-                                            <Check className={`w-4 h-4 ${req.met ? 'text-green-500' : 'text-gray-500'}`} />
-                                            <span className={req.met ? 'text-green-400' : 'text-foreground-muted'}>
-                                                {req.label}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                        <button
+                            type="submit"
+                            disabled={isLoading || !allRequirementsMet || !passwordsMatch}
+                            className="btn-primary w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? 'Creating account...' : 'Create Account'}
+                            {!isLoading && <ArrowRight className="w-4 h-4" />}
+                        </button>
 
-                            {/* Confirm Password */}
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Confirm password"
-                                    className={`w-full bg-white/5 border rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none ${confirmPassword.length > 0
-                                        ? passwordsMatch
-                                            ? 'border-green-500/50'
-                                            : 'border-red-500/50'
-                                        : 'border-white/10'
-                                        }`}
-                                    required
-                                />
-                            </div>
-
-                            {error && (
-                                <p className="text-red-400 text-sm text-center">{error}</p>
-                            )}
-
-                            <button
-                                type="submit"
-                                disabled={isLoading || !allRequirementsMet || !passwordsMatch}
-                                className="btn-primary w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isLoading ? 'Creating account...' : 'Create Account'}
-                                {!isLoading && <ArrowRight className="w-4 h-4" />}
-                            </button>
-
-                            <div className="text-center space-y-2">
-                                <p className="text-sm text-foreground-muted">
-                                    Already have an account?{' '}
-                                    <Link href="/login" className="text-accent-orange hover:underline">
-                                        Sign in
-                                    </Link>
-                                </p>
-                                <Link
-                                    href="/login"
-                                    className="inline-flex items-center gap-1 text-sm text-foreground-muted hover:text-foreground"
-                                >
-                                    <ArrowLeft className="w-4 h-4" />
-                                    Back to login
+                        <div className="text-center space-y-2">
+                            <p className="text-sm text-foreground-muted">
+                                Already have an account?{' '}
+                                <Link href="/login" className="text-accent-orange hover:underline">
+                                    Sign in
                                 </Link>
-                            </div>
-                        </form>
-                    </div>
+                            </p>
+                            <Link
+                                href="/login"
+                                className="inline-flex items-center gap-1 text-sm text-foreground-muted hover:text-foreground"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Back to login
+                            </Link>
+                        </div>
+                    </form>
                 </div>
-                <VerificationModal
-                    isOpen={showVerification}
-                    onClose={() => {
-                        setShowVerification(false);
-                        router.push('/onboarding');
-                    }}
-                    email={email}
-                    onVerified={() => {
-                        setShowVerification(false);
-                        router.push('/onboarding');
-                    }}
-                />
             </div>
-        );
-    }
+            <VerificationModal
+                isOpen={showVerification}
+                onClose={() => {
+                    setShowVerification(false);
+                    router.push('/onboarding');
+                }}
+                email={email}
+                onVerified={() => {
+                    setShowVerification(false);
+                    router.push('/onboarding');
+                }}
+            />
+        </div>
     );
+
 }

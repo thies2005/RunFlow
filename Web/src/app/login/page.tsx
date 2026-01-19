@@ -106,8 +106,8 @@ export default function LoginPage() {
                         <button
                             onClick={() => setAuthMode('strava')}
                             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${authMode === 'strava'
-                                    ? 'bg-accent-orange text-white'
-                                    : 'text-foreground-muted hover:text-foreground'
+                                ? 'bg-accent-orange text-white'
+                                : 'text-foreground-muted hover:text-foreground'
                                 }`}
                         >
                             Strava
@@ -115,8 +115,8 @@ export default function LoginPage() {
                         <button
                             onClick={() => setAuthMode('email')}
                             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${authMode === 'email'
-                                    ? 'bg-accent-orange text-white'
-                                    : 'text-foreground-muted hover:text-foreground'
+                                ? 'bg-accent-orange text-white'
+                                : 'text-foreground-muted hover:text-foreground'
                                 }`}
                         >
                             Email
@@ -162,7 +162,7 @@ export default function LoginPage() {
                                     required
                                 />
                             </div>
-                            
+
                             <div className="flex justify-end">
                                 <button
                                     type="button"
@@ -203,10 +203,10 @@ export default function LoginPage() {
                     RunFlow respects your privacy. We only read your activity data.
                 </p>
             </footer>
-        </div>
-            <ForgotPasswordModal 
-                isOpen={showForgotPwd} 
-                onClose={() => setShowForgotPwd(false)} 
+
+            <ForgotPasswordModal
+                isOpen={showForgotPwd}
+                onClose={() => setShowForgotPwd(false)}
             />
         </div >
     );

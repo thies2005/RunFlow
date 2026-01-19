@@ -1,5 +1,0 @@
-<resources>
-    <string name="app_name">RunFlow</string>
-    <string name="monitor_weight">Weight</string>
-    <string name="monitor_heart">Resting Heart Rate</string>
-</resources>

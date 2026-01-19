@@ -110,12 +110,29 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+
 model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model AuthCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  type      AuthCodeType
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, type])
+}
+
+enum AuthCodeType {
+  VERIFY_EMAIL
+  PASSWORD_RESET
 }
 
 // ============================================

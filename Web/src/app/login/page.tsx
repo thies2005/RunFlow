@@ -7,6 +7,7 @@ import { Activity, Target, TrendingUp, Zap, Mail, Lock, User, ArrowRight } from 
 import Image from 'next/image';
 import Link from 'next/link';
 import { ConnectWithStravaButton } from '@/components';
+import ForgotPasswordModal from '@/components/auth/ForgotPasswordModal';
 
 type AuthMode = 'strava' | 'email';
 
@@ -17,7 +18,9 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+
     const [isLoading, setIsLoading] = useState(false);
+    const [showForgotPwd, setShowForgotPwd] = useState(false);
 
     useEffect(() => {
         if (status === 'authenticated') {
@@ -159,6 +162,16 @@ export default function LoginPage() {
                                     required
                                 />
                             </div>
+                            
+                            <div className="flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowForgotPwd(true)}
+                                    className="text-xs text-accent-orange hover:underline"
+                                >
+                                    Forgot password?
+                                </button>
+                            </div>
 
                             {error && (
                                 <p className="text-red-400 text-sm">{error}</p>
@@ -191,5 +204,10 @@ export default function LoginPage() {
                 </p>
             </footer>
         </div>
+            <ForgotPasswordModal 
+                isOpen={showForgotPwd} 
+                onClose={() => setShowForgotPwd(false)} 
+            />
+        </div >
     );
 }

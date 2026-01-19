@@ -8,6 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { hashPassword, validateEmail, validatePassword } from '@/lib/auth/auth-email';
+import { createAuthCode } from '@/lib/auth/tokens';
+import { sendWelcomeEmail } from '@/lib/email';
+import { AuthCodeType } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
     try {
@@ -65,6 +68,15 @@ export async function POST(request: NextRequest) {
                 name: true,
             }
         });
+
+        // Generate and send verification code
+        try {
+            const code = await createAuthCode(user.email!, AuthCodeType.VERIFY_EMAIL);
+            await sendWelcomeEmail(user.email!, code);
+        } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError);
+            // We don't fail the request, but the user will need to request a new code later
+        }
 
         return NextResponse.json({
             success: true,

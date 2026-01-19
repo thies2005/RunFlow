@@ -52,16 +52,8 @@ export default function OnboardingWizard() {
     });
 
     // Auto-advance to step 2 when sync completes
-    useEffect(() => {
-        if (step === 1 && !syncStatus?.syncInProgress && (syncStatus?.totalActivities || 0) > 0) {
-            // Optional: small delay to let user see "Done" or just auto-advance
-            // For now, let's just let the user click "Analyze Data" as it was before,
-            // BUT we ensure the UI updates to show that button.
-            // The user request said "to get to next screen you have to refresh",
-            // implying the button didn't appear.
-            // Invalidating the query should fix that.
-        }
-    }, [syncStatus, step]);
+    // Auto-advance logic removed or simplified - we want user to click Continue
+    // to confirm they see the result (even if 0 activities)
 
     // Analysis Logic (Step 2 and 3) - fetch stats for VO2max
     const { data: statsData, isLoading: statsLoading } = useQuery({
@@ -168,13 +160,24 @@ export default function OnboardingWizard() {
                             </div>
                         )}
 
-                        {!syncStatus?.syncInProgress && (syncStatus?.totalActivities || 0) > 0 && (
-                            <button
-                                onClick={() => setStep(2)}
-                                className="btn-primary w-full py-3 flex items-center justify-center gap-2"
-                            >
-                                Analyze Data <ArrowRight className="w-4 h-4" />
-                            </button>
+                        {!syncStatus?.syncInProgress && (
+                            <div className="flex flex-col gap-3">
+                                {(syncStatus?.totalActivities || 0) > 0 ? (
+                                    <button
+                                        onClick={() => setStep(2)}
+                                        className="btn-primary w-full py-3 flex items-center justify-center gap-2"
+                                    >
+                                        Analyze Data <ArrowRight className="w-4 h-4" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => setStep(2)}
+                                        className="w-full py-3 flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-colors"
+                                    >
+                                        Continue without activities <ArrowRight className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 )}
@@ -184,7 +187,11 @@ export default function OnboardingWizard() {
                     <div className="space-y-6 animate-fade-in">
                         <div className="text-center mb-8">
                             <h1 className="text-3xl font-bold mb-2">Your Running Profile</h1>
-                            <p className="text-gray-400">Based on your last {activitiesData?.activities?.length || 0} activities</p>
+                            {(activitiesData?.activities?.length || 0) > 0 ? (
+                                <p className="text-gray-400">Based on your last {activitiesData?.activities?.length} activities</p>
+                            ) : (
+                                <p className="text-gray-400">No activities found yet. We'll use default values to get you started.</p>
+                            )}
                         </div>
 
                         <AnalyticsDashboard

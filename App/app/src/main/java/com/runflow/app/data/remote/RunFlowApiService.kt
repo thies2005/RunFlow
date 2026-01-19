@@ -10,6 +10,12 @@ interface RunFlowApiService {
     @POST("mobile/v1/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
+    @POST("mobile/v1/auth/email-login")
+    suspend fun emailLogin(@Body request: EmailLoginRequest): Response<LoginResponse>
+
+    @POST("mobile/v1/auth/register")
+    suspend fun register(@Body request: RegisterRequest): Response<LoginResponse>
+
     @POST("mobile/v1/auth/logout")
     suspend fun logout(@Body request: LogoutRequest): Response<AuthResponse>
 

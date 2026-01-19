@@ -4,6 +4,8 @@ import com.runflow.app.data.model.LoginRequest
 import com.runflow.app.data.model.LoginResponse
 import com.runflow.app.data.model.LogoutRequest
 import com.runflow.app.data.model.RefreshTokenRequest
+import com.runflow.app.data.model.EmailLoginRequest
+import com.runflow.app.data.model.RegisterRequest
 import com.runflow.app.data.remote.ApiResult
 import com.runflow.app.data.remote.RunFlowApiService
 import com.runflow.app.data.remote.safeApiCall
@@ -19,6 +21,36 @@ class AuthRepository @Inject constructor(
 
     suspend fun login(code: String): ApiResult<LoginResponse> {
         return when (val result = safeApiCall { apiService.login(LoginRequest(code)) }) {
+            is ApiResult.Success -> {
+                val response = result.data
+                tokenManager.saveTokens(response.accessToken, response.refreshToken)
+                tokenManager.saveUserId(response.user.id)
+                ApiResult.Success(response)
+            }
+            is ApiResult.Error -> result
+            is ApiResult.Loading -> ApiResult.Loading
+        }
+    }
+
+    suspend fun emailLogin(email: String, password: String): ApiResult<LoginResponse> {
+        return when (val result = safeApiCall { 
+            apiService.emailLogin(EmailLoginRequest(email, password)) 
+        }) {
+            is ApiResult.Success -> {
+                val response = result.data
+                tokenManager.saveTokens(response.accessToken, response.refreshToken)
+                tokenManager.saveUserId(response.user.id)
+                ApiResult.Success(response)
+            }
+            is ApiResult.Error -> result
+            is ApiResult.Loading -> ApiResult.Loading
+        }
+    }
+
+    suspend fun register(email: String, password: String, name: String?): ApiResult<LoginResponse> {
+        return when (val result = safeApiCall { 
+            apiService.register(RegisterRequest(email, password, name)) 
+        }) {
             is ApiResult.Success -> {
                 val response = result.data
                 tokenManager.saveTokens(response.accessToken, response.refreshToken)

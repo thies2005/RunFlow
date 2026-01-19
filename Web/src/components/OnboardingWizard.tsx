@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, RefreshCw, BarChart2, Calendar } from 'lucide-react';
+import { ArrowRight, RefreshCw, BarChart2, Calendar, Link2 } from 'lucide-react';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import PlanSetupForm from './PlanSetupForm';
+import SyncPlatformSelector from './SyncPlatformSelector';
 import { useEffect } from 'react';
 
 export default function OnboardingWizard() {
@@ -14,10 +15,21 @@ export default function OnboardingWizard() {
     const queryClient = useQueryClient();
     const searchParams = useSearchParams();
     const { data: session } = useSession();
+    const hasStrava = (session?.user as any)?.hasStrava || false;
+
     const [step, setStep] = useState(() => {
         const p = searchParams.get('step');
-        return p ? parseInt(p) : 1;
+        if (p) return parseInt(p);
+        // If user has Strava, start at step 1 (sync), otherwise step 0 (platform selection)
+        return hasStrava ? 1 : 0;
     });
+
+    // Update step when session loads
+    useEffect(() => {
+        if (session && step === 0 && hasStrava) {
+            setStep(1);
+        }
+    }, [session, hasStrava, step]);
 
     // Sync Logic (Step 1)
     const { data: syncStatus } = useQuery({
@@ -87,11 +99,24 @@ export default function OnboardingWizard() {
             <div className="w-full h-1 bg-gray-800">
                 <div
                     className="h-full bg-accent-orange transition-all duration-500 ease-out"
-                    style={{ width: `${(step / 3) * 100}%` }}
+                    style={{ width: `${((step + 1) / 4) * 100}%` }}
                 />
             </div>
 
             <div className="flex-1 max-w-5xl mx-auto w-full p-6 flex flex-col justify-center">
+                {/* Step 0: Sync Platform Selection (for email users) */}
+                {step === 0 && (
+                    <div className="max-w-2xl mx-auto animate-fade-in">
+                        <div className="w-16 h-16 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mx-auto mb-6">
+                            <Link2 className="w-8 h-8" />
+                        </div>
+                        <SyncPlatformSelector
+                            connectedPlatforms={hasStrava ? ['strava'] : []}
+                            onSkip={() => setStep(1)}
+                        />
+                    </div>
+                )}
+
                 {/* Step 1: Sync */}
                 {step === 1 && (
                     <div className="max-w-md mx-auto text-center space-y-6 animate-fade-in">

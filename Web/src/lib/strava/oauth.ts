@@ -1,12 +1,15 @@
 /**
  * Strava OAuth Configuration for NextAuth
+ * With additional Credentials provider for email/password auth
  */
 
 import { AuthOptions } from 'next-auth';
 import StravaProvider from 'next-auth/providers/strava';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
 import { encryptToken, decryptToken } from '@/lib/crypto';
+import { verifyPassword } from '@/lib/auth/auth-email';
 
 export const authOptions: AuthOptions = {
     adapter: PrismaAdapter(prisma) as any,
@@ -20,9 +23,47 @@ export const authOptions: AuthOptions = {
                 },
             },
         }),
+        CredentialsProvider({
+            id: 'credentials',
+            name: 'Email',
+            credentials: {
+                email: { label: 'Email', type: 'email' },
+                password: { label: 'Password', type: 'password' }
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) {
+                    throw new Error('Email and password are required');
+                }
+
+                const user = await prisma.user.findUnique({
+                    where: { email: credentials.email.toLowerCase() }
+                });
+
+                if (!user || !user.passwordHash) {
+                    throw new Error('Invalid email or password');
+                }
+
+                const isValid = await verifyPassword(credentials.password, user.passwordHash);
+                if (!isValid) {
+                    throw new Error('Invalid email or password');
+                }
+
+                return {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    image: user.image,
+                };
+            }
+        }),
     ],
     callbacks: {
         async signIn({ user, account }: { user: any, account: any }) {
+            // Skip token handling for credentials provider
+            if (account?.provider === 'credentials') {
+                return true;
+            }
+
             // Fix: Strava Provider returns 'athlete' object which breaks PrismaAdapter
             // We must remove it before NextAuth tries to save the account
             if (account && 'athlete' in account) {
@@ -39,16 +80,25 @@ export const authOptions: AuthOptions = {
 
             return true;
         },
-        async session({ session, user }: { session: any, user: any }) {
-            // Ensure user ID is always set
-            if (session.user && user) {
-                session.user.id = user.id;
+        async jwt({ token, user }: { token: any, user: any }) {
+            // Persist the user id to the token on first sign in
+            if (user) {
+                token.id = user.id;
+            }
+            return token;
+        },
+        async session({ session, token, user }: { session: any, token: any, user: any }) {
+            // For JWT strategy, get user from token; for database strategy, from user
+            const userId = token?.id || user?.id;
+
+            if (session.user && userId) {
+                session.user.id = userId;
 
                 try {
                     // Check if user has valid Strava connection via Account table
-                    const account = await prisma.account.findFirst({
+                    const stravaAccount = await prisma.account.findFirst({
                         where: {
-                            userId: user.id,
+                            userId: userId,
                             provider: 'strava'
                         },
                         select: {
@@ -57,18 +107,19 @@ export const authOptions: AuthOptions = {
                         }
                     });
 
-                    // Sync status logic (optional fallback to user fields if needed, 
-                    // but primarily we should check the Account presence)
+                    // Get user's sync status and auth method
                     const dbUser = await prisma.user.findUnique({
-                        where: { id: user.id },
-                        select: { lastSyncAt: true }
+                        where: { id: userId },
+                        select: { lastSyncAt: true, authMethod: true }
                     });
 
-                    session.user.hasStrava = !!account;
+                    session.user.hasStrava = !!stravaAccount;
+                    session.user.authMethod = dbUser?.authMethod || 'strava';
                     session.user.lastSyncAt = dbUser?.lastSyncAt?.toISOString() ?? null;
                 } catch (error) {
                     console.error('Error fetching user data for session:', error);
                     session.user.hasStrava = false;
+                    session.user.authMethod = 'strava';
                     session.user.lastSyncAt = null;
                 }
             }
@@ -80,7 +131,8 @@ export const authOptions: AuthOptions = {
         error: '/login',
     },
     session: {
-        strategy: 'database',
+        strategy: 'jwt',
+        maxAge: 30 * 24 * 60 * 60, // 30 days
     },
     debug: process.env.NODE_ENV === 'development',
 };

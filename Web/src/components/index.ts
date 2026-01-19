@@ -12,3 +12,4 @@ export * from './StravaLogos';
 export { Footer } from './Footer';
 export { UserMenu } from './UserMenu';
 export { ErrorBoundary, ChartErrorBoundary } from './ErrorBoundary';
+export { default as SyncPlatformSelector } from './SyncPlatformSelector';

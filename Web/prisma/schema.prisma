@@ -22,6 +22,10 @@ model User {
   image         String?
   emailVerified DateTime?
 
+  // Email/Password Authentication
+  passwordHash  String?   // bcrypt hashed password for email auth users
+  authMethod    String    @default("strava") // "strava" | "email" - primary auth method
+
   // Strava OAuth tokens
   stravaId           String?   @unique
   stravaAccessToken  String?

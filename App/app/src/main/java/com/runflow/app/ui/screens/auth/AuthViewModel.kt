@@ -56,7 +56,12 @@ class AuthViewModel @Inject constructor(
             val result = authRepository.login(code)
             when (result) {
                 is com.runflow.app.data.remote.ApiResult.Success -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false, 
+                        isAuthenticated = true,
+                        authMethod = "strava",
+                        currentStep = 2 // Move to Sync Platform Step
+                    )
                     Result.success(Unit)
                 }
                 is com.runflow.app.data.remote.ApiResult.Error -> {
@@ -79,6 +84,53 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun onEmailLogin(email: String, password: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val result = authRepository.emailLogin(email, password)
+            when (result) {
+                is com.runflow.app.data.remote.ApiResult.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false, 
+                        isAuthenticated = true,
+                        // If it's a new user (no created date check here yet, but simplistic assumes 
+                        // sync might be needed or skip to profile if already set up. 
+                        // For now consistent with web flow logic)
+                        currentStep = 2 // Move to Sync Platform Step
+                    )
+                }
+                is com.runflow.app.data.remote.ApiResult.Error -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = result.message)
+                }
+                is com.runflow.app.data.remote.ApiResult.Loading -> {}
+            }
+        }
+    }
+
+    fun onRegister(email: String, password: String, name: String?) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            val result = authRepository.register(email, password, name)
+            when (result) {
+                is com.runflow.app.data.remote.ApiResult.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false, 
+                        isAuthenticated = true,
+                        currentStep = 2 // Move to Sync Platform Step
+                    )
+                }
+                is com.runflow.app.data.remote.ApiResult.Error -> {
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = result.message)
+                }
+                is com.runflow.app.data.remote.ApiResult.Loading -> {}
+            }
+        }
+    }
+
+    fun setStep(step: Int) {
+        _uiState.value = _uiState.value.copy(currentStep = step)
+    }
+
     // Notification settings (exposed for SettingsScreen)
     val notificationsEnabled = preferencesManager.notificationsEnabled
     val syncNotifications = preferencesManager.syncNotifications
@@ -99,6 +151,7 @@ class AuthViewModel @Inject constructor(
 data class AuthState(
     val isLoading: Boolean = false,
     val isAuthenticated: Boolean = false,
-    val currentStep: Int = 1, // 1: Connect, 2: Profile, 3: Complete
+    val currentStep: Int = 0, // 0: Method Selection, 1: Auth (Strava/Email), 2: Sync, 3: Profile
+    val authMethod: String? = null, // "strava" or "email"
     val error: String? = null
 )

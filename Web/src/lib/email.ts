@@ -44,11 +44,12 @@ export async function sendWelcomeEmail(email: string, code: string) {
 export async function sendPasswordResetEmail(email: string, code: string) {
     console.log(`[Email] Attempting to send password reset email to: ${email}`);
     try {
+        const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login`;
         const info = await transporter.sendMail({
             from: DEFAULT_FROM,
             to: email,
             subject: 'Reset your RunFlow password',
-            text: `Reset your password using this code: ${code}`,
+            text: `Reset your password using this code: ${code}\n\nGo to ${resetUrl}, click "Forgot password?" and enter your code.`,
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                     <h1>Reset Password</h1>
@@ -57,6 +58,14 @@ export async function sendPasswordResetEmail(email: string, code: string) {
                         <p style="margin: 0; color: #666;">Your reset code is:</p>
                         <p style="font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 10px 0;">${code}</p>
                     </div>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <a href="${resetUrl}" style="display: inline-block; background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500;">
+                            Reset Password
+                        </a>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">
+                        Click the button above, then select "Forgot password?" on the login page to enter your code.
+                    </p>
                     <p>If you didn't request this, you can safely ignore this email.</p>
                     <p>This code will expire in 15 minutes.</p>
                 </div>

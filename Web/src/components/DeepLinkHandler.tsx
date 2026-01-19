@@ -10,11 +10,18 @@ export default function DeepLinkHandler() {
     useEffect(() => {
         const handleDeepLink = (event: URLOpenListenerEvent) => {
             const url = new URL(event.url);
-            // Only handle links for our own domain
             if (url.hostname === 'runflow.schuelken.uk' || url.protocol === 'runflow:') {
                 const path = url.pathname + url.search;
                 console.log('Deep link received:', path);
-                router.push(path);
+
+                // For API routes (like Auth Callbacks), we MUST force a hard navigation
+                // so the browser makes a proper request and handles Set-Cookie headers.
+                // Client-side router.push() usually fails for API routes.
+                if (path.startsWith('/api/')) {
+                    window.location.href = path;
+                } else {
+                    router.push(path);
+                }
             }
         };
 

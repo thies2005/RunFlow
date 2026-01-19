@@ -16,9 +16,12 @@ export const config = {
          * - register (register page)
          * - _next/static (static files)
          * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
+          * - favicon.ico (favicon file)
          * - icons (public icons folder)
+         * - manifest.json (PWA manifest)
+         * - sw.js (Service Worker)
+         * - swe-worker (Service Worker Workbox)
          */
-        '/((?!api/auth|api/webhooks|login|register|_next/static|_next/image|favicon.ico|icons).*)',
+        '/((?!api/auth|api/webhooks|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker).*)',
     ],
 }

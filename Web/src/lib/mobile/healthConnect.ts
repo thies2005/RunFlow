@@ -64,23 +64,26 @@ export async function isHealthConnectAvailable(): Promise<boolean> {
 
 /**
  * Request permissions for Health Connect
+ * Note: Workout/Exercise permissions must be granted through Health Connect settings
  */
 export async function requestHealthPermissions(): Promise<boolean> {
     if (!isMobile()) return false;
 
     try {
+        // First request the basic data type permissions the plugin supports
         await Health.requestAuthorization({
             read: REQUIRED_READ_PERMISSIONS,
             write: [],
         });
 
-        // Verify we got at least some permissions
-        const result = await Health.checkAuthorization({
-            read: ['distance'],
-            write: [],
-        });
+        // Open Health Connect settings so user can grant Workouts/Exercise permission
+        // The plugin's requestAuthorization doesn't support workout permissions directly,
+        // so the user must grant READ_EXERCISE through the Health Connect app settings
+        await Health.openHealthConnectSettings();
 
-        return result.readAuthorized.length > 0;
+        // We return true to indicate settings were opened
+        // The actual permission check happens when we try to query workouts
+        return true;
     } catch (error) {
         console.error('Health Connect Permission Error:', error);
         return false;

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { PwaLifecycle } from './pwa-lifecycle';
+import DeepLinkHandler from '@/components/DeepLinkHandler';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             <body className={inter.className}>
                 <Providers>{children}</Providers>
                 <PwaLifecycle />
+                <DeepLinkHandler />
             </body>
         </html>
     );

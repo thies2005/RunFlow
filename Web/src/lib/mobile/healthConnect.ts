@@ -1,7 +1,66 @@
 import { Capacitor } from '@capacitor/core';
-import { Health } from '@capgo/capacitor-health';
+import { Health, HealthDataType, WorkoutType, Workout } from '@capgo/capacitor-health';
 
 export const isMobile = () => Capacitor.isNativePlatform();
+
+// Data types we request permission for
+const REQUIRED_READ_PERMISSIONS: HealthDataType[] = [
+    'distance',
+    'heartRate',
+    'steps',
+    'calories',
+];
+
+// Map plugin workout types to RunFlow activity types
+const WORKOUT_TYPE_MAP: Record<WorkoutType, string> = {
+    'running': 'RUN',
+    'walking': 'WALK',
+    'hiking': 'HIKE',
+    'cycling': 'RIDE',
+    'swimming': 'SWIM',
+    'yoga': 'WORKOUT',
+    'strengthTraining': 'WORKOUT',
+    'tennis': 'WORKOUT',
+    'basketball': 'WORKOUT',
+    'soccer': 'WORKOUT',
+    'americanFootball': 'WORKOUT',
+    'baseball': 'WORKOUT',
+    'crossTraining': 'WORKOUT',
+    'elliptical': 'WORKOUT',
+    'rowing': 'WORKOUT',
+    'stairClimbing': 'WORKOUT',
+    'traditionalStrengthTraining': 'WORKOUT',
+    'waterFitness': 'SWIM',
+    'waterPolo': 'SWIM',
+    'waterSports': 'SWIM',
+    'wrestling': 'WORKOUT',
+    'other': 'OTHER',
+};
+
+export interface HealthActivity {
+    name: string;
+    type: string;
+    startDate: Date;
+    endDate: Date;
+    distance?: number; // meters
+    duration: number; // seconds
+    calories?: number;
+}
+
+/**
+ * Check if Health Connect is available on this device
+ */
+export async function isHealthConnectAvailable(): Promise<boolean> {
+    if (!isMobile()) return false;
+
+    try {
+        const result = await Health.isAvailable();
+        return result.available;
+    } catch (error) {
+        console.error('Health Connect availability check failed:', error);
+        return false;
+    }
+}
 
 /**
  * Request permissions for Health Connect
@@ -10,14 +69,18 @@ export async function requestHealthPermissions(): Promise<boolean> {
     if (!isMobile()) return false;
 
     try {
-        const status = await Health.requestAuthorization({
-
-            read: ['steps', 'distance', 'calories', 'heartRate', 'weight'],
-            write: [], // We only read for now
+        await Health.requestAuthorization({
+            read: REQUIRED_READ_PERMISSIONS,
+            write: [],
         });
 
-        // Check if we have access (simplified check, real app might check each permission)
-        return true;
+        // Verify we got at least some permissions
+        const result = await Health.checkAuthorization({
+            read: ['distance'],
+            write: [],
+        });
+
+        return result.readAuthorized.length > 0;
     } catch (error) {
         console.error('Health Connect Permission Error:', error);
         return false;
@@ -25,35 +88,104 @@ export async function requestHealthPermissions(): Promise<boolean> {
 }
 
 /**
- * Sync logic: Fetch data from Health Connect and upload to API
+ * Fetch workout activities from Health Connect
  */
-export async function syncHealthData(days = 1) {
-    if (!isMobile()) return;
+export async function fetchHealthActivities(days = 30): Promise<HealthActivity[]> {
+    if (!isMobile()) return [];
 
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - days);
 
     try {
-        // Example: Fetch Steps using queryAggregated (available in plugin)
-        // Note: Check plugin docs for specific query method signature
-        // This is a conceptual implementation based on typical usage
-
-        // Pseudo-code for fetching steps
-        /*
-        const steps = await Health.query({
-            name: 'steps',
-            startDate: start,
-            endDate: end
+        // Query all workout sessions using the dedicated queryWorkouts method
+        const result = await Health.queryWorkouts({
+            startDate: start.toISOString(),
+            endDate: end.toISOString(),
+            limit: 200,
         });
-        */
 
-        console.log('Syncing health data...');
+        if (!result.workouts || result.workouts.length === 0) {
+            console.log('No workouts found in Health Connect');
+            return [];
+        }
 
-        // TODO: Call your existing API
-        // await fetch('/api/activities', { method: 'POST', body: ... });
+        const activities: HealthActivity[] = [];
 
-    } catch (e) {
-        console.error('Sync failed', e);
+        for (const workout of result.workouts) {
+            // Map workout type to RunFlow type
+            const runflowType = WORKOUT_TYPE_MAP[workout.workoutType] || 'OTHER';
+
+            // Skip very short activities (less than 1 minute)
+            if (workout.duration < 60) continue;
+
+            const startDate = new Date(workout.startDate);
+            const endDate = new Date(workout.endDate);
+
+            // Generate a descriptive name
+            const workoutName = workout.sourceName ||
+                `${workout.workoutType.charAt(0).toUpperCase() + workout.workoutType.slice(1)} Activity`;
+
+            activities.push({
+                name: workoutName,
+                type: runflowType,
+                startDate,
+                endDate,
+                distance: workout.totalDistance || undefined,
+                duration: workout.duration,
+                calories: workout.totalEnergyBurned || undefined,
+            });
+        }
+
+        return activities;
+    } catch (error) {
+        console.error('Failed to fetch Health Connect activities:', error);
+        return [];
     }
+}
+
+/**
+ * Sync Health Connect activities to RunFlow API
+ * Returns number of activities synced
+ */
+export async function syncHealthData(days = 30): Promise<{ synced: number; errors: number }> {
+    if (!isMobile()) {
+        return { synced: 0, errors: 0 };
+    }
+
+    const activities = await fetchHealthActivities(days);
+    let synced = 0;
+    let errors = 0;
+
+    console.log(`Found ${activities.length} activities in Health Connect`);
+
+    for (const activity of activities) {
+        try {
+            const response = await fetch('/api/activities', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: activity.name,
+                    date: activity.startDate.toISOString(),
+                    type: activity.type,
+                    distance: activity.distance ? activity.distance / 1000 : 0, // API expects km
+                    duration: Math.round(activity.duration / 60), // API expects minutes
+                }),
+            });
+
+            if (response.ok) {
+                synced++;
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Failed to sync activity:', activity.name, errorData);
+                errors++;
+            }
+        } catch (error) {
+            console.error('Error syncing activity:', activity.name, error);
+            errors++;
+        }
+    }
+
+    console.log(`Health Connect sync complete: ${synced} synced, ${errors} errors`);
+    return { synced, errors };
 }

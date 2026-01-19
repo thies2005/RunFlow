@@ -272,7 +272,7 @@ export default function PlanPage() {
                                 return (
                                     <div key={weekStartIso} className="glass-card overflow-hidden">
                                         {/* Week Header */}
-                                        <div className="p-4 border-b border-glass-border flex flex-col md:flex-row md:items-center justify-between bg-surface sticky top-0 z-10 backdrop-blur-md gap-2">
+                                        <div className="p-4 border-b border-glass-border flex flex-col md:flex-row md:items-center justify-between bg-surface sticky top-[env(safe-area-inset-top)] z-10 backdrop-blur-md gap-2">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex flex-col">
                                                     <span className="text-foreground font-semibold">Week {index + 1}</span>

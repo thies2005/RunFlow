@@ -110,7 +110,7 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen bg-background">
             <UserMetricsProvider stats={statsData}>
-                <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50">
+                <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between h-16">
                             <div className="flex items-center gap-3">

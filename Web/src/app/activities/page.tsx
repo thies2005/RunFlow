@@ -136,6 +136,7 @@ export default function ActivitiesPage() {
                             activities={allActivities}
                             isLoading={isLoading}
                             userHrMax={userHrMax}
+                            vdotCorrectionFactor={statsData?.vdotCorrectionFactor}
                         />
 
                         {hasNextPage && (

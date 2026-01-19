@@ -208,7 +208,7 @@ export default function Dashboard() {
                                 </button>
                             </div>
                         </div>
-                        <ActivityList activities={recentActivities} isLoading={isLoading} userHrMax={userHrMax} />
+                        <ActivityList activities={recentActivities} isLoading={isLoading} userHrMax={userHrMax} vdotCorrectionFactor={correctionFactor} />
                     </div>
                 </main>
 

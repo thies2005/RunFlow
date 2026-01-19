@@ -13,9 +13,10 @@ interface ActivityDetailsModalProps {
     onClose: () => void;
     activity: ActivityListItem | null;
     userHrMax?: number;
+    vdotCorrectionFactor?: number;
 }
 
-export default function ActivityDetailsModal({ isOpen, onClose, activity, userHrMax }: ActivityDetailsModalProps) {
+export default function ActivityDetailsModal({ isOpen, onClose, activity, userHrMax, vdotCorrectionFactor = 1.0 }: ActivityDetailsModalProps) {
     const [mounted, setMounted] = useState(false);
     const [trainingType, setTrainingType] = useState<WorkoutType | null>(null);
     const [isUpdatingType, setIsUpdatingType] = useState(false);
@@ -332,7 +333,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             </div>
                             <div className="flex justify-between items-center border-t border-glass-border pt-2 mt-2">
                                 <span className="text-foreground-muted">Eff. VO2 Max</span>
-                                <span className="text-accent-purple font-medium">{activity.estimatedVdot ? activity.estimatedVdot.toFixed(1) : '-'}</span>
+                                <span className="text-accent-purple font-medium">{activity.estimatedVdot ? (activity.estimatedVdot * vdotCorrectionFactor).toFixed(1) : '-'}</span>
                             </div>
                         </div>
 

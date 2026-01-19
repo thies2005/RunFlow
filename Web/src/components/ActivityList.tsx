@@ -18,6 +18,7 @@ interface ActivityListProps {
     activities: ActivityListItem[];
     isLoading?: boolean;
     userHrMax?: number;
+    vdotCorrectionFactor?: number;
 }
 
 const activityIcons: Record<string, React.ReactNode> = {
@@ -180,7 +181,7 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
 
 ActivityCard.displayName = 'ActivityCard';
 
-export function ActivityList({ activities, isLoading, userHrMax }: ActivityListProps) {
+export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionFactor }: ActivityListProps) {
     const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
 
     if (isLoading) {
@@ -238,6 +239,7 @@ export function ActivityList({ activities, isLoading, userHrMax }: ActivityListP
                 onClose={() => setSelectedActivity(null)}
                 activity={selectedActivity}
                 userHrMax={userHrMax}
+                vdotCorrectionFactor={vdotCorrectionFactor}
             />
         </>
     );

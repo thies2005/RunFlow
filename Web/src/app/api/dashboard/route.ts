@@ -156,7 +156,34 @@ export async function GET(req: NextRequest) {
             includeCrossTraining ? crossTrainingActivities : [],
             effectiveVO2max
         );
-        const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);
+
+        // --- Fitness Metrics Logic Updated ---
+        // Use cached DailyFitness for accurate long-term values, consistent with Analytics page.
+        let ctl = 0;
+        let atl = 0;
+        let tsb = 0;
+        let workloadRatio = 0;
+
+        const latestFitness = await prisma.dailyFitness.findFirst({
+            where: { userId },
+            orderBy: { date: 'desc' }
+        });
+
+        if (latestFitness) {
+            ctl = Math.round(latestFitness.ctl);
+            atl = Math.round(latestFitness.atl);
+            tsb = Math.round(latestFitness.tsb);
+            // Re-calculate ratio from the source values to ensure precision
+            workloadRatio = latestFitness.ctl > 0 ? parseFloat((latestFitness.atl / latestFitness.ctl).toFixed(2)) : 0;
+        } else {
+            // Fallback for brand new users with no history cache yet
+            const { ctl: calcCtl, atl: calcAtl, tsb: calcTsb, workloadRatio: calcRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);
+            ctl = calcCtl;
+            atl = calcAtl;
+            tsb = calcTsb;
+            workloadRatio = calcRatio;
+        }
+
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
         const stats = {

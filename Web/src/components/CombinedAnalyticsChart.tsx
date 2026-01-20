@@ -218,182 +218,185 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
             </div>
 
             {/* Chart */}
-            <div className="h-80 min-h-[320px] w-full overflow-x-auto relative">
-                <div className="min-w-[600px] h-full relative">
-                    <ComposedChart width={600} height={320} data={chartData} className="w-full h-full">
-                        <defs>
-                            <linearGradient id="colorTrainingTime" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0.3} />
-                                <stop offset="95%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" />
-                        <XAxis
-                            dataKey="date"
-                            stroke="var(--foreground-muted)"
-                            fontSize={11}
-                            tickLine={false}
-                            minTickGap={timeRange === '1M' ? 20 : 50}
-                            tickFormatter={tickFormatter}
-                        />
+            <div className="h-80 w-full overflow-x-auto">
+                {/* On mobile: fixed min-width to force scrolling. On desktop (md): min-width 0 to allow resizing */}
+                <div className="min-w-[600px] md:min-w-0 w-full h-full relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={chartData}>
+                            <defs>
+                                <linearGradient id="colorTrainingTime" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" />
+                            <XAxis
+                                dataKey="date"
+                                stroke="var(--foreground-muted)"
+                                fontSize={11}
+                                tickLine={false}
+                                minTickGap={timeRange === '1M' ? 20 : 50}
+                                tickFormatter={tickFormatter}
+                            />
 
-                        {/* Left Y-Axis: VO2max */}
-                        <YAxis
-                            yAxisId="left"
-                            orientation="left"
-                            stroke="#f59e0b"
-                            fontSize={11}
-                            domain={domains.vo2 as [number, number]}
-                            tickLine={false}
-                            axisLine={false}
-                            hide={!visibleSeries.vo2max}
-                        />
-
-                        {/* Right Y-Axis: Fitness metrics */}
-                        <YAxis
-                            yAxisId="right"
-                            orientation="right"
-                            stroke="#10b981"
-                            fontSize={11}
-                            domain={domains.fitness as [number, number]}
-                            tickLine={false}
-                            axisLine={false}
-                            hide={!visibleSeries.ctl && !visibleSeries.atl && !visibleSeries.tsb}
-                            tickFormatter={(val) => val.toFixed(0)}
-                        />
-
-                        {/* Volume Y-Axis (hidden, used for scaling Volume and Time) */}
-                        <YAxis
-                            yAxisId="volume"
-                            orientation="right"
-                            stroke="#8b5cf6"
-                            fontSize={11}
-                            domain={domains.volume as [number, number]}
-                            tickLine={false}
-                            axisLine={false}
-                            hide={true}
-                        />
-
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'var(--glass-bg)',
-                                border: '1px solid var(--glass-border)',
-                                borderRadius: '8px',
-                                boxShadow: 'var(--card-shadow)',
-                                backdropFilter: 'blur(12px)'
-                            }}
-                            itemStyle={{ color: 'var(--foreground)' }}
-                            labelStyle={{ color: 'var(--foreground-muted)' }}
-                            labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        />
-
-                        {/* VO2max Rolling Average (Smooth Line) */}
-                        {visibleSeries.vo2max && (
-                            <Line
+                            {/* Left Y-Axis: VO2max */}
+                            <YAxis
                                 yAxisId="left"
-                                type="monotone"
-                                dataKey="vo2maxRolling"
-                                stroke={SERIES_CONFIG.vo2max.color}
-                                strokeWidth={2}
-                                dot={false}
-                                isAnimationActive={false}
-                                connectNulls
-                                name="VO2max (Avg)"
+                                orientation="left"
+                                stroke="#f59e0b"
+                                fontSize={11}
+                                domain={domains.vo2 as [number, number]}
+                                tickLine={false}
+                                axisLine={false}
+                                hide={!visibleSeries.vo2max}
                             />
-                        )}
 
-                        {/* Fitness Lines */}
-                        {visibleSeries.ctl && (
-                            <Line
+                            {/* Right Y-Axis: Fitness metrics */}
+                            <YAxis
                                 yAxisId="right"
-                                type="monotone"
-                                dataKey="ctl"
-                                stroke={SERIES_CONFIG.ctl.color}
-                                strokeWidth={2}
-                                dot={false}
-                                connectNulls
-                                name="Fitness (CTL)"
+                                orientation="right"
+                                stroke="#10b981"
+                                fontSize={11}
+                                domain={domains.fitness as [number, number]}
+                                tickLine={false}
+                                axisLine={false}
+                                hide={!visibleSeries.ctl && !visibleSeries.atl && !visibleSeries.tsb}
+                                tickFormatter={(val) => val.toFixed(0)}
                             />
-                        )}
-                        {visibleSeries.atl && (
-                            <Line
-                                yAxisId="right"
-                                type="monotone"
-                                dataKey="atl"
-                                stroke={SERIES_CONFIG.atl.color}
-                                strokeWidth={2}
-                                dot={false}
-                                connectNulls
-                                name="Fatigue (ATL)"
-                            />
-                        )}
-                        {visibleSeries.tsb && (
-                            <Line
-                                yAxisId="right"
-                                type="monotone"
-                                dataKey="tsb"
-                                stroke={SERIES_CONFIG.tsb.color}
-                                strokeWidth={2}
-                                dot={false}
-                                connectNulls
-                                name="Form (TSB)"
-                            />
-                        )}
 
-                        {/* Volume Bar (Only visible in 1M view OR if explicitly enabled in other views - but user request implies specific handling) */}
-                        {visibleSeries.volume && timeRange === '1M' && (
-                            <Bar
+                            {/* Volume Y-Axis (hidden, used for scaling Volume and Time) */}
+                            <YAxis
                                 yAxisId="volume"
-                                dataKey="volume"
-                                fill={SERIES_CONFIG.volume.color}
-                                opacity={0.3}
-                                name="Daily Volume (km)"
-                                radius={[4, 4, 0, 0]}
+                                orientation="right"
+                                stroke="#8b5cf6"
+                                fontSize={11}
+                                domain={domains.volume as [number, number]}
+                                tickLine={false}
+                                axisLine={false}
+                                hide={true}
                             />
-                        )}
 
-                        {/* Volume Rolling Line (Weekly Volume) */}
-                        {visibleSeries.volume && (
-                            <Line
-                                yAxisId="volume"
-                                type="monotone"
-                                dataKey="volumeRolling"
-                                stroke={SERIES_CONFIG.volume.color}
-                                strokeWidth={2}
-                                dot={false}
-                                connectNulls
-                                name="Weekly Volume (km)"
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: 'var(--glass-bg)',
+                                    border: '1px solid var(--glass-border)',
+                                    borderRadius: '8px',
+                                    boxShadow: 'var(--card-shadow)',
+                                    backdropFilter: 'blur(12px)'
+                                }}
+                                itemStyle={{ color: 'var(--foreground)' }}
+                                labelStyle={{ color: 'var(--foreground-muted)' }}
+                                labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             />
-                        )}
 
-                        {/* Training Time (Area - Daily - Only in 1M view) */}
-                        {visibleSeries.trainingTime && timeRange === '1M' && (
-                            <Area
-                                yAxisId="volume"
-                                type="monotone"
-                                dataKey="trainingTimeHours"
-                                stroke="none"
-                                fill="url(#colorTrainingTime)"
-                                fillOpacity={0.6}
-                                connectNulls
-                                name="Daily Time (h)"
-                            />
-                        )}
+                            {/* VO2max Rolling Average (Smooth Line) */}
+                            {visibleSeries.vo2max && (
+                                <Line
+                                    yAxisId="left"
+                                    type="monotone"
+                                    dataKey="vo2maxRolling"
+                                    stroke={SERIES_CONFIG.vo2max.color}
+                                    strokeWidth={2}
+                                    dot={false}
+                                    isAnimationActive={false}
+                                    connectNulls
+                                    name="VO2max (Avg)"
+                                />
+                            )}
 
-                        {/* Training Time Rolling Line */}
-                        {visibleSeries.trainingTime && (
-                            <Line
-                                yAxisId="volume"
-                                type="monotone"
-                                dataKey="trainingTimeRollingHours"
-                                stroke={SERIES_CONFIG.trainingTime.color}
-                                strokeWidth={2}
-                                dot={false}
-                                connectNulls
-                                name="Weekly Time (h)"
-                            />
-                        )}
-                    </ComposedChart>
+                            {/* Fitness Lines */}
+                            {visibleSeries.ctl && (
+                                <Line
+                                    yAxisId="right"
+                                    type="monotone"
+                                    dataKey="ctl"
+                                    stroke={SERIES_CONFIG.ctl.color}
+                                    strokeWidth={2}
+                                    dot={false}
+                                    connectNulls
+                                    name="Fitness (CTL)"
+                                />
+                            )}
+                            {visibleSeries.atl && (
+                                <Line
+                                    yAxisId="right"
+                                    type="monotone"
+                                    dataKey="atl"
+                                    stroke={SERIES_CONFIG.atl.color}
+                                    strokeWidth={2}
+                                    dot={false}
+                                    connectNulls
+                                    name="Fatigue (ATL)"
+                                />
+                            )}
+                            {visibleSeries.tsb && (
+                                <Line
+                                    yAxisId="right"
+                                    type="monotone"
+                                    dataKey="tsb"
+                                    stroke={SERIES_CONFIG.tsb.color}
+                                    strokeWidth={2}
+                                    dot={false}
+                                    connectNulls
+                                    name="Form (TSB)"
+                                />
+                            )}
+
+                            {/* Volume Bar (Only visible in 1M view OR if explicitly enabled in other views - but user request implies specific handling) */}
+                            {visibleSeries.volume && timeRange === '1M' && (
+                                <Bar
+                                    yAxisId="volume"
+                                    dataKey="volume"
+                                    fill={SERIES_CONFIG.volume.color}
+                                    opacity={0.3}
+                                    name="Daily Volume (km)"
+                                    radius={[4, 4, 0, 0]}
+                                />
+                            )}
+
+                            {/* Volume Rolling Line (Weekly Volume) */}
+                            {visibleSeries.volume && (
+                                <Line
+                                    yAxisId="volume"
+                                    type="monotone"
+                                    dataKey="volumeRolling"
+                                    stroke={SERIES_CONFIG.volume.color}
+                                    strokeWidth={2}
+                                    dot={false}
+                                    connectNulls
+                                    name="Weekly Volume (km)"
+                                />
+                            )}
+
+                            {/* Training Time (Area - Daily - Only in 1M view) */}
+                            {visibleSeries.trainingTime && timeRange === '1M' && (
+                                <Area
+                                    yAxisId="volume"
+                                    type="monotone"
+                                    dataKey="trainingTimeHours"
+                                    stroke="none"
+                                    fill="url(#colorTrainingTime)"
+                                    fillOpacity={0.6}
+                                    connectNulls
+                                    name="Daily Time (h)"
+                                />
+                            )}
+
+                            {/* Training Time Rolling Line */}
+                            {visibleSeries.trainingTime && (
+                                <Line
+                                    yAxisId="volume"
+                                    type="monotone"
+                                    dataKey="trainingTimeRollingHours"
+                                    stroke={SERIES_CONFIG.trainingTime.color}
+                                    strokeWidth={2}
+                                    dot={false}
+                                    connectNulls
+                                    name="Weekly Time (h)"
+                                />
+                            )}
+                        </ComposedChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 

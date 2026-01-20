@@ -227,14 +227,17 @@ export default function AnalyticsPage() {
             }
         });
 
-        // Helper to safe-normalize dates
+        // Helper to safe-normalize dates (using string manipulation to avoid timezone issues)
         const normalizeDate = (d: string) => {
-            try { return new Date(d).toISOString().split('T')[0]; } catch { return d; }
+            if (!d) return '';
+            // If it's already YYYY-MM-DD, return it. If it's ISO, take first 10 chars.
+            return d.length >= 10 ? d.substring(0, 10) : d;
         };
 
         // Build combined data array
         const allDates = new Set([...Array.from(dailyVolumeMap.keys()), ...Array.from(dailyTimeMap.keys())]);
         const combinedDataRaw = Array.from(allDates).sort().map(date => {
+            // date is YYYY-MM-DD from dailyVolumeMap
             const fitnessEntry = serverFitnessTrend.find((f: { date: string }) => normalizeDate(f.date) === date);
             return {
                 date,

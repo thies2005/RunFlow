@@ -28,6 +28,23 @@ export default function TrainingStatusCard() {
     // Linear mapping: 0.0 -> 0%, 2.0 -> 100%
     const markerPos = Math.min(100, (workloadRatio / 2) * 100);
 
+    // Check for empty data
+    const hasData = ctl > 0 || atl > 0 || effectiveVO2max > 0;
+
+    if (!hasData) {
+        return (
+            <div className="glass-card p-6 h-full flex flex-col items-center justify-center min-h-[400px] text-center">
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                    <Activity className="w-8 h-8 text-gray-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-300 mb-2">No Training Data</h3>
+                <p className="text-sm text-gray-500 max-w-[200px]">
+                    Sync your activities to see your training status and fitness metrics.
+                </p>
+            </div>
+        );
+    }
+
     const tsbStatus = interpretTsb(tsb);
 
     return (

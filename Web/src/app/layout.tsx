@@ -29,7 +29,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
+        <html lang="en" style={{ border: '5px solid red', boxSizing: 'border-box' }}>
             <body className={inter.className}>
                 <Providers>
                     <AdaptiveLayout>{children}</AdaptiveLayout>

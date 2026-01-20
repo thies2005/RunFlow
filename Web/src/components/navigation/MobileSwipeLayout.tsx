@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, PanInfo } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { MobileBottomNav } from './MobileBottomNav';
 import StravaPoweredFooter from '@/components/StravaPoweredFooter';
@@ -12,8 +12,6 @@ interface MobileSwipeLayoutProps {
 }
 
 const PATHS = ['/', '/plan', '/analytics'];
-const SWIPE_THRESHOLD = 40; // Reduced from 80 for easier swiping
-const SWIPE_VELOCITY_THRESHOLD = 200; // Reduced for more responsive swiping
 
 export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutProps) {
     const router = useRouter();
@@ -25,7 +23,6 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
     };
 
     const [activeIndex, setActiveIndex] = useState(() => getIndexFromPath(pathname));
-    const [isAnimating, setIsAnimating] = useState(false);
 
     useEffect(() => {
         const newIndex = getIndexFromPath(pathname);
@@ -34,92 +31,45 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
         }
     }, [pathname, activeIndex]);
 
-    const navigateToIndex = useCallback((index: number) => {
-        if (index >= 0 && index < PATHS.length && index !== activeIndex && !isAnimating) {
-            setIsAnimating(true);
+    // Simplified navigation - no swiping, no sliding
+    const handleTabChange = useCallback((index: number) => {
+        if (index >= 0 && index < PATHS.length && index !== activeIndex) {
             setActiveIndex(index);
             router.replace(PATHS[index], { scroll: false });
             onPageChange?.(index);
-
-            // If navigating to Plan page, scroll to today
-            if (index === 1) {
-                setTimeout(() => {
-                    const todayAnchor = document.getElementById('plan-today-anchor');
-                    if (todayAnchor) {
-                        todayAnchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }, 350);
-            }
         }
-    }, [activeIndex, isAnimating, router, onPageChange]);
-
-    const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        const { offset, velocity } = info;
-        const isHorizontalSwipe = Math.abs(offset.x) > Math.abs(offset.y) * 0.8; // Relaxed from 1.5 to allow diagonal swipes
-
-        if (!isHorizontalSwipe) return;
-
-        const hasEnoughOffset = Math.abs(offset.x) > SWIPE_THRESHOLD;
-        const hasEnoughVelocity = Math.abs(velocity.x) > SWIPE_VELOCITY_THRESHOLD;
-
-        if (hasEnoughOffset || hasEnoughVelocity) {
-            if (offset.x > 0 && activeIndex > 0) {
-                navigateToIndex(activeIndex - 1);
-            } else if (offset.x < 0 && activeIndex < PATHS.length - 1) {
-                navigateToIndex(activeIndex + 1);
-            }
-        }
-    }, [activeIndex, navigateToIndex]);
+    }, [activeIndex, router, onPageChange]);
 
     return (
         <div
             className="fixed inset-0 bg-background"
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
-            {/* Swipe container */}
-            <motion.div
-                className="flex h-full"
-                style={{
-                    width: `${PATHS.length * 100}vw`,
-                    willChange: 'transform',
-                }}
-                animate={{ x: `-${activeIndex * 100}vw` }}
-                transition={{
-                    type: 'spring',
-                    stiffness: 300,
-                    damping: 30
-                }}
-                onAnimationComplete={() => setIsAnimating(false)}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.2}
-                dragDirectionLock
-                onDragEnd={handleDragEnd}
-            >
-                {children.map((child, index) => (
-                    <div
-                        key={index}
-                        className="h-full overflow-y-auto overscroll-y-contain flex-shrink-0"
-                        style={{
-                            width: '100vw',
-                            paddingBottom: '80px',
-                        }}
-                    >
+            {/* Content Container - No swipe, simple fade */}
+            <div className="h-full w-full overflow-hidden pb-[80px]">
+                <motion.div
+                    key={activeIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full w-full"
+                >
+                    <div className="h-full w-full overflow-y-auto overscroll-y-contain">
                         <div className="min-h-full">
-                            {child}
+                            {children[activeIndex]}
                             {/* Strava footer at bottom */}
                             <div className="py-6 px-4">
                                 <StravaPoweredFooter />
                             </div>
                         </div>
                     </div>
-                ))}
-            </motion.div>
+                </motion.div>
+            </div>
 
             {/* Bottom Navigation */}
             <MobileBottomNav
                 activeIndex={activeIndex}
-                onTabChange={navigateToIndex}
+                onTabChange={handleTabChange}
             />
         </div>
     );

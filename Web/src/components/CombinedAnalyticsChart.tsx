@@ -393,17 +393,16 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                             />
                         )}
                     </ComposedChart>
-                </ResponsiveContainer>
+                </div>
             </div>
-        </div>
 
-            {/* Legend */ }
-    <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-foreground-muted">
-        <span>🟡 VO2max = Aerobic power</span>
-        <span>🟢 CTL = Long-term fitness</span>
-        <span>🔴 ATL = Short-term fatigue</span>
-        <span>🔵 TSB = Form (CTL - ATL)</span>
-    </div>
+            {/* Legend */}
+            <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-foreground-muted">
+                <span>🟡 VO2max = Aerobic power</span>
+                <span>🟢 CTL = Long-term fitness</span>
+                <span>🔴 ATL = Short-term fatigue</span>
+                <span>🔵 TSB = Form (CTL - ATL)</span>
+            </div>
         </div >
     );
 }

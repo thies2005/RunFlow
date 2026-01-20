@@ -12,8 +12,8 @@ interface MobileSwipeLayoutProps {
 }
 
 const PATHS = ['/', '/plan', '/analytics'];
-const SWIPE_THRESHOLD = 80;
-const SWIPE_VELOCITY_THRESHOLD = 300;
+const SWIPE_THRESHOLD = 40; // Reduced from 80 for easier swiping
+const SWIPE_VELOCITY_THRESHOLD = 200; // Reduced for more responsive swiping
 
 export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutProps) {
     const router = useRouter();
@@ -25,6 +25,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
     };
 
     const [activeIndex, setActiveIndex] = useState(() => getIndexFromPath(pathname));
+    const [isAnimating, setIsAnimating] = useState(false);
 
     useEffect(() => {
         const newIndex = getIndexFromPath(pathname);
@@ -34,7 +35,8 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
     }, [pathname, activeIndex]);
 
     const navigateToIndex = useCallback((index: number) => {
-        if (index >= 0 && index < PATHS.length && index !== activeIndex) {
+        if (index >= 0 && index < PATHS.length && index !== activeIndex && !isAnimating) {
+            setIsAnimating(true);
             setActiveIndex(index);
             router.replace(PATHS[index], { scroll: false });
             onPageChange?.(index);
@@ -46,14 +48,14 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                     if (todayAnchor) {
                         todayAnchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
-                }, 400);
+                }, 350);
             }
         }
-    }, [activeIndex, router, onPageChange]);
+    }, [activeIndex, isAnimating, router, onPageChange]);
 
     const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         const { offset, velocity } = info;
-        const isHorizontalSwipe = Math.abs(offset.x) > Math.abs(offset.y) * 2;
+        const isHorizontalSwipe = Math.abs(offset.x) > Math.abs(offset.y) * 1.5; // Relaxed ratio
 
         if (!isHorizontalSwipe) return;
 
@@ -79,10 +81,15 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                 className="flex h-full"
                 style={{ width: `${PATHS.length * 100}vw` }}
                 animate={{ x: `-${activeIndex * 100}vw` }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                transition={{
+                    type: 'tween',
+                    duration: 0.25,
+                    ease: 'easeOut'
+                }}
+                onAnimationComplete={() => setIsAnimating(false)}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.05}
+                dragElastic={0.1}
                 dragDirectionLock
                 onDragEnd={handleDragEnd}
             >
@@ -92,7 +99,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                         className="h-full overflow-y-auto overscroll-y-contain flex-shrink-0"
                         style={{
                             width: '100vw',
-                            paddingBottom: '80px', // Space for bottom nav
+                            paddingBottom: '80px',
                         }}
                     >
                         <div className="min-h-full">
@@ -106,7 +113,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                 ))}
             </motion.div>
 
-            {/* Bottom Navigation - fixed at bottom */}
+            {/* Bottom Navigation */}
             <MobileBottomNav
                 activeIndex={activeIndex}
                 onTabChange={navigateToIndex}
@@ -116,6 +123,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
 }
 
 export default MobileSwipeLayout;
+
 
 
 

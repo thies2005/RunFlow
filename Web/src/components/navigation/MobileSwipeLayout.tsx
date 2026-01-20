@@ -1,22 +1,24 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, PanInfo } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { MobileBottomNav } from './MobileBottomNav';
+import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 
 interface MobileSwipeLayoutProps {
     children: React.ReactNode[];
+    onPageChange?: (index: number) => void;
 }
 
 const PATHS = ['/', '/plan', '/analytics'];
-const SWIPE_THRESHOLD = 80; // Increased threshold
+const SWIPE_THRESHOLD = 80;
 const SWIPE_VELOCITY_THRESHOLD = 300;
 
-export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
+export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutProps) {
     const router = useRouter();
     const pathname = usePathname();
-    const containerRef = useRef<HTMLDivElement>(null);
+    const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     // Determine initial index from pathname
     const getIndexFromPath = (path: string) => {
@@ -34,30 +36,37 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
         }
     }, [pathname, activeIndex]);
 
-    const navigateToIndex = (index: number) => {
+    const navigateToIndex = useCallback((index: number) => {
         if (index >= 0 && index < PATHS.length && index !== activeIndex) {
             setActiveIndex(index);
             router.replace(PATHS[index], { scroll: false });
-        }
-    };
 
-    const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        // Disable swipe on Plan page (index 1) to prevent DnD conflicts
-        if (activeIndex === 1) {
-            return;
-        }
+            // Notify parent of page change (for scroll to today, etc.)
+            onPageChange?.(index);
 
+            // If navigating to Plan page (index 1), scroll to today after a short delay
+            if (index === 1) {
+                setTimeout(() => {
+                    const todayAnchor = document.getElementById('plan-today-anchor');
+                    if (todayAnchor) {
+                        todayAnchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 400);
+            }
+        }
+    }, [activeIndex, router, onPageChange]);
+
+    const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         const { offset, velocity } = info;
 
         // Only process horizontal swipes - horizontal movement must be significantly greater than vertical
-        // This prevents vertical scrolling from triggering page changes
         const isHorizontalSwipe = Math.abs(offset.x) > Math.abs(offset.y) * 2;
 
         if (!isHorizontalSwipe) {
             return;
         }
 
-        // Determine swipe direction - require both threshold and direction clarity
+        // Determine swipe direction
         const hasEnoughOffset = Math.abs(offset.x) > SWIPE_THRESHOLD;
         const hasEnoughVelocity = Math.abs(velocity.x) > SWIPE_VELOCITY_THRESHOLD;
 
@@ -70,19 +79,15 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
                 navigateToIndex(activeIndex + 1);
             }
         }
-    };
-
-    // Calculate if drag should be disabled (on Plan page)
-    const isDragDisabled = activeIndex === 1;
+    }, [activeIndex, navigateToIndex]);
 
     return (
         <div className="fixed inset-0 overflow-hidden bg-background pt-[env(safe-area-inset-top)]">
             <motion.div
-                ref={containerRef}
                 className="flex h-full w-[300vw]"
                 animate={{ x: `-${activeIndex * 100}vw` }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                drag={isDragDisabled ? false : 'x'}
+                drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.05}
                 dragDirectionLock
@@ -91,9 +96,14 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
                 {children.map((child, index) => (
                     <div
                         key={index}
-                        className="w-screen h-full overflow-y-auto pb-20 overscroll-y-contain"
+                        ref={(el) => { pageRefs.current[index] = el; }}
+                        className="w-screen h-full overflow-y-auto pb-24 overscroll-y-contain"
                     >
                         {child}
+                        {/* Powered by Strava footer at bottom of each page */}
+                        <div className="py-4 px-4">
+                            <StravaPoweredFooter />
+                        </div>
                     </div>
                 ))}
             </motion.div>
@@ -107,4 +117,5 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
 }
 
 export default MobileSwipeLayout;
+
 

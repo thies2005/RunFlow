@@ -296,6 +296,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                 stroke={SERIES_CONFIG.vo2max.color}
                                 strokeWidth={2}
                                 dot={false}
+                                isAnimationActive={false}
                                 connectNulls
                                 name="VO2max (Avg)"
                             />

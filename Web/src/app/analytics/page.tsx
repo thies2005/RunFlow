@@ -514,6 +514,7 @@ export default function AnalyticsPage() {
                                                 outerRadius={90}
                                                 paddingAngle={2}
                                                 dataKey="value"
+                                                isAnimationActive={false}
                                                 label={({ percent }) => percent > 0.05 ? `${Math.round(percent * 100)}%` : ''}
                                                 labelLine={false}
                                             >
@@ -668,6 +669,7 @@ export default function AnalyticsPage() {
                                         type="monotone"
                                         dataKey="vo2"
                                         stroke="none"
+                                        isAnimationActive={false}
                                         dot={{ r: 3, fill: '#f59e0b', fillOpacity: 1 }}
                                         name="VO2max (Run)"
                                     />
@@ -677,6 +679,7 @@ export default function AnalyticsPage() {
                                         stroke="#f59e0b"
                                         strokeWidth={2}
                                         dot={false}
+                                        isAnimationActive={false}
                                         name="VO2max (Avg)"
                                     />
                                 </LineChart>
@@ -715,7 +718,7 @@ export default function AnalyticsPage() {
                                         itemStyle={{ color: 'var(--foreground)' }}
                                         labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                     />
-                                    <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
+                                    <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} isAnimationActive={false} name="Shape %" />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </div>
@@ -754,9 +757,9 @@ export default function AnalyticsPage() {
                                     labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                 />
                                 <Legend />
-                                <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} name="Fitness (CTL)" />
-                                <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} name="Fatigue (ATL)" />
-                                <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} dot={false} name="Form (TSB)" />
+                                <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} isAnimationActive={false} name="Fitness (CTL)" />
+                                <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} isAnimationActive={false} name="Fatigue (ATL)" />
+                                <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} dot={false} isAnimationActive={false} name="Form (TSB)" />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>

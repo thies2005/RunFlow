@@ -55,7 +55,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
 
     const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         const { offset, velocity } = info;
-        const isHorizontalSwipe = Math.abs(offset.x) > Math.abs(offset.y) * 1.5; // Relaxed ratio
+        const isHorizontalSwipe = Math.abs(offset.x) > Math.abs(offset.y) * 0.8; // Relaxed from 1.5 to allow diagonal swipes
 
         if (!isHorizontalSwipe) return;
 
@@ -85,14 +85,14 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                 }}
                 animate={{ x: `-${activeIndex * 100}vw` }}
                 transition={{
-                    type: 'tween',
-                    duration: 0.2,
-                    ease: 'easeOut'
+                    type: 'spring',
+                    stiffness: 300,
+                    damping: 30
                 }}
                 onAnimationComplete={() => setIsAnimating(false)}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.1}
+                dragElastic={0.2}
                 dragDirectionLock
                 onDragEnd={handleDragEnd}
             >
@@ -103,8 +103,6 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                         style={{
                             width: '100vw',
                             paddingBottom: '80px',
-                            contentVisibility: 'auto',
-                            containIntrinsicSize: '100vw 100vh', // Prevents scroll jump when rendering
                         }}
                     >
                         <div className="min-h-full">

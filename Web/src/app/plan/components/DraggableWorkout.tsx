@@ -60,7 +60,7 @@ export function DraggableWorkout({
         <div
             ref={setNodeRef}
             style={dragStyle}
-            className={`group p-3 rounded-lg flex items-center gap-3 hover:bg-surface-hover transition-colors border border-transparent ${isDragging ? 'opacity-0' : ''} ${isTodayItem ? 'bg-accent-orange/5 border-accent-orange/20' : 'bg-surface'}`}
+            className={`group p-3 rounded-lg flex items-center gap-3 hover:bg-surface-hover transition-colors border border-transparent select-none ${isDragging ? 'opacity-0' : ''} ${isTodayItem ? 'bg-accent-orange/5 border-accent-orange/20' : 'bg-surface'}`}
         >
             <div className="cursor-grab touch-none text-foreground-muted hover:text-foreground p-2 -m-2 opacity-50 hover:opacity-100 transition-opacity" {...listeners} {...attributes}>
                 <GripVertical className="w-4 h-4" />

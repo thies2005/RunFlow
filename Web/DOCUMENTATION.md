@@ -36,6 +36,7 @@ RunFlow is a production-grade **running performance dashboard** that combines st
 | Feature | Description |
 |---------|-------------|
 | **Strava Integration** | OAuth authentication with real-time webhook support |
+| **Health Connect** | Direct sync from Garmin, Peloton, etc. via Mobile App |
 | **VDOT Calculator** | Based on Jack Daniels' Running Formula |
 | **Fitness Metrics** | CTL (Chronic Training Load), ATL (Acute Training Load), TSB (Training Stress Balance) |
 | **TRIMP** | Training Impulse calculation based on heart rate |
@@ -142,7 +143,11 @@ Key services:
 │  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐     │
 │  │  Strava  │───▶│ Webhook  │───▶│ Database │◀───│  Sync    │     │
 │  │          │    │ Handler  │    │          │    │ Service  │     │
-│  └──────────┘    └──────────┘    └────┬─────┘    └──────────┘     │
+│  └──────────┘    └──────────┘    └────▲─────┘    └──────────┘     │
+│                                       │                           │
+│  ┌──────────────┐                     │                           │
+│  │ Health Conn. │───▶ Mobile App ─────┘ (via API)                 │
+│  └──────────────┘                                                 │
 │                                      │                            │
 │                                      ▼                            │
 │                              ┌──────────────┐                      │
@@ -225,13 +230,13 @@ model User {
   height        Float?    // cm
 
   // HR Zone thresholds (% of hrMax)
-  hrZone1Max    Int       @default(60)  // Z1: Recovery
-  hrZone2Max    Int       @default(70)  // Z2: Endurance
-  hrZone3Max    Int       @default(80)  // Z3: Tempo
-  hrZone4Max    Int       @default(90)  // Z4: Threshold
-  // Z5: 90%+ (VO2max)
-  // RunFlow uses a 7-Zone model internally mapping these 5 values.
-  // Z6 (Anaerobic) and Z7 (Neuromuscular) are derived above Z5.
+  hrZone1Max    Int       @default(130)  // Z1: Active Recovery
+  hrZone2Max    Int       @default(148)  // Z2: Endurance
+  hrZone3Max    Int       @default(160)  // Z3: Tempo
+  hrZone4Max    Int       @default(170)  // Z4: Threshold
+  hrZone5Max    Int       @default(178)  // Z5: VO2max
+  hrZone6Max    Int       @default(187)  // Z6: Anaerobic
+  // Z7: Neuromuscular Power (derived as > Z6)
 
   // VDOT Correction
   vdotCorrectionFactor    Float     @default(1.0)
@@ -301,6 +306,8 @@ model Activity {
   hrZone3Time     Int?
   hrZone4Time     Int?
   hrZone5Time     Int?
+  hrZone6Time     Int?
+  hrZone7Time     Int?
 
   // Raw Data
   rawJson         Json?
@@ -1414,9 +1421,10 @@ RunFlow uses **Capacitor** to wrap the Next.js web application into a native And
 
 The mobile app integrates with **Google Health Connect** to sync workouts from other apps (like Garmin, Peloton, etc.) directly into RunFlow.
 
-- **Plugin**: `@capacitor-community/health-connect` (or similar wrapper)
+- **Plugin**: `@capacitor-community/health-connect`
 - **Data Flow**: `Health Connect -> Android App -> RunFlow Web API` -> Database
 - **Sync Logic**: Checks for new activities on app launch or manual sync trigger.
+- **Heart Rate Zones**: The app calculates time-in-zone locally using the raw heart rate samples from Health Connect before sending the summary to the server.
 
 ### 12.2 Build Process
 
@@ -1432,7 +1440,6 @@ npx cap sync
 # 3. Open Android Studio to build APK/Bundle
 npx cap open android
 ```
-
 ---
 
 **RunFlow v1.2.0** | https://github.com/thies2005/RunFlow

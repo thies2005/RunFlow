@@ -1,28 +1,28 @@
 # RunFlow
 
-RunFlow is a production-grade running performance dashboard that combines structured training plans with deep analytics. It features a robust web platform and an Android application (Alpha).
+RunFlow is a production-grade running performance dashboard that combines structured training plans with deep analytics. It features a robust web platform and a Hybrid Mobile App.
 
-- **Web Platform & PWA**: Containerized Next.js application for easy deployment. Our primary focus is on the web experience and the PWA for mobile devices.
-- **Mobile App (Android)**: Native Android application for training management. (Currently in Alpha and development is paused).
+- **Web Platform & PWA**: Containerized Next.js application for easy deployment.
+- **Mobile App (Android)**: Hybrid application built with Capacitor, providing native capabilities like Health Connect integration.
 
 [**>>> Full Documentation <<<**](Web/DOCUMENTATION.md) — API reference, metrics formulas, and architecture.
-[**>>> Mobile API Documentation <<<**](Web/MOBILE_API.md) — Protocol for App-Server communication.
+[**>>> Mobile API Documentation <<<**](Web/MOBILE_API.md) — Protocol for Mobile App communication.
 
 ---
 
 ## 🏗️ Architecture
 
 - **Frontend/Backend**: Next.js 14 App Router (Service Layer Architecture).
-- **Mobile**: Native Kotlin Android App (Jetpack Compose).
+- **Mobile**: Capacitor (Hybrid) Android App.
 - **Database**: PostgreSQL 16.
-- **Physics**: Custom implementation of Runalyze TRIMP, CTL/ATL/TSB, and Effective VO2max.
+- **Physics**: Custom implementation of Runalyze TRIMP, CTL/ATL/TSB, and Effective VO2max (7-Zone HR Model).
 
 ---
 
 ## 📂 Directory Structure
 
-- **`Web/`**: The web application (Next.js), DB schema (Prisma), and API backend.
-- **`Web/android/`**: The Capacitor Android project (Java/Kotlin wrapper).
+- **`Web/`**: The main application folder (Next.js), DB schema (Prisma), and API backend.
+- **`Web/android/`**: The Capacitor Android project (Native wrapper).
 
 ---
 
@@ -68,26 +68,26 @@ docker compose up -d --build
 
 ## 📱 Mobile App (Android)
 
-> [!NOTE]
-> RunFlow has transitioned to a **Hybrid Mobile App** architecture using **Capacitor**. The previous native Kotlin app is deprecated.
+The **RunFlow Mobile App** is a hybrid app built with **Capacitor**. It wraps the responsive web application and adds native plugins for enhanced functionality.
 
-The Android application is now a native wrapper around the web platform, providing the same rich UI with added native capabilities like **Health Connect** integration.
-
-### Features
-- **Unified Experience**: Same powerful interface as the web.
-- **Health Connect**: Sync activities from Garmin, Peloton, and other apps directly on your phone.
-- **Native Notifications**: Stay updated on training plan progress.
+### Key Features
+- **Unified Experience**: Shared UI/UX between web and mobile.
+- **Health Connect Integration**: Sync workouts from Garmin, Peloton, and other fitness apps directly from your device's Health Connect store.
+- **Native Notifications**: Receive training plan updates and reminders.
+- **Background Sync**: Automatically syncs data when the app is active.
 
 ### Build Instructions
 The mobile app project is located in `Web/android`.
 
 ```bash
 cd Web
-# Build web assets
+# 1. Build web assets
 npm run build
-# Sync to Android project
+
+# 2. Sync web assets to Android project
 npx cap sync
-# Open in Android Studio
+
+# 3. Open in Android Studio to build APK/Bundle
 npx cap open android
 ```
 
@@ -102,4 +102,4 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 ### Backups
-Specifics for database backups can be found in the Web documentation. Automated backups run every 6 hours if configured.
+RunFlow supports automated database backups. Check `Web/DOCUMENTATION.md` for configuration details.

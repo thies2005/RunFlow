@@ -319,12 +319,8 @@ export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardPr
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <LazyChartWrapper height="20rem">
-                    <ZoneTrendChart data={zoneTrend} />
-                </LazyChartWrapper>
-                <LazyChartWrapper height="20rem">
-                    <WeeklyVolumeChart data={weeklyVolume} />
-                </LazyChartWrapper>
+                <ZoneTrendChart data={zoneTrend} />
+                <WeeklyVolumeChart data={weeklyVolume} />
             </div>
 
             {zoneTrend.length > 0 && (
@@ -336,9 +332,7 @@ export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardPr
             <StatsGrid currentVdot={currentVdot} totals={totals} />
 
             {vdotTrend.length > 0 && (
-                <LazyChartWrapper height="20rem">
-                    <VDOTTrendChart data={vdotTrend} />
-                </LazyChartWrapper>
+                <VDOTTrendChart data={vdotTrend} />
             )}
 
             <LazyChartWrapper height="16rem">

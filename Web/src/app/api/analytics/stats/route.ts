@@ -99,11 +99,37 @@ export async function GET(req: Request) {
             effectiveVO2max
         );
 
-        // CTL/ATL uses run activities primarily for specificity, or all?
-        // Original code used runActivities only. Keeping that behavior.
-        // UPDATE: Home screen should match Analytics dashboard which includes all CTL-contributing activities
-        const fitnessActivities = activities.filter(a => getActivityContribution(a.type).contributesToCtl);
-        const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(fitnessActivities);
+        // --- Fitness Metrics Logic Updated ---
+        // Instead of calculating on the fly (which misses long-term history and causes divergence),
+        // we fetch the latest cached "DailyFitness" record which is the source of truth for the graph.
+
+        let ctl = 0;
+        let atl = 0;
+        let tsb = 0;
+        let workloadRatio = 0;
+
+        const latestFitness = await prisma.dailyFitness.findFirst({
+            where: { userId },
+            orderBy: { date: 'desc' }
+        });
+
+        if (latestFitness) {
+            ctl = Math.round(latestFitness.ctl);
+            atl = Math.round(latestFitness.atl);
+            tsb = Math.round(latestFitness.tsb);
+            // Re-calculate ratio from the source values to ensure precision
+            workloadRatio = latestFitness.ctl > 0 ? parseFloat((latestFitness.atl / latestFitness.ctl).toFixed(2)) : 0;
+        } else {
+            // Fallback for brand new users with no history cache yet: Calculate on fly
+            // This generally only happens before the first graph load
+            const fitnessActivities = activities.filter(a => getActivityContribution(a.type).contributesToCtl);
+            const metrics = AnalyticsService.calculateFitnessMetrics(fitnessActivities);
+            ctl = metrics.ctl;
+            atl = metrics.atl;
+            tsb = metrics.tsb;
+            workloadRatio = metrics.workloadRatio;
+        }
+
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
         return NextResponse.json({

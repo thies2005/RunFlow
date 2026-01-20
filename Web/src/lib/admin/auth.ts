@@ -23,6 +23,10 @@ function getJwtSecret(): Uint8Array {
         );
     }
 
+    if (secret && secret.length < 32 && process.env.NODE_ENV === 'production') {
+        console.warn('[SECURITY] JWT_SECRET is too short (< 32 chars). It is recommended to use a longer secret for production safety.');
+    }
+
     _jwtSecret = new TextEncoder().encode(
         secret || 'development-secret-change-in-production-min-32-chars'
     );

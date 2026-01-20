@@ -16,6 +16,28 @@ export async function POST(request: NextRequest) {
 
         console.log('[Admin Login] Attempt for:', username);
 
+        // Rate Limiting
+        const { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } = await import('@/lib/rateLimit');
+        const identifier = getClientIdentifier(request);
+
+        // Limit: 5 attempts per 15 minutes
+        const rateLimit = await checkRateLimitAsync(identifier, {
+            limit: 5,
+            windowSeconds: 15 * 60,
+            prefix: 'admin_login'
+        });
+
+        if (!rateLimit.allowed) {
+            console.warn(`[Admin Login] Rate limit exceeded for ${identifier}`);
+            return NextResponse.json(
+                { error: 'Too many login attempts. Please try again later.' },
+                {
+                    status: 429,
+                    headers: rateLimitHeaders(rateLimit)
+                }
+            );
+        }
+
         // Validate required fields
         if (!username || !password) {
             return NextResponse.json(

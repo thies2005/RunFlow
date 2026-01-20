@@ -5,7 +5,15 @@ import { useSession, signOut } from 'next-auth/react';
 import { Settings, LogOut, User, Moon, Sun, Monitor, ChevronDown } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-export function UserMenu({ onOpenProfile, onOpenSettings }: { onOpenProfile: () => void; onOpenSettings: () => void }) {
+export function UserMenu({
+    onOpenProfile,
+    onOpenSettings,
+    trigger
+}: {
+    onOpenProfile: () => void;
+    onOpenSettings: () => void;
+    trigger?: React.ReactNode;
+}) {
     const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const { theme, setTheme } = useTheme();
@@ -25,18 +33,21 @@ export function UserMenu({ onOpenProfile, onOpenSettings }: { onOpenProfile: () 
 
     return (
         <div className="relative" ref={menuRef}>
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-hover transition-colors border border-transparent hover:border-glass-border"
-            >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    src={session.user.image || ''}
-                    alt={session.user.name || 'User'}
-                    className="w-8 h-8 rounded-full border border-glass-border"
-                />
-                <ChevronDown className={`w-4 h-4 text-foreground-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-            </button>
+            <div onClick={() => setIsOpen(!isOpen)} className={trigger ? "cursor-pointer" : ""}>
+                {trigger || (
+                    <button
+                        className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-hover transition-colors border border-transparent hover:border-glass-border"
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={session.user.image || ''}
+                            alt={session.user.name || 'User'}
+                            className="w-8 h-8 rounded-full border border-glass-border"
+                        />
+                        <ChevronDown className={`w-4 h-4 text-foreground-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                )}
+            </div>
 
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-56 glass-card shadow-2xl z-[100] overflow-hidden animate-in slide-in-from-top-2 duration-200">

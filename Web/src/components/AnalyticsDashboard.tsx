@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -28,6 +28,260 @@ interface HistoryResponse {
     totals: { distance: number; activities: number; averagePace: number };
 }
 
+// ============================================
+// Memoized Chart Sub-Components
+// ============================================
+
+const formatZoneTime = (minutes: number) => {
+    if (minutes >= 60) {
+        const hours = Math.floor(minutes / 60);
+        const mins = Math.round(minutes % 60);
+        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+    return `${Math.round(minutes)}m`;
+};
+
+// Zone Trend Chart
+const ZoneTrendChart = memo(({ data }: { data: HistoryResponse['zoneTrend'] }) => (
+    <div className="glass-card p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Training Zone Trend</h3>
+        <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => v >= 60 ? `${Math.round(v / 60)}h` : `${v}m`} />
+                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} formatter={(value: number) => {
+                        if (value >= 60) {
+                            const hours = Math.floor(value / 60);
+                            const mins = Math.round(value % 60);
+                            return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                        }
+                        return `${Math.round(value)}m`;
+                    }} />
+                    <Area type="monotone" dataKey="Z1" stackId="1" stroke="#10b981" fill="#10b981" name="Z1 Recovery" />
+                    <Area type="monotone" dataKey="Z2" stackId="1" stroke="#84cc16" fill="#84cc16" name="Z2 Aerobic" />
+                    <Area type="monotone" dataKey="Z3" stackId="1" stroke="#eab308" fill="#eab308" name="Z3 Tempo" />
+                    <Area type="monotone" dataKey="Z4" stackId="1" stroke="#f97316" fill="#f97316" name="Z4 Threshold" />
+                    <Area type="monotone" dataKey="Z5" stackId="1" stroke="#ef4444" fill="#ef4444" name="Z5 VO2max" />
+                    <Area type="monotone" dataKey="Z6" stackId="1" stroke="#6366f1" fill="#6366f1" name="Z6 Anaerobic" />
+                    <Area type="monotone" dataKey="Z7" stackId="1" stroke="#9333ea" fill="#9333ea" name="Z7 Neuromuscular" />
+                </AreaChart>
+            </ResponsiveContainer>
+        </div>
+    </div>
+));
+ZoneTrendChart.displayName = 'ZoneTrendChart';
+
+// Weekly Volume Chart
+const WeeklyVolumeChart = memo(({ data }: { data: HistoryResponse['weeklyVolume'] }) => (
+    <div className="glass-card p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Weekly Volume</h3>
+        <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} unit="km" />
+                    <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                    <Bar dataKey="km" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    </div>
+));
+WeeklyVolumeChart.displayName = 'WeeklyVolumeChart';
+
+// Zone Pie Chart
+const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTrend'] }) => {
+    const { pieData, total } = useMemo(() => {
+        const zoneTotals = zoneTrend.reduce((acc, week) => ({
+            Z1: acc.Z1 + (week.Z1 || 0),
+            Z2: acc.Z2 + (week.Z2 || 0),
+            Z3: acc.Z3 + (week.Z3 || 0),
+            Z4: acc.Z4 + (week.Z4 || 0),
+            Z5: acc.Z5 + (week.Z5 || 0),
+            Z6: acc.Z6 + (week.Z6 || 0),
+            Z7: acc.Z7 + (week.Z7 || 0),
+        }), { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0, Z6: 0, Z7: 0 });
+
+        const total = zoneTotals.Z1 + zoneTotals.Z2 + zoneTotals.Z3 + zoneTotals.Z4 + zoneTotals.Z5 + zoneTotals.Z6 + zoneTotals.Z7;
+
+        const pieData = [
+            { name: 'Z1 Recovery', value: zoneTotals.Z1, color: '#10b981' },
+            { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: '#84cc16' },
+            { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308' },
+            { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316' },
+            { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444' },
+            { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: '#6366f1' },
+            { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: '#9333ea' },
+        ].filter(d => d.value > 0);
+
+        return { pieData, total };
+    }, [zoneTrend]);
+
+    if (total === 0) return null;
+
+    return (
+        <div className="glass-card p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Time in Zones Distribution</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Pie Chart */}
+                <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={pieData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={50}
+                                outerRadius={90}
+                                paddingAngle={2}
+                                dataKey="value"
+                                label={({ name, percent }) => percent > 0.05 ? `${Math.round(percent * 100)}%` : ''}
+                                labelLine={false}
+                            >
+                                {pieData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                            </Pie>
+                            <Tooltip
+                                contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
+                                formatter={(value: number) => formatZoneTime(value)}
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+
+                {/* Legend & Breakdown */}
+                <div className="flex flex-col justify-center space-y-2">
+                    {pieData.map((zone, i) => {
+                        const pct = (zone.value / total) * 100;
+                        return (
+                            <div key={i} className="flex items-center justify-between p-2 hover:bg-white/5 rounded">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: zone.color }} />
+                                    <span className="text-gray-300 text-sm">{zone.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-white font-mono text-sm">{formatZoneTime(zone.value)}</span>
+                                    <span className="text-gray-500 text-xs w-12 text-right">{Math.round(pct)}%</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    <div className="border-t border-gray-700 pt-2 mt-2 flex justify-between">
+                        <span className="text-gray-400 text-sm">Total</span>
+                        <span className="text-white font-mono text-sm">{formatZoneTime(total)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
+ZonePieChart.displayName = 'ZonePieChart';
+
+// VDOT Trend Chart
+const VDOTTrendChart = memo(({ data }: { data: HistoryResponse['vdotTrend'] }) => (
+    <div className="glass-card p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">VDOT Trend</h3>
+        <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
+                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} formatter={(value: number) => value.toFixed(1)} />
+                    <Line type="monotone" dataKey="vdot" stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b' }} />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    </div>
+));
+VDOTTrendChart.displayName = 'VDOTTrendChart';
+
+// Fitness Trend Chart
+const FitnessTrendChart = memo(({ data }: { data: HistoryResponse['fitnessTrend'] }) => (
+    <div className="glass-card p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Fitness Tracking (Impulse-Response)</h3>
+        <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => Math.round(val).toString()} />
+                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} formatter={(value: number) => value.toFixed(1)} />
+                    <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} name="Fitness (CTL)" dot={false} />
+                    <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} name="Fatigue (ATL)" dot={false} />
+                    <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} name="Form (TSB)" dot={false} />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    </div>
+));
+FitnessTrendChart.displayName = 'FitnessTrendChart';
+
+// Stats Grid
+const StatsGrid = memo(({ currentVdot, totals }: { currentVdot: number | null; totals: HistoryResponse['totals'] }) => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="glass-card p-4 text-center">
+            <p className="text-gray-400 text-sm mb-1">Current VDOT</p>
+            <p className="text-3xl font-bold text-white">{currentVdot?.toFixed(1) || '-'}</p>
+        </div>
+        <div className="glass-card p-4 text-center">
+            <p className="text-gray-400 text-sm mb-1">Total Distance</p>
+            <p className="text-3xl font-bold text-white">
+                {totals?.distance || 0}<span className="text-sm text-gray-500 font-normal ml-1">km</span>
+            </p>
+        </div>
+        <div className="glass-card p-4 text-center">
+            <p className="text-gray-400 text-sm mb-1">Total Activities</p>
+            <p className="text-3xl font-bold text-white">{totals?.activities || 0}</p>
+        </div>
+        <div className="glass-card p-4 text-center">
+            <p className="text-gray-400 text-sm mb-1">Avg Pace</p>
+            <p className="text-3xl font-bold text-white">
+                {totals?.averagePace ? formatPace(totals.averagePace).replace('/km', '') : '-'}
+            </p>
+        </div>
+    </div>
+));
+StatsGrid.displayName = 'StatsGrid';
+
+// Race Predictions Section
+const RacePredictions = memo(({ currentVdot }: { currentVdot: number | null }) => {
+    const racePredictions = useMemo(() => {
+        if (!currentVdot || currentVdot <= 0) return [];
+        return [
+            { race: '5K', time: formatTime(predictRaceTime(currentVdot, '5K')) },
+            { race: '10K', time: formatTime(predictRaceTime(currentVdot, '10K')) },
+            { race: 'Half', time: formatTime(predictRaceTime(currentVdot, 'HALF')) },
+            { race: 'Marathon', time: formatTime(predictRaceTime(currentVdot, 'MARATHON')) },
+        ];
+    }, [currentVdot]);
+
+    if (racePredictions.length === 0) return null;
+
+    return (
+        <div className="glass-card p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Race Predictions (VDOT {currentVdot?.toFixed(1)})</h3>
+            <div className="grid grid-cols-4 gap-4">
+                {racePredictions.map(p => (
+                    <div key={p.race} className="text-center">
+                        <p className="text-gray-400 text-sm">{p.race}</p>
+                        <p className="text-2xl font-bold text-white">{p.time}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+});
+RacePredictions.displayName = 'RacePredictions';
+
+// ============================================
+// Main Component
+// ============================================
+
 export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardProps) {
     const [timeRange, setTimeRange] = useState('12_WEEKS');
 
@@ -49,14 +303,6 @@ export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardPr
 
     const { weeklyVolume, zoneTrend, fitnessTrend, vdotTrend, totals } = data;
 
-    // Race Predictions based on current VDOT
-    const racePredictions = currentVdot && currentVdot > 0 ? [
-        { race: '5K', time: formatTime(predictRaceTime(currentVdot, '5K')) },
-        { race: '10K', time: formatTime(predictRaceTime(currentVdot, '10K')) },
-        { race: 'Half', time: formatTime(predictRaceTime(currentVdot, 'HALF')) },
-        { race: 'Marathon', time: formatTime(predictRaceTime(currentVdot, 'MARATHON')) },
-    ] : [];
-
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
@@ -72,221 +318,19 @@ export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardPr
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Zone Distribution Trend */}
-                <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Training Zone Trend</h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={zoneTrend}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => v >= 60 ? `${Math.round(v / 60)}h` : `${v}m`} />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} formatter={(value: number) => {
-                                    if (value >= 60) {
-                                        const hours = Math.floor(value / 60);
-                                        const mins = Math.round(value % 60);
-                                        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-                                    }
-                                    return `${Math.round(value)}m`;
-                                }} />
-                                <Area type="monotone" dataKey="Z1" stackId="1" stroke="#10b981" fill="#10b981" name="Z1 Recovery" />
-                                <Area type="monotone" dataKey="Z2" stackId="1" stroke="#84cc16" fill="#84cc16" name="Z2 Aerobic" />
-                                <Area type="monotone" dataKey="Z3" stackId="1" stroke="#eab308" fill="#eab308" name="Z3 Tempo" />
-                                <Area type="monotone" dataKey="Z4" stackId="1" stroke="#f97316" fill="#f97316" name="Z4 Threshold" />
-                                <Area type="monotone" dataKey="Z5" stackId="1" stroke="#ef4444" fill="#ef4444" name="Z5 VO2max" />
-                                <Area type="monotone" dataKey="Z6" stackId="1" stroke="#6366f1" fill="#6366f1" name="Z6 Anaerobic" />
-                                <Area type="monotone" dataKey="Z7" stackId="1" stroke="#9333ea" fill="#9333ea" name="Z7 Neuromuscular" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Weekly Volume */}
-                <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Weekly Volume</h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={weeklyVolume}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} unit="km" />
-                                <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
-                                <Bar dataKey="km" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+                <ZoneTrendChart data={zoneTrend} />
+                <WeeklyVolumeChart data={weeklyVolume} />
             </div>
 
-            {/* Time in Zones Pie Chart */}
-            {zoneTrend.length > 0 && (() => {
-                // Aggregate zone times from zoneTrend
-                const zoneTotals = zoneTrend.reduce((acc, week) => ({
-                    Z1: acc.Z1 + (week.Z1 || 0),
-                    Z2: acc.Z2 + (week.Z2 || 0),
-                    Z3: acc.Z3 + (week.Z3 || 0),
-                    Z4: acc.Z4 + (week.Z4 || 0),
-                    Z5: acc.Z5 + (week.Z5 || 0),
-                    Z6: acc.Z6 + (week.Z6 || 0),
-                    Z7: acc.Z7 + (week.Z7 || 0),
-                }), { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0, Z6: 0, Z7: 0 });
+            {zoneTrend.length > 0 && <ZonePieChart zoneTrend={zoneTrend} />}
 
-                const total = zoneTotals.Z1 + zoneTotals.Z2 + zoneTotals.Z3 + zoneTotals.Z4 + zoneTotals.Z5 + zoneTotals.Z6 + zoneTotals.Z7;
-                if (total === 0) return null;
+            <StatsGrid currentVdot={currentVdot} totals={totals} />
 
-                const pieData = [
-                    { name: 'Z1 Recovery', value: zoneTotals.Z1, color: '#10b981' },
-                    { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: '#84cc16' },
-                    { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308' },
-                    { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316' },
-                    { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444' },
-                    { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: '#6366f1' },
-                    { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: '#9333ea' },
-                ].filter(d => d.value > 0);
+            {vdotTrend.length > 0 && <VDOTTrendChart data={vdotTrend} />}
 
-                const formatZoneTime = (minutes: number) => {
-                    if (minutes >= 60) {
-                        const hours = Math.floor(minutes / 60);
-                        const mins = Math.round(minutes % 60);
-                        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-                    }
-                    return `${Math.round(minutes)}m`;
-                };
+            <RacePredictions currentVdot={currentVdot} />
 
-                return (
-                    <div className="glass-card p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Time in Zones Distribution</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Pie Chart */}
-                            <div className="h-64">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={pieData}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={50}
-                                            outerRadius={90}
-                                            paddingAngle={2}
-                                            dataKey="value"
-                                            label={({ name, percent }) => percent > 0.05 ? `${Math.round(percent * 100)}%` : ''}
-                                            labelLine={false}
-                                        >
-                                            {pieData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                            formatter={(value: number) => formatZoneTime(value)}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-
-                            {/* Legend & Breakdown */}
-                            <div className="flex flex-col justify-center space-y-2">
-                                {pieData.map((zone, i) => {
-                                    const pct = (zone.value / total) * 100;
-                                    return (
-                                        <div key={i} className="flex items-center justify-between p-2 hover:bg-white/5 rounded">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: zone.color }} />
-                                                <span className="text-gray-300 text-sm">{zone.name}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-white font-mono text-sm">{formatZoneTime(zone.value)}</span>
-                                                <span className="text-gray-500 text-xs w-12 text-right">{Math.round(pct)}%</span>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                                <div className="border-t border-gray-700 pt-2 mt-2 flex justify-between">
-                                    <span className="text-gray-400 text-sm">Total</span>
-                                    <span className="text-white font-mono text-sm">{formatZoneTime(total)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })()}
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="glass-card p-4 text-center">
-                    <p className="text-gray-400 text-sm mb-1">Current VDOT</p>
-                    <p className="text-3xl font-bold text-white">{currentVdot?.toFixed(1) || '-'}</p>
-                </div>
-                <div className="glass-card p-4 text-center">
-                    <p className="text-gray-400 text-sm mb-1">Total Distance</p>
-                    <p className="text-3xl font-bold text-white">
-                        {totals?.distance || 0}<span className="text-sm text-gray-500 font-normal ml-1">km</span>
-                    </p>
-                </div>
-                <div className="glass-card p-4 text-center">
-                    <p className="text-gray-400 text-sm mb-1">Total Activities</p>
-                    <p className="text-3xl font-bold text-white">{totals?.activities || 0}</p>
-                </div>
-                <div className="glass-card p-4 text-center">
-                    <p className="text-gray-400 text-sm mb-1">Avg Pace</p>
-                    <p className="text-3xl font-bold text-white">
-                        {totals?.averagePace ? formatPace(totals.averagePace).replace('/km', '') : '-'}
-                    </p>
-                </div>
-            </div>
-
-            {/* VDOT Trend */}
-            {vdotTrend.length > 0 && (
-                <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">VDOT Trend</h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={vdotTrend}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} formatter={(value: number) => value.toFixed(1)} />
-                                <Line type="monotone" dataKey="vdot" stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b' }} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
-
-            {/* Race Predictions */}
-            {racePredictions.length > 0 && (
-                <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Race Predictions (VDOT {currentVdot?.toFixed(1)})</h3>
-                    <div className="grid grid-cols-4 gap-4">
-                        {racePredictions.map(p => (
-                            <div key={p.race} className="text-center">
-                                <p className="text-gray-400 text-sm">{p.race}</p>
-                                <p className="text-2xl font-bold text-white">{p.time}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Fitness Chart */}
-            {fitnessTrend.length > 0 && (
-                <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Fitness Tracking (Impulse-Response)</h3>
-                    <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={fitnessTrend}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => Math.round(val).toString()} />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} formatter={(value: number) => value.toFixed(1)} />
-                                <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} name="Fitness (CTL)" dot={false} />
-                                <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} name="Fatigue (ATL)" dot={false} />
-                                <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} name="Form (TSB)" dot={false} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
+            {fitnessTrend.length > 0 && <FitnessTrendChart data={fitnessTrend} />}
         </div>
     );
 }

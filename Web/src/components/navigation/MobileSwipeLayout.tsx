@@ -79,11 +79,14 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
             {/* Swipe container */}
             <motion.div
                 className="flex h-full"
-                style={{ width: `${PATHS.length * 100}vw` }}
+                style={{
+                    width: `${PATHS.length * 100}vw`,
+                    willChange: 'transform',
+                }}
                 animate={{ x: `-${activeIndex * 100}vw` }}
                 transition={{
                     type: 'tween',
-                    duration: 0.25,
+                    duration: 0.2,
                     ease: 'easeOut'
                 }}
                 onAnimationComplete={() => setIsAnimating(false)}

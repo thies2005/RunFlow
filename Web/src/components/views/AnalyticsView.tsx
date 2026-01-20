@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import {
@@ -265,4 +266,4 @@ export function AnalyticsView({
     );
 }
 
-export default AnalyticsView;
+export default memo(AnalyticsView);

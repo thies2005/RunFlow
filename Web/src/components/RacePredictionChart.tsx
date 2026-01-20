@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import { predictRaceTime, formatTime } from '@/lib/metrics/vdot';
 import { calculatePredictedTimes } from '@/lib/metrics/runalyze';
@@ -18,7 +18,7 @@ const RACE_COLORS = {
     'Marathon': '#ef4444',
 };
 
-export default function RacePredictionChart({
+function RacePredictionChart({
     effectiveVO2max,
     currentShape,
     calibrationFactor = 1.0
@@ -202,3 +202,11 @@ export default function RacePredictionChart({
         </div>
     );
 }
+
+export default memo(RacePredictionChart, (prevProps, nextProps) => {
+    return (
+        prevProps.effectiveVO2max === nextProps.effectiveVO2max &&
+        prevProps.currentShape === nextProps.currentShape &&
+        prevProps.calibrationFactor === nextProps.calibrationFactor
+    );
+});

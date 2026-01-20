@@ -101,12 +101,15 @@ export default function Dashboard() {
 
     // Onboarding Redirect (Check if user has completed onboarding by having an active goal)
     // Users with an active goal have completed onboarding - don't redirect them
-    if (status === 'authenticated' && !isLoading && !activeGoal) {
+    const hasError = error || syncMutation.error;
+
+    // Onboarding Redirect (Check if user has completed onboarding by having an active goal)
+    // Users with an active goal have completed onboarding - don't redirect them
+    // Do NOT redirect if there's an error (show the error instead)
+    if (status === 'authenticated' && !isLoading && !activeGoal && !hasError) {
         router.push('/onboarding');
         return null;
     }
-
-    const hasError = error || syncMutation.error;
 
     return (
         <div className="min-h-screen bg-background">

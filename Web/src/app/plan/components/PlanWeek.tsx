@@ -67,9 +67,9 @@ export const PlanWeek = memo(function PlanWeek({
         <div className="glass-card overflow-hidden">
             {/* Week Header */}
 
-            <div className="p-3 md:p-4 border-b border-glass-border flex flex-row items-center justify-between bg-surface sticky top-[env(safe-area-inset-top)] z-10 backdrop-blur-md gap-2 flex-nowrap">
-                <div className="flex items-center gap-3 overflow-hidden min-w-0 flex-1">
-                    <div className="flex flex-col min-w-fit flex-shrink-0">
+            <div className="p-3 md:p-4 border-b border-glass-border flex flex-row items-center justify-between bg-surface sticky top-[env(safe-area-inset-top)] z-10 backdrop-blur-md gap-2">
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="flex flex-col min-w-fit">
                         <span className="text-foreground font-semibold text-sm md:text-base">Week {weekIndex + 1}</span>
                         <span className="text-[10px] md:text-xs text-foreground-muted whitespace-nowrap">
                             {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d')}
@@ -77,8 +77,8 @@ export const PlanWeek = memo(function PlanWeek({
                     </div>
 
                     {isPastOrCurrent ? (
-                        <div className="flex flex-col space-y-0.5 md:space-y-1 ml-1 md:ml-2 overflow-hidden min-w-0">
-                            <div className="flex flex-wrap items-center gap-1.5 md:gap-2 text-xs truncate">
+                        <div className="flex flex-col space-y-0.5 md:space-y-1 ml-1 md:ml-2 overflow-hidden">
+                            <div className="flex flex-wrap items-center gap-1.5 md:gap-2 text-xs">
                                 <span className="px-1.5 py-0.5 bg-green-500/10 text-green-400 rounded border border-green-500/20 whitespace-nowrap text-[10px] md:text-xs">
                                     {(actualRunMileage / 1000).toFixed(1)}k
                                 </span>
@@ -86,7 +86,7 @@ export const PlanWeek = memo(function PlanWeek({
                                     / {(plannedMileage / 1000).toFixed(1)}k
                                 </span>
                             </div>
-                            <div className="hidden md:flex items-center gap-2 text-xs text-gray-400 truncate">
+                            <div className="hidden sm:flex items-center gap-2 text-xs text-gray-400">
                                 <span>Time: {formatDuration(totalMovingTime)}</span>
                                 {totalMovingTime > 0 && (
                                     <span className="text-gray-500 text-[10px]">
@@ -96,13 +96,13 @@ export const PlanWeek = memo(function PlanWeek({
                             </div>
                         </div>
                     ) : (
-                        <div className="px-2 py-1 bg-surface rounded text-xs text-foreground-muted border border-glass-border truncate">
+                        <div className="px-2 py-1 bg-surface rounded text-xs text-foreground-muted border border-glass-border">
                             {(plannedMileage / 1000).toFixed(1)} km planned
                         </div>
                     )}
                 </div>
-                <div className="flex-shrink-0 ml-auto">
-                    <span className={`px-2 py-1 rounded text-xs font-bold border ${phase.color} whitespace-nowrap`}>
+                <div>
+                    <span className={`px-2 py-1 rounded text-xs font-bold border ${phase.color}`}>
                         {phase.name}
                     </span>
                 </div>

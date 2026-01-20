@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
+import { getActivityContribution } from '@/lib/metrics/fitness';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -100,7 +101,9 @@ export async function GET(req: Request) {
 
         // CTL/ATL uses run activities primarily for specificity, or all?
         // Original code used runActivities only. Keeping that behavior.
-        const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);
+        // UPDATE: Home screen should match Analytics dashboard which includes all CTL-contributing activities
+        const fitnessActivities = activities.filter(a => getActivityContribution(a.type).contributesToCtl);
+        const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(fitnessActivities);
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
         return NextResponse.json({

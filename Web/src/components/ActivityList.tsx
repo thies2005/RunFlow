@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo } from 'react';
+import { useState, memo, useCallback, useMemo } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
     Activity,
@@ -184,6 +184,15 @@ ActivityCard.displayName = 'ActivityCard';
 export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionFactor }: ActivityListProps) {
     const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
 
+    // ⚡ Memoized handlers to prevent re-creating functions on each render
+    const handleActivityClick = useCallback((activity: ActivityListItem) => {
+        setSelectedActivity(activity);
+    }, []);
+
+    const handleModalClose = useCallback(() => {
+        setSelectedActivity(null);
+    }, []);
+
     if (isLoading) {
         return (
             <div className="space-y-4">
@@ -227,7 +236,7 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
                         key={activity.id}
                         className="animate-slide-in cursor-pointer"
                         style={{ animationDelay: `${index * 0.05}s` }}
-                        onClick={() => setSelectedActivity(activity)}
+                        onClick={() => handleActivityClick(activity)}
                     >
                         <ActivityCard activity={activity} />
                     </div>
@@ -236,7 +245,7 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
 
             <ActivityDetailsModal
                 isOpen={!!selectedActivity}
-                onClose={() => setSelectedActivity(null)}
+                onClose={handleModalClose}
                 activity={selectedActivity}
                 userHrMax={userHrMax}
                 vdotCorrectionFactor={vdotCorrectionFactor}

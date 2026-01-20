@@ -33,9 +33,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Sanitize filename - use basename and remove dangerous characters
+        const rawFilename = file.name;
+        const sanitizedFilename = path.basename(rawFilename)
+            .replace(/[\x00-\x1f\x80-\x9f]/g, '') // Remove null bytes and control characters
+            .replace(/\.\./g, ''); // Remove directory traversal attempts
+
         // Validate file extension
-        const allowedExtensions = ['.sql', '.gz'];
-        const isAllowed = allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+        const allowedExtensions = ['.sql', '.gz', '.sql.gz'];
+        const isAllowed = allowedExtensions.some(ext => sanitizedFilename.toLowerCase().endsWith(ext));
 
         if (!isAllowed) {
             return NextResponse.json(
@@ -52,10 +58,13 @@ export async function POST(request: NextRequest) {
         // Create buffer and write file
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        const filePath = path.join(BACKUPS_DIR, file.name);
+        const filePath = path.join(BACKUPS_DIR, sanitizedFilename);
 
-        // Security check: prevent directory traversal
-        if (!filePath.startsWith(BACKUPS_DIR)) {
+        // Security check: ensure resolved path is within backups directory
+        const resolvedPath = path.resolve(filePath);
+        const resolvedBackupsDir = path.resolve(BACKUPS_DIR);
+
+        if (!resolvedPath.startsWith(resolvedBackupsDir + path.sep)) {
             return NextResponse.json(
                 { error: 'Invalid filename' },
                 { status: 400 }

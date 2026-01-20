@@ -103,6 +103,8 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                         style={{
                             width: '100vw',
                             paddingBottom: '80px',
+                            contentVisibility: 'auto',
+                            containIntrinsicSize: '100vw 100vh', // Prevents scroll jump when rendering
                         }}
                     >
                         <div className="min-h-full">

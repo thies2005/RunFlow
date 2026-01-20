@@ -7,6 +7,7 @@ import {
     AreaChart, Area, LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
 import { predictRaceTime, formatTime, formatPace } from '@/lib/metrics/vdot';
+import LazyChartWrapper from '@/components/LazyChartWrapper';
 
 type AnalyticsDashboardProps = {
     currentVdot: number | null;
@@ -318,19 +319,37 @@ export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardPr
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ZoneTrendChart data={zoneTrend} />
-                <WeeklyVolumeChart data={weeklyVolume} />
+                <LazyChartWrapper height="20rem">
+                    <ZoneTrendChart data={zoneTrend} />
+                </LazyChartWrapper>
+                <LazyChartWrapper height="20rem">
+                    <WeeklyVolumeChart data={weeklyVolume} />
+                </LazyChartWrapper>
             </div>
 
-            {zoneTrend.length > 0 && <ZonePieChart zoneTrend={zoneTrend} />}
+            {zoneTrend.length > 0 && (
+                <LazyChartWrapper height="20rem">
+                    <ZonePieChart zoneTrend={zoneTrend} />
+                </LazyChartWrapper>
+            )}
 
             <StatsGrid currentVdot={currentVdot} totals={totals} />
 
-            {vdotTrend.length > 0 && <VDOTTrendChart data={vdotTrend} />}
+            {vdotTrend.length > 0 && (
+                <LazyChartWrapper height="20rem">
+                    <VDOTTrendChart data={vdotTrend} />
+                </LazyChartWrapper>
+            )}
 
-            <RacePredictions currentVdot={currentVdot} />
+            <LazyChartWrapper height="16rem">
+                <RacePredictions currentVdot={currentVdot} />
+            </LazyChartWrapper>
 
-            {fitnessTrend.length > 0 && <FitnessTrendChart data={fitnessTrend} />}
+            {fitnessTrend.length > 0 && (
+                <LazyChartWrapper height="20rem">
+                    <FitnessTrendChart data={fitnessTrend} />
+                </LazyChartWrapper>
+            )}
         </div>
     );
 }

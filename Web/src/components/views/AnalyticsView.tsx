@@ -11,6 +11,7 @@ import {
 import RacePredictionChart from '@/components/RacePredictionChart';
 import CombinedAnalyticsChart, { TimeRange } from '@/components/CombinedAnalyticsChart';
 import { Footer } from '@/components';
+import LazyChartWrapper from '@/components/LazyChartWrapper';
 import { formatTime, formatPace } from '@/lib/metrics/vdot';
 
 interface AnalyticsViewProps {
@@ -150,18 +151,22 @@ export function AnalyticsView({
                 </div>
 
                 {/* Combined Analytics Chart */}
-                <CombinedAnalyticsChart
-                    data={combinedData}
-                    timeRange={timeRange}
-                    onTimeRangeChange={setTimeRange}
-                />
+                <LazyChartWrapper height="24rem">
+                    <CombinedAnalyticsChart
+                        data={combinedData}
+                        timeRange={timeRange}
+                        onTimeRangeChange={setTimeRange}
+                    />
+                </LazyChartWrapper>
 
                 {/* Race Prediction Chart */}
-                <RacePredictionChart
-                    effectiveVO2max={runalyzeMetrics.effectiveVO2max}
-                    currentShape={runalyzeMetrics.shape}
-                    calibrationFactor={runalyzeMetrics.calibrationFactor}
-                />
+                <LazyChartWrapper height="24rem">
+                    <RacePredictionChart
+                        effectiveVO2max={runalyzeMetrics.effectiveVO2max}
+                        currentShape={runalyzeMetrics.shape}
+                        calibrationFactor={runalyzeMetrics.calibrationFactor}
+                    />
+                </LazyChartWrapper>
 
                 {/* Training Paces */}
                 <div className="glass-card p-6">
@@ -203,62 +208,68 @@ export function AnalyticsView({
                 {/* Trend Charts */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* VO2max Trend */}
+                    <LazyChartWrapper height="20rem">
+                        <div className="glass-card p-6">
+                            <h3 className="text-lg font-semibold text-foreground mb-4">VO2max Trend</h3>
+                            <div className="h-64">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={vo2TrendData}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
+                                        <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
+                                        <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                        />
+                                        <Line type="monotone" dataKey="vo2Rolling" stroke="#f59e0b" strokeWidth={2} dot={false} name="VO2max" />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </LazyChartWrapper>
+
+                    {/* Shape Trend */}
+                    <LazyChartWrapper height="20rem">
+                        <div className="glass-card p-6">
+                            <h3 className="text-lg font-semibold text-foreground mb-4">Shape Trend</h3>
+                            <div className="h-64">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={shapeTrendData}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
+                                        <XAxis dataKey="week" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
+                                        <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={[0, 120]} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                        />
+                                        <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </LazyChartWrapper>
+                </div>
+
+                {/* Fitness & Form */}
+                <LazyChartWrapper height="22rem">
                     <div className="glass-card p-6">
-                        <h3 className="text-lg font-semibold text-foreground mb-4">VO2max Trend</h3>
-                        <div className="h-64">
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Fitness & Form</h3>
+                        <div className="h-72">
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={vo2TrendData}>
+                                <LineChart data={fitnessData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
                                     <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
-                                    <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
+                                    <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                     <Tooltip
                                         contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
                                     />
-                                    <Line type="monotone" dataKey="vo2Rolling" stroke="#f59e0b" strokeWidth={2} dot={false} name="VO2max" />
+                                    <Legend />
+                                    <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} name="Fitness (CTL)" />
+                                    <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} name="Fatigue (ATL)" />
+                                    <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} dot={false} name="Form (TSB)" />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
                     </div>
-
-                    {/* Shape Trend */}
-                    <div className="glass-card p-6">
-                        <h3 className="text-lg font-semibold text-foreground mb-4">Shape Trend</h3>
-                        <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={shapeTrendData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
-                                    <XAxis dataKey="week" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
-                                    <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={[0, 120]} />
-                                    <Tooltip
-                                        contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
-                                    />
-                                    <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Fitness & Form */}
-                <div className="glass-card p-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Fitness & Form</h3>
-                    <div className="h-72">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={fitnessData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
-                                <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
-                                <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
-                                />
-                                <Legend />
-                                <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} name="Fitness (CTL)" />
-                                <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} name="Fatigue (ATL)" />
-                                <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} dot={false} name="Form (TSB)" />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+                </LazyChartWrapper>
             </main>
 
             {showHeader && <Footer />}

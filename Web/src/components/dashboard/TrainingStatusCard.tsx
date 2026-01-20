@@ -25,8 +25,8 @@ export default function TrainingStatusCard() {
     };
 
     const status = workloadStatus(workloadRatio);
-    // Linear mapping: 0.0 -> 0%, 1.0 -> 50%, 2.0+ -> 100%
-    const markerPos = Math.min(100, (workloadRatio / 2) * 100);
+    // Linear mapping: 0.0 -> 0%, 3.0 -> 100% for better visibility of overload
+    const markerPos = Math.min(100, (workloadRatio / 3) * 100);
 
     const tsbStatus = interpretTsb(tsb);
 
@@ -36,7 +36,6 @@ export default function TrainingStatusCard() {
 
             {/* Top Metrics Grid */}
             <div className="grid grid-cols-2 gap-4 mb-8 shrink-0">
-                {/* Marathon Shape */}
                 {/* Marathon Shape */}
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-900/20">
@@ -84,14 +83,21 @@ export default function TrainingStatusCard() {
                 </div>
 
                 <div className="relative h-2 w-full bg-white/5 rounded-full mb-3 shadow-inner">
-                    {/* Zones */}
-                    <div className="absolute left-0 w-[40%] h-full bg-gray-500/10 rounded-l-full border-r border-white/5" />
-                    <div className="absolute left-[40%] w-[25%] h-full bg-green-500/20" />
-                    <div className="absolute left-[65%] w-[10%] h-full bg-orange-500/20" />
-                    <div className="absolute left-[75%] w-[25%] h-full bg-red-500/20 rounded-r-full border-l border-white/5" />
+                    {/* Zones (Scale 0 - 3.0) */}
+                    {/* 0 - 0.8: Recovery (26.6%) */}
+                    <div className="absolute left-0 w-[26.6%] h-full bg-gray-500/10 rounded-l-full border-r border-white/5" />
+
+                    {/* 0.8 - 1.3: Sweet Spot (1.3 is 43.3% -> width approx 16.7%) */}
+                    <div className="absolute left-[26.6%] w-[16.7%] h-full bg-green-500/20" />
+
+                    {/* 1.3 - 1.5: Caution (1.5 is 50% -> width approx 6.7%) */}
+                    <div className="absolute left-[43.3%] w-[6.7%] h-full bg-orange-500/20" />
+
+                    {/* 1.5 - 3.0: Overload (50% -> 100%) */}
+                    <div className="absolute left-[50%] w-[50%] h-full bg-red-500/20 rounded-r-full border-l border-white/5" />
 
                     {/* Sweet Spot Guide */}
-                    <div className="absolute left-[40%] -top-1 w-[25%] h-4 border-x border-white/10 pointer-events-none" />
+                    <div className="absolute left-[26.6%] -top-1 w-[16.7%] h-4 border-x border-white/10 pointer-events-none" />
 
                     {/* Marker */}
                     <div
@@ -102,8 +108,8 @@ export default function TrainingStatusCard() {
 
                 <div className="flex justify-between text-xs text-gray-500 font-black uppercase tracking-widest px-1">
                     <span>Low</span>
-                    <span className="text-green-500/60 font-black">Sweet Spot (0.8 - 1.3)</span>
-                    <span>{workloadRatio > 2 ? workloadRatio.toFixed(2) : '2.0+'}</span>
+                    <span className="text-green-500/60 font-black absolute left-[35%] -translate-x-1/2">Sweet Spot (0.8 - 1.3)</span>
+                    <span>{workloadRatio > 3 ? workloadRatio.toFixed(2) : '3.0+'}</span>
                 </div>
             </div>
 

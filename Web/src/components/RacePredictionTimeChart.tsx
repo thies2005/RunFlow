@@ -13,8 +13,15 @@ interface VO2DataPoint {
     vo2Rolling?: number;
 }
 
+interface ShapeDataPoint {
+    week: string;
+    shape: number;
+}
+
 interface RacePredictionTimeChartProps {
     vo2TrendData: VO2DataPoint[];
+    shapeTrendData?: ShapeDataPoint[];
+    calibrationFactor?: number;
     timeRange?: string;
 }
 
@@ -28,14 +35,19 @@ const RACE_COLORS = {
 
 type RaceKey = keyof typeof RACE_COLORS;
 
-const RACE_DISTANCES: { key: RaceKey; distance: RaceDistance }[] = [
-    { key: '5K', distance: '5K' },
-    { key: '10K', distance: '10K' },
-    { key: 'Half', distance: 'HALF' },
-    { key: 'Marathon', distance: 'MARATHON' },
+// Shape impact factors per distance (same as calculateAllRacePredictions in runalyze.ts)
+const RACE_DISTANCES: { key: RaceKey; distance: RaceDistance; shapeImpact: number }[] = [
+    { key: '5K', distance: '5K', shapeImpact: 0.05 },
+    { key: '10K', distance: '10K', shapeImpact: 0.08 },
+    { key: 'Half', distance: 'HALF', shapeImpact: 0.15 },
+    { key: 'Marathon', distance: 'MARATHON', shapeImpact: 0.30 },
 ];
 
-function RacePredictionTimeChart({ vo2TrendData }: RacePredictionTimeChartProps) {
+function RacePredictionTimeChart({
+    vo2TrendData,
+    shapeTrendData,
+    calibrationFactor = 1.0
+}: RacePredictionTimeChartProps) {
     const [visibleRaces, setVisibleRaces] = useState<Record<RaceKey, boolean>>({
         '5K': true,
         '10K': true,
@@ -47,7 +59,18 @@ function RacePredictionTimeChart({ vo2TrendData }: RacePredictionTimeChartProps)
         setVisibleRaces(prev => ({ ...prev, [key]: !prev[key] }));
     }, []);
 
-    // Calculate predictions for each VO2 data point
+    // Create a shape lookup map by week/date
+    const shapeByDate = useMemo(() => {
+        const map = new Map<string, number>();
+        if (shapeTrendData) {
+            shapeTrendData.forEach(s => {
+                map.set(s.week, s.shape);
+            });
+        }
+        return map;
+    }, [shapeTrendData]);
+
+    // Calculate predictions for each VO2 data point with shape adjustments
     const chartData = useMemo(() => {
         if (!vo2TrendData || vo2TrendData.length === 0) return [];
 
@@ -59,17 +82,26 @@ function RacePredictionTimeChart({ vo2TrendData }: RacePredictionTimeChartProps)
                 return { date: dateStr };
             }
 
+            // Get shape for this date (default to 50% if not found)
+            const shape = shapeByDate.get(dateStr) ?? 50;
+
             const dataPoint: Record<string, string | number> = { date: dateStr };
 
-            RACE_DISTANCES.forEach(({ key, distance }) => {
-                const timeSeconds = predictRaceTime(vo2, distance);
-                dataPoint[key] = timeSeconds / 60; // Convert to minutes for chart
-                dataPoint[`${key}Raw`] = timeSeconds; // Keep raw for tooltip
+            RACE_DISTANCES.forEach(({ key, distance, shapeImpact }) => {
+                // Calculate optimal time from VO2max
+                const optimal = predictRaceTime(vo2, distance);
+
+                // Apply shape penalty (same formula as calculateAllRacePredictions)
+                const penalty = (1 - Math.min(shape, 100) / 100) * shapeImpact * calibrationFactor;
+                const predicted = optimal * (1 + penalty);
+
+                dataPoint[key] = predicted / 60; // Convert to minutes for chart
+                dataPoint[`${key}Raw`] = predicted; // Keep raw for tooltip
             });
 
             return dataPoint;
         }).filter(p => p['5K'] !== undefined); // Only include points with valid predictions
-    }, [vo2TrendData]);
+    }, [vo2TrendData, shapeByDate, calibrationFactor]);
 
     // Format Y-axis to show times
     const formatYAxis = useCallback((minutes: number) => {
@@ -181,12 +213,16 @@ function RacePredictionTimeChart({ vo2TrendData }: RacePredictionTimeChartProps)
             </div>
 
             <p className="text-xs text-foreground-muted text-center mt-4">
-                Predicted race times based on your VO2max trend over time
+                Predicted race times based on VO2max and marathon shape over time
             </p>
         </div>
     );
 }
 
 export default memo(RacePredictionTimeChart, (prevProps, nextProps) => {
-    return prevProps.vo2TrendData === nextProps.vo2TrendData;
+    return (
+        prevProps.vo2TrendData === nextProps.vo2TrendData &&
+        prevProps.shapeTrendData === nextProps.shapeTrendData &&
+        prevProps.calibrationFactor === nextProps.calibrationFactor
+    );
 });

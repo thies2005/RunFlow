@@ -569,7 +569,11 @@ export default function AnalyticsPage() {
                 />
 
                 {/* Race Prediction Time Trends Chart */}
-                <RacePredictionTimeChart vo2TrendData={vo2TrendData} />
+                <RacePredictionTimeChart
+                    vo2TrendData={vo2TrendData}
+                    shapeTrendData={shapeTrendData}
+                    calibrationFactor={runalyzeMetrics.calibrationFactor}
+                />
 
                 {/* Training Paces & Heart Rate Section */}
                 <div className="glass-card p-6">

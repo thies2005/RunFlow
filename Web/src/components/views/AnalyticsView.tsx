@@ -171,7 +171,11 @@ export function AnalyticsView({
 
                 {/* Race Prediction Time Trends Chart */}
                 <LazyChartWrapper height="22rem">
-                    <RacePredictionTimeChart vo2TrendData={vo2TrendData} />
+                    <RacePredictionTimeChart
+                        vo2TrendData={vo2TrendData}
+                        shapeTrendData={shapeTrendData}
+                        calibrationFactor={runalyzeMetrics.calibrationFactor}
+                    />
                 </LazyChartWrapper>
 
                 {/* Training Paces */}

@@ -12,11 +12,15 @@ export function PwaLifecycle() {
     useEffect(() => {
         if (
             typeof window !== "undefined" &&
-            "serviceWorker" in navigator &&
-            window.workbox !== undefined
+            "serviceWorker" in navigator
         ) {
-            const wb = window.workbox;
-            wb.register();
+            // UNREGISTER ALL SERVICE WORKERS to clear stale cache
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                for (let registration of registrations) {
+                    console.log('Unregistering Service Worker:', registration);
+                    registration.unregister();
+                }
+            });
         }
     }, []);
 

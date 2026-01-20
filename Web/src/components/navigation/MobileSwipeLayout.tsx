@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { motion, PanInfo } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { MobileBottomNav } from './MobileBottomNav';
 
@@ -10,8 +10,8 @@ interface MobileSwipeLayoutProps {
 }
 
 const PATHS = ['/', '/plan', '/analytics'];
-const SWIPE_THRESHOLD = 50;
-const SWIPE_VELOCITY_THRESHOLD = 500;
+const SWIPE_THRESHOLD = 80; // Increased threshold
+const SWIPE_VELOCITY_THRESHOLD = 300;
 
 export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
     const router = useRouter();
@@ -25,7 +25,6 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
     };
 
     const [activeIndex, setActiveIndex] = useState(() => getIndexFromPath(pathname));
-    const [isDragging, setIsDragging] = useState(false);
 
     // Sync with pathname changes (e.g., back button)
     useEffect(() => {
@@ -43,8 +42,6 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
     };
 
     const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        setIsDragging(false);
-
         // Disable swipe on Plan page (index 1) to prevent DnD conflicts
         if (activeIndex === 1) {
             return;
@@ -52,8 +49,19 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
 
         const { offset, velocity } = info;
 
-        // Determine swipe direction
-        if (Math.abs(offset.x) > SWIPE_THRESHOLD || Math.abs(velocity.x) > SWIPE_VELOCITY_THRESHOLD) {
+        // Only process horizontal swipes - horizontal movement must be significantly greater than vertical
+        // This prevents vertical scrolling from triggering page changes
+        const isHorizontalSwipe = Math.abs(offset.x) > Math.abs(offset.y) * 2;
+
+        if (!isHorizontalSwipe) {
+            return;
+        }
+
+        // Determine swipe direction - require both threshold and direction clarity
+        const hasEnoughOffset = Math.abs(offset.x) > SWIPE_THRESHOLD;
+        const hasEnoughVelocity = Math.abs(velocity.x) > SWIPE_VELOCITY_THRESHOLD;
+
+        if (hasEnoughOffset || hasEnoughVelocity) {
             if (offset.x > 0 && activeIndex > 0) {
                 // Swiped right -> go to previous
                 navigateToIndex(activeIndex - 1);
@@ -64,15 +72,11 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
         }
     };
 
-    const handleDragStart = () => {
-        setIsDragging(true);
-    };
-
     // Calculate if drag should be disabled (on Plan page)
     const isDragDisabled = activeIndex === 1;
 
     return (
-        <div className="fixed inset-0 overflow-hidden bg-background">
+        <div className="fixed inset-0 overflow-hidden bg-background pt-[env(safe-area-inset-top)]">
             <motion.div
                 ref={containerRef}
                 className="flex h-full w-[300vw]"
@@ -80,17 +84,14 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 drag={isDragDisabled ? false : 'x'}
                 dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.1}
-                onDragStart={handleDragStart}
+                dragElastic={0.05}
+                dragDirectionLock
                 onDragEnd={handleDragEnd}
             >
                 {children.map((child, index) => (
                     <div
                         key={index}
-                        className="w-screen h-full overflow-y-auto pb-20"
-                        style={{
-                            touchAction: isDragging ? 'none' : 'pan-y',
-                        }}
+                        className="w-screen h-full overflow-y-auto pb-20 overscroll-y-contain"
                     >
                         {child}
                     </div>
@@ -106,3 +107,4 @@ export function MobileSwipeLayout({ children }: MobileSwipeLayoutProps) {
 }
 
 export default MobileSwipeLayout;
+

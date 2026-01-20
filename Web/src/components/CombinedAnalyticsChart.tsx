@@ -219,7 +219,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
 
             {/* Chart */}
             <div className="h-80 min-w-0 overflow-x-auto">
-                <div className="min-w-[400px] h-full">
+                <div className="min-w-[600px] h-full">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={chartData}>
                             <defs>
@@ -297,6 +297,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     stroke={SERIES_CONFIG.vo2max.color}
                                     strokeWidth={2}
                                     dot={false}
+                                    connectNulls
                                     name="VO2max (Avg)"
                                 />
                             )}
@@ -310,6 +311,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     stroke={SERIES_CONFIG.ctl.color}
                                     strokeWidth={2}
                                     dot={false}
+                                    connectNulls
                                     name="Fitness (CTL)"
                                 />
                             )}
@@ -321,6 +323,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     stroke={SERIES_CONFIG.atl.color}
                                     strokeWidth={2}
                                     dot={false}
+                                    connectNulls
                                     name="Fatigue (ATL)"
                                 />
                             )}
@@ -332,6 +335,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     stroke={SERIES_CONFIG.tsb.color}
                                     strokeWidth={2}
                                     dot={false}
+                                    connectNulls
                                     name="Form (TSB)"
                                 />
                             )}
@@ -357,6 +361,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     stroke={SERIES_CONFIG.volume.color}
                                     strokeWidth={2}
                                     dot={false}
+                                    connectNulls
                                     name="Weekly Volume (km)"
                                 />
                             )}
@@ -370,6 +375,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     stroke="none"
                                     fill="url(#colorTrainingTime)"
                                     fillOpacity={0.6}
+                                    connectNulls
                                     name="Daily Time (h)"
                                 />
                             )}
@@ -383,6 +389,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     stroke={SERIES_CONFIG.trainingTime.color}
                                     strokeWidth={2}
                                     dot={false}
+                                    connectNulls
                                     name="Weekly Time (h)"
                                 />
                             )}

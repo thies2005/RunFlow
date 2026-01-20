@@ -52,14 +52,16 @@ export class ApiError extends Error {
      * Convert to NextResponse
      */
     toResponse(): NextResponse<ApiErrorResponse> {
-        return NextResponse.json(
-            {
-                error: this.code,
-                message: this.message,
-                ...(this.details && { details: this.details }),
-            },
-            { status: this.statusCode }
-        );
+        const payload: ApiErrorResponse = {
+            error: this.code,
+            message: this.message,
+        };
+
+        if (this.details !== undefined && this.details !== null) {
+            payload.details = this.details;
+        }
+
+        return NextResponse.json(payload, { status: this.statusCode });
     }
 
     // Factory methods for common errors

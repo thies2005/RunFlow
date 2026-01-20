@@ -100,7 +100,7 @@ export interface Activity {
  * Activity streams data (GPS, HR, etc.) from Strava or Health Connect
  */
 export interface ActivityStreams {
-    time?: number[];           // Seconds since start
+    time: number[];           // Seconds since start
     distance?: number[];       // Meters from start
     latlng?: [number, number][]; // GPS coordinates
     altitude?: number[];       // Elevation in meters

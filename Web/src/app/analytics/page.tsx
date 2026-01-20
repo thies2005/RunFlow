@@ -495,7 +495,7 @@ export default function AnalyticsPage() {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Pie Chart */}
-                                <div className="h-64">
+                                <div className="h-64 min-h-[256px] w-full relative">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
@@ -628,7 +628,7 @@ export default function AnalyticsPage() {
                     {/* VO2max Trend (Rolling Average) */}
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold text-foreground mb-4">Effective VO2max Trend</h3>
-                        <div className="h-64">
+                        <div className="h-64 min-h-[256px] w-full relative">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={filteredVo2Trend}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
@@ -679,7 +679,7 @@ export default function AnalyticsPage() {
                     {/* Shape Trend */}
                     <div className="glass-card p-6">
                         <h3 className="text-lg font-semibold text-foreground mb-4">Marathon Shape Trend</h3>
-                        <div className="h-64">
+                        <div className="h-64 min-h-[256px] w-full relative">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={filteredShapeTrend}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
@@ -717,7 +717,7 @@ export default function AnalyticsPage() {
                 {/* === FITNESS & FORM === */}
                 <div className="glass-card p-6">
                     <h3 className="text-lg font-semibold text-foreground mb-4">Fitness & Form (CTL / ATL / TSB)</h3>
-                    <div className="h-72">
+                    <div className="h-72 min-h-[288px] w-full relative">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={filteredFitness}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />

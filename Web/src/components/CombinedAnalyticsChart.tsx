@@ -218,8 +218,8 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
             </div>
 
             {/* Chart */}
-            <div className="h-80 min-w-0 overflow-x-auto">
-                <div className="min-w-[600px] h-full">
+            <div className="h-80 min-h-[320px] w-full overflow-x-auto relative">
+                <div className="min-w-[600px] h-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={chartData}>
                             <defs>

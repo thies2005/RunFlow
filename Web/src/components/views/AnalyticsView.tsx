@@ -9,6 +9,7 @@ import {
     PieChart, Pie, Cell
 } from 'recharts';
 import RacePredictionChart from '@/components/RacePredictionChart';
+import RacePredictionTimeChart from '@/components/RacePredictionTimeChart';
 import CombinedAnalyticsChart, { TimeRange } from '@/components/CombinedAnalyticsChart';
 import { Footer } from '@/components';
 import LazyChartWrapper from '@/components/LazyChartWrapper';
@@ -166,6 +167,11 @@ export function AnalyticsView({
                         currentShape={runalyzeMetrics.shape}
                         calibrationFactor={runalyzeMetrics.calibrationFactor}
                     />
+                </LazyChartWrapper>
+
+                {/* Race Prediction Time Trends Chart */}
+                <LazyChartWrapper height="22rem">
+                    <RacePredictionTimeChart vo2TrendData={vo2TrendData} />
                 </LazyChartWrapper>
 
                 {/* Training Paces */}

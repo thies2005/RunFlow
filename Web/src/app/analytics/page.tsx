@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import RacePredictionChart from '@/components/RacePredictionChart';
+import RacePredictionTimeChart from '@/components/RacePredictionTimeChart';
 import CombinedAnalyticsChart, { TimeRange } from '@/components/CombinedAnalyticsChart';
 import { Footer } from '@/components';
 import {
@@ -566,6 +567,9 @@ export default function AnalyticsPage() {
                     currentShape={runalyzeMetrics.shape}
                     calibrationFactor={runalyzeMetrics.calibrationFactor}
                 />
+
+                {/* Race Prediction Time Trends Chart */}
+                <RacePredictionTimeChart vo2TrendData={vo2TrendData} />
 
                 {/* Training Paces & Heart Rate Section */}
                 <div className="glass-card p-6">

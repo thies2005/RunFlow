@@ -227,17 +227,25 @@ export default function AnalyticsPage() {
             }
         });
 
+        // Helper to safe-normalize dates
+        const normalizeDate = (d: string) => {
+            try { return new Date(d).toISOString().split('T')[0]; } catch { return d; }
+        };
+
         // Build combined data array
         const allDates = new Set([...Array.from(dailyVolumeMap.keys()), ...Array.from(dailyTimeMap.keys())]);
-        const combinedDataRaw = Array.from(allDates).sort().map(date => ({
-            date,
-            volume: dailyVolumeMap.get(date) || 0,
-            trainingTime: dailyTimeMap.get(date) || 0,
-            vo2max: dailyVO2Map.get(date)?.vo2max,
-            ctl: serverFitnessTrend.find((f: { date: string }) => f.date === date)?.ctl,
-            atl: serverFitnessTrend.find((f: { date: string }) => f.date === date)?.atl,
-            tsb: serverFitnessTrend.find((f: { date: string }) => f.date === date)?.tsb,
-        }));
+        const combinedDataRaw = Array.from(allDates).sort().map(date => {
+            const fitnessEntry = serverFitnessTrend.find((f: { date: string }) => normalizeDate(f.date) === date);
+            return {
+                date,
+                volume: dailyVolumeMap.get(date) || 0,
+                trainingTime: dailyTimeMap.get(date) || 0,
+                vo2max: dailyVO2Map.get(date)?.vo2max,
+                ctl: fitnessEntry?.ctl,
+                atl: fitnessEntry?.atl,
+                tsb: fitnessEntry?.tsb,
+            };
+        });
 
         // Calculate rolling averages for combined data
         const combinedDataWithRolling = combinedDataRaw.map((d, index) => {

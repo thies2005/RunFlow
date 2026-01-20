@@ -4,7 +4,6 @@ import './globals.css';
 import { Providers } from './providers';
 import { PwaLifecycle } from './pwa-lifecycle';
 import DeepLinkHandler from '@/components/DeepLinkHandler';
-import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 import AdaptiveLayout from './adaptive-layout';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -35,11 +34,11 @@ export default function RootLayout({
                 <Providers>
                     <AdaptiveLayout>{children}</AdaptiveLayout>
                 </Providers>
-                <StravaPoweredFooter />
                 <PwaLifecycle />
                 <DeepLinkHandler />
             </body>
         </html>
     );
 }
+
 

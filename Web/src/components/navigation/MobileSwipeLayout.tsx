@@ -37,6 +37,17 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
             setActiveIndex(index);
             router.replace(PATHS[index], { scroll: false });
             onPageChange?.(index);
+
+            // If navigating to Plan page, scroll to today
+            if (index === 1) {
+                // Short timeout to allow React to render the new view
+                setTimeout(() => {
+                    const todayAnchor = document.getElementById('plan-today-anchor');
+                    if (todayAnchor) {
+                        todayAnchor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            }
         }
     }, [activeIndex, router, onPageChange]);
 

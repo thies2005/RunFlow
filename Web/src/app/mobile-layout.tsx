@@ -54,9 +54,10 @@ export function MobileLayout() {
     const [zonesTimeRange, setZonesTimeRange] = useState<'1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'>('1Y');
 
     // DnD Sensors for Plan
+    // DnD Sensors for Plan
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-        useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } }),
     );
 
     // === QUERIES ===

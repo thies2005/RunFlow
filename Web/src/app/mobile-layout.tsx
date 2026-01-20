@@ -303,13 +303,7 @@ export function MobileLayout() {
 
     // === AUTH GUARDS ===
 
-    if (status === 'loading' || isDashboardLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-pulse text-gray-400">Loading...</div>
-            </div>
-        );
-    }
+
 
     if (status === 'unauthenticated') {
         router.push('/login');

@@ -7,6 +7,7 @@ import { AnalyticsService } from '@/lib/services/analytics';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { cachedResponse } from '@/lib/apiResponse';
 
 // GET - List goals
 export async function GET(request: NextRequest) {
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        return NextResponse.json({ goals }, { headers: rateLimitHeaders(rateLimitResult) });
+        return cachedResponse({ goals }, { maxAge: 60, staleWhileRevalidate: 30 });
     } catch (error) {
         console.error('List goals error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

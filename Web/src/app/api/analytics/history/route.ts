@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { calculateTrimpFromZones, FALLBACK_TRIMP_PER_MINUTE } from '@/lib/metrics/trimp';
 import { calculateFitnessHistory, getActivityContribution, calculateRunningTss, type DailyLoad } from '@/lib/metrics/fitness';
 import { calculateMarathonShape, calculateWeightedEffectiveVO2max, type ActivityForShape } from '@/lib/metrics/runalyze';
+import { cachedResponse } from '@/lib/apiResponse';
 
 export const dynamic = 'force-dynamic';
 
@@ -383,7 +384,7 @@ export async function GET(request: Request) {
             }
         }
 
-        return NextResponse.json({
+        return cachedResponse({
             weeklyVolume,
             zoneTrend,
             fitnessTrend: filteredFitness,
@@ -396,7 +397,7 @@ export async function GET(request: Request) {
                 activities: totalActivities,
                 averagePace, // sec/km
             }
-        });
+        }, { maxAge: 300, staleWhileRevalidate: 60 });
 
     } catch (error) {
         console.error('History API Error:', error);

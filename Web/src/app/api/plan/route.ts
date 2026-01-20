@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { authOptions } from '@/lib/strava/oauth';
 import { NextResponse } from 'next/server';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { cachedResponse } from '@/lib/apiResponse';
 
 export async function GET(req: Request) {
     try {
@@ -124,13 +125,13 @@ export async function GET(req: Request) {
             });
         }
 
-        return NextResponse.json({
+        return cachedResponse({
             goal: {
                 ...activeGoal,
                 workouts: enhancedWorkouts
             },
             unlinkedActivities
-        });
+        }, { maxAge: 60, staleWhileRevalidate: 30 });
     } catch (error) {
         console.error('Plan fetch error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

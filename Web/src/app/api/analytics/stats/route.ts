@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { getActivityContribution } from '@/lib/metrics/fitness';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { cachedResponse } from '@/lib/apiResponse';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,7 +133,7 @@ export async function GET(req: Request) {
 
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
-        return NextResponse.json({
+        return cachedResponse({
             currentWeekMileage,
             effectiveVO2max,
             rawVO2max,
@@ -145,7 +146,7 @@ export async function GET(req: Request) {
             workloadRatio,
             easyTrimp,
             hrMax: maxHR
-        });
+        }, { maxAge: 300, staleWhileRevalidate: 60 });
 
     } catch (error) {
         console.error('Stats API Error:', error);

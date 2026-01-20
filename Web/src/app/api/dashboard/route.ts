@@ -6,6 +6,7 @@ import { AnalyticsService } from '@/lib/services/analytics';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { cachedResponse } from '@/lib/apiResponse';
 
 export const dynamic = 'force-dynamic';
 
@@ -207,12 +208,12 @@ export async function GET(req: NextRequest) {
             stravaId: a.stravaId.toString()
         }));
 
-        return NextResponse.json({
+        return cachedResponse({
             stats,
             recentActivities: { activities: serializedActivities }, // Match expected format or simplfy? Keeping nested for compatibility
             goals: { goals },
             syncStatus
-        });
+        }, { maxAge: 60, staleWhileRevalidate: 30 });
 
     } catch (error) {
         console.error('Dashboard API Error:', error);

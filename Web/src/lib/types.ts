@@ -90,10 +90,25 @@ export interface Activity {
     hrZone5Time: number | null;
     hrZone6Time: number | null;
     hrZone7Time: number | null;
-    streams: any | null; // Using any for Json type, or could define a more specific type
+    streams: ActivityStreams | null;
     trainingType: WorkoutType | null;
     createdAt: string | Date;
     updatedAt: string | Date;
+}
+
+/**
+ * Activity streams data (GPS, HR, etc.) from Strava or Health Connect
+ */
+export interface ActivityStreams {
+    time?: number[];           // Seconds since start
+    distance?: number[];       // Meters from start
+    latlng?: [number, number][]; // GPS coordinates
+    altitude?: number[];       // Elevation in meters
+    heartrate?: number[];      // Heart rate in bpm
+    cadence?: number[];        // Steps per minute (running)
+    velocity_smooth?: number[]; // Smoothed speed m/s
+    grade_smooth?: number[];   // Grade/slope percentage
+    watts?: number[];          // Power in watts (if available)
 }
 
 /**

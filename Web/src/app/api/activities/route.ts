@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { ActivityType } from '@prisma/client';
+import { cachedResponse } from '@/lib/apiResponse';
 
 // Type for Prisma where clause with optional filters
 type ActivityWhereClause = {
@@ -106,12 +107,12 @@ export async function GET(request: NextRequest) {
             isLinked: linkedActivityIds.has(a.id)
         }));
 
-        return NextResponse.json({
+        return cachedResponse({
             activities: serialized,
             total,
             limit,
             offset,
-        });
+        }, { maxAge: 120, staleWhileRevalidate: 60 });
     } catch (error) {
         console.error('Activities error:', error);
         return NextResponse.json(

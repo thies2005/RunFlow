@@ -43,42 +43,35 @@ interface UserMetricsProviderProps {
 import { useState, useEffect } from 'react';
 
 export function UserMetricsProvider({ children, stats }: UserMetricsProviderProps) {
-    const [maxMetrics, setMaxMetrics] = useState({ maxCtl: 100, maxAtl: 100 }); // Default to 100 to avoid division by zero/huge bars initially
+    // Initial max values: check stats first, otherwise default to 100
+    const [maxMetrics, setMaxMetrics] = useState({
+        maxCtl: stats?.maxCtl || 100,
+        maxAtl: stats?.maxAtl || 100
+    });
 
-    // Load max values from localStorage on mount
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        try {
-            const saved = localStorage.getItem('runflow_fitness_max');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed && typeof parsed.maxCtl === 'number' && typeof parsed.maxAtl === 'number') {
-                    setMaxMetrics({
-                        maxCtl: parsed.maxCtl || 100,
-                        maxAtl: parsed.maxAtl || 100
-                    });
-                }
-            }
-        } catch (e) {
-            console.error('Failed to load fitness max values', e);
-        }
-    }, []);
-
-    // Update max values when stats change
+    // Effect: If stats change and contain explicit max values (from newly updated API), update state
     useEffect(() => {
         if (!stats) return;
 
+        // Trust server-provided max values if they exist
+        if (typeof stats.maxCtl === 'number' && typeof stats.maxAtl === 'number') {
+            setMaxMetrics({
+                maxCtl: stats.maxCtl > 0 ? stats.maxCtl : 100,
+                maxAtl: stats.maxAtl > 0 ? stats.maxAtl : 100
+            });
+            return;
+        }
+
+        // --- Fallback logic (Client-side tracking for older API responses) ---
+        // Only run this if the server DIDN'T provide max values
         const currentCtl = stats.ctl || 0;
         const currentAtl = stats.atl || 0;
 
-        // If newly fetched stats are higher than our stored max, update specific maxes
         setMaxMetrics(prev => {
             let changed = false;
             let newMaxCtl = prev.maxCtl;
             let newMaxAtl = prev.maxAtl;
 
-            // Only update if current value is strictly greater
             if (currentCtl > prev.maxCtl) {
                 newMaxCtl = currentCtl;
                 changed = true;
@@ -89,17 +82,19 @@ export function UserMetricsProvider({ children, stats }: UserMetricsProviderProp
             }
 
             if (changed) {
-                const newMax = { maxCtl: newMaxCtl, maxAtl: newMaxAtl };
-                localStorage.setItem('runflow_fitness_max', JSON.stringify(newMax));
-                return newMax;
+                return { maxCtl: newMaxCtl, maxAtl: newMaxAtl };
             }
             return prev;
         });
-    }, [stats]); // stats object dependency
+    }, [stats]);
 
     // Extract defaults or fallback values
     const ctl = stats?.ctl || 0;
     const atl = stats?.atl || 0;
+
+    // Use state max values (which are now synced with server stats)
+    const effectiveMaxCtl = maxMetrics.maxCtl;
+    const effectiveMaxAtl = maxMetrics.maxAtl;
 
     const value: UserMetrics = {
         marathonShape: stats?.marathonShape || { shape: 0, mileageScore: 0, longRunScore: 0, crossTrainingScore: 0 },
@@ -113,11 +108,11 @@ export function UserMetricsProvider({ children, stats }: UserMetricsProviderProp
         currentWeekMileage: stats?.currentWeekMileage || 0,
         userHrMax: stats?.hrMax || 185,
 
-        maxCtl: maxMetrics.maxCtl,
-        maxAtl: maxMetrics.maxAtl,
-        // Calculate percentages capped at 100% just in case, though logically if we update max it should match
-        ctlPercent: maxMetrics.maxCtl > 0 ? (ctl / maxMetrics.maxCtl) * 100 : 0,
-        atlPercent: maxMetrics.maxAtl > 0 ? (atl / maxMetrics.maxAtl) * 100 : 0
+        maxCtl: effectiveMaxCtl,
+        maxAtl: effectiveMaxAtl,
+        // Calculate percentages
+        ctlPercent: effectiveMaxCtl > 0 ? (ctl / effectiveMaxCtl) * 100 : 0,
+        atlPercent: effectiveMaxAtl > 0 ? (atl / effectiveMaxAtl) * 100 : 0
     };
 
     return (

@@ -108,11 +108,23 @@ export async function GET(req: Request) {
         let atl = 0;
         let tsb = 0;
         let workloadRatio = 0;
+        let maxCtl = 0;
+        let maxAtl = 0;
 
-        const latestFitness = await prisma.dailyFitness.findFirst({
-            where: { userId },
-            orderBy: { date: 'desc' }
-        });
+        // Fetch latest fitness AND historical maximums in parallel
+        const [latestFitness, maxFitnessValues] = await Promise.all([
+            prisma.dailyFitness.findFirst({
+                where: { userId },
+                orderBy: { date: 'desc' }
+            }),
+            prisma.dailyFitness.aggregate({
+                where: { userId },
+                _max: {
+                    ctl: true,
+                    atl: true
+                }
+            })
+        ]);
 
         if (latestFitness) {
             ctl = Math.round(latestFitness.ctl);
@@ -131,6 +143,10 @@ export async function GET(req: Request) {
             workloadRatio = metrics.workloadRatio;
         }
 
+        // Ensure max values are at least the current values
+        maxCtl = Math.max(Math.round(maxFitnessValues._max.ctl || 0), ctl);
+        maxAtl = Math.max(Math.round(maxFitnessValues._max.atl || 0), atl);
+
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
         return cachedResponse({
@@ -145,7 +161,9 @@ export async function GET(req: Request) {
             tsb,
             workloadRatio,
             easyTrimp,
-            hrMax: maxHR
+            hrMax: maxHR,
+            maxCtl,
+            maxAtl
         }, { maxAge: 300, staleWhileRevalidate: 60 });
 
     } catch (error) {

@@ -1,6 +1,7 @@
 import { TrendingUp, Activity, Gauge } from 'lucide-react';
 import { useUserMetrics } from '../providers/UserMetricsProvider';
 import { interpretTsb } from '@/lib/metrics/fitness';
+import { useState } from 'react';
 
 export default function TrainingStatusCard() {
     const {
@@ -11,8 +12,15 @@ export default function TrainingStatusCard() {
         atl,
         tsb,
         workloadRatio,
-        easyTrimp
+        easyTrimp,
+        maxCtl,
+        maxAtl,
+        ctlPercent,
+        atlPercent
     } = useUserMetrics();
+
+    const [showAbsoluteAtl, setShowAbsoluteAtl] = useState(false);
+    const [showAbsoluteCtl, setShowAbsoluteCtl] = useState(false);
 
     const shapePercent = marathonShape?.shape || 0;
 
@@ -126,24 +134,32 @@ export default function TrainingStatusCard() {
             {/* Metrics List (Runalyze Style) */}
             <div className="space-y-5 flex-1 flex flex-col justify-center border-t border-white/5 pt-6">
                 {/* Fatigue (ATL) */}
-                <div className="flex items-center gap-3">
-                    <div className="w-32 text-xs text-gray-400 uppercase tracking-tighter font-bold truncate">Fatigue (ATL)</div>
+                <div
+                    className="flex items-center gap-3 cursor-pointer group"
+                    title={`${Math.round(atlPercent)}% (Abs: ${atl} / Max: ${maxAtl})`}
+                    onClick={() => setShowAbsoluteAtl(!showAbsoluteAtl)}
+                >
+                    <div className="w-32 text-xs text-gray-400 uppercase tracking-tighter font-bold truncate group-hover:text-gray-300 transition-colors">Fatigue (ATL)</div>
                     <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${Math.min(100, atl)}%` }} />
+                        <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${Math.min(100, atlPercent)}%` }} />
                     </div>
                     <div className="w-14 text-right text-sm font-black text-red-400">
-                        {atl > 0 ? `${atl}` : '-'}
+                        {atl > 0 ? (showAbsoluteAtl ? atl : `${Math.round(atlPercent)}%`) : '-'}
                     </div>
                 </div>
 
                 {/* Fitness (CTL) */}
-                <div className="flex items-center gap-3">
-                    <div className="w-32 text-xs text-gray-400 uppercase tracking-tighter font-bold truncate">Fitness (CTL)</div>
+                <div
+                    className="flex items-center gap-3 cursor-pointer group"
+                    title={`${Math.round(ctlPercent)}% (Abs: ${ctl} / Max: ${maxCtl})`}
+                    onClick={() => setShowAbsoluteCtl(!showAbsoluteCtl)}
+                >
+                    <div className="w-32 text-xs text-gray-400 uppercase tracking-tighter font-bold truncate group-hover:text-gray-300 transition-colors">Fitness (CTL)</div>
                     <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${Math.min(100, ctl)}%` }} />
+                        <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${Math.min(100, ctlPercent)}%` }} />
                     </div>
                     <div className="w-14 text-right text-sm font-black text-blue-400">
-                        {ctl > 0 ? `${ctl}` : '-'}
+                        {ctl > 0 ? (showAbsoluteCtl ? ctl : `${Math.round(ctlPercent)}%`) : '-'}
                     </div>
                 </div>
 

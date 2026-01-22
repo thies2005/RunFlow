@@ -1,0 +1,84 @@
+
+/**
+ * Admin Endpoint: Recalculate Fitness
+ * 
+ * POST /api/admin/recalculate-fitness
+ * 
+ * Triggers a full recalculation of fitness history for all users.
+ * Useful for fixing data corruption or applying new calculation logic retroactively.
+ * 
+ * Requires Admin Authentication.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin/auth';
+import { prisma } from '@/lib/db';
+import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
+
+// Set max duration for this serverless function (Vercel/Next.js specific)
+export const maxDuration = 300; // 5 minutes
+
+export async function POST(request: NextRequest) {
+    // 1. Require Admin Auth
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+        return authResult.error;
+    }
+
+    try {
+        console.log('[Admin] Starting fitness recalculation for ALL users...');
+
+        // 2. Fetch all users
+        const users = await prisma.user.findMany({
+            select: { id: true, email: true }
+        });
+
+        console.log(`[Admin] Found ${users.length} users to process.`);
+
+        const results = [];
+
+        // 3. Process each user
+        for (const user of users) {
+            try {
+                // Find earliest activity date for this user
+                const firstActivity = await prisma.activity.findFirst({
+                    where: { userId: user.id },
+                    orderBy: { startDate: 'asc' },
+                    select: { startDate: true }
+                });
+
+                if (firstActivity) {
+                    console.log(`[Admin] Recalculating for user ${user.email} (Start: ${firstActivity.startDate.toISOString()})`);
+
+                    // We pass the earliest activity as a "modified activity".
+                    // The updateFitnessCache logic will:
+                    // 1. Look for baseline before this date (likely none).
+                    // 2. Start from 0/0.
+                    // 3. Recalculate everything from that date forward to today.
+                    await updateFitnessCache(user.id, [{ startDate: firstActivity.startDate }]);
+
+                    results.push({ userId: user.id, email: user.email, status: 'success', startDate: firstActivity.startDate });
+                } else {
+                    console.log(`[Admin] User ${user.email} has no activities. Skipping.`);
+                    results.push({ userId: user.id, email: user.email, status: 'skipped', reason: 'no_activities' });
+                }
+            } catch (err: any) {
+                console.error(`[Admin] Failed to recalculate for user ${user.email}:`, err);
+                results.push({ userId: user.id, email: user.email, status: 'error', error: err.message });
+            }
+        }
+
+        return NextResponse.json({
+            message: 'Recalculation complete',
+            totalUsers: users.length,
+            results
+        });
+
+    } catch (error: any) {
+        console.error('[Admin] Global error during recalculation:', error);
+        return NextResponse.json(
+            { error: 'Internal server error during recalculation: ' + error.message },
+            { status: 500 }
+        );
+    }
+}

@@ -67,7 +67,7 @@ export const PlanWeek = memo(function PlanWeek({
         <div className="glass-card overflow-hidden">
             {/* Week Header */}
 
-            <div className="p-3 md:p-4 border-b border-glass-border flex flex-row items-center justify-between bg-surface sticky top-[env(safe-area-inset-top)] z-10 backdrop-blur-md gap-2">
+            <div className="p-3 md:p-4 border-b border-glass-border flex flex-row items-center justify-between bg-background/95 backdrop-blur-md sticky top-[env(safe-area-inset-top)] z-10 gap-2">
                 <div className="flex items-center gap-3 overflow-hidden">
                     <div className="flex flex-col min-w-fit">
                         <span className="text-foreground font-semibold text-sm md:text-base">Week {weekIndex + 1}</span>

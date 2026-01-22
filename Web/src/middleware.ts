@@ -32,7 +32,7 @@ const getAllowedOrigins = (): string[] => {
     }
 
     // Remove duplicates
-    return [...new Set(origins)];
+    return Array.from(new Set(origins));
 };
 
 /**

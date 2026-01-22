@@ -10,9 +10,19 @@ import { NextRequest, NextResponse } from 'next/server';
 const getAllowedOrigins = (): string[] => {
     const origins: string[] = [];
 
+    // Production domains - add your deployed domain(s) here
+    origins.push('https://runflow.schuelken.uk');
+    origins.push('http://runflow.schuelken.uk');
+
     // Add the app URL from environment
     if (process.env.NEXT_PUBLIC_APP_URL) {
         origins.push(process.env.NEXT_PUBLIC_APP_URL);
+        // Also add https version if http was provided and vice versa
+        if (process.env.NEXT_PUBLIC_APP_URL.startsWith('http://')) {
+            origins.push(process.env.NEXT_PUBLIC_APP_URL.replace('http://', 'https://'));
+        } else if (process.env.NEXT_PUBLIC_APP_URL.startsWith('https://')) {
+            origins.push(process.env.NEXT_PUBLIC_APP_URL.replace('https://', 'http://'));
+        }
     }
 
     // Add localhost for development
@@ -21,7 +31,8 @@ const getAllowedOrigins = (): string[] => {
         origins.push('http://127.0.0.1:3000');
     }
 
-    return origins;
+    // Remove duplicates
+    return [...new Set(origins)];
 };
 
 /**

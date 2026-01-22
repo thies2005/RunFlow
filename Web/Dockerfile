@@ -56,6 +56,9 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Create backups directory and set permissions
 RUN mkdir -p /app/backups && chown nextjs:nodejs /app/backups
 
+# Create .next/cache directory for Next.js image optimizer
+RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app/.next/cache
+
 USER nextjs
 
 EXPOSE 3000

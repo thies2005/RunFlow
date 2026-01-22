@@ -111,7 +111,7 @@ export const PlanWeek = memo(function PlanWeek({
 
 
             {/* Days Grid */}
-            <div className="p-2 space-y-1">
+            <div className="p-2 pt-3 space-y-1">
                 {Array.from({ length: 7 }).map((_, i) => {
                     const dayDate = addDays(weekStart, i);
                     const isTodayItem = isToday(dayDate);

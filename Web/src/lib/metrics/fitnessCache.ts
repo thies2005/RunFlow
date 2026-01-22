@@ -46,21 +46,46 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
         startDate.setUTCHours(0, 0, 0, 0);
 
         // 2. Get Baseline State (Day Before)
-        const dayBefore = new Date(startDate);
-        dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
-
-        const baseline = await prisma.dailyFitness.findUnique({
+        // 2. Get Baseline State (Latest before Start Date)
+        // Find the most recent fitness entry before the start date to handle gaps
+        const baseline = await prisma.dailyFitness.findFirst({
             where: {
-                userId_date: {
-                    userId,
-                    date: dayBefore
-                }
-            }
+                userId,
+                date: { lt: startDate }
+            },
+            orderBy: { date: 'desc' }
         });
 
         let currentCtl = baseline?.ctl || 0;
         let currentAtl = baseline?.atl || 0;
         let currentCtlRunning = baseline?.ctlRunning || 0;
+
+        // Apply decay for any gap between baseline and the day before start date
+        if (baseline) {
+            // We want the state at the END of dayBefore, so we can start processing startDate
+            const dayBefore = new Date(startDate);
+            dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
+            dayBefore.setUTCHours(0, 0, 0, 0);
+
+            const baselineDate = new Date(baseline.date);
+            baselineDate.setUTCHours(0, 0, 0, 0);
+
+            // Calculate gap in days: e.g., Baseline Jan 20, Start Jan 22 -> Gap = Jan 21 (1 day missing)
+            // (DayBefore - Baseline) in days
+            const msPerDay = 24 * 60 * 60 * 1000;
+            const gapDays = Math.round((dayBefore.getTime() - baselineDate.getTime()) / msPerDay);
+
+            if (gapDays > 0) {
+                const ctlDecay = Math.exp(-1 / CTL_TIME_CONSTANT);
+                const atlDecay = Math.exp(-1 / ATL_TIME_CONSTANT);
+
+                // With 0 load during gap days, simple exponential decay applies:
+                // Value_t = Value_0 * (decay ^ t)
+                currentCtl = currentCtl * Math.pow(ctlDecay, gapDays);
+                currentAtl = currentAtl * Math.pow(atlDecay, gapDays);
+                currentCtlRunning = currentCtlRunning * Math.pow(ctlDecay, gapDays);
+            }
+        }
 
         // 3. Fetch All Activities from Start Date onwards
         const activities = await prisma.activity.findMany({

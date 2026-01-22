@@ -178,12 +178,13 @@ export function RaceCountdown({
                             <Timer className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400 uppercase tracking-wide">
-                                Predicted
+                            <p className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                                Projected Finish
+                                <span className="cursor-help" title="Estimated finish time on race day based on your training plan and expected fitness improvement">ⓘ</span>
                                 {correctionFactor !== 1.0 && <span className="ml-1 text-[10px] text-accent-cyan" title="Using calibrated VO2max">●</span>}
                             </p>
                             <p className="text-xl font-bold text-white">{formatTime(dynamicPredictedTime)}</p>
-                            <p className="text-[10px] text-gray-500">VO2max {currentVdot.toFixed(1)}</p>
+                            <p className="text-[10px] text-gray-500">Target VO2max {projection.projectedVdot.toFixed(1)}</p>
                         </div>
                     </div>
                 )}

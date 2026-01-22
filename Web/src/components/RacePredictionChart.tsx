@@ -81,7 +81,12 @@ function RacePredictionChart({
     return (
         <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Race Predictions</h3>
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    Race Predictions
+                    <span className="text-xs font-normal text-gray-400 bg-white/10 px-2 py-1 rounded-full" title="Estimated performance if you raced today based on current fitness and shape">
+                        Current Shape
+                    </span>
+                </h3>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
                     <span>VO2max:</span>
                     <input
@@ -187,7 +192,7 @@ function RacePredictionChart({
                             }}
                         />
                         <Bar dataKey="optimalMin" fill="#4ade80" opacity={0.3} name="Optimal" radius={[0, 4, 4, 0]} />
-                        <Bar dataKey="predictedMin" name="Predicted" radius={[0, 4, 4, 0]}>
+                        <Bar dataKey="predictedMin" name="Current Prediction" radius={[0, 4, 4, 0]}>
                             {chartData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}

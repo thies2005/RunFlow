@@ -133,7 +133,12 @@ function RacePredictionTimeChart({
     return (
         <div className="glass-card p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                <h3 className="text-lg font-semibold text-foreground">Race Prediction Trends</h3>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    Race Prediction Trends
+                    <span className="text-xs font-normal text-foreground-muted bg-white/10 px-2 py-1 rounded-full cursor-help" title="Historical estimated performance based on daily fitness and shape">
+                        Current Shape
+                    </span>
+                </h3>
 
                 {/* Race Toggle Buttons */}
                 <div className="flex flex-wrap gap-2">

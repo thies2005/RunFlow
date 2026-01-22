@@ -26,10 +26,24 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        console.log('[Admin] Starting fitness recalculation for ALL users...');
+        // Check for specific userId in body (optional)
+        let targetUserId: string | null = null;
+        try {
+            const body = await request.json();
+            if (body && body.userId) {
+                targetUserId = body.userId;
+            }
+        } catch (e) {
+            // Ignore JSON parse error, assume no body -> all users
+        }
 
-        // 2. Fetch all users
+        console.log(targetUserId
+            ? `[Admin] Starting fitness recalculation for user ${targetUserId}...`
+            : '[Admin] Starting fitness recalculation for ALL users...');
+
+        // 2. Fetch users (all or specific)
         const users = await prisma.user.findMany({
+            where: targetUserId ? { id: targetUserId } : undefined,
             select: { id: true, email: true }
         });
 

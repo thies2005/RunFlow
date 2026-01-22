@@ -88,6 +88,41 @@ function DashboardContent() {
         }
     };
 
+    const handleRecalculateFitness = async (userId?: string, userEmail?: string) => {
+        const confirmMsg = userId
+            ? `Recalculate fitness history for ${userEmail}? This may take a few seconds.`
+            : 'Recalculate fitness history for ALL users? This checks all activities and rebuilds cache. It may take a while.';
+
+        if (!confirm(confirmMsg)) return;
+
+        setProcessing(true);
+        setActionMessage(null);
+        try {
+            const res = await fetch('/api/admin/recalculate-fitness', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: userId ? JSON.stringify({ userId }) : undefined
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Recalculation failed');
+
+            setActionMessage({
+                type: 'success',
+                text: userId
+                    ? `Fitness recalculated for ${userEmail}`
+                    : `Recalculation complete. Processed ${data.totalUsers} users.`
+            });
+
+            // Refresh list to update any status indicators if we add them later
+            fetchAllData();
+        } catch (error: any) {
+            setActionMessage({ type: 'error', text: error.message });
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const handleDeleteUser = async (userId: string) => {
         if (!confirm('Are you sure you want to delete this user? This action CANNOT be undone.')) return;
 
@@ -253,6 +288,16 @@ function DashboardContent() {
                     {/* Users Tab */}
                     {activeTab === 'users' && (
                         <div>
+                            <div className="flex justify-end mb-4">
+                                <button
+                                    onClick={() => handleRecalculateFitness()}
+                                    disabled={processing}
+                                    className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium disabled:opacity-50"
+                                >
+                                    <Activity className="w-4 h-4" />
+                                    Recalculate All Fitness
+                                </button>
+                            </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead>
@@ -296,6 +341,14 @@ function DashboardContent() {
                                                 </td>
                                                 <td className="py-4 text-right">
                                                     <div className="flex justify-end space-x-2">
+                                                        <button
+                                                            onClick={() => handleRecalculateFitness(user.id, user.name || user.email)}
+                                                            disabled={processing}
+                                                            className="text-gray-400 hover:text-blue-500 transition p-2 hover:bg-blue-50 rounded-lg"
+                                                            title="Recalculate Fitness"
+                                                        >
+                                                            <Activity className="w-4 h-4" />
+                                                        </button>
                                                         <button
                                                             onClick={() => handleResetPassword(user.id, user.email)}
                                                             disabled={processing}

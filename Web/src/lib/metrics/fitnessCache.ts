@@ -14,14 +14,32 @@ const CTL_TIME_CONSTANT = 42;
 const ATL_TIME_CONSTANT = 7;
 
 /**
+ * Normalize a date to UTC midnight.
+ * This is crucial for consistent daily bucketing regardless of timezone.
+ */
+function toUtcMidnight(date: Date): Date {
+    const d = new Date(date);
+    d.setUTCHours(0, 0, 0, 0);
+    return d;
+}
+
+/**
+ * Get date key for activity grouping (YYYY-MM-DD format in UTC)
+ */
+function getDateKey(date: Date): string {
+    return date.toISOString().split('T')[0];
+}
+
+/**
  * Updates the fitness cache for a user based on new or modified activities.
  *
  * Strategy:
  * 1. Identify the earliest date among all modified activities.
- * 2. Fetch the "DailyFitness" state for the day BEFORE that earliest date (baseline).
- * 3. Fetch all activities from that earliest date to TODAY.
- * 4. Recalculate daily loads (TRIMP, TSS) and resulting metrics (CTL, ATL) day-by-day.
- * 5. Bulk upsert the new values into the DailyFitness table.
+ * 2. Fetch the latest DailyFitness state BEFORE that earliest date (baseline).
+ * 3. Apply decay for any gap days between baseline and start date.
+ * 4. Fetch all activities from that earliest date to TODAY.
+ * 5. Recalculate daily loads (TRIMP, TSS) and resulting metrics (CTL, ATL) day-by-day.
+ * 6. Bulk upsert the new values into the DailyFitness table.
  *
  * @param userId - The user ID
  * @param modifiedActivities - Array of activities that were added/updated
@@ -30,22 +48,13 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
     if (modifiedActivities.length === 0) return;
 
     try {
-        // 1. Find earliest date
-        // Sort by date to find the start
+        // 1. Find earliest date among modified activities (normalized to UTC midnight)
         const dates = modifiedActivities
-            .map(a => a.startDate ? new Date(a.startDate) : new Date())
-            .map(d => new Date(d.getFullYear(), d.getMonth(), d.getDate())); // Normalize to midnight local/UTC?
+            .map(a => a.startDate ? toUtcMidnight(new Date(a.startDate)) : toUtcMidnight(new Date()))
+            .sort((a, b) => a.getTime() - b.getTime());
 
-        // Prisma stores DateTimes as UTC. We should stick to UTC midnight for daily buckets.
-        const sortedDates = dates.sort((a, b) => a.getTime() - b.getTime());
-        const earliestDate = sortedDates[0];
+        const startDate = dates[0];
 
-        // Normalize to start of day (UTC) to match cache keys if we use date as key
-        // Ideally we store one entry per day.
-        const startDate = new Date(earliestDate);
-        startDate.setUTCHours(0, 0, 0, 0);
-
-        // 2. Get Baseline State (Day Before)
         // 2. Get Baseline State (Latest before Start Date)
         // Find the most recent fitness entry before the start date to handle gaps
         const baseline = await prisma.dailyFitness.findFirst({
@@ -60,26 +69,20 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
         let currentAtl = baseline?.atl || 0;
         let currentCtlRunning = baseline?.ctlRunning || 0;
 
-        // Apply decay for any gap between baseline and the day before start date
+        // 3. Apply decay for any gap between baseline and start date
         if (baseline) {
-            // We want the state at the END of dayBefore, so we can start processing startDate
-            const dayBefore = new Date(startDate);
-            dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
-            dayBefore.setUTCHours(0, 0, 0, 0);
+            const baselineDate = toUtcMidnight(new Date(baseline.date));
 
-            const baselineDate = new Date(baseline.date);
-            baselineDate.setUTCHours(0, 0, 0, 0);
-
-            // Calculate gap in days: e.g., Baseline Jan 20, Start Jan 22 -> Gap = Jan 21 (1 day missing)
-            // (DayBefore - Baseline) in days
+            // Gap = number of days from baseline to the day before startDate
+            // e.g., Baseline Jan 15, Start Jan 20 -> Days 16, 17, 18, 19 are gap = 4 days
             const msPerDay = 24 * 60 * 60 * 1000;
-            const gapDays = Math.round((dayBefore.getTime() - baselineDate.getTime()) / msPerDay);
+            const gapDays = Math.round((startDate.getTime() - baselineDate.getTime()) / msPerDay) - 1;
 
             if (gapDays > 0) {
                 const ctlDecay = Math.exp(-1 / CTL_TIME_CONSTANT);
                 const atlDecay = Math.exp(-1 / ATL_TIME_CONSTANT);
 
-                // With 0 load during gap days, simple exponential decay applies:
+                // With 0 load during gap days, exponential decay applies:
                 // Value_t = Value_0 * (decay ^ t)
                 currentCtl = currentCtl * Math.pow(ctlDecay, gapDays);
                 currentAtl = currentAtl * Math.pow(atlDecay, gapDays);
@@ -87,7 +90,7 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             }
         }
 
-        // 3. Fetch All Activities from Start Date onwards
+        // 4. Fetch All Activities from Start Date onwards
         const activities = await prisma.activity.findMany({
             where: {
                 userId,
@@ -96,28 +99,34 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             orderBy: { startDate: 'asc' }
         });
 
-        // 4. Iterate Day by Day
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
+        // 5. Iterate Day by Day
+        const today = toUtcMidnight(new Date());
 
         const ctlDecay = Math.exp(-1 / CTL_TIME_CONSTANT);
         const atlDecay = Math.exp(-1 / ATL_TIME_CONSTANT);
 
-        const updates = [];
+        const updates: Array<{
+            userId: string;
+            date: Date;
+            ctl: number;
+            atl: number;
+            tsb: number;
+            ctlRunning: number;
+            trimp: number;
+            runningTss: number;
+        }> = [];
 
-        // Group activities by day
+        // Group activities by day using consistent UTC date key
         const activityMap = new Map<string, typeof activities>();
         activities.forEach(a => {
-            const d = new Date(a.startDate);
-            d.setUTCHours(0, 0, 0, 0);
-            const k = d.toISOString();
+            const k = getDateKey(toUtcMidnight(new Date(a.startDate)));
             if (!activityMap.has(k)) activityMap.set(k, []);
             activityMap.get(k)!.push(a);
         });
 
-        // Iterate
+        // Iterate day by day from startDate to today
         for (let d = new Date(startDate); d <= today; d.setUTCDate(d.getUTCDate() + 1)) {
-            const dateKey = d.toISOString();
+            const dateKey = getDateKey(d);
             const dailyActivities = activityMap.get(dateKey) || [];
 
             // Calculate Daily Load
@@ -125,31 +134,33 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             let dailyRunningTss = 0;
 
             for (const a of dailyActivities) {
-                // Re-implement calculation logic or import helper
-                // We use helper from fitness.ts, but need to adapt types
-                // Activity type is Prisma enum (string mostly)
+                // TRIMP: Prefer stored value, fallback to zone calculation, then duration estimate
+                let trimp = a.trimp ?? 0;
 
-                // TRIMP
-                let trimp = calculateTrimpFromZones(a.hrZone1Time, a.hrZone2Time, a.hrZone3Time, a.hrZone4Time, a.hrZone5Time);
+                if (trimp === 0 || trimp === null) {
+                    // Try zone-based calculation
+                    trimp = calculateTrimpFromZones(
+                        a.hrZone1Time, a.hrZone2Time, a.hrZone3Time,
+                        a.hrZone4Time, a.hrZone5Time
+                    );
+                }
+
                 if (trimp === 0 && a.movingTime > 0) {
-                    // Fallback (matches history route logic)
+                    // Fallback: duration-based estimate
                     trimp = (a.movingTime / 60) * 2.5;
                 }
 
                 // Running TSS
                 const contribution = getActivityContribution(a.type);
-                const runningTss = contribution.contributesToRunningTss && a.type === 'RUN' // simplified check
-                    ? calculateRunningTss(a.movingTime, a.distance, 300) // Assumes threshold 5:00/km default if not provided?
-                    // wait, calculateRunningTss needs pace.
-                    // In history API we used consistent 300 (5:00/km) which is weird.
-                    // Ideally this should use users threshold.
+                const runningTss = contribution.contributesToRunningTss && a.type === 'RUN' && a.distance > 0
+                    ? calculateRunningTss(a.movingTime, a.distance, 300)
                     : 0;
 
                 dailyTrimp += trimp;
                 dailyRunningTss += runningTss;
             }
 
-            // Apply Decay
+            // Apply EMA formula: newValue = oldValue * decay + todayLoad * (1 - decay)
             currentCtl = currentCtl * ctlDecay + dailyTrimp * (1 - ctlDecay);
             currentAtl = currentAtl * atlDecay + dailyTrimp * (1 - atlDecay);
             currentCtlRunning = currentCtlRunning * ctlDecay + dailyRunningTss * (1 - ctlDecay);
@@ -167,9 +178,7 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             });
         }
 
-        // 5. Batch Update
-        // Prisma does not support bulk upsert easily. We use transaction with individual upserts.
-        // This is much faster than serial awaits.
+        // 6. Batch Update
         await prisma.$transaction(
             updates.map(u =>
                 prisma.dailyFitness.upsert({
@@ -182,11 +191,11 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                 })
             )
         );
+
+        console.log(`[FitnessCache] Updated ${updates.length} days for user ${userId}. Latest CTL: ${currentCtl.toFixed(1)}, ATL: ${currentAtl.toFixed(1)}`);
     } catch (error) {
         // Log error but don't throw - fitness cache updates are non-critical
-        // and shouldn't break the main sync flow
         console.error('[FitnessCache] Error updating fitness cache:', error);
-        // Optionally: log to monitoring service
     }
 }
 

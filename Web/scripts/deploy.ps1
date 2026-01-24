@@ -52,7 +52,7 @@ else {
         docker buildx use runflow-builder > $null
     }
 
-    docker buildx build --platform linux/amd64, linux/arm64 -t $FullImageName -t $LatestImageName --push .
+    docker buildx build --platform linux/amd64,linux/arm64 -t $FullImageName -t $LatestImageName --push .
     if ($LASTEXITCODE -ne 0) { Write-Error "Docker build/push failed!"; exit 1 }
 }
 

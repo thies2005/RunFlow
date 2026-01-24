@@ -147,9 +147,10 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     if (pathname.startsWith("/api/")) return false;
                     return true;
                 },
-                handler: "StaleWhileRevalidate", // aggressively cache pages
+                handler: "NetworkFirst", // Always try network first, fall back to cache when offline
                 options: {
                     cacheName: "pages",
+                    networkTimeoutSeconds: 5, // Fall back to cache if network is slow
                     expiration: {
                         maxEntries: 32,
                         maxAgeSeconds: 24 * 60 * 60, // 24 hours

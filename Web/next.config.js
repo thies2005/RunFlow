@@ -2,11 +2,18 @@ const withPWA = require("@ducanh2912/next-pwa").default({
     dest: "public",
     cacheOnFrontEndNav: false,
     aggressiveFrontEndNavCaching: false,
-    reloadOnOnline: false,
+    reloadOnOnline: true,
     swcMinify: true,
     disable: process.env.NODE_ENV === "development",
     extendDefaultRuntimeCaching: true,
+    // Exclude any static index.html from being precached
+    publicExcludes: ['!index.html'],
+    fallbacks: {
+        document: '/~offline',
+    },
     workboxOptions: {
+        skipWaiting: true,
+        clientsClaim: true,
         disableDevLogs: true,
         runtimeCaching: [
             {

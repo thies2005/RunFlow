@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check } from 'lucide-react';
+import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { requestHealthPermissions, syncHealthData, isMobile } from '@/lib/mobile/healthConnect';
 
@@ -421,9 +422,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             <Key className="w-4 h-4" />
                             API Access
                         </h3>
-                        <p className="text-[10px] text-gray-500 mb-3">
-                            Enable read-only API access for external AI assistants
-                        </p>
+                        <div className="flex justify-between items-start mb-3">
+                            <p className="text-[10px] text-gray-500">
+                                Enable read-only API access for external AI assistants
+                            </p>
+                            <Link href="/api-docs" target="_blank" className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
+                                API Docs <ExternalLink className="w-3 h-3" />
+                            </Link>
+                        </div>
 
                         {generatedApiKey ? (
                             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-3 animate-fade-in">

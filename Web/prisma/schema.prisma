@@ -70,6 +70,7 @@ model User {
   sessions   Session[]
   activities Activity[]
   goals      Goal[]
+  apiKey     ApiKey?
 
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
@@ -377,4 +378,23 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, read])
+}
+
+// ============================================
+// API Keys for External Access
+// ============================================
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String    @unique // One key per user
+  keyHash    String    // SHA-256 hash of the API key
+  keyPrefix  String    // First 8 chars for display (e.g., "rf_abc12...")
+  name       String    @default("My API Key")
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  expiresAt  DateTime? // Optional expiration
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([keyHash])
 }

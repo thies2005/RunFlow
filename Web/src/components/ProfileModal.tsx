@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Save, AlertCircle, User, Trash2, RefreshCw } from 'lucide-react';
+import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { requestHealthPermissions, syncHealthData, isMobile } from '@/lib/mobile/healthConnect';
 
@@ -31,6 +31,11 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [message, setMessage] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // API Key state
+    const [generatedApiKey, setGeneratedApiKey] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
 
     // Fetch existing settings
     const { data: settingsData } = useQuery({
@@ -199,6 +204,61 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         deleteMutation.mutate();
     };
 
+    // API Key Query
+    const { data: apiKeyData, refetch: refetchApiKey } = useQuery({
+        queryKey: ['api-key'],
+        queryFn: async () => {
+            const res = await fetch('/api/settings/api-key');
+            if (!res.ok) throw new Error('Failed to fetch API key info');
+            return res.json();
+        },
+        refetchOnWindowFocus: false,
+    });
+
+    // Generate API Key Mutation
+    const generateApiKeyMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch('/api/settings/api-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'My API Key' }),
+            });
+            if (!res.ok) throw new Error('Failed to generate API key');
+            return res.json();
+        },
+        onSuccess: (data) => {
+            setGeneratedApiKey(data.apiKey);
+            refetchApiKey();
+        },
+        onError: () => {
+            setMessage('Failed to generate API key.');
+        }
+    });
+
+    // Revoke API Key Mutation
+    const revokeApiKeyMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch('/api/settings/api-key', { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to revoke API key');
+            return res.json();
+        },
+        onSuccess: () => {
+            setGeneratedApiKey(null);
+            setShowRevokeConfirm(false);
+            refetchApiKey();
+            setMessage('API key revoked.');
+        },
+        onError: () => {
+            setMessage('Failed to revoke API key.');
+        }
+    });
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     if (!isOpen) return null;
 
     const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
@@ -352,6 +412,85 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 <RefreshCw className={`w-4 h-4 ${healthConnectSyncMutation.isPending ? 'animate-spin' : ''}`} />
                                 {healthConnectSyncMutation.isPending ? 'Syncing...' : 'Sync from Health Connect'}
                             </button>
+                        </div>
+                    </div>
+
+                    {/* API Access Section */}
+                    <div className="mb-4">
+                        <h3 className="text-blue-400 font-medium mb-3 text-xs uppercase tracking-wider flex items-center gap-2">
+                            <Key className="w-4 h-4" />
+                            API Access
+                        </h3>
+                        <p className="text-[10px] text-gray-500 mb-3">
+                            Enable read-only API access for external AI assistants
+                        </p>
+
+                        {generatedApiKey ? (
+                            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-3 animate-fade-in">
+                                <p className="text-green-300 text-xs mb-2 font-medium">🔑 Your API Key (copy now, it will not be shown again):</p>
+                                <div className="flex items-center gap-2">
+                                    <code className="flex-1 bg-black/30 px-3 py-2 rounded text-xs text-green-400 font-mono break-all">
+                                        {generatedApiKey}
+                                    </code>
+                                    <button
+                                        onClick={() => copyToClipboard(generatedApiKey)}
+                                        className="p-2 bg-green-500/20 rounded hover:bg-green-500/30 transition-colors"
+                                    >
+                                        {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-green-400" />}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : apiKeyData?.hasKey ? (
+                            <div className="bg-white/5 border border-white/10 rounded-lg p-3 mb-3">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-gray-300 text-sm">Active API Key</p>
+                                        <code className="text-xs text-gray-500 font-mono">{apiKeyData.keyPrefix}</code>
+                                    </div>
+                                    {apiKeyData.lastUsedAt && (
+                                        <p className="text-[10px] text-gray-500">
+                                            Last used: {new Date(apiKeyData.lastUsedAt).toLocaleDateString()}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        ) : null}
+
+                        <div className="space-y-2">
+                            {!apiKeyData?.hasKey ? (
+                                <button
+                                    onClick={() => generateApiKeyMutation.mutate()}
+                                    disabled={generateApiKeyMutation.isPending}
+                                    className="w-full py-2.5 border border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                                >
+                                    <Key className={`w-4 h-4 ${generateApiKeyMutation.isPending ? 'animate-pulse' : ''}`} />
+                                    {generateApiKeyMutation.isPending ? 'Generating...' : 'Generate API Key'}
+                                </button>
+                            ) : !showRevokeConfirm ? (
+                                <button
+                                    onClick={() => setShowRevokeConfirm(true)}
+                                    className="w-full py-2.5 border border-orange-500/30 text-orange-400 rounded-lg hover:bg-orange-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Revoke API Key
+                                </button>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowRevokeConfirm(false)}
+                                        className="flex-1 py-2 bg-white/5 text-white text-xs rounded-md hover:bg-white/10 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => revokeApiKeyMutation.mutate()}
+                                        disabled={revokeApiKeyMutation.isPending}
+                                        className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded-md flex items-center justify-center gap-1"
+                                    >
+                                        {revokeApiKeyMutation.isPending ? 'Revoking...' : 'Confirm Revoke'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
 

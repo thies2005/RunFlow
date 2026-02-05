@@ -56,6 +56,12 @@ export async function GET(request: NextRequest) {
             where: { id: userId },
             select: {
                 hrMax: true,
+                hrRest: true,
+                weight: true,
+                hrZone1Max: true,
+                hrZone2Max: true,
+                hrZone3Max: true,
+                hrZone4Max: true,
                 vdotCorrectionFactor: true,
                 includeCrossTraining: true,
             }
@@ -130,6 +136,19 @@ export async function GET(request: NextRequest) {
             {
                 user: {
                     name: user.name,
+                    settings: {
+                        hrMax: maxHR,
+                        hrRest: userSettings?.hrRest || null,
+                        weight: userSettings?.weight || null,
+                        vdotCorrectionFactor,
+                        hrZones: {
+                            zone1: userSettings?.hrZone1Max || Math.round(maxHR * 0.65),
+                            zone2: userSettings?.hrZone2Max || Math.round(maxHR * 0.77),
+                            zone3: userSettings?.hrZone3Max || Math.round(maxHR * 0.84),
+                            zone4: userSettings?.hrZone4Max || Math.round(maxHR * 0.90),
+                            zone5: maxHR,
+                        }
+                    }
                 },
                 stats: {
                     currentWeekMileage: {

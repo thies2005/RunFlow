@@ -132,7 +132,7 @@ export default function ApiDocsPage() {
                     <div className="mt-4">
                         <h4 className="text-sm font-medium text-white mb-2">Response Includes:</h4>
                         <ul className="grid grid-cols-2 gap-2 text-sm text-gray-400">
-                            <li>• Current Week Mileage</li>
+                            <li>• User Settings (HR Zones)</li>
                             <li>• Effective VO2max</li>
                             <li>• Marathon Shape Score</li>
                             <li>• Fitness (CTL/ATL/TSB)</li>
@@ -158,6 +158,37 @@ export default function ApiDocsPage() {
 
                     <CodeBlock code={`curl "https://runflow.app/api/external/v1/goals" \\
   -H "Authorization: Bearer rf_abc123..."`} />
+                </EndpointSection>
+
+                {/* Plan Endpoint */}
+                <EndpointSection
+                    method="GET"
+                    path="/api/external/v1/plan"
+                    title="Training Plan & Workouts"
+                    icon={<Activity className="w-5 h-5 text-accent-orange" />}
+                >
+                    <p className="text-gray-400 mb-6">
+                        Retrieve the active training plan, race details, and scheduled workouts.
+                    </p>
+
+                    <h4 className="text-sm font-medium text-white mb-3">Query Parameters</h4>
+                    <ParameterTable params={[
+                        { name: 'from', type: 'ISO Date', required: false, desc: 'Start date for workouts (default: today)' },
+                        { name: 'to', type: 'ISO Date', required: false, desc: 'End date (default: +14 days)' },
+                    ]} />
+
+                    <CodeBlock code={`curl "https://runflow.app/api/external/v1/plan?to=2024-06-01" \\
+  -H "Authorization: Bearer rf_abc123..."`} />
+
+                    <div className="mt-4">
+                        <h4 className="text-sm font-medium text-white mb-2">Response Includes:</h4>
+                        <ul className="grid grid-cols-2 gap-2 text-sm text-gray-400">
+                            <li>• Active Goal & Race Info</li>
+                            <li>• Workouts list (Type, Desc)</li>
+                            <li>• Target Paces & Zones</li>
+                            <li>• Completion Status</li>
+                        </ul>
+                    </div>
                 </EndpointSection>
 
                 {/* Fitness Endpoint */}

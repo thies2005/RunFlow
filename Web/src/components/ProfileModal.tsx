@@ -29,6 +29,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     // Marathon Shape settings
     const [includeCrossTraining, setIncludeCrossTraining] = useState(true);
 
+    // Display preferences
+    const [useImperial, setUseImperial] = useState(false);
+
     const [message, setMessage] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -73,6 +76,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             if (typeof settingsData.includeCrossTraining === 'boolean') {
                 setIncludeCrossTraining(settingsData.includeCrossTraining);
             }
+            if (typeof settingsData.useImperial === 'boolean') {
+                setUseImperial(settingsData.useImperial);
+            }
         }
     }, [settingsData]);
 
@@ -103,7 +109,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     hrZone4Max,
                     hrZone5Max,
                     hrZone6Max,
-                    includeCrossTraining
+                    includeCrossTraining,
+                    useImperial
                 }),
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -370,6 +377,28 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             >
                                 <span
                                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeCrossTraining ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Display Preferences */}
+                    <div className="pt-2 border-t border-white/10">
+                        <label className="block text-xs text-accent-orange mb-3 uppercase font-semibold">Display Preferences</label>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                            <div>
+                                <p className="text-sm text-white">Use Miles</p>
+                                <p className="text-[10px] text-gray-500">Show distance and pace in miles instead of kilometers</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setUseImperial(!useImperial)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${useImperial ? 'bg-accent-orange' : 'bg-white/20'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${useImperial ? 'translate-x-6' : 'translate-x-1'
                                         }`}
                                 />
                             </button>

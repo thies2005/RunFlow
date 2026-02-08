@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
             hrZone5Max,
             hrZone6Max,
             hrZone7Max,
-            includeCrossTraining
+            includeCrossTraining,
+            useImperial
         } = body;
 
         // Helper to parse int safely
@@ -56,6 +57,8 @@ export async function POST(request: NextRequest) {
                 hrZone6Max: parseIntSafe(hrZone6Max),
                 // Only update includeCrossTraining if explicitly provided (boolean)
                 ...(typeof includeCrossTraining === 'boolean' && { includeCrossTraining }),
+                // Only update useImperial if explicitly provided (boolean)
+                ...(typeof useImperial === 'boolean' && { useImperial }),
             },
         });
 

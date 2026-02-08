@@ -168,17 +168,17 @@ export async function GET(req: NextRequest) {
         let maxCtl = 0;
         let maxAtl = 0;
 
-        // Parallel fetch for latest AND max
-        const [currentFitness, maxFitnessValues] = await Promise.all([
-            ensureFitnessCacheUpToDate(userId),
-            prisma.dailyFitness.aggregate({
-                where: { userId },
-                _max: {
-                    ctl: true,
-                    atl: true
-                }
-            })
-        ]);
+        // First ensure cache is up to date, THEN fetch max values
+        const currentFitness = await ensureFitnessCacheUpToDate(userId);
+
+        // Now fetch max (after cache is updated)
+        const maxFitnessValues = await prisma.dailyFitness.aggregate({
+            where: { userId },
+            _max: {
+                ctl: true,
+                atl: true
+            }
+        });
 
         if (currentFitness) {
             ctl = Math.round(currentFitness.ctl);

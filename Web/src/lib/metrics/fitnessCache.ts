@@ -250,13 +250,23 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
         let currentCtlRunning = latest.ctlRunning;
         let currentTsb = latest.tsb;
 
-        const inputs: any[] = [];
+        const inputs: Array<{
+            userId: string;
+            date: Date;
+            ctl: number;
+            atl: number;
+            tsb: number;
+            ctlRunning: number;
+            trimp: number;
+            runningTss: number;
+        }> = [];
 
-        // Iterate from day after latest until today
-        const nextDay = new Date(latestDate);
-        nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+        // Iterate from day after latest until today (using timestamps for safety)
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const startTime = latestDate.getTime() + msPerDay;
+        const endTime = today.getTime();
 
-        for (let d = nextDay; d <= today; d.setUTCDate(d.getUTCDate() + 1)) {
+        for (let timestamp = startTime; timestamp <= endTime; timestamp += msPerDay) {
             // Apply decay (0 load for these gap days)
             currentCtl = currentCtl * ctlDecay;
             currentAtl = currentAtl * atlDecay;
@@ -265,7 +275,7 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
 
             inputs.push({
                 userId,
-                date: new Date(d), // Clone
+                date: new Date(timestamp),
                 ctl: currentCtl,
                 atl: currentAtl,
                 tsb: currentTsb,

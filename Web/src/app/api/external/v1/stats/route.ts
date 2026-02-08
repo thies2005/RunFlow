@@ -110,9 +110,11 @@ export async function GET(request: NextRequest) {
             effectiveVO2max
         );
 
-        // Fetch fitness metrics from cache
-        const [currentFitness, maxFitnessValues, activeGoal] = await Promise.all([
-            ensureFitnessCacheUpToDate(userId),
+        // First ensure cache is up to date, THEN fetch max values
+        const currentFitness = await ensureFitnessCacheUpToDate(userId);
+
+        // Now fetch max and goal (after cache is updated)
+        const [maxFitnessValues, activeGoal] = await Promise.all([
             prisma.dailyFitness.aggregate({
                 where: { userId },
                 _max: { ctl: true, atl: true }

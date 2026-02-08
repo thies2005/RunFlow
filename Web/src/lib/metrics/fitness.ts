@@ -52,7 +52,9 @@ export function calculateFitnessHistory(
     initialCtlRunning: number = 0,
     startDate?: Date
 ): FitnessHistory[] {
-    if (dailyLoads.length === 0) return [];
+    // Only return empty if NO activities AND no explicit start date
+    // When startDate is provided, we need to calculate decay even with no activities
+    if (dailyLoads.length === 0 && !startDate) return [];
 
     const ctlDecay = calculateDecayFactor(CTL_TIME_CONSTANT);
     const atlDecay = calculateDecayFactor(ATL_TIME_CONSTANT);

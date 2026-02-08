@@ -236,13 +236,13 @@ export default function AnalyticsPage() {
         };
 
         // Build combined data array - INCLUDE server fitness dates (for rest days)
-        const fitnessDateSet = new Set(serverFitnessTrend.map((f: { date: string }) => normalizeDate(f.date)));
-        const allDates = new Set([
+        const fitnessDateSet = new Set<string>(serverFitnessTrend.map((f: { date: string }) => normalizeDate(f.date)));
+        const allDates = new Set<string>([
             ...Array.from(dailyVolumeMap.keys()),
             ...Array.from(dailyTimeMap.keys()),
             ...Array.from(fitnessDateSet)  // Include server fitness dates (including rest days up to today)
         ]);
-        const combinedDataRaw = Array.from(allDates).sort().map(date => {
+        const combinedDataRaw = Array.from(allDates).sort().map((date: string) => {
             // date is YYYY-MM-DD from dailyVolumeMap
             const fitnessEntry = serverFitnessTrend.find((f: { date: string }) => normalizeDate(f.date) === date);
             return {

@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { getExternalApiUser } from '@/lib/api/externalAuth';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
 import { AnalyticsService } from '@/lib/services/analytics';
+import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 
 // Rate limit for external API
 const EXTERNAL_API_RATE_LIMIT = { limit: 100, windowSeconds: 60, prefix: 'external-stats' };
@@ -110,11 +111,8 @@ export async function GET(request: NextRequest) {
         );
 
         // Fetch fitness metrics from cache
-        const [latestFitness, maxFitnessValues, activeGoal] = await Promise.all([
-            prisma.dailyFitness.findFirst({
-                where: { userId },
-                orderBy: { date: 'desc' }
-            }),
+        const [currentFitness, maxFitnessValues, activeGoal] = await Promise.all([
+            ensureFitnessCacheUpToDate(userId),
             prisma.dailyFitness.aggregate({
                 where: { userId },
                 _max: { ctl: true, atl: true }
@@ -125,11 +123,11 @@ export async function GET(request: NextRequest) {
             })
         ]);
 
-        const ctl = latestFitness ? Math.round(latestFitness.ctl) : 0;
-        const atl = latestFitness ? Math.round(latestFitness.atl) : 0;
-        const tsb = latestFitness ? Math.round(latestFitness.tsb) : 0;
-        const workloadRatio = latestFitness && latestFitness.ctl > 0
-            ? parseFloat((latestFitness.atl / latestFitness.ctl).toFixed(2))
+        const ctl = currentFitness ? Math.round(currentFitness.ctl) : 0;
+        const atl = currentFitness ? Math.round(currentFitness.atl) : 0;
+        const tsb = currentFitness ? Math.round(currentFitness.tsb) : 0;
+        const workloadRatio = currentFitness && currentFitness.ctl > 0
+            ? parseFloat((currentFitness.atl / currentFitness.ctl).toFixed(2))
             : 0;
 
         return NextResponse.json(
@@ -172,6 +170,7 @@ export async function GET(request: NextRequest) {
                         workloadRatio,
                         maxCtl: Math.round(maxFitnessValues._max.ctl || 0),
                         maxAtl: Math.round(maxFitnessValues._max.atl || 0),
+                        calculatedAt: new Date().toISOString(),
                     },
                     currentVdot: activeGoal?.currentVdot || effectiveVO2max,
                     hrMax: maxHR,

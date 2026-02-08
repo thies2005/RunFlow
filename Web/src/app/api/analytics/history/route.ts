@@ -6,6 +6,7 @@ import { calculateTrimpFromZones, FALLBACK_TRIMP_PER_MINUTE } from '@/lib/metric
 import { calculateFitnessHistory, getActivityContribution, calculateRunningTss, type DailyLoad } from '@/lib/metrics/fitness';
 import { calculateMarathonShape, calculateWeightedEffectiveVO2max, type ActivityForShape } from '@/lib/metrics/runalyze';
 import { cachedResponse } from '@/lib/apiResponse';
+import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 
 export const dynamic = 'force-dynamic';
 
@@ -180,6 +181,11 @@ export async function GET(request: Request) {
                 });
             }
         }
+
+        // --- 1.5. Ensure Cache is Up-to-Date (Gap Filling) ---
+        // If there were no new activities, the block above did nothing.
+        // We need to fill gap days with decay up to today.
+        await ensureFitnessCacheUpToDate(userId);
 
         // --- 2. Fetch Data for Response ---
 

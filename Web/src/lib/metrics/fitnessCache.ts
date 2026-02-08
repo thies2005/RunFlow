@@ -216,3 +216,83 @@ export async function getCachedFitnessHistory(userId: string, startDate?: Date) 
         return [];
     }
 }
+
+/**
+ * Ensures the fitness cache is calculated up to today (UTC midnight).
+ * If the last cached entry is old, it fills the gap days with decayed values (0 load).
+ * Returns the fitness metrics for TODAY.
+ */
+export async function ensureFitnessCacheUpToDate(userId: string) {
+    try {
+        const today = toUtcMidnight(new Date());
+
+        // 1. Get latest cached entry
+        const latest = await prisma.dailyFitness.findFirst({
+            where: { userId },
+            orderBy: { date: 'desc' }
+        });
+
+        if (!latest) return null;
+
+        const latestDate = toUtcMidnight(new Date(latest.date));
+
+        // If cache is already up to date (or in the future??), return it
+        if (latestDate.getTime() >= today.getTime()) {
+            return latest;
+        }
+
+        // 2. Calculate values for gap days
+        const ctlDecay = Math.exp(-1 / CTL_TIME_CONSTANT);
+        const atlDecay = Math.exp(-1 / ATL_TIME_CONSTANT);
+
+        let currentCtl = latest.ctl;
+        let currentAtl = latest.atl;
+        let currentCtlRunning = latest.ctlRunning;
+        let currentTsb = latest.tsb;
+
+        const inputs: any[] = [];
+
+        // Iterate from day after latest until today
+        const nextDay = new Date(latestDate);
+        nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+
+        for (let d = nextDay; d <= today; d.setUTCDate(d.getUTCDate() + 1)) {
+            // Apply decay (0 load for these gap days)
+            currentCtl = currentCtl * ctlDecay;
+            currentAtl = currentAtl * atlDecay;
+            currentCtlRunning = currentCtlRunning * ctlDecay;
+            currentTsb = currentCtl - currentAtl;
+
+            inputs.push({
+                userId,
+                date: new Date(d), // Clone
+                ctl: currentCtl,
+                atl: currentAtl,
+                tsb: currentTsb,
+                ctlRunning: currentCtlRunning,
+                trimp: 0,
+                runningTss: 0
+            });
+        }
+
+        // 3. Batch Insert
+        if (inputs.length > 0) {
+            await prisma.dailyFitness.createMany({
+                data: inputs,
+                skipDuplicates: true
+            });
+            console.log(`[FitnessCache] Auto-filled ${inputs.length} gap days for user ${userId}`);
+        }
+
+        // Return the values for today (last item in inputs, or calculated)
+        return inputs.length > 0 ? inputs[inputs.length - 1] : latest;
+
+    } catch (error) {
+        console.error('[FitnessCache] Error ensuring fitness cache update:', error);
+        // Fallback to whatever we can find
+        return prisma.dailyFitness.findFirst({
+            where: { userId },
+            orderBy: { date: 'desc' }
+        });
+    }
+}

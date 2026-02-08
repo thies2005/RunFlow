@@ -16,6 +16,7 @@ import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
+import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 
@@ -136,7 +137,15 @@ export async function GET(request: NextRequest) {
             includeCrossTraining ? crossTrainingActivities : [],
             effectiveVO2max
         );
-        const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);
+
+        // Use cached fitness with gap filling (real-time decay)
+        const currentFitness = await ensureFitnessCacheUpToDate(userId);
+        const ctl = currentFitness ? Math.round(currentFitness.ctl) : 0;
+        const atl = currentFitness ? Math.round(currentFitness.atl) : 0;
+        const tsb = currentFitness ? Math.round(currentFitness.tsb) : 0;
+        const workloadRatio = currentFitness && currentFitness.ctl > 0
+            ? parseFloat((currentFitness.atl / currentFitness.ctl).toFixed(2)) : 0;
+
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
         // Serialize BigInt for activities

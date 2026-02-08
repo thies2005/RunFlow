@@ -7,6 +7,7 @@ import { startOfWeek, endOfWeek } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/apiResponse';
+import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,11 +169,8 @@ export async function GET(req: NextRequest) {
         let maxAtl = 0;
 
         // Parallel fetch for latest AND max
-        const [latestFitness, maxFitnessValues] = await Promise.all([
-            prisma.dailyFitness.findFirst({
-                where: { userId },
-                orderBy: { date: 'desc' }
-            }),
+        const [currentFitness, maxFitnessValues] = await Promise.all([
+            ensureFitnessCacheUpToDate(userId),
             prisma.dailyFitness.aggregate({
                 where: { userId },
                 _max: {
@@ -182,12 +180,12 @@ export async function GET(req: NextRequest) {
             })
         ]);
 
-        if (latestFitness) {
-            ctl = Math.round(latestFitness.ctl);
-            atl = Math.round(latestFitness.atl);
-            tsb = Math.round(latestFitness.tsb);
+        if (currentFitness) {
+            ctl = Math.round(currentFitness.ctl);
+            atl = Math.round(currentFitness.atl);
+            tsb = Math.round(currentFitness.tsb);
             // Re-calculate ratio from the source values to ensure precision
-            workloadRatio = latestFitness.ctl > 0 ? parseFloat((latestFitness.atl / latestFitness.ctl).toFixed(2)) : 0;
+            workloadRatio = currentFitness.ctl > 0 ? parseFloat((currentFitness.atl / currentFitness.ctl).toFixed(2)) : 0;
         } else {
             // Fallback for brand new users with no history cache yet
             const { ctl: calcCtl, atl: calcAtl, tsb: calcTsb, workloadRatio: calcRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);

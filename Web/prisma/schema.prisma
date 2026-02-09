@@ -95,7 +95,20 @@ model GlobalAiSettings {
   defaultApiKey       String?  // Encrypted admin API key
   defaultModel        String   @default("gpt-4o-mini")
   
-  // Usage limits (per user)
+  // Usage Tiers (0 = BYOK only, 1-3 = customizable limits)
+  tier1Name           String   @default("Basic")
+  tier1DailyLimit     Int      @default(10)
+  tier1MonthlyLimit   Int      @default(100)
+  
+  tier2Name           String   @default("Standard")
+  tier2DailyLimit     Int      @default(25)
+  tier2MonthlyLimit   Int      @default(300)
+  
+  tier3Name           String   @default("Premium")  
+  tier3DailyLimit     Int      @default(50)
+  tier3MonthlyLimit   Int      @default(500)
+  
+  // Legacy limits (deprecated, use tiers instead)
   dailyMessageLimit   Int      @default(50)
   monthlyMessageLimit Int      @default(500)
   
@@ -110,8 +123,11 @@ model UserAiSettings {
   id                    String   @id @default(cuid())
   userId                String   @unique
   
-  // Feature activation (admin or BYOK enables this)
+  // Feature activation - controlled by usageTier or BYOK
   aiEnabled             Boolean  @default(false)
+  
+  // Usage tier: "none" = BYOK only, "tier1", "tier2", "tier3" = admin-assigned
+  usageTier             String   @default("none")
   
   // BYOK - User's own OpenAI-compatible endpoint
   customBaseUrl         String?  // e.g., "https://api.anthropic.com/v1" or local

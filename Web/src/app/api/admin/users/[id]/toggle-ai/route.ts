@@ -1,6 +1,10 @@
 /**
- * Admin Toggle User AI Access
+ * Admin Set User AI Tier
  * POST /api/admin/users/[id]/toggle-ai
+ * 
+ * Sets the usage tier for a user:
+ * - "none": BYOK only (user must provide own API key)
+ * - "tier1", "tier2", "tier3": Admin-defined usage limits
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -14,6 +18,8 @@ async function isAdmin(): Promise<boolean> {
     return adminToken?.value === process.env.ADMIN_SESSION_TOKEN;
 }
 
+const VALID_TIERS = ['none', 'tier1', 'tier2', 'tier3'];
+
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -25,30 +31,39 @@ export async function POST(
     try {
         const { id: userId } = await params;
         const body = await request.json();
-        const { enabled } = body;
+        const { tier } = body;
 
-        if (typeof enabled !== 'boolean') {
-            return NextResponse.json({ error: 'enabled must be a boolean' }, { status: 400 });
+        // Validate tier
+        if (!VALID_TIERS.includes(tier)) {
+            return NextResponse.json({
+                error: `Invalid tier. Must be one of: ${VALID_TIERS.join(', ')}`
+            }, { status: 400 });
         }
+
+        // Determine if AI should be enabled based on tier
+        const aiEnabled = tier !== 'none';
 
         // Upsert user AI settings
         const settings = await prisma.userAiSettings.upsert({
             where: { userId },
             create: {
                 userId,
-                aiEnabled: enabled,
+                usageTier: tier,
+                aiEnabled,
             },
             update: {
-                aiEnabled: enabled,
+                usageTier: tier,
+                aiEnabled,
             },
         });
 
         return NextResponse.json({
             success: true,
+            usageTier: settings.usageTier,
             aiEnabled: settings.aiEnabled,
         });
     } catch (error) {
-        console.error('Toggle user AI error:', error);
+        console.error('Set user AI tier error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

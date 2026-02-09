@@ -178,10 +178,10 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
             updates.customApiKey = customApiKey;
             updates.customBaseUrl = customBaseUrl || 'https://api.openai.com/v1';
             updates.customModel = customModel || 'gpt-4o-mini';
-        } else if (customBaseUrl !== data?.settings.customBaseUrl) {
+        } else if (data?.settings && customBaseUrl !== data?.settings?.customBaseUrl) {
             updates.customBaseUrl = customBaseUrl || null;
         }
-        if (customModel !== data?.settings.customModel) {
+        if (data?.settings && customModel !== data?.settings?.customModel) {
             updates.customModel = customModel || null;
         }
 
@@ -229,23 +229,23 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                     ) : (
                         <>
                             {/* Status Banner */}
-                            <div className={`p-3 rounded-lg flex items-center gap-3 ${data?.settings.aiEnabled
-                                    ? 'bg-green-500/10 border border-green-500/30'
-                                    : 'bg-yellow-500/10 border border-yellow-500/30'
+                            <div className={`p-3 rounded-lg flex items-center gap-3 ${data?.settings?.aiEnabled
+                                ? 'bg-green-500/10 border border-green-500/30'
+                                : 'bg-yellow-500/10 border border-yellow-500/30'
                                 }`}>
-                                <div className={`w-2 h-2 rounded-full ${data?.settings.aiEnabled ? 'bg-green-400' : 'bg-yellow-400'
+                                <div className={`w-2 h-2 rounded-full ${data?.settings?.aiEnabled ? 'bg-green-400' : 'bg-yellow-400'
                                     }`} />
-                                <span className={data?.settings.aiEnabled ? 'text-green-300' : 'text-yellow-300'}>
-                                    {data?.settings.aiEnabled
-                                        ? data?.settings.hasCustomApiKey
+                                <span className={data?.settings?.aiEnabled ? 'text-green-300' : 'text-yellow-300'}>
+                                    {data?.settings?.aiEnabled
+                                        ? data?.settings?.customApiKey
                                             ? 'AI enabled (using your API key)'
                                             : 'AI enabled (using shared quota)'
-                                        : 'AI features not enabled'}
+                                        : 'AI features not enabled - contact admin or add your own API key'}
                                 </span>
                             </div>
 
-                            {/* Usage Stats (if enabled) */}
-                            {data?.settings.aiEnabled && !data?.settings.hasCustomApiKey && (
+                            {/* Usage Stats (if enabled and not using own key) */}
+                            {data?.settings?.aiEnabled && !data?.settings?.customApiKey && data?.usage && (
                                 <div className="bg-gray-800/50 rounded-lg p-4">
                                     <h3 className="text-sm font-medium text-gray-300 mb-2">Usage</h3>
                                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -287,7 +287,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     <div className="relative">
                                         <input
                                             type={showApiKey ? 'text' : 'password'}
-                                            placeholder={data?.settings.hasCustomApiKey ? '••••••••••••••••' : 'API Key'}
+                                            placeholder={data?.settings?.customApiKey ? '••••••••••••••••' : 'API Key'}
                                             value={customApiKey}
                                             onChange={(e) => setCustomApiKey(e.target.value)}
                                             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 pr-10 text-white text-sm focus:border-purple-500 focus:outline-none"
@@ -310,7 +310,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     />
                                 </div>
 
-                                {data?.settings.hasCustomApiKey && (
+                                {data?.settings?.customApiKey && (
                                     <button
                                         onClick={handleRemoveApiKey}
                                         className="text-xs text-red-400 hover:text-red-300"
@@ -383,8 +383,8 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             key={mode.value}
                                             onClick={() => setFeedbackMode(mode.value)}
                                             className={`p-3 rounded-lg border text-left transition-colors ${feedbackMode === mode.value
-                                                    ? 'border-purple-500 bg-purple-500/10'
-                                                    : 'border-gray-700 hover:border-gray-600'
+                                                ? 'border-purple-500 bg-purple-500/10'
+                                                : 'border-gray-700 hover:border-gray-600'
                                                 }`}
                                         >
                                             <p className={`text-sm font-medium ${feedbackMode === mode.value ? 'text-purple-300' : 'text-white'

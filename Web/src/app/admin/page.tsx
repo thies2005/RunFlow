@@ -10,8 +10,18 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
         defaultBaseUrl: settings?.defaultBaseUrl || 'https://api.openai.com/v1',
         defaultApiKey: '',
         defaultModel: settings?.defaultModel || 'gpt-4o-mini',
-        dailyMessageLimit: settings?.dailyMessageLimit || 50,
-        monthlyMessageLimit: settings?.monthlyMessageLimit || 500,
+        // Tier 1
+        tier1Name: settings?.tier1Name || 'Basic',
+        tier1DailyLimit: settings?.tier1DailyLimit || 10,
+        tier1MonthlyLimit: settings?.tier1MonthlyLimit || 100,
+        // Tier 2
+        tier2Name: settings?.tier2Name || 'Standard',
+        tier2DailyLimit: settings?.tier2DailyLimit || 25,
+        tier2MonthlyLimit: settings?.tier2MonthlyLimit || 300,
+        // Tier 3
+        tier3Name: settings?.tier3Name || 'Premium',
+        tier3DailyLimit: settings?.tier3DailyLimit || 50,
+        tier3MonthlyLimit: settings?.tier3MonthlyLimit || 500,
         systemPrompt: settings?.systemPrompt || '',
     });
     const [showApiKey, setShowApiKey] = useState(false);
@@ -22,8 +32,15 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                 ...prev,
                 defaultBaseUrl: settings.defaultBaseUrl || prev.defaultBaseUrl,
                 defaultModel: settings.defaultModel || prev.defaultModel,
-                dailyMessageLimit: settings.dailyMessageLimit || prev.dailyMessageLimit,
-                monthlyMessageLimit: settings.monthlyMessageLimit || prev.monthlyMessageLimit,
+                tier1Name: settings.tier1Name || prev.tier1Name,
+                tier1DailyLimit: settings.tier1DailyLimit ?? prev.tier1DailyLimit,
+                tier1MonthlyLimit: settings.tier1MonthlyLimit ?? prev.tier1MonthlyLimit,
+                tier2Name: settings.tier2Name || prev.tier2Name,
+                tier2DailyLimit: settings.tier2DailyLimit ?? prev.tier2DailyLimit,
+                tier2MonthlyLimit: settings.tier2MonthlyLimit ?? prev.tier2MonthlyLimit,
+                tier3Name: settings.tier3Name || prev.tier3Name,
+                tier3DailyLimit: settings.tier3DailyLimit ?? prev.tier3DailyLimit,
+                tier3MonthlyLimit: settings.tier3MonthlyLimit ?? prev.tier3MonthlyLimit,
                 systemPrompt: settings.systemPrompt || prev.systemPrompt,
             }));
         }
@@ -127,26 +144,110 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                     <p className="text-xs text-gray-500 mt-1">Leave blank to keep existing key. Used for users without their own key.</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Daily Message Limit</label>
-                        <input
-                            type="number"
-                            value={formData.dailyMessageLimit}
-                            onChange={(e) => setFormData({ ...formData, dailyMessageLimit: parseInt(e.target.value) || 50 })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                            min="1"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Message Limit</label>
-                        <input
-                            type="number"
-                            value={formData.monthlyMessageLimit}
-                            onChange={(e) => setFormData({ ...formData, monthlyMessageLimit: parseInt(e.target.value) || 500 })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                            min="1"
-                        />
+                {/* Usage Tiers */}
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                    <h4 className="font-medium text-gray-700 mb-3">Usage Tiers</h4>
+                    <p className="text-xs text-gray-500 mb-4">Define 3 tiers with different daily/monthly message limits. "No Access" tier = BYOK only.</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Tier 1 */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <input
+                                type="text"
+                                value={formData.tier1Name}
+                                onChange={(e) => setFormData({ ...formData, tier1Name: e.target.value })}
+                                className="w-full px-2 py-1 border-b border-gray-200 font-medium text-gray-800 mb-2 focus:outline-none focus:border-purple-500"
+                                placeholder="Tier 1 Name"
+                            />
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <label className="text-gray-500 text-xs">Daily</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier1DailyLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier1DailyLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        min="0"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-gray-500 text-xs">Monthly</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier1MonthlyLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier1MonthlyLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        min="0"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tier 2 */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <input
+                                type="text"
+                                value={formData.tier2Name}
+                                onChange={(e) => setFormData({ ...formData, tier2Name: e.target.value })}
+                                className="w-full px-2 py-1 border-b border-gray-200 font-medium text-gray-800 mb-2 focus:outline-none focus:border-purple-500"
+                                placeholder="Tier 2 Name"
+                            />
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <label className="text-gray-500 text-xs">Daily</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier2DailyLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier2DailyLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        min="0"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-gray-500 text-xs">Monthly</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier2MonthlyLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier2MonthlyLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        min="0"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tier 3 */}
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <input
+                                type="text"
+                                value={formData.tier3Name}
+                                onChange={(e) => setFormData({ ...formData, tier3Name: e.target.value })}
+                                className="w-full px-2 py-1 border-b border-gray-200 font-medium text-gray-800 mb-2 focus:outline-none focus:border-purple-500"
+                                placeholder="Tier 3 Name"
+                            />
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <label className="text-gray-500 text-xs">Daily</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier3DailyLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier3DailyLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        min="0"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-gray-500 text-xs">Monthly</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier3MonthlyLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier3MonthlyLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        min="0"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -172,6 +273,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
         </div>
     );
 };
+
 
 // Components
 const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (

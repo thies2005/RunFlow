@@ -47,6 +47,17 @@ export async function GET() {
                 defaultBaseUrl: globalSettings.defaultBaseUrl,
                 hasDefaultApiKey: !!globalSettings.defaultApiKey, // Don't return the key itself
                 defaultModel: globalSettings.defaultModel,
+                // Tier settings
+                tier1Name: globalSettings.tier1Name,
+                tier1DailyLimit: globalSettings.tier1DailyLimit,
+                tier1MonthlyLimit: globalSettings.tier1MonthlyLimit,
+                tier2Name: globalSettings.tier2Name,
+                tier2DailyLimit: globalSettings.tier2DailyLimit,
+                tier2MonthlyLimit: globalSettings.tier2MonthlyLimit,
+                tier3Name: globalSettings.tier3Name,
+                tier3DailyLimit: globalSettings.tier3DailyLimit,
+                tier3MonthlyLimit: globalSettings.tier3MonthlyLimit,
+                // Legacy (deprecated)
                 dailyMessageLimit: globalSettings.dailyMessageLimit,
                 monthlyMessageLimit: globalSettings.monthlyMessageLimit,
                 systemPrompt: globalSettings.systemPrompt,
@@ -77,6 +88,11 @@ export async function PUT(request: NextRequest) {
             defaultBaseUrl,
             defaultApiKey,
             defaultModel,
+            // Tier fields
+            tier1Name, tier1DailyLimit, tier1MonthlyLimit,
+            tier2Name, tier2DailyLimit, tier2MonthlyLimit,
+            tier3Name, tier3DailyLimit, tier3MonthlyLimit,
+            // Legacy
             dailyMessageLimit,
             monthlyMessageLimit,
             systemPrompt,
@@ -96,6 +112,19 @@ export async function PUT(request: NextRequest) {
         }
 
         if (defaultModel !== undefined) updateData.defaultModel = defaultModel;
+
+        // Tier settings
+        if (tier1Name !== undefined) updateData.tier1Name = tier1Name;
+        if (tier1DailyLimit !== undefined) updateData.tier1DailyLimit = parseInt(tier1DailyLimit) || 0;
+        if (tier1MonthlyLimit !== undefined) updateData.tier1MonthlyLimit = parseInt(tier1MonthlyLimit) || 0;
+        if (tier2Name !== undefined) updateData.tier2Name = tier2Name;
+        if (tier2DailyLimit !== undefined) updateData.tier2DailyLimit = parseInt(tier2DailyLimit) || 0;
+        if (tier2MonthlyLimit !== undefined) updateData.tier2MonthlyLimit = parseInt(tier2MonthlyLimit) || 0;
+        if (tier3Name !== undefined) updateData.tier3Name = tier3Name;
+        if (tier3DailyLimit !== undefined) updateData.tier3DailyLimit = parseInt(tier3DailyLimit) || 0;
+        if (tier3MonthlyLimit !== undefined) updateData.tier3MonthlyLimit = parseInt(tier3MonthlyLimit) || 0;
+
+        // Legacy (deprecated)
         if (dailyMessageLimit !== undefined) updateData.dailyMessageLimit = parseInt(dailyMessageLimit) || 50;
         if (monthlyMessageLimit !== undefined) updateData.monthlyMessageLimit = parseInt(monthlyMessageLimit) || 500;
         if (systemPrompt !== undefined) updateData.systemPrompt = systemPrompt;

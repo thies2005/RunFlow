@@ -1,5 +1,5 @@
 /**
- * AI Usage Tracking - Daily/monthly limit management
+ * AI Usage Tracking - Daily/monthly limit management with tiers
  */
 
 import { prisma } from '@/lib/db';
@@ -10,7 +10,42 @@ export interface UsageStatus {
     messagesUsedThisMonth: number;
     dailyLimit: number;
     monthlyLimit: number;
+    tier: string;
+    tierName: string;
     reason?: string;
+}
+
+/**
+ * Get limits for a usage tier
+ */
+function getTierLimits(tier: string, globalSettings: any): { daily: number; monthly: number; name: string } {
+    if (!globalSettings) {
+        return { daily: 0, monthly: 0, name: 'No Access' };
+    }
+
+    switch (tier) {
+        case 'tier1':
+            return {
+                daily: globalSettings.tier1DailyLimit ?? 10,
+                monthly: globalSettings.tier1MonthlyLimit ?? 100,
+                name: globalSettings.tier1Name ?? 'Basic'
+            };
+        case 'tier2':
+            return {
+                daily: globalSettings.tier2DailyLimit ?? 25,
+                monthly: globalSettings.tier2MonthlyLimit ?? 300,
+                name: globalSettings.tier2Name ?? 'Standard'
+            };
+        case 'tier3':
+            return {
+                daily: globalSettings.tier3DailyLimit ?? 50,
+                monthly: globalSettings.tier3MonthlyLimit ?? 500,
+                name: globalSettings.tier3Name ?? 'Premium'
+            };
+        case 'none':
+        default:
+            return { daily: 0, monthly: 0, name: 'Bring Your Own Key' };
+    }
 }
 
 /**
@@ -22,9 +57,6 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
         prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
     ]);
 
-    const dailyLimit = globalSettings?.dailyMessageLimit ?? 50;
-    const monthlyLimit = globalSettings?.monthlyMessageLimit ?? 500;
-
     // If user has their own API key, no limits apply
     if (userSettings?.customApiKey) {
         return {
@@ -33,6 +65,8 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
             messagesUsedThisMonth: userSettings.messagesUsedThisMonth,
             dailyLimit: Infinity,
             monthlyLimit: Infinity,
+            tier: 'byok',
+            tierName: 'Your API Key',
         };
     }
 
@@ -41,9 +75,29 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
             canUse: false,
             messagesUsedToday: 0,
             messagesUsedThisMonth: 0,
-            dailyLimit,
-            monthlyLimit,
+            dailyLimit: 0,
+            monthlyLimit: 0,
+            tier: 'none',
+            tierName: 'Not Configured',
             reason: 'AI not configured',
+        };
+    }
+
+    // Get tier-based limits
+    const usageTier = userSettings.usageTier || 'none';
+    const tierLimits = getTierLimits(usageTier, globalSettings);
+
+    // "none" tier means BYOK only - no access without own key
+    if (usageTier === 'none') {
+        return {
+            canUse: false,
+            messagesUsedToday: userSettings.messagesUsedToday,
+            messagesUsedThisMonth: userSettings.messagesUsedThisMonth,
+            dailyLimit: 0,
+            monthlyLimit: 0,
+            tier: usageTier,
+            tierName: tierLimits.name,
+            reason: 'Add your own API key to use AI features',
         };
     }
 
@@ -63,6 +117,9 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
         messagesUsedThisMonth = 0;
     }
 
+    const dailyLimit = tierLimits.daily;
+    const monthlyLimit = tierLimits.monthly;
+
     // Check limits
     if (messagesUsedToday >= dailyLimit) {
         return {
@@ -71,6 +128,8 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
             messagesUsedThisMonth,
             dailyLimit,
             monthlyLimit,
+            tier: usageTier,
+            tierName: tierLimits.name,
             reason: `Daily limit reached (${dailyLimit} messages/day)`,
         };
     }
@@ -82,6 +141,8 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
             messagesUsedThisMonth,
             dailyLimit,
             monthlyLimit,
+            tier: usageTier,
+            tierName: tierLimits.name,
             reason: `Monthly limit reached (${monthlyLimit} messages/month)`,
         };
     }
@@ -92,6 +153,8 @@ export async function checkUsageLimit(userId: string): Promise<UsageStatus> {
         messagesUsedThisMonth,
         dailyLimit,
         monthlyLimit,
+        tier: usageTier,
+        tierName: tierLimits.name,
     };
 }
 

@@ -74,11 +74,88 @@ model User {
   activities Activity[]
   goals      Goal[]
   apiKey     ApiKey?
+  aiSettings UserAiSettings?
 
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   DailyFitness DailyFitness[]
   notifications Notification[]
+}
+
+// ============================================
+// AI Coach Settings
+// ============================================
+
+// Global AI settings (admin-controlled singleton)
+model GlobalAiSettings {
+  id                  String   @id @default("singleton")
+  
+  // Default LLM configuration (OpenAI-compatible)
+  defaultBaseUrl      String   @default("https://api.openai.com/v1")
+  defaultApiKey       String?  // Encrypted admin API key
+  defaultModel        String   @default("gpt-4o-mini")
+  
+  // Usage limits (per user)
+  dailyMessageLimit   Int      @default(50)
+  monthlyMessageLimit Int      @default(500)
+  
+  // System prompt (base coach persona)
+  systemPrompt        String   @default("You are a knowledgeable and encouraging running coach. Analyze the athlete's data and provide personalized, actionable advice. Be specific when referencing their metrics and progress. Keep responses concise but insightful.")
+  
+  updatedAt           DateTime @updatedAt
+}
+
+// Per-user AI configuration
+model UserAiSettings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  
+  // Feature activation (admin or BYOK enables this)
+  aiEnabled             Boolean  @default(false)
+  
+  // BYOK - User's own OpenAI-compatible endpoint
+  customBaseUrl         String?  // e.g., "https://api.anthropic.com/v1" or local
+  customApiKey          String?  // Encrypted
+  customModel           String?
+  
+  // Activity feedback settings
+  feedbackMode          String   @default("on_demand") // "off" | "on_demand" | "auto" | "both"
+  
+  // Granular data access permissions (all default OFF)
+  accessFitnessMetrics  Boolean  @default(false) // CTL, ATL, TSB
+  accessActivityHistory Boolean  @default(false) // Runs, times, distances
+  accessHeartRateData   Boolean  @default(false) // HR zones, avg/max HR
+  accessGoals           Boolean  @default(false) // Race goals & targets
+  accessTrainingPlan    Boolean  @default(false) // Scheduled workouts
+  accessPerformance     Boolean  @default(false) // VDOT, predictions
+  accessBiometrics      Boolean  @default(false) // Weight, height, age
+  
+  // Custom prompt additions (appended to global prompt)
+  customPromptAddition  String?
+  
+  // Usage tracking
+  messagesUsedToday     Int      @default(0)
+  messagesUsedThisMonth Int      @default(0)
+  lastUsageReset        DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+// Cached AI feedback for activities
+model ActivityAiFeedback {
+  id                  String   @id @default(cuid())
+  activityId          String   @unique
+  
+  // Three feedback fields
+  plannedComparison   String?  @db.Text // vs scheduled workout
+  progressAnalysis    String?  @db.Text // weekly/monthly progress
+  goalTrajectory      String?  @db.Text // race goal alignment
+  
+  generatedAt         DateTime @default(now())
+  
+  @@index([activityId])
 }
 
 enum Sex {

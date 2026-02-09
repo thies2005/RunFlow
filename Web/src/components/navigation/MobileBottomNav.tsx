@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Calendar, BarChart3 } from 'lucide-react';
+import { Home, Calendar, BarChart3, Bot } from 'lucide-react';
 
 interface MobileBottomNavProps {
     activeIndex: number;
@@ -11,6 +11,7 @@ const tabs = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Calendar, label: 'Plan', path: '/plan' },
     { icon: BarChart3, label: 'Analytics', path: '/analytics' },
+    { icon: Bot, label: 'Chat', path: '/chat' },
 ];
 
 export function MobileBottomNav({ activeIndex, onTabChange }: MobileBottomNavProps) {
@@ -26,8 +27,8 @@ export function MobileBottomNav({ activeIndex, onTabChange }: MobileBottomNavPro
                             key={tab.path}
                             onClick={() => onTabChange(index)}
                             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${isActive
-                                    ? 'text-accent-orange'
-                                    : 'text-foreground-muted hover:text-foreground'
+                                ? 'text-accent-orange'
+                                : 'text-foreground-muted hover:text-foreground'
                                 }`}
                         >
                             <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5]' : ''}`} />

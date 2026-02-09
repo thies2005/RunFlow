@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink } from 'lucide-react';
+import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot } from 'lucide-react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { requestHealthPermissions, syncHealthData, isMobile } from '@/lib/mobile/healthConnect';
+import AiSettingsModal from '@/components/AiSettingsModal';
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -40,6 +41,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [generatedApiKey, setGeneratedApiKey] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
+    const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
 
     // Fetch existing settings
     const { data: settingsData } = useQuery({
@@ -405,6 +407,19 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         </div>
                     </div>
 
+                    {/* AI Features Section */}
+                    <div className="pt-2 border-t border-white/10">
+                        <label className="block text-xs text-purple-400 mb-3 uppercase font-semibold">AI Features</label>
+                        <button
+                            onClick={() => setIsAiSettingsOpen(true)}
+                            className="w-full py-3 border border-purple-500/30 text-purple-400 rounded-lg hover:bg-purple-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                        >
+                            <Bot className="w-4 h-4" />
+                            Configure AI Coach
+                        </button>
+                        <p className="text-[10px] text-gray-500 mt-2">Get personalized training advice, activity feedback, and more</p>
+                    </div>
+
                     {message && (
                         <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${message.includes('Error') ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
                             <AlertCircle className="w-4 h-4" />
@@ -565,6 +580,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     </div>
                 </div>
             </div>
+            <AiSettingsModal
+                isOpen={isAiSettingsOpen}
+                onClose={() => setIsAiSettingsOpen(false)}
+            />
         </div>
     );
 }

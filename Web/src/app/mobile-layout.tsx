@@ -20,6 +20,8 @@ import { SettingsModal, EditWorkoutModal } from '@/components';
 import ProfileModal from '@/components/ProfileModal';
 import ActivityDetailsModal from '@/components/ActivityDetailsModal';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
+import AiChat from '@/components/AiChat';
+import AiSettingsModal from '@/components/AiSettingsModal';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
 import type { Workout, Goal, Activity } from '@/lib/types';
 import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
@@ -45,6 +47,7 @@ export function MobileLayout() {
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
     const [selectedActivity, setSelectedActivity] = useState<any>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+    const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
 
     // Plan State
     const [showUnlinked, setShowUnlinked] = useState(true);
@@ -440,6 +443,14 @@ export function MobileLayout() {
                     onOpenCalibration={() => setIsCalibrationOpen(true)}
                     showHeader={false}
                 />
+
+                {/* Chat View */}
+                <div className="h-full flex flex-col bg-background">
+                    <div className="p-4 border-b border-gray-800">
+                        <h1 className="text-xl font-bold text-white">AI Coach</h1>
+                    </div>
+                    <AiChat onOpenSettings={() => setIsAiSettingsOpen(true)} />
+                </div>
             </MobileSwipeLayout>
 
             {/* Modals */}
@@ -478,6 +489,11 @@ export function MobileLayout() {
                 vdotCorrectionFactor={analyticsMetrics.runalyzeMetrics.vdotCorrectionFactor}
                 shapePercent={analyticsMetrics.runalyzeMetrics.shape}
                 activities={activitiesData?.activities || []}
+            />
+
+            <AiSettingsModal
+                isOpen={isAiSettingsOpen}
+                onClose={() => setIsAiSettingsOpen(false)}
             />
         </>
     );

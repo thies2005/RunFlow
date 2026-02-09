@@ -11,7 +11,7 @@ interface MobileSwipeLayoutProps {
     onPageChange?: (index: number) => void;
 }
 
-const PATHS = ['/', '/plan', '/analytics'];
+const PATHS = ['/', '/plan', '/analytics', '/chat'];
 
 export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutProps) {
     const router = useRouter();

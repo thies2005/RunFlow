@@ -2,10 +2,180 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail } from 'lucide-react';
+import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, EyeOff, Save } from 'lucide-react';
+
+// AI Settings Tab Component
+const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, setActionMessage }: any) => {
+    const [formData, setFormData] = useState({
+        defaultBaseUrl: settings?.defaultBaseUrl || 'https://api.openai.com/v1',
+        defaultApiKey: '',
+        defaultModel: settings?.defaultModel || 'gpt-4o-mini',
+        dailyMessageLimit: settings?.dailyMessageLimit || 50,
+        monthlyMessageLimit: settings?.monthlyMessageLimit || 500,
+        systemPrompt: settings?.systemPrompt || '',
+    });
+    const [showApiKey, setShowApiKey] = useState(false);
+
+    useEffect(() => {
+        if (settings) {
+            setFormData((prev: any) => ({
+                ...prev,
+                defaultBaseUrl: settings.defaultBaseUrl || prev.defaultBaseUrl,
+                defaultModel: settings.defaultModel || prev.defaultModel,
+                dailyMessageLimit: settings.dailyMessageLimit || prev.dailyMessageLimit,
+                monthlyMessageLimit: settings.monthlyMessageLimit || prev.monthlyMessageLimit,
+                systemPrompt: settings.systemPrompt || prev.systemPrompt,
+            }));
+        }
+    }, [settings]);
+
+    const handleSave = async () => {
+        setProcessing(true);
+        setActionMessage(null);
+        try {
+            const updatePayload: any = { ...formData };
+            if (!updatePayload.defaultApiKey) {
+                delete updatePayload.defaultApiKey; // Don't clear existing key if field is empty
+            }
+
+            const res = await fetch('/api/admin/ai-settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatePayload),
+            });
+
+            if (!res.ok) throw new Error('Failed to save settings');
+
+            setActionMessage({ type: 'success', text: 'AI settings saved successfully' });
+            setFormData((prev: any) => ({ ...prev, defaultApiKey: '' })); // Clear key field after save
+            onRefresh();
+        } catch (error: any) {
+            setActionMessage({ type: 'error', text: error.message });
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                    <p className="text-purple-600 text-sm font-medium">Total Users</p>
+                    <p className="text-2xl font-bold text-purple-800">{stats?.totalUsers || 0}</p>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                    <p className="text-green-600 text-sm font-medium">AI Enabled</p>
+                    <p className="text-2xl font-bold text-green-800">{stats?.enabledUsers || 0}</p>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <p className="text-blue-600 text-sm font-medium">Custom API Keys</p>
+                    <p className="text-2xl font-bold text-blue-800">{stats?.usersWithCustomKey || 0}</p>
+                </div>
+            </div>
+
+            {/* Global Settings Form */}
+            <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 space-y-4">
+                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <Bot className="w-5 h-5 text-purple-600" />
+                    Global AI Configuration
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
+                        <input
+                            type="text"
+                            value={formData.defaultBaseUrl}
+                            onChange={(e) => setFormData({ ...formData, defaultBaseUrl: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            placeholder="https://api.openai.com/v1"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                        <input
+                            type="text"
+                            value={formData.defaultModel}
+                            onChange={(e) => setFormData({ ...formData, defaultModel: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            placeholder="gpt-4o-mini"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Default API Key {settings?.hasDefaultApiKey && <span className="text-green-600">(set)</span>}
+                    </label>
+                    <div className="relative">
+                        <input
+                            type={showApiKey ? 'text' : 'password'}
+                            value={formData.defaultApiKey}
+                            onChange={(e) => setFormData({ ...formData, defaultApiKey: e.target.value })}
+                            className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            placeholder={settings?.hasDefaultApiKey ? '••••••••••••••' : 'sk-...'}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowApiKey(!showApiKey)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Leave blank to keep existing key. Used for users without their own key.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Daily Message Limit</label>
+                        <input
+                            type="number"
+                            value={formData.dailyMessageLimit}
+                            onChange={(e) => setFormData({ ...formData, dailyMessageLimit: parseInt(e.target.value) || 50 })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            min="1"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Message Limit</label>
+                        <input
+                            type="number"
+                            value={formData.monthlyMessageLimit}
+                            onChange={(e) => setFormData({ ...formData, monthlyMessageLimit: parseInt(e.target.value) || 500 })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            min="1"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">System Prompt</label>
+                    <textarea
+                        value={formData.systemPrompt}
+                        onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 h-32"
+                        placeholder="You are a knowledgeable and encouraging running coach..."
+                    />
+                </div>
+
+                <button
+                    onClick={handleSave}
+                    disabled={processing}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50"
+                >
+                    <Save className="w-4 h-4" />
+                    {processing ? 'Saving...' : 'Save Settings'}
+                </button>
+            </div>
+        </div>
+    );
+};
 
 // Components
 const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (
+
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-start space-x-4">
         <div className={`p-3 rounded-lg ${color}`}>
             <Icon className="w-6 h-6 text-white" />
@@ -25,11 +195,12 @@ function DashboardContent() {
     const [stats, setStats] = useState<any>(null);
     const [users, setUsers] = useState<any[]>([]);
     const [backups, setBackups] = useState<any[]>([]);
+    const [aiSettings, setAiSettings] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     // Tab state controlled by URL
     const tabParam = searchParams.get('tab');
-    const activeTab = tabParam === 'backups' ? 'backups' : 'users';
+    const activeTab = tabParam === 'backups' ? 'backups' : tabParam === 'ai' ? 'ai' : 'users';
 
     const [processing, setProcessing] = useState(false);
     const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -38,10 +209,11 @@ function DashboardContent() {
     const fetchAllData = React.useCallback(async () => {
         try {
             setLoading(true);
-            const [statsRes, usersRes, backupsRes] = await Promise.all([
+            const [statsRes, usersRes, backupsRes, aiRes] = await Promise.all([
                 fetch('/api/admin/stats'),
                 fetch('/api/admin/users?limit=20'),
                 fetch('/api/admin/backups'),
+                fetch('/api/admin/ai-settings'),
             ]);
 
             if (statsRes.status === 401 || usersRes.status === 401) {
@@ -52,10 +224,12 @@ function DashboardContent() {
             const statsData = await statsRes.json();
             const usersData = await usersRes.json();
             const backupsData = await backupsRes.json();
+            const aiData = aiRes.ok ? await aiRes.json() : null;
 
             setStats(statsData);
             setUsers(usersData.users || []);
             setBackups(backupsData.backups || []);
+            setAiSettings(aiData);
 
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);
@@ -282,6 +456,13 @@ function DashboardContent() {
                     >
                         Backup & Restore
                     </button>
+                    <button
+                        onClick={() => router.push('/admin?tab=ai')}
+                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'ai' ? 'border-b-2 border-purple-500 text-purple-600' : 'text-gray-500 hover:text-gray-800'}`}
+                    >
+                        <Bot className="w-4 h-4 inline mr-1" />
+                        AI Settings
+                    </button>
                 </div>
 
                 <div className="p-6">
@@ -466,6 +647,18 @@ function DashboardContent() {
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {/* AI Settings Tab */}
+                    {activeTab === 'ai' && (
+                        <AiSettingsTab
+                            settings={aiSettings?.settings}
+                            stats={aiSettings?.stats}
+                            onRefresh={fetchAllData}
+                            processing={processing}
+                            setProcessing={setProcessing}
+                            setActionMessage={setActionMessage}
+                        />
                     )}
                 </div>
             </div>

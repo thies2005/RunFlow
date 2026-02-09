@@ -147,6 +147,7 @@ async function streamOpenAI(
 
         return {
             async *[Symbol.asyncIterator]() {
+                let isReasoning = false;
                 try {
                     while (true) {
                         const { done, value } = await reader.read();
@@ -167,12 +168,20 @@ async function streamOpenAI(
 
                                 // Support reasoning_content (used by Kimi, DeepSeek, NVIDIA NIM)
                                 if (delta?.reasoning_content) {
+                                    if (!isReasoning) {
+                                        yield '<think>';
+                                        isReasoning = true;
+                                    }
                                     options?.onToken?.(delta.reasoning_content);
                                     yield delta.reasoning_content;
                                 }
 
                                 // Standard content
                                 if (delta?.content) {
+                                    if (isReasoning) {
+                                        yield '</think>';
+                                        isReasoning = false;
+                                    }
                                     options?.onToken?.(delta.content);
                                     yield delta.content;
                                 }
@@ -182,6 +191,9 @@ async function streamOpenAI(
                         }
                     }
                 } finally {
+                    if (isReasoning) {
+                        yield '</think>';
+                    }
                     reader.releaseLock();
                 }
             },

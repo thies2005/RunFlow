@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, EyeOff, Save } from 'lucide-react';
+import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, EyeOff, Save, Loader2, Zap, XCircle } from 'lucide-react';
 
 // AI Settings Tab Component
 const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, setActionMessage }: any) => {
@@ -25,6 +25,44 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
         systemPrompt: settings?.systemPrompt || '',
     });
     const [showApiKey, setShowApiKey] = useState(false);
+
+    // Test Key State
+    const [testingKey, setTestingKey] = useState(false);
+    const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+    const handleTestApiKey = async () => {
+        if (!formData.defaultApiKey) {
+            setTestResult({ success: false, message: 'Enter a new key to test it.' });
+            return;
+        }
+
+        setTestingKey(true);
+        setTestResult(null);
+
+        try {
+            const res = await fetch('/api/ai/test-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apiKey: formData.defaultApiKey,
+                    baseUrl: formData.defaultBaseUrl || 'https://api.openai.com/v1',
+                    model: formData.defaultModel || 'gpt-4o-mini',
+                }),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                setTestResult({ success: true, message: `✓ Valid! Model: ${data.model}` });
+            } else {
+                setTestResult({ success: false, message: data.error || 'Test failed' });
+            }
+        } catch (error) {
+            setTestResult({ success: false, message: 'Connection error' });
+        } finally {
+            setTestingKey(false);
+        }
+    };
 
     useEffect(() => {
         if (settings) {
@@ -105,7 +143,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                             type="text"
                             value={formData.defaultBaseUrl}
                             onChange={(e) => setFormData({ ...formData, defaultBaseUrl: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                             placeholder="https://api.openai.com/v1"
                         />
                     </div>
@@ -115,7 +153,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                             type="text"
                             value={formData.defaultModel}
                             onChange={(e) => setFormData({ ...formData, defaultModel: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                             placeholder="gpt-4o-mini"
                         />
                     </div>
@@ -125,22 +163,39 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Default API Key {settings?.hasDefaultApiKey && <span className="text-green-600">(set)</span>}
                     </label>
-                    <div className="relative">
-                        <input
-                            type={showApiKey ? 'text' : 'password'}
-                            value={formData.defaultApiKey}
-                            onChange={(e) => setFormData({ ...formData, defaultApiKey: e.target.value })}
-                            className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                            placeholder={settings?.hasDefaultApiKey ? '••••••••••••••' : 'sk-...'}
-                        />
+                    <div className="flex gap-2">
+                        <div className="relative flex-1">
+                            <input
+                                type={showApiKey ? 'text' : 'password'}
+                                value={formData.defaultApiKey}
+                                onChange={(e) => setFormData({ ...formData, defaultApiKey: e.target.value })}
+                                className="w-full px-3 py-2 pr-10 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                placeholder={settings?.hasDefaultApiKey ? '••••••••••••••' : 'sk-...'}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowApiKey(!showApiKey)}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
                         <button
                             type="button"
-                            onClick={() => setShowApiKey(!showApiKey)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            onClick={handleTestApiKey}
+                            disabled={!formData.defaultApiKey || testingKey}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium text-sm transition"
                         >
-                            {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {testingKey ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                            Test
                         </button>
                     </div>
+                    {testResult && (
+                        <p className={`text-xs mt-2 flex items-center gap-1 ${testResult.success ? 'text-green-600' : 'text-red-600'}`}>
+                            {testResult.success ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                            {testResult.message}
+                        </p>
+                    )}
                     <p className="text-xs text-gray-500 mt-1">Leave blank to keep existing key. Used for users without their own key.</p>
                 </div>
 
@@ -156,7 +211,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                 type="text"
                                 value={formData.tier1Name}
                                 onChange={(e) => setFormData({ ...formData, tier1Name: e.target.value })}
-                                className="w-full px-2 py-1 border-b border-gray-200 font-medium text-gray-800 mb-2 focus:outline-none focus:border-purple-500"
+                                className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-2 focus:outline-none focus:border-purple-500"
                                 placeholder="Tier 1 Name"
                             />
                             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -166,7 +221,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                         type="number"
                                         value={formData.tier1DailyLimit}
                                         onChange={(e) => setFormData({ ...formData, tier1DailyLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded"
                                         min="0"
                                     />
                                 </div>
@@ -176,7 +231,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                         type="number"
                                         value={formData.tier1MonthlyLimit}
                                         onChange={(e) => setFormData({ ...formData, tier1MonthlyLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded"
                                         min="0"
                                     />
                                 </div>
@@ -189,7 +244,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                 type="text"
                                 value={formData.tier2Name}
                                 onChange={(e) => setFormData({ ...formData, tier2Name: e.target.value })}
-                                className="w-full px-2 py-1 border-b border-gray-200 font-medium text-gray-800 mb-2 focus:outline-none focus:border-purple-500"
+                                className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-2 focus:outline-none focus:border-purple-500"
                                 placeholder="Tier 2 Name"
                             />
                             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -199,7 +254,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                         type="number"
                                         value={formData.tier2DailyLimit}
                                         onChange={(e) => setFormData({ ...formData, tier2DailyLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded"
                                         min="0"
                                     />
                                 </div>
@@ -209,7 +264,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                         type="number"
                                         value={formData.tier2MonthlyLimit}
                                         onChange={(e) => setFormData({ ...formData, tier2MonthlyLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded"
                                         min="0"
                                     />
                                 </div>
@@ -222,7 +277,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                 type="text"
                                 value={formData.tier3Name}
                                 onChange={(e) => setFormData({ ...formData, tier3Name: e.target.value })}
-                                className="w-full px-2 py-1 border-b border-gray-200 font-medium text-gray-800 mb-2 focus:outline-none focus:border-purple-500"
+                                className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-2 focus:outline-none focus:border-purple-500"
                                 placeholder="Tier 3 Name"
                             />
                             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -232,7 +287,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                         type="number"
                                         value={formData.tier3DailyLimit}
                                         onChange={(e) => setFormData({ ...formData, tier3DailyLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded"
                                         min="0"
                                     />
                                 </div>
@@ -242,7 +297,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                         type="number"
                                         value={formData.tier3MonthlyLimit}
                                         onChange={(e) => setFormData({ ...formData, tier3MonthlyLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 border border-gray-200 rounded"
+                                        className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded"
                                         min="0"
                                     />
                                 </div>
@@ -256,7 +311,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                     <textarea
                         value={formData.systemPrompt}
                         onChange={(e) => setFormData({ ...formData, systemPrompt: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 h-32"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 h-32"
                         placeholder="You are a knowledgeable and encouraging running coach..."
                     />
                 </div>

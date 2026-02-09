@@ -164,8 +164,10 @@ export async function POST(request: NextRequest) {
     }
 }
 
+import { AiConfig } from '@/lib/ai/providers';
+
 async function generateFeedback(
-    config: { baseUrl: string; apiKey: string; model: string },
+    config: AiConfig,
     prompt: string,
     userContext: string,
     activityContext: string

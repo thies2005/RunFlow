@@ -284,14 +284,15 @@ async function streamGoogle(
     options?: StreamOptions
 ): Promise<AsyncIterable<string>> {
     try {
+        // Separate system message for Gemini's system_instruction field
+        const systemMessage = messages.find(m => m.role === 'system');
+        const chatMessages = messages.filter(m => m.role !== 'system');
+
         // Map messages to Gemini format (user/model)
-        const geminiContent = messages.map(m => ({
+        const geminiContent = chatMessages.map(m => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.content }]
-        })).filter(m => m.parts[0].text); // Filter empty
-
-        // System instructions are passed differently in newer API versions but often just prepended for simplicity in REST
-        // For REST API v1beta: contents[]
+        })).filter(m => m.parts[0].text);
 
         const url = `${config.baseUrl}/v1beta/models/${config.model}:streamGenerateContent?key=${config.apiKey}`;
 
@@ -301,9 +302,12 @@ async function streamGoogle(
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                system_instruction: systemMessage ? {
+                    parts: [{ text: systemMessage.content }]
+                } : undefined,
                 contents: geminiContent,
                 generationConfig: {
-                    maxOutputTokens: 1000,
+                    maxOutputTokens: 4096,
                     temperature: 0.7,
                 }
             }),
@@ -318,54 +322,55 @@ async function streamGoogle(
         if (!reader) throw new Error('No response body from AI provider');
 
         const decoder = new TextDecoder();
+        let buffer = '';
 
         return {
             async *[Symbol.asyncIterator]() {
                 try {
-                    let buffer = '';
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
 
                         buffer += decoder.decode(value, { stream: true });
 
-                        // Google sends a JSON array stream but loosely formatted
-                        // often `[{...},\r\n`
-                        // We need to parse complete JSON objects from the buffer
-                        // Simple hack: split by newline/comma if possible or assume proper JSON array elements
-                        // A more robust way for Google REST stream is to verify bracket balance or split by `\n,`
+                        /**
+                         * Gemini REST stream returns a JSON array:
+                         * [
+                         *   { "candidates": [...] },
+                         *   { "candidates": [...] }
+                         * ]
+                         * Each chunk may contain partial objects.
+                         */
 
-                        // NOTE: Real Gemini stream usually returns a JSON array where each chunk IS a valid JSON object in the list
-                        // structure: [ { ... }, { ... } ]
-                        // The stream chunks are usually partial JSON.
-                        // Actually, the `streamGenerateContent` returns a stream of JSON objects, not an array.
+                        // Remove leading '[' if present (start of array)
+                        if (buffer.startsWith('[')) {
+                            buffer = buffer.slice(1);
+                        }
 
-                        // Let's try splitting by `\n` assuming they send line-delimited JSON or similar
-                        // If it fails, we wait for more data.
+                        // Try to extract full JSON objects
+                        // We look for objects starting with '{' and ending with '}' 
+                        // that are followed by a comma or the end of the array.
+                        let boundary;
+                        while ((boundary = findJsonBoundary(buffer)) !== -1) {
+                            const jsonStr = buffer.slice(0, boundary + 1);
+                            buffer = buffer.slice(boundary + 1);
 
-                        // Clean buffer logic for Google's weird streaming format would go here.
-                        // For now, let's assume standard behavior or implement a simple JSON extractor
+                            // Clean up leading comma or whitespace for the next object
+                            buffer = buffer.replace(/^\s*,\s*/, '');
 
-                        // Note: The raw REST API returns a JSON array `[` ... `]`
-                        // We can try to parse accumulated buffer if it starts with `[` and we find closing `}` and `,`
-
-                        // Simplified approach: Regex match complete `{ "candidates": ... }` blocks
-                        const regex = /\{"candidates":\[.*?\]\}/g;
-                        let match;
-                        while ((match = regex.exec(buffer)) !== null) {
                             try {
-                                const part = JSON.parse(match[0]);
+                                const part = JSON.parse(jsonStr);
                                 const text = part.candidates?.[0]?.content?.parts?.[0]?.text;
                                 if (text) {
                                     options?.onToken?.(text);
                                     yield text;
                                 }
-                            } catch (e) { }
+                            } catch (e) {
+                                // If JSON.parse fails, it might be a partial object despite our boundary check
+                                // though unlikely with findJsonBoundary. 
+                                console.warn('Failed to parse Gemini chunk', e);
+                            }
                         }
-
-                        // Keep the end of buffer that didn't match
-                        // This is tricky without advanced parsing. 
-                        // For this first pass, we will rely on lines if Google sends newlines.
                     }
                 } finally {
                     reader.releaseLock();
@@ -376,6 +381,49 @@ async function streamGoogle(
         handlePermissionError(error, config);
         throw error;
     }
+}
+
+/**
+ * Find the end of its first complete JSON object in a string by tracking balanced braces.
+ */
+function findJsonBoundary(str: string): number {
+    let braceCount = 0;
+    let inString = false;
+    let escaped = false;
+    let foundStart = false;
+
+    for (let i = 0; i < str.length; i++) {
+        const char = str[i];
+
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+            } else if (char === '\\') {
+                escaped = true;
+            } else if (char === '"') {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (char === '"') {
+            inString = true;
+            continue;
+        }
+
+        if (char === '{') {
+            braceCount++;
+            foundStart = true;
+        } else if (char === '}') {
+            braceCount--;
+        }
+
+        if (foundStart && braceCount === 0) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 async function handleError(response: Response) {

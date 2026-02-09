@@ -47,7 +47,11 @@ export async function GET(request: NextRequest) {
                         select: { activities: true }
                     },
                     aiSettings: {
-                        select: { usageTier: true }
+                        select: {
+                            usageTier: true,
+                            adminAllowed: true,
+                            aiEnabled: true
+                        }
                     }
                 },
                 orderBy: { createdAt: 'desc' },

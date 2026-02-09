@@ -40,8 +40,8 @@ export async function POST(
             }, { status: 400 });
         }
 
-        // Determine if AI should be enabled and if we should clear custom keys
-        const aiEnabled = tier !== 'none';
+        // Determine if AI should be allowed and if we should clear custom keys
+        const adminAllowed = tier !== 'none';
         const isManaged = tier !== 'none';
 
         // Upsert user AI settings
@@ -50,12 +50,15 @@ export async function POST(
             create: {
                 userId,
                 usageTier: tier,
-                aiEnabled,
+                adminAllowed,
+                aiEnabled: false, // User must still opt-in
             },
             update: {
                 usageTier: tier,
-                aiEnabled,
-                // Clear custom keys if setting a managed tier to prevent override confusion
+                adminAllowed,
+                // If admin removes access, also disable AI
+                ...(!adminAllowed ? { aiEnabled: false } : {}),
+                // Clear custom keys if setting a managed tier
                 ...(isManaged ? {
                     customApiKey: null,
                     customBaseUrl: null,
@@ -67,6 +70,7 @@ export async function POST(
         return NextResponse.json({
             success: true,
             usageTier: settings.usageTier,
+            adminAllowed: settings.adminAllowed,
             aiEnabled: settings.aiEnabled,
         });
     } catch (error) {

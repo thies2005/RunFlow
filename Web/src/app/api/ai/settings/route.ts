@@ -80,8 +80,6 @@ export async function PUT(request: NextRequest) {
 
         const updateData: any = {
             aiEnabled: body.aiEnabled,
-            customBaseUrl: body.customBaseUrl,
-            customModel: body.customModel,
             feedbackMode: body.feedbackMode,
             accessFitnessMetrics: body.accessFitnessMetrics,
             accessActivityHistory: body.accessActivityHistory,
@@ -93,13 +91,33 @@ export async function PUT(request: NextRequest) {
             customPromptAddition: body.customPromptAddition,
         };
 
+        // Get current settings to check adminAllowed
+        const currentSettings = await prisma.userAiSettings.findUnique({
+            where: { userId: session.user.id }
+        });
+
+        // Enforce adminAllowed
+        if (body.aiEnabled === true && (!currentSettings || !currentSettings.adminAllowed)) {
+            return NextResponse.json({
+                error: 'AI access not allowed by administrator. Please contact support.'
+            }, { status: 403 });
+        }
+
         // Only update API key if provided (encrypt it)
         if (body.customApiKey !== undefined) {
             if (body.customApiKey) {
                 updateData.customApiKey = encryptToken(body.customApiKey);
+                updateData.customBaseUrl = body.customBaseUrl;
+                updateData.customModel = body.customModel;
             } else {
                 updateData.customApiKey = null;
+                updateData.customBaseUrl = null;
+                updateData.customModel = null;
             }
+        } else {
+            // If just updating settings and not API key, we might still want to update URL/Model
+            if (body.customBaseUrl !== undefined) updateData.customBaseUrl = body.customBaseUrl;
+            if (body.customModel !== undefined) updateData.customModel = body.customModel;
         }
 
         const settings = await prisma.userAiSettings.upsert({

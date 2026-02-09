@@ -780,6 +780,7 @@ function DashboardContent() {
                                             <th className="pb-3 font-semibold text-gray-600 text-sm">Joined</th>
                                             <th className="pb-3 font-semibold text-gray-600 text-sm">Last Sync</th>
                                             <th className="pb-3 font-semibold text-gray-600 text-sm">Activities</th>
+                                            <th className="pb-3 font-semibold text-gray-600 text-sm text-center">AI Access</th>
                                             <th className="pb-3 font-semibold text-gray-600 text-sm">AI Tier</th>
                                             <th className="pb-3 font-semibold text-gray-600 text-sm text-right">Actions</th>
                                         </tr>
@@ -791,7 +792,6 @@ function DashboardContent() {
                                                     <div className="flex items-center">
                                                         <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
                                                             {user.image ? (
-
                                                                 <img src={user.image} alt="" className="w-full h-full object-cover" />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
@@ -814,14 +814,32 @@ function DashboardContent() {
                                                 <td className="py-4 text-sm text-gray-500">
                                                     {user.activityCount}
                                                 </td>
+                                                <td className="py-4">
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <div className="flex gap-2">
+                                                            <span
+                                                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${user.aiSettings?.adminAllowed ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}
+                                                                title={user.aiSettings?.adminAllowed ? 'Admin has allowed access' : 'Admin has not allowed access'}
+                                                            >
+                                                                {user.aiSettings?.adminAllowed ? 'Allowed' : 'Locked'}
+                                                            </span>
+                                                            <span
+                                                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${user.aiSettings?.aiEnabled ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-400'}`}
+                                                                title={user.aiSettings?.aiEnabled ? 'User has opted-in' : 'User has not opted-in'}
+                                                            >
+                                                                {user.aiSettings?.aiEnabled ? 'Opt-in' : 'Off'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </td>
                                                 <td className="py-4 text-sm text-gray-500">
                                                     <select
                                                         value={user.aiSettings?.usageTier || 'none'}
                                                         onChange={(e) => handleToggleAi(user.id, e.target.value)}
                                                         disabled={processing}
-                                                        className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5"
+                                                        className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2"
                                                     >
-                                                        <option value="none">No Access (BYOK)</option>
+                                                        <option value="none">No Access</option>
                                                         <option value="tier1">{aiSettings?.settings?.tier1Name || 'Tier 1'}</option>
                                                         <option value="tier2">{aiSettings?.settings?.tier2Name || 'Tier 2'}</option>
                                                         <option value="tier3">{aiSettings?.settings?.tier3Name || 'Tier 3'}</option>

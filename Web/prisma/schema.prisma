@@ -145,6 +145,7 @@ model UserAiSettings {
   userId                String   @unique
   
   // Feature activation - controlled by usageTier or BYOK
+  adminAllowed          Boolean  @default(false)
   aiEnabled             Boolean  @default(false)
   
   // Usage tier: "none" = BYOK only, "tier1", "tier2", "tier3" = admin-assigned

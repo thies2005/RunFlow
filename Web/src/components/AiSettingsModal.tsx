@@ -370,6 +370,16 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             >
                                                 NVIDIA (Kimi) Preset
                                             </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setCustomBaseUrl('https://open.bigmodel.cn/api/paas/v4');
+                                                    setCustomModel('glm-4-plus');
+                                                }}
+                                                className="text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded border border-gray-700 transition"
+                                            >
+                                                Zhipu AI (GLM) Preset
+                                            </button>
                                         </div>
 
                                         <label htmlFor="customBaseUrl" className="sr-only">Base URL</label>

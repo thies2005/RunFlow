@@ -126,7 +126,10 @@ async function streamOpenAI(
                 model: config.model,
                 messages,
                 stream: true,
-                max_tokens: 1000,
+                // Use max_completion_tokens for reasoning models if applicable, else max_tokens
+                ...(config.model.includes('kimi') || config.model.includes('deepseek') || config.model.includes('reasoning') || config.model.includes('o1')
+                    ? { max_completion_tokens: 4096 }
+                    : { max_tokens: 4096 }),
                 temperature: 0.7,
             }),
             signal: options?.signal,
@@ -140,6 +143,7 @@ async function streamOpenAI(
         if (!reader) throw new Error('No response body from AI provider');
 
         const decoder = new TextDecoder();
+        let lineBuffer = '';
 
         return {
             async *[Symbol.asyncIterator]() {
@@ -148,8 +152,9 @@ async function streamOpenAI(
                         const { done, value } = await reader.read();
                         if (done) break;
 
-                        const chunk = decoder.decode(value, { stream: true });
-                        const lines = chunk.split('\n');
+                        lineBuffer += decoder.decode(value, { stream: true });
+                        const lines = lineBuffer.split('\n');
+                        lineBuffer = lines.pop() || ''; // Keep the partial line for the next chunk
 
                         for (const line of lines) {
                             const trimmed = line.trim();

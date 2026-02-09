@@ -311,6 +311,8 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                 setFormData(prev => ({ ...prev, baseUrl: 'https://api.openai.com/v1', models: 'gpt-4o,gpt-4o-mini' }));
             } else if (formData.type === 'nvidia') {
                 setFormData(prev => ({ ...prev, baseUrl: 'https://integrate.api.nvidia.com/v1', models: 'moonshotai/kimi-k2.5,meta/llama-3.1-405b-instruct' }));
+            } else if (formData.type === 'zhipu') {
+                setFormData(prev => ({ ...prev, baseUrl: 'https://open.bigmodel.cn/api/paas/v4', models: 'glm-4-plus,glm-4-air,glm-4-0520' }));
             } else if (formData.type === 'anthropic') {
                 setFormData(prev => ({ ...prev, baseUrl: 'https://api.anthropic.com', models: 'claude-3-opus-20240229,claude-3-sonnet-20240229' }));
             } else if (formData.type === 'google') {
@@ -400,6 +402,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                         <option value="openai">OpenAI Compatible</option>
                         <option value="nvidia">NVIDIA NIM</option>
+                        <option value="zhipu">Zhipu AI (GLM)</option>
                         <option value="anthropic">Anthropic</option>
                         <option value="google">Google Gemini</option>
                     </select>

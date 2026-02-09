@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             backups: files,
             total: files.length,
-            backupsDir: BACKUPS_DIR,
         });
 
     } catch (error) {

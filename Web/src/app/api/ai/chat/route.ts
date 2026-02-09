@@ -18,6 +18,7 @@ import {
     incrementUsage,
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
+import { checkRateLimitAsync } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +33,19 @@ export async function POST(request: NextRequest) {
         }
 
         const userId = session.user.id;
+
+        // Per-request rate limit: 10 requests per minute per user
+        const rateLimitResult = await checkRateLimitAsync(userId, {
+            limit: 10,
+            windowSeconds: 60,
+            prefix: 'ai_chat',
+        });
+        if (!rateLimitResult.allowed) {
+            return new Response(JSON.stringify({ error: 'Too many requests. Please wait before sending another message.' }), {
+                status: 429,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
         const body = await request.json();
         const { message, activityId } = body as { message: string; activityId?: string };
 

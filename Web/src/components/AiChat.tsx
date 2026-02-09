@@ -17,6 +17,21 @@ interface ChatMessage {
     content: string;
 }
 
+// Helper to separate reasoning from response
+const cleanContent = (content: string) => {
+    // Remove complete think blocks
+    let cleaned = content.replace(/<think>[\s\S]*?<\/think>/g, '');
+
+    // Handle incomplete think block at the end (streaming)
+    // If we have an open <think> that isn't closed, we should hide everything after it
+    const openThinkIndex = cleaned.indexOf('<think>');
+    if (openThinkIndex !== -1) {
+        cleaned = cleaned.slice(0, openThinkIndex);
+    }
+
+    return cleaned;
+};
+
 export default function AiChat({ activityId, compact = false, onOpenSettings }: AiChatProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
@@ -164,32 +179,45 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                         {/* Messages */}
                         {messages.length > 0 && (
                             <div className="space-y-3 mb-3 max-h-60 overflow-y-auto">
-                                {messages.map((msg, i) => (
-                                    <div
-                                        key={i}
-                                        className={`text-sm ${msg.role === 'user' ? 'text-gray-300' : 'text-white'
-                                            }`}
-                                    >
-                                        <span className="font-medium">
-                                            {msg.role === 'user' ? 'You: ' : 'Coach: '}
-                                        </span>
-                                        <div className="inline-block align-top markdown-content">
-                                            <ReactMarkdown
-                                                remarkPlugins={[remarkGfm]}
-                                                components={{
-                                                    p: ({ node, ...props }) => <p className="inline" {...props} />,
-                                                    ul: ({ node, ...props }) => <ul className="list-disc ml-4 inline-block" {...props} />,
-                                                    li: ({ node, ...props }) => <li className="inline-block mr-2" {...props} />,
-                                                }}
-                                            >
-                                                {msg.content}
-                                            </ReactMarkdown>
+                                {messages.map((msg, i) => {
+                                    const cleanedContent = cleanContent(msg.content);
+                                    // If content is empty after cleaning (and it wasn't empty before), it means we're in a thinking block
+                                    const isThinking = isStreaming && i === messages.length - 1 && msg.role === 'assistant' && msg.content && !cleanedContent;
+
+                                    return (
+                                        <div
+                                            key={i}
+                                            className={`text-sm ${msg.role === 'user' ? 'text-gray-300' : 'text-white'
+                                                }`}
+                                        >
+                                            <span className="font-medium">
+                                                {msg.role === 'user' ? 'You: ' : 'Coach: '}
+                                            </span>
+                                            <div className="inline-block align-top markdown-content">
+                                                {isThinking ? (
+                                                    <span className="text-gray-400 italic flex items-center gap-1">
+                                                        <Loader2 className="w-3 h-3 animate-spin inline" />
+                                                        Thinking...
+                                                    </span>
+                                                ) : (
+                                                    <ReactMarkdown
+                                                        remarkPlugins={[remarkGfm]}
+                                                        components={{
+                                                            p: ({ node, ...props }) => <p className="inline" {...props} />,
+                                                            ul: ({ node, ...props }) => <ul className="list-disc ml-4 inline-block" {...props} />,
+                                                            li: ({ node, ...props }) => <li className="inline-block mr-2" {...props} />,
+                                                        }}
+                                                    >
+                                                        {cleanedContent}
+                                                    </ReactMarkdown>
+                                                )}
+                                            </div>
+                                            {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && cleanedContent && (
+                                                <span className="inline-block w-1 h-4 bg-purple-400 animate-pulse ml-1" />
+                                            )}
                                         </div>
-                                        {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && (
-                                            <span className="inline-block w-1 h-4 bg-purple-400 animate-pulse ml-1" />
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 <div ref={messagesEndRef} />
                             </div>
                         )}
@@ -286,62 +314,77 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                     </div>
                 ) : (
                     <>
-                        {messages.map((msg, i) => (
-                            <div
-                                key={i}
-                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
+                        {messages.map((msg, i) => {
+                            const cleanedContent = cleanContent(msg.content);
+                            // If content is empty after cleaning (and it wasn't empty before), it means we're in a thinking block
+                            const isThinking = isStreaming && i === messages.length - 1 && msg.role === 'assistant' && msg.content && !cleanedContent;
+
+                            return (
                                 <div
-                                    className={`max-w-[85%] rounded-2xl px-4 py-2 ${msg.role === 'user'
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-gray-800 text-white'
-                                        }`}
+                                    key={i}
+                                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div className="text-sm markdown-content">
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkGfm]}
-                                            components={{
-                                                h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
-                                                h2: ({ node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
-                                                h3: ({ node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
-                                                p: ({ node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
-                                                ul: ({ node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
-                                                ol: ({ node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
-                                                li: ({ node, ...props }) => <li className="pl-1" {...props} />,
-                                                code: ({ node, inline, className, children, ...props }: any) => {
-                                                    const match = /language-(\w+)/.exec(className || '');
-                                                    return !inline ? (
-                                                        <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
-                                                            <code className={className} {...props}>
-                                                                {children}
-                                                            </code>
-                                                        </pre>
-                                                    ) : (
-                                                        <code className="bg-black/30 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
-                                                            {children}
-                                                        </code>
-                                                    );
-                                                },
-                                                table: ({ node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
-                                                thead: ({ node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
-                                                th: ({ node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
-                                                td: ({ node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
-                                                blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
-                                                a: ({ node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                                            }}
-                                        >
-                                            {msg.content}
-                                        </ReactMarkdown>
+                                    <div
+                                        className={`max-w-[85%] rounded-2xl px-4 py-2 ${msg.role === 'user'
+                                            ? 'bg-purple-600 text-white'
+                                            : 'bg-gray-800 text-white'
+                                            }`}
+                                    >
+                                        <div className="text-sm markdown-content">
+                                            {isThinking ? (
+                                                <div className="flex items-center gap-2 text-gray-400 italic">
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                    <span>Thinking...</span>
+                                                </div>
+                                            ) : (
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm]}
+                                                    components={{
+                                                        h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
+                                                        h2: ({ node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
+                                                        h3: ({ node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
+                                                        p: ({ node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+                                                        ul: ({ node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
+                                                        ol: ({ node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
+                                                        li: ({ node, ...props }) => <li className="pl-1" {...props} />,
+                                                        code: ({ node, inline, className, children, ...props }: any) => {
+                                                            const match = /language-(\w+)/.exec(className || '');
+                                                            return !inline ? (
+                                                                <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
+                                                                    <code className={className} {...props}>
+                                                                        {children}
+                                                                    </code>
+                                                                </pre>
+                                                            ) : (
+                                                                <code className="bg-black/30 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
+                                                                    {children}
+                                                                </code>
+                                                            );
+                                                        },
+                                                        table: ({ node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
+                                                        thead: ({ node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
+                                                        th: ({ node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
+                                                        td: ({ node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
+                                                        blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
+                                                        a: ({ node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                    }}
+                                                >
+                                                    {cleanedContent}
+                                                </ReactMarkdown>
+                                            )}
+                                        </div>
+                                        {/* Loading spinner for initial non-thinking state */}
+                                        {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && !msg.content && (
+                                            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                                        )}
+                                        {/* Cursor for typing effect when not reasoning */}
+                                        {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && cleanedContent && (
+                                            <span className="inline-block w-1 h-4 bg-purple-400 animate-pulse ml-1" />
+                                        )}
                                     </div>
-                                    {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && !msg.content && (
-                                        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                                    )}
-                                    {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && msg.content && (
-                                        <span className="inline-block w-1 h-4 bg-purple-400 animate-pulse ml-1" />
-                                    )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         <div ref={messagesEndRef} />
                     </>
                 )}

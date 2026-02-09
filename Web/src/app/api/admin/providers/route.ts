@@ -12,6 +12,19 @@ import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
+/** Validate that a provider URL is safe (https only, or localhost for dev) */
+function isValidProviderUrl(url: string): boolean {
+    try {
+        const parsed = new URL(url);
+        // Allow https in production, http only for localhost/dev
+        if (parsed.protocol === 'https:') return true;
+        if (parsed.protocol === 'http:' && (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1')) return true;
+        return false;
+    } catch {
+        return false;
+    }
+}
+
 
 export async function GET(request: NextRequest) {
     const authResult = await requireAdmin(request);
@@ -55,6 +68,10 @@ export async function POST(request: NextRequest) {
 
         if (!name || !type || !baseUrl || !apiKey || !slug) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+
+        if (!isValidProviderUrl(baseUrl)) {
+            return NextResponse.json({ error: 'Invalid base URL. Must be a valid HTTPS URL.' }, { status: 400 });
         }
 
         const provider = await prisma.aiProvider.create({
@@ -101,7 +118,12 @@ export async function PUT(request: NextRequest) {
         const updateData: any = {};
         if (name) updateData.name = name;
         if (type) updateData.type = type;
-        if (baseUrl) updateData.baseUrl = baseUrl;
+        if (baseUrl) {
+            if (!isValidProviderUrl(baseUrl)) {
+                return NextResponse.json({ error: 'Invalid base URL. Must be a valid HTTPS URL.' }, { status: 400 });
+            }
+            updateData.baseUrl = baseUrl;
+        }
         if (apiKey) updateData.apiKey = encryptToken(apiKey); // Only update if provided
         if (models) updateData.models = models;
         if (isActive !== undefined) updateData.isActive = isActive;

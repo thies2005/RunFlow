@@ -44,7 +44,7 @@ export function encryptToken(plaintext: string): string {
     if (!key) {
         // Encryption not configured
         if (process.env.NODE_ENV === 'production') {
-            console.error('CRITICAL SECURITY WARNING: ENCRYPTION_KEY not set in production! OAuth tokens stored unencrypted.');
+            throw new Error('CRITICAL SECURITY ERROR: ENCRYPTION_KEY not set in production! Cannot encrypt tokens safely.');
         }
         return plaintext;
     }

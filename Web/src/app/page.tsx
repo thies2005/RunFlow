@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Settings, LogOut, AlertCircle, BarChart3 } from 'lucide-react';
+import { RefreshCw, Settings, LogOut, AlertCircle, BarChart3, MessageSquare } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { format } from 'date-fns';
 import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo, Footer, UserMenu } from '@/components';
@@ -132,6 +132,10 @@ export default function Dashboard() {
                                 <button onClick={() => router.push('/analytics')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
                                     <BarChart3 className="w-5 h-5" />
                                     <span className="hidden sm:inline">Analytics</span>
+                                </button>
+                                <button onClick={() => router.push('/chat')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
+                                    <MessageSquare className="w-5 h-5" />
+                                    <span className="hidden sm:inline">AI Coach</span>
                                 </button>
                                 <div className="flex items-center gap-3">
                                     <UserMenu

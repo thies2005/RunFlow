@@ -290,8 +290,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Weight (kg)</label>
+                            <label htmlFor="weight" className="block text-xs text-gray-400 mb-1 uppercase">Weight (kg)</label>
                             <input
+                                id="weight"
                                 type="number"
                                 value={weight}
                                 onChange={e => setWeight(parseInt(e.target.value) || 70)}
@@ -302,8 +303,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Height (cm)</label>
+                            <label htmlFor="height" className="block text-xs text-gray-400 mb-1 uppercase">Height (cm)</label>
                             <input
+                                id="height"
                                 type="number"
                                 value={height}
                                 onChange={e => setHeight(parseInt(e.target.value) || 175)}
@@ -318,8 +320,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <div className="pt-2 border-t border-white/10">
                         <label className="block text-xs text-accent-orange mb-2 uppercase font-semibold">Heart Rate Zones</label>
                         <div className="mb-4">
-                            <label className="block text-xs text-gray-400 mb-1 uppercase">Threshold Heart Rate (bpm)</label>
+                            <label htmlFor="thresholdHr" className="block text-xs text-gray-400 mb-1 uppercase">Threshold Heart Rate (bpm)</label>
                             <input
+                                id="thresholdHr"
                                 type="number"
                                 value={thresholdHr || ''}
                                 onChange={e => handleThresholdChange(parseInt(e.target.value) || 0)}
@@ -332,32 +335,32 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 1 Max (&lt;75%)</label>
-                                    <input type="number" value={hrZone1Max} onChange={e => setHrZone1Max(parseInt(e.target.value))} className={inputClass} />
+                                    <label htmlFor="hrZone1Max" className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 1 Max (&lt;75%)</label>
+                                    <input id="hrZone1Max" type="number" value={hrZone1Max} onChange={e => setHrZone1Max(parseInt(e.target.value))} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 2 Max (76-87%)</label>
-                                    <input type="number" value={hrZone2Max} onChange={e => setHrZone2Max(parseInt(e.target.value))} className={inputClass} />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 3 Max (88-94%)</label>
-                                    <input type="number" value={hrZone3Max} onChange={e => setHrZone3Max(parseInt(e.target.value))} className={inputClass} />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 4 Max (95-100%)</label>
-                                    <input type="number" value={hrZone4Max} onChange={e => setHrZone4Max(parseInt(e.target.value))} className={inputClass} />
+                                    <label htmlFor="hrZone2Max" className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 2 Max (76-87%)</label>
+                                    <input id="hrZone2Max" type="number" value={hrZone2Max} onChange={e => setHrZone2Max(parseInt(e.target.value))} className={inputClass} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 5 Max (101-105%)</label>
-                                    <input type="number" value={hrZone5Max} onChange={e => setHrZone5Max(parseInt(e.target.value))} className={inputClass} />
+                                    <label htmlFor="hrZone3Max" className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 3 Max (88-94%)</label>
+                                    <input id="hrZone3Max" type="number" value={hrZone3Max} onChange={e => setHrZone3Max(parseInt(e.target.value))} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 6 Max (106-110%)</label>
-                                    <input type="number" value={hrZone6Max} onChange={e => setHrZone6Max(parseInt(e.target.value))} className={inputClass} />
+                                    <label htmlFor="hrZone4Max" className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 4 Max (95-100%)</label>
+                                    <input id="hrZone4Max" type="number" value={hrZone4Max} onChange={e => setHrZone4Max(parseInt(e.target.value))} className={inputClass} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label htmlFor="hrZone5Max" className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 5 Max (101-105%)</label>
+                                    <input id="hrZone5Max" type="number" value={hrZone5Max} onChange={e => setHrZone5Max(parseInt(e.target.value))} className={inputClass} />
+                                </div>
+                                <div>
+                                    <label htmlFor="hrZone6Max" className="block text-[10px] text-gray-400 mb-1 uppercase">Zone 6 Max (106-110%)</label>
+                                    <input id="hrZone6Max" type="number" value={hrZone6Max} onChange={e => setHrZone6Max(parseInt(e.target.value))} className={inputClass} />
                                 </div>
                             </div>
                         </div>

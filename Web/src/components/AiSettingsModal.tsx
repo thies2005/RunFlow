@@ -317,7 +317,9 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                 </p>
 
                                 <div className="space-y-2">
+                                    <label htmlFor="customBaseUrl" className="sr-only">Base URL</label>
                                     <input
+                                        id="customBaseUrl"
                                         type="text"
                                         placeholder="Base URL (default: https://api.openai.com/v1)"
                                         value={customBaseUrl}
@@ -326,7 +328,9 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     />
 
                                     <div className="relative">
+                                        <label htmlFor="customApiKey" className="sr-only">API Key</label>
                                         <input
+                                            id="customApiKey"
                                             type={showApiKey ? 'text' : 'password'}
                                             placeholder={data?.settings?.hasCustomApiKey ? '••••••••••••••••' : 'API Key'}
                                             value={customApiKey}
@@ -342,7 +346,9 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         </button>
                                     </div>
 
+                                    <label htmlFor="customModel" className="sr-only">Model</label>
                                     <input
+                                        id="customModel"
                                         type="text"
                                         placeholder="Model (default: gpt-4o-mini)"
                                         value={customModel}
@@ -372,8 +378,8 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     {/* Test Result Feedback */}
                                     {testResult && (
                                         <div className={`flex items-center gap-2 text-sm p-2 rounded-lg ${testResult.success
-                                                ? 'bg-green-500/10 text-green-400 border border-green-500/30'
-                                                : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                                            ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+                                            : 'bg-red-500/10 text-red-400 border border-red-500/30'
                                             }`}>
                                             {testResult.success ? (
                                                 <CheckCircle className="w-4 h-4 flex-shrink-0" />
@@ -481,7 +487,9 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                 <p className="text-xs text-gray-500">
                                     Add context about your training (e.g., injuries, preferences)
                                 </p>
+                                <label htmlFor="customPrompt" className="sr-only">Custom Instructions</label>
                                 <textarea
+                                    id="customPrompt"
                                     value={customPrompt}
                                     onChange={(e) => setCustomPrompt(e.target.value)}
                                     placeholder="I'm recovering from a knee injury and should avoid high-intensity work..."

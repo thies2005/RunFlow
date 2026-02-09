@@ -138,7 +138,9 @@ export async function POST(request: NextRequest) {
         });
     } catch (error) {
         console.error('AI Chat error:', error);
-        return new Response(JSON.stringify({ error: 'Internal server error' }), {
+        return new Response(JSON.stringify({
+            error: error instanceof Error ? error.message : String(error)
+        }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
         });

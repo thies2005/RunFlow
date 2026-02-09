@@ -159,6 +159,8 @@ export async function PUT(request: NextRequest) {
         });
     } catch (error) {
         console.error('Admin AI settings PUT error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return NextResponse.json({
+            error: error instanceof Error ? error.message : String(error)
+        }, { status: 500 });
     }
 }

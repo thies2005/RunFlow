@@ -388,11 +388,11 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="e.g. OpenAI" />
+                    <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder:text-gray-400" placeholder="e.g. OpenAI" />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                    <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white">
+                    <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                         <option value="openai">OpenAI Compatible</option>
                         <option value="anthropic">Anthropic</option>
                         <option value="google">Google Gemini</option>
@@ -402,13 +402,13 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
-                <input type="text" value={formData.baseUrl} onChange={e => setFormData({ ...formData, baseUrl: e.target.value })} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" />
+                <input type="text" value={formData.baseUrl} onChange={e => setFormData({ ...formData, baseUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder:text-gray-400" />
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">API Key {initialData && <span className="text-green-600 font-normal">(Leave blank to keep current)</span>}</label>
                 <div className="flex gap-2">
-                    <input type="password" value={formData.apiKey} onChange={e => setFormData({ ...formData, apiKey: e.target.value })} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" placeholder={initialData ? '••••••••' : 'sk-...'} />
+                    <input type="password" value={formData.apiKey} onChange={e => setFormData({ ...formData, apiKey: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder:text-gray-400" placeholder={initialData ? '••••••••' : 'sk-...'} />
                     <button onClick={handleTest} disabled={testing || (!formData.apiKey && !initialData)} className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 disabled:opacity-50">
                         {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                     </button>
@@ -422,7 +422,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Models (comma separated)</label>
-                <input type="text" value={formData.models} onChange={e => setFormData({ ...formData, models: e.target.value })} className="w-full px-3 py-2 border rounded-lg font-mono text-sm" placeholder="gpt-4,gpt-4o" />
+                <input type="text" value={formData.models} onChange={e => setFormData({ ...formData, models: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder:text-gray-400" placeholder="gpt-4,gpt-4o" />
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t">

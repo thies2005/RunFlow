@@ -158,10 +158,18 @@ async function streamOpenAI(
 
                             try {
                                 const json = JSON.parse(trimmed.slice(6));
-                                const content = json.choices?.[0]?.delta?.content;
-                                if (content) {
-                                    options?.onToken?.(content);
-                                    yield content;
+                                const delta = json.choices?.[0]?.delta;
+
+                                // Support reasoning_content (used by Kimi, DeepSeek, NVIDIA NIM)
+                                if (delta?.reasoning_content) {
+                                    options?.onToken?.(delta.reasoning_content);
+                                    yield delta.reasoning_content;
+                                }
+
+                                // Standard content
+                                if (delta?.content) {
+                                    options?.onToken?.(delta.content);
+                                    yield delta.content;
                                 }
                             } catch {
                                 // Skip invalid JSON lines

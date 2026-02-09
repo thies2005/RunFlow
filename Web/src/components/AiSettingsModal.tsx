@@ -349,6 +349,29 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     </p>
 
                                     <div className="space-y-2">
+                                        <div className="flex gap-2 mb-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setCustomBaseUrl('https://api.openai.com/v1');
+                                                    setCustomModel('gpt-4o-mini');
+                                                }}
+                                                className="text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded border border-gray-700 transition"
+                                            >
+                                                OpenAI Preset
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setCustomBaseUrl('https://integrate.api.nvidia.com/v1');
+                                                    setCustomModel('moonshotai/kimi-k2.5');
+                                                }}
+                                                className="text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded border border-gray-700 transition"
+                                            >
+                                                NVIDIA (Kimi) Preset
+                                            </button>
+                                        </div>
+
                                         <label htmlFor="customBaseUrl" className="sr-only">Base URL</label>
                                         <input
                                             id="customBaseUrl"

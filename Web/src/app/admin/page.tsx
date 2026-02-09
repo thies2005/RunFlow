@@ -309,6 +309,8 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
         if (!initialData && formData.type) {
             if (formData.type === 'openai') {
                 setFormData(prev => ({ ...prev, baseUrl: 'https://api.openai.com/v1', models: 'gpt-4o,gpt-4o-mini' }));
+            } else if (formData.type === 'nvidia') {
+                setFormData(prev => ({ ...prev, baseUrl: 'https://integrate.api.nvidia.com/v1', models: 'moonshotai/kimi-k2.5,meta/llama-3.1-405b-instruct' }));
             } else if (formData.type === 'anthropic') {
                 setFormData(prev => ({ ...prev, baseUrl: 'https://api.anthropic.com', models: 'claude-3-opus-20240229,claude-3-sonnet-20240229' }));
             } else if (formData.type === 'google') {
@@ -363,7 +365,10 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     provider: formData.type,
-                    apiKey: formData.apiKey || initialData?.apiKey, // Use entered key or existing
+                    // Only send apiKey if they typed a new one. 
+                    // Note: If they leave it blank to keep current, you can't test it here 
+                    // without additional server-side support for testing by provider ID.
+                    apiKey: formData.apiKey || null,
                     baseUrl: formData.baseUrl,
                     model: modelsList[0] || 'gpt-4o-mini',
                 }),
@@ -394,6 +399,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                     <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                         <option value="openai">OpenAI Compatible</option>
+                        <option value="nvidia">NVIDIA NIM</option>
                         <option value="anthropic">Anthropic</option>
                         <option value="google">Google Gemini</option>
                     </select>

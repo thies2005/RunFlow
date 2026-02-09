@@ -1268,7 +1268,7 @@ This builds:
 | `STRAVA_CLIENT_SECRET` | Yes | From Strava API settings |
 | `STRAVA_VERIFY_TOKEN` | Yes | Custom string for webhook validation |
 | `DATABASE_URL` | Optional | Default: `postgresql://runflow:runflow@db:5432/runflow` |
-| `ENCRYPTION_KEY` | Optional | For encrypting Strava tokens |
+| `ENCRYPTION_KEY` | Required (Prod) | 32-byte base64 key for encrypting Strava tokens at rest |
 | `TUNNEL_TOKEN` | Optional | Cloudflare Tunnel token |
 | `POSTGRES_USER` | Optional | Default: `runflow` |
 | `POSTGRES_PASSWORD` | Optional | Default: `runflow` |

@@ -30,7 +30,7 @@ export async function GET() {
         // Don't return full API keys, just a mask or existence check
         const safeProviders = providers.map(p => ({
             ...p,
-            apiKey: p.apiKey ? '••••••••' : null, // Masked
+            apiKey: null, // Don't send masked string to client
             hasKey: !!p.apiKey
         }));
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        return NextResponse.json({ success: true, provider: { ...provider, apiKey: '••••••••' } });
+        return NextResponse.json({ success: true, provider: { ...provider, apiKey: null } });
     } catch (error: any) {
         if (error.code === 'P2002') {
             return NextResponse.json({ error: 'A provider with this slug already exists' }, { status: 400 });
@@ -102,7 +102,7 @@ export async function PUT(request: NextRequest) {
             data: updateData,
         });
 
-        return NextResponse.json({ success: true, provider: { ...provider, apiKey: '••••••••' } });
+        return NextResponse.json({ success: true, provider: { ...provider, apiKey: null } });
     } catch (error) {
         console.error('Providers PUT error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

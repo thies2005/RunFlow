@@ -15,11 +15,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
     try {
         const body = await request.json();
         const { apiKey, baseUrl = 'https://api.openai.com/v1', model = 'gpt-4o-mini' } = body;
 
         if (!apiKey) {
+            clearTimeout(timeoutId);
             return NextResponse.json({ error: 'API key is required' }, { status: 400 });
         }
 
@@ -35,7 +39,10 @@ export async function POST(request: NextRequest) {
                 messages: [{ role: 'user', content: 'Say "OK" and nothing else.' }],
                 max_tokens: 5,
             }),
+            signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             let errorMessage = `API returned ${response.status}`;
@@ -61,11 +68,20 @@ export async function POST(request: NextRequest) {
             model: data?.model || model,
         });
 
-    } catch (error) {
+    } catch (error: any) {
+        clearTimeout(timeoutId);
         console.error('API key test error:', error);
+
+        let errorMessage = 'Connection failed';
+        if (error.name === 'AbortError') {
+            errorMessage = 'Request timed out - the API is taking too long to respond';
+        } else if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+
         return NextResponse.json({
             success: false,
-            error: error instanceof Error ? error.message : 'Connection failed',
+            error: errorMessage,
         });
     }
 }

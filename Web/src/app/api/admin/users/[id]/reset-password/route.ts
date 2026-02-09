@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { createAuthCode } from '@/lib/auth/tokens';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { AuthCodeType } from '@prisma/client';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
 export async function POST(
     request: NextRequest,
@@ -21,6 +22,10 @@ export async function POST(
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
+    }
+
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
     }
 
     try {

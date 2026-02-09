@@ -8,15 +8,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
-
-// Simple admin check
-async function isAdmin(): Promise<boolean> {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('admin_session');
-    return adminToken?.value === process.env.ADMIN_SESSION_TOKEN;
-}
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
 const VALID_TIERS = ['none', 'tier1', 'tier2', 'tier3'];
 
@@ -24,8 +18,13 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    if (!(await isAdmin())) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+        return authResult.error;
+    }
+
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
     }
 
     try {

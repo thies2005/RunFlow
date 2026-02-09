@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
 // Set max duration for this serverless function (Vercel/Next.js specific)
 export const maxDuration = 300; // 5 minutes
@@ -23,6 +24,10 @@ export async function POST(request: NextRequest) {
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
+    }
+
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
     }
 
     try {

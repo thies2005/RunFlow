@@ -4,27 +4,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { requireAdmin } from '@/lib/admin/auth';
 import { encryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
-
-// Simple admin check (reusing existing pattern from admin routes)
-async function isAdmin(): Promise<boolean> {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('admin_session');
-    return adminToken?.value === process.env.ADMIN_SESSION_TOKEN;
-}
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
 /**
  * GET - Fetch global AI settings and user AI stats
  */
-// ... (imports remain same)
-
-// ... (isAdmin remains same)
-
-export async function GET() {
-    if (!(await isAdmin())) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function GET(request: NextRequest) {
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+        return authResult.error;
     }
 
     try {
@@ -83,8 +74,13 @@ export async function GET() {
  * PUT - Update global AI settings
  */
 export async function PUT(request: NextRequest) {
-    if (!(await isAdmin())) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+        return authResult.error;
+    }
+
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
     }
 
     try {

@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminCredentials, signAdminToken, COOKIE_NAME } from '@/lib/admin/auth';
+import { setCsrfCookie } from '@/lib/security/csrf';
 
 export async function POST(request: NextRequest) {
     try {
@@ -75,6 +76,9 @@ export async function POST(request: NextRequest) {
             maxAge: 86400, // 24 hours
             path: '/',
         });
+
+        // Set CSRF cookie for subsequent requests
+        setCsrfCookie(response);
 
         return response;
 

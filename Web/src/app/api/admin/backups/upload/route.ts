@@ -12,6 +12,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { pipeline } from 'stream';
 import { promisify } from 'util';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
 const pump = promisify(pipeline);
 const BACKUPS_DIR = path.join(process.cwd(), 'backups');
@@ -20,6 +21,10 @@ export async function POST(request: NextRequest) {
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
+    }
+
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
     }
 
     try {

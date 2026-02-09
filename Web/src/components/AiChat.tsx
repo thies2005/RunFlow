@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Send, Bot, Loader2, AlertCircle, Settings2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface AiChatProps {
     activityId?: string;
@@ -171,7 +173,18 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                                         <span className="font-medium">
                                             {msg.role === 'user' ? 'You: ' : 'Coach: '}
                                         </span>
-                                        {msg.content}
+                                        <div className="inline-block align-top markdown-content">
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkGfm]}
+                                                components={{
+                                                    p: ({ node, ...props }) => <p className="inline" {...props} />,
+                                                    ul: ({ node, ...props }) => <ul className="list-disc ml-4 inline-block" {...props} />,
+                                                    li: ({ node, ...props }) => <li className="inline-block mr-2" {...props} />,
+                                                }}
+                                            >
+                                                {msg.content}
+                                            </ReactMarkdown>
+                                        </div>
                                         {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && (
                                             <span className="inline-block w-1 h-4 bg-purple-400 animate-pulse ml-1" />
                                         )}
@@ -284,7 +297,42 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                                         : 'bg-gray-800 text-white'
                                         }`}
                                 >
-                                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                    <div className="text-sm markdown-content">
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            components={{
+                                                h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
+                                                h2: ({ node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
+                                                h3: ({ node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
+                                                p: ({ node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+                                                ul: ({ node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
+                                                ol: ({ node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
+                                                li: ({ node, ...props }) => <li className="pl-1" {...props} />,
+                                                code: ({ node, inline, className, children, ...props }: any) => {
+                                                    const match = /language-(\w+)/.exec(className || '');
+                                                    return !inline ? (
+                                                        <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
+                                                            <code className={className} {...props}>
+                                                                {children}
+                                                            </code>
+                                                        </pre>
+                                                    ) : (
+                                                        <code className="bg-black/30 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
+                                                            {children}
+                                                        </code>
+                                                    );
+                                                },
+                                                table: ({ node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
+                                                thead: ({ node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
+                                                th: ({ node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
+                                                td: ({ node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
+                                                blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
+                                                a: ({ node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                            }}
+                                        >
+                                            {msg.content}
+                                        </ReactMarkdown>
+                                    </div>
                                     {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && !msg.content && (
                                         <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                                     )}

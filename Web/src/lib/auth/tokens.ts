@@ -3,6 +3,7 @@
 import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/db';
 import { AuthCodeType } from '@prisma/client';
+import { checkRateLimitAsync } from '@/lib/rateLimit';
 
 export const CODE_EXPIRY_MINUTES = 15;
 
@@ -51,6 +52,19 @@ export async function createAuthCode(email: string, type: AuthCodeType): Promise
  * Verify a code for a user
  */
 export async function verifyAuthCode(email: string, code: string, type: AuthCodeType): Promise<boolean> {
+    const clientId = `${email}:${type}`;
+    
+    const rateLimitResult = await checkRateLimitAsync(clientId, {
+        prefix: 'auth_code_verify',
+        limit: 10,
+        windowSeconds: 900
+    });
+    
+    if (!rateLimitResult.allowed) {
+        console.warn(`Rate limit exceeded for auth code verification: ${clientId}`);
+        return false;
+    }
+
     const record = await prisma.authCode.findFirst({
         where: {
             email,

@@ -7,19 +7,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { requireAdmin } from '@/lib/admin/auth';
 import { encryptToken, decryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
-async function isAdmin(): Promise<boolean> {
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('admin_session');
-    return adminToken?.value === process.env.ADMIN_SESSION_TOKEN;
-}
-
-export async function GET() {
-    if (!(await isAdmin())) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+export async function GET(request: NextRequest) {
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+        return authResult.error;
     }
 
     try {
@@ -42,8 +38,13 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-    if (!(await isAdmin())) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+        return authResult.error;
+    }
+
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
     }
 
     try {
@@ -77,8 +78,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-    if (!(await isAdmin())) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+        return authResult.error;
+    }
+
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
     }
 
     try {
@@ -110,8 +116,13 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-    if (!(await isAdmin())) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+        return authResult.error;
+    }
+
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
     }
 
     const { searchParams } = new URL(request.url);

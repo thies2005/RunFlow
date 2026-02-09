@@ -114,8 +114,29 @@ model GlobalAiSettings {
   
   // System prompt (base coach persona)
   systemPrompt        String   @default("You are a knowledgeable and encouraging running coach. Analyze the athlete's data and provide personalized, actionable advice. Be specific when referencing their metrics and progress. Keep responses concise but insightful.")
+
+  // Active Provider Configuration
+  activeProviderId    String?
+  activeProvider      AiProvider? @relation(fields: [activeProviderId], references: [id])
   
   updatedAt           DateTime @updatedAt
+}
+
+// AI Providers (OpenAI, Anthropic, Google, etc.)
+model AiProvider {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "OpenAI", "Anthropic"
+  slug        String   @unique // e.g. "openai", "anthropic" ("google" for Gemini)
+  type        String   // "openai" | "anthropic" | "google"
+  baseUrl     String
+  apiKey      String   // Encrypted
+  models      String[] // List of model IDs e.g. ["gpt-4", "claude-3-opus"]
+  isActive    Boolean  @default(true)
+  
+  globalSettings GlobalAiSettings[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // Per-user AI configuration

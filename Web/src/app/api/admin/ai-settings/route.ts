@@ -18,6 +18,10 @@ async function isAdmin(): Promise<boolean> {
 /**
  * GET - Fetch global AI settings and user AI stats
  */
+// ... (imports remain same)
+
+// ... (isAdmin remains same)
+
 export async function GET() {
     if (!(await isAdmin())) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -47,6 +51,7 @@ export async function GET() {
                 defaultBaseUrl: globalSettings.defaultBaseUrl,
                 hasDefaultApiKey: !!globalSettings.defaultApiKey, // Don't return the key itself
                 defaultModel: globalSettings.defaultModel,
+                activeProviderId: globalSettings.activeProviderId,
                 // Tier settings
                 tier1Name: globalSettings.tier1Name,
                 tier1DailyLimit: globalSettings.tier1DailyLimit,
@@ -88,6 +93,7 @@ export async function PUT(request: NextRequest) {
             defaultBaseUrl,
             defaultApiKey,
             defaultModel,
+            activeProviderId,
             // Tier fields
             tier1Name, tier1DailyLimit, tier1MonthlyLimit,
             tier2Name, tier2DailyLimit, tier2MonthlyLimit,
@@ -101,6 +107,7 @@ export async function PUT(request: NextRequest) {
         const updateData: Record<string, unknown> = {};
 
         if (defaultBaseUrl !== undefined) updateData.defaultBaseUrl = defaultBaseUrl;
+        if (activeProviderId !== undefined) updateData.activeProviderId = activeProviderId;
 
         // Encrypt API key if provided
         if (defaultApiKey !== undefined) {
@@ -144,6 +151,7 @@ export async function PUT(request: NextRequest) {
                 defaultBaseUrl: settings.defaultBaseUrl,
                 hasDefaultApiKey: !!settings.defaultApiKey,
                 defaultModel: settings.defaultModel,
+                activeProviderId: settings.activeProviderId,
                 dailyMessageLimit: settings.dailyMessageLimit,
                 monthlyMessageLimit: settings.monthlyMessageLimit,
                 systemPrompt: settings.systemPrompt,

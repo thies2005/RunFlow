@@ -59,7 +59,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
             {/* Content Container - No swipe, simple fade */}
-            <div className={`h-full w-full overflow-hidden ${isChat ? 'pb-[64px]' : 'pb-[80px]'}`}>
+            <div className={`h-[100dvh] w-full overflow-hidden ${isChat ? 'pb-[calc(64px+env(safe-area-inset-bottom))]' : 'pb-[calc(80px+env(safe-area-inset-bottom))]'}`}>
                 <motion.div
                     key={activeIndex}
                     initial={{ opacity: 0 }}

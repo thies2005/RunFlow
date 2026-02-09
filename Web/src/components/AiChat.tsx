@@ -399,7 +399,7 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
             )}
 
             {/* Input Area */}
-            <div className="p-4 border-t border-gray-800 bg-background sticky bottom-0 z-10">
+            <div className="p-4 border-t border-gray-800 bg-background">
                 <div className="flex gap-2">
                     <input
                         type="text"

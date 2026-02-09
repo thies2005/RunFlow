@@ -40,8 +40,9 @@ export async function POST(
             }, { status: 400 });
         }
 
-        // Determine if AI should be enabled based on tier
+        // Determine if AI should be enabled and if we should clear custom keys
         const aiEnabled = tier !== 'none';
+        const isManaged = tier !== 'none';
 
         // Upsert user AI settings
         const settings = await prisma.userAiSettings.upsert({
@@ -54,6 +55,12 @@ export async function POST(
             update: {
                 usageTier: tier,
                 aiEnabled,
+                // Clear custom keys if setting a managed tier to prevent override confusion
+                ...(isManaged ? {
+                    customApiKey: null,
+                    customBaseUrl: null,
+                    customModel: null,
+                } : {})
             },
         });
 

@@ -51,13 +51,15 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
         }
     }, [activeIndex, router, onPageChange]);
 
+    const isChat = pathname === '/chat';
+
     return (
         <div
             className="fixed inset-0 bg-background"
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
             {/* Content Container - No swipe, simple fade */}
-            <div className="h-full w-full overflow-hidden pb-[80px]">
+            <div className={`h-full w-full overflow-hidden ${isChat ? 'pb-[64px]' : 'pb-[80px]'}`}>
                 <motion.div
                     key={activeIndex}
                     initial={{ opacity: 0 }}
@@ -65,13 +67,15 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                     transition={{ duration: 0.2 }}
                     className="h-full w-full"
                 >
-                    <div className="h-full w-full overflow-y-auto overscroll-y-contain">
-                        <div className="min-h-full">
+                    <div className={`h-full w-full ${isChat ? 'overflow-hidden' : 'overflow-y-auto overscroll-y-contain'}`}>
+                        <div className={isChat ? 'h-full' : 'min-h-full'}>
                             {children[activeIndex]}
-                            {/* Strava footer at bottom */}
-                            <div className="py-6 px-4">
-                                <StravaPoweredFooter />
-                            </div>
+                            {/* Strava footer at bottom - hide on chat */}
+                            {!isChat && (
+                                <div className="py-6 px-4">
+                                    <StravaPoweredFooter />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </motion.div>

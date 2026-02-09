@@ -29,7 +29,7 @@ export default function ChatPage() {
                 </div>
             </header>
 
-            <main className="flex-1 max-w-7xl w-full mx-auto p-0 md:p-4 h-[calc(100vh-64px)]">
+            <main className="flex-1 max-w-7xl w-full mx-auto p-0 md:p-4 h-[calc(100dvh-64px)] overflow-hidden">
                 <div className="h-full bg-background md:bg-surface md:border md:border-glass-border md:rounded-xl overflow-hidden">
                     <AiChat onOpenSettings={() => setIsAiSettingsOpen(true)} />
                 </div>

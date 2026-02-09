@@ -45,6 +45,9 @@ export async function GET(request: NextRequest) {
                     lastSyncAt: true,
                     _count: {
                         select: { activities: true }
+                    },
+                    aiSettings: {
+                        select: { usageTier: true }
                     }
                 },
                 orderBy: { createdAt: 'desc' },
@@ -63,6 +66,7 @@ export async function GET(request: NextRequest) {
             createdAt: user.createdAt.toISOString(),
             lastSyncAt: user.lastSyncAt?.toISOString() ?? null,
             activityCount: user._count.activities,
+            aiSettings: user.aiSettings,
         }));
 
         return NextResponse.json({

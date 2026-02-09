@@ -33,8 +33,8 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
         where: { userId },
     });
 
-    // If user has custom API key, use their config
-    if (userSettings?.customApiKey) {
+    // If user has custom API key AND is in BYOK mode ('none'), use their config
+    if (userSettings?.customApiKey && userSettings.usageTier === 'none') {
         return {
             provider: 'openai', // Custom keys assume OpenAI-compatible for now
             baseUrl: userSettings.customBaseUrl || 'https://api.openai.com/v1',
@@ -43,7 +43,7 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
         };
     }
 
-    // Otherwise, use global config if user is enabled
+    // Otherwise, use global config if user is enabled (managed tiers)
     if (!userSettings?.aiEnabled) {
         return null; // AI not enabled for this user
     }

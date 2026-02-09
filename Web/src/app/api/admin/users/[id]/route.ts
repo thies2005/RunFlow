@@ -9,7 +9,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
-import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
 export async function DELETE(
     request: NextRequest,
@@ -19,10 +18,6 @@ export async function DELETE(
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
-    }
-
-    if (!validateCsrfToken(request)) {
-        return csrfValidationErrorResponse();
     }
 
     try {

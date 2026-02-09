@@ -4,14 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/admin/auth';
 import { encryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
-
-/**
- * GET - Fetch global AI settings and user AI stats
- */
 export async function GET(request: NextRequest) {
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
@@ -74,13 +70,14 @@ export async function GET(request: NextRequest) {
  * PUT - Update global AI settings
  */
 export async function PUT(request: NextRequest) {
+    // Validate CSRF token
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
-    }
-
-    if (!validateCsrfToken(request)) {
-        return csrfValidationErrorResponse();
     }
 
     try {

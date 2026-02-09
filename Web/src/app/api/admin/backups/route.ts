@@ -7,10 +7,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
+import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
-import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 
 const BACKUPS_DIR = path.join(process.cwd(), 'backups');
 
@@ -69,13 +69,14 @@ export async function GET(request: NextRequest) {
  * Body: { action: 'create' | 'restore', backupName?: string }
  */
 export async function POST(request: NextRequest) {
+    // Validate CSRF token
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
-    }
-
-    if (!validateCsrfToken(request)) {
-        return csrfValidationErrorResponse();
     }
 
     try {

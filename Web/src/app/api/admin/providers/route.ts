@@ -7,10 +7,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/admin/auth';
 import { encryptToken, decryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+
 
 export async function GET(request: NextRequest) {
     const authResult = await requireAdmin(request);
@@ -38,13 +39,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    // Validate CSRF token
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
-    }
-
-    if (!validateCsrfToken(request)) {
-        return csrfValidationErrorResponse();
     }
 
     try {
@@ -78,13 +80,14 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+    // Validate CSRF token
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
-    }
-
-    if (!validateCsrfToken(request)) {
-        return csrfValidationErrorResponse();
     }
 
     try {
@@ -116,13 +119,14 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+    // Validate CSRF token
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
-    }
-
-    if (!validateCsrfToken(request)) {
-        return csrfValidationErrorResponse();
     }
 
     const { searchParams } = new URL(request.url);

@@ -3,43 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, EyeOff, Save, Loader2, Zap, XCircle } from 'lucide-react';
-
-function getCsrfToken(): string | null {
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-        const [name, value] = cookie.trim().split('=');
-        if (name === 'csrf_token') {
-            try {
-                const data = JSON.parse(decodeURIComponent(value));
-                if (data && data.token) {
-                    return data.token;
-                }
-            } catch {
-                return null;
-            }
-        }
-    }
-    return null;
-}
-
-async function fetchWithCsrf(url: string, options: RequestInit = {}): Promise<Response> {
-    const csrfToken = getCsrfToken();
-    const headers = {
-        ...options.headers,
-        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-    };
-
-    const response = await fetch(url, { ...options, headers });
-
-    if (response.status === 403) {
-        const data = await response.json();
-        if (data.error === 'CSRF token validation failed') {
-            throw new Error('CSRF validation failed. Please refresh the page and try again.');
-        }
-    }
-
-    return response;
-}
+import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 
 // AI Settings Tab Component
 const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, setActionMessage }: any) => {
@@ -98,9 +62,9 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
     const handleSaveGlobal = async () => {
         setProcessing(true);
         try {
-            const res = await fetchWithCsrf('/api/admin/ai-settings', {
+            const res = await fetch('/api/admin/ai-settings', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: csrfHeaders(),
                 body: JSON.stringify({
                     ...formData,
                     activeProviderId
@@ -120,7 +84,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
         if (!confirm('Delete this provider?')) return;
         setProcessing(true);
         try {
-            const res = await fetchWithCsrf(`/api/admin/providers?id=${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/admin/providers?id=${id}`, { method: 'DELETE', headers: { 'X-CSRF-Token': getCsrfToken() } });
             if (!res.ok) throw new Error('Failed to delete');
             fetchProviders();
             if (activeProviderId === id) setActiveProviderId(null);
@@ -374,9 +338,9 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
             }
 
             const method = initialData ? 'PUT' : 'POST';
-            const res = await fetchWithCsrf('/api/admin/providers', {
+            const res = await fetch('/api/admin/providers', {
                 method,
-                headers: { 'Content-Type': 'application/json' },
+                headers: csrfHeaders(),
                 body: JSON.stringify(payload),
             });
 
@@ -558,7 +522,7 @@ function DashboardContent() {
         setProcessing(true);
         setActionMessage(null);
         try {
-            const res = await fetchWithCsrf(`/api/admin/users/${userId}/reset-password`, { method: 'POST' });
+            const res = await fetch(`/api/admin/users/${userId}/reset-password`, { method: 'POST', headers: { 'X-CSRF-Token': getCsrfToken() } });
             const data = await res.json();
 
             if (!res.ok) throw new Error(data.error || 'Failed to send reset email');
@@ -581,9 +545,9 @@ function DashboardContent() {
         setProcessing(true);
         setActionMessage(null);
         try {
-            const res = await fetchWithCsrf('/api/admin/recalculate-fitness', {
+            const res = await fetch('/api/admin/recalculate-fitness', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: csrfHeaders(),
                 body: userId ? JSON.stringify({ userId }) : undefined
             });
 
@@ -611,7 +575,7 @@ function DashboardContent() {
 
         setProcessing(true);
         try {
-            const res = await fetchWithCsrf(`/api/admin/users/${userId}`, { method: 'DELETE' });
+            const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE', headers: { 'X-CSRF-Token': getCsrfToken() } });
             if (!res.ok) throw new Error('Failed to delete user');
 
             setActionMessage({ type: 'success', text: 'User deleted successfully' });
@@ -633,9 +597,9 @@ function DashboardContent() {
         ));
 
         try {
-            const res = await fetchWithCsrf(`/api/admin/users/${userId}/toggle-ai`, {
+            const res = await fetch(`/api/admin/users/${userId}/toggle-ai`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: csrfHeaders(),
                 body: JSON.stringify({ tier }),
             });
 
@@ -661,8 +625,9 @@ function DashboardContent() {
         formData.append('file', file);
 
         try {
-            const res = await fetchWithCsrf('/api/admin/backups/upload', {
+            const res = await fetch('/api/admin/backups/upload', {
                 method: 'POST',
+                headers: { 'X-CSRF-Token': getCsrfToken() },
                 body: formData,
             });
 
@@ -685,9 +650,9 @@ function DashboardContent() {
         setActionMessage(null);
 
         try {
-            const res = await fetchWithCsrf('/api/admin/backups', {
+            const res = await fetch('/api/admin/backups', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: csrfHeaders(),
                 body: JSON.stringify({ action, backupName }),
             });
 

@@ -6,7 +6,6 @@
  */
 
 import * as Sentry from "@sentry/nextjs";
-import { Prisma } from "@prisma/client";
 
 Sentry.init({
     dsn: process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -15,7 +14,7 @@ Sentry.init({
     enabled: process.env.NODE_ENV === 'production' && !!(process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN),
 
     // Performance Monitoring for server
-    tracesSampleRate: 0.1,
+    tracesSampleRate: 0.1, // 10% of transactions
 
     // Environment tag
     environment: process.env.NODE_ENV,
@@ -33,14 +32,9 @@ Sentry.init({
         'Missing required fields',
     ],
 
-    // Integrations
-    integrations: [
-        // Prisma integration for database query tracking
-        Sentry.prismaIntegration(),
-    ],
-
     // Before sending event
     beforeSend(event, hint) {
+        // Add additional context
         if (hint.originalException instanceof Error) {
             event.extra = {
                 ...event.extra,

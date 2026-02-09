@@ -72,12 +72,12 @@ export async function POST(request: NextRequest) {
         response.cookies.set(COOKIE_NAME, token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            sameSite: 'strict',
             maxAge: 86400, // 24 hours
             path: '/',
         });
 
-        // Set CSRF cookie for subsequent requests
+        // Set CSRF cookie for admin frontend
         setCsrfCookie(response);
 
         return response;

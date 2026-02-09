@@ -24,6 +24,12 @@
 - **User Management**: Admins can now manually trigger password reset emails for users from the dashboard.
 - **Observability**: Enhanced email system logging for better troubleshooting of delivery issues.
 
+### 🛡️ Security Hardening
+- **Admin Authentication**: Standardized on JWT-based authentication for all admin routes, replacing legacy checks.
+- **CSRF Protection**: Comprehensive CSRF validation added to all state-changing admin operations.
+- **Rate Limiting**: Added strict rate limiting to authentication code verification endpoints.
+- **Cookie Security**: Upgraded admin session cookies to `SameSite=Strict` for enhanced protection.
+
 ---
 
 > Please report any issues on [GitHub](https://github.com/thies2005/RunFlow/issues).

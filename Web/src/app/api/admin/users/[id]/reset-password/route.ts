@@ -18,14 +18,15 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    // Validate CSRF token
+    if (!validateCsrfToken(request)) {
+        return csrfValidationErrorResponse();
+    }
+
     // Require admin authentication
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
-    }
-
-    if (!validateCsrfToken(request)) {
-        return csrfValidationErrorResponse();
     }
 
     try {

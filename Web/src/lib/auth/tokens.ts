@@ -3,7 +3,7 @@
 import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/db';
 import { AuthCodeType } from '@prisma/client';
-import { checkRateLimitAsync } from '@/lib/rateLimit';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export const CODE_EXPIRY_MINUTES = 15;
 
@@ -50,18 +50,18 @@ export async function createAuthCode(email: string, type: AuthCodeType): Promise
 
 /**
  * Verify a code for a user
+ * Rate limited to 10 attempts per 15 minutes per email to prevent brute-force attacks
  */
 export async function verifyAuthCode(email: string, code: string, type: AuthCodeType): Promise<boolean> {
-    const clientId = `${email}:${type}`;
-    
-    const rateLimitResult = await checkRateLimitAsync(clientId, {
-        prefix: 'auth_code_verify',
+    // Rate limit: 10 attempts per 15 minutes per email
+    const rateLimitResult = checkRateLimit(email, {
         limit: 10,
-        windowSeconds: 900
+        windowSeconds: 15 * 60,
+        prefix: 'auth_code_verify',
     });
-    
+
     if (!rateLimitResult.allowed) {
-        console.warn(`Rate limit exceeded for auth code verification: ${clientId}`);
+        console.warn(`[Auth] Rate limit exceeded for auth code verification: ${email}`);
         return false;
     }
 

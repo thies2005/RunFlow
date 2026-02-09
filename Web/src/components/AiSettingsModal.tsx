@@ -237,7 +237,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     }`} />
                                 <span className={data?.settings?.aiEnabled ? 'text-green-300' : 'text-yellow-300'}>
                                     {data?.settings?.aiEnabled
-                                        ? data?.settings?.customApiKey
+                                        ? data?.settings?.hasCustomApiKey
                                             ? 'AI enabled (using your API key)'
                                             : 'AI enabled (using shared quota)'
                                         : 'AI features not enabled - contact admin or add your own API key'}
@@ -245,7 +245,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                             </div>
 
                             {/* Usage Stats (if enabled and not using own key) */}
-                            {data?.settings?.aiEnabled && !data?.settings?.customApiKey && data?.usage && (
+                            {data?.settings?.aiEnabled && !data?.settings?.hasCustomApiKey && data?.usage && (
                                 <div className="bg-gray-800/50 rounded-lg p-4">
                                     <h3 className="text-sm font-medium text-gray-300 mb-2">Usage</h3>
                                     <div className="grid grid-cols-2 gap-4 text-sm">
@@ -287,7 +287,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     <div className="relative">
                                         <input
                                             type={showApiKey ? 'text' : 'password'}
-                                            placeholder={data?.settings?.customApiKey ? '••••••••••••••••' : 'API Key'}
+                                            placeholder={data?.settings?.hasCustomApiKey ? '••••••••••••••••' : 'API Key'}
                                             value={customApiKey}
                                             onChange={(e) => setCustomApiKey(e.target.value)}
                                             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 pr-10 text-white text-sm focus:border-purple-500 focus:outline-none"
@@ -310,7 +310,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     />
                                 </div>
 
-                                {data?.settings?.customApiKey && (
+                                {data?.settings?.hasCustomApiKey && (
                                     <button
                                         onClick={handleRemoveApiKey}
                                         className="text-xs text-red-400 hover:text-red-300"

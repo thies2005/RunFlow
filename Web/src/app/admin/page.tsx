@@ -147,7 +147,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                 {/* Usage Tiers */}
                 <div className="border-t border-gray-200 pt-4 mt-4">
                     <h4 className="font-medium text-gray-700 mb-3">Usage Tiers</h4>
-                    <p className="text-xs text-gray-500 mb-4">Define 3 tiers with different daily/monthly message limits. "No Access" tier = BYOK only.</p>
+                    <p className="text-xs text-gray-500 mb-4">Define 3 tiers with different daily/monthly message limits. &quot;No Access&quot; tier = BYOK only.</p>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Tier 1 */}

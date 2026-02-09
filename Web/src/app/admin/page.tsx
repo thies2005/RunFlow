@@ -416,6 +416,36 @@ function DashboardContent() {
         }
     };
 
+    const handleToggleAi = async (userId: string, tier: string) => {
+        setProcessing(true);
+        // Optimistic update
+        setUsers(users.map((u: any) =>
+            u.id === userId
+                ? { ...u, aiSettings: { ...u.aiSettings, usageTier: tier } }
+                : u
+        ));
+
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/toggle-ai`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tier }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update AI settings');
+            }
+
+            setActionMessage({ type: 'success', text: 'User AI tier updated' });
+        } catch (error: any) {
+            setActionMessage({ type: 'error', text: error.message });
+            fetchAllData(); // Revert on error
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const handleUploadBackup = async (file: File) => {
         setProcessing(true);
         setActionMessage(null);
@@ -589,6 +619,7 @@ function DashboardContent() {
                                             <th className="pb-3 font-semibold text-gray-600 text-sm">Joined</th>
                                             <th className="pb-3 font-semibold text-gray-600 text-sm">Last Sync</th>
                                             <th className="pb-3 font-semibold text-gray-600 text-sm">Activities</th>
+                                            <th className="pb-3 font-semibold text-gray-600 text-sm">AI Tier</th>
                                             <th className="pb-3 font-semibold text-gray-600 text-sm text-right">Actions</th>
                                         </tr>
                                     </thead>
@@ -621,6 +652,19 @@ function DashboardContent() {
                                                 </td>
                                                 <td className="py-4 text-sm text-gray-500">
                                                     {user.activityCount}
+                                                </td>
+                                                <td className="py-4 text-sm text-gray-500">
+                                                    <select
+                                                        value={user.aiSettings?.usageTier || 'none'}
+                                                        onChange={(e) => handleToggleAi(user.id, e.target.value)}
+                                                        disabled={processing}
+                                                        className="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2.5"
+                                                    >
+                                                        <option value="none">No Access (BYOK)</option>
+                                                        <option value="tier1">{aiSettings?.settings?.tier1Name || 'Tier 1'}</option>
+                                                        <option value="tier2">{aiSettings?.settings?.tier2Name || 'Tier 2'}</option>
+                                                        <option value="tier3">{aiSettings?.settings?.tier3Name || 'Tier 3'}</option>
+                                                    </select>
                                                 </td>
                                                 <td className="py-4 text-right">
                                                     <div className="flex justify-end space-x-2">

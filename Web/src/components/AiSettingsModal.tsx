@@ -13,6 +13,9 @@ import {
     Check,
     Loader2,
     Info,
+    Zap,
+    CheckCircle,
+    XCircle,
 } from 'lucide-react';
 
 interface AiSettingsModalProps {
@@ -102,6 +105,10 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
     const [customPrompt, setCustomPrompt] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // API key testing state
+    const [testingKey, setTestingKey] = useState(false);
+    const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
     // Fetch current settings
     const { data, isLoading, refetch } = useQuery({
@@ -202,6 +209,40 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
             newAccess[opt.key] = enabled;
         });
         setDataAccess(newAccess);
+    };
+
+    const handleTestApiKey = async () => {
+        if (!customApiKey) {
+            setTestResult({ success: false, message: 'Please enter an API key to test' });
+            return;
+        }
+
+        setTestingKey(true);
+        setTestResult(null);
+
+        try {
+            const res = await fetch('/api/ai/test-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    apiKey: customApiKey,
+                    baseUrl: customBaseUrl || 'https://api.openai.com/v1',
+                    model: customModel || 'gpt-4o-mini',
+                }),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                setTestResult({ success: true, message: `✓ API key works! Model: ${data.model}` });
+            } else {
+                setTestResult({ success: false, message: data.error || 'API key test failed' });
+            }
+        } catch (error) {
+            setTestResult({ success: false, message: 'Connection error - check your base URL' });
+        } finally {
+            setTestingKey(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -308,6 +349,40 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         onChange={(e) => setCustomModel(e.target.value)}
                                         className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-500 focus:outline-none"
                                     />
+
+                                    {/* Test API Key Button */}
+                                    <button
+                                        onClick={handleTestApiKey}
+                                        disabled={testingKey || !customApiKey}
+                                        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition"
+                                    >
+                                        {testingKey ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                Testing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Zap className="w-4 h-4" />
+                                                Test API Key
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* Test Result Feedback */}
+                                    {testResult && (
+                                        <div className={`flex items-center gap-2 text-sm p-2 rounded-lg ${testResult.success
+                                                ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+                                                : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                                            }`}>
+                                            {testResult.success ? (
+                                                <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                                            ) : (
+                                                <XCircle className="w-4 h-4 flex-shrink-0" />
+                                            )}
+                                            <span>{testResult.message}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {data?.settings?.hasCustomApiKey && (

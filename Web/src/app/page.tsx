@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Settings, LogOut, AlertCircle, BarChart3, MessageSquare } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+import { signIn, signOut } from 'next-auth/react';
+import { LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo, Footer, UserMenu } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
@@ -163,19 +164,38 @@ export default function Dashboard() {
                     </div>
                 </header>
 
-                {hasError && (
-                    <div className="bg-red-500/10 border-b border-red-500/20 py-3 px-4">
-                        <div className="max-w-7xl mx-auto flex items-center gap-2 text-red-400">
-                            <AlertCircle className="w-5 h-5" />
-                            <span className="text-sm">
-                                {syncMutation.error?.message || error?.message || 'An error occurred'}
-                            </span>
-                            <button onClick={() => { queryClient.invalidateQueries(); syncMutation.reset(); }} className="ml-auto text-sm underline hover:no-underline">
-                                Retry
-                            </button>
+                {hasError && (() => {
+                    const errMsg = syncMutation.error?.message || error?.message || '';
+                    const isAuthError = errMsg.toLowerCase().includes('authenticate') ||
+                        errMsg.toLowerCase().includes('token') ||
+                        errMsg.includes('400') || errMsg.includes('401');
+                    return (
+                        <div className="bg-red-500/10 border-b border-red-500/20 py-3 px-4">
+                            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center gap-2 text-red-400">
+                                <div className="flex items-center gap-2 flex-1">
+                                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                    <span className="text-sm">
+                                        {isAuthError ? 'Strava connection lost. Please reconnect to resume syncing.' : (errMsg || 'An error occurred')}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {isAuthError && (
+                                        <button
+                                            onClick={() => signIn('strava', { callbackUrl: window.location.href })}
+                                            className="px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg flex items-center gap-2 transition-colors font-medium"
+                                        >
+                                            <LinkIcon className="w-4 h-4" />
+                                            Reconnect Strava
+                                        </button>
+                                    )}
+                                    <button onClick={() => { queryClient.invalidateQueries(); syncMutation.reset(); }} className="text-sm underline hover:no-underline">
+                                        {isAuthError ? 'Dismiss' : 'Retry'}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-8">

@@ -76,42 +76,34 @@ export const authOptions: AuthOptions = {
             const encryptedRefresh = account?.refresh_token ? encryptToken(account.refresh_token) : null;
 
             // CRITICAL FIX: Force-update account tokens on re-authentication
-            // PrismaAdapter may skip updating existing accounts, so we explicitly upsert
-            if (account?.provider === 'strava' && account?.providerAccountId && user?.email) {
-                // Find user by email to handle both new and existing users
-                const dbUser = await prisma.user.findUnique({
-                    where: { email: user.email.toLowerCase() }
-                });
-
-                if (dbUser) {
-                    // Force update the account with fresh encrypted tokens
-                    await prisma.account.upsert({
+            // PrismaAdapter may skip updating existing accounts, so we explicitly update
+            if (account?.provider === 'strava' && account?.providerAccountId) {
+                try {
+                    // Try to update existing account directly by provider+providerAccountId
+                    const existingAccount = await prisma.account.findUnique({
                         where: {
                             provider_providerAccountId: {
                                 provider: 'strava',
                                 providerAccountId: account.providerAccountId
                             }
-                        },
-                        update: {
-                            access_token: encryptedAccess,
-                            refresh_token: encryptedRefresh,
-                            expires_at: account.expires_at,
-                            token_type: account.token_type,
-                            scope: account.scope,
-                        },
-                        create: {
-                            userId: dbUser.id,
-                            type: account.type,
-                            provider: account.provider,
-                            providerAccountId: account.providerAccountId,
-                            access_token: encryptedAccess,
-                            refresh_token: encryptedRefresh,
-                            expires_at: account.expires_at,
-                            token_type: account.token_type,
-                            scope: account.scope,
                         }
                     });
-                    console.log(`✓ Force-updated Strava tokens for user ${dbUser.id}`);
+
+                    if (existingAccount) {
+                        await prisma.account.update({
+                            where: { id: existingAccount.id },
+                            data: {
+                                access_token: encryptedAccess,
+                                refresh_token: encryptedRefresh,
+                                expires_at: account.expires_at,
+                                token_type: account.token_type,
+                                scope: account.scope,
+                            }
+                        });
+                        console.log(`✓ Force-updated Strava tokens for user ${existingAccount.userId}`);
+                    }
+                } catch (err) {
+                    console.error('Failed to force-update Strava tokens:', err);
                 }
             }
 

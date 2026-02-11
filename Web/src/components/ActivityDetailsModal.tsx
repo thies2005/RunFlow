@@ -76,7 +76,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         } finally {
             setIsUpdatingType(false);
         }
-    }, [activity?.id, trainingType]);
+    }, [activity, trainingType]);
 
     const handleSaveName = useCallback(async () => {
         if (!activity || !name.trim()) return;
@@ -99,7 +99,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         } finally {
             setIsSavingName(false);
         }
-    }, [activity?.id, name, router]);
+    }, [activity, name, router]);
 
     // Early return AFTER all hooks have been called
     if (!isOpen || !activity || !mounted) return null;

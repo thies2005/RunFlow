@@ -347,7 +347,7 @@ export function MobileLayout() {
             combinedData,
             trainingPaces,
         };
-    }, [activitiesData, goalsData, statsData, historyData]);
+    }, [activitiesData, goalsData, statsData, historyData, userData]);
 
     // === HANDLERS ===
 

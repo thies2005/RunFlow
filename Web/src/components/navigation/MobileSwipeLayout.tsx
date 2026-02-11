@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { MobileBottomNav } from './MobileBottomNav';
@@ -20,19 +20,19 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true }:
     const pathname = usePathname();
 
     // Dynamically build paths and tabs
-    const paths = showAiChat ? [...BASE_PATHS, '/chat'] : BASE_PATHS;
+    const paths = useMemo(() => showAiChat ? [...BASE_PATHS, '/chat'] : BASE_PATHS, [showAiChat]);
 
-    const tabs = [
+    const tabs = useMemo(() => [
         { icon: Home, label: 'Home', path: '/' },
         { icon: Calendar, label: 'Plan', path: '/plan' },
         { icon: BarChart3, label: 'Analytics', path: '/analytics' },
         ...(showAiChat ? [{ icon: Bot, label: 'Coach', path: '/chat' }] : []),
-    ];
+    ], [showAiChat]);
 
-    const getIndexFromPath = (path: string) => {
+    const getIndexFromPath = useCallback((path: string) => {
         const index = paths.indexOf(path);
         return index >= 0 ? index : 0;
-    };
+    }, [paths]);
 
     const [activeIndex, setActiveIndex] = useState(() => getIndexFromPath(pathname));
 
@@ -41,7 +41,7 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true }:
         if (newIndex !== activeIndex) {
             setActiveIndex(newIndex);
         }
-    }, [pathname, activeIndex, showAiChat]); // Re-run if showAiChat changes
+    }, [pathname, activeIndex, showAiChat, getIndexFromPath]); // Re-run if showAiChat changes
 
     // Simplified navigation - no swiping, no sliding
     const handleTabChange = useCallback((index: number) => {

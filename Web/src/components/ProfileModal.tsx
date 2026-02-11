@@ -43,6 +43,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [copied, setCopied] = useState(false);
     const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+    const [showReauthPrompt, setShowReauthPrompt] = useState(false);
 
     // Fetch existing settings
     const { data: settingsData } = useQuery({
@@ -151,11 +152,24 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         },
         onSuccess: () => {
             setMessage('Full resync started! This may take a few minutes.');
+            setShowReauthPrompt(false);
             queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
         },
         onError: (err) => {
-            setMessage(`Resync failed: ${err.message}`);
+            const isAuthError = err.message.toLowerCase().includes('authenticate') ||
+                err.message.toLowerCase().includes('auth failed') ||
+                err.message.toLowerCase().includes('token') ||
+                err.message.includes('400') ||
+                err.message.includes('401');
+
+            if (isAuthError) {
+                setMessage('Connection lost. Please reconnect Strava.');
+                setShowReauthPrompt(true);
+            } else {
+                setMessage(`Resync failed: ${err.message}`);
+                setShowReauthPrompt(false);
+            }
         }
     });
 
@@ -425,9 +439,21 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     </div>
 
                     {message && (
-                        <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${message.includes('Error') ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
-                            <AlertCircle className="w-4 h-4" />
-                            {message}
+                        <div className={`p-3 rounded-lg text-sm flex flex-col gap-2 ${message.includes('Error') || message.includes('failed') || message.includes('lost') ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+                            <div className="flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4" />
+                                {message}
+                            </div>
+
+                            {showReauthPrompt && (
+                                <button
+                                    onClick={() => signIn('strava', { callbackUrl: window.location.href })}
+                                    className="mt-1 w-full py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded text-xs flex items-center justify-center gap-2 transition-colors uppercase font-semibold tracking-wide"
+                                >
+                                    <LinkIcon className="w-3 h-3" />
+                                    Reconnect Now
+                                </button>
+                            )}
                         </div>
                     )}
 

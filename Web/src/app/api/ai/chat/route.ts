@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 async function detectIntent(config: AiConfig, message: string): Promise<string> {
     const systemPrompt = `You are a classifier. Classify user messages as either HISTORY_QUERY or NORMAL.
 HISTORY_QUERY: requires accessing the user's entire past activity history (older or deeper than the recent 20 activities context).
-Examples: "How many marathons have I run?", "Compare my running volume 2023 vs 2024", "What is my all-time PR?", "List my runs from last month", "Show all runs longer than 20km", "When was my last long run?".
+Examples: "How many marathons have I run?", "Compare my running volume 2023 vs 2024", "What is my all-time PR?", "List my runs from last month", "Show all runs longer than 20km", "When was my last long run?", "What data can you access?", "Check all my history".
 NORMAL: everything else.
 Examples: "Help me plan a workout", "What is my current fitness?", "Analyze my last run", "What should I run tomorrow?", "Explain VDOT".
 Reply ONLY with "HISTORY_QUERY" or "NORMAL".`;

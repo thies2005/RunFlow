@@ -49,7 +49,21 @@ export async function GET(req: Request) {
             include: {
                 workouts: {
                     where: Object.keys(workoutWhere).length > 0 ? workoutWhere : undefined,
-                    orderBy: { scheduledDate: 'asc' }
+                    orderBy: { scheduledDate: 'asc' },
+                    include: {
+                        linkedActivity: {
+                            select: {
+                                id: true,
+                                name: true,
+                                startDate: true,
+                                distance: true,
+                                movingTime: true,
+                                averageHr: true,
+                                averageSpeed: true,
+                                type: true
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -57,36 +71,6 @@ export async function GET(req: Request) {
         if (!activeGoal) {
             return NextResponse.json({ goal: null, unlinkedActivities: [] });
         }
-
-        // Fetch linked activities for completed workouts
-        const linkedActivityIds = activeGoal.workouts
-            .filter(w => w.linkedActivityId)
-            .map(w => w.linkedActivityId as string);
-
-        const linkedActivities = linkedActivityIds.length > 0
-            ? await prisma.activity.findMany({
-                where: { id: { in: linkedActivityIds } },
-                select: {
-                    id: true,
-                    name: true,
-                    startDate: true,
-                    distance: true,
-                    movingTime: true,
-                    averageHr: true,
-                    averageSpeed: true,
-                    type: true
-                }
-            })
-            : [];
-
-        // Map activities by ID for quick lookup
-        const activityMap = new Map(linkedActivities.map(a => [a.id, a]));
-
-        // Enhance workouts with linked activity data
-        const enhancedWorkouts = activeGoal.workouts.map(w => ({
-            ...w,
-            linkedActivity: w.linkedActivityId ? activityMap.get(w.linkedActivityId) ?? null : null
-        }));
 
         // Fetch unlinked activities within the plan period (if requested)
         let unlinkedActivities: any[] = [];
@@ -126,10 +110,7 @@ export async function GET(req: Request) {
         }
 
         return cachedResponse({
-            goal: {
-                ...activeGoal,
-                workouts: enhancedWorkouts
-            },
+            goal: activeGoal,
             unlinkedActivities
         }, { maxAge: 60, staleWhileRevalidate: 30 });
     } catch (error) {

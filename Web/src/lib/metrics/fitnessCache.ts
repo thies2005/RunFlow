@@ -179,18 +179,27 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
         }
 
         // 6. Batch Update
-        await prisma.$transaction(
-            updates.map(u =>
-                prisma.dailyFitness.upsert({
-                    where: { userId_date: { userId: u.userId, date: u.date } },
-                    update: {
-                        ctl: u.ctl, atl: u.atl, tsb: u.tsb,
-                        ctlRunning: u.ctlRunning, trimp: u.trimp, runningTss: u.runningTss
-                    },
-                    create: u
+        if (updates.length > 0) {
+            const firstDate = updates[0].date;
+            const lastDate = updates[updates.length - 1].date;
+
+            await prisma.$transaction([
+                // Delete existing records in the range
+                prisma.dailyFitness.deleteMany({
+                    where: {
+                        userId,
+                        date: {
+                            gte: firstDate,
+                            lte: lastDate
+                        }
+                    }
+                }),
+                // Insert calculated records
+                prisma.dailyFitness.createMany({
+                    data: updates
                 })
-            )
-        );
+            ]);
+        }
 
         console.log(`[FitnessCache] Updated ${updates.length} days for user ${userId}. Latest CTL: ${currentCtl.toFixed(1)}, ATL: ${currentAtl.toFixed(1)}`);
     } catch (error) {

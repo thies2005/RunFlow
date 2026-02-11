@@ -318,6 +318,7 @@ model Activity {
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  linkedWorkouts Workout[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -449,6 +450,7 @@ model Workout {
   isCompleted      Boolean   @default(false)
   completedAt      DateTime?
   linkedActivityId String? // Link to actual activity
+  linkedActivity   Activity? @relation(fields: [linkedActivityId], references: [id])
 
   // Relations
   goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)

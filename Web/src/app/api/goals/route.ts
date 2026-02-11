@@ -87,14 +87,20 @@ export async function POST(request: NextRequest) {
         } = body;
 
         // If calibration factor is provided, update global user settings immediately
-        if (calibrationFactor) {
-            await prisma.user.update({
-                where: { id: session.user.id },
-                data: { vdotCorrectionFactor: calibrationFactor }
-            });
-        }
+        // We start this operation but don't await it yet to allow parallel execution
+        // We catch errors to prevent unhandled rejections if the main flow fails elsewhere
+        const userUpdatePromise = calibrationFactor ? prisma.user.update({
+            where: { id: session.user.id },
+            data: { vdotCorrectionFactor: calibrationFactor }
+        }).then(res => ({ result: res, error: null }))
+          .catch(err => ({ result: null, error: err }))
+        : Promise.resolve({ result: null, error: null });
 
         if (!name || !raceType || !raceDate) {
+            // Ensure we wait for the update to complete or fail
+            const updateResult = await userUpdatePromise;
+            if (updateResult.error) throw updateResult.error;
+
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
@@ -210,10 +216,14 @@ export async function POST(request: NextRequest) {
         });
 
         if (!currentVdot) {
-            const user = await prisma.user.findUnique({
+            const updateResult = await userUpdatePromise;
+            if (updateResult.error) throw updateResult.error;
+
+            // If we have a successful update, use its result instead of fetching again
+            const user = updateResult.result || (await prisma.user.findUnique({
                 where: { id: session.user.id },
                 select: { hrMax: true, vdotCorrectionFactor: true }
-            });
+            }));
 
             const sixMonthsAgo = new Date();
             sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
@@ -311,6 +321,10 @@ export async function POST(request: NextRequest) {
                 console.error('Failed to generate training plan:', error);
             }
         }
+
+        // Ensure any pending user update is completed and check for errors
+        const finalUpdateResult = await userUpdatePromise;
+        if (finalUpdateResult.error) throw finalUpdateResult.error;
 
         return NextResponse.json({ goal }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {

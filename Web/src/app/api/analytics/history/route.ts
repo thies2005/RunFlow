@@ -357,19 +357,35 @@ export async function GET(request: Request) {
         const vo2Trend: { week: string; vo2: number }[] = [];
         const now2 = new Date();
 
+        let runStartIdx = 0;
+        let runEndIdx = 0;
+        let crossStartIdx = 0;
+        let crossEndIdx = 0;
+
         for (let i = 11; i >= 0; i--) {
             const weekEnd = new Date(now2.getTime() - i * 7 * 24 * 60 * 60 * 1000);
             const weekStart = new Date(weekEnd.getTime() - 182 * 24 * 60 * 60 * 1000); // 6 month lookback for each point
 
-            const weekRuns = runActivitiesForShape.filter(r => {
-                const d = new Date(r.startDate);
-                return d >= weekStart && d <= weekEnd;
-            });
+            // Optimized sliding window for runs
+            // Note: runActivitiesForShape is sorted by startDate ascending (from Prisma query), which is required for this logic
+            while (runStartIdx < runActivitiesForShape.length && new Date(runActivitiesForShape[runStartIdx].startDate) < weekStart) {
+                runStartIdx++;
+            }
+            if (runEndIdx < runStartIdx) runEndIdx = runStartIdx;
+            while (runEndIdx < runActivitiesForShape.length && new Date(runActivitiesForShape[runEndIdx].startDate) <= weekEnd) {
+                runEndIdx++;
+            }
+            const weekRuns = runActivitiesForShape.slice(runStartIdx, runEndIdx);
 
-            const weekCrossTraining = crossTrainingActivitiesForShape.filter(a => {
-                const d = new Date(a.startDate);
-                return d >= weekStart && d <= weekEnd;
-            });
+            // Optimized sliding window for cross-training
+            while (crossStartIdx < crossTrainingActivitiesForShape.length && new Date(crossTrainingActivitiesForShape[crossStartIdx].startDate) < weekStart) {
+                crossStartIdx++;
+            }
+            if (crossEndIdx < crossStartIdx) crossEndIdx = crossStartIdx;
+            while (crossEndIdx < crossTrainingActivitiesForShape.length && new Date(crossTrainingActivitiesForShape[crossEndIdx].startDate) <= weekEnd) {
+                crossEndIdx++;
+            }
+            const weekCrossTraining = crossTrainingActivitiesForShape.slice(crossStartIdx, crossEndIdx);
 
             // Calculate raw VO2 and apply correction factor (matching stats API)
             const rawVO2 = calculateWeightedEffectiveVO2max(weekRuns, maxHR);

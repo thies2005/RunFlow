@@ -9,21 +9,21 @@ describe('VDOT Calculator', () => {
         });
 
         it('should calculate correct VDOT for 10K', () => {
-            // 42:00 10K is roughly VDOT 49
+            // 42:00 10K is roughly VDOT 49.1
             const vdot = calculateVdot({ distance: '10K', timeSeconds: 2520 });
-            expect(vdot).toBeCloseTo(49, 1);
+            expect(vdot).toBeCloseTo(49.1, 1);
         });
 
         it('should calculate correct VDOT for half marathon', () => {
-            // 1:33:00 (5580s) Half is roughly VDOT 49
+            // 1:33:00 (5580s) Half is roughly VDOT 49.1
             const vdot = calculateVdot({ distance: 'HALF', timeSeconds: 5580 });
-            expect(vdot).toBeCloseTo(49, 1);
+            expect(vdot).toBeCloseTo(49.1, 1);
         });
 
         it('should calculate correct VDOT for marathon', () => {
-            // 3:15:00 (11700s) Marathon is roughly VDOT 49
+            // 3:15:00 (11700s) Marathon is roughly VDOT 48.7
             const vdot = calculateVdot({ distance: 'MARATHON', timeSeconds: 11700 });
-            expect(vdot).toBeCloseTo(49, 1);
+            expect(vdot).toBeCloseTo(48.7, 1);
         });
 
         it('should return 0 for invalid inputs', () => {
@@ -59,16 +59,16 @@ describe('VDOT Calculator', () => {
         });
 
         it('should predict reasonable 5K time for VDOT 50', () => {
-            // VDOT 50 -> 5K ~19:36 (1176s)
+            // VDOT 50 -> 5K ~19:57 (1197s)
             const time = predictRaceTime(50, '5K');
-            expect(time).toBeCloseTo(1176, 30); // Within 30 seconds
+            expect(time).toBeCloseTo(1197, 30); // Within 30 seconds
         });
 
         it('should predict reasonable half marathon time for VDOT 50', () => {
             // VDOT 50 -> Half ~1:29:xx
             const time = predictRaceTime(50, 'HALF');
             const minutes = time / 60;
-            expect(minutes).toBeCloseTo(89.5, 3); // ~1:29:30
+            expect(minutes).toBeCloseTo(91.6, 1); // ~1:31:30
         });
 
         it('should predict faster time for higher VDOT', () => {

@@ -53,6 +53,13 @@ jest.mock('@/lib/metrics/calories', () => ({
 jest.mock('@/lib/redis', () => ({
     acquireLock: jest.fn(() => Promise.resolve(true)),
     releaseLock: jest.fn(),
+    getRedisClient: jest.fn(() => Promise.resolve({
+        get: jest.fn(),
+        set: jest.fn(),
+        del: jest.fn(),
+        incr: jest.fn(() => Promise.resolve(1)),
+        expire: jest.fn(),
+    })),
 }));
 
 // Mock fetch globally
@@ -113,7 +120,7 @@ describe('syncUserActivities Performance', () => {
                 });
             }
             if (typeof url === 'string' && url.includes('/athlete')) {
-                 return Promise.resolve({
+                return Promise.resolve({
                     ok: true,
                     status: 200,
                     json: () => Promise.resolve({}),

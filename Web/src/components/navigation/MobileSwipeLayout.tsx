@@ -4,21 +4,33 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { MobileBottomNav } from './MobileBottomNav';
+import { Home, Calendar, BarChart3, Bot } from 'lucide-react';
 import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 
 interface MobileSwipeLayoutProps {
     children: React.ReactNode[];
     onPageChange?: (index: number) => void;
+    showAiChat?: boolean;
 }
 
-const PATHS = ['/', '/plan', '/analytics', '/chat'];
+const BASE_PATHS = ['/', '/plan', '/analytics'];
 
-export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutProps) {
+export function MobileSwipeLayout({ children, onPageChange, showAiChat = true }: MobileSwipeLayoutProps) {
     const router = useRouter();
     const pathname = usePathname();
 
+    // Dynamically build paths and tabs
+    const paths = showAiChat ? [...BASE_PATHS, '/chat'] : BASE_PATHS;
+
+    const tabs = [
+        { icon: Home, label: 'Home', path: '/' },
+        { icon: Calendar, label: 'Plan', path: '/plan' },
+        { icon: BarChart3, label: 'Analytics', path: '/analytics' },
+        ...(showAiChat ? [{ icon: Bot, label: 'Coach', path: '/chat' }] : []),
+    ];
+
     const getIndexFromPath = (path: string) => {
-        const index = PATHS.indexOf(path);
+        const index = paths.indexOf(path);
         return index >= 0 ? index : 0;
     };
 
@@ -29,17 +41,17 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
         if (newIndex !== activeIndex) {
             setActiveIndex(newIndex);
         }
-    }, [pathname, activeIndex]);
+    }, [pathname, activeIndex, showAiChat]); // Re-run if showAiChat changes
 
     // Simplified navigation - no swiping, no sliding
     const handleTabChange = useCallback((index: number) => {
-        if (index >= 0 && index < PATHS.length && index !== activeIndex) {
+        if (index >= 0 && index < paths.length && index !== activeIndex) {
             setActiveIndex(index);
-            router.replace(PATHS[index], { scroll: false });
+            router.replace(paths[index], { scroll: false });
             onPageChange?.(index);
 
             // If navigating to Plan page, scroll to today
-            if (index === 1) {
+            if (paths[index] === '/plan') {
                 // Short timeout to allow React to render the new view
                 setTimeout(() => {
                     const todayAnchor = document.getElementById('plan-today-anchor');
@@ -49,7 +61,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                 }, 100);
             }
         }
-    }, [activeIndex, router, onPageChange]);
+    }, [activeIndex, router, onPageChange, paths]);
 
     const isChat = pathname === '/chat';
 
@@ -59,7 +71,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
             {/* Content Container - No swipe, simple fade */}
-            <div className={`h-[100dvh] w-full overflow-hidden ${isChat ? 'pb-[calc(64px+env(safe-area-inset-bottom))]' : 'pb-[calc(80px+env(safe-area-inset-bottom))]'}`}>
+            <div className={`h-full w-full overflow-hidden ${isChat ? 'pb-[calc(64px+env(safe-area-inset-bottom))]' : 'pb-[calc(80px+env(safe-area-inset-bottom))]'}`}>
                 <motion.div
                     key={activeIndex}
                     initial={{ opacity: 0 }}
@@ -69,6 +81,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
                 >
                     <div className={`h-full w-full ${isChat ? 'overflow-hidden' : 'overflow-y-auto overscroll-y-contain'}`}>
                         <div className={isChat ? 'h-full' : 'min-h-full'}>
+                            {/* Only render children that match current config */}
                             {children[activeIndex]}
                             {/* Strava footer at bottom - hide on chat */}
                             {!isChat && (
@@ -85,6 +98,7 @@ export function MobileSwipeLayout({ children, onPageChange }: MobileSwipeLayoutP
             <MobileBottomNav
                 activeIndex={activeIndex}
                 onTabChange={handleTabChange}
+                tabs={tabs}
             />
         </div>
     );

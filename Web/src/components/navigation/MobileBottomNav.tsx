@@ -7,14 +7,20 @@ interface MobileBottomNavProps {
     onTabChange: (index: number) => void;
 }
 
-const tabs = [
-    { icon: Home, label: 'Home', path: '/' },
-    { icon: Calendar, label: 'Plan', path: '/plan' },
-    { icon: BarChart3, label: 'Analytics', path: '/analytics' },
-    { icon: Bot, label: 'Chat', path: '/chat' },
-];
+// Tabs are now passed as props
+export interface NavTab {
+    icon: any;
+    label: string;
+    path: string;
+}
 
-export function MobileBottomNav({ activeIndex, onTabChange }: MobileBottomNavProps) {
+interface MobileBottomNavProps {
+    activeIndex: number;
+    onTabChange: (index: number) => void;
+    tabs: NavTab[];
+}
+
+export function MobileBottomNav({ activeIndex, onTabChange, tabs }: MobileBottomNavProps) {
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-glass-border backdrop-blur-xl bg-background/90 pb-[env(safe-area-inset-bottom)]">
             <div className="flex items-center justify-around h-16">

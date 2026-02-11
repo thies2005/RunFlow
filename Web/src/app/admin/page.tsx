@@ -458,7 +458,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
                         placeholder="e.g. OpenAI"
                     />
                 </div>
@@ -468,7 +468,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                         type="text"
                         value={formData.slug}
                         onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
                         placeholder="openai"
                     />
                 </div>
@@ -480,7 +480,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     <select
                         value={formData.type}
                         onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     >
                         <option value="openai">OpenAI Compatible</option>
                         <option value="anthropic">Anthropic</option>
@@ -496,7 +496,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                         value={formData.monthlyTokenLimit}
                         onChange={(e) => setFormData({ ...formData, monthlyTokenLimit: e.target.value })}
                         placeholder="Optional (e.g. 1000000)"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
                     />
                 </div>
             </div>
@@ -507,7 +507,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     type="text"
                     value={formData.baseUrl}
                     onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
                 />
             </div>
 
@@ -518,7 +518,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                         type="password"
                         value={formData.apiKey}
                         onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="flex-1 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
                         placeholder="sk-..."
                     />
                     <button
@@ -544,7 +544,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
                     type="text"
                     value={formData.models}
                     onChange={(e) => setFormData({ ...formData, models: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
                     placeholder="gpt-4, gpt-4o-mini"
                 />
             </div>

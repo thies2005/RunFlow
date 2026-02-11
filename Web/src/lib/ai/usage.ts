@@ -372,11 +372,32 @@ export async function incrementUsage(
             await prisma.aiProvider.update({
                 where: { id: providerId },
                 data: {
-                    // @ts-ignore
                     monthlyInputTokensUsed: monthlyInput + inputDelta,
-                    // @ts-ignore
                     monthlyOutputTokensUsed: monthlyOutput + outputDelta,
                     lastUsageReset: now
+                }
+            });
+
+            // 3. Log Daily Token Usage for Analytics
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // UTC Midnight ideally, but server time is fine for now
+
+            await prisma.aiDailyTokenUsage.upsert({
+                where: {
+                    date_providerId: {
+                        date: today,
+                        providerId: providerId
+                    }
+                },
+                update: {
+                    inputTokens: { increment: inputDelta },
+                    outputTokens: { increment: outputDelta }
+                },
+                create: {
+                    date: today,
+                    providerId: providerId,
+                    inputTokens: inputDelta,
+                    outputTokens: outputDelta
                 }
             });
         }

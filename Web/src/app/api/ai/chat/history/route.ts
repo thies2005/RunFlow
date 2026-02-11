@@ -21,22 +21,19 @@ export async function GET(request: NextRequest) {
         const activityId = searchParams.get('activityId');
 
         // Fetch messages
-        const messages = await prisma.chatMessage.findMany({
+        const messagesStart = await prisma.chatMessage.findMany({
             where: {
                 userId,
-                // If activityId is provided, filter by it. 
-                // If not, we might want to show global chat or all chat? 
-                // For now, let's say if no activityId, we show non-activity specific chat?
-                // Or maybe just all chat?
-                // Let's go with: if activityId is present, show for that activity.
-                // If not, show general chat (where activityId is null).
                 activityId: activityId || null,
             },
             orderBy: {
-                createdAt: 'asc',
+                createdAt: 'desc', // Get newest first
             },
-            take: 50, // Limit to last 50 messages for performance
+            take: 50,
         });
+
+        // Reverse to show oldest first (chronological)
+        const messages = messagesStart.reverse();
 
         return new Response(JSON.stringify({ messages }), {
             status: 200,

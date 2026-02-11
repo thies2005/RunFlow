@@ -151,6 +151,7 @@ model AiProvider {
   lastUsageReset          DateTime @default(now())
 
   globalSettings GlobalAiSettings[]
+  dailyUsage     AiDailyTokenUsage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -563,4 +564,19 @@ model ChatMessage {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+// Daily aggregated token usage for analytics
+model AiDailyTokenUsage {
+  id           String   @id @default(cuid())
+  date         DateTime @db.Date // Midnight UTC
+  
+  inputTokens  Int @default(0)
+  outputTokens Int @default(0)
+  
+  providerId   String
+  provider     AiProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([date, providerId])
+  @@index([date])
 }

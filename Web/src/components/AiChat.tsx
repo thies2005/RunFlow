@@ -69,6 +69,7 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
     // Load history into messages when fetched
     useEffect(() => {
         if (historyData?.messages) {
+            console.log('Chat history loaded:', historyData.messages.length);
             setMessages(historyData.messages);
         }
     }, [historyData]);

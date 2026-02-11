@@ -703,7 +703,7 @@ function DashboardContent() {
 
     // Tab state controlled by URL
     const tabParam = searchParams.get('tab');
-    const activeTab = tabParam === 'backups' ? 'backups' : tabParam === 'ai' ? 'ai' : 'users';
+    const activeTab = tabParam === 'backups' ? 'backups' : tabParam === 'ai' ? 'ai' : tabParam === 'analytics' ? 'analytics' : 'users';
 
     const [processing, setProcessing] = useState(false);
     const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -997,6 +997,13 @@ function DashboardContent() {
                         <Bot className="w-4 h-4 inline mr-1" />
                         AI Settings
                     </button>
+                    <button
+                        onClick={() => router.push('/admin?tab=analytics')}
+                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'analytics' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
+                    >
+                        <BarChart3 className="w-4 h-4 inline mr-1" />
+                        Analytics
+                    </button>
                 </div>
 
                 <div className="p-6">
@@ -1225,6 +1232,11 @@ function DashboardContent() {
                             setProcessing={setProcessing}
                             setActionMessage={setActionMessage}
                         />
+                    )}
+
+                    {/* Analytics Tab */}
+                    {activeTab === 'analytics' && (
+                        <AnalyticsTab />
                     )}
                 </div>
             </div>

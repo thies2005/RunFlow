@@ -20,6 +20,7 @@ export const authOptions: AuthOptions = {
             authorization: {
                 params: {
                     scope: 'read,activity:read_all,profile:read_all',
+                    approval_prompt: 'force',
                 },
             },
         }),

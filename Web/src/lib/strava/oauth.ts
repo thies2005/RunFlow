@@ -71,12 +71,56 @@ export const authOptions: AuthOptions = {
                 delete (account as any).athlete;
             }
 
-            // Encrypt tokens before they're stored by the adapter
+            // Encrypt tokens before storing
+            const encryptedAccess = account?.access_token ? encryptToken(account.access_token) : null;
+            const encryptedRefresh = account?.refresh_token ? encryptToken(account.refresh_token) : null;
+
+            // CRITICAL FIX: Force-update account tokens on re-authentication
+            // PrismaAdapter may skip updating existing accounts, so we explicitly upsert
+            if (account?.provider === 'strava' && account?.providerAccountId && user?.email) {
+                // Find user by email to handle both new and existing users
+                const dbUser = await prisma.user.findUnique({
+                    where: { email: user.email.toLowerCase() }
+                });
+
+                if (dbUser) {
+                    // Force update the account with fresh encrypted tokens
+                    await prisma.account.upsert({
+                        where: {
+                            provider_providerAccountId: {
+                                provider: 'strava',
+                                providerAccountId: account.providerAccountId
+                            }
+                        },
+                        update: {
+                            access_token: encryptedAccess,
+                            refresh_token: encryptedRefresh,
+                            expires_at: account.expires_at,
+                            token_type: account.token_type,
+                            scope: account.scope,
+                        },
+                        create: {
+                            userId: dbUser.id,
+                            type: account.type,
+                            provider: account.provider,
+                            providerAccountId: account.providerAccountId,
+                            access_token: encryptedAccess,
+                            refresh_token: encryptedRefresh,
+                            expires_at: account.expires_at,
+                            token_type: account.token_type,
+                            scope: account.scope,
+                        }
+                    });
+                    console.log(`✓ Force-updated Strava tokens for user ${dbUser.id}`);
+                }
+            }
+
+            // Update account object for adapter (in case it's a new user)
             if (account?.access_token) {
-                account.access_token = encryptToken(account.access_token);
+                account.access_token = encryptedAccess;
             }
             if (account?.refresh_token) {
-                account.refresh_token = encryptToken(account.refresh_token);
+                account.refresh_token = encryptedRefresh;
             }
 
             return true;

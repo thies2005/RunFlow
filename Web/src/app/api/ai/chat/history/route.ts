@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         const messagesStart = await prisma.chatMessage.findMany({
             where: {
                 userId,
-                activityId: activityId || null,
+                ...(activityId ? { activityId } : {}), // If activityId provided, filter by it. Otherwise show all.
             },
             orderBy: {
                 createdAt: 'desc', // Get newest first

@@ -206,12 +206,18 @@ export async function GET(request: Request) {
         }));
 
 
-        // B. Fetch Activities for Volume/Zones (Range only)
-        // We only need activities within the user's requested view range now
-        const viewActivities = await prisma.activity.findMany({
+        // B. Fetch All Required Activities (Consolidated Query)
+        // We need activities for both the "view range" (cutoff) AND the "marathon shape" (6 months)
+        // We fetch the superset and filter in memory to avoid redundant DB calls.
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
+
+        const minDate = cutoff < sixMonthsAgo ? cutoff : sixMonthsAgo;
+
+        const allActivities = await prisma.activity.findMany({
             where: {
                 userId,
-                startDate: { gte: cutoff }
+                startDate: { gte: minDate }
             },
             select: {
                 startDate: true,
@@ -226,9 +232,14 @@ export async function GET(request: Request) {
                 hrZone6Time: true,
                 hrZone7Time: true,
                 estimatedVdot: true,
+                averageHr: true,
+                hasHeartrate: true,
             },
             orderBy: { startDate: 'asc' },
         });
+
+        // Filter for View (Volume/Zones)
+        const viewActivities = allActivities.filter(a => new Date(a.startDate) >= cutoff);
 
         // Compute Volume/Zones from viewActivities
         const weeklyVolumeMap: Record<string, number> = {};
@@ -296,32 +307,9 @@ export async function GET(request: Request) {
         const averagePace = totalDistance > 0 ? (totalMovingTime / totalDistance) * 1000 : 0; // sec/km
 
         // --- C. Calculate Marathon Shape & VO2max Trends ---
-        // Need all activities for 6-month lookback for shape calculation
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
 
-        const allActivitiesForShape = await prisma.activity.findMany({
-            where: {
-                userId,
-                startDate: { gte: sixMonthsAgo }
-            },
-            select: {
-                startDate: true,
-                distance: true,
-                movingTime: true,
-                type: true,
-                averageHr: true,
-                hasHeartrate: true,
-                hrZone1Time: true,
-                hrZone2Time: true,
-                hrZone3Time: true,
-                hrZone4Time: true,
-                hrZone5Time: true,
-                hrZone6Time: true,
-                hrZone7Time: true,
-            },
-            orderBy: { startDate: 'asc' }
-        });
+        // Filter for Shape
+        const allActivitiesForShape = allActivities.filter(a => new Date(a.startDate) >= sixMonthsAgo);
 
         // Map to ActivityForShape type
         const runActivitiesForShape: ActivityForShape[] = allActivitiesForShape

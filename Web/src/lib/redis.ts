@@ -2,7 +2,7 @@
 // Lazy-loads the Redis client only when needed and configured
 
 // Minimal Redis interface for our usage
-interface RedisClient {
+export interface RedisClient {
     set(key: string, value: string, options?: { ex?: number; nx?: boolean }): Promise<string | null>;
     get(key: string): Promise<string | null>;
     del(key: string): Promise<number>;
@@ -13,18 +13,6 @@ interface RedisClient {
 
 let redisClient: RedisClient | null = null;
 let redisInitialized = false;
-
-/**
- * Dynamic import helper for optional @upstash/redis dependency
- * Using Function constructor as a safer alternative to eval() for optional dynamic requires
- * This prevents webpack from bundling the dependency at build time
- */
-function dynamicRequire(moduleName: string): unknown {
-    // Using Function constructor instead of eval() for better security
-    // This is still a dynamic require but with a slightly better security profile
-    const requireFn = new Function('return require')() as NodeRequire;
-    return requireFn(moduleName);
-}
 
 /**
  * Initialize and return the Redis client if authentication is available.
@@ -45,7 +33,7 @@ export async function getRedisClient(): Promise<RedisClient | null> {
 
     try {
         // Dynamic import to prevent webpack from bundling @upstash/redis
-        const { Redis: DynamicRedis } = dynamicRequire('@upstash/redis') as { Redis: new (options: { url: string; token: string }) => RedisClient };
+        const { Redis: DynamicRedis } = await import('@upstash/redis');
 
         redisClient = new DynamicRedis({ url: redisUrl, token: redisToken || '' });
         console.log('[Redis] Client initialized successfully');

@@ -18,7 +18,7 @@ import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { calculateCalories, calculateAge, type ActivityType as CalorieActivityType } from '@/lib/metrics/calories';
 import { WorkoutType } from '@/lib/types';
 import { safeBigInt } from '@/lib/utils/bigint';
-import { acquireLock, releaseLock } from '@/lib/redis';
+import { acquireLock, releaseLock, getRedisClient, type RedisClient } from '@/lib/redis';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const MAX_PER_PAGE = 200;
@@ -43,18 +43,68 @@ const logger = {
 };
 
 /**
- * Simple in-memory rate limiter
+ * Rate limiter that supports both in-memory and Redis backends
  * 
- * LIMITATION (M-04): This rate limiter is per-process. In multi-instance deployments
- * (e.g., Kubernetes, multiple serverless functions), each instance maintains its own
- * counter, potentially exceeding Strava's global limit. For production at scale,
- * consider using Redis-based rate limiting.
+ * Updated to support Redis for multi-instance deployments (addressing M-04).
+ * Falls back to in-memory if Redis is not configured.
  */
-const rateLimiter = {
+export const rateLimiter = {
+    // In-memory fallback state
     requests: 0,
     windowStart: Date.now(),
 
+    // Redis key
+    REDIS_KEY: 'strava:rate_limit:requests',
+
     async checkAndWait(): Promise<void> {
+        const redis = await getRedisClient();
+
+        if (redis) {
+            await this.checkAndWaitRedis(redis);
+        } else {
+            await this.checkAndWaitInMemory();
+        }
+    },
+
+    async checkAndWaitRedis(redis: RedisClient): Promise<void> {
+        const windowSeconds = RATE_LIMIT_WINDOW_MS / 1000;
+
+        // Loop until we acquire a slot
+        while (true) {
+            // Increment the counter
+            const current = await redis.incr(this.REDIS_KEY);
+
+            // If first request, set expiry
+            if (current === 1) {
+                await redis.expire(this.REDIS_KEY, windowSeconds);
+                return;
+            }
+
+            // Safety: Ensure expiry is set if we're not first but key exists
+            // This handles race condition where first setter crashed before expire
+            // or if key persisted without expiry.
+            const ttl = await redis.ttl(this.REDIS_KEY);
+            if (ttl === -1) {
+                await redis.expire(this.REDIS_KEY, windowSeconds);
+            }
+
+            // Check if within limit
+            if (current <= RATE_LIMIT_REQUESTS) {
+                return;
+            }
+
+            // Limit exceeded
+            const waitTimeSeconds = ttl > 0 ? ttl : windowSeconds;
+            logger.info(`Rate limit reached (Redis), waiting ${waitTimeSeconds}s`);
+
+            // Wait + 1s buffer
+            await new Promise(resolve => setTimeout(resolve, (waitTimeSeconds + 1) * 1000));
+
+            // Loop again to try acquiring slot in new window
+        }
+    },
+
+    async checkAndWaitInMemory(): Promise<void> {
         const now = Date.now();
 
         // Reset window if expired
@@ -66,7 +116,7 @@ const rateLimiter = {
         // If at limit, wait for window to reset
         if (this.requests >= RATE_LIMIT_REQUESTS) {
             const waitTime = RATE_LIMIT_WINDOW_MS - (now - this.windowStart) + 1000;
-            logger.info(`Rate limit reached, waiting ${waitTime / 1000}s`);
+            logger.info(`Rate limit reached (Memory), waiting ${waitTime / 1000}s`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
             this.requests = 0;
             this.windowStart = Date.now();

@@ -50,7 +50,13 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
         },
     });
 
+    const adminAllowed = settingsData?.settings?.adminAllowed;
     const aiEnabled = settingsData?.settings?.aiEnabled || settingsData?.settings?.hasCustomApiKey;
+
+    // If admin has disabled AI features globally for this user, hide everything
+    if (adminAllowed === false) {
+        return null;
+    }
 
     // Scroll to bottom on new messages
     useEffect(() => {

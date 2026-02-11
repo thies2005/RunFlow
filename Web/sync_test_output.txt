@@ -1,0 +1,27 @@
+FAIL src/lib/strava/sync.test.ts
+  syncUserActivities Performance
+    ├ù should query the database for each activity (N+1 issue) (3 ms)
+
+  ΓùÅ syncUserActivities Performance ΓÇ║ should query the database for each activity (N+1 issue)
+
+    TypeError: redis.incr is not a function
+
+      92 |         // Loop until we successfully acquire a slot
+      93 |         while (true) {
+    > 94 |             const current = await redis.incr(RATE_LIMIT_KEY);
+         |                                         ^
+      95 |
+      96 |             // First request in the window: set the expiration
+      97 |             if (current === 1) {
+
+      at Object.incr [as checkAndWaitRedis] (src/lib/strava/sync.ts:94:41)
+      at Object.checkAndWaitRedis [as checkAndWait] (src/lib/strava/sync.ts:61:25)
+      at fetchActivities (src/lib/strava/sync.ts:226:5)
+      at syncUserActivities (src/lib/strava/sync.ts:527:32)
+      at Object.<anonymous> (src/lib/strava/sync.test.ts:135:9)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 1 total
+Snapshots:   0 total
+Time:        1.053 s
+Ran all test suites matching /src\\lib\\strava\\sync.test.ts/i.

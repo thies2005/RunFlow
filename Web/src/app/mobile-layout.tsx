@@ -135,6 +135,20 @@ export function MobileLayout() {
         enabled: status === 'authenticated',
     });
 
+    // AI Settings Query
+    const { data: aiSettingsData } = useQuery({
+        queryKey: ['ai-settings'],
+        queryFn: async () => {
+            const res = await fetch('/api/ai/settings');
+            if (!res.ok) throw new Error('Failed to fetch AI settings');
+            return res.json();
+        },
+        enabled: status === 'authenticated',
+    });
+
+    // Determine if AI chat should be shown
+    const showAiChat = aiSettingsData?.settings?.adminAllowed;
+
     // Analytics History Query
     const { data: historyData } = useQuery({
         queryKey: ['analytics-history', timeRange],
@@ -390,7 +404,7 @@ export function MobileLayout() {
 
     return (
         <>
-            <MobileSwipeLayout>
+            <MobileSwipeLayout showAiChat={showAiChat}>
                 {/* Dashboard View */}
                 <DashboardView
                     session={session}
@@ -444,13 +458,16 @@ export function MobileLayout() {
                     showHeader={false}
                 />
 
+
                 {/* Chat View */}
-                <div className="h-full flex flex-col bg-background">
-                    <div className="p-4 border-b border-gray-800">
-                        <h1 className="text-xl font-bold text-white">AI Coach</h1>
+                {showAiChat && (
+                    <div className="h-full flex flex-col bg-background">
+                        <div className="p-4 border-b border-gray-800">
+                            <h1 className="text-xl font-bold text-white">AI Coach</h1>
+                        </div>
+                        <AiChat onOpenSettings={() => setIsAiSettingsOpen(true)} />
                     </div>
-                    <AiChat onOpenSettings={() => setIsAiSettingsOpen(true)} />
-                </div>
+                )}
             </MobileSwipeLayout>
 
             {/* Modals */}

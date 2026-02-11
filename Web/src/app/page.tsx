@@ -41,6 +41,19 @@ export default function Dashboard() {
         refetchInterval: (query) => query.state.data?.syncStatus?.syncInProgress ? 2000 : false,
     });
 
+    // AI Settings Query
+    const { data: aiSettingsData } = useQuery({
+        queryKey: ['ai-settings'],
+        queryFn: async () => {
+            const res = await fetch('/api/ai/settings');
+            if (!res.ok) throw new Error('Failed to fetch AI settings');
+            return res.json();
+        },
+        enabled: status === 'authenticated',
+    });
+
+    const showAiCoach = aiSettingsData?.settings?.adminAllowed;
+
     const syncMutation = useMutation({
         mutationFn: async () => {
             const res = await fetch('/api/sync', { method: 'POST' });
@@ -133,10 +146,12 @@ export default function Dashboard() {
                                     <BarChart3 className="w-5 h-5" />
                                     <span className="hidden sm:inline">Analytics</span>
                                 </button>
-                                <button onClick={() => router.push('/chat')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
-                                    <MessageSquare className="w-5 h-5" />
-                                    <span className="hidden sm:inline">AI Coach</span>
-                                </button>
+                                {showAiCoach && (
+                                    <button onClick={() => router.push('/chat')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
+                                        <MessageSquare className="w-5 h-5" />
+                                        <span className="hidden sm:inline">AI Coach</span>
+                                    </button>
+                                )}
                                 <div className="flex items-center gap-3">
                                     <UserMenu
                                         onOpenProfile={() => setIsProfileOpen(true)}

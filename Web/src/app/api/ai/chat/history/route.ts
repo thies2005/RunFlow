@@ -47,3 +47,38 @@ export async function GET(request: NextRequest) {
         });
     }
 }
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+
+        const userId = session.user.id;
+        const { searchParams } = new URL(request.url);
+        const activityId = searchParams.get('activityId');
+
+        // Delete messages
+        await prisma.chatMessage.deleteMany({
+            where: {
+                userId,
+                ...(activityId ? { activityId } : {}), // If specific activity, delete only those. Otherwise delete all.
+            },
+        });
+
+        return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } catch (error) {
+        console.error('Error clearing chat history:', error);
+        return new Response(JSON.stringify({ error: 'Failed to clear chat history' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+}

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Send, Bot, Loader2, AlertCircle, Settings2, Book } from 'lucide-react';
+import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import PromptLibrary from './PromptLibrary';
@@ -170,6 +170,27 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
         } finally {
             setIsStreaming(false);
             abortControllerRef.current = null;
+        }
+    };
+
+    const handleClearHistory = async () => {
+        if (!confirm('Start a new chat? This will clear your current conversation history.')) return;
+
+        try {
+            const params = new URLSearchParams();
+            if (activityId) params.append('activityId', activityId);
+
+            const res = await fetch(`/api/ai/chat/history?${params.toString()}`, {
+                method: 'DELETE',
+            });
+
+            if (!res.ok) throw new Error('Failed to clear history');
+
+            setMessages([]);
+            setInput('');
+        } catch (error) {
+            console.error('Failed to clear history:', error);
+            setError('Failed to start new chat');
         }
     };
 
@@ -456,6 +477,15 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                     >
                         <Book className="w-5 h-5" />
                     </button>
+                    {messages.length > 0 && (
+                        <button
+                            onClick={handleClearHistory}
+                            className="p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-red-500/50 rounded-xl text-gray-400 hover:text-red-400 transition-colors"
+                            title="Start New Chat"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+                    )}
                     <input
                         type="text"
                         value={input}

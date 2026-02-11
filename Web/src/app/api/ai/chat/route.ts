@@ -35,8 +35,10 @@ Reply ONLY with "HISTORY_QUERY" or "NORMAL".`;
 
     try {
         const response = await generateCompletion(config, [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: message },
+            {
+                role: 'user',
+                content: `${systemPrompt}\n\nUser Message to Classify:\n"${message}"`
+            }
         ]);
         return response.trim().toUpperCase().includes('HISTORY_QUERY') ? 'HISTORY_QUERY' : 'NORMAL';
     } catch (e) {

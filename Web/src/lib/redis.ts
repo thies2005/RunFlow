@@ -2,7 +2,7 @@
 // Lazy-loads the Redis client only when needed and configured
 
 // Minimal Redis interface for our usage
-interface RedisClient {
+export interface RedisClient {
     set(key: string, value: string, options?: { ex?: number; nx?: boolean }): Promise<string | null>;
     get(key: string): Promise<string | null>;
     del(key: string): Promise<number>;

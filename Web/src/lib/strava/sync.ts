@@ -18,13 +18,14 @@ import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { calculateCalories, calculateAge, type ActivityType as CalorieActivityType } from '@/lib/metrics/calories';
 import { WorkoutType } from '@/lib/types';
 import { safeBigInt } from '@/lib/utils/bigint';
-import { acquireLock, releaseLock } from '@/lib/redis';
+import { acquireLock, releaseLock, getRedisClient, type RedisClient } from '@/lib/redis';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const MAX_PER_PAGE = 200;
 const RATE_LIMIT_REQUESTS = 95; // 5% buffer under Strava's 100 req/15min limit
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const MAX_RETRIES = 3; // Maximum retry attempts for rate-limited requests
+const RATE_LIMIT_KEY = 'strava:rate_limit:requests';
 
 // Default HR values - extracted from magic numbers per L-03
 const DEFAULT_HR_MAX = 185; // Conservative default when user hasn't configured
@@ -43,18 +44,24 @@ const logger = {
 };
 
 /**
- * Simple in-memory rate limiter
+ * Hybrid rate limiter (Redis + In-Memory fallback)
  * 
- * LIMITATION (M-04): This rate limiter is per-process. In multi-instance deployments
- * (e.g., Kubernetes, multiple serverless functions), each instance maintains its own
- * counter, potentially exceeding Strava's global limit. For production at scale,
- * consider using Redis-based rate limiting.
+ * Solves limitation (M-04): Uses Redis for distributed rate limiting when available,
+ * ensuring strict adherence to Strava's limits across multiple instances.
+ * Falls back to per-process in-memory limiting if Redis is unavailable.
  */
-const rateLimiter = {
+export const rateLimiter = {
     requests: 0,
     windowStart: Date.now(),
 
     async checkAndWait(): Promise<void> {
+        const redis = await getRedisClient();
+
+        if (redis) {
+            return this.checkAndWaitRedis(redis);
+        }
+
+        // Fallback to in-memory
         const now = Date.now();
 
         // Reset window if expired
@@ -66,7 +73,7 @@ const rateLimiter = {
         // If at limit, wait for window to reset
         if (this.requests >= RATE_LIMIT_REQUESTS) {
             const waitTime = RATE_LIMIT_WINDOW_MS - (now - this.windowStart) + 1000;
-            logger.info(`Rate limit reached, waiting ${waitTime / 1000}s`);
+            logger.info(`Rate limit reached (In-Memory), waiting ${waitTime / 1000}s`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
             this.requests = 0;
             this.windowStart = Date.now();
@@ -74,6 +81,59 @@ const rateLimiter = {
 
         this.requests++;
     },
+
+    /**
+     * Distributed rate limiting using Redis
+     * Uses atomic increment and expiry to manage sliding window
+     */
+    async checkAndWaitRedis(redis: RedisClient): Promise<void> {
+        const windowSeconds = Math.ceil(RATE_LIMIT_WINDOW_MS / 1000);
+
+        // Loop until we successfully acquire a slot
+        while (true) {
+            const current = await redis.incr(RATE_LIMIT_KEY);
+
+            // First request in the window: set the expiration
+            if (current === 1) {
+                await redis.expire(RATE_LIMIT_KEY, windowSeconds);
+                return;
+            }
+
+            // Check if we are within the limit
+            if (current <= RATE_LIMIT_REQUESTS) {
+                // Ideally, we should check/ensure TTL here too, but to save bandwidth
+                // we assume the first request (current=1) set it correctly.
+                // If the first request crashed before setting expire, the key might persist without TTL.
+                // We can check TTL periodically or if we suspect issues, but for now we trust the happy path.
+                return;
+            }
+
+            // Rate limit exceeded: check remaining TTL
+            const ttl = await redis.ttl(RATE_LIMIT_KEY);
+
+            // Safety: if key exists but has no TTL (-1), force expire it to avoid indefinite lock
+            if (ttl === -1) {
+                 logger.warn('Rate limit key found without TTL, forcing expiration');
+                 await redis.expire(RATE_LIMIT_KEY, windowSeconds);
+                 // We still need to wait because the counter is high
+                 const waitTime = windowSeconds;
+                 logger.info(`Rate limit reached (Redis, no TTL fixed), waiting ${waitTime}s`);
+                 await new Promise(resolve => setTimeout(resolve, (waitTime + 1) * 1000));
+                 continue; // Loop again
+            }
+
+            // Safety: if key expired during our check (-2), loop again
+            if (ttl === -2) {
+                continue;
+            }
+
+            // Normal case: wait for the remaining TTL plus buffer
+            const waitTime = ttl > 0 ? ttl : windowSeconds;
+            logger.info(`Rate limit reached (Redis), waiting ${waitTime}s`);
+            await new Promise(resolve => setTimeout(resolve, (waitTime + 1) * 1000));
+            // After waiting, loop again to acquire a slot in the new window
+        }
+    }
 };
 
 

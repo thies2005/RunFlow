@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot } from 'lucide-react';
 import Link from 'next/link';
-import { signOut } from 'next-auth/react';
+import { signIn, signOut } from 'next-auth/react';
+import { LinkIcon } from 'lucide-react';
 import { requestHealthPermissions, syncHealthData, isMobile } from '@/lib/mobile/healthConnect';
 import AiSettingsModal from '@/components/AiSettingsModal';
 
@@ -460,6 +461,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 <RefreshCw className={`w-4 h-4 ${healthConnectSyncMutation.isPending ? 'animate-spin' : ''}`} />
                                 {healthConnectSyncMutation.isPending ? 'Syncing...' : 'Sync from Health Connect'}
                             </button>
+                            <button
+                                onClick={() => signIn('strava', { callbackUrl: window.location.href })}
+                                className="w-full py-2.5 border border-orange-500/30 text-orange-400 rounded-lg hover:bg-orange-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                            >
+                                <LinkIcon className="w-4 h-4" />
+                                Reconnect Strava
+                            </button>
+                            <p className="text-[10px] text-gray-500">Re-authenticate with Strava if sync is failing</p>
                         </div>
                     </div>
 

@@ -16,11 +16,31 @@ import {
     buildSystemPrompt,
     checkUsageLimit,
     incrementUsage,
+    buildExtendedHistoryContext,
+    generateCompletion,
+    type AiConfig,
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
+
+async function detectIntent(config: AiConfig, message: string): Promise<string> {
+    const prompt = `Classify the user message.
+User Message: "${message}"
+Does this message require accessing the user's entire past activity history (older than just the last 20 activities)?
+Examples requiring history: "How many marathons have I run?", "Compare my running volume 2023 vs 2024", "What is my all-time PR?", "List my runs from last month".
+Examples NOT requiring history: "Help me plan a workout", "What is my current fitness?", "Analyze my last run", "What should I run tomorrow?".
+Reply ONLY with "HISTORY_QUERY" or "NORMAL".`;
+
+    try {
+        const response = await generateCompletion(config, [{ role: 'system', content: prompt }]);
+        return response.trim().toUpperCase().includes('HISTORY_QUERY') ? 'HISTORY_QUERY' : 'NORMAL';
+    } catch (e) {
+        console.error('Intent detection failed', e);
+        return 'NORMAL';
+    }
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -83,6 +103,17 @@ export async function POST(request: NextRequest) {
         // Build context based on user's data access settings
         const userContext = await buildUserContext(userId);
         let contextString = formatContextForAi(userContext);
+
+        // Check intent for extended history (Lazy Load)
+        if (userSettings?.accessAllActivities) {
+            // Use a cheap prompt to check intent
+            const intent = await detectIntent({ ...config, model: 'gpt-4o-mini' }, message);
+
+            if (intent === 'HISTORY_QUERY') {
+                const extendedHistory = await buildExtendedHistoryContext(userId);
+                contextString += extendedHistory;
+            }
+        }
 
         // If activity-specific chat, add activity context
         if (activityId) {

@@ -88,6 +88,7 @@ export async function PUT(request: NextRequest) {
             accessTrainingPlan: body.accessTrainingPlan,
             accessPerformance: body.accessPerformance,
             accessBiometrics: body.accessBiometrics,
+            accessAllActivities: body.accessAllActivities,
             customPromptAddition: body.customPromptAddition,
         };
 

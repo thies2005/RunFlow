@@ -37,6 +37,7 @@ interface AiSettings {
     accessTrainingPlan: boolean;
     accessPerformance: boolean;
     accessBiometrics: boolean;
+    accessAllActivities: boolean;
     customPromptAddition: string | null;
 }
 
@@ -83,6 +84,11 @@ const DATA_ACCESS_OPTIONS = [
         key: 'accessBiometrics',
         label: 'Biometrics',
         description: 'Weight, height, age',
+    },
+    {
+        key: 'accessAllActivities',
+        label: 'All Activity History (Lazy Load)',
+        description: 'Allow AI to search older activities when needed',
     },
 ];
 
@@ -144,6 +150,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                 accessTrainingPlan: s.accessTrainingPlan,
                 accessPerformance: s.accessPerformance,
                 accessBiometrics: s.accessBiometrics,
+                accessAllActivities: s.accessAllActivities,
             });
             // Don't populate API key for security
             setCustomApiKey('');

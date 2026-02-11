@@ -167,6 +167,7 @@ model UserAiSettings {
   accessTrainingPlan    Boolean  @default(false) // Scheduled workouts
   accessPerformance     Boolean  @default(false) // VDOT, predictions
   accessBiometrics      Boolean  @default(false) // Weight, height, age
+  accessAllActivities   Boolean  @default(false) // Allow AI to search entire history (lazy load)
   
   // Custom prompt additions (appended to global prompt)
   customPromptAddition  String?

@@ -473,12 +473,20 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 break;
             }
 
+            // Batch fetch existing activities to avoid N+1 queries
+            const stravaIds = activities.map(a => safeBigInt(a.id));
+            const existingActivities = await prisma.activity.findMany({
+                where: { stravaId: { in: stravaIds } },
+            });
+            const existingMap = new Map();
+            for (const a of existingActivities) {
+                existingMap.set(a.stravaId.toString(), a);
+            }
+
             for (const activity of activities) {
                 try {
                     // Check if already exists
-                    const existing = await prisma.activity.findUnique({
-                        where: { stravaId: safeBigInt(activity.id) },
-                    });
+                    const existing = existingMap.get(safeBigInt(activity.id).toString()) || null;
 
                     // Determine if we need to process this activity
                     // Process if: New OR (Existing but missing Zone data AND has HR)

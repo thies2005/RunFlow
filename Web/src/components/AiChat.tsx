@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Send, Bot, Loader2, AlertCircle, Settings2 } from 'lucide-react';
+import { Send, Bot, Loader2, AlertCircle, Settings2, Book } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import PromptLibrary from './PromptLibrary';
 
 interface AiChatProps {
     activityId?: string;
@@ -37,6 +38,7 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
     const [input, setInput] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -50,15 +52,34 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
         },
     });
 
+    // Fetch Chat History
+    const { data: historyData, isLoading: historyLoading } = useQuery({
+        queryKey: ['chat-history', activityId],
+        queryFn: async () => {
+            const params = new URLSearchParams();
+            if (activityId) params.append('activityId', activityId);
+
+            const res = await fetch(`/api/ai/chat/history?${params.toString()}`);
+            if (!res.ok) throw new Error('Failed to fetch history');
+            return res.json();
+        },
+        enabled: !!settingsData, // Only fetch if settings loaded (and potentially if AI enabled, but let's fetch anyway)
+    });
+
+    // Load history into messages when fetched
+    useEffect(() => {
+        if (historyData?.messages) {
+            setMessages(historyData.messages);
+        }
+    }, [historyData]);
+
     const adminAllowed = settingsData?.settings?.adminAllowed;
     const aiEnabled = settingsData?.settings?.aiEnabled || settingsData?.settings?.hasCustomApiKey;
-
-
 
     // Scroll to bottom on new messages
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+    }, [messages, isStreaming]);
 
     const handleSend = async () => {
         if (!input.trim() || isStreaming) return;
@@ -264,7 +285,7 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
     }
 
     // Full chat view
-    if (settingsLoading) {
+    if (settingsLoading || (historyLoading && aiEnabled)) {
         return (
             <div className="flex-1 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
@@ -294,21 +315,37 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
     }
 
     return (
-        <div className="flex-1 flex flex-col h-full">
+        <div className="flex-1 flex flex-col h-full relative">
+            <PromptLibrary
+                isOpen={isPromptLibraryOpen}
+                onClose={() => setIsPromptLibraryOpen(false)}
+                onSelectPrompt={(text) => {
+                    setInput(text);
+                }}
+            />
+
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center">
                         <Bot className="w-12 h-12 text-purple-400 mb-4" />
                         <h3 className="text-lg font-medium text-white mb-2">AI Running Coach</h3>
-                        <p className="text-gray-400 text-sm max-w-xs">
+                        <p className="text-gray-400 text-sm max-w-xs mb-6">
                             Ask me anything about your training, get workout advice, or analyze your progress.
                         </p>
+
+                        <button
+                            onClick={() => setIsPromptLibraryOpen(true)}
+                            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-purple-400 text-sm rounded-full transition-colors flex items-center gap-2 border border-purple-500/20 hover:border-purple-500/50"
+                        >
+                            <Book className="w-4 h-4" />
+                            Browse Prompt Library
+                        </button>
+
                         <div className="mt-6 flex flex-wrap justify-center gap-2">
                             {[
                                 'How should I prepare for my race?',
                                 'Am I training too hard?',
-                                'What should I do tomorrow?',
                             ].map((suggestion) => (
                                 <button
                                     key={suggestion}
@@ -407,8 +444,15 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
             )}
 
             {/* Input Area */}
-            <div className="p-4 border-t border-gray-800 bg-background">
+            <div className="p-4 border-t border-gray-800 bg-background mt-auto z-10">
                 <div className="flex gap-2">
+                    <button
+                        onClick={() => setIsPromptLibraryOpen(true)}
+                        className="p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
+                        title="Prompt Library"
+                    >
+                        <Book className="w-5 h-5" />
+                    </button>
                     <input
                         type="text"
                         value={input}

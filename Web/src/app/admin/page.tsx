@@ -17,12 +17,21 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
         tier1Name: settings?.tier1Name || 'Basic',
         tier1DailyLimit: settings?.tier1DailyLimit || 10,
         tier1MonthlyLimit: settings?.tier1MonthlyLimit || 100,
+        tier1DailyTokenLimit: settings?.tier1DailyTokenLimit || 50000,
+        tier1MonthlyTokenLimit: settings?.tier1MonthlyTokenLimit || 500000,
+
         tier2Name: settings?.tier2Name || 'Standard',
         tier2DailyLimit: settings?.tier2DailyLimit || 25,
         tier2MonthlyLimit: settings?.tier2MonthlyLimit || 300,
+        tier2DailyTokenLimit: settings?.tier2DailyTokenLimit || 100000,
+        tier2MonthlyTokenLimit: settings?.tier2MonthlyTokenLimit || 1000000,
+
         tier3Name: settings?.tier3Name || 'Premium',
         tier3DailyLimit: settings?.tier3DailyLimit || 50,
         tier3MonthlyLimit: settings?.tier3MonthlyLimit || 500,
+        tier3DailyTokenLimit: settings?.tier3DailyTokenLimit || 200000,
+        tier3MonthlyTokenLimit: settings?.tier3MonthlyTokenLimit || 2000000,
+
         systemPrompt: settings?.systemPrompt || '',
     });
 
@@ -38,12 +47,21 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                 tier1Name: settings.tier1Name || prev.tier1Name,
                 tier1DailyLimit: settings.tier1DailyLimit ?? prev.tier1DailyLimit,
                 tier1MonthlyLimit: settings.tier1MonthlyLimit ?? prev.tier1MonthlyLimit,
+                tier1DailyTokenLimit: settings.tier1DailyTokenLimit ?? prev.tier1DailyTokenLimit,
+                tier1MonthlyTokenLimit: settings.tier1MonthlyTokenLimit ?? prev.tier1MonthlyTokenLimit,
+
                 tier2Name: settings.tier2Name || prev.tier2Name,
                 tier2DailyLimit: settings.tier2DailyLimit ?? prev.tier2DailyLimit,
                 tier2MonthlyLimit: settings.tier2MonthlyLimit ?? prev.tier2MonthlyLimit,
+                tier2DailyTokenLimit: settings.tier2DailyTokenLimit ?? prev.tier2DailyTokenLimit,
+                tier2MonthlyTokenLimit: settings.tier2MonthlyTokenLimit ?? prev.tier2MonthlyTokenLimit,
+
                 tier3Name: settings.tier3Name || prev.tier3Name,
                 tier3DailyLimit: settings.tier3DailyLimit ?? prev.tier3DailyLimit,
                 tier3MonthlyLimit: settings.tier3MonthlyLimit ?? prev.tier3MonthlyLimit,
+                tier3DailyTokenLimit: settings.tier3DailyTokenLimit ?? prev.tier3DailyTokenLimit,
+                tier3MonthlyTokenLimit: settings.tier3MonthlyTokenLimit ?? prev.tier3MonthlyTokenLimit,
+
                 systemPrompt: settings.systemPrompt || prev.systemPrompt,
             }));
         }
@@ -183,70 +201,116 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                 {/* Usage Tiers */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Tier 1 */}
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <input
                             type="text"
                             value={formData.tier1Name}
                             onChange={(e) => setFormData({ ...formData, tier1Name: e.target.value })}
-                            className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-2 focus:outline-none focus:border-purple-500"
+                            className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-3 focus:outline-none focus:border-purple-500"
                             placeholder="Tier 1 Name"
                         />
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <label className="text-gray-500 text-xs">Daily Limit</label>
-                                <input
-                                    type="number"
-                                    value={formData.tier1DailyLimit}
-                                    onChange={(e) => setFormData({ ...formData, tier1DailyLimit: parseInt(e.target.value) || 0 })}
-                                    className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded"
-                                />
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Daily Msgs</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier1DailyLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier1DailyLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Monthly Msgs</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier1MonthlyLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier1MonthlyLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-gray-500 text-xs">Monthly Limit</label>
-                                <input
-                                    type="number"
-                                    value={formData.tier1MonthlyLimit}
-                                    onChange={(e) => setFormData({ ...formData, tier1MonthlyLimit: parseInt(e.target.value) || 0 })}
-                                    className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded"
-                                />
+                            <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 pt-2">
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Daily Tokens</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier1DailyTokenLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier1DailyTokenLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Monthly Tokens</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier1MonthlyTokenLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier1MonthlyTokenLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
                     {/* Tier 2 */}
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <input
                             type="text"
                             value={formData.tier2Name}
                             onChange={(e) => setFormData({ ...formData, tier2Name: e.target.value })}
-                            className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-2 focus:outline-none focus:border-purple-500"
+                            className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-3 focus:outline-none focus:border-purple-500"
                         />
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <label className="text-gray-500 text-xs">Daily</label>
-                                <input type="number" value={formData.tier2DailyLimit} onChange={e => setFormData({ ...formData, tier2DailyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded" />
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Daily Msgs</label>
+                                    <input type="number" value={formData.tier2DailyLimit} onChange={e => setFormData({ ...formData, tier2DailyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Monthly Msgs</label>
+                                    <input type="number" value={formData.tier2MonthlyLimit} onChange={e => setFormData({ ...formData, tier2MonthlyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-gray-500 text-xs">Monthly</label>
-                                <input type="number" value={formData.tier2MonthlyLimit} onChange={e => setFormData({ ...formData, tier2MonthlyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded" />
+                            <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 pt-2">
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Daily Tokens</label>
+                                    <input type="number" value={formData.tier2DailyTokenLimit} onChange={e => setFormData({ ...formData, tier2DailyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Monthly Tokens</label>
+                                    <input type="number" value={formData.tier2MonthlyTokenLimit} onChange={e => setFormData({ ...formData, tier2MonthlyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
                             </div>
                         </div>
                     </div>
                     {/* Tier 3 */}
-                    <div className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                         <input
                             type="text"
                             value={formData.tier3Name}
                             onChange={(e) => setFormData({ ...formData, tier3Name: e.target.value })}
-                            className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-2 focus:outline-none focus:border-purple-500"
+                            className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-3 focus:outline-none focus:border-purple-500"
                         />
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <label className="text-gray-500 text-xs">Daily</label>
-                                <input type="number" value={formData.tier3DailyLimit} onChange={e => setFormData({ ...formData, tier3DailyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded" />
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Daily Msgs</label>
+                                    <input type="number" value={formData.tier3DailyLimit} onChange={e => setFormData({ ...formData, tier3DailyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Monthly Msgs</label>
+                                    <input type="number" value={formData.tier3MonthlyLimit} onChange={e => setFormData({ ...formData, tier3MonthlyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
                             </div>
-                            <div>
-                                <label className="text-gray-500 text-xs">Monthly</label>
-                                <input type="number" value={formData.tier3MonthlyLimit} onChange={e => setFormData({ ...formData, tier3MonthlyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-200 rounded" />
+                            <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 pt-2">
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Daily Tokens</label>
+                                    <input type="number" value={formData.tier3DailyTokenLimit} onChange={e => setFormData({ ...formData, tier3DailyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">Monthly Tokens</label>
+                                    <input type="number" value={formData.tier3MonthlyTokenLimit} onChange={e => setFormData({ ...formData, tier3MonthlyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -298,6 +362,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
         baseUrl: initialData?.baseUrl || '',
         apiKey: '',
         models: initialData?.models?.join(',') || '',
+        monthlyTokenLimit: initialData?.monthlyTokenLimit || '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -356,21 +421,16 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
     };
 
     const handleTest = async () => {
+        // ... same logic ...
         setTesting(true);
         setTestResult(null);
         try {
-            // We need to use valid provider config to test.
-            // If creating new, we use the form data.
-            // NOTE: The server-side test endpoint handles the raw config.
             const modelsList = formData.models.split(',').map((s: string) => s.trim()).filter(Boolean);
             const res = await fetch('/api/ai/test-key', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     provider: formData.type,
-                    // Only send apiKey if they typed a new one. 
-                    // Note: If they leave it blank to keep current, you can't test it here 
-                    // without additional server-side support for testing by provider ID.
                     apiKey: formData.apiKey || null,
                     baseUrl: formData.baseUrl,
                     model: modelsList[0] || 'gpt-4o-mini',
@@ -391,40 +451,88 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
 
     return (
         <div className="space-y-4">
-            {error && <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg">{error}</div>}
-
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder:text-gray-400" placeholder="e.g. OpenAI" />
+                    <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="e.g. OpenAI"
+                    />
                 </div>
                 <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                    <input
+                        type="text"
+                        value={formData.slug}
+                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="openai"
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                    <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    <select
+                        value={formData.type}
+                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    >
                         <option value="openai">OpenAI Compatible</option>
-                        <option value="nvidia">NVIDIA NIM</option>
-                        <option value="zhipu">Zhipu AI (GLM)</option>
                         <option value="anthropic">Anthropic</option>
                         <option value="google">Google Gemini</option>
+                        <option value="nvidia">NVIDIA NIM</option>
+                        <option value="zhipu">Zhipu AI</option>
                     </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Token Limit</label>
+                    <input
+                        type="number"
+                        value={formData.monthlyTokenLimit}
+                        onChange={(e) => setFormData({ ...formData, monthlyTokenLimit: e.target.value })}
+                        placeholder="Optional (e.g. 1000000)"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
                 </div>
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
-                <input type="text" value={formData.baseUrl} onChange={e => setFormData({ ...formData, baseUrl: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder:text-gray-400" />
+                <input
+                    type="text"
+                    value={formData.baseUrl}
+                    onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">API Key {initialData && <span className="text-green-600 font-normal">(Leave blank to keep current)</span>}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">API Key {initialData && '(Leave blank to keep current)'}</label>
                 <div className="flex gap-2">
-                    <input type="password" value={formData.apiKey} onChange={e => setFormData({ ...formData, apiKey: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder:text-gray-400" placeholder={initialData ? '••••••••' : 'sk-...'} />
-                    <button onClick={handleTest} disabled={testing || (!formData.apiKey && !initialData)} className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-600 disabled:opacity-50">
+                    <input
+                        type="password"
+                        value={formData.apiKey}
+                        onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="sk-..."
+                    />
+                    <button
+                        onClick={handleTest}
+                        disabled={testing || (!formData.apiKey && !initialData)}
+                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-1"
+                    >
                         {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                        Test
                     </button>
                 </div>
                 {testResult && (
-                    <p className={`text-xs mt-1 ${testResult.success ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-xs mt-1 ${testResult.success ? 'text-green-600' : 'text-red-500'}`}>
+                        {testResult.success ? <CheckCircle className="w-3 h-3 inline mr-1" /> : <AlertTriangle className="w-3 h-3 inline mr-1" />}
                         {testResult.message}
                     </p>
                 )}
@@ -432,18 +540,38 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Models (comma separated)</label>
-                <input type="text" value={formData.models} onChange={e => setFormData({ ...formData, models: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder:text-gray-400" placeholder="gpt-4,gpt-4o" />
+                <input
+                    type="text"
+                    value={formData.models}
+                    onChange={(e) => setFormData({ ...formData, models: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="gpt-4, gpt-4o-mini"
+                />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
-                <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                <button onClick={handleSave} disabled={loading} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50">
-                    {loading ? 'Saving...' : 'Save Provider'}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+            <div className="flex justify-end gap-3 pt-4">
+                <button
+                    onClick={onClose}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition flex items-center gap-2"
+                >
+                    {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {initialData ? 'Update Provider' : 'Add Provider'}
                 </button>
             </div>
         </div>
     );
 };
+
+
 
 
 // Components

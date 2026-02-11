@@ -15,9 +15,11 @@ import {
     formatContextForAi,
     buildSystemPrompt,
     checkUsageLimit,
+    checkProviderLimit,
     incrementUsage,
     buildExtendedHistoryContext,
     generateCompletion,
+    countTokens,
     type AiConfig,
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
@@ -90,6 +92,17 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        // Check provider limit if using a system provider (not keyOverride)
+        if (!config.keyOverride && config.providerId) {
+            const providerStatus = await checkProviderLimit(config.providerId);
+            if (!providerStatus.canUse) {
+                return new Response(JSON.stringify({ error: providerStatus.reason }), {
+                    status: 503,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            }
+        }
+
         // Check usage limits (only for users without custom API key)
         const usageStatus = await checkUsageLimit(userId);
         if (!usageStatus.canUse) {
@@ -157,22 +170,72 @@ export async function POST(request: NextRequest) {
             },
         ];
 
+        // Calculate Input Tokens
+        // We calculate based on the full prompt sent to the LLM
+        let inputTokens = 0;
+        try {
+            // Estimation
+            inputTokens += countTokens(`${systemPrompt}\n\n--- Athlete Data ---\n${contextString}`, config.model);
+            inputTokens += countTokens(message, config.model);
+        } catch (e) {
+            console.error('Token counting error', e);
+        }
+
         // Stream the response
         const stream = await streamChat(config, messages);
 
         // Create a readable stream for SSE
         const encoder = new TextEncoder();
+        let fullResponse = '';
+
         const readableStream = new ReadableStream({
             async start(controller) {
                 try {
+
+                    // We stream first, then count output tokens and increment usage at the end
                     for await (const token of stream) {
+                        fullResponse += token;
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
                     }
                     controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
                     controller.close();
 
-                    // Increment usage after successful completion
-                    await incrementUsage(userId);
+                    // Save conversation and increment usage
+                    try {
+                        // User message
+                        await prisma.chatMessage.create({
+                            data: {
+                                userId,
+                                role: 'user',
+                                content: message,
+                                activityId,
+                            },
+                        });
+
+                        // Assistant message
+                        await prisma.chatMessage.create({
+                            data: {
+                                userId,
+                                role: 'assistant',
+                                content: fullResponse,
+                                activityId,
+                            },
+                        });
+
+                        // Calculate Output Tokens
+                        const outputTokens = countTokens(fullResponse, config.model);
+
+                        // Increment usage
+                        // Note: we pass config.providerId to track provider usage if applicable
+                        await incrementUsage(userId, {
+                            inputTokens,
+                            outputTokens
+                        }, config.providerId);
+
+                    } catch (dbError) {
+                        console.error('Failed to save chat or update usage', dbError);
+                    }
+
                 } catch (error) {
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
                     controller.close();

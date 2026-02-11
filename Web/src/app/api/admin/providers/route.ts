@@ -41,7 +41,9 @@ export async function GET(request: NextRequest) {
         const safeProviders = providers.map(p => ({
             ...p,
             apiKey: null, // Don't send masked string to client
-            hasKey: !!p.apiKey
+            hasKey: !!p.apiKey,
+            // Convert BigInt to string for JSON serialization
+            monthlyTokenLimit: p.monthlyTokenLimit ? p.monthlyTokenLimit.toString() : null
         }));
 
         return NextResponse.json({ providers: safeProviders });
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json();
-        const { name, type, baseUrl, apiKey, models, slug } = body;
+        const { name, type, baseUrl, apiKey, models, slug, monthlyTokenLimit } = body;
 
         if (!name || !type || !baseUrl || !apiKey || !slug) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -82,11 +84,19 @@ export async function POST(request: NextRequest) {
                 baseUrl,
                 apiKey: encryptToken(apiKey),
                 models: models || [],
-                isActive: true,
+                isActive: true, // Default active
+                monthlyTokenLimit: monthlyTokenLimit ? BigInt(monthlyTokenLimit) : null,
             },
         });
 
-        return NextResponse.json({ success: true, provider: { ...provider, apiKey: null } });
+        return NextResponse.json({
+            success: true,
+            provider: {
+                ...provider,
+                apiKey: null,
+                monthlyTokenLimit: provider.monthlyTokenLimit ? provider.monthlyTokenLimit.toString() : null
+            }
+        });
     } catch (error: any) {
         if (error.code === 'P2002') {
             return NextResponse.json({ error: 'A provider with this slug already exists' }, { status: 400 });
@@ -109,7 +119,7 @@ export async function PUT(request: NextRequest) {
 
     try {
         const body = await request.json();
-        const { id, name, type, baseUrl, apiKey, models, isActive } = body;
+        const { id, name, type, baseUrl, apiKey, models, isActive, monthlyTokenLimit } = body;
 
         if (!id) {
             return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
@@ -127,13 +137,23 @@ export async function PUT(request: NextRequest) {
         if (apiKey) updateData.apiKey = encryptToken(apiKey); // Only update if provided
         if (models) updateData.models = models;
         if (isActive !== undefined) updateData.isActive = isActive;
+        if (monthlyTokenLimit !== undefined) {
+            updateData.monthlyTokenLimit = monthlyTokenLimit ? BigInt(monthlyTokenLimit) : null;
+        }
 
         const provider = await prisma.aiProvider.update({
             where: { id },
             data: updateData,
         });
 
-        return NextResponse.json({ success: true, provider: { ...provider, apiKey: null } });
+        return NextResponse.json({
+            success: true,
+            provider: {
+                ...provider,
+                apiKey: null,
+                monthlyTokenLimit: provider.monthlyTokenLimit ? provider.monthlyTokenLimit.toString() : null
+            }
+        });
     } catch (error) {
         console.error('Providers PUT error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

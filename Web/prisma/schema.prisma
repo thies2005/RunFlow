@@ -23,8 +23,8 @@ model User {
   emailVerified DateTime?
 
   // Email/Password Authentication
-  passwordHash  String?   // bcrypt hashed password for email auth users
-  authMethod    String    @default("strava") // "strava" | "email" - primary auth method
+  passwordHash String? // bcrypt hashed password for email auth users
+  authMethod   String  @default("strava") // "strava" | "email" - primary auth method
 
   // Strava OAuth tokens
   stravaId           String?   @unique
@@ -76,10 +76,11 @@ model User {
   apiKey     ApiKey?
   aiSettings UserAiSettings?
 
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  DailyFitness DailyFitness[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  DailyFitness  DailyFitness[]
   notifications Notification[]
+  chatMessages  ChatMessage[]
 }
 
 // ============================================
@@ -88,112 +89,136 @@ model User {
 
 // Global AI settings (admin-controlled singleton)
 model GlobalAiSettings {
-  id                  String   @id @default("singleton")
-  
+  id String @id @default("singleton")
+
   // Default LLM configuration (OpenAI-compatible)
-  defaultBaseUrl      String   @default("https://api.openai.com/v1")
-  defaultApiKey       String?  // Encrypted admin API key
-  defaultModel        String   @default("gpt-4o-mini")
-  
+  defaultBaseUrl String  @default("https://api.openai.com/v1")
+  defaultApiKey  String? // Encrypted admin API key
+  defaultModel   String  @default("gpt-4o-mini")
+
   // Usage Tiers (0 = BYOK only, 1-3 = customizable limits)
-  tier1Name           String   @default("Basic")
-  tier1DailyLimit     Int      @default(10)
-  tier1MonthlyLimit   Int      @default(100)
-  
-  tier2Name           String   @default("Standard")
-  tier2DailyLimit     Int      @default(25)
-  tier2MonthlyLimit   Int      @default(300)
-  
-  tier3Name           String   @default("Premium")  
-  tier3DailyLimit     Int      @default(50)
-  tier3MonthlyLimit   Int      @default(500)
-  
+  tier1Name         String @default("Basic")
+  tier1DailyLimit   Int    @default(10)
+  tier1MonthlyLimit Int    @default(100)
+
+  tier2Name         String @default("Standard")
+  tier2DailyLimit   Int    @default(25)
+  tier2MonthlyLimit Int    @default(300)
+
+  tier3Name         String @default("Premium")
+  tier3DailyLimit   Int    @default(50)
+  tier3MonthlyLimit Int    @default(500)
+
+  // Token Limits for Tiers
+  tier1DailyTokenLimit   Int @default(50000)
+  tier1MonthlyTokenLimit Int @default(500000)
+
+  tier2DailyTokenLimit   Int @default(100000)
+  tier2MonthlyTokenLimit Int @default(1000000)
+
+  tier3DailyTokenLimit   Int @default(200000)
+  tier3MonthlyTokenLimit Int @default(2000000)
+
   // Legacy limits (deprecated, use tiers instead)
-  dailyMessageLimit   Int      @default(50)
-  monthlyMessageLimit Int      @default(500)
-  
+  dailyMessageLimit   Int @default(50)
+  monthlyMessageLimit Int @default(500)
+
   // System prompt (base coach persona)
-  systemPrompt        String   @default("You are a knowledgeable and encouraging running coach. Analyze the athlete's data and provide personalized, actionable advice. Be specific when referencing their metrics and progress. Keep responses concise but insightful.")
+  systemPrompt String @default("You are a knowledgeable and encouraging running coach. Analyze the athlete's data and provide personalized, actionable advice. Be specific when referencing their metrics and progress. Keep responses concise but insightful.")
 
   // Active Provider Configuration
-  activeProviderId    String?
-  activeProvider      AiProvider? @relation(fields: [activeProviderId], references: [id])
-  
-  updatedAt           DateTime @updatedAt
+  activeProviderId String?
+  activeProvider   AiProvider? @relation(fields: [activeProviderId], references: [id])
+
+  updatedAt DateTime @updatedAt
 }
 
 // AI Providers (OpenAI, Anthropic, Google, etc.)
 model AiProvider {
-  id          String   @id @default(cuid())
-  name        String   // e.g. "OpenAI", "Anthropic"
-  slug        String   @unique // e.g. "openai", "anthropic" ("google" for Gemini)
-  type        String   // "openai" | "anthropic" | "google"
-  baseUrl     String
-  apiKey      String   // Encrypted
-  models      String[] // List of model IDs e.g. ["gpt-4", "claude-3-opus"]
-  isActive    Boolean  @default(true)
-  
+  id       String   @id @default(cuid())
+  name     String // e.g. "OpenAI", "Anthropic"
+  slug     String   @unique // e.g. "openai", "anthropic" ("google" for Gemini)
+  type     String // "openai" | "anthropic" | "google"
+  baseUrl  String
+  apiKey   String // Encrypted
+  models   String[] // List of model IDs e.g. ["gpt-4", "claude-3-opus"]
+  isActive Boolean  @default(true)
+
+  // Usage Tracking
+  monthlyInputTokensUsed  Int      @default(0)
+  monthlyOutputTokensUsed Int      @default(0)
+  monthlyTokenLimit       BigInt?  // Null = unlimited. Using BigInt for high limits.
+  lastUsageReset          DateTime @default(now())
+
   globalSettings GlobalAiSettings[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Per-user AI configuration
 model UserAiSettings {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  
+  id     String @id @default(cuid())
+  userId String @unique
+
   // Feature activation - controlled by usageTier or BYOK
-  adminAllowed          Boolean  @default(false)
-  aiEnabled             Boolean  @default(false)
-  
+  adminAllowed Boolean @default(false)
+  aiEnabled    Boolean @default(false)
+
   // Usage tier: "none" = BYOK only, "tier1", "tier2", "tier3" = admin-assigned
-  usageTier             String   @default("none")
-  
+  usageTier String @default("none")
+
   // BYOK - User's own OpenAI-compatible endpoint
-  customBaseUrl         String?  // e.g., "https://api.anthropic.com/v1" or local
-  customApiKey          String?  // Encrypted
-  customModel           String?
-  
+  customBaseUrl String? // e.g., "https://api.anthropic.com/v1" or local
+  customApiKey  String? // Encrypted
+  customModel   String?
+
   // Activity feedback settings
-  feedbackMode          String   @default("on_demand") // "off" | "on_demand" | "auto" | "both"
-  
+  feedbackMode String @default("on_demand") // "off" | "on_demand" | "auto" | "both"
+
   // Granular data access permissions (all default OFF)
-  accessFitnessMetrics  Boolean  @default(false) // CTL, ATL, TSB
-  accessActivityHistory Boolean  @default(false) // Runs, times, distances
-  accessHeartRateData   Boolean  @default(false) // HR zones, avg/max HR
-  accessGoals           Boolean  @default(false) // Race goals & targets
-  accessTrainingPlan    Boolean  @default(false) // Scheduled workouts
-  accessPerformance     Boolean  @default(false) // VDOT, predictions
-  accessBiometrics      Boolean  @default(false) // Weight, height, age
-  accessAllActivities   Boolean  @default(false) // Allow AI to search entire history (lazy load)
+  accessFitnessMetrics  Boolean @default(false) // CTL, ATL, TSB
   
+  accessActivityHistory Boolean @default(false) // Runs, times, distances
+  accessHeartRateData   Boolean @default(false) // HR zones, avg/max HR
+  accessGoals           Boolean @default(false) // Race goals & targets
+  accessTrainingPlan    Boolean @default(false) // Scheduled workouts
+  accessPerformance     Boolean @default(false) // VDOT, predictions
+  accessBiometrics      Boolean @default(false) // Weight, height, age
+  accessAllActivities   Boolean @default(false) // Allow AI to search entire history (lazy load)
+
   // Custom prompt additions (appended to global prompt)
-  customPromptAddition  String?
-  
+  customPromptAddition String?
+
   // Usage tracking
-  messagesUsedToday     Int      @default(0)
-  messagesUsedThisMonth Int      @default(0)
-  lastUsageReset        DateTime @default(now())
-  
+  messagesUsedToday     Int @default(0)
+  messagesUsedThisMonth Int @default(0)
+
+  // Token tracking
+  inputTokensUsedToday      Int @default(0)
+  outputTokensUsedToday     Int @default(0)
+  inputTokensUsedThisMonth  Int @default(0)
+  outputTokensUsedThisMonth Int @default(0)
+
+  lastUsageReset DateTime @default(now())
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
 }
 
 // Cached AI feedback for activities
 model ActivityAiFeedback {
-  id                  String   @id @default(cuid())
-  activityId          String   @unique
-  
+  id         String @id @default(cuid())
+  activityId String @unique
+
   // Three feedback fields
-  plannedComparison   String?  @db.Text // vs scheduled workout
-  progressAnalysis    String?  @db.Text // weekly/monthly progress
-  goalTrajectory      String?  @db.Text // race goal alignment
-  
-  generatedAt         DateTime @default(now())
-  
+  plannedComparison String? @db.Text // vs scheduled workout
+  progressAnalysis  String? @db.Text // weekly/monthly progress
+  goalTrajectory    String? @db.Text // race goal alignment
+
+  generatedAt DateTime @default(now())
+
   @@index([activityId])
 }
 
@@ -230,7 +255,6 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -240,12 +264,12 @@ model VerificationToken {
 }
 
 model AuthCode {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   email     String
   code      String
   type      AuthCodeType
   expiresAt DateTime
-  createdAt DateTime @default(now())
+  createdAt DateTime     @default(now())
 
   @@index([email, type])
 }
@@ -318,11 +342,12 @@ model Activity {
   trainingType WorkoutType? // Auto-tagged or manual override
 
   // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedWorkouts Workout[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  ChatMessage ChatMessage[]
 
   @@index([userId, startDate])
   @@index([type])
@@ -402,8 +427,8 @@ model Goal {
   buildWeeks Int @default(4)
 
   // Preferred Training Days (0=Sunday, 1=Monday, ..., 6=Saturday)
-  longRunDay Int @default(0) // Default Sunday
-  workoutDay Int @default(3) // Default Wednesday
+  longRunDay Int  @default(0) // Default Sunday
+  workoutDay Int  @default(3) // Default Wednesday
   restDays   Json @default("[1, 5]") // Default Monday & Friday as rest days
 
   // Status
@@ -437,8 +462,8 @@ model Workout {
   // Workout details
   workoutType WorkoutType
   description String
-  phase       PlanPhase @default(BASE)
-  order       Int       @default(0)
+  phase       PlanPhase   @default(BASE)
+  order       Int         @default(0)
   notes       String?
 
   // Targets
@@ -508,8 +533,8 @@ model Notification {
 model ApiKey {
   id         String    @id @default(cuid())
   userId     String    @unique // One key per user
-  keyHash    String    // SHA-256 hash of the API key
-  keyPrefix  String    // First 8 chars for display (e.g., "rf_abc12...")
+  keyHash    String // SHA-256 hash of the API key
+  keyPrefix  String // First 8 chars for display (e.g., "rf_abc12...")
   name       String    @default("My API Key")
   createdAt  DateTime  @default(now())
   lastUsedAt DateTime?
@@ -518,4 +543,24 @@ model ApiKey {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([keyHash])
+}
+
+// ============================================
+// Chat History
+// ============================================
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String // "user" | "assistant"
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  // Optional: link to activity if context-specific
+  activityId String?
+  activity   Activity? @relation(fields: [activityId], references: [id])
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

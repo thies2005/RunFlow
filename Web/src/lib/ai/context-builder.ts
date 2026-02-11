@@ -379,6 +379,15 @@ export function formatContextForAi(context: UserContext): string {
         const totalDistance = last7Days.reduce((sum, a) => sum + a.distance, 0) / 1000;
         const totalDuration = last7Days.reduce((sum, a) => sum + a.duration, 0);
         parts.push(`Last 7 days: ${totalDistance.toFixed(1)}km in ${Math.round(totalDuration / 60)} minutes across ${last7Days.length} activities`);
+
+        // List individual recent activities so the AI can reference specific runs
+        parts.push('\nRecent Activities:');
+        context.recentActivities.forEach((a) => {
+            const dist = (a.distance / 1000).toFixed(1);
+            const paceMin = Math.floor(a.pace / 60);
+            const paceSec = Math.floor(a.pace % 60).toString().padStart(2, '0');
+            parts.push(`  ${a.date} | ${a.type} | ${dist}km | ${paceMin}:${paceSec}/km`);
+        });
     }
 
     if (context.trainingPlan) {

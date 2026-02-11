@@ -26,15 +26,18 @@ import { checkRateLimitAsync } from '@/lib/rateLimit';
 export const dynamic = 'force-dynamic';
 
 async function detectIntent(config: AiConfig, message: string): Promise<string> {
-    const prompt = `Classify the user message.
-User Message: "${message}"
-Does this message require accessing the user's entire past activity history (older than just the last 20 activities)?
-Examples requiring history: "How many marathons have I run?", "Compare my running volume 2023 vs 2024", "What is my all-time PR?", "List my runs from last month".
-Examples NOT requiring history: "Help me plan a workout", "What is my current fitness?", "Analyze my last run", "What should I run tomorrow?".
+    const systemPrompt = `You are a classifier. Classify user messages as either HISTORY_QUERY or NORMAL.
+HISTORY_QUERY: requires accessing the user's entire past activity history (older than last 20 activities).
+Examples: "How many marathons have I run?", "Compare my running volume 2023 vs 2024", "What is my all-time PR?", "List my runs from last month".
+NORMAL: everything else.
+Examples: "Help me plan a workout", "What is my current fitness?", "Analyze my last run", "What should I run tomorrow?".
 Reply ONLY with "HISTORY_QUERY" or "NORMAL".`;
 
     try {
-        const response = await generateCompletion(config, [{ role: 'system', content: prompt }]);
+        const response = await generateCompletion(config, [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: message },
+        ]);
         return response.trim().toUpperCase().includes('HISTORY_QUERY') ? 'HISTORY_QUERY' : 'NORMAL';
     } catch (e) {
         console.error('Intent detection failed', e);
@@ -105,7 +108,7 @@ export async function POST(request: NextRequest) {
         let contextString = formatContextForAi(userContext);
 
         // Check intent for extended history (Lazy Load)
-        if (userSettings?.accessAllActivities) {
+        if ((userSettings as any)?.accessAllActivities) {
             // Use the user's configured model for intent detection to ensure compatibility
             console.log(`Checking intent with model: ${config.model}`);
             const intent = await detectIntent(config, message);

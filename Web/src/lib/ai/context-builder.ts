@@ -24,6 +24,11 @@ export interface UserContext {
         distance: number; // meters
         duration: number; // seconds
         pace: number; // sec/km
+        avgHr?: number;
+        elevationGain?: number;
+        cadence?: number;
+        tss?: number;
+        trimp?: number;
     }[];
 
     // Heart rate data (if accessHeartRateData)
@@ -164,6 +169,11 @@ export async function buildUserContext(userId: string): Promise<UserContext> {
             distance: a.distance,
             duration: a.movingTime,
             pace: a.distance > 0 ? (a.movingTime / (a.distance / 1000)) : 0,
+            avgHr: a.averageHr || undefined,
+            elevationGain: a.totalElevation || undefined,
+            cadence: a.averageCadence || undefined,
+            tss: a.runningTss || undefined,
+            trimp: a.trimp || undefined,
         }));
     }
 
@@ -381,12 +391,18 @@ export function formatContextForAi(context: UserContext): string {
         parts.push(`Last 7 days: ${totalDistance.toFixed(1)}km in ${Math.round(totalDuration / 60)} minutes across ${last7Days.length} activities`);
 
         // List individual recent activities so the AI can reference specific runs
-        parts.push('\nRecent Activities:');
+        parts.push('\nRecent Activities (Last 20):');
         context.recentActivities.forEach((a) => {
             const dist = (a.distance / 1000).toFixed(1);
             const paceMin = Math.floor(a.pace / 60);
             const paceSec = Math.floor(a.pace % 60).toString().padStart(2, '0');
-            parts.push(`  ${a.date} | ${a.type} | ${dist}km | ${paceMin}:${paceSec}/km`);
+
+            let details = `${a.date} | ${a.type} | ${dist}km | ${paceMin}:${paceSec}/km`;
+            if (a.avgHr) details += ` | ${Math.round(a.avgHr)}bpm`;
+            if (a.elevationGain) details += ` | +${Math.round(a.elevationGain)}m`;
+            if (a.tss) details += ` | TSS ${Math.round(a.tss)}`;
+
+            parts.push(`  ${details}`);
         });
     }
 

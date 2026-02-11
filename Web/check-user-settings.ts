@@ -22,7 +22,8 @@ async function main() {
                 console.log('    Custom API Key Set:', !!s.customApiKey);
                 if (s.customApiKey) {
                     try {
-                        console.log('    Decrypted Key Start:', decryptToken(s.customApiKey).substring(0, 10) + '...');
+                        const decrypted = decryptToken(s.customApiKey);
+                        console.log('    Decrypted Key Start:', (decrypted ? decrypted.substring(0, 10) : 'NULL/FAILED') + '...');
                     } catch (e) {
                         console.log('    Could not decrypt key (might be plaintext):', s.customApiKey.substring(0, 10));
                     }

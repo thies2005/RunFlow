@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
-import { isAdmin } from '@/lib/admin/adminCheck';
+import { requireAdmin } from '@/lib/admin/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email || !isAdmin(session.user.email)) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await requireAdmin(req);
+    if ('error' in authResult) {
+        return authResult.error;
     }
 
     try {

@@ -218,12 +218,20 @@ export function calculateMarathonShape(
     }
 
     const now = new Date();
-    const sixMonthsAgo = new Date(now.getTime() - 182 * 24 * 60 * 60 * 1000);
-    const tenWeeksAgo = new Date(now.getTime() - 70 * 24 * 60 * 60 * 1000);
+    const nowTime = now.getTime();
+    const sixMonthsAgoTime = nowTime - 182 * 24 * 60 * 60 * 1000;
+    const tenWeeksAgoTime = nowTime - 70 * 24 * 60 * 60 * 1000;
+
+    // Pre-calculate timestamps for efficient filtering and calculation
+    // This avoids parsing dates repeatedly inside loops
+    const runActivitiesWithTimestamp = runActivities.map(a => ({
+        ...a,
+        timestamp: new Date(a.startDate).getTime()
+    }));
 
     // Filter activities
-    const last6Months = runActivities.filter(a => new Date(a.startDate) >= sixMonthsAgo);
-    const last10Weeks = runActivities.filter(a => new Date(a.startDate) >= tenWeeksAgo);
+    const last6Months = runActivitiesWithTimestamp.filter(a => a.timestamp >= sixMonthsAgoTime);
+    const last10Weeks = runActivitiesWithTimestamp.filter(a => a.timestamp >= tenWeeksAgoTime);
 
     // === MILEAGE COMPONENT (66.7%) ===
     // Target: VO2max value in km per week (e.g., VO2max 50 → 50 km/week)
@@ -245,7 +253,7 @@ export function calculateMarathonShape(
     let longRunPoints = 0;
     longRuns.forEach(run => {
         const distKm = run.distance / 1000;
-        const daysAgo = (now.getTime() - new Date(run.startDate).getTime()) / (24 * 60 * 60 * 1000);
+        const daysAgo = (nowTime - run.timestamp) / (24 * 60 * 60 * 1000);
 
         // Points formula: exponential for distance, decay for recency
         // Base: 0.5 points at 13km, ~1.1 at 30km, ~1.8 at 35km

@@ -57,8 +57,8 @@ const DATA_ACCESS_OPTIONS = [
     },
     {
         key: 'accessActivityHistory',
-        label: 'Activity History',
-        description: 'Your runs, distances, and times',
+        label: 'Recent Activity',
+        description: 'Your recent runs, distances, and times (Last 20)',
     },
     {
         key: 'accessHeartRateData',

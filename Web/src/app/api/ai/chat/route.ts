@@ -106,8 +106,9 @@ export async function POST(request: NextRequest) {
 
         // Check intent for extended history (Lazy Load)
         if (userSettings?.accessAllActivities) {
-            // Use a cheap prompt to check intent
-            const intent = await detectIntent({ ...config, model: 'gpt-4o-mini' }, message);
+            // Use the user's configured model for intent detection to ensure compatibility
+            console.log(`Checking intent with model: ${config.model}`);
+            const intent = await detectIntent(config, message);
 
             if (intent === 'HISTORY_QUERY') {
                 const extendedHistory = await buildExtendedHistoryContext(userId);

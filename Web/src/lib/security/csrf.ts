@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const CSRF_COOKIE_NAME = 'csrf_token';
-const CSRF_TOKEN_EXPIRATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+const CSRF_TOKEN_EXPIRATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 interface CsrfTokenData {
     token: string;
@@ -27,7 +27,7 @@ export function setCsrfCookie(response: NextResponse): string {
     return token;
 }
 
-function getCsrfTokenFromCookie(request: NextRequest): string | null {
+export function getCsrfTokenFromCookie(request: NextRequest): string | null {
     const cookie = request.cookies.get(CSRF_COOKIE_NAME);
     if (!cookie || !cookie.value) {
         return null;

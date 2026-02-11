@@ -71,7 +71,7 @@ export function encryptToken(plaintext: string): string {
  * @param encryptedToken - The encrypted string from encryptToken()
  * @returns Decrypted plaintext, or original if encryption not configured or decryption fails
  */
-export function decryptToken(encryptedToken: string): string {
+export function decryptToken(encryptedToken: string): string | null {
     const key = getEncryptionKey();
     if (!key) {
         // Encryption not configured - assume plaintext
@@ -101,10 +101,9 @@ export function decryptToken(encryptedToken: string): string {
 
         return decrypted.toString('utf8');
     } catch (error) {
-        // Decryption failed - might be plaintext or corrupted
-        // In production, this would indicate tampering or key rotation
+        // Decryption failed - key mismatch or corrupted data
         console.error('Token decryption failed:', error);
-        return encryptedToken;
+        return null;
     }
 }
 

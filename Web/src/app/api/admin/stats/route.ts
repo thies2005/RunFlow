@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
+import { getCsrfTokenFromCookie, setCsrfCookie } from '@/lib/security/csrf';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             users: {
                 total: totalUsers,
                 newToday: newUsersToday,
@@ -96,6 +97,15 @@ export async function GET(request: NextRequest) {
             },
             timestamp: now.toISOString(),
         });
+
+        // Auto-refresh CSRF token if missing or expired
+        // Since we are authenticated as admin here, it's safe to issue a new token
+        const currentCsrfToken = getCsrfTokenFromCookie(request);
+        if (!currentCsrfToken) {
+            setCsrfCookie(response);
+        }
+
+        return response;
 
     } catch (error) {
         console.error('[Admin Stats] Error:', error);

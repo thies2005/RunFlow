@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { encryptToken, decryptToken } from '@/lib/crypto';
+import { encryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';

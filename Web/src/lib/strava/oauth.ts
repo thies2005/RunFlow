@@ -206,6 +206,13 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
     // Decrypt refresh token for use
     const decryptedRefreshToken = decryptToken(account.refresh_token);
 
+    if (!decryptedRefreshToken) {
+        console.error(`Failed to decrypt refresh token for user ${userId} - forcing re-authentication`);
+        // We can't refresh without a valid token.
+        // Return null to trigger re-auth flow in caller
+        return null;
+    }
+
     // Check if token is still valid (with 5 min buffer)
     // expires_at is in seconds (Unix timestamp)
     if (account.expires_at && account.expires_at * 1000 > Date.now() + 5 * 60 * 1000) {

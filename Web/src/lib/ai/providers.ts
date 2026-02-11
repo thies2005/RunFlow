@@ -42,12 +42,16 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
 
     // If user has custom API key AND is in BYOK mode ('none'), use their config
     if (userSettings.customApiKey && userSettings.usageTier === 'none') {
-        return {
-            provider: 'openai', // Custom keys assume OpenAI-compatible for now
-            baseUrl: userSettings.customBaseUrl || 'https://api.openai.com/v1',
-            apiKey: decryptToken(userSettings.customApiKey),
-            model: userSettings.customModel || 'gpt-4o-mini',
-        };
+        const decryptedKey = decryptToken(userSettings.customApiKey);
+        if (decryptedKey) {
+            return {
+                provider: 'openai', // Custom keys assume OpenAI-compatible for now
+                baseUrl: userSettings.customBaseUrl || 'https://api.openai.com/v1',
+                apiKey: decryptedKey,
+                model: userSettings.customModel || 'gpt-4o-mini',
+            };
+        }
+        // Fall through if decryption failed
     }
 
     // Check for active provider in Global Settings
@@ -58,22 +62,29 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
 
     // 1. Use Active Provider if set
     if (globalSettings?.activeProvider) {
-        return {
-            provider: globalSettings.activeProvider.type as any,
-            baseUrl: globalSettings.activeProvider.baseUrl,
-            apiKey: decryptToken(globalSettings.activeProvider.apiKey),
-            model: globalSettings.activeProvider.models[0] || 'gpt-4o-mini', // Default to first available model
-        };
+        const decryptedKey = decryptToken(globalSettings.activeProvider.apiKey);
+        if (decryptedKey) {
+            return {
+                provider: globalSettings.activeProvider.type as any,
+                baseUrl: globalSettings.activeProvider.baseUrl,
+                apiKey: decryptedKey,
+                model: globalSettings.activeProvider.models[0] || 'gpt-4o-mini', // Default to first available model
+            };
+        }
+        // Fall through if active provider key is invalid
     }
 
     // 2. Fallback to Legacy Global Config
     if (globalSettings?.defaultApiKey) {
-        return {
-            provider: 'openai', // Legacy is always OpenAI-compatible
-            baseUrl: globalSettings.defaultBaseUrl,
-            apiKey: decryptToken(globalSettings.defaultApiKey),
-            model: globalSettings.defaultModel,
-        };
+        const decryptedKey = decryptToken(globalSettings.defaultApiKey);
+        if (decryptedKey) {
+            return {
+                provider: 'openai', // Legacy is always OpenAI-compatible
+                baseUrl: globalSettings.defaultBaseUrl,
+                apiKey: decryptedKey,
+                model: globalSettings.defaultModel,
+            };
+        }
     }
 
     return null;

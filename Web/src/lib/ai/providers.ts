@@ -169,7 +169,7 @@ async function streamOpenAI(
 
                         lineBuffer += decoder.decode(value, { stream: true });
                         const lines = lineBuffer.split('\n');
-                        lineBuffer = lines.pop() || ''; // Keep the partial line for the next chunk
+                        lineBuffer = lines.pop() || '';
 
                         for (const line of lines) {
                             const trimmed = line.trim();
@@ -179,7 +179,6 @@ async function streamOpenAI(
                             try {
                                 const json = JSON.parse(trimmed.slice(6));
 
-                                // Check for provider-sent error
                                 if (json.error) {
                                     throw new Error(`OpenAI provider error: ${json.error.message || JSON.stringify(json.error)}`);
                                 }
@@ -187,7 +186,6 @@ async function streamOpenAI(
                                 const delta = json.choices?.[0]?.delta;
                                 if (!delta) continue;
 
-                                // Support reasoning_content (used by Kimi, DeepSeek, NVIDIA NIM)
                                 if (delta.reasoning_content) {
                                     if (!isReasoning) {
                                         yield '<think>';
@@ -197,7 +195,6 @@ async function streamOpenAI(
                                     yield delta.reasoning_content;
                                 }
 
-                                // Standard content
                                 if (delta.content) {
                                     if (isReasoning) {
                                         yield '</think>';
@@ -238,7 +235,6 @@ async function streamAnthropic(
     options?: StreamOptions
 ): Promise<AsyncIterable<string>> {
     try {
-        // Convert messages to Anthropic format (system is separate)
         const systemMessage = messages.find(m => m.role === 'system');
         const userMessages = messages.filter(m => m.role !== 'system');
 
@@ -290,7 +286,6 @@ async function streamAnthropic(
                                 try {
                                     const json = JSON.parse(trimmed.slice(6));
 
-                                    // Handle errors sent in data
                                     if (json.error || json.type === 'error') {
                                         throw new Error(`Anthropic error: ${(json.error?.message || json.message) || JSON.stringify(json)}`);
                                     }
@@ -302,7 +297,6 @@ async function streamAnthropic(
                                     }
                                 } catch (e) {
                                     if (e instanceof Error && e.message.startsWith('Anthropic error:')) throw e;
-                                    // Skip invalid JSON lines
                                 }
                             }
                         }
@@ -330,11 +324,9 @@ async function streamGoogle(
     options?: StreamOptions
 ): Promise<AsyncIterable<string>> {
     try {
-        // Separate system message for Gemini's system_instruction field
         const systemMessage = messages.find(m => m.role === 'system');
         const chatMessages = messages.filter(m => m.role !== 'system');
 
-        // Map messages to Gemini format (user/model)
         const geminiContent = chatMessages.map(m => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: m.content }]
@@ -379,27 +371,14 @@ async function streamGoogle(
 
                         buffer += decoder.decode(value, { stream: true });
 
-                        /**
-                         * Gemini REST stream returns a JSON array:
-                         * [
-                         *   { "candidates": [...] },
-                         *   { "candidates": [...] }
-                         * ]
-                         * Each chunk may contain partial objects.
-                         */
-
-                        // Remove leading '[' if present (start of array)
                         if (buffer.startsWith('[')) {
                             buffer = buffer.slice(1);
                         }
 
-                        // Try to extract full JSON objects
                         let boundary;
                         while ((boundary = findJsonBoundary(buffer)) !== -1) {
                             const jsonStr = buffer.slice(0, boundary + 1);
                             buffer = buffer.slice(boundary + 1);
-
-                            // Clean up leading comma or whitespace for the next object
                             buffer = buffer.replace(/^\s*,\s*/, '');
 
                             try {
@@ -432,9 +411,6 @@ async function streamGoogle(
     }
 }
 
-/**
- * Find the end of its first complete JSON object in a string by tracking balanced braces.
- */
 function findJsonBoundary(str: string): number {
     let braceCount = 0;
     let inString = false;
@@ -443,35 +419,24 @@ function findJsonBoundary(str: string): number {
 
     for (let i = 0; i < str.length; i++) {
         const char = str[i];
-
         if (inString) {
-            if (escaped) {
-                escaped = false;
-            } else if (char === '\\') {
-                escaped = true;
-            } else if (char === '"') {
-                inString = false;
-            }
+            if (escaped) escaped = false;
+            else if (char === '\\') escaped = true;
+            else if (char === '"') inString = false;
             continue;
         }
-
         if (char === '"') {
             inString = true;
             continue;
         }
-
         if (char === '{') {
             braceCount++;
             foundStart = true;
         } else if (char === '}') {
             braceCount--;
         }
-
-        if (foundStart && braceCount === 0) {
-            return i;
-        }
+        if (foundStart && braceCount === 0) return i;
     }
-
     return -1;
 }
 
@@ -479,13 +444,9 @@ async function handleError(response: Response) {
     let errorMessage = `AI API error: ${response.status}`;
     try {
         const data = await response.json();
-        if (data.error?.message) {
-            errorMessage += ` - ${data.error.message}`;
-        } else if (data.message) {
-            errorMessage += ` - ${data.message}`;
-        } else {
-            errorMessage += ` - ${JSON.stringify(data)}`;
-        }
+        if (data.error?.message) errorMessage += ` - ${data.error.message}`;
+        else if (data.message) errorMessage += ` - ${data.message}`;
+        else errorMessage += ` - ${JSON.stringify(data)}`;
     } catch {
         const text = await response.text();
         if (text) errorMessage += ` - ${text}`;
@@ -499,9 +460,6 @@ function handlePermissionError(error: any, config: AiConfig) {
     }
 }
 
-/**
- * Generate a non-streaming chat completion
- */
 export async function generateCompletion(
     config: AiConfig,
     messages: ChatMessage[]
@@ -520,24 +478,15 @@ export async function generateCompletion(
                 temperature: 0.7,
             }),
         });
-
-        if (!response.ok) {
-            await handleError(response);
-        }
-
+        if (!response.ok) await handleError(response);
         const data = await response.json();
         return data.choices?.[0]?.message?.content || '';
     } catch (error: any) {
-        if (error.name === 'TypeError' && error.message === 'fetch failed') {
-            throw new Error(`Failed to connect to AI provider at ${config.baseUrl}. Please check the URL and internet connection.`);
-        }
+        handlePermissionError(error, config);
         throw error;
     }
 }
 
-/**
- * Test an API configuration
- */
 export async function testAiConfig(config: AiConfig): Promise<{ success: boolean; error?: string; model?: string }> {
     try {
         if (config.provider === 'google') {
@@ -547,7 +496,6 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
             const data = await res.json();
             return { success: false, error: data.error?.message || 'Google API Error' };
         }
-
         if (config.provider === 'anthropic') {
             const res = await fetch(`${config.baseUrl}/v1/messages`, {
                 method: 'POST',
@@ -566,8 +514,6 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
             const data = await res.json();
             return { success: false, error: data.error?.message || 'Anthropic API Error' };
         }
-
-        // OpenAI Fallback
         const chatResponse = await fetch(`${config.baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
@@ -580,17 +526,11 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
                 max_tokens: 5,
             }),
         });
-
-        if (chatResponse.ok) {
-            return { success: true, model: config.model };
-        }
-
+        if (chatResponse.ok) return { success: true, model: config.model };
         let errorMessage = `API returned ${chatResponse.status}`;
         try {
             const data = await chatResponse.json();
-            if (data.error?.message) {
-                errorMessage += `: ${data.error.message}`;
-            }
+            if (data.error?.message) errorMessage += `: ${data.error.message}`;
         } catch {
             const text = await chatResponse.text();
             if (text) errorMessage += `: ${text}`;

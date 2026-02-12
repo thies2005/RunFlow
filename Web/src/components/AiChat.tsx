@@ -16,6 +16,7 @@ interface AiChatProps {
     isPromptLibraryOpen?: boolean;
     onClosePromptLibrary?: () => void;
     onOpenPromptLibrary?: () => void;
+    hideInputActions?: boolean;
 }
 
 interface ChatMessage {
@@ -38,7 +39,7 @@ const cleanContent = (content: string) => {
     return cleaned;
 };
 
-export default function AiChat({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary }: AiChatProps) {
+export default function AiChat({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false }: AiChatProps) {
     useEffect(() => {
         console.log('[AI CHAT] Component mounted');
         return () => {
@@ -73,7 +74,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
             setMessages([]);
             setError(null);
         }
-    }, [sessionId]);
+    }, [sessionId, isStreaming]);
 
     // Cleanup: Abort only on unmount (manual aborts are handled in send/newChat)
     useEffect(() => {
@@ -460,20 +461,24 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
 
             <div className="p-2 sm:p-4 border-t border-white/10 bg-[#0a0a0a] mt-auto z-10 w-full shadow-2xl">
                 <div className="max-w-5xl mx-auto w-full flex gap-1.5 sm:gap-2">
-                    <button
-                        onClick={openLibrary}
-                        className="hidden sm:flex p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
-                        title="Prompt Library"
-                    >
-                        <Book className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={handleNewChat}
-                        className="hidden sm:flex p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
-                        title="New Chat"
-                    >
-                        <Plus className="w-5 h-5" />
-                    </button>
+                    {!hideInputActions && (
+                        <>
+                            <button
+                                onClick={openLibrary}
+                                className="hidden sm:flex p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
+                                title="Prompt Library"
+                            >
+                                <Book className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={handleNewChat}
+                                className="hidden sm:flex p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
+                                title="New Chat"
+                            >
+                                <Plus className="w-5 h-5" />
+                            </button>
+                        </>
+                    )}
                     <input
                         type="text"
                         value={input}

@@ -45,7 +45,9 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true }:
 
     // Simplified navigation - no swiping, no sliding
     const handleTabChange = useCallback((index: number) => {
-        if (index >= 0 && index < paths.length && index !== activeIndex) {
+        // Allow re-clicking the Chat tab to reset it (navigate to base /chat)
+        const isChatTab = paths[index] === '/chat';
+        if (index >= 0 && index < paths.length && (index !== activeIndex || isChatTab)) {
             setActiveIndex(index);
             router.replace(paths[index], { scroll: false });
             onPageChange?.(index);
@@ -71,7 +73,7 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true }:
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
         >
             {/* Content Container - No swipe, simple fade */}
-            <div className={`h-full w-full overflow-hidden ${isChat ? 'pb-[calc(64px+env(safe-area-inset-bottom))]' : 'pb-[calc(80px+env(safe-area-inset-bottom))]'}`}>
+            <div className={`h-full w-full overflow-hidden ${isChat ? 'pb-[calc(90px+env(safe-area-inset-bottom))]' : 'pb-[calc(80px+env(safe-area-inset-bottom))]'}`}>
                 <motion.div
                     key={activeIndex}
                     initial={{ opacity: 0 }}

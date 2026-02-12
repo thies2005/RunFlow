@@ -14,7 +14,10 @@ import {
     TouchSensor,
 } from '@dnd-kit/core';
 
+import { Menu, X, Book } from 'lucide-react';
+
 import { MobileSwipeLayout } from '@/components/navigation';
+import ChatSidebar from '@/components/ChatSidebar';
 import { DashboardView, PlanView, AnalyticsView } from '@/components/views';
 import { SettingsModal, EditWorkoutModal } from '@/components';
 import ProfileModal from '@/components/ProfileModal';
@@ -50,6 +53,8 @@ export function MobileLayout() {
     const [selectedActivity, setSelectedActivity] = useState<any>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
 
     // Plan State
     const [showUnlinked, setShowUnlinked] = useState(true);
@@ -463,14 +468,69 @@ export function MobileLayout() {
 
                 {/* Chat View */}
                 {showAiChat && (
-                    <div className="h-full flex flex-col bg-background">
-                        <div className="p-4 border-b border-gray-800">
-                            <h1 className="text-xl font-bold text-white">AI Coach</h1>
-                        </div>
+                    <div className="h-full flex flex-col bg-background relative">
+                        {/* Sticky Header */}
+                        <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
+                            <div className="flex items-center justify-between px-4 py-3">
+                                <button
+                                    onClick={() => setIsMobileSidebarOpen(true)}
+                                    className="p-2 -ml-2 text-gray-400 hover:text-white transition-colors"
+                                >
+                                    <Menu className="w-6 h-6" />
+                                </button>
+                                <span className="text-lg font-bold text-white">AI Coach</span>
+                                <button
+                                    onClick={() => setIsPromptLibraryOpen(true)}
+                                    className="p-2 -mr-2 text-gray-400 hover:text-purple-400 transition-colors"
+                                >
+                                    <Book className="w-6 h-6" />
+                                </button>
+                            </div>
+                        </header>
+
                         <AiChat
                             sessionId={sessionId}
                             onOpenSettings={() => setIsAiSettingsOpen(true)}
+                            isPromptLibraryOpen={isPromptLibraryOpen}
+                            onClosePromptLibrary={() => setIsPromptLibraryOpen(false)}
+                            onOpenPromptLibrary={() => setIsPromptLibraryOpen(true)}
+                            hideInputActions={true}
                         />
+
+                        {/* Mobile Sidebar Overlay */}
+                        {isMobileSidebarOpen && (
+                            <div className="fixed inset-0 z-[60] flex">
+                                {/* Backdrop */}
+                                <div
+                                    className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                                    onClick={() => setIsMobileSidebarOpen(false)}
+                                />
+                                {/* Sidebar */}
+                                <div className="relative w-[80%] max-w-sm h-full bg-[#1c1c1e] shadow-xl animate-in slide-in-from-left duration-200">
+                                    <div className="flex items-center justify-between p-4 border-b border-white/5">
+                                        <span className="font-semibold text-white">Chat History</span>
+                                        <button
+                                            onClick={() => setIsMobileSidebarOpen(false)}
+                                            className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    <div className="h-[calc(100%-60px)]">
+                                        <ChatSidebar
+                                            sessionId={sessionId}
+                                            className="border-none w-full"
+                                            onCloseMobile={() => setIsMobileSidebarOpen(false)}
+                                            onNewChat={() => {
+                                                setIsMobileSidebarOpen(false);
+                                                // Navigate to base chat path to clear session
+                                                router.push('/chat');
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </MobileSwipeLayout>

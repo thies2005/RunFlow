@@ -202,7 +202,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
             <div className="h-[400px] w-full bg-white/5 rounded-xl border border-white/10 p-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" opacity={0.4} vertical={false} />
                         <XAxis
                             dataKey="time"
                             tickFormatter={formatXAxis}
@@ -214,7 +214,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                         />
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: 'var(--glass-bg)',
+                                background: 'var(--glass-bg)',
                                 border: '1px solid var(--glass-border)',
                                 borderRadius: '0.5rem',
                                 backdropFilter: 'blur(12px)',

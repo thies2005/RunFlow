@@ -228,7 +228,7 @@ export function AnalyticsView({
                                         <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                         <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
                                         <Tooltip
-                                            contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                            contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
                                         />
                                         <Line type="monotone" dataKey="vo2Rolling" stroke="#f59e0b" strokeWidth={2} dot={false} name="VO2max" />
                                     </LineChart>
@@ -248,7 +248,7 @@ export function AnalyticsView({
                                         <XAxis dataKey="week" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                         <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={[0, 120]} />
                                         <Tooltip
-                                            contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                            contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
                                         />
                                         <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
                                     </AreaChart>
@@ -269,7 +269,7 @@ export function AnalyticsView({
                                     <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                     <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                        contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
                                     />
                                     <Legend />
                                     <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} name="Fitness (CTL)" />

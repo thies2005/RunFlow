@@ -210,7 +210,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                 <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: 'var(--glass-bg)',
+                                        background: 'var(--glass-bg)',
                                         border: '1px solid var(--glass-border)',
                                         borderRadius: '8px',
                                         backdropFilter: 'blur(12px)',
@@ -245,7 +245,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                 <YAxis domain={['dataMax', 'dataMin']} stroke="#6b7280" ticks={[0, 3, 6, 9, 12, 15]} />
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: 'var(--glass-bg)',
+                                        background: 'var(--glass-bg)',
                                         border: '1px solid var(--glass-border)',
                                         borderRadius: '8px',
                                         backdropFilter: 'blur(12px)',
@@ -286,7 +286,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
                                     <Tooltip
                                         contentStyle={{
-                                            backgroundColor: 'var(--glass-bg)',
+                                            background: 'var(--glass-bg)',
                                             border: '1px solid var(--glass-border)',
                                             borderRadius: '8px',
                                             backdropFilter: 'blur(12px)',
@@ -323,7 +323,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
                                     <Tooltip
                                         contentStyle={{
-                                            backgroundColor: 'var(--glass-bg)',
+                                            background: 'var(--glass-bg)',
                                             border: '1px solid var(--glass-border)',
                                             borderRadius: '8px',
                                             backdropFilter: 'blur(12px)',

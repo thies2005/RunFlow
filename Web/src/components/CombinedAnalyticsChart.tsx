@@ -278,7 +278,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
 
                             <Tooltip
                                 contentStyle={{
-                                    backgroundColor: 'var(--glass-bg)',
+                                    background: 'var(--glass-bg)',
                                     border: '1px solid var(--glass-border)',
                                     borderRadius: '8px',
                                     boxShadow: 'var(--card-shadow)',

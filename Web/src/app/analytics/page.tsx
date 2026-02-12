@@ -534,7 +534,7 @@ export default function AnalyticsPage() {
                                                         ))}
                                                     </Pie>
                                                     <Tooltip
-                                                        contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                                        contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
                                                         formatter={(value: number) => formatZoneTime(value)}
                                                     />
                                                 </PieChart>
@@ -678,7 +678,7 @@ export default function AnalyticsPage() {
                                             />
                                             <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
                                             <Tooltip
-                                                contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                                contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
                                                 labelStyle={{ color: 'var(--foreground)' }}
                                                 itemStyle={{ color: 'var(--foreground)' }}
                                                 labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -731,7 +731,7 @@ export default function AnalyticsPage() {
                                             />
                                             <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={[0, 120]} />
                                             <Tooltip
-                                                contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                                contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
                                                 labelStyle={{ color: 'var(--foreground)' }}
                                                 itemStyle={{ color: 'var(--foreground)' }}
                                                 labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -769,7 +769,7 @@ export default function AnalyticsPage() {
                                         />
                                         <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} tickFormatter={(val) => val.toFixed(0)} />
                                         <Tooltip
-                                            contentStyle={{ backgroundColor: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                            contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
                                             labelStyle={{ color: 'var(--foreground)' }}
                                             itemStyle={{ color: 'var(--foreground)' }}
                                             labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

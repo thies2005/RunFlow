@@ -183,7 +183,7 @@ function RacePredictionTimeChart({
                         />
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: 'var(--glass-bg)',
+                                background: 'var(--glass-bg)',
                                 border: '1px solid var(--glass-border)',
                                 borderRadius: '12px',
                                 backdropFilter: 'blur(12px)',

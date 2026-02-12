@@ -60,6 +60,15 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
         setError(null);
     }, [sessionId]);
 
+    // Cleanup: Abort any active stream if component unmounts or sessionId changes
+    useEffect(() => {
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, [sessionId]);
+
     // Check if AI is enabled
     const { data: settingsData, isLoading: settingsLoading } = useQuery({
         queryKey: ['ai-settings'],
@@ -82,7 +91,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
             if (!res.ok) throw new Error('Failed to fetch history');
             return res.json();
         },
-        enabled: !!settingsData,
+        enabled: !!settingsData && (!!sessionId || !!activityId),
     });
 
     // Load history into messages when fetched
@@ -196,6 +205,9 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
     };
 
     const handleNewChat = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
         setMessages([]);
         setInput('');
         setError(null);

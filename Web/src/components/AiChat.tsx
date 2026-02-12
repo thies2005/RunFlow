@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import PromptLibrary from './PromptLibrary';
 
 interface AiChatProps {
     activityId?: string;
+    sessionId?: string;
     compact?: boolean;
     onOpenSettings?: () => void;
 }
@@ -33,7 +35,9 @@ const cleanContent = (content: string) => {
     return cleaned;
 };
 
-export default function AiChat({ activityId, compact = false, onOpenSettings }: AiChatProps) {
+export default function AiChat({ activityId, sessionId, compact = false, onOpenSettings }: AiChatProps) {
+    const router = useRouter();
+    const queryClient = useQueryClient();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
@@ -41,6 +45,12 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
     const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+
+    // Reset messages when sessionId changes
+    useEffect(() => {
+        setMessages([]);
+        setError(null);
+    }, [sessionId]);
 
     // Check if AI is enabled
     const { data: settingsData, isLoading: settingsLoading } = useQuery({
@@ -54,22 +64,22 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
 
     // Fetch Chat History
     const { data: historyData, isLoading: historyLoading } = useQuery({
-        queryKey: ['chat-history', activityId],
+        queryKey: ['chat-history', activityId, sessionId],
         queryFn: async () => {
             const params = new URLSearchParams();
             if (activityId) params.append('activityId', activityId);
+            if (sessionId) params.append('sessionId', sessionId);
 
             const res = await fetch(`/api/ai/chat/history?${params.toString()}`);
             if (!res.ok) throw new Error('Failed to fetch history');
             return res.json();
         },
-        enabled: !!settingsData, // Only fetch if settings loaded (and potentially if AI enabled, but let's fetch anyway)
+        enabled: !!settingsData,
     });
 
     // Load history into messages when fetched
     useEffect(() => {
         if (historyData?.messages) {
-            console.log('Chat history loaded:', historyData.messages.length);
             setMessages(historyData.messages);
         }
     }, [historyData]);
@@ -77,7 +87,7 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
     const adminAllowed = settingsData?.settings?.adminAllowed;
     const aiEnabled = settingsData?.settings?.aiEnabled || settingsData?.settings?.hasCustomApiKey;
 
-    // Scroll to bottom on new messages
+    // Scroll to bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isStreaming]);
@@ -91,7 +101,6 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
         setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
         setIsStreaming(true);
 
-        // Create abort controller for this request
         abortControllerRef.current = new AbortController();
 
         try {
@@ -101,6 +110,7 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                 body: JSON.stringify({
                     message: userMessage,
                     activityId,
+                    sessionId,
                 }),
                 signal: abortControllerRef.current.signal,
             });
@@ -110,10 +120,8 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                 throw new Error(errorData.error || 'Failed to send message');
             }
 
-            // Add empty assistant message to stream into
             setMessages((prev) => [...prev, { role: 'assistant', content: '' }]);
 
-            // Read the stream
             const reader = response.body?.getReader();
             if (!reader) throw new Error('No response body');
 
@@ -135,6 +143,16 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
 
                     try {
                         const json = JSON.parse(trimmed.slice(6));
+
+                        // Handle new session creation
+                        if (json.sessionId && !sessionId) {
+                            // Update URL without full reload if possible, or just push
+                            // Replacing URL is better to avoid back button issues if user just started
+                            router.replace(`/chat?sessionId=${json.sessionId}`);
+                            // Invalidate sessions list
+                            queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+                        }
+
                         if (json.token) {
                             setMessages((prev) => {
                                 const updated = [...prev];
@@ -149,17 +167,13 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                             throw new Error(json.error);
                         }
                     } catch (e) {
-                        // Skip invalid JSON
+                        // ignore invalid json
                     }
                 }
             }
         } catch (err) {
-            if ((err as Error).name === 'AbortError') {
-                // Request was aborted, ignore
-                return;
-            }
+            if ((err as Error).name === 'AbortError') return;
             setError((err as Error).message);
-            // Remove the empty assistant message if there was an error
             setMessages((prev) => {
                 const last = prev[prev.length - 1];
                 if (last?.role === 'assistant' && !last.content) {
@@ -173,25 +187,8 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
         }
     };
 
-    const handleClearHistory = async () => {
-        if (!confirm('Start a new chat? This will clear your current conversation history.')) return;
-
-        try {
-            const params = new URLSearchParams();
-            if (activityId) params.append('activityId', activityId);
-
-            const res = await fetch(`/api/ai/chat/history?${params.toString()}`, {
-                method: 'DELETE',
-            });
-
-            if (!res.ok) throw new Error('Failed to clear history');
-
-            setMessages([]);
-            setInput('');
-        } catch (error) {
-            console.error('Failed to clear history:', error);
-            setError('Failed to start new chat');
-        }
+    const handleNewChat = () => {
+        router.push('/chat');
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -201,12 +198,8 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
         }
     };
 
-    // If admin has disabled AI features globally for this user, hide everything
-    if (adminAllowed === false) {
-        return null;
-    }
+    if (adminAllowed === false) return null;
 
-    // Compact variant for activity detail
     if (compact) {
         return (
             <div className="bg-gray-800/50 rounded-xl p-4">
@@ -217,63 +210,25 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
 
                 {!aiEnabled ? (
                     <div className="text-sm text-gray-400">
-                        <button
-                            onClick={onOpenSettings}
-                            className="text-purple-400 hover:text-purple-300"
-                        >
+                        <button onClick={onOpenSettings} className="text-purple-400 hover:text-purple-300">
                             Enable AI features
-                        </button>
-                        {' '}to chat about this activity.
+                        </button>{' '}to chat about this activity.
                     </div>
                 ) : (
                     <>
-                        {/* Messages */}
                         {messages.length > 0 && (
                             <div className="space-y-3 mb-3 max-h-60 overflow-y-auto">
-                                {messages.map((msg, i) => {
-                                    const cleanedContent = cleanContent(msg.content);
-                                    // If content is empty after cleaning (and it wasn't empty before), it means we're in a thinking block
-                                    const isThinking = isStreaming && i === messages.length - 1 && msg.role === 'assistant' && msg.content && !cleanedContent;
-
-                                    return (
-                                        <div
-                                            key={i}
-                                            className={`text-sm ${msg.role === 'user' ? 'text-gray-300' : 'text-white'
-                                                }`}
-                                        >
-                                            <span className="font-medium">
-                                                {msg.role === 'user' ? 'You: ' : 'Coach: '}
-                                            </span>
-                                            <div className="inline-block align-top markdown-content">
-                                                {isThinking ? (
-                                                    <span className="text-gray-400 italic flex items-center gap-1">
-                                                        <Loader2 className="w-3 h-3 animate-spin inline" />
-                                                        Thinking...
-                                                    </span>
-                                                ) : (
-                                                    <ReactMarkdown
-                                                        remarkPlugins={[remarkGfm]}
-                                                        components={{
-                                                            p: ({ node, ...props }) => <p className="inline" {...props} />,
-                                                            ul: ({ node, ...props }) => <ul className="list-disc ml-4 inline-block" {...props} />,
-                                                            li: ({ node, ...props }) => <li className="inline-block mr-2" {...props} />,
-                                                        }}
-                                                    >
-                                                        {cleanedContent}
-                                                    </ReactMarkdown>
-                                                )}
-                                            </div>
-                                            {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && cleanedContent && (
-                                                <span className="inline-block w-1 h-4 bg-purple-400 animate-pulse ml-1" />
-                                            )}
+                                {messages.map((msg, i) => (
+                                    <div key={i} className={`text-sm ${msg.role === 'user' ? 'text-gray-300' : 'text-white'}`}>
+                                        <span className="font-medium">{msg.role === 'user' ? 'You: ' : 'Coach: '}</span>
+                                        <div className="inline-block align-top markdown-content">
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanContent(msg.content)}</ReactMarkdown>
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                ))}
                                 <div ref={messagesEndRef} />
                             </div>
                         )}
-
-                        {/* Input */}
                         <div className="flex gap-2">
                             <input
                                 type="text"
@@ -284,22 +239,10 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                                 disabled={isStreaming}
                                 className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none disabled:opacity-50"
                             />
-                            <button
-                                onClick={handleSend}
-                                disabled={!input.trim() || isStreaming}
-                                className="p-2 bg-purple-600 hover:bg-purple-500 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {isStreaming ? (
-                                    <Loader2 className="w-4 h-4 text-white animate-spin" />
-                                ) : (
-                                    <Send className="w-4 h-4 text-white" />
-                                )}
+                            <button onClick={handleSend} disabled={!input.trim() || isStreaming} className="p-2 bg-purple-600 hover:bg-purple-500 rounded-lg disabled:opacity-50">
+                                {isStreaming ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
                             </button>
                         </div>
-
-                        {error && (
-                            <p className="text-xs text-red-400 mt-2">{error}</p>
-                        )}
                     </>
                 )}
             </div>
@@ -322,13 +265,8 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                     <Bot className="w-8 h-8 text-gray-500" />
                 </div>
                 <h2 className="text-xl font-semibold text-white mb-2">AI Coach</h2>
-                <p className="text-gray-400 mb-6 max-w-sm">
-                    Get personalized training advice, analyze your workouts, and ask questions about your fitness data.
-                </p>
-                <button
-                    onClick={onOpenSettings}
-                    className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl flex items-center gap-2 transition-colors"
-                >
+                <p className="text-gray-400 mb-6 max-w-sm">Get personalized training advice, analyze your workouts, and ask questions about your fitness data.</p>
+                <button onClick={onOpenSettings} className="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl flex items-center gap-2 transition-colors">
                     <Settings2 className="w-5 h-5" />
                     Enable AI Features
                 </button>
@@ -341,9 +279,7 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
             <PromptLibrary
                 isOpen={isPromptLibraryOpen}
                 onClose={() => setIsPromptLibraryOpen(false)}
-                onSelectPrompt={(text) => {
-                    setInput(text);
-                }}
+                onSelectPrompt={(text) => setInput(text)}
             />
 
             {/* Chat Messages */}
@@ -359,7 +295,6 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                                 Ask me anything about your training, get workout advice, or analyze your progress.
                                 I can access your activities and help you plan your next race.
                             </p>
-
                             <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
                                 <button
                                     onClick={() => setIsPromptLibraryOpen(true)}
@@ -368,18 +303,8 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                                     <Book className="w-5 h-5" />
                                     Browse Prompt Library
                                 </button>
-
-                                {messages.length > 0 && (
-                                    <button
-                                        onClick={handleClearHistory}
-                                        className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-red-400 font-medium rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 border border-red-500/20 hover:border-red-500/50"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                        Start New Chat
-                                    </button>
-                                )}
                             </div>
-
+                            {/* Suggestions grid ... */}
                             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
                                 {[
                                     'How should I prepare for my race?',
@@ -401,20 +326,10 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                         <>
                             {messages.map((msg, i) => {
                                 const cleanedContent = cleanContent(msg.content);
-                                // If content is empty after cleaning (and it wasn't empty before), it means we're in a thinking block
                                 const isThinking = isStreaming && i === messages.length - 1 && msg.role === 'assistant' && msg.content && !cleanedContent;
-
                                 return (
-                                    <div
-                                        key={i}
-                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                                    >
-                                        <div
-                                            className={`max-w-[85%] rounded-2xl px-5 py-3 shadow-sm ${msg.role === 'user'
-                                                ? 'bg-purple-600 text-white'
-                                                : 'bg-gray-800 text-white border border-gray-700'
-                                                }`}
-                                        >
+                                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`max-w-[85%] rounded-2xl px-5 py-3 shadow-sm ${msg.role === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-white border border-gray-700'}`}>
                                             <div className="text-sm sm:text-base leading-relaxed markdown-content">
                                                 {isThinking ? (
                                                     <div className="flex items-center gap-2 text-gray-400 italic">
@@ -458,11 +373,9 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                                                     </ReactMarkdown>
                                                 )}
                                             </div>
-                                            {/* Loading spinner for initial non-thinking state */}
                                             {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && !msg.content && (
                                                 <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
                                             )}
-                                            {/* Cursor for typing effect when not reasoning */}
                                             {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && cleanedContent && (
                                                 <span className="inline-block w-1 h-4 bg-purple-400 animate-pulse ml-1" />
                                             )}
@@ -476,7 +389,6 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                 </div>
             </div>
 
-            {/* Error Message */}
             {error && (
                 <div className="mx-auto mb-2 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400 text-sm max-w-5xl w-full">
                     <AlertCircle className="w-4 h-4" />
@@ -484,7 +396,6 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                 </div>
             )}
 
-            {/* Input Area */}
             <div className="p-4 border-t border-white/10 bg-[#0a0a0a] mt-auto z-10 w-full shadow-2xl">
                 <div className="max-w-5xl mx-auto w-full flex gap-2">
                     <button
@@ -494,15 +405,13 @@ export default function AiChat({ activityId, compact = false, onOpenSettings }: 
                     >
                         <Book className="w-5 h-5" />
                     </button>
-                    {messages.length > 0 && (
-                        <button
-                            onClick={handleClearHistory}
-                            className="p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-red-500/50 rounded-xl text-gray-400 hover:text-red-400 transition-colors"
-                            title="Start New Chat"
-                        >
-                            <Trash2 className="w-5 h-5" />
-                        </button>
-                    )}
+                    <button
+                        onClick={handleNewChat}
+                        className="p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
+                        title="New Chat"
+                    >
+                        <Plus className="w-5 h-5" />
+                    </button>
                     <input
                         type="text"
                         value={input}

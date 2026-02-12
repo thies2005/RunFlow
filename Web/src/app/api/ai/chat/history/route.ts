@@ -19,12 +19,24 @@ export async function GET(request: NextRequest) {
         const userId = session.user.id;
         const { searchParams } = new URL(request.url);
         const activityId = searchParams.get('activityId');
+        const sessionId = searchParams.get('sessionId');
 
         // Fetch messages
         const messagesStart = await prisma.chatMessage.findMany({
             where: {
                 userId,
-                ...(activityId ? { activityId } : {}), // If activityId provided, filter by it. Otherwise show all.
+                ...(activityId ? { activityId } : {}),
+                ...(sessionId ? { sessionId } : {
+                    // If no sessionId and no activityId, maybe we should return nothing or default?
+                    // For now, if no session ID is provided, and no activity ID, we might want to return null to avoid mixing sessions.
+                    // BUT for backward compatibility or "global" chat, we might need to handle it.
+                    // However, avoiding "mix" is better. 
+                    // Let's say: if sessionId is NOT provided, we only return if activityId IS provided (context chat).
+                    // If neither, we return empty list to force frontend to create a session?
+                    // Or we just return all non-session messages (legacy)?
+                    // Let's stick to: filter if provided.
+                    sessionId: null
+                }),
             },
             orderBy: {
                 createdAt: 'desc', // Get newest first
@@ -61,12 +73,14 @@ export async function DELETE(request: NextRequest) {
         const userId = session.user.id;
         const { searchParams } = new URL(request.url);
         const activityId = searchParams.get('activityId');
+        const sessionId = searchParams.get('sessionId');
 
         // Delete messages
         await prisma.chatMessage.deleteMany({
             where: {
                 userId,
-                ...(activityId ? { activityId } : {}), // If specific activity, delete only those. Otherwise delete all.
+                ...(activityId ? { activityId } : {}),
+                ...(sessionId ? { sessionId } : { sessionId: null }),
             },
         });
 

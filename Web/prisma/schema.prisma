@@ -81,6 +81,7 @@ model User {
   DailyFitness  DailyFitness[]
   notifications Notification[]
   chatMessages  ChatMessage[]
+  chatSessions  ChatSession[]
 }
 
 // ============================================
@@ -561,9 +562,27 @@ model ChatMessage {
   activityId String?
   activity   Activity? @relation(fields: [activityId], references: [id])
 
+  // Link to ChatSession
+  sessionId String?
+  session   ChatSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([sessionId])
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String   @default("New Chat")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  ChatMessage[]
+
+  @@index([userId, updatedAt])
 }
 
 // Daily aggregated token usage for analytics

@@ -74,13 +74,40 @@ export async function POST(request: NextRequest) {
             });
         }
         const body = await request.json();
-        const { message, activityId } = body as { message: string; activityId?: string };
+        const { message, activityId, sessionId: requestedSessionId } = body as { message: string; activityId?: string; sessionId?: string };
 
         if (!message || typeof message !== 'string') {
             return new Response(JSON.stringify({ error: 'Message is required' }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },
             });
+        }
+
+        // Handle Session ID
+        let sessionId = requestedSessionId;
+        if (!sessionId) {
+            const newSession = await prisma.chatSession.create({
+                data: {
+                    userId,
+                    title: 'New Chat',
+                },
+            });
+            sessionId = newSession.id;
+        } else {
+            // Verify ownership
+            const existingSession = await prisma.chatSession.findUnique({
+                where: { id: sessionId },
+            });
+            if (!existingSession || existingSession.userId !== userId) {
+                // If invalid session, create a new one
+                const newSession = await prisma.chatSession.create({
+                    data: {
+                        userId,
+                        title: 'New Chat',
+                    },
+                });
+                sessionId = newSession.id;
+            }
         }
 
         // Check if AI is enabled for this user
@@ -191,6 +218,8 @@ export async function POST(request: NextRequest) {
         const readableStream = new ReadableStream({
             async start(controller) {
                 try {
+                    // Send Session ID first
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sessionId })}\n\n`));
 
                     // We stream first, then count output tokens and increment usage at the end
                     for await (const token of stream) {
@@ -209,6 +238,7 @@ export async function POST(request: NextRequest) {
                                 role: 'user',
                                 content: message,
                                 activityId,
+                                sessionId,
                             },
                         });
 
@@ -219,7 +249,14 @@ export async function POST(request: NextRequest) {
                                 role: 'assistant',
                                 content: fullResponse,
                                 activityId,
+                                sessionId,
                             },
+                        });
+
+                        // Update session timestamp
+                        await prisma.chatSession.update({
+                            where: { id: sessionId },
+                            data: { updatedAt: new Date() },
                         });
 
                         // Calculate Output Tokens

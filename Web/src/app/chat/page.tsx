@@ -1,37 +1,60 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Menu, X } from 'lucide-react';
 import AiChat from '@/components/AiChat';
 import AiSettingsModal from '@/components/AiSettingsModal';
+import ChatSidebar from '@/components/ChatSidebar';
 
 export default function ChatPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const sessionId = searchParams.get('sessionId') || undefined;
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-background flex flex-col">
-            {/* Header for Desktop view - Mobile view uses MobileLayout which has its own header */}
-            <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)] hidden md:block">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => router.back()}
-                                className="p-2 text-foreground-muted hover:text-foreground transition-colors"
-                            >
-                                <ArrowLeft className="w-5 h-5" />
-                            </button>
-                            <h1 className="text-xl font-bold text-foreground">AI Coach</h1>
-                        </div>
-                    </div>
-                </div>
-            </header>
+        <div className="flex h-[100dvh] bg-background overflow-hidden">
+            {/* Desktop Sidebar */}
+            <aside className="hidden md:block w-[260px] flex-shrink-0">
+                <ChatSidebar sessionId={sessionId} />
+            </aside>
 
-            <main className="flex-1 w-full mx-auto h-[calc(100dvh-64px)] overflow-hidden flex flex-col">
-                <div className="flex-1 bg-background overflow-hidden relative">
-                    <AiChat onOpenSettings={() => setIsAiSettingsOpen(true)} />
+            {/* Mobile Sidebar Drawer */}
+            {isMobileSidebarOpen && (
+                <div className="fixed inset-0 z-50 md:hidden flex">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileSidebarOpen(false)} />
+                    <aside className="relative w-[280px] bg-[#1c1c1e] h-full shadow-2xl animate-in slide-in-from-left duration-200">
+                        <div className="absolute top-2 right-2 z-10">
+                            <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 text-gray-400 hover:text-white">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <ChatSidebar sessionId={sessionId} onCloseMobile={() => setIsMobileSidebarOpen(false)} />
+                    </aside>
+                </div>
+            )}
+
+            {/* Main Chat Area */}
+            <main className="flex-1 flex flex-col min-w-0 bg-[#212121]">
+                {/* Mobile Header */}
+                <header className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#1c1c1e]">
+                    <button
+                        onClick={() => setIsMobileSidebarOpen(true)}
+                        className="p-2 -ml-2 text-gray-400 hover:text-white"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
+                    <span className="font-semibold text-white">AI Coach</span>
+                    <div className="w-6" /> {/* Spacer for centering */}
+                </header>
+
+                <div className="flex-1 relative">
+                    <AiChat
+                        sessionId={sessionId}
+                        onOpenSettings={() => setIsAiSettingsOpen(true)}
+                    />
                 </div>
             </main>
 

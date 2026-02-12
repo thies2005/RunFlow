@@ -188,6 +188,9 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
     };
 
     const handleNewChat = () => {
+        setMessages([]);
+        setInput('');
+        setError(null);
         router.push('/chat');
     };
 
@@ -396,18 +399,18 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                 </div>
             )}
 
-            <div className="p-4 border-t border-white/10 bg-[#0a0a0a] mt-auto z-10 w-full shadow-2xl">
-                <div className="max-w-5xl mx-auto w-full flex gap-2">
+            <div className="p-2 sm:p-4 border-t border-white/10 bg-[#0a0a0a] mt-auto z-10 w-full shadow-2xl">
+                <div className="max-w-5xl mx-auto w-full flex gap-1.5 sm:gap-2">
                     <button
                         onClick={() => setIsPromptLibraryOpen(true)}
-                        className="p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
+                        className="hidden sm:flex p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
                         title="Prompt Library"
                     >
                         <Book className="w-5 h-5" />
                     </button>
                     <button
                         onClick={handleNewChat}
-                        className="p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
+                        className="hidden sm:flex p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
                         title="New Chat"
                     >
                         <Plus className="w-5 h-5" />
@@ -419,12 +422,12 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                         onKeyDown={handleKeyDown}
                         placeholder="Ask your AI coach..."
                         disabled={isStreaming}
-                        className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none disabled:opacity-50"
+                        className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none disabled:opacity-50"
                     />
                     <button
                         onClick={handleSend}
                         disabled={!input.trim() || isStreaming}
-                        className="p-3 bg-purple-600 hover:bg-purple-500 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="p-2.5 sm:p-3 bg-purple-600 hover:bg-purple-500 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                     >
                         {isStreaming ? (
                             <Loader2 className="w-5 h-5 text-white animate-spin" />

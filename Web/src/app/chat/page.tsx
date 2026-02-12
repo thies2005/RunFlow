@@ -50,7 +50,7 @@ function ChatContent() {
                     <div className="w-6" /> {/* Spacer for centering */}
                 </header>
 
-                <div className="flex-1 relative">
+                <div className="flex-1 min-h-0 overflow-hidden">
                     <AiChat
                         sessionId={sessionId}
                         onOpenSettings={() => setIsAiSettingsOpen(true)}

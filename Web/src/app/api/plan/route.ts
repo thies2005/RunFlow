@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/db';
 import { authOptions } from '@/lib/strava/oauth';
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/apiResponse';
 

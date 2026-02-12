@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import AiChat from '@/components/AiChat';
 import AiSettingsModal from '@/components/AiSettingsModal';
 import ChatSidebar from '@/components/ChatSidebar';
 
-export default function ChatPage() {
+function ChatContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const sessionId = searchParams.get('sessionId') || undefined;
@@ -63,5 +63,13 @@ export default function ChatPage() {
                 onClose={() => setIsAiSettingsOpen(false)}
             />
         </div>
+    );
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center bg-background text-muted-foreground">Loading chat...</div>}>
+            <ChatContent />
+        </Suspense>
     );
 }

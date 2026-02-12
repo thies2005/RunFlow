@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, EyeOff, Save, Loader2, Zap, XCircle, BarChart3 } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -1041,7 +1042,7 @@ function DashboardContent() {
                                                     <div className="flex items-center">
                                                         <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
                                                             {user.image ? (
-                                                                <img src={user.image} alt="" className="w-full h-full object-cover" />
+                                                                <Image src={user.image} alt="" width={32} height={32} className="w-full h-full object-cover" unoptimized />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
                                                                     {user.name?.[0] || '?'}

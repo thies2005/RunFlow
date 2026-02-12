@@ -6,7 +6,7 @@
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:-runflow}@db:5432/${POSTGRES_DB:-runflow}?schema=public
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}
@@ -57,7 +57,7 @@
     container_name: runflow-migrator
     command: sh -c "node_modules/.bin/prisma db push --accept-data-loss"
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:-runflow}@db:5432/${POSTGRES_DB:-runflow}?schema=public
     depends_on:
       db:
         condition: service_healthy

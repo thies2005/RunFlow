@@ -44,7 +44,8 @@ const AnalyticsTab = ({ }: any) => {
                             <XAxis dataKey="date" tick={{ fontSize: 12, fill: '#6b7280' }} />
                             <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
                             <Tooltip
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                contentStyle={{ backgroundColor: '#fff', color: '#1f2937', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                itemStyle={{ color: '#1f2937' }}
                                 cursor={{ fill: '#f9fafb' }}
                             />
                             <Legend />

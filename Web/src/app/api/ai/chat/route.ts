@@ -116,19 +116,21 @@ export async function POST(request: NextRequest) {
         // Create a readable stream for SSE
         const encoder = new TextEncoder();
         let fullResponse = '';
+        let heartbeat: NodeJS.Timeout | undefined;
 
         const readableStream = new ReadableStream({
             async start(controller) {
+                console.log(`AI Chat: Starting stream for user ${userId}, session ${sessionId}`);
                 try {
                     // 1. Send Session ID immediately to acknowledge the request
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sessionId })}\n\n`));
 
                     // Keep-alive heartbeat while processing
-                    const heartbeat = setInterval(() => {
+                    heartbeat = setInterval(() => {
                         try {
                             controller.enqueue(encoder.encode(': heartbeat\n\n'));
                         } catch (e) {
-                            clearInterval(heartbeat);
+                            if (heartbeat) clearInterval(heartbeat);
                         }
                     }, 15000);
 
@@ -205,9 +207,6 @@ export async function POST(request: NextRequest) {
                     // 3. Start the actual AI stream
                     const stream = await streamChat(config, aiMessages);
 
-                    // Stop heartbeat now that tokens are flowing
-                    clearInterval(heartbeat);
-
                     for await (const token of stream) {
                         fullResponse += token;
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
@@ -230,9 +229,11 @@ export async function POST(request: NextRequest) {
                         await incrementUsage(userId, { inputTokens, outputTokens }, config.providerId);
                     } catch (dbError) {
                         console.error('Failed to save AI response or update usage', dbError);
+                    } finally {
+                        clearInterval(heartbeat);
                     }
-
                 } catch (error) {
+                    clearInterval(heartbeat);
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
                     controller.close();
                 }

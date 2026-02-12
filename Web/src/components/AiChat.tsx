@@ -104,12 +104,18 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
     });
 
     // Load history into messages when fetched
-    // Only overwrite if we aren't streaming, or if we have no local messages for this session
     useEffect(() => {
         if (historyData?.messages && !isStreaming) {
-            // Only update if we don't have messages yet or if the session actually changed
-            if (messages.length === 0 || sessionId !== activeSessionIdRef.current) {
+            // Only load history if:
+            // 1. We have no messages currently
+            // 2. OR the sessionId prop has changed to a DIFFERENT chat than our current active one
+            const isDifferentSession = sessionId && activeSessionIdRef.current && sessionId !== activeSessionIdRef.current;
+            const hasNoMessages = messages.length === 0;
+
+            if (hasNoMessages || isDifferentSession) {
                 setMessages(historyData.messages);
+                // Sync our tracker to this new session we just loaded
+                activeSessionIdRef.current = sessionId;
             }
         }
     }, [historyData, isStreaming, sessionId]);
@@ -176,6 +182,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
 
                         // Handle new session creation
                         if (json.sessionId && activeSessionIdRef.current !== json.sessionId) {
+                            console.log('AI Chat: New session created:', json.sessionId);
                             activeSessionIdRef.current = json.sessionId;
                             // Update URL without full reload
                             router.replace(`/chat?sessionId=${json.sessionId}`, { scroll: false });

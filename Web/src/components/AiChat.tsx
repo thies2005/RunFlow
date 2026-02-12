@@ -162,6 +162,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
             if (!reader) throw new Error('No response body');
 
             const decoder = new TextDecoder();
+            let receivedDone = false;
             let buffer = '';
 
             while (true) {
@@ -174,17 +175,19 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
 
                 for (const line of lines) {
                     const trimmed = line.trim();
-                    if (!trimmed || trimmed === 'data: [DONE]') continue;
-                    if (!trimmed.startsWith('data: ')) continue;
+                    if (trimmed === 'data: [DONE]') {
+                        receivedDone = true;
+                        continue;
+                    }
+                    if (!trimmed || !trimmed.startsWith('data: ')) continue;
 
                     try {
                         const json = JSON.parse(trimmed.slice(6));
 
                         // Handle new session creation
                         if (json.sessionId && activeSessionIdRef.current !== json.sessionId) {
-                            console.log('AI Chat: New session created:', json.sessionId);
                             activeSessionIdRef.current = json.sessionId;
-                            // Update URL without full reload
+                            // Update URL without full reload (using standard parameter name)
                             router.replace(`/chat?sessionId=${json.sessionId}`, { scroll: false });
                             // Invalidate sessions list
                             queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
@@ -204,9 +207,14 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                             throw new Error(json.error);
                         }
                     } catch (e) {
-                        // ignore invalid json
+                        if (e instanceof Error && e.message.includes('Error')) throw e;
                     }
                 }
+            }
+
+            if (!receivedDone) {
+                console.warn('AI Chat: Stream ended without [DONE] signal');
+                // We don't necessarily throw here as some proxies might strip the last line
             }
         } catch (err) {
             if ((err as Error).name === 'AbortError') return;

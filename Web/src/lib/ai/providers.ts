@@ -178,10 +178,17 @@ async function streamOpenAI(
 
                             try {
                                 const json = JSON.parse(trimmed.slice(6));
+
+                                // Check for provider-sent error
+                                if (json.error) {
+                                    throw new Error(`OpenAI provider error: ${json.error.message || JSON.stringify(json.error)}`);
+                                }
+
                                 const delta = json.choices?.[0]?.delta;
+                                if (!delta) continue;
 
                                 // Support reasoning_content (used by Kimi, DeepSeek, NVIDIA NIM)
-                                if (delta?.reasoning_content) {
+                                if (delta.reasoning_content) {
                                     if (!isReasoning) {
                                         yield '<think>';
                                         isReasoning = true;
@@ -191,7 +198,7 @@ async function streamOpenAI(
                                 }
 
                                 // Standard content
-                                if (delta?.content) {
+                                if (delta.content) {
                                     if (isReasoning) {
                                         yield '</think>';
                                         isReasoning = false;
@@ -199,25 +206,28 @@ async function streamOpenAI(
                                     options?.onToken?.(delta.content);
                                     yield delta.content;
                                 }
-                            } catch {
+                            } catch (error) {
+                                if (error instanceof Error && error.message.startsWith('OpenAI provider error:')) throw error;
                                 // Skip invalid JSON lines
                             }
                         }
                     }
+                } catch (error) {
+                    console.error('OpenAI stream error:', error);
+                    throw error;
                 } finally {
                     if (isReasoning) {
                         yield '</think>';
                     }
                     reader.releaseLock();
                 }
-            },
+            }
         };
     } catch (error: any) {
         handlePermissionError(error, config);
         throw error;
     }
 }
-
 
 /**
  * Anthropic Stream Support
@@ -244,7 +254,7 @@ async function streamAnthropic(
                 system: systemMessage?.content,
                 messages: userMessages.map(m => ({ role: m.role, content: m.content })),
                 stream: true,
-                max_tokens: 1024,
+                max_tokens: 4096,
                 temperature: 0.7,
             }),
             signal: options?.signal,
@@ -258,6 +268,7 @@ async function streamAnthropic(
         if (!reader) throw new Error('No response body from AI provider');
 
         const decoder = new TextDecoder();
+        let lineBuffer = '';
 
         return {
             async *[Symbol.asyncIterator]() {
@@ -266,34 +277,43 @@ async function streamAnthropic(
                         const { done, value } = await reader.read();
                         if (done) break;
 
-                        const chunk = decoder.decode(value, { stream: true });
-                        const lines = chunk.split('\n');
+                        lineBuffer += decoder.decode(value, { stream: true });
+                        const lines = lineBuffer.split('\n');
+                        lineBuffer = lines.pop() || '';
 
                         for (const line of lines) {
                             const trimmed = line.trim();
                             if (!trimmed) continue;
                             if (!trimmed.startsWith('event: ') && !trimmed.startsWith('data: ')) continue;
 
-                            // Anthropic SSE sends "event: ..." then "data: ..."
-                            // We focus on the "data: " lines that are JSON
                             if (trimmed.startsWith('data: ')) {
                                 try {
                                     const json = JSON.parse(trimmed.slice(6));
+
+                                    // Handle errors sent in data
+                                    if (json.error || json.type === 'error') {
+                                        throw new Error(`Anthropic error: ${(json.error?.message || json.message) || JSON.stringify(json)}`);
+                                    }
+
                                     if (json.type === 'content_block_delta' && json.delta?.text) {
                                         const content = json.delta.text;
                                         options?.onToken?.(content);
                                         yield content;
                                     }
-                                } catch {
-                                    // Skip
+                                } catch (e) {
+                                    if (e instanceof Error && e.message.startsWith('Anthropic error:')) throw e;
+                                    // Skip invalid JSON lines
                                 }
                             }
                         }
                     }
+                } catch (error) {
+                    console.error('Anthropic stream error:', error);
+                    throw error;
                 } finally {
                     reader.releaseLock();
                 }
-            },
+            }
         };
     } catch (error: any) {
         handlePermissionError(error, config);
@@ -374,8 +394,6 @@ async function streamGoogle(
                         }
 
                         // Try to extract full JSON objects
-                        // We look for objects starting with '{' and ending with '}' 
-                        // that are followed by a comma or the end of the array.
                         let boundary;
                         while ((boundary = findJsonBoundary(buffer)) !== -1) {
                             const jsonStr = buffer.slice(0, boundary + 1);
@@ -386,22 +404,27 @@ async function streamGoogle(
 
                             try {
                                 const part = JSON.parse(jsonStr);
+                                if (part.error) {
+                                    throw new Error(`Google error: ${part.error.message || JSON.stringify(part.error)}`);
+                                }
                                 const text = part.candidates?.[0]?.content?.parts?.[0]?.text;
                                 if (text) {
                                     options?.onToken?.(text);
                                     yield text;
                                 }
                             } catch (e) {
-                                // If JSON.parse fails, it might be a partial object despite our boundary check
-                                // though unlikely with findJsonBoundary. 
+                                if (e instanceof Error && e.message.startsWith('Google error:')) throw e;
                                 console.warn('Failed to parse Gemini chunk', e);
                             }
                         }
                     }
+                } catch (error) {
+                    console.error('Google stream error:', error);
+                    throw error;
                 } finally {
                     reader.releaseLock();
                 }
-            },
+            }
         };
     } catch (error: any) {
         handlePermissionError(error, config);
@@ -458,6 +481,8 @@ async function handleError(response: Response) {
         const data = await response.json();
         if (data.error?.message) {
             errorMessage += ` - ${data.error.message}`;
+        } else if (data.message) {
+            errorMessage += ` - ${data.message}`;
         } else {
             errorMessage += ` - ${JSON.stringify(data)}`;
         }
@@ -497,19 +522,7 @@ export async function generateCompletion(
         });
 
         if (!response.ok) {
-            let errorMessage = `AI API error: ${response.status}`;
-            try {
-                const data = await response.json();
-                if (data.error?.message) {
-                    errorMessage += ` - ${data.error.message}`;
-                } else {
-                    errorMessage += ` - ${JSON.stringify(data)}`;
-                }
-            } catch {
-                const text = await response.text();
-                if (text) errorMessage += ` - ${text}`;
-            }
-            throw new Error(errorMessage);
+            await handleError(response);
         }
 
         const data = await response.json();

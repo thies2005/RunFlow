@@ -78,7 +78,7 @@ function ChatContent() {
                     </button>
                 </header>
 
-                <div className="flex-1 min-h-0 overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                     <AiChat
                         key={resetKey}
                         sessionId={sessionId}

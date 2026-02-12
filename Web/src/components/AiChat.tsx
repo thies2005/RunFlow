@@ -63,10 +63,9 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
 
     const activeSessionIdRef = useRef<string | undefined>(sessionId);
 
-    // Sync ref with prop
-    useEffect(() => {
-        activeSessionIdRef.current = sessionId;
-    }, [sessionId]);
+    // Ref to track the currently active session internally
+    // We only update this when we successfully load a chat or start a stream
+    // This allows us to detect when the PROP sessionId changes away from what we are showing
 
     // Reset messages when sessionId changes, but NOT if it matches what we are currently streaming
     useEffect(() => {
@@ -347,9 +346,9 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
 
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                <div className="max-w-5xl mx-auto w-full h-full space-y-4">
+                <div className="max-w-5xl mx-auto w-full h-full space-y-4 flex flex-col">
                     {messages.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 min-h-0">
                             <div className="bg-gray-800/50 p-4 rounded-full mb-6">
                                 <Bot className="w-12 h-12 text-purple-400" />
                             </div>

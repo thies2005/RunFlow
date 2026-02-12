@@ -345,10 +345,10 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
             />
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                <div className="max-w-5xl mx-auto w-full space-y-4 flex flex-col">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+                <div className="max-w-5xl mx-auto w-full min-h-full flex flex-col justify-center">
                     {messages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-start text-center p-8 min-h-0">
+                        <div className="flex flex-col items-center text-center p-8">
                             <div className="bg-gray-800/50 p-4 rounded-full mb-6">
                                 <Bot className="w-12 h-12 text-purple-400" />
                             </div>

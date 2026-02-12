@@ -54,9 +54,16 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    // Reset messages when sessionId changes, but NOT if we are currently streaming a new session
+    const activeSessionIdRef = useRef<string | undefined>(sessionId);
+
+    // Sync ref with prop
     useEffect(() => {
-        if (!isStreaming) {
+        activeSessionIdRef.current = sessionId;
+    }, [sessionId]);
+
+    // Reset messages when sessionId changes, but NOT if it matches what we are currently streaming
+    useEffect(() => {
+        if (!isStreaming && sessionId !== activeSessionIdRef.current) {
             setMessages([]);
             setError(null);
         }
@@ -96,12 +103,16 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
         enabled: !!settingsData && (!!sessionId || !!activityId),
     });
 
-    // Load history into messages when fetched, but NOT if we are currently streaming
+    // Load history into messages when fetched
+    // Only overwrite if we aren't streaming, or if we have no local messages for this session
     useEffect(() => {
         if (historyData?.messages && !isStreaming) {
-            setMessages(historyData.messages);
+            // Only update if we don't have messages yet or if the session actually changed
+            if (messages.length === 0 || sessionId !== activeSessionIdRef.current) {
+                setMessages(historyData.messages);
+            }
         }
-    }, [historyData, isStreaming]);
+    }, [historyData, isStreaming, sessionId]);
 
     const adminAllowed = settingsData?.settings?.adminAllowed;
     const aiEnabled = settingsData?.settings?.aiEnabled || settingsData?.settings?.hasCustomApiKey;
@@ -164,10 +175,10 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                         const json = JSON.parse(trimmed.slice(6));
 
                         // Handle new session creation
-                        if (json.sessionId && !sessionId) {
-                            // Update URL without full reload if possible, or just push
-                            // Replacing URL is better to avoid back button issues if user just started
-                            router.replace(`/chat?sessionId=${json.sessionId}`);
+                        if (json.sessionId && activeSessionIdRef.current !== json.sessionId) {
+                            activeSessionIdRef.current = json.sessionId;
+                            // Update URL without full reload
+                            router.replace(`/chat?sessionId=${json.sessionId}`, { scroll: false });
                             // Invalidate sessions list
                             queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
                         }

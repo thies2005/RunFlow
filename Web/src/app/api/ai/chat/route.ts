@@ -134,6 +134,11 @@ export async function POST(request: NextRequest) {
 
                     // 2. Heavy work starts here (now running inside the stream)
 
+                    // Create user message immediately so it's in the DB if the frontend reloads history
+                    await prisma.chatMessage.create({
+                        data: { userId, role: 'user', content: message, activityId, sessionId },
+                    });
+
                     // Check if AI is enabled for this user
                     const config = await getAiConfig(userId);
                     if (!config) throw new Error('AI features not enabled. Add your own API key or contact admin.');
@@ -211,11 +216,8 @@ export async function POST(request: NextRequest) {
                     controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
                     controller.close();
 
-                    // 4. Post-stream processing (Saving to DB)
+                    // 4. Post-stream processing (Saving AI response to DB)
                     try {
-                        await prisma.chatMessage.create({
-                            data: { userId, role: 'user', content: message, activityId, sessionId },
-                        });
                         await prisma.chatMessage.create({
                             data: { userId, role: 'assistant', content: fullResponse, activityId, sessionId },
                         });
@@ -227,7 +229,7 @@ export async function POST(request: NextRequest) {
                         const outputTokens = countTokens(fullResponse, config.model);
                         await incrementUsage(userId, { inputTokens, outputTokens }, config.providerId);
                     } catch (dbError) {
-                        console.error('Failed to save chat or update usage', dbError);
+                        console.error('Failed to save AI response or update usage', dbError);
                     }
 
                 } catch (error) {

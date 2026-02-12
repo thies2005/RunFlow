@@ -400,6 +400,17 @@ export async function incrementUsage(
                     outputTokens: outputDelta
                 }
             });
+
+            // 4. Create Granular Usage History Record
+            await prisma.aiUsageHistory.create({
+                data: {
+                    userId: userId,
+                    providerId: providerId,
+                    inputTokens: inputDelta,
+                    outputTokens: outputDelta,
+                    timestamp: now
+                }
+            });
         }
     }
 }

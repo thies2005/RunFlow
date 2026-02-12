@@ -16,9 +16,10 @@ interface ChatSidebarProps {
     sessionId?: string;
     className?: string;
     onCloseMobile?: () => void;
+    onNewChat?: () => void;
 }
 
-export default function ChatSidebar({ sessionId, className = '', onCloseMobile }: ChatSidebarProps) {
+export default function ChatSidebar({ sessionId, className = '', onCloseMobile, onNewChat }: ChatSidebarProps) {
     const router = useRouter();
     const queryClient = useQueryClient();
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -65,7 +66,11 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile }
             <div className="p-4">
                 <button
                     onClick={() => {
-                        router.push('/chat');
+                        if (onNewChat) {
+                            onNewChat();
+                        } else {
+                            router.push('/chat');
+                        }
                         if (onCloseMobile) onCloseMobile();
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-purple-900/20"

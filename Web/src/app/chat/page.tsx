@@ -14,12 +14,21 @@ function ChatContent() {
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
+    const [resetKey, setResetKey] = useState(0);
+
+    const handleNewChat = () => {
+        if (!sessionId) {
+            setResetKey(prev => prev + 1);
+        } else {
+            router.push('/chat');
+        }
+    };
 
     return (
         <div className="flex h-[100dvh] bg-background overflow-hidden">
             {/* Desktop Sidebar */}
             <aside className="hidden md:block w-[260px] flex-shrink-0">
-                <ChatSidebar sessionId={sessionId} />
+                <ChatSidebar sessionId={sessionId} onNewChat={handleNewChat} />
             </aside>
 
             {/* Mobile Sidebar Drawer */}
@@ -32,7 +41,7 @@ function ChatContent() {
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <ChatSidebar sessionId={sessionId} onCloseMobile={() => setIsMobileSidebarOpen(false)} />
+                        <ChatSidebar sessionId={sessionId} onCloseMobile={() => setIsMobileSidebarOpen(false)} onNewChat={handleNewChat} />
                     </aside>
                 </div>
             )}
@@ -58,6 +67,7 @@ function ChatContent() {
 
                 <div className="flex-1 min-h-0 overflow-hidden">
                     <AiChat
+                        key={resetKey}
                         sessionId={sessionId}
                         onOpenSettings={() => setIsAiSettingsOpen(true)}
                         isPromptLibraryOpen={isPromptLibraryOpen}

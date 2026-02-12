@@ -85,7 +85,11 @@ const DATA_ACCESS_OPTIONS = [
         label: 'Biometrics',
         description: 'Weight, height, age',
     },
-
+    {
+        key: 'accessAllActivities',
+        label: 'All Activity History (Lazy Load)',
+        description: 'Allow AI to search older activities when needed',
+    },
 ];
 
 const FEEDBACK_MODES = [

@@ -17,7 +17,7 @@ import {
     checkUsageLimit,
     checkProviderLimit,
     incrementUsage,
-
+    buildExtendedHistoryContext,
     generateCompletion,
     countTokens,
     type AiConfig,
@@ -159,7 +159,14 @@ export async function POST(request: NextRequest) {
                     const userContext = await buildUserContext(userId);
                     let contextString = formatContextForAi(userContext);
 
-
+                    // Lazy load extended history
+                    if ((userSettings as any)?.accessAllActivities) {
+                        const intent = await detectIntent(config, message);
+                        if (intent === 'HISTORY_QUERY') {
+                            const extendedHistory = await buildExtendedHistoryContext(userId);
+                            contextString += extendedHistory;
+                        }
+                    }
 
                     // Activity context
                     if (activityId) {

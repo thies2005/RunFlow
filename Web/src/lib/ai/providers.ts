@@ -393,15 +393,23 @@ async function streamGoogle(
 
                         buffer += decoder.decode(value, { stream: true });
 
+                        // Remove leading '[' if present (start of array)
                         if (buffer.startsWith('[')) {
                             buffer = buffer.slice(1);
                         }
 
+                        // Try to extract full JSON objects
                         let boundary;
                         while ((boundary = findJsonBoundary(buffer)) !== -1) {
+                            // Clean up leading comma or whitespace BEFORE extracting JSON
+                            buffer = buffer.replace(/^\s*,\s*/, '');
+
+                            // Re-find boundary after cleanup (position may have changed)
+                            boundary = findJsonBoundary(buffer);
+                            if (boundary === -1) break;
+
                             const jsonStr = buffer.slice(0, boundary + 1);
                             buffer = buffer.slice(boundary + 1);
-                            buffer = buffer.replace(/^\s*,\s*/, '');
 
                             try {
                                 const part = JSON.parse(jsonStr);
@@ -415,7 +423,7 @@ async function streamGoogle(
                                 }
                             } catch (e) {
                                 if (e instanceof Error && e.message.startsWith('Google error:')) throw e;
-                                console.warn('Failed to parse Gemini chunk', e);
+                                console.warn('[GEMINI STREAM] Failed to parse chunk:', e, 'JSON:', jsonStr.substring(0, 100));
                             }
                         }
                     }

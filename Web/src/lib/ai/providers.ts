@@ -162,10 +162,23 @@ async function streamOpenAI(
         return {
             async *[Symbol.asyncIterator]() {
                 let isReasoning = false;
+                let chunkCount = 0;
+                let yieldCount = 0;
+                console.log('[OPENAI STREAM] Starting async iterator');
                 try {
                     while (true) {
                         const { done, value } = await reader.read();
-                        if (done) break;
+                        chunkCount++;
+                        const bytesRead = value?.length || 0;
+
+                        if (done) {
+                            console.log(`[OPENAI STREAM] Reader done. Chunks: ${chunkCount}, Yields: ${yieldCount}`);
+                            break;
+                        }
+
+                        if (chunkCount % 5 === 0) {
+                            console.log(`[OPENAI STREAM] Chunk ${chunkCount}, Bytes: ${bytesRead}, Buffer: ${lineBuffer.length}`);
+                        }
 
                         lineBuffer += decoder.decode(value, { stream: true });
                         const lines = lineBuffer.split('\n');
@@ -189,33 +202,42 @@ async function streamOpenAI(
                                 if (delta.reasoning_content) {
                                     if (!isReasoning) {
                                         yield '<think>';
+                                        yieldCount++;
                                         isReasoning = true;
                                     }
                                     options?.onToken?.(delta.reasoning_content);
                                     yield delta.reasoning_content;
+                                    yieldCount++;
                                 }
 
                                 if (delta.content) {
                                     if (isReasoning) {
                                         yield '</think>';
+                                        yieldCount++;
                                         isReasoning = false;
                                     }
                                     options?.onToken?.(delta.content);
                                     yield delta.content;
+                                    yieldCount++;
                                 }
                             } catch (error) {
-                                if (error instanceof Error && error.message.startsWith('OpenAI provider error:')) throw error;
-                                // Skip invalid JSON lines
+                                if (error instanceof Error && error.message.startsWith('OpenAI provider error:')) {
+                                    console.error('[OPENAI STREAM] Provider error:', error.message);
+                                    throw error;
+                                }
+                                console.warn('[OPENAI STREAM] Skipped invalid JSON line');
                             }
                         }
                     }
                 } catch (error) {
-                    console.error('OpenAI stream error:', error);
+                    console.error('[OPENAI STREAM] Error in iterator:', error);
                     throw error;
                 } finally {
                     if (isReasoning) {
                         yield '</think>';
+                        yieldCount++;
                     }
+                    console.log(`[OPENAI STREAM] Cleanup. Total yields: ${yieldCount}`);
                     reader.releaseLock();
                 }
             }

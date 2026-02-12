@@ -39,6 +39,12 @@ const cleanContent = (content: string) => {
 };
 
 export default function AiChat({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary }: AiChatProps) {
+    useEffect(() => {
+        console.log('[AI CHAT] Component mounted');
+        return () => {
+            console.log('[AI CHAT] Component unmounting');
+        };
+    }, []);
     const router = useRouter();
     const queryClient = useQueryClient();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -138,6 +144,11 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
         setIsStreaming(true);
 
         abortControllerRef.current = new AbortController();
+
+        // Log if abort is triggered
+        abortControllerRef.current.signal.addEventListener('abort', () => {
+            console.error('[AI CHAT] Fetch aborted!', new Error().stack);
+        });
 
         try {
             const response = await fetch('/api/ai/chat', {

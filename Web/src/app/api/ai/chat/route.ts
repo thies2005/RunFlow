@@ -205,12 +205,22 @@ export async function POST(request: NextRequest) {
                     const inputTokens = countTokens(`${systemPrompt}\n\n--- Athlete Data ---\n${contextString}`, config.model) + countTokens(message, config.model);
 
                     // 3. Start the actual AI stream
+                    console.log(`[STREAM START] Session: ${sessionId}, User: ${userId}, Model: ${config.model}`);
                     const stream = await streamChat(config, aiMessages);
 
+                    let tokenCount = 0;
                     for await (const token of stream) {
+                        tokenCount++;
                         fullResponse += token;
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
+
+                        // Log progress every 10 tokens
+                        if (tokenCount % 10 === 0) {
+                            console.log(`[STREAM PROGRESS] Session: ${sessionId}, Tokens: ${tokenCount}, Response length: ${fullResponse.length}`);
+                        }
                     }
+
+                    console.log(`[STREAM END] Session: ${sessionId}, Total tokens: ${tokenCount}, Final response length: ${fullResponse.length}`);
 
                     controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
                     controller.close();
@@ -227,12 +237,14 @@ export async function POST(request: NextRequest) {
 
                         const outputTokens = countTokens(fullResponse, config.model);
                         await incrementUsage(userId, { inputTokens, outputTokens }, config.providerId);
+                        console.log(`[DB SAVE] Session: ${sessionId}, Saved ${fullResponse.length} chars to database`);
                     } catch (dbError) {
-                        console.error('Failed to save AI response or update usage', dbError);
+                        console.error('[DB ERROR] Failed to save AI response or update usage', dbError);
                     } finally {
                         clearInterval(heartbeat);
                     }
                 } catch (error) {
+                    console.error(`[STREAM ERROR] Session: ${sessionId}, Error:`, error);
                     clearInterval(heartbeat);
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
                     controller.close();

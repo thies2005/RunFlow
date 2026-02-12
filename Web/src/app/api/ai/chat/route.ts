@@ -85,11 +85,14 @@ export async function POST(request: NextRequest) {
 
         // Handle Session ID
         let sessionId = requestedSessionId;
+        // Generate a title from the user's message (first 50 chars)
+        const sessionTitle = message.length > 50 ? message.substring(0, 50) + '...' : message;
+
         if (!sessionId) {
             const newSession = await prisma.chatSession.create({
                 data: {
                     userId,
-                    title: 'New Chat',
+                    title: sessionTitle,
                 },
             });
             sessionId = newSession.id;
@@ -103,7 +106,7 @@ export async function POST(request: NextRequest) {
                 const newSession = await prisma.chatSession.create({
                     data: {
                         userId,
-                        title: 'New Chat',
+                        title: sessionTitle,
                     },
                 });
                 sessionId = newSession.id;

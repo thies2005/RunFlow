@@ -35,20 +35,6 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile }
 
     const sessions = (sessionsData?.sessions || []) as ChatSession[];
 
-    // Create new session
-    const createSession = useMutation({
-        mutationFn: async () => {
-            const res = await fetch('/api/ai/chat/sessions', { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to create session');
-            return res.json();
-        },
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
-            router.push(`/chat?sessionId=${data.session.id}`);
-            if (onCloseMobile) onCloseMobile();
-        },
-    });
-
     // Delete session
     const deleteSession = useMutation({
         mutationFn: async (id: string) => {
@@ -78,15 +64,13 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile }
         <div className={`flex flex-col h-full bg-[#1c1c1e] border-r border-white/5 ${className}`}>
             <div className="p-4">
                 <button
-                    onClick={() => createSession.mutate()}
-                    disabled={createSession.isPending}
+                    onClick={() => {
+                        router.push('/chat');
+                        if (onCloseMobile) onCloseMobile();
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-purple-900/20"
                 >
-                    {createSession.isPending ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                        <Plus className="w-5 h-5" />
-                    )}
+                    <Plus className="w-5 h-5" />
                     <span className="font-medium">New Chat</span>
                 </button>
             </div>
@@ -107,8 +91,8 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile }
                             href={`/chat?sessionId=${session.id}`}
                             onClick={onCloseMobile}
                             className={`group flex items-center justify-between px-3 py-3 rounded-lg text-sm transition-colors ${sessionId === session.id
-                                    ? 'bg-white/10 text-white'
-                                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                                ? 'bg-white/10 text-white'
+                                : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
                                 }`}
                         >
                             <div className="flex items-center gap-3 overflow-hidden">

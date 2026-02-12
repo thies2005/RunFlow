@@ -429,42 +429,4 @@ function formatTime(seconds: number): string {
     return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-/**
- * Build extended history context for lazy loading (up to 1000 items)
- */
-export async function buildExtendedHistoryContext(userId: string): Promise<string> {
-    const activities = await prisma.activity.findMany({
-        where: { userId },
-        orderBy: { startDate: 'desc' },
-        take: 1000,
-        select: {
-            startDate: true,
-            type: true,
-            distance: true,
-            movingTime: true,
-            averageHr: true,
-            totalElevation: true,
-            name: true,
-        }
-    });
 
-    if (activities.length === 0) return "No activity history found.";
-
-    // Compress data to save tokens
-    // Format: Date|Type|Dist(km)|Time(min)|HR|Elev
-    const lines = ["Date | Type | km | min | HR | Elev | Name"];
-
-    // Group by month to provide structure? No, just list them. 
-    // Maybe filter out very short activities?
-
-    activities.forEach(a => {
-        const date = a.startDate.toISOString().split('T')[0];
-        const dist = (a.distance / 1000).toFixed(1);
-        const time = Math.round(a.movingTime / 60);
-        const hr = a.averageHr ? Math.round(a.averageHr) : '-';
-        const elev = a.totalElevation ? Math.round(a.totalElevation) : '-';
-        lines.push(`${date}|${a.type}|${dist}|${time}|${hr}|${elev}|${a.name.substring(0, 20)}`);
-    });
-
-    return `\n\n--- EXTENDED ACTIVITY HISTORY (Last ${activities.length}) ---\n${lines.join('\n')}`;
-}

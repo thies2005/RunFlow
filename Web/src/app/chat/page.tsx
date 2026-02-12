@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Menu, X, Book } from 'lucide-react';
+import { Menu, X, Book, ArrowLeft } from 'lucide-react';
 import AiChat from '@/components/AiChat';
 import AiSettingsModal from '@/components/AiSettingsModal';
 import ChatSidebar from '@/components/ChatSidebar';
@@ -48,6 +48,19 @@ function ChatContent() {
 
             {/* Main Chat Area */}
             <main className="flex-1 flex flex-col min-w-0 bg-[#212121]">
+                {/* Desktop Header */}
+                <header className="hidden md:flex items-center justify-between px-6 py-3 border-b border-white/5 bg-[#1c1c1e]">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => router.push('/')}
+                            className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Dashboard
+                        </button>
+                    </div>
+                </header>
+
                 {/* Mobile Header */}
                 <header className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#1c1c1e]">
                     <button

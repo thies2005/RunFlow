@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { format, startOfWeek } from 'date-fns';
 import {
@@ -36,6 +36,8 @@ export function MobileLayout() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const sessionId = searchParams.get('sessionId') || undefined;
     const queryClient = useQueryClient();
 
     // Modals State
@@ -465,7 +467,10 @@ export function MobileLayout() {
                         <div className="p-4 border-b border-gray-800">
                             <h1 className="text-xl font-bold text-white">AI Coach</h1>
                         </div>
-                        <AiChat onOpenSettings={() => setIsAiSettingsOpen(true)} />
+                        <AiChat
+                            sessionId={sessionId}
+                            onOpenSettings={() => setIsAiSettingsOpen(true)}
+                        />
                     </div>
                 )}
             </MobileSwipeLayout>

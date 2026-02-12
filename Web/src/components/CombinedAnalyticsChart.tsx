@@ -119,6 +119,33 @@ const useDateFormatter = (timeRange: TimeRange) => {
     }, [timeRange]);
 };
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="glass-card p-4 border border-glass-border">
+                <p className="text-foreground-muted text-sm mb-2">
+                    {new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+                <div className="space-y-1">
+                    {payload.map((entry: any, index: number) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                            <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: entry.color || entry.stroke }}
+                            />
+                            <span className="text-foreground-muted">{entry.name}:</span>
+                            <span className="text-foreground font-medium">
+                                {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: CombinedAnalyticsChartProps) {
     const [visibleSeries, setVisibleSeries] = useState<Record<SeriesKey, boolean>>({
         vo2max: true,
@@ -229,7 +256,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                     <stop offset="95%" stopColor={SERIES_CONFIG.trainingTime.color} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" opacity={0.4} vertical={false} />
                             <XAxis
                                 dataKey="date"
                                 stroke="var(--foreground-muted)"
@@ -276,18 +303,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                 hide={true}
                             />
 
-                            <Tooltip
-                                contentStyle={{
-                                    background: 'var(--glass-bg)',
-                                    border: '1px solid var(--glass-border)',
-                                    borderRadius: '8px',
-                                    boxShadow: 'var(--card-shadow)',
-                                    backdropFilter: 'blur(12px)'
-                                }}
-                                itemStyle={{ color: 'var(--foreground)' }}
-                                labelStyle={{ color: 'var(--foreground-muted)' }}
-                                labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            />
+                            <Tooltip content={<CustomTooltip />} />
 
                             {/* VO2max Rolling Average (Smooth Line) */}
                             {visibleSeries.vo2max && (

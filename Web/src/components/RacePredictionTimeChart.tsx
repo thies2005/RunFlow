@@ -43,6 +43,36 @@ const RACE_DISTANCES: { key: RaceKey; distance: RaceDistance; shapeImpact: numbe
     { key: 'Marathon', distance: 'MARATHON', shapeImpact: 0.30 },
 ];
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="glass-card p-4 border border-glass-border">
+                <p className="text-foreground-muted text-sm mb-2">
+                    {new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+                <div className="space-y-1">
+                    {payload.map((entry: any, index: number) => {
+                        const totalSeconds = Math.round(Number(entry.value) * 60);
+                        return (
+                            <div key={index} className="flex items-center gap-2 text-sm">
+                                <div
+                                    className="w-2 h-2 rounded-full"
+                                    style={{ backgroundColor: entry.color || entry.stroke }}
+                                />
+                                <span className="text-foreground-muted">{entry.name}:</span>
+                                <span className="text-foreground font-medium">
+                                    {formatTime(totalSeconds)}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 function RacePredictionTimeChart({
     vo2TrendData,
     shapeTrendData,
@@ -115,12 +145,6 @@ function RacePredictionTimeChart({
         return `${mins}m`;
     }, []);
 
-    // Format tooltip
-    const formatTooltipValue = useCallback((value: number, name: string) => {
-        const totalSeconds = Math.round(value * 60);
-        return [formatTime(totalSeconds), name];
-    }, []);
-
     if (!chartData || chartData.length === 0) {
         return (
             <div className="glass-card p-6">
@@ -181,18 +205,7 @@ function RacePredictionTimeChart({
                             domain={['dataMin - 5', 'dataMax + 5']}
                             width={50}
                         />
-                        <Tooltip
-                            contentStyle={{
-                                background: 'var(--glass-bg)',
-                                border: '1px solid var(--glass-border)',
-                                borderRadius: '12px',
-                                backdropFilter: 'blur(12px)',
-                            }}
-                            labelStyle={{ color: 'var(--foreground)', marginBottom: '8px' }}
-                            itemStyle={{ fontSize: '12px' }}
-                            labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                            formatter={formatTooltipValue}
-                        />
+                        <Tooltip content={<CustomTooltip />} />
                         <Legend
                             wrapperStyle={{ fontSize: '12px' }}
                             iconType="circle"

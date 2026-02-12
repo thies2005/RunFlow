@@ -15,6 +15,35 @@ import { Footer } from '@/components';
 import LazyChartWrapper from '@/components/LazyChartWrapper';
 import { formatTime, formatPace } from '@/lib/metrics/vdot';
 
+const AnalyticsTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="glass-card p-4 border border-glass-border">
+                {label && (
+                    <p className="text-foreground-muted text-sm mb-2">
+                        {label}
+                    </p>
+                )}
+                <div className="space-y-1">
+                    {payload.map((entry: any, index: number) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                            <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: entry.color || entry.stroke }}
+                            />
+                            <span className="text-foreground-muted">{entry.name}:</span>
+                            <span className="text-foreground font-medium">
+                                {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 interface AnalyticsViewProps {
     runalyzeMetrics: {
         effectiveVO2max: number;
@@ -227,9 +256,7 @@ export function AnalyticsView({
                                         <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
                                         <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                         <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
-                                        <Tooltip
-                                            contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
-                                        />
+                                        <Tooltip content={<AnalyticsTooltip />} />
                                         <Line type="monotone" dataKey="vo2Rolling" stroke="#f59e0b" strokeWidth={2} dot={false} name="VO2max" />
                                     </LineChart>
                                 </ResponsiveContainer>
@@ -247,9 +274,7 @@ export function AnalyticsView({
                                         <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
                                         <XAxis dataKey="week" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                         <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={[0, 120]} />
-                                        <Tooltip
-                                            contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
-                                        />
+                                        <Tooltip content={<AnalyticsTooltip />} />
                                         <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} name="Shape %" />
                                     </AreaChart>
                                 </ResponsiveContainer>
@@ -268,9 +293,7 @@ export function AnalyticsView({
                                     <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
                                     <XAxis dataKey="date" stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
                                     <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} />
-                                    <Tooltip
-                                        contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
-                                    />
+                                    <Tooltip content={<AnalyticsTooltip />} />
                                     <Legend />
                                     <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} name="Fitness (CTL)" />
                                     <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} name="Fatigue (ATL)" />

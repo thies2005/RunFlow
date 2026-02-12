@@ -71,6 +71,7 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
                 baseUrl: globalSettings.activeProvider.baseUrl,
                 apiKey: decryptedKey,
                 model: globalSettings.activeProvider.models[0] || 'gpt-4o-mini', // Default to first available model
+                providerId: globalSettings.activeProvider.id,
             };
         }
         // Fall through if active provider key is invalid

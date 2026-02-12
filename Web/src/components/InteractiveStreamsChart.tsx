@@ -25,6 +25,58 @@ interface InteractiveStreamsChartProps {
     streams: Streams | null;
 }
 
+const formatPaceTooltip = (val: number) => {
+    if (!val) return '';
+    const mins = Math.floor(val);
+    const secs = Math.round((val - mins) * 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="glass-card p-4 border border-glass-border">
+                <p className="text-foreground-muted text-sm mb-2">
+                    {Math.floor(label / 60)}m {label % 60 > 0 ? `${label % 60}s` : ''}
+                </p>
+                <div className="space-y-1">
+                    {payload.map((entry: any, index: number) => {
+                        let displayValue = entry.value;
+                        let unit = '';
+
+                        // Apply specific formatting based on the data key
+                        if (entry.name === 'Pace' || entry.name === 'GAP') {
+                            displayValue = formatPaceTooltip(entry.value);
+                            unit = '/km';
+                        } else if (entry.name === 'Heart Rate') {
+                            displayValue = Math.round(entry.value);
+                            unit = ' bpm';
+                        } else if (entry.name === 'Elevation') {
+                            displayValue = Math.round(entry.value);
+                            unit = ' m';
+                        } else if (entry.name === 'Cadence') {
+                            displayValue = Math.round(entry.value);
+                            unit = ' spm';
+                        }
+
+                        return (
+                            <div key={index} className="flex items-center gap-2 text-sm">
+                                <span style={{ color: entry.stroke }} className="font-medium">
+                                    {entry.name}:
+                                </span>
+                                <span className="text-foreground">
+                                    {displayValue}<span className="text-foreground-muted text-xs">{unit}</span>
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 export default function InteractiveStreamsChart({ streams }: InteractiveStreamsChartProps) {
     const [enabledMetrics, setEnabledMetrics] = useState({
         heartrate: true,
@@ -212,27 +264,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                             axisLine={false}
                             minTickGap={30}
                         />
-                        <Tooltip
-                            contentStyle={{
-                                background: 'var(--glass-bg)',
-                                border: '1px solid var(--glass-border)',
-                                borderRadius: '0.5rem',
-                                backdropFilter: 'blur(12px)',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                            }}
-                            labelStyle={{ color: 'var(--foreground-muted)', marginBottom: '0.25rem' }}
-                            itemStyle={{ color: 'var(--foreground)' }}
-                            labelFormatter={formatXAxis}
-                            formatter={(value: number, name: string) => {
-                                if (value === null || value === undefined) return ['-', name];
-                                if (name === 'Pace') return [formatPaceAxis(value), 'Pace'];
-                                if (name === 'GAP') return [formatPaceAxis(value), 'GAP'];
-                                if (name === 'Heart Rate') return [`${Math.round(value)} bpm`, 'Heart Rate'];
-                                if (name === 'Elevation') return [`${Math.round(value)} m`, 'Elevation'];
-                                if (name === 'Cadence') return [`${Math.round(value)} spm`, 'Cadence'];
-                                return [value, name];
-                            }}
-                        />
+                        <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ paddingTop: '10px' }} />
 
                         {enabledMetrics.heartrate && hasHeartrate && (

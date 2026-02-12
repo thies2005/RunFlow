@@ -18,6 +18,34 @@ const RACE_COLORS = {
     'Marathon': '#ef4444',
 };
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="glass-card p-4 border border-glass-border">
+                <p className="text-foreground-muted text-sm mb-2">{label}</p>
+                <div className="space-y-1">
+                    {payload.map((entry: any, index: number) => {
+                        const totalSecs = Math.round(Number(entry.value) * 60);
+                        return (
+                            <div key={index} className="flex items-center gap-2 text-sm">
+                                <div
+                                    className="w-2 h-2 rounded-full"
+                                    style={{ backgroundColor: entry.color || entry.fill }}
+                                />
+                                <span className="text-foreground-muted">{entry.name}:</span>
+                                <span className="text-foreground font-medium">
+                                    {formatTime(totalSecs)}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 function RacePredictionChart({
     effectiveVO2max,
     currentShape,
@@ -170,27 +198,7 @@ function RacePredictionChart({
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
                         <XAxis type="number" stroke="#9ca3af" fontSize={12} tickFormatter={(v) => `${Math.round(v)}m`} />
                         <YAxis type="category" dataKey="name" stroke="#9ca3af" fontSize={12} width={60} />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '12px',
-                                backdropFilter: 'blur(8px)',
-                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
-                            }}
-                            itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                            labelStyle={{ color: '#9ca3af', marginBottom: '8px', fontWeight: 'bold' }}
-                            formatter={(value: number, name: string) => {
-                                const totalSecs = Math.round(value * 60);
-                                const hours = Math.floor(totalSecs / 3600);
-                                const mins = Math.floor((totalSecs % 3600) / 60);
-                                const secs = totalSecs % 60;
-                                const timeStr = hours > 0
-                                    ? `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-                                    : `${mins}:${secs.toString().padStart(2, '0')}`;
-                                return [timeStr, name];
-                            }}
-                        />
+                        <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="optimalMin" fill="#4ade80" opacity={0.3} name="Optimal" radius={[0, 4, 4, 0]} />
                         <Bar dataKey="predictedMin" name="Current Prediction" radius={[0, 4, 4, 0]}>
                             {chartData.map((entry, index) => (

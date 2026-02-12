@@ -54,20 +54,22 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    // Reset messages when sessionId changes
+    // Reset messages when sessionId changes, but NOT if we are currently streaming a new session
     useEffect(() => {
-        setMessages([]);
-        setError(null);
+        if (!isStreaming) {
+            setMessages([]);
+            setError(null);
+        }
     }, [sessionId]);
 
-    // Cleanup: Abort any active stream if component unmounts or sessionId changes
+    // Cleanup: Abort only on unmount (manual aborts are handled in send/newChat)
     useEffect(() => {
         return () => {
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
             }
         };
-    }, [sessionId]);
+    }, []);
 
     // Check if AI is enabled
     const { data: settingsData, isLoading: settingsLoading } = useQuery({
@@ -94,12 +96,12 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
         enabled: !!settingsData && (!!sessionId || !!activityId),
     });
 
-    // Load history into messages when fetched
+    // Load history into messages when fetched, but NOT if we are currently streaming
     useEffect(() => {
-        if (historyData?.messages) {
+        if (historyData?.messages && !isStreaming) {
             setMessages(historyData.messages);
         }
-    }, [historyData]);
+    }, [historyData, isStreaming]);
 
     const adminAllowed = settingsData?.settings?.adminAllowed;
     const aiEnabled = settingsData?.settings?.aiEnabled || settingsData?.settings?.hasCustomApiKey;
@@ -273,7 +275,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
     }
 
     // Full chat view
-    if (settingsLoading || (historyLoading && aiEnabled)) {
+    if (settingsLoading || (historyLoading && aiEnabled && messages.length === 0)) {
         return (
             <div className="flex-1 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />

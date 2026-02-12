@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Book } from 'lucide-react';
 import AiChat from '@/components/AiChat';
 import AiSettingsModal from '@/components/AiSettingsModal';
 import ChatSidebar from '@/components/ChatSidebar';
@@ -13,6 +13,7 @@ function ChatContent() {
     const sessionId = searchParams.get('sessionId') || undefined;
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
 
     return (
         <div className="flex h-[100dvh] bg-background overflow-hidden">
@@ -47,13 +48,21 @@ function ChatContent() {
                         <Menu className="w-6 h-6" />
                     </button>
                     <span className="font-semibold text-white">AI Coach</span>
-                    <div className="w-6" /> {/* Spacer for centering */}
+                    <button
+                        onClick={() => setIsPromptLibraryOpen(true)}
+                        className="p-2 -mr-2 text-gray-400 hover:text-white"
+                    >
+                        <Book className="w-5 h-5" />
+                    </button>
                 </header>
 
                 <div className="flex-1 min-h-0 overflow-hidden">
                     <AiChat
                         sessionId={sessionId}
                         onOpenSettings={() => setIsAiSettingsOpen(true)}
+                        isPromptLibraryOpen={isPromptLibraryOpen}
+                        onClosePromptLibrary={() => setIsPromptLibraryOpen(false)}
+                        onOpenPromptLibrary={() => setIsPromptLibraryOpen(true)}
                     />
                 </div>
             </main>

@@ -13,6 +13,9 @@ interface AiChatProps {
     sessionId?: string;
     compact?: boolean;
     onOpenSettings?: () => void;
+    isPromptLibraryOpen?: boolean;
+    onClosePromptLibrary?: () => void;
+    onOpenPromptLibrary?: () => void;
 }
 
 interface ChatMessage {
@@ -35,14 +38,19 @@ const cleanContent = (content: string) => {
     return cleaned;
 };
 
-export default function AiChat({ activityId, sessionId, compact = false, onOpenSettings }: AiChatProps) {
+export default function AiChat({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary }: AiChatProps) {
     const router = useRouter();
     const queryClient = useQueryClient();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
+    const [isPromptLibraryOpenLocal, setIsPromptLibraryOpenLocal] = useState(false);
+
+    const isLibraryOpen = isPromptLibraryOpen !== undefined ? isPromptLibraryOpen : isPromptLibraryOpenLocal;
+    const closeLibrary = onClosePromptLibrary || (() => setIsPromptLibraryOpenLocal(false));
+    const openLibrary = onOpenPromptLibrary || (() => setIsPromptLibraryOpenLocal(true));
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -280,8 +288,8 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
     return (
         <div className="flex-1 flex flex-col h-full relative">
             <PromptLibrary
-                isOpen={isPromptLibraryOpen}
-                onClose={() => setIsPromptLibraryOpen(false)}
+                isOpen={isLibraryOpen}
+                onClose={closeLibrary}
                 onSelectPrompt={(text) => setInput(text)}
             />
 
@@ -300,7 +308,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                             </p>
                             <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
                                 <button
-                                    onClick={() => setIsPromptLibraryOpen(true)}
+                                    onClick={openLibrary}
                                     className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-purple-400 font-medium rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 border border-purple-500/20 hover:border-purple-500/50 shadow-lg shadow-purple-900/10"
                                 >
                                     <Book className="w-5 h-5" />
@@ -402,7 +410,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
             <div className="p-2 sm:p-4 border-t border-white/10 bg-[#0a0a0a] mt-auto z-10 w-full shadow-2xl">
                 <div className="max-w-5xl mx-auto w-full flex gap-1.5 sm:gap-2">
                     <button
-                        onClick={() => setIsPromptLibraryOpen(true)}
+                        onClick={openLibrary}
                         className="hidden sm:flex p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
                         title="Prompt Library"
                     >

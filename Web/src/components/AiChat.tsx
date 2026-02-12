@@ -345,8 +345,8 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
             />
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-                <div className="max-w-5xl mx-auto w-full min-h-full flex flex-col justify-center">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 flex flex-col justify-center">
+                <div className="max-w-5xl mx-auto w-full">
                     {messages.length === 0 ? (
                         <div className="flex flex-col items-center text-center p-8">
                             <div className="bg-gray-800/50 p-4 rounded-full mb-6">
@@ -366,8 +366,8 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                                     Browse Prompt Library
                                 </button>
                             </div>
-                            {/* Suggestions grid ... */}
-                            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
+                            {/* Suggestions grid - hidden on mobile */}
+                            <div className="mt-8 hidden sm:grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
                                 {[
                                     'How should I prepare for my race?',
                                     'Am I training too hard?',

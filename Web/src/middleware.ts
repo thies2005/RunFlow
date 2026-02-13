@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateNonce } from '@/lib/security/nonce'
 import { logger, generateRequestId } from '@/lib/logging/logger'
 
 /**
@@ -113,18 +112,13 @@ export async function middleware(request: NextRequest) {
         userAgent: request.headers.get('user-agent'),
     });
 
-    // Generate nonce for CSP
-    const nonce = generateNonce();
-
     // Continue with normal middleware chain
     const response = NextResponse.next();
 
-    // Override CSP with nonce
-    // Note: 'unsafe-inline' is added as a fallback for browsers that don't support nonces
-    // Browsers that support nonces will ignore 'unsafe-inline'
+    // Override CSP (allow inline scripts to avoid blank page with Next.js inline chunks)
     const csp = [
         `default-src 'self'`,
-        `script-src 'self' 'unsafe-inline' 'nonce-${nonce}'`,
+        `script-src 'self' 'unsafe-inline'`,
         `style-src 'self' 'unsafe-inline'`,
         `img-src 'self' data: https://*.strava.com https://*.googleusercontent.com`,
         `font-src 'self' data:`,
@@ -143,9 +137,6 @@ export async function middleware(request: NextRequest) {
     response.headers.set('X-XSS-Protection', '1; mode=block')
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
-    // Store nonce in headers for use in pages
-    response.headers.set('x-nonce', nonce)
-    
     // Add request ID header for tracing
     response.headers.set('x-request-id', requestId)
 

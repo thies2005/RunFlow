@@ -146,15 +146,24 @@ export const authOptions: AuthOptions = {
                         }
                     });
 
-                    // Get user's sync status and auth method
+                    // Get user's sync status, auth method, and profile data
                     const dbUser = await prisma.user.findUnique({
                         where: { id: userId },
-                        select: { lastSyncAt: true, authMethod: true }
+                        select: { lastSyncAt: true, authMethod: true, image: true, name: true }
                     });
 
                     session.user.hasStrava = !!stravaAccount;
                     session.user.authMethod = dbUser?.authMethod || 'strava';
                     session.user.lastSyncAt = dbUser?.lastSyncAt?.toISOString() ?? null;
+
+                    // Always refresh profile picture and name from DB
+                    // (JWT may have stale data after migration or profile update)
+                    if (dbUser?.image) {
+                        session.user.image = dbUser.image;
+                    }
+                    if (dbUser?.name) {
+                        session.user.name = dbUser.name;
+                    }
                 } catch (error) {
                     logger.error('Error fetching user data for session', { error: error instanceof Error ? error.message : String(error) });
                     session.user.hasStrava = false;

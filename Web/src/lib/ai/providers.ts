@@ -21,92 +21,95 @@ export interface AiConfig {
     providerId?: string;
 }
 
-const ALLOWED_BASE_URLS = [
-  'https://api.openai.com/v1',
-  'https://api.anthropic.com',
-  'https://generativelanguage.googleapis.com',
-] as const;
+const DEFAULT_ALLOWED_BASE_URLS = [
+    'https://api.openai.com/v1',
+    'https://api.anthropic.com',
+    'https://generativelanguage.googleapis.com',
+    'https://openrouter.ai/api/v1',
+];
 
 function isPrivateIP(hostname: string): boolean {
-  const privatePatterns = [
-    /^127\./,
-    /^10\./,
-    /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
-    /^192\.168\./,
-    /^::1$/,
-    /^localhost$/,
-    /^0\.0\.0\.0$/,
-    /^::$/,
-    /^fc00:/i,
-    /^fe80:/i,
-  ];
+    const privatePatterns = [
+        /^127\./,
+        /^10\./,
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+        /^192\.168\./,
+        /^::1$/,
+        /^localhost$/,
+        /^0\.0\.0\.0$/,
+        /^::$/,
+        /^fc00:/i,
+        /^fe80:/i,
+    ];
 
-  return privatePatterns.some(pattern => pattern.test(hostname));
+    return privatePatterns.some(pattern => pattern.test(hostname));
 }
 
-export function validateUrl(url: string, allowedBaseUrls: readonly string[] = ALLOWED_BASE_URLS): boolean {
-  try {
-    const parsed = new URL(url);
+export function validateUrl(url: string, allowedBaseUrls: readonly string[] = DEFAULT_ALLOWED_BASE_URLS): boolean {
+    try {
+        const parsed = new URL(url);
 
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-      return false;
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+            return false;
+        }
+
+        if (isPrivateIP(parsed.hostname)) {
+            return false;
+        }
+
+        if (parsed.hostname === '0.0.0.0' || parsed.hostname === '[::]' || parsed.hostname === 'localhost') {
+            return false;
+        }
+
+        const isAllowedBase = allowedBaseUrls.some(allowed => url.startsWith(allowed));
+        return isAllowedBase;
+    } catch {
+        return false;
     }
-
-    if (isPrivateIP(parsed.hostname)) {
-      return false;
-    }
-
-    if (parsed.hostname === '0.0.0.0' || parsed.hostname === '[::]' || parsed.hostname === 'localhost') {
-      return false;
-    }
-
-    const isAllowedBase = allowedBaseUrls.some(allowed => url.startsWith(allowed));
-    return isAllowedBase;
-  } catch {
-    return false;
-  }
 }
 
-export async function safeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & { allowedUrls?: string[] }): Promise<Response> {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
 
-  if (!validateUrl(url, ALLOWED_BASE_URLS)) {
-    throw new Error(`SSRF Protection: Blocked request to disallowed URL: ${url}`);
-  }
+    if (!validateUrl(url, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
+        throw new Error(`SSRF Protection: Blocked request to disallowed URL: ${url}`);
+    }
 
-  const response = await fetch(input, init);
+    const response = await fetch(input, init);
 
-  if (!response.ok) {
+    if (!response.ok) {
+        return response;
+    }
+
+    const finalUrl = response.url;
+
+    if (finalUrl && finalUrl !== url && !validateUrl(finalUrl, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
+        response.body?.cancel();
+        throw new Error(`SSRF Protection: Blocked redirect to disallowed URL: ${finalUrl}`);
+    }
+
     return response;
-  }
-
-  const finalUrl = response.url;
-
-  if (finalUrl && finalUrl !== url && !validateUrl(finalUrl, ALLOWED_BASE_URLS)) {
-    response.body?.cancel();
-    throw new Error(`SSRF Protection: Blocked redirect to disallowed URL: ${finalUrl}`);
-  }
-
-  return response;
 }
 
-export function validateBaseUrl(baseUrl: string): boolean {
-  try {
-    const url = new URL(baseUrl);
-    // Verify exact hostname match to prevent SSRF bypasses
-    const allowedHostname = ALLOWED_BASE_URLS
-      .map(allowed => new URL(allowed).hostname)
-      .some(host => url.hostname === host);
-    
-    if (!allowedHostname) {
-      return false;
+export function validateBaseUrl(baseUrl: string, extraAllowedUrls: string[] = []): boolean {
+    try {
+        const url = new URL(baseUrl);
+        const allAllowed = [...DEFAULT_ALLOWED_BASE_URLS, ...extraAllowedUrls];
+
+        // Verify exact hostname match to prevent SSRF bypasses
+        const allowedHostname = allAllowed
+            .map(allowed => new URL(allowed).hostname)
+            .some(host => url.hostname === host);
+
+        if (!allowedHostname) {
+            return false;
+        }
+
+        // Ensure it starts with the allowed prefix
+        return allAllowed.some(allowed => baseUrl.startsWith(allowed));
+    } catch {
+        return false;
     }
-    
-    // Ensure it starts with the allowed prefix
-    return ALLOWED_BASE_URLS.some(allowed => baseUrl.startsWith(allowed));
-  } catch {
-    return false;
-  }
 }
 
 export interface StreamOptions {
@@ -180,11 +183,11 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
     if (globalSettings?.defaultApiKey) {
         const decryptedKey = decryptToken(globalSettings.defaultApiKey);
         if (decryptedKey) {
-        const baseUrl = globalSettings.defaultBaseUrl;
-        if (!validateBaseUrl(baseUrl)) {
-            logger.warn('[AI Config] Invalid defaultBaseUrl detected', { baseUrl });
-            return null;
-        }
+            const baseUrl = globalSettings.defaultBaseUrl;
+            if (!validateBaseUrl(baseUrl)) {
+                logger.warn('[AI Config] Invalid defaultBaseUrl detected', { baseUrl });
+                return null;
+            }
             return {
                 provider: 'openai', // Legacy is always OpenAI-compatible
                 baseUrl,
@@ -423,7 +426,7 @@ async function streamAnthropic(
                                         options?.onToken?.(content);
                                         yield content;
                                     }
-                                 } catch (e) {
+                                } catch (e) {
                                     if (e instanceof Error && e.message.startsWith('Anthropic error:')) throw e;
                                 }
                             }
@@ -627,7 +630,7 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
     try {
         if (config.provider === 'google') {
             const url = `${config.baseUrl}/v1beta/models/${config.model}?key=${config.apiKey}`;
-            const res = await safeFetch(url);
+            const res = await safeFetch(url, { allowedUrls: [config.baseUrl] });
             if (res.ok) return { success: true, model: config.model };
             const data = await res.json();
             return { success: false, error: data.error?.message || 'Google API Error' };
@@ -644,12 +647,14 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
                     model: config.model,
                     max_tokens: 1,
                     messages: [{ role: 'user', content: 'Hi' }]
-                })
+                }),
+                allowedUrls: [config.baseUrl],
             });
             if (res.ok) return { success: true, model: config.model };
             const data = await res.json();
             return { success: false, error: data.error?.message || 'Anthropic API Error' };
         }
+
         const chatResponse = await safeFetch(`${config.baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
@@ -661,8 +666,11 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
                 messages: [{ role: 'user', content: 'Hi' }],
                 max_tokens: 5,
             }),
+            allowedUrls: [config.baseUrl],
         });
+
         if (chatResponse.ok) return { success: true, model: config.model };
+
         let errorMessage = `API returned ${chatResponse.status}`;
         try {
             const data = await chatResponse.json();

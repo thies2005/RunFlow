@@ -384,6 +384,16 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             >
                                                 Zhipu AI (GLM) Preset
                                             </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setCustomBaseUrl('https://openrouter.ai/api/v1');
+                                                    setCustomModel('deepseek/deepseek-r1:free');
+                                                }}
+                                                className="text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded border border-gray-700 transition"
+                                            >
+                                                OpenRouter Preset
+                                            </button>
                                         </div>
 
                                         <label htmlFor="customBaseUrl" className="sr-only">Base URL</label>

@@ -258,6 +258,18 @@ export async function POST(request: NextRequest) {
                 } catch (error) {
                     logger.error('Stream error', { sessionId, error: error instanceof Error ? error.message : String(error) });
                     clearInterval(heartbeat);
+
+                    // If no response was generated, clean up the orphaned session/message
+                    if (!fullResponse && sessionId) {
+                        try {
+                            await prisma.chatMessage.deleteMany({ where: { sessionId } });
+                            await prisma.chatSession.delete({ where: { id: sessionId } });
+                            logger.info('Cleaned up empty session after stream error', { sessionId });
+                        } catch (cleanupError) {
+                            logger.warn('Failed to cleanup empty session', { sessionId, error: String(cleanupError) });
+                        }
+                    }
+
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
                     controller.close();
                 }

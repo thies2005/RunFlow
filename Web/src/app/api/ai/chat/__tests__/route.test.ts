@@ -19,9 +19,11 @@ jest.mock('@/lib/db', () => ({
             create: jest.fn(),
             findUnique: jest.fn(),
             update: jest.fn(),
+            delete: jest.fn(),
         },
         chatMessage: {
             create: jest.fn(),
+            deleteMany: jest.fn(),
         },
         globalAiSettings: {
             findUnique: jest.fn(),

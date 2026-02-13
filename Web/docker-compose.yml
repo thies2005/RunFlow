@@ -149,7 +149,7 @@ services:
 
   tunnel:
     # M-11 fix: Pin cloudflared version for reproducible builds  
-    image: cloudflare/cloudflared:2024.1.0
+    image: cloudflare/cloudflared:latest
     container_name: runflow-tunnel
     restart: unless-stopped
     command: tunnel --no-autoupdate run

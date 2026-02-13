@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
                 hasDefaultApiKey: !!globalSettings.defaultApiKey, // Don't return the key itself
                 defaultModel: globalSettings.defaultModel,
                 activeProviderId: globalSettings.activeProviderId,
+                fallbackProviderId: globalSettings.fallbackProviderId,
                 // Tier settings
                 tier1Name: globalSettings.tier1Name,
                 tier1DailyLimit: globalSettings.tier1DailyLimit,
@@ -181,6 +182,7 @@ export async function PUT(request: NextRequest) {
                 hasDefaultApiKey: !!settings.defaultApiKey,
                 defaultModel: settings.defaultModel,
                 activeProviderId: settings.activeProviderId,
+                fallbackProviderId: settings.fallbackProviderId,
                 dailyMessageLimit: settings.dailyMessageLimit,
                 monthlyMessageLimit: settings.monthlyMessageLimit,
                 systemPrompt: settings.systemPrompt,

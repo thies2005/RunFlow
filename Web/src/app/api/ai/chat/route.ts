@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
                     });
 
                     // Check if AI is enabled for this user
-                    const config = await getAiConfig(userId!); // userId is checked above via session
+                    let config = await getAiConfig(userId!); // userId is checked above via session
                     if (!config) {
                         // Provide specific error message
                         const userAiSettings = await prisma.userAiSettings.findUnique({ where: { userId: userId! } });
@@ -218,7 +218,24 @@ export async function POST(request: NextRequest) {
 
                     // 3. Start the actual AI stream
                     logger.debug('Stream starting', { sessionId, userId, model: config.model });
-                    const stream = await streamChat(config, aiMessages);
+
+                    let stream;
+                    try {
+                        stream = await streamChat(config, aiMessages);
+                    } catch (primaryError) {
+                        if (config.fallback) {
+                            logger.warn('Primary provider failed, switching to fallback', {
+                                primaryModel: config.model,
+                                fallbackModel: config.fallback.model,
+                                error: primaryError instanceof Error ? primaryError.message : String(primaryError)
+                            });
+                            // Use fallback config but keep same context
+                            config = config.fallback;
+                            stream = await streamChat(config, aiMessages);
+                        } else {
+                            throw primaryError;
+                        }
+                    }
 
                     let tokenCount = 0;
                     for await (const token of stream) {

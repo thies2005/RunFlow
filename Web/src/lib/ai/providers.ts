@@ -19,6 +19,7 @@ export interface AiConfig {
     model: string;
     keyOverride?: boolean;
     providerId?: string;
+    fallback?: AiConfig;
 }
 
 const DEFAULT_ALLOWED_BASE_URLS = [
@@ -156,7 +157,10 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
     // Check for active provider in Global Settings
     const globalSettings = await prisma.globalAiSettings.findUnique({
         where: { id: 'singleton' },
-        include: { activeProvider: true }
+        include: {
+            activeProvider: true,
+            fallbackProvider: true,
+        }
     });
 
     // 1. Use Active Provider if set
@@ -174,6 +178,13 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
                 apiKey: decryptedKey,
                 model: globalSettings.activeProvider.models[0] || 'gpt-4o-mini', // Default to first available model
                 providerId: globalSettings.activeProvider.id,
+                fallback: globalSettings.fallbackProvider ? {
+                    provider: globalSettings.fallbackProvider.type as 'openai' | 'anthropic' | 'google',
+                    baseUrl: globalSettings.fallbackProvider.baseUrl,
+                    apiKey: decryptToken(globalSettings.fallbackProvider.apiKey) || '',
+                    model: globalSettings.fallbackProvider.models[0] || 'gpt-4o-mini',
+                    providerId: globalSettings.fallbackProvider.id,
+                } : undefined,
             };
         }
         // Fall through if active provider key is invalid

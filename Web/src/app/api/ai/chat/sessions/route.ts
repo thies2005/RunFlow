@@ -62,6 +62,15 @@ export async function DELETE(req: Request) {
         const userId = session.user.id;
 
         const { searchParams } = new URL(req.url);
+        const deleteAll = searchParams.get('all') === 'true';
+
+        if (deleteAll) {
+            await prisma.chatSession.deleteMany({
+                where: { userId },
+            });
+            return NextResponse.json({ success: true, count: 'all' });
+        }
+
         const sessionId = searchParams.get('sessionId');
 
         if (!sessionId) {

@@ -9,10 +9,13 @@ describe('CSRF Protection', () => {
       
       const cookies = response.cookies.getAll();
       const csrfCookie = cookies.find(c => c.name === 'csrf_token');
+      const csrfClientCookie = cookies.find(c => c.name === 'csrf_token_client');
       
       expect(csrfCookie).toBeDefined();
-      // Note: Next.js cookie object structure depends on version, but the key is that
-      // the implementation in csrf.ts line 20 has httpOnly: true
+      expect(csrfClientCookie).toBeDefined();
+      // Note: The server sets two cookies:
+      // 1. csrf_token (httpOnly: true) for server-side validation
+      // 2. csrf_token_client (httpOnly: false) for client-side access
     });
   });
 

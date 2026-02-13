@@ -120,9 +120,11 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.next();
 
     // Override CSP with nonce
+    // Note: 'unsafe-inline' is added as a fallback for browsers that don't support nonces
+    // Browsers that support nonces will ignore 'unsafe-inline'
     const csp = [
         `default-src 'self'`,
-        `script-src 'self' 'nonce-${nonce}'`,
+        `script-src 'self' 'unsafe-inline' 'nonce-${nonce}'`,
         `style-src 'self' 'unsafe-inline'`,
         `img-src 'self' data: https://*.strava.com https://*.googleusercontent.com`,
         `font-src 'self' data:`,

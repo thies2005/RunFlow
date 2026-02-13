@@ -178,6 +178,18 @@ const nextConfig = {
                 hostname: "dgalywyr863hv.cloudfront.net",
                 pathname: "/pictures/**",
             },
+            {
+                protocol: "https",
+                hostname: "*.strava.com",
+            },
+            {
+                protocol: "https",
+                hostname: "lh3.googleusercontent.com",
+            },
+            {
+                protocol: "https",
+                hostname: "avatars.githubusercontent.com",
+            },
         ],
     },
     // Security headers are now handled in middleware.ts for proper nonce support

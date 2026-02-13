@@ -218,7 +218,13 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                             throw new Error(json.error);
                         }
                     } catch (e) {
-                        if (e instanceof Error && e.message.includes('Error')) throw e;
+                        // Re-throw intentional errors (from json.error above)
+                        // Only swallow JSON parse errors from malformed SSE lines
+                        if (e instanceof SyntaxError) {
+                            console.warn('[AI CHAT] Malformed SSE line:', trimmed);
+                        } else {
+                            throw e;
+                        }
                     }
                 }
             }

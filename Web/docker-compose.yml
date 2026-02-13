@@ -76,7 +76,7 @@ services:
       dockerfile: Dockerfile
       target: builder
     container_name: runflow-migrator
-    command: sh -c "node_modules/.bin/prisma migrate deploy"
+    command: sh -c "node_modules/.bin/prisma db push --skip-generate"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-runflow}?schema=public
     depends_on:

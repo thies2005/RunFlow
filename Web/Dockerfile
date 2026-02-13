@@ -3,7 +3,8 @@
 # ==================================
 # Stage 1: Dependencies
 # ==================================
-FROM node:20-alpine AS deps
+# M-11 fix: Pin node version for reproducible builds
+FROM node:20.11.1-alpine3.19 AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
@@ -15,7 +16,11 @@ RUN --mount=type=cache,target=/root/.npm \
 # ==================================
 # Stage 2: Builder
 # ==================================
-FROM node:20-alpine AS builder
+FROM node:20.11.1-alpine3.19 AS builder
+# M-10 fix: Add build arg for Sentry DSN (needed at build time for client-side code)
+ARG NEXT_PUBLIC_SENTRY_DSN
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+
 RUN apk add --no-cache openssl libc6-compat
 WORKDIR /app
 
@@ -35,13 +40,15 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # ==================================
 # Stage 3: Runner
 # ==================================
-FROM node:20-alpine AS runner
-RUN apk add --no-cache openssl libc6-compat postgresql-client
+FROM node:20.11.1-alpine3.19 AS runner
+# M-22 fix: Remove postgresql-client (unused - Prisma has its own driver)
+RUN apk add --no-cache openssl libc6-compat
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+# M-13 fix: Remove NODE_OPTIONS in runner to allow proper memory management
+ENV NODE_OPTIONS=""
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

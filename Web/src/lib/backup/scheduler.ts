@@ -1,0 +1,273 @@
+import { exec } from 'child_process'
+import { promisify } from 'util'
+import * as fs from 'fs'
+import * as path from 'path'
+import { DAY_MS, RETENTION } from '@/lib/constants'
+import { recordBackupSuccess, recordBackupFailure, setSchedulerRunning } from './status'
+import { logger } from '@/lib/logging/logger'
+
+const execAsync = promisify(exec)
+
+const BACKUP_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), 'backups')
+
+interface BackupConfig {
+  dailyRetention: number
+  weeklyRetention: number
+  monthlyRetention: number
+}
+
+const BACKUP_CONFIG: BackupConfig = {
+  dailyRetention: RETENTION.DAILY,
+  weeklyRetention: RETENTION.WEEKLY,
+  monthlyRetention: RETENTION.MONTHLY,
+}
+
+interface BackupMetadata {
+  name: string
+  path: string
+  size: number
+  createdAt: Date
+  type: 'daily' | 'weekly' | 'monthly'
+}
+
+function ensureBackupDir() {
+  if (!fs.existsSync(BACKUP_DIR)) {
+    fs.mkdirSync(BACKUP_DIR, { recursive: true })
+  }
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+function parseDatabaseUrl(): { host: string; port: string; user: string; pass: string; name: string } | null {
+  const dbUrl = process.env.DATABASE_URL
+  if (!dbUrl) {
+    logger.error('[Backup] DATABASE_URL not configured', {})
+    return null
+  }
+
+  try {
+    const targetUrl = dbUrl.includes('://') ? dbUrl : `postgresql://${dbUrl}`
+    const parsed = new URL(targetUrl)
+
+    return {
+      host: parsed.hostname,
+      port: parsed.port || '5432',
+      user: decodeURIComponent(parsed.username),
+      pass: decodeURIComponent(parsed.password),
+      name: parsed.pathname.slice(1)
+    }
+  } catch (e) {
+    logger.error('[Backup] Invalid DATABASE_URL format', { error: e instanceof Error ? e.message : String(e) })
+    return null
+  }
+}
+
+export async function createBackup(name?: string): Promise<BackupMetadata> {
+  const startTime = Date.now()
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const backupName = name || `runflow-backup-${timestamp}.sql`
+  const backupPath = path.join(BACKUP_DIR, backupName)
+
+  ensureBackupDir()
+
+  const dbConfig = parseDatabaseUrl()
+  if (!dbConfig) {
+    const errorMsg = 'Failed to parse DATABASE_URL'
+    recordBackupFailure(errorMsg)
+    throw new Error(errorMsg)
+  }
+
+  const { host, port, user, pass, name: dbName } = dbConfig
+
+  logger.info('[Backup] Creating backup', { backupName, backupPath, db: dbName })
+
+  try {
+    const command = `pg_dump -h "${host}" -p "${port}" -U "${user}" -d "${dbName}" -F p -f "${backupPath}"`
+    
+    await execAsync(command, {
+      env: {
+        ...process.env,
+        PGPASSWORD: pass
+      }
+    })
+
+    const stats = fs.statSync(backupPath)
+    const duration = Date.now() - startTime
+
+    logger.info('[Backup] Backup created successfully', {
+      backupName,
+      path: backupPath,
+      sizeFormatted: formatBytes(stats.size),
+      duration
+    })
+
+    recordBackupSuccess(backupPath, stats.size)
+
+    return {
+      name: backupName,
+      path: backupPath,
+      size: stats.size,
+      createdAt: new Date(stats.mtime),
+      type: 'daily'
+    }
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    logger.error('[Backup] Backup failed', { backupName, error: errorMsg })
+    recordBackupFailure(errorMsg)
+    throw error
+  }
+}
+
+export async function restoreBackup(backupPath: string): Promise<void> {
+  const startTime = Date.now()
+  const safePath = path.basename(backupPath)
+  const fullPath = path.join(BACKUP_DIR, safePath)
+
+  if (!fs.existsSync(fullPath)) {
+    throw new Error(`Backup file not found: ${backupPath}`)
+  }
+
+  const dbConfig = parseDatabaseUrl()
+  if (!dbConfig) {
+    throw new Error('Failed to parse DATABASE_URL')
+  }
+
+  const { host, port, user, pass, name: dbName } = dbConfig
+
+  logger.info('[Backup] Restoring backup', { backupPath: fullPath, db: dbName })
+
+  try {
+    const command = `psql -h "${host}" -p "${port}" -U "${user}" -d "${dbName}" -f "${fullPath}"`
+    
+    await execAsync(command, {
+      env: {
+        ...process.env,
+        PGPASSWORD: pass
+      }
+    })
+
+    const duration = Date.now() - startTime
+    logger.info('[Backup] Backup restored successfully', { backupPath: fullPath, duration })
+  } catch (error) {
+    logger.error('[Backup] Backup restore failed', { backupPath: fullPath, error: error instanceof Error ? error.message : String(error) })
+    throw error
+  }
+}
+
+export async function cleanupOldBackups(): Promise<{ deleted: number; kept: number }> {
+  ensureBackupDir()
+  
+  logger.info('[Backup] Cleaning up old backups based on retention policy', {})
+
+  try {
+    const now = new Date()
+    const dailyCutoff = new Date(now.getTime() - BACKUP_CONFIG.dailyRetention * DAY_MS)
+    const weeklyCutoff = new Date(now.getTime() - BACKUP_CONFIG.weeklyRetention * 7 * DAY_MS)
+    const monthlyCutoff = new Date(now.getTime() - BACKUP_CONFIG.monthlyRetention * 30 * DAY_MS)
+
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.endsWith('.sql') || f.endsWith('.sql.gz') || f.endsWith('.dump'))
+      .map(f => ({
+        name: f,
+        path: path.join(BACKUP_DIR, f),
+        stats: fs.statSync(path.join(BACKUP_DIR, f))
+      }))
+
+    const dailyBackups = files.filter(f => f.stats.mtime >= dailyCutoff)
+    const weeklyBackups = files
+      .filter(f => f.stats.mtime >= weeklyCutoff && f.stats.mtime < dailyCutoff)
+      .sort((a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime())
+      .slice(0, 1)
+    const monthlyBackups = files
+      .filter(f => f.stats.mtime >= monthlyCutoff && f.stats.mtime < weeklyCutoff)
+      .sort((a, b) => b.stats.mtime.getTime() - a.stats.mtime.getTime())
+      .slice(0, 1)
+
+    const toKeep = new Set([...dailyBackups, ...weeklyBackups, ...monthlyBackups].map(f => f.path))
+    const toDelete = files.filter(f => !toKeep.has(f.path) && f.stats.mtime < monthlyCutoff)
+
+    let deleted = 0
+    for (const file of toDelete) {
+      try {
+        fs.unlinkSync(file.path)
+        deleted++
+        logger.info('[Backup] Deleted old backup', { name: file.name, age: `${Math.floor((now.getTime() - file.stats.mtime.getTime()) / DAY_MS)} days` })
+      } catch (e) {
+        logger.error('[Backup] Failed to delete backup', { name: file.name, error: e instanceof Error ? e.message : String(e) })
+      }
+    }
+
+    logger.info('[Backup] Cleanup completed', { deleted, kept: files.length - deleted })
+
+    return { deleted, kept: files.length - deleted }
+  } catch (error) {
+    logger.error('[Backup] Backup cleanup failed', { error: error instanceof Error ? error.message : String(error) })
+    throw error
+  }
+}
+
+export function listBackups(): BackupMetadata[] {
+  ensureBackupDir()
+
+  try {
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.endsWith('.sql') || f.endsWith('.sql.gz') || f.endsWith('.dump'))
+      .map(f => {
+        const stats = fs.statSync(path.join(BACKUP_DIR, f))
+        const age = (Date.now() - stats.mtime.getTime()) / DAY_MS
+        let type: 'daily' | 'weekly' | 'monthly' = 'daily'
+        
+        if (age > 30) {
+          type = 'monthly'
+        } else if (age > 7) {
+          type = 'weekly'
+        }
+
+        return {
+          name: f,
+          path: path.join(BACKUP_DIR, f),
+          size: stats.size,
+          createdAt: stats.mtime,
+          type
+        }
+      })
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+
+    return files
+  } catch (error) {
+    logger.error('[Backup] Failed to list backups', { error: error instanceof Error ? error.message : String(error) })
+    throw error
+  }
+}
+
+export function startBackupScheduler(): NodeJS.Timeout {
+  const daily = DAY_MS
+
+  const scheduler = setInterval(async () => {
+    try {
+      logger.info('[Backup] Running scheduled backup', {})
+      await createBackup()
+      await cleanupOldBackups()
+      logger.info('[Backup] Scheduled backup completed successfully', {})
+    } catch (error) {
+      logger.error('[Backup] Scheduled backup failed', { error: error instanceof Error ? error.message : String(error) })
+    }
+  }, daily)
+
+  setSchedulerRunning(true)
+  logger.info('[Backup] Backup scheduler started (interval: 24 hours)', {})
+
+  return scheduler
+}
+
+export function stopBackupScheduler(scheduler: NodeJS.Timeout): void {
+  clearInterval(scheduler)
+  setSchedulerRunning(false)
+  logger.info('[Backup] Backup scheduler stopped', {})
+}

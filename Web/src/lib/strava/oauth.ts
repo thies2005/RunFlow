@@ -10,6 +10,8 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
 import { encryptToken, decryptToken } from '@/lib/crypto';
 import { verifyPassword } from '@/lib/auth/auth-email';
+import { TIME_RANGES } from '@/lib/constants';
+import { logger } from '@/lib/logging/logger';
 
 export const authOptions: AuthOptions = {
     adapter: PrismaAdapter(prisma) as any,
@@ -59,7 +61,7 @@ export const authOptions: AuthOptions = {
         }),
     ],
     callbacks: {
-        async signIn({ user, account }: { user: any, account: any }) {
+        async signIn({ user: _user, account }: { user: any, account: any }) {
             // Skip token handling for credentials provider
             if (account?.provider === 'credentials') {
                 return true;
@@ -100,10 +102,10 @@ export const authOptions: AuthOptions = {
                                 scope: account.scope,
                             }
                         });
-                        console.log(`✓ Force-updated Strava tokens for user ${existingAccount.userId}`);
+                        logger.info('Force-updated Strava tokens', { userId: existingAccount.userId });
                     }
                 } catch (err) {
-                    console.error('Failed to force-update Strava tokens:', err);
+                    logger.error('Failed to force-update Strava tokens', { error: err instanceof Error ? err.message : String(err) });
                 }
             }
 
@@ -154,7 +156,7 @@ export const authOptions: AuthOptions = {
                     session.user.authMethod = dbUser?.authMethod || 'strava';
                     session.user.lastSyncAt = dbUser?.lastSyncAt?.toISOString() ?? null;
                 } catch (error) {
-                    console.error('Error fetching user data for session:', error);
+                    logger.error('Error fetching user data for session', { error: error instanceof Error ? error.message : String(error) });
                     session.user.hasStrava = false;
                     session.user.authMethod = 'strava';
                     session.user.lastSyncAt = null;
@@ -169,7 +171,7 @@ export const authOptions: AuthOptions = {
     },
     session: {
         strategy: 'jwt',
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        maxAge: TIME_RANGES.SYNC_LOOKBACK_DAYS * 24 * 60 * 60, // 30 days
     },
     // Cookie configuration for HTTPS behind reverse proxy (Cloudflare Tunnel)
     cookies: {
@@ -244,7 +246,7 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
     const decryptedRefreshToken = decryptToken(account.refresh_token);
 
     if (!decryptedRefreshToken) {
-        console.error(`Failed to decrypt refresh token for user ${userId} - forcing re-authentication`);
+        logger.error('Failed to decrypt refresh token, forcing re-authentication', { userId });
         // We can't refresh without a valid token.
         // Return null to trigger re-auth flow in caller
         return null;

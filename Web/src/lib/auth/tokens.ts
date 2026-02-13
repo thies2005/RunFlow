@@ -4,6 +4,8 @@ import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/db';
 import { AuthCodeType } from '@prisma/client';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { MINUTE_MS, AUTH_TOKEN_DURATION } from '@/lib/constants';
+import { logger } from '@/lib/logging/logger';
 
 export const CODE_EXPIRY_MINUTES = 15;
 
@@ -29,7 +31,7 @@ export function generateAuthCode(): string {
  */
 export async function createAuthCode(email: string, type: AuthCodeType): Promise<string> {
     const code = generateAuthCode();
-    const expiresAt = new Date(Date.now() + CODE_EXPIRY_MINUTES * 60 * 1000);
+    const expiresAt = new Date(Date.now() + CODE_EXPIRY_MINUTES * MINUTE_MS);
 
     // Clean up any existing codes for this user/type to modify duplication
     await prisma.authCode.deleteMany({
@@ -53,15 +55,14 @@ export async function createAuthCode(email: string, type: AuthCodeType): Promise
  * Rate limited to 10 attempts per 15 minutes per email to prevent brute-force attacks
  */
 export async function verifyAuthCode(email: string, code: string, type: AuthCodeType): Promise<boolean> {
-    // Rate limit: 10 attempts per 15 minutes per email
     const rateLimitResult = checkRateLimit(email, {
         limit: 10,
-        windowSeconds: 15 * 60,
+        windowSeconds: AUTH_TOKEN_DURATION,
         prefix: 'auth_code_verify',
     });
 
     if (!rateLimitResult.allowed) {
-        console.warn(`[Auth] Rate limit exceeded for auth code verification: ${email}`);
+        logger.warn('Rate limit exceeded for auth code verification', { email });
         return false;
     }
 

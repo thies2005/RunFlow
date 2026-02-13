@@ -1,45 +1,44 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import {
     Activity, Bike, Move, ChevronDown, ChevronUp,
-    AlertCircle, Save, Check, Calendar, Target, TrendingUp
+    AlertCircle, AlertTriangle, Save, Check, Target, Waves, Dumbbell, Rocket, BarChart2
 } from 'lucide-react';
-import { calculatePredictedTimes, calculateAllRacePredictions } from '@/lib/metrics/runalyze';
+import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { formatTime, calculateVdot, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
 import {
     calculateProjectedGoalTime,
     calculateWeeksUntilRace,
-    type PlanSettings,
-    type ProjectedGoalResult
+    type PlanSettings
 } from '@/lib/metrics/goalProjection';
+
+interface RaceActivity {
+    id: string;
+    name: string;
+    distance: number;
+    movingTime: number;
+    startDate: string;
+}
 
 interface PlanSetupFormProps {
     mode: 'onboarding' | 'settings';
-    onSuccess: () => void;
+    onSuccess?: () => void;
     onCancel?: () => void;
     effectiveVO2max?: number;
     shapePercent?: number;
 }
 
-interface RaceActivity {
-    id: string;
-    name: string;
-    startDate: string;
-    distance: number;
-    movingTime: number;
-}
-
 export default function PlanSetupForm({
     mode,
     onSuccess,
-    onCancel,
+    onCancel: _onCancel,
     effectiveVO2max: propEffectiveVO2max = 0,
     shapePercent: propShapePercent = 0
 }: PlanSetupFormProps) {
-    const router = useRouter();
+    const _router = useRouter();
     const queryClient = useQueryClient();
 
     // Target Race (onboarding only)
@@ -381,7 +380,7 @@ export default function PlanSetupForm({
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['goals'] });
             queryClient.invalidateQueries({ queryKey: ['plan'] });
-            onSuccess();
+            onSuccess?.();
         },
         onError: (error) => {
             console.error('Goal creation failed:', error);
@@ -440,7 +439,7 @@ export default function PlanSetupForm({
             queryClient.invalidateQueries({ queryKey: ['analytics-stats'] });
             setTimeout(() => {
                 setMessage('');
-                onSuccess();
+                onSuccess?.();
             }, 2000);
         },
         onError: () => {
@@ -457,7 +456,7 @@ export default function PlanSetupForm({
     };
 
     const isLoading = createGoalMutation.isPending || updateSettingsMutation.isPending;
-    const [isEditingTime, setIsEditingTime] = useState(false);
+    const [_isEditingTime, _setIsEditingTime] = useState(false);
 
     const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
 
@@ -709,8 +708,8 @@ export default function PlanSetupForm({
 
                     return (
                         <div className="mt-4 p-4 bg-surface rounded-lg border border-glass-border">
-                            <h4 className="text-xs font-semibold text-foreground-muted mb-3">
-                                📊 Calibration Result
+                            <h4 className="text-xs font-semibold text-foreground-muted mb-3 flex items-center gap-2">
+                                <BarChart2 className="w-4 h-4" /> Calibration Result
                             </h4>
 
                             <div className="space-y-3">
@@ -733,13 +732,13 @@ export default function PlanSetupForm({
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2">
                                         {factorPercent >= 5 ? (
-                                            <>🚀 Race performance exceeds training predictions. Goal times adjusted accordingly.</>
+                                            <><Rocket className="w-4 h-4 inline" /> Race performance exceeds training predictions. Goal times adjusted accordingly.</>
                                         ) : factorPercent >= 0 ? (
-                                            <>✅ Your race performance aligns well with training fitness.</>
+                                            <><Check className="w-4 h-4 inline" /> Your race performance aligns well with training fitness.</>
                                         ) : factorPercent >= -5 ? (
-                                            <>📊 Race was slightly slower than predicted. Goal times adjusted.</>
+                                            <><BarChart2 className="w-4 h-4 inline" /> Race was slightly slower than predicted. Goal times adjusted.</>
                                         ) : (
-                                            <>⚠️ Significant gap between training and race. Check conditions or use manual goal.</>
+                                            <><AlertTriangle className="w-4 h-4 inline" /> Significant gap between training and race. Check conditions or use manual goal.</>
                                         )}
                                     </p>
                                 </div>
@@ -1069,7 +1068,7 @@ export default function PlanSetupForm({
                 <div className="mb-6">
                     <div className="flex justify-between mb-2">
                         <label className="text-xs text-foreground-muted uppercase flex items-center gap-1">
-                            🏊 Swims / Week
+                            <Waves className="w-4 h-4" /> Swims / Week
                         </label>
                         <span className="text-cyan-400 font-bold">{swimsPerWeek}</span>
                     </div>
@@ -1093,7 +1092,7 @@ export default function PlanSetupForm({
                 <div className="mb-6">
                     <div className="flex justify-between mb-2">
                         <label className="text-xs text-foreground-muted uppercase flex items-center gap-1">
-                            💪 Strength / Week
+                            <Dumbbell className="w-4 h-4" /> Strength / Week
                         </label>
                         <span className="text-purple-400 font-bold">{strengthPerWeek}</span>
                     </div>

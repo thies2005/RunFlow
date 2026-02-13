@@ -1,0 +1,24 @@
+src/lib/__tests__/apiError.test.ts(97,20): error TS18047: 'response.body' is possibly 'null'.
+src/lib/__tests__/apiError.test.ts(97,34): error TS2339: Property 'details' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+src/lib/__tests__/apiError.test.ts(106,21): error TS2540: Cannot assign to 'NODE_ENV' because it is a read-only property.
+src/lib/__tests__/apiError.test.ts(113,16): error TS18047: 'response.body' is possibly 'null'.
+src/lib/__tests__/apiError.test.ts(113,30): error TS2339: Property 'error' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+src/lib/__tests__/apiError.test.ts(114,16): error TS18047: 'response.body' is possibly 'null'.
+src/lib/__tests__/apiError.test.ts(114,30): error TS2339: Property 'message' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+src/lib/__tests__/apiError.test.ts(118,21): error TS2540: Cannot assign to 'NODE_ENV' because it is a read-only property.
+src/lib/__tests__/apiError.test.ts(122,16): error TS18047: 'response.body' is possibly 'null'.
+src/lib/__tests__/apiError.test.ts(122,30): error TS2339: Property 'error' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+src/lib/__tests__/apiError.test.ts(123,16): error TS18047: 'response.body' is possibly 'null'.
+src/lib/__tests__/apiError.test.ts(123,30): error TS2339: Property 'message' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+src/lib/__tests__/apiError.test.ts(127,21): error TS2540: Cannot assign to 'NODE_ENV' because it is a read-only property.
+src/lib/__tests__/apiError.test.ts(131,16): error TS18047: 'response.body' is possibly 'null'.
+src/lib/__tests__/apiError.test.ts(131,30): error TS2339: Property 'message' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+src/lib/__tests__/apiError.test.ts(137,16): error TS18047: 'response.body' is possibly 'null'.
+src/lib/__tests__/apiError.test.ts(137,30): error TS2339: Property 'error' does not exist on type 'ReadableStream<Uint8Array<ArrayBuffer>>'.
+src/lib/__tests__/config.test.ts(22,25): error TS2540: Cannot assign to 'NODE_ENV' because it is a read-only property.
+src/lib/__tests__/config.test.ts(30,25): error TS2540: Cannot assign to 'NODE_ENV' because it is a read-only property.
+src/lib/__tests__/config.test.ts(39,25): error TS2540: Cannot assign to 'NODE_ENV' because it is a read-only property.
+src/lib/__tests__/config.test.ts(56,25): error TS2540: Cannot assign to 'NODE_ENV' because it is a read-only property.
+src/lib/__tests__/config.test.ts(64,25): error TS2540: Cannot assign to 'NODE_ENV' because it is a read-only property.
+src/lib/metrics/__tests__/fitnessCache.test.ts(43,11): error TS7034: Variable 'activities' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/lib/metrics/__tests__/fitnessCache.test.ts(46,63): error TS7005: Variable 'activities' implicitly has an 'any[]' type.

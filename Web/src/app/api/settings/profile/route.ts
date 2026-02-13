@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
+import { validateBody } from '@/lib/validation/validator';
+import { userSettingsSchema } from '@/lib/validation/schemas';
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,7 +13,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await request.json();
+        const validation = await validateBody(userSettingsSchema, request);
+        if (!validation.success) {
+            return validation.error;
+        }
+
         const {
             weight,
             height,
@@ -23,23 +29,20 @@ export async function POST(request: NextRequest) {
             hrZone4Max,
             hrZone5Max,
             hrZone6Max,
-            hrZone7Max,
             includeCrossTraining,
             useImperial
-        } = body;
+        } = validation.data;
 
-        // Helper to parse int safely
-        const parseIntSafe = (val: any) => {
-            if (val === undefined || val === null || val === '') return undefined;
-            const parsed = parseInt(String(val), 10);
-            return isNaN(parsed) ? undefined : parsed;
+        // M-06 fix: Type helpers properly (values are already validated by Zod schema)
+        const parseIntSafe = (val: number | undefined) => {
+            if (val === undefined) return undefined;
+            return Math.round(val);
         };
 
         // Helper to parse float safely
-        const parseFloatSafe = (val: any) => {
-            if (val === undefined || val === null || val === '') return undefined;
-            const parsed = parseFloat(String(val));
-            return isNaN(parsed) ? undefined : parsed;
+        const parseFloatSafe = (val: number | undefined) => {
+            if (val === undefined) return undefined;
+            return val;
         };
 
         await prisma.user.update({

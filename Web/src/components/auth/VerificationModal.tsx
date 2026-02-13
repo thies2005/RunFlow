@@ -43,7 +43,7 @@ export default function VerificationModal({ isOpen, onClose, email, onVerified }
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm p-4">
             <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl shadow-2xl p-6 border border-zinc-200 dark:border-zinc-800">
                 <div className="text-center mb-6">
                     <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Verify Code</h2>

@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, Heart, Clock, TrendingUp } from 'lucide-react';
+import { CheckCircle, Heart, Clock, TrendingUp, Activity, Route, Zap, Flame, Sparkles, Moon, Bike, Waves, Dumbbell, Target } from 'lucide-react';
 
 interface Workout {
     id: string;
@@ -15,7 +15,7 @@ interface Workout {
 
 interface TodayWorkoutProps {
     workout: Workout | null;
-    onComplete?: (id: string) => void;
+    onComplete?: (_id: string) => void;
     isLoading?: boolean;
 }
 
@@ -24,61 +24,61 @@ const workoutConfig = {
         label: 'Easy Run',
         color: 'from-green-500 to-emerald-600',
         badge: 'badge-easy',
-        icon: '🏃',
+        icon: <Activity className="w-8 h-8 text-white" />,
     },
     LONG_RUN: {
         label: 'Long Run',
         color: 'from-blue-500 to-indigo-600',
         badge: 'badge-easy',
-        icon: '🛤️',
+        icon: <Route className="w-8 h-8 text-white" />,
     },
     TEMPO: {
         label: 'Tempo',
         color: 'from-yellow-500 to-orange-600',
         badge: 'badge-tempo',
-        icon: '⚡',
+        icon: <Zap className="w-8 h-8 text-white" />,
     },
     INTERVALS: {
         label: 'Intervals',
         color: 'from-red-500 to-pink-600',
         badge: 'badge-interval',
-        icon: '🔥',
+        icon: <Flame className="w-8 h-8 text-white" />,
     },
     RECOVERY: {
         label: 'Recovery',
         color: 'from-cyan-500 to-teal-600',
         badge: 'badge-recovery',
-        icon: '🧘',
+        icon: <Sparkles className="w-8 h-8 text-white" />,
     },
     REST: {
         label: 'Rest Day',
         color: 'from-gray-500 to-gray-600',
         badge: 'badge-recovery',
-        icon: '😴',
+        icon: <Moon className="w-8 h-8 text-white" />,
     },
     RIDE: {
         label: 'Ride',
         color: 'from-orange-500 to-red-600',
         badge: 'badge-tempo',
-        icon: '🚴',
+        icon: <Bike className="w-8 h-8 text-white" />,
     },
     SWIM: {
         label: 'Swim',
         color: 'from-cyan-500 to-blue-600',
         badge: 'badge-interval',
-        icon: '🏊',
+        icon: <Waves className="w-8 h-8 text-white" />,
     },
     STRENGTH: {
         label: 'Strength',
         color: 'from-purple-500 to-pink-600',
         badge: 'badge-recovery',
-        icon: '💪',
+        icon: <Dumbbell className="w-8 h-8 text-white" />,
     },
     OTHER: {
         label: 'Other',
         color: 'from-gray-500 to-gray-600',
         badge: 'badge-easy',
-        icon: '🏃',
+        icon: <Target className="w-8 h-8 text-white" />,
     },
 };
 
@@ -103,7 +103,7 @@ export function TodayWorkout({ workout, onComplete, isLoading }: TodayWorkoutPro
             <div className="glass-card p-6 animate-slide-in">
                 <h2 className="text-lg font-semibold text-gray-400 mb-4">Today&apos;s Workout</h2>
                 <div className="text-center py-8">
-                    <span className="text-4xl mb-4 block">🎯</span>
+                    <Target className="w-16 h-16 mx-auto text-gray-400 mb-4 block" />
                     <p className="text-gray-400">No workout scheduled today</p>
                     <p className="text-sm text-gray-500 mt-2">Set a race goal to generate your training plan</p>
                 </div>

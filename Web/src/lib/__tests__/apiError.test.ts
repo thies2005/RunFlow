@@ -94,7 +94,7 @@ describe('ApiError', () => {
             const error = ApiError.unauthorized();
             const response = error.toResponse();
 
-            expect(response.body.details).toBeUndefined();
+            expect((response.body as any).details).toBeUndefined();
         });
     });
 });
@@ -103,38 +103,38 @@ describe('handleApiError', () => {
     const originalEnv = process.env.NODE_ENV;
 
     afterEach(() => {
-        process.env.NODE_ENV = originalEnv;
+        (process.env as any).NODE_ENV = originalEnv;
     });
 
     it('should handle ApiError correctly', () => {
         const error = ApiError.notFound('User');
         const response = handleApiError(error);
 
-        expect(response.body.error).toBe(ApiErrorCode.NOT_FOUND);
-        expect(response.body.message).toBe('User not found');
+        expect((response.body as any).error).toBe(ApiErrorCode.NOT_FOUND);
+        expect((response.body as any).message).toBe('User not found');
     });
 
     it('should handle standard Error in development', () => {
-        process.env.NODE_ENV = 'development';
+        (process.env as any).NODE_ENV = 'development';
         const error = new Error('Something went wrong');
         const response = handleApiError(error);
 
-        expect(response.body.error).toBe(ApiErrorCode.INTERNAL_ERROR);
-        expect(response.body.message).toBe('Something went wrong');
+        expect((response.body as any).error).toBe(ApiErrorCode.INTERNAL_ERROR);
+        expect((response.body as any).message).toBe('Something went wrong');
     });
 
     it('should hide error message in production', () => {
-        process.env.NODE_ENV = 'production';
+        (process.env as any).NODE_ENV = 'production';
         const error = new Error('Sensitive database error');
         const response = handleApiError(error);
 
-        expect(response.body.message).toBe('An unexpected error occurred');
+        expect((response.body as any).message).toBe('An unexpected error occurred');
     });
 
     it('should handle unknown error types', () => {
         const response = handleApiError('string error');
 
-        expect(response.body.error).toBe(ApiErrorCode.INTERNAL_ERROR);
+        expect((response.body as any).error).toBe(ApiErrorCode.INTERNAL_ERROR);
         expect(response.status).toBe(500);
     });
 });

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
+import { handleError } from '@/lib/errors/handler';
 
 export async function GET() {
     try {
@@ -24,8 +25,7 @@ export async function GET() {
 
         return NextResponse.json({ sessions: chatSessions });
     } catch (error) {
-        console.error('Error fetching chat sessions:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return handleError(error);
     }
 }
 
@@ -48,8 +48,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ session: newSession });
     } catch (error) {
-        console.error('Error creating chat session:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return handleError(error);
     }
 }
 
@@ -84,7 +83,6 @@ export async function DELETE(req: Request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error deleting chat session:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return handleError(error);
     }
 }

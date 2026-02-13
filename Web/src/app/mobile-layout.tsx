@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { format, startOfWeek } from 'date-fns';
+import { format } from 'date-fns';
 import {
-    DndContext,
     useSensor,
     useSensors,
     DragEndEvent,
@@ -25,20 +24,18 @@ import ActivityDetailsModal from '@/components/ActivityDetailsModal';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import AiChat from '@/components/AiChat';
 import AiSettingsModal from '@/components/AiSettingsModal';
+import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
 import type { Workout, Goal, Activity } from '@/lib/types';
 import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
 import {
     calculatePredictedTimes,
-    calculateAllRacePredictions,
-    calculateEffectiveVO2max,
 } from '@/lib/metrics/runalyze';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 
 export function MobileLayout() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const pathname = usePathname();
     const searchParams = useSearchParams();
     const sessionId = searchParams.get('sessionId') || undefined;
     const queryClient = useQueryClient();
@@ -50,7 +47,8 @@ export function MobileLayout() {
     const [initialComplete, setInitialComplete] = useState(false);
     const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
-    const [selectedActivity, setSelectedActivity] = useState<any>(null);
+    // M-06 fix: Use proper ActivityListItem type (matches ActivityDetailsModal props)
+    const [selectedActivity, setSelectedActivity] = useState<import('@/lib/types').ActivityListItem | null>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -99,7 +97,7 @@ export function MobileLayout() {
     });
 
     // Activities Query
-    const { data: activitiesData, isLoading: isActivitiesLoading } = useQuery({
+    const { data: activitiesData } = useQuery({
         queryKey: ['all-activities'],
         queryFn: async () => {
             const res = await fetch('/api/activities?limit=500');
@@ -268,7 +266,6 @@ export function MobileLayout() {
 
                 // Calculate VO2max for this run if it has HR
                 if (activity.hasHeartrate && activity.averageHr && activity.distance >= 3000) {
-                    const { calculateEffectiveVO2max } = require('@/lib/metrics/runalyze');
                     const vo2 = calculateEffectiveVO2max(activity.distance, activity.movingTime, activity.averageHr, maxHR);
                     if (vo2 > 0) {
                         const existing = dailyVO2Map.get(dateKey) || { values: [] };
@@ -502,7 +499,7 @@ export function MobileLayout() {
                             <div className="fixed inset-0 z-[60] flex">
                                 {/* Backdrop */}
                                 <div
-                                    className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                                    className="absolute inset-0 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm"
                                     onClick={() => setIsMobileSidebarOpen(false)}
                                 />
                                 {/* Sidebar */}
@@ -545,7 +542,8 @@ export function MobileLayout() {
                 key={editingWorkout?.id ?? 'new'}
                 isOpen={!!editingWorkout || !!createDate}
                 onClose={() => { setEditingWorkout(null); setCreateDate(undefined); refetchPlan(); }}
-                workout={editingWorkout as any}
+                // M-06 fix: WorkoutWithLinkedActivity extends Workout, safe cast
+                workout={editingWorkout as import('@/lib/types').Workout | null}
                 defaultDate={createDate}
                 goalId={activeGoal?.id || planData?.goal?.id}
                 initialComplete={initialComplete}

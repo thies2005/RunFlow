@@ -183,7 +183,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
         return `${mins}m`;
     };
 
-    const formatPaceAxis = (val: number) => {
+    const _formatPaceAxis = (val: number) => {
         if (val === null || val === undefined || val === 0) return '';
         const mins = Math.floor(val);
         const secs = Math.round((val - mins) * 60);

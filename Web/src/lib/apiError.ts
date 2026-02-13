@@ -5,10 +5,12 @@
  */
 
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logging/logger';
 
 /**
  * Standardized error codes for API responses
  */
+/* eslint-disable no-unused-vars */
 export enum ApiErrorCode {
     UNAUTHORIZED = 'UNAUTHORIZED',
     FORBIDDEN = 'FORBIDDEN',
@@ -20,6 +22,7 @@ export enum ApiErrorCode {
     DATABASE_ERROR = 'DATABASE_ERROR',
     EXTERNAL_SERVICE_ERROR = 'EXTERNAL_SERVICE_ERROR',
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * Error response structure
@@ -35,10 +38,10 @@ interface ApiErrorResponse {
  */
 export class ApiError extends Error {
     constructor(
-        public readonly statusCode: number,
-        public readonly code: ApiErrorCode,
+        public readonly statusCode: number, // eslint-disable-line no-unused-vars
+        public readonly code: ApiErrorCode, // eslint-disable-line no-unused-vars
         message: string,
-        public readonly details?: unknown
+        public readonly details?: unknown // eslint-disable-line no-unused-vars
     ) {
         super(message);
         this.name = 'ApiError';
@@ -118,13 +121,11 @@ export function handleApiError(
     logContext?: Record<string, unknown>
 ): NextResponse<ApiErrorResponse> {
     // Log the error with context
-    console.error('[API Error]', {
+    logger.error('API error', {
         ...logContext,
-        error: error instanceof Error ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-        } : error,
+        error: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : undefined,
+        errorStack: error instanceof Error ? error.stack : undefined,
     });
 
     // Handle our custom ApiError

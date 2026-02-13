@@ -1,0 +1,9 @@
+
+> runflow@1.2.9 lint
+> next lint
+
+
+./src/components/AiChat.tsx
+127:8  Warning: React Hook useEffect has a missing dependency: 'messages.length'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules

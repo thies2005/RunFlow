@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot } from 'lucide-react';
+import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot, LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { signIn, signOut } from 'next-auth/react';
-import { LinkIcon } from 'lucide-react';
-import { requestHealthPermissions, syncHealthData, isMobile } from '@/lib/mobile/healthConnect';
+
+import { requestHealthPermissions, syncHealthData } from '@/lib/mobile/healthConnect';
 import AiSettingsModal from '@/components/AiSettingsModal';
 
 interface ProfileModalProps {
@@ -289,7 +289,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in overflow-y-auto pt-10 pb-10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-md animate-fade-in overflow-y-auto pt-10 pb-10">
             <div className="glass-card w-full max-w-sm p-6 relative animate-slide-in my-auto !bg-[#12121a]/95 border-white/10">
                 <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
                     <X className="w-5 h-5" />
@@ -515,7 +515,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
                         {generatedApiKey ? (
                             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-3 animate-fade-in">
-                                <p className="text-green-300 text-xs mb-2 font-medium">🔑 Your API Key (copy now, it will not be shown again):</p>
+                                <p className="text-green-300 text-xs mb-2 font-medium flex items-center gap-1">
+                                    <Key className="w-3 h-3" /> Your API Key (copy now, it will not be shown again):
+                                </p>
                                 <div className="flex items-center gap-2">
                                     <code className="flex-1 bg-black/30 px-3 py-2 rounded text-xs text-green-400 font-mono break-all">
                                         {generatedApiKey}

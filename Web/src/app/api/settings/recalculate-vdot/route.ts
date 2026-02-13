@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
@@ -8,7 +8,7 @@ import { calculateVdot, predictRaceTime, type RaceDistance } from '@/lib/metrics
  * POST /api/settings/recalculate-vdot
  * Recalculates VDOT from best recent race efforts and updates active goal.
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {

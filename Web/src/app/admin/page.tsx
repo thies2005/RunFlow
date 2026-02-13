@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, EyeOff, Save, Loader2, Zap, XCircle, BarChart3 } from 'lucide-react';
+import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3 } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -443,7 +443,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
 
             {/* Provider Modal/Form Overlay */}
             {showProviderForm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)] flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
                         <h3 className="text-lg font-bold text-gray-900">{editingProvider ? 'Edit Provider' : 'Add New Provider'}</h3>
                         <ProviderForm
@@ -876,7 +876,7 @@ function DashboardContent() {
     };
 
     const handleBackupAction = async (action: 'create' | 'restore', backupName?: string) => {
-        if (action === 'restore' && !confirm(`⚠️ WARNING: This will overwrite the current database with ${backupName}. This action is destructive. Are you sure?`)) return;
+        if (action === 'restore' && !confirm(`WARNING: This will overwrite the current database with ${backupName}. This action is destructive. Are you sure?`)) return;
 
         setProcessing(true);
         setActionMessage(null);

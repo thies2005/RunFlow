@@ -14,12 +14,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 
-// Set max duration for this serverless function (Vercel/Next.js specific)
-export const maxDuration = 300; // 5 minutes
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
-    // 1. Require Admin Auth
+    const rateLimit = await adminRateLimit(request, 'sensitive');
+    if (!rateLimit.success) {
+        return rateLimit.error;
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
@@ -82,11 +86,13 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             message: 'Recalculation complete',
             totalUsers: users.length,
             results
         });
+
+        return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
 
     } catch (error: any) {
         console.error('[Admin] Global error during recalculation:', error);

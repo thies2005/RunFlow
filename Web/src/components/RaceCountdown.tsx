@@ -1,4 +1,4 @@
-import { Calendar, Target, Timer } from 'lucide-react';
+import { Calendar, Target, Timer, Trophy } from 'lucide-react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import type { Goal } from '@/lib/types';
@@ -56,7 +56,7 @@ export function RaceCountdown({
             <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
                 <h2 className="text-lg font-semibold text-gray-400 mb-4">Race Goal</h2>
                 <div className="text-center py-8">
-                    <span className="text-4xl mb-4 block">🏁</span>
+                    <Trophy className="w-16 h-16 mx-auto text-gray-400 mb-4 block" />
                     <p className="text-gray-400">No race goal set</p>
                     <button
                         onClick={() => router.push('/onboarding?step=3')}

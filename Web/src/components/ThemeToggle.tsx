@@ -20,13 +20,6 @@ export function ThemeToggle() {
         );
     }
 
-    const themes = [
-        { name: 'light', icon: Sun },
-        { name: 'dark', icon: Moon },
-        { name: 'system', icon: Monitor },
-    ];
-
-    const currentTheme = themes.find(t => t.name === theme) || themes[2];
     const nextTheme = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light';
 
     return (

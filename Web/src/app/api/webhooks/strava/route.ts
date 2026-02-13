@@ -86,8 +86,7 @@ export async function GET(req: Request) {
     const receivedToken = token?.trim();
     const expectedToken = VERIFY_TOKEN?.trim();
 
-    console.log('[Strava Webhook] Comparing tokens:', {
-        received: receivedToken,
+    console.log('[Strava Webhook] Token verification:', {
         match: receivedToken === expectedToken
     });
 
@@ -99,7 +98,11 @@ export async function GET(req: Request) {
         });
     }
 
-    console.warn(`[Strava Webhook] Verification failed. Mode: ${mode}, Received: "${receivedToken}", Expected: "${expectedToken}"`);
+    console.warn('[Strava Webhook] Verification failed.', {
+        mode,
+        hasToken: !!receivedToken,
+        tokenLengthMatch: receivedToken?.length === expectedToken?.length
+    });
     return new NextResponse('Forbidden', { status: 403 });
 }
 

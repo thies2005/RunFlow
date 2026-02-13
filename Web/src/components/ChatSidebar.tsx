@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, MessageSquare, Trash2, MoreVertical, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, MessageSquare, Trash2, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface ChatSession {

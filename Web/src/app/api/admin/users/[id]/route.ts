@@ -9,12 +9,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logger } from '@/lib/logging/logger';
 
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    // Require admin authentication
+    const rateLimit = await adminRateLimit(request, 'sensitive');
+    if (!rateLimit.success) {
+        return rateLimit.error;
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
@@ -48,15 +54,17 @@ export async function DELETE(
             where: { id: userId }
         });
 
-        console.log(`[Admin] User deleted: ${userId} (${user.name || user.email})`);
+        logger.info('User deleted', { userId, userName: user.name, userEmail: user.email });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             success: true,
             message: `User ${user.name || user.email || userId} deleted successfully`,
         });
 
+        return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
+
     } catch (error) {
-        console.error('[Admin User Delete] Error:', error);
+        logger.error('Failed to delete user', { userId: await (async () => (await params).id)(), error: error instanceof Error ? error.message : String(error) });
         return NextResponse.json(
             { error: 'Failed to delete user' },
             { status: 500 }

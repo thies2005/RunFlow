@@ -1,0 +1,118 @@
+
+> runflow@1.2.9 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for client (static)...
+ ○ (pwa) Service worker: C:\Users\thies\Antigravity\Full RunFlow\Web\public\sw.js
+ ○ (pwa)   URL: /sw.js
+ ○ (pwa)   Scope: /
+ ○ (pwa) This app will fallback to these precached routes when fetching from the cache and the network fails:
+ ○ (pwa)   Documents (pages): /~offline
+ ○ (pwa) Custom runtimeCaching array found, using it to extend the default one.
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+
+./src/app/api/activities/[id]/__tests__/route.test.ts
+113:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+233:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/activities/__tests__/route.test.ts
+112:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+125:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+133:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+144:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+280:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/analytics/__tests__/route.test.ts
+181:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+195:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+209:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/backups/__tests__/route.test.ts
+31:29  Warning: 'csrfValidationErrorResponse' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+112:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+296:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/recalculate-fitness/__tests__/route.test.ts
+185:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+197:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/stats/__tests__/route.test.ts
+172:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/users/[id]/__tests__/route.test.ts
+111:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+121:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/users/__tests__/route.test.ts
+102:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+115:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+127:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+181:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/ai/activity-feedback/__tests__/route.test.ts
+135:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+316:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/ai/chat/history/__tests__/route.test.ts
+74:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+88:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+148:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+164:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/ai/chat/sessions/__tests__/route.test.ts
+102:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+161:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+194:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+286:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/ai/chat/__tests__/route.test.ts
+225:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/analytics/stats/__tests__/route.test.ts
+69:10  Warning: 'handleError' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/auth/forgot-password/__tests__/route.test.ts
+157:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/auth/register/__tests__/route.test.ts
+214:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/auth/reset-password/__tests__/route.test.ts
+203:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/dashboard/__tests__/route.test.ts
+189:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/goals/__tests__/route.test.ts
+140:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+157:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+307:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/lib/security/__tests__/cors.test.ts
+1:10  Warning: 'validateOrigin' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+1:26  Warning: 'setCorsHeaders' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+Failed to compile.
+
+./src/app/mobile-layout.tsx:560:17
+Type error: Type 'Activity | null' is not assignable to type 'ActivityListItem | null'.
+  Type 'Activity' is not assignable to type 'ActivityListItem'.
+    Types of property 'stravaId' are incompatible.
+      Type 'bigint' is not assignable to type 'string'.
+
+[0m [90m 558 |[39m                 isOpen[33m=[39m{isActivityModalOpen}[0m
+[0m [90m 559 |[39m                 onClose[33m=[39m{() [33m=>[39m setIsActivityModalOpen([36mfalse[39m)}[0m
+[0m[31m[1m>[22m[39m[90m 560 |[39m                 activity[33m=[39m{selectedActivity}[0m
+[0m [90m     |[39m                 [31m[1m^[22m[39m[0m
+[0m [90m 561 |[39m             [33m/[39m[33m>[39m[0m
+[0m [90m 562 |[39m[0m
+[0m [90m 563 |[39m             [33m<[39m[33mShapeCalibrationModal[39m[0m
+Next.js build worker exited with code: 1 and signal: null

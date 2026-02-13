@@ -27,6 +27,14 @@ module.exports = {
                     blue: '#3a0ca3',
                     cyan: 'var(--accent-cyan)',
                 },
+                // Workout type colors
+                'workout-long-run': 'rgb(var(--color-workout-long-run) / <alpha-value>)',
+                'workout-tempo': 'rgb(var(--color-workout-tempo) / <alpha-value>)',
+                'workout-interval': 'rgb(var(--color-workout-interval) / <alpha-value>)',
+                'workout-race': 'rgb(var(--color-workout-race) / <alpha-value>)',
+                'workout-recovery': 'rgb(var(--color-workout-recovery) / <alpha-value>)',
+                'workout-strength': 'rgb(var(--color-workout-strength) / <alpha-value>)',
+                'workout-easy': 'rgb(var(--color-workout-easy) / <alpha-value>)',
                 // Running zones
                 zone: {
                     1: '#4ade80', // Easy - Green

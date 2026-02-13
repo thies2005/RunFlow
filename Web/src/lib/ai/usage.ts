@@ -338,16 +338,12 @@ export async function incrementUsage(
             messagesUsedToday: messagesUsedToday + 1,
             messagesUsedThisMonth: messagesUsedThisMonth + 1,
 
-            // @ts-ignore
+            // M-17 fix: Fields are valid in Prisma schema, no type suppression needed
             inputTokensUsedToday: inputTokensUsedToday + inputDelta,
-            // @ts-ignore
             outputTokensUsedToday: outputTokensUsedToday + outputDelta,
-            // @ts-ignore
             inputTokensUsedThisMonth: inputTokensUsedThisMonth + inputDelta,
-            // @ts-ignore
             outputTokensUsedThisMonth: outputTokensUsedThisMonth + outputDelta,
 
-            // @ts-ignore
             lastUsageReset: now,
         },
     });
@@ -356,11 +352,8 @@ export async function incrementUsage(
     if (providerId) {
         const provider = await prisma.aiProvider.findUnique({ where: { id: providerId } });
         if (provider) {
-            // @ts-ignore
             const lastReset = new Date(provider.lastUsageReset);
-            // @ts-ignore
             let monthlyInput = provider.monthlyInputTokensUsed;
-            // @ts-ignore
             let monthlyOutput = provider.monthlyOutputTokensUsed;
 
             // Reset monthly if new month

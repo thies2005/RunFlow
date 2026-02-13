@@ -9,34 +9,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminCredentials, signAdminToken, COOKIE_NAME } from '@/lib/admin/auth';
 import { setCsrfCookie } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logger } from '@/lib/logging/logger';
+import { handleError } from '@/lib/errors/handler';
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const { username, password } = body;
 
-        console.log('[Admin Login] Attempt for:', username);
+        logger.info('Admin login attempt', { username });
 
-        // Rate Limiting
-        const { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } = await import('@/lib/rateLimit');
-        const identifier = getClientIdentifier(request);
-
-        // Limit: 5 attempts per 15 minutes
-        const rateLimit = await checkRateLimitAsync(identifier, {
-            limit: 5,
-            windowSeconds: 15 * 60,
-            prefix: 'admin_login'
-        });
-
-        if (!rateLimit.allowed) {
-            console.warn(`[Admin Login] Rate limit exceeded for ${identifier}`);
-            return NextResponse.json(
-                { error: 'Too many login attempts. Please try again later.' },
-                {
-                    status: 429,
-                    headers: rateLimitHeaders(rateLimit)
-                }
-            );
+        const rateLimit = await adminRateLimit(request, 'sensitive');
+        if (!rateLimit.success) {
+            return rateLimit.error;
         }
 
         // Validate required fields
@@ -48,8 +34,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Verify credentials
-        if (!verifyAdminCredentials(username, password)) {
-            console.warn('[Admin Login] Credential mismatch');
+        if (!(await verifyAdminCredentials(username, password))) {
+            logger.warn('Admin login credential mismatch', { username });
             // Add slight delay to prevent brute force timing attacks
             await new Promise(resolve => setTimeout(resolve, 500));
             return NextResponse.json(
@@ -80,13 +66,9 @@ export async function POST(request: NextRequest) {
         // Set CSRF cookie for admin frontend
         setCsrfCookie(response);
 
-        return response;
+        return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
 
     } catch (error) {
-        console.error('[Admin Login] Error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
+        return handleError(error);
     }
 }

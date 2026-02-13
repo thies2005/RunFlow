@@ -13,17 +13,21 @@ import { createAuthCode } from '@/lib/auth/tokens';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { AuthCodeType } from '@prisma/client';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    // Validate CSRF token
     if (!validateCsrfToken(request)) {
         return csrfValidationErrorResponse();
     }
 
-    // Require admin authentication
+    const rateLimit = await adminRateLimit(request, 'sensitive');
+    if (!rateLimit.success) {
+        return rateLimit.error;
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
@@ -61,10 +65,12 @@ export async function POST(
 
             console.log(`[Admin] Password reset triggered for user: ${user.email} (ID: ${userId})`);
 
-            return NextResponse.json({
+            const response = NextResponse.json({
                 success: true,
                 message: `Password reset email sent to ${user.email}`,
             });
+
+            return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
         } catch (emailError) {
             console.error(`[Admin] Failed to send reset email to ${user.email}:`, emailError);
             return NextResponse.json(

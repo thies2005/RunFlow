@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
+import { adminRateLimit, getRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -9,6 +10,11 @@ export async function GET(
     request: NextRequest,
     { params }: { params: { filename: string } }
 ) {
+    const rateLimit = await adminRateLimit(request, 'read');
+    if (!rateLimit.success) {
+        return rateLimit.error;
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
@@ -41,6 +47,11 @@ export async function GET(
         headers.set('Content-Disposition', `attachment; filename="${safeFilename}"`);
         headers.set('Content-Type', 'application/octet-stream');
         headers.set('Content-Length', stats.size.toString());
+
+        const rateLimitHeaders = getRateLimitHeaders('read', rateLimit.result!.remaining, rateLimit.result!.reset);
+        rateLimitHeaders.forEach((value, key) => {
+            headers.set(key, value);
+        });
 
         return new NextResponse(fileBuffer, {
             status: 200,

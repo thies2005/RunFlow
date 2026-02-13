@@ -2,14 +2,14 @@ import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { GripVertical, Check, Settings } from 'lucide-react';
 import { WorkoutWithLinkedActivity } from '@/lib/types';
-import { workoutStyles, formatPace, formatSwimmingPace } from '@/lib/plan/utils';
+import { workoutStyles, formatPace } from '@/lib/plan/utils';
 
 interface DraggableWorkoutProps {
     workout: WorkoutWithLinkedActivity;
     isTodayItem: boolean;
-    onClick: (workout: WorkoutWithLinkedActivity) => void;
-    onComplete: (workout: WorkoutWithLinkedActivity, e: React.MouseEvent) => void;
-    onActivityClick: (activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, e: React.MouseEvent) => void;
+    onClick: (_workout: WorkoutWithLinkedActivity) => void;
+    onComplete: (_workout: WorkoutWithLinkedActivity, _e: React.MouseEvent) => void;
+    onActivityClick: (_activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, _e: React.MouseEvent) => void;
 }
 
 export function DraggableWorkout({

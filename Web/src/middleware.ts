@@ -1,5 +1,6 @@
-import { withAuth } from "next-auth/middleware"
 import { NextRequest, NextResponse } from 'next/server';
+import { generateNonce } from '@/lib/security/nonce'
+import { logger, generateRequestId } from '@/lib/logging/logger'
 
 /**
  * CORS Configuration
@@ -12,7 +13,6 @@ const getAllowedOrigins = (): string[] => {
 
     // Production domains - add your deployed domain(s) here
     origins.push('https://runflow.schuelken.uk');
-    origins.push('http://runflow.schuelken.uk');
 
     // Add the app URL from environment
     if (process.env.NEXT_PUBLIC_APP_URL) {
@@ -86,20 +86,7 @@ function addCorsHeaders(response: NextResponse, request: NextRequest): NextRespo
     return response;
 }
 
-// Wrap the auth middleware to add CORS handling
-export default withAuth({
-    pages: {
-        signIn: '/login',
-    },
-    callbacks: {
-        authorized: ({ token, req }) => {
-            // Allow public routes
-            return true;
-        }
-    }
-});
-
-// Middleware function that runs before withAuth
+// Middleware function that handles CORS, CSP, logging, and rewrites
 export async function middleware(request: NextRequest) {
     // Handle CORS first
     const corsResponse = handleCors(request);
@@ -107,8 +94,69 @@ export async function middleware(request: NextRequest) {
         return corsResponse;
     }
 
+    // Rewrite /api/latest/* to /api/v1/*
+    const url = request.nextUrl;
+    if (url.pathname.startsWith('/api/latest/')) {
+        const rewriteUrl = new URL(url.pathname.replace('/api/latest/', '/api/v1/'), request.url);
+        return NextResponse.rewrite(rewriteUrl);
+    }
+
+    // Generate request ID and start timing
+    const requestId = generateRequestId();
+    const startTime = Date.now();
+
+    // Log incoming request
+    logger.info('Incoming request', {
+        requestId,
+        method: request.method,
+        path: request.nextUrl.pathname,
+        userAgent: request.headers.get('user-agent'),
+    });
+
+    // Generate nonce for CSP
+    const nonce = generateNonce();
+
     // Continue with normal middleware chain
     const response = NextResponse.next();
+
+    // Override CSP with nonce
+    const csp = [
+        `default-src 'self'`,
+        `script-src 'self' 'nonce-${nonce}'`,
+        `style-src 'self' 'unsafe-inline'`,
+        `img-src 'self' data: https://*.strava.com https://*.googleusercontent.com`,
+        `font-src 'self' data:`,
+        `connect-src 'self' https://www.strava.com https://api.openai.com`,
+        `frame-src 'none'`,
+        `object-src 'none'`,
+        `base-uri 'self'`,
+        `form-action 'self'`,
+        `manifest-src 'self'`,
+        `upgrade-insecure-requests`
+    ].join('; ')
+
+    response.headers.set('Content-Security-Policy', csp)
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    response.headers.set('X-Frame-Options', 'DENY')
+    response.headers.set('X-XSS-Protection', '1; mode=block')
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+
+    // Store nonce in headers for use in pages
+    response.headers.set('x-nonce', nonce)
+    
+    // Add request ID header for tracing
+    response.headers.set('x-request-id', requestId)
+
+    // Log response with duration
+    const duration = Date.now() - startTime;
+    logger.info('Request completed', {
+        requestId,
+        method: request.method,
+        path: request.nextUrl.pathname,
+        status: response.status,
+        duration,
+    });
+
     return addCorsHeaders(response, request);
 }
 

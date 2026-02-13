@@ -16,6 +16,17 @@
   --accent-purple: #7209b7;
   --accent-cyan: #00b4d8;
 
+  /* Workout type colors */
+  --color-workout-long-run: 168 85 247;
+  --color-workout-tempo: 249 115 22;
+  --color-workout-interval: 239 68 68;
+  --color-workout-race: 234 179 8;
+  --color-workout-recovery: 34 197 94;
+  --color-workout-strength: 59 130 246;
+  --color-workout-easy: 107 114 128;
+
+  --modal-backdrop-opacity: 0.6;
+
   /* Glass/Surface variables */
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(0, 0, 0, 0.08);
@@ -40,6 +51,15 @@
   --accent-pink: #f72585;
   --accent-purple: #7209b7;
   --accent-cyan: #4cc9f0;
+
+  /* Workout type colors (same as light mode) */
+  --color-workout-long-run: 168 85 247;
+  --color-workout-tempo: 249 115 22;
+  --color-workout-interval: 239 68 68;
+  --color-workout-race: 234 179 8;
+  --color-workout-recovery: 34 197 94;
+  --color-workout-strength: 59 130 246;
+  --color-workout-easy: 107 114 128;
 
   /* Glass/Surface variables */
   --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);

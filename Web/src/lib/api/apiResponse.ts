@@ -7,6 +7,8 @@
  */
 
 import { NextResponse } from 'next/server';
+import { safeStringify } from '@/lib/json/serializer';
+import { logger } from '@/lib/logging/logger';
 
 /**
  * Standard error response structure
@@ -30,11 +32,11 @@ export interface ApiSuccess<T = unknown> {
 /**
  * Error codes for consistent client handling
  */
+/* eslint-disable no-unused-vars */
 export enum ErrorCode {
     // Authentication errors (4xx)
     UNAUTHORIZED = 'UNAUTHORIZED',
     INVALID_TOKEN = 'INVALID_TOKEN',
-    TOKEN_EXPIRED = 'TOKEN_EXPIRED',
     FORBIDDEN = 'FORBIDDEN',
 
     // Client errors (4xx)
@@ -47,8 +49,8 @@ export enum ErrorCode {
     // Server errors (5xx)
     INTERNAL_ERROR = 'INTERNAL_ERROR',
     SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
-    DATABASE_ERROR = 'DATABASE_ERROR',
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * Map HTTP status codes to error codes
@@ -102,7 +104,11 @@ export function apiError(
         errorResponse.path = path;
     }
 
-    return NextResponse.json(errorResponse, { status });
+    const jsonString = safeStringify(errorResponse);
+    return new NextResponse(jsonString, {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+    });
 }
 
 /**
@@ -162,13 +168,16 @@ export function apiSuccess<T>(
     data: T,
     status: number = 200
 ): NextResponse<ApiSuccess<T>> {
-    return NextResponse.json(
-        {
-            data,
-            timestamp: new Date().toISOString(),
-        } as ApiSuccess<T>,
-        { status }
-    );
+    const body: ApiSuccess<T> = {
+        data,
+        timestamp: new Date().toISOString(),
+    };
+
+    const jsonString = safeStringify(body);
+    return new NextResponse(jsonString, {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+    });
 }
 
 /**
@@ -179,7 +188,7 @@ export function handleApiError(
     error: unknown,
     context?: { path?: string; details?: unknown }
 ): NextResponse<ApiError> {
-    console.error('[API Error]', error);
+    logger.error('API error', { error: error instanceof Error ? error.message : String(error), context });
 
     if (error instanceof Error) {
         return apiError(

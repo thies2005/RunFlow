@@ -5,11 +5,11 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Settings, LogOut, AlertCircle, BarChart3, MessageSquare } from 'lucide-react';
-import { signIn, signOut } from 'next-auth/react';
+import { RefreshCw, AlertCircle, BarChart3, MessageSquare, Hand } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import { LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { RaceCountdown, ActivityList, SettingsModal, PoweredByStravaLogo, Footer, UserMenu } from '@/components';
+import { RaceCountdown, ActivityList, SettingsModal, Footer, UserMenu } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
@@ -86,15 +86,7 @@ export default function Dashboard() {
     const today = new Date().toDateString();
 
     // Stats from Server
-    const currentWeekMileage = statsData?.currentWeekMileage || 0;
-    const effectiveVO2max = statsData?.effectiveVO2max || 0;
     const correctionFactor = statsData?.vdotCorrectionFactor || 1.0;
-    const marathonShape = statsData?.marathonShape || { shape: 0, longRunScore: 0, weeklyMileageScore: 0 };
-    const ctl = statsData?.ctl || 0;
-    const atl = statsData?.atl || 0;
-    const tsb = statsData?.tsb || 0;
-    const workloadRatio = statsData?.workloadRatio || 0;
-    const easyTrimp = statsData?.easyTrimp || 0;
     const userHrMax = statsData?.hrMax || 185;
 
 
@@ -199,8 +191,9 @@ export default function Dashboard() {
 
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-foreground mb-2">
-                            Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}! 👋
+                        <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
+                            Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}!
+                            <Hand className="w-8 h-8 text-accent-orange" />
                         </h1>
                         <p className="text-gray-400">
                             {syncStatus?.totalActivities ? `${syncStatus.totalActivities} activities synced` : 'Sync your Strava activities to get started'}

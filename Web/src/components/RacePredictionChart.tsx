@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useMemo, memo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { predictRaceTime, formatTime } from '@/lib/metrics/vdot';
-import { calculatePredictedTimes } from '@/lib/metrics/runalyze';
 
 interface RacePredictionChartProps {
     effectiveVO2max: number;

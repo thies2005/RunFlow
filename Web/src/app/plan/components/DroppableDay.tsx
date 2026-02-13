@@ -7,7 +7,7 @@ interface DroppableDayProps {
     date: Date;
     children: React.ReactNode;
     isTodayItem: boolean;
-    onAdd: (date: Date) => void;
+    onAdd: (_date: Date) => void;
     id?: string;
 }
 

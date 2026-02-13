@@ -9,7 +9,7 @@ import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 
 interface MobileSwipeLayoutProps {
     children: React.ReactNode[];
-    onPageChange?: (index: number) => void;
+    onPageChange?: (_index: number) => void;
     showAiChat?: boolean;
 }
 
@@ -29,9 +29,9 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true }:
         ...(showAiChat ? [{ icon: Bot, label: 'Coach', path: '/chat' }] : []),
     ], [showAiChat]);
 
-    const getIndexFromPath = useCallback((path: string) => {
-        const index = paths.indexOf(path);
-        return index >= 0 ? index : 0;
+    const getIndexFromPath = useCallback((_path: string) => {
+        const _index = paths.indexOf(_path);
+        return _index >= 0 ? _index : 0;
     }, [paths]);
 
     const [activeIndex, setActiveIndex] = useState(() => getIndexFromPath(pathname));

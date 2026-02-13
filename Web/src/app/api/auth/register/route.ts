@@ -12,6 +12,7 @@ import { createAuthCode } from '@/lib/auth/tokens';
 import { sendWelcomeEmail } from '@/lib/email';
 import { AuthCodeType } from '@prisma/client';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
+import { handleError } from '@/lib/errors/handler';
 
 export async function POST(request: NextRequest) {
     try {
@@ -83,7 +84,8 @@ export async function POST(request: NextRequest) {
             const code = await createAuthCode(user.email!, AuthCodeType.VERIFY_EMAIL);
             await sendWelcomeEmail(user.email!, code);
         } catch (emailError) {
-            console.error(`[Auth Register] Failed to send welcome email to ${user.email}:`, emailError);
+            // M-03 fix: Log email errors so they're visible in monitoring
+            console.error('[Register] Failed to send welcome email:', emailError);
             // We don't fail the request, but the user will need to request a new code later
         }
 
@@ -94,10 +96,6 @@ export async function POST(request: NextRequest) {
         }, { status: 201 });
 
     } catch (error) {
-        console.error('[Auth Register] Error:', error);
-        return NextResponse.json(
-            { error: 'Failed to create account' },
-            { status: 500 }
-        );
+        return handleError(error);
     }
 }

@@ -7,8 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
-import { testAiConfig, getUsageStats } from '@/lib/ai';
+import { getUsageStats } from '@/lib/ai';
 import { encryptToken } from '@/lib/crypto';
+import { handleError } from '@/lib/errors/handler';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,8 +53,7 @@ export async function GET() {
             }
         });
     } catch (error) {
-        console.error('AI settings GET error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return handleError(error);
     }
 }
 
@@ -132,7 +132,6 @@ export async function PUT(request: NextRequest) {
 
         return NextResponse.json({ success: true, settings });
     } catch (error) {
-        console.error('AI settings PUT error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return handleError(error);
     }
 }

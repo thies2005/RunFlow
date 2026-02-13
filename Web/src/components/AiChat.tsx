@@ -124,7 +124,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                 activeSessionIdRef.current = sessionId;
             }
         }
-    }, [historyData, isStreaming, sessionId]);
+    }, [historyData, isStreaming, sessionId, messages.length]);
 
     const adminAllowed = settingsData?.settings?.adminAllowed;
     const aiEnabled = settingsData?.settings?.aiEnabled || settingsData?.settings?.hasCustomApiKey;
@@ -402,15 +402,15 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                                                     <ReactMarkdown
                                                         remarkPlugins={[remarkGfm]}
                                                         components={{
-                                                            h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
-                                                            h2: ({ node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
-                                                            h3: ({ node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
-                                                            p: ({ node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
-                                                            ul: ({ node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
-                                                            ol: ({ node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
-                                                            li: ({ node, ...props }) => <li className="pl-1" {...props} />,
-                                                            code: ({ node, inline, className, children, ...props }: any) => {
-                                                                const match = /language-(\w+)/.exec(className || '');
+                                                            h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
+                                                            h2: ({ node: _node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
+                                                            h3: ({ node: _node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
+                                                            p: ({ node: _node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+                                                            ul: ({ node: _node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
+                                                            ol: ({ node: _node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
+                                                            li: ({ node: _node, ...props }) => <li className="pl-1" {...props} />,
+                                                            code: ({ node: _node, inline, className, children, ...props }: any) => {
+                                                                const _match = /language-(\w+)/.exec(className || '');
                                                                 return !inline ? (
                                                                     <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
                                                                         <code className={className} {...props}>
@@ -423,12 +423,12 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                                                                     </code>
                                                                 );
                                                             },
-                                                            table: ({ node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
-                                                            thead: ({ node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
-                                                            th: ({ node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
-                                                            td: ({ node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
-                                                            blockquote: ({ node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
-                                                            a: ({ node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                            table: ({ node: _node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
+                                                            thead: ({ node: _node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
+                                                            th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
+                                                            td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
+                                                            blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
+                                                            a: ({ node: _node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
                                                         }}
                                                     >
                                                         {cleanedContent}

@@ -66,6 +66,14 @@ export async function GET(request: NextRequest) {
 
         const deepLink = redirectUrl.toString();
 
+        // Escape for HTML attribute context (defense-in-depth)
+        const safeDeepLinkForHtml = deepLink
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
         return new NextResponse(`
             <!DOCTYPE html>
             <html>
@@ -117,15 +125,15 @@ export async function GET(request: NextRequest) {
                 <div class="loader"></div>
                 <h1>Opening RunFlow...</h1>
                 <p>If the app doesn't open automatically, please tap the button below.</p>
-                <a href="${deepLink}" class="btn">Open RunFlow App</a>
+                <a href="${safeDeepLinkForHtml}" class="btn">Open RunFlow App</a>
                 
                 <script>
-                    // Immediate redirect
-                    window.location.href = "${deepLink}";
+                    // Immediate redirect using JSON.stringify for safe JS context
+                    window.location.href = ${JSON.stringify(deepLink)};
                     
                     // Fallback after a delay for some browser variants
                     setTimeout(function() {
-                        window.location.href = "${deepLink}";
+                        window.location.href = ${JSON.stringify(deepLink)};
                     }, 1500);
                 </script>
             </body>

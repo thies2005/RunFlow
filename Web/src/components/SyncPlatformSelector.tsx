@@ -83,14 +83,14 @@ const platforms: SyncPlatform[] = [
 
 interface SyncPlatformSelectorProps {
     onStravaConnected?: () => void;
-    onHealthConnectSynced?: (count: number) => void;
+    onHealthConnectSynced?: (_count: number) => void;
     connectedPlatforms?: string[];
     onSkip?: () => void;
     zoneSettings?: ZoneSettings;
 }
 
 export default function SyncPlatformSelector({
-    onStravaConnected,
+    onStravaConnected: _onStravaConnected,
     onHealthConnectSynced,
     connectedPlatforms = [],
     onSkip,

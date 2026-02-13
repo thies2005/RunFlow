@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { WorkoutType } from '@/lib/types';
+import { logger } from '@/lib/logging/logger';
 
 export async function PATCH(
     request: Request,
@@ -49,7 +50,7 @@ export async function PATCH(
 
         return NextResponse.json(updatedActivity);
     } catch (error) {
-        console.error('Error updating activity type:', error);
+        logger.error('Error updating activity type', { error: error instanceof Error ? error.message : String(error) });
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

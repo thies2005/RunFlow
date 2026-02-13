@@ -2,11 +2,10 @@
 
 import { memo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Settings } from 'lucide-react';
 import {
     LineChart, Line, AreaChart, Area,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-    PieChart, Pie, Cell
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import RacePredictionChart from '@/components/RacePredictionChart';
 import RacePredictionTimeChart from '@/components/RacePredictionTimeChart';
@@ -67,8 +66,8 @@ interface AnalyticsViewProps {
     activitiesData: any;
     timeRange: TimeRange;
     zonesTimeRange: '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL';
-    setTimeRange: (range: TimeRange) => void;
-    setZonesTimeRange: (range: '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL') => void;
+    setTimeRange: (_range: TimeRange) => void;
+    setZonesTimeRange: (_range: '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL') => void;
     onRecalculate: () => void;
     isRecalculating: boolean;
     onOpenCalibration: () => void;
@@ -82,12 +81,12 @@ export function AnalyticsView({
     fitnessData,
     combinedData,
     trainingPaces,
-    userData,
-    activitiesData,
+    userData: _userData,
+    activitiesData: _activitiesData,
     timeRange,
-    zonesTimeRange,
+    zonesTimeRange: _zonesTimeRange,
     setTimeRange,
-    setZonesTimeRange,
+    setZonesTimeRange: _setZonesTimeRange,
     onRecalculate,
     isRecalculating,
     onOpenCalibration,
@@ -159,7 +158,7 @@ export function AnalyticsView({
                             className="absolute top-2 right-2 p-2 text-gray-500 hover:text-accent-pink transition"
                             title="Calibrate"
                         >
-                            ⚙️
+                            <Settings className="w-5 h-5 text-gray-500" />
                         </button>
                         <p className="text-gray-400 text-sm mb-2">Marathon Prediction</p>
                         <div className="flex justify-center items-baseline gap-3">

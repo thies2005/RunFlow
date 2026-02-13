@@ -65,7 +65,7 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
 
     return (
 
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm">
             <div className="bg-background border border-glass-border rounded-xl w-full max-w-md shadow-2xl overflow-hidden glass-card">
                 <div className="flex items-center justify-between p-4 border-b border-glass-border">
                     <h2 className="text-lg font-bold text-foreground">Manual Entry</h2>

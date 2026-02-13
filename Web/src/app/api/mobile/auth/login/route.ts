@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeStravaCodeForTokens } from '@/lib/mobile/auth';
-import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
     try {
@@ -39,10 +39,12 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // redirectUri is optional - use default if not provided (for Android app compatibility)
-        const redirectUri = providedRedirectUri || process.env.NEXT_PUBLIC_APP_URL
-            ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/strava/callback`
-            : 'https://runflow.schuelken.uk/api/auth/strava/callback';
+        // M-18 fix: Add explicit parentheses for clarity
+        const redirectUri = providedRedirectUri 
+            ? providedRedirectUri 
+            : (process.env.NEXT_PUBLIC_APP_URL
+                ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/strava/callback`
+                : 'https://runflow.schuelken.uk/api/auth/strava/callback');
 
         // Exchange the Strava code for our tokens
         const result = await exchangeStravaCodeForTokens(code, redirectUri);

@@ -11,6 +11,7 @@ import { encryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 
 /** Validate that a provider URL is safe (https only, or localhost for dev) */
 function isValidProviderUrl(url: string): boolean {
@@ -27,6 +28,11 @@ function isValidProviderUrl(url: string): boolean {
 
 
 export async function GET(request: NextRequest) {
+    const rateLimit = await adminRateLimit(request, 'read');
+    if (!rateLimit.success) {
+        return rateLimit.error;
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
@@ -46,7 +52,8 @@ export async function GET(request: NextRequest) {
             monthlyTokenLimit: p.monthlyTokenLimit ? p.monthlyTokenLimit.toString() : null
         }));
 
-        return NextResponse.json({ providers: safeProviders });
+        const response = NextResponse.json({ providers: safeProviders });
+        return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
         console.error('Providers GET error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -54,9 +61,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    // Validate CSRF token
     if (!validateCsrfToken(request)) {
         return csrfValidationErrorResponse();
+    }
+
+    const rateLimit = await adminRateLimit(request, 'write');
+    if (!rateLimit.success) {
+        return rateLimit.error;
     }
 
     const authResult = await requireAdmin(request);
@@ -89,7 +100,7 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             success: true,
             provider: {
                 ...provider,
@@ -97,6 +108,8 @@ export async function POST(request: NextRequest) {
                 monthlyTokenLimit: provider.monthlyTokenLimit ? provider.monthlyTokenLimit.toString() : null
             }
         });
+
+        return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error: any) {
         if (error.code === 'P2002') {
             return NextResponse.json({ error: 'A provider with this slug already exists' }, { status: 400 });
@@ -107,9 +120,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-    // Validate CSRF token
     if (!validateCsrfToken(request)) {
         return csrfValidationErrorResponse();
+    }
+
+    const rateLimit = await adminRateLimit(request, 'write');
+    if (!rateLimit.success) {
+        return rateLimit.error;
     }
 
     const authResult = await requireAdmin(request);
@@ -146,7 +163,7 @@ export async function PUT(request: NextRequest) {
             data: updateData,
         });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             success: true,
             provider: {
                 ...provider,
@@ -154,6 +171,8 @@ export async function PUT(request: NextRequest) {
                 monthlyTokenLimit: provider.monthlyTokenLimit ? provider.monthlyTokenLimit.toString() : null
             }
         });
+
+        return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
         console.error('Providers PUT error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -161,9 +180,13 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-    // Validate CSRF token
     if (!validateCsrfToken(request)) {
         return csrfValidationErrorResponse();
+    }
+
+    const rateLimit = await adminRateLimit(request, 'write');
+    if (!rateLimit.success) {
+        return rateLimit.error;
     }
 
     const authResult = await requireAdmin(request);
@@ -193,7 +216,8 @@ export async function DELETE(request: NextRequest) {
             where: { id },
         });
 
-        return NextResponse.json({ success: true });
+        const response = NextResponse.json({ success: true });
+        return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
         console.error('Providers DELETE error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

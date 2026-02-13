@@ -10,11 +10,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { getCsrfTokenFromCookie, setCsrfCookie } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import * as fs from 'fs';
 import * as path from 'path';
+import { DAY_MS } from '@/lib/constants';
+import { handleError } from '@/lib/errors/handler';
 
 export async function GET(request: NextRequest) {
-    // Require admin authentication
+    const rateLimit = await adminRateLimit(request, 'read');
+    if (!rateLimit.success) {
+        return rateLimit.error;
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
@@ -22,8 +29,8 @@ export async function GET(request: NextRequest) {
 
     try {
         const now = new Date();
-        const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const last24h = new Date(now.getTime() - DAY_MS);
+        const last7d = new Date(now.getTime() - 7 * DAY_MS);
 
         // Get user statistics
         const [
@@ -105,13 +112,9 @@ export async function GET(request: NextRequest) {
             setCsrfCookie(response);
         }
 
-        return response;
+        return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
 
     } catch (error) {
-        console.error('[Admin Stats] Error:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch statistics' },
-            { status: 500 }
-        );
+        return handleError(error);
     }
 }

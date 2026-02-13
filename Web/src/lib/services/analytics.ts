@@ -1,6 +1,6 @@
 import { Activity, MarathonShape } from '@/lib/types';
 import { METRICS } from '@/lib/constants';
-import { calculateWeightedEffectiveVO2max, calculateMarathonShape } from '@/lib/metrics/runalyze';
+import { calculateWeightedEffectiveVO2max, calculateMarathonShape, ActivityForShape } from '@/lib/metrics/runalyze';
 import { calculateFitnessHistory, DailyLoad, FitnessHistory } from '@/lib/metrics/fitness';
 
 /**
@@ -127,7 +127,7 @@ export class AnalyticsService {
     /**
      * Wrapper for Runalyze VO2max calculations
      */
-    static calculateVO2max(activities: any[], maxHr: number, correctionFactor: number): { rawVO2max: number, effectiveVO2max: number } {
+    static calculateVO2max(activities: ActivityForShape[], maxHr: number, correctionFactor: number): { rawVO2max: number, effectiveVO2max: number } {
         const rawVO2max = calculateWeightedEffectiveVO2max(activities, maxHr, 1.0); // 1.0 for raw
         // The original logic applied the user's correction factor to the raw value
         // "calibrationFactor" in the original code passed to calculateWeightedEffectiveVO2max was actually 'marathonShapeFactor' which seems wrong for VO2max calc?
@@ -138,7 +138,7 @@ export class AnalyticsService {
         return { rawVO2max, effectiveVO2max };
     }
 
-    static calculateShape(runActivities: any[], crossTrainingActivities: any[], effectiveVO2max: number): MarathonShape {
+    static calculateShape(runActivities: ActivityForShape[], crossTrainingActivities: ActivityForShape[], effectiveVO2max: number): MarathonShape {
         return calculateMarathonShape(
             runActivities,
             effectiveVO2max,

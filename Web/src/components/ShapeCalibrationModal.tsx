@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Calculator } from 'lucide-react';
 import { solveCalibrationFactor } from '@/lib/metrics/runalyze';
-import { formatTime, predictRaceTime, calculateVdot, type RaceDistance } from '@/lib/metrics/vdot';
+import { formatTime, predictRaceTime, calculateVdot } from '@/lib/metrics/vdot';
 import type { Activity } from '@/lib/types';
 
 /**
@@ -257,7 +257,7 @@ export default function ShapeCalibrationModal({
     const isPending = shapeMutation.isPending || vdotMutation.isPending;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm p-4">
             <div className="bg-surface border border-glass-border rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-glass-border">

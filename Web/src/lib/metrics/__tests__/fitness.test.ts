@@ -33,7 +33,6 @@ describe('Fitness Metrics', () => {
 
     describe('getActivityContribution', () => {
         it('should identify Running correctly', () => {
-            const contrib = getActivityContribution('Run'); // Case insensitive check needed? Impl says upper.
             // The impl does `activityType.toUpperCase()`.
             expect(getActivityContribution('run').contributesToRunningTss).toBe(true);
             expect(getActivityContribution('Ride').contributesToRunningTss).toBe(false);

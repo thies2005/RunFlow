@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { RefreshCw, AlertCircle, BarChart3 } from 'lucide-react';
+import { RefreshCw, AlertCircle, BarChart3, Hand } from 'lucide-react';
 import { Session } from 'next-auth';
 import { UseMutationResult } from '@tanstack/react-query';
 import { RaceCountdown, ActivityList, Footer, UserMenu } from '@/components';
@@ -23,7 +23,7 @@ interface DashboardViewProps {
     error: Error | null;
     onOpenSettings: () => void;
     onOpenProfile: () => void;
-    onEditWorkout: (workout: Workout, complete?: boolean) => void;
+    onEditWorkout: (_workout: Workout, _complete?: boolean) => void;
     onInvalidateQueries: () => void;
     showHeader?: boolean;
 }
@@ -99,9 +99,10 @@ export function DashboardView({
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-8">
                         <div className="flex items-center justify-between">
-                            <h1 className="text-3xl font-bold text-foreground mb-2">
-                                <span className="hidden sm:inline">Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}! 👋</span>
-                                <span className="sm:hidden">Welcome back! 👋</span>
+                            <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
+                                <span className="hidden sm:inline">Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}!</span>
+                                <span className="sm:hidden">Welcome back!</span>
+                                <Hand className="w-8 h-8 text-accent-orange" />
                             </h1>
                             <div className="sm:hidden">
                                 <UserMenu

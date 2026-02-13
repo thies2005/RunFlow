@@ -5,6 +5,12 @@ import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { ActivityType } from '@prisma/client';
 import { cachedResponse } from '@/lib/apiResponse';
+import { validateBody } from '@/lib/validation/validator';
+import { activitySchema } from '@/lib/validation/schemas';
+import { handleError } from '@/lib/errors/handler';
+import { logger } from '@/lib/logging/logger';
+import { recordMetric } from '@/lib/monitoring/metrics';
+import { MINUTE_MS } from '@/lib/constants';
 
 // Type for Prisma where clause with optional filters
 type ActivityWhereClause = {
@@ -15,18 +21,21 @@ type ActivityWhereClause = {
 };
 
 export async function GET(request: NextRequest) {
+    const startTime = Date.now();
+    let isError = false;
+
     try {
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
-            console.error('Activities GET: No session or user ID');
+            logger.error('Activities GET: No session or user ID', { path: request.nextUrl.pathname });
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { searchParams } = new URL(request.url);
-        const limit = parseInt(searchParams.get('limit') || '50');
+        const limit = parseInt(searchParams.get('limit') || '20');
         const offset = parseInt(searchParams.get('offset') || '0');
-        const type = searchParams.get('type'); // Optional filter
+        const type = searchParams.get('type');
         const raceEligible = searchParams.get('raceEligible') === 'true';
 
         const where: ActivityWhereClause = { userId: session.user.id };
@@ -44,7 +53,7 @@ export async function GET(request: NextRequest) {
             const sixMonthsAgo = new Date();
             sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
             where.type = 'RUN';
-            where.distance = { gte: 4500 }; // >= 4.5km
+            where.distance = { gte: 4500 };
             where.startDate = { gte: sixMonthsAgo };
         }
 
@@ -86,6 +95,12 @@ export async function GET(request: NextRequest) {
                     hrZone5Time: true,
                     hrZone6Time: true,
                     hrZone7Time: true,
+                    _count: {
+                        select: {
+                            laps: true,
+                            splits: true,
+                        },
+                    },
                 },
             }),
             prisma.activity.count({ where }),
@@ -114,15 +129,19 @@ export async function GET(request: NextRequest) {
             offset,
         }, { maxAge: 120, staleWhileRevalidate: 60 });
     } catch (error) {
-        console.error('Activities error:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch activities' },
-            { status: 500 }
-        );
+        isError = true;
+        return handleError(error);
+    } finally {
+        const duration = Date.now() - startTime;
+        recordMetric('api.activities.get.response_time', duration);
+        recordMetric('api.activities.get.error', isError ? 1 : 0);
     }
 }
 
 export async function POST(request: NextRequest) {
+    const startTime = Date.now();
+    let isError = false;
+
     try {
         // Rate limiting check (async for Redis support)
         const clientId = getClientIdentifier(request);
@@ -140,66 +159,31 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await request.json();
-        const { name, date, type, distance, duration, hr, hrZones } = body;
-
-        // === Input Validation ===
-
-        // Required fields check
-        if (!name || !date || !distance || !duration) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        const validation = await validateBody(activitySchema, request);
+        if (!validation.success) {
+            return validation.error;
         }
 
-        // Name: string, 1-200 characters
-        if (typeof name !== 'string' || name.length < 1 || name.length > 200) {
-            return NextResponse.json({ error: 'Name must be 1-200 characters' }, { status: 400 });
-        }
+        const { name, date, type, distance, duration, hr, hrZones } = validation.data;
 
-        // Date: valid date
         const parsedDate = new Date(date);
-        if (isNaN(parsedDate.getTime())) {
-            return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
-        }
-
-        // Distance: positive number, max 500km
-        const parsedDistance = parseFloat(String(distance));
-        if (isNaN(parsedDistance) || parsedDistance <= 0 || parsedDistance > 500) {
-            return NextResponse.json({ error: 'Distance must be between 0.001 and 500 km' }, { status: 400 });
-        }
-
-        // Duration: positive integer, max 48 hours in minutes
-        const parsedDuration = parseInt(String(duration), 10);
-        if (isNaN(parsedDuration) || parsedDuration <= 0 || parsedDuration > 2880) {
-            return NextResponse.json({ error: 'Duration must be between 1 and 2880 minutes' }, { status: 400 });
-        }
-
-        // Type: validate against enum
-        const validTypes = ['RUN', 'VIRTUAL_RIDE', 'RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER'];
-        const activityType = type && validTypes.includes(String(type).toUpperCase())
-            ? String(type).toUpperCase()
-            : 'RUN';
-
-        // HR: optional, positive number, 30-250 bpm
-        let parsedHr: number | null = null;
-        if (hr !== undefined && hr !== null && hr !== '') {
-            parsedHr = parseFloat(String(hr));
-            if (isNaN(parsedHr) || parsedHr < 30 || parsedHr > 250) {
-                return NextResponse.json({ error: 'Heart rate must be between 30 and 250 bpm' }, { status: 400 });
-            }
-        }
+        const parsedDistance = distance;
+        const parsedDuration = duration;
+        const parsedHr = hr;
+        const activityType = type || 'RUN';
 
         // === Duplicate Check ===
         // Check if an activity with the same start date (within 1 minute) and type already exists
-        const startTime = parsedDate.getTime();
-        const oneMinute = 60 * 1000;
+        const activityTimestamp = parsedDate.getTime();
+        const oneMinute = MINUTE_MS;
 
         const existingActivity = await prisma.activity.findFirst({
             where: {
                 userId: session.user.id,
                 type: activityType as ActivityType,
                 startDate: {
-                    gte: new Date(startTime - oneMinute),
-                    lte: new Date(startTime + oneMinute),
+                    gte: new Date(activityTimestamp - oneMinute),
+                    lte: new Date(activityTimestamp + oneMinute),
                 }
             }
         });
@@ -254,8 +238,12 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
-        console.error('Create Activity Error:', error);
-        return NextResponse.json({ error: 'Failed to create activity' }, { status: 500 });
+        isError = true;
+        return handleError(error);
+    } finally {
+        const duration = Date.now() - startTime;
+        recordMetric('api.activities.post.response_time', duration);
+        recordMetric('api.activities.post.error', isError ? 1 : 0);
     }
 }
 

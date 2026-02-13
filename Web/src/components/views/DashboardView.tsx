@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { RefreshCw, AlertCircle, BarChart3, Hand } from 'lucide-react';
 import { Session } from 'next-auth';
 import { UseMutationResult } from '@tanstack/react-query';
-import { RaceCountdown, ActivityList, Footer, UserMenu } from '@/components';
+import { RaceCountdown, ActivityList, Footer, UserMenu, UserAvatar } from '@/components';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
@@ -109,12 +109,13 @@ export function DashboardView({
                                     onOpenProfile={onOpenProfile}
                                     onOpenSettings={onOpenSettings}
                                     trigger={
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img
-                                            src={session?.user?.image || ''}
-                                            alt={session?.user?.name || 'User'}
-                                            className="w-10 h-10 rounded-full border border-glass-border"
-                                        />
+                                        <div className="rounded-full border border-glass-border">
+                                            <UserAvatar
+                                                image={session?.user?.image}
+                                                name={session?.user?.name}
+                                                className="w-10 h-10"
+                                            />
+                                        </div>
                                     }
                                 />
                             </div>

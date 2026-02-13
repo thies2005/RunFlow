@@ -145,7 +145,17 @@ export async function POST(request: NextRequest) {
 
                     // Check if AI is enabled for this user
                     const config = await getAiConfig(userId!); // userId is checked above via session
-                    if (!config) throw new Error('AI features not enabled. Add your own API key or contact admin.');
+                    if (!config) {
+                        // Provide specific error message
+                        const userAiSettings = await prisma.userAiSettings.findUnique({ where: { userId: userId! } });
+                        if (!userAiSettings || !userAiSettings.adminAllowed) {
+                            throw new Error('AI access has not been granted by the admin. Contact admin to enable AI for your account.');
+                        } else if (!userAiSettings.aiEnabled) {
+                            throw new Error('AI features are disabled. Enable AI in your settings (click the gear icon).');
+                        } else {
+                            throw new Error('No AI provider configured. Add your own API key in settings or contact admin.');
+                        }
+                    }
 
                     // Check usage limits
                     const usageStatus = await checkUsageLimit(userId!);

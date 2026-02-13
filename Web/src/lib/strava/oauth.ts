@@ -22,13 +22,11 @@ export const authOptions: AuthOptions = {
             authorization: {
                 params: {
                     scope: 'read,activity:read_all,profile:read_all',
-                    approval_prompt: 'force',
+                    approval_prompt: 'auto',
                 },
             },
         }),
         CredentialsProvider({
-
-
             credentials: {
                 email: { label: 'Email', type: 'email' },
                 password: { label: 'Password', type: 'password' }
@@ -302,5 +300,3 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
     // Return the plaintext access token for immediate use
     return data.access_token;
 }
-
-

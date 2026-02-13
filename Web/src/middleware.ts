@@ -120,7 +120,7 @@ export async function middleware(request: NextRequest) {
         `default-src 'self'`,
         `script-src 'self' 'unsafe-inline'`,
         `style-src 'self' 'unsafe-inline'`,
-        `img-src 'self' data: https://*.strava.com https://*.googleusercontent.com`,
+        `img-src 'self' data: https://*.strava.com https://*.googleusercontent.com https://dgalywyr863hv.cloudfront.net https://avatars.githubusercontent.com`,
         `font-src 'self' data:`,
         `connect-src 'self' https://www.strava.com https://api.openai.com`,
         `frame-src 'none'`,

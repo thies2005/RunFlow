@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 
 
 
@@ -20,9 +21,13 @@ export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    // Validate CSRF token
     if (!validateCsrfToken(request)) {
         return csrfValidationErrorResponse();
+    }
+
+    const rateLimit = await adminRateLimit(request, 'write');
+    if (!rateLimit.success) {
+        return rateLimit.error;
     }
 
     const authResult = await requireAdmin(request);
@@ -69,12 +74,14 @@ export async function POST(
             },
         });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             success: true,
             usageTier: settings.usageTier,
             adminAllowed: settings.adminAllowed,
             aiEnabled: settings.aiEnabled,
         });
+
+        return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
         console.error('Set user AI tier error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

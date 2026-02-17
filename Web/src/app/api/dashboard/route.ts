@@ -8,6 +8,7 @@ import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/apiResponse';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
+import { handleError } from '@/lib/errors/handler';
 
 export const dynamic = 'force-dynamic';
 
@@ -232,7 +233,6 @@ export async function GET(req: NextRequest) {
         }, { maxAge: 60, staleWhileRevalidate: 30 });
 
     } catch (error) {
-        console.error('Dashboard API Error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return handleError(error);
     }
 }

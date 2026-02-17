@@ -1,11 +1,12 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { BarChart2 } from 'lucide-react';
 
 interface Props {
     children: ReactNode;
     fallback?: ReactNode;
-    onError?: (error: Error, errorInfo: ErrorInfo) => void;
+    onError?: (_error: Error, _errorInfo: ErrorInfo) => void;
 }
 
 interface State {
@@ -40,7 +41,7 @@ export class ChartErrorBoundary extends Component<Props, State> {
 
             return (
                 <div className="glass-card p-6 h-64 flex flex-col items-center justify-center">
-                    <span className="text-4xl mb-4">📊</span>
+                    <BarChart2 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                     <p className="text-gray-400">Unable to display chart</p>
                     <p className="text-sm text-gray-500 mt-2">
                         Try refreshing the page or syncing new data

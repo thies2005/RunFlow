@@ -174,7 +174,7 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
                                 outerRadius={90}
                                 paddingAngle={2}
                                 dataKey="value"
-                                label={({ name, percent }) => percent > 0.05 ? `${Math.round(percent * 100)}%` : ''}
+                                label={({ percent }) => percent > 0.05 ? `${Math.round(percent * 100)}%` : ''}
                                 labelLine={false}
                             >
                                 {pieData.map((entry, index) => (

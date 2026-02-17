@@ -1,5 +1,6 @@
 
 import nodemailer from 'nodemailer';
+import { logger } from '@/lib/logging/logger';
 
 export const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -14,7 +15,7 @@ export const transporter = nodemailer.createTransport({
 const DEFAULT_FROM = process.env.SMTP_FROM || '"RunFlow" <noreply@runflow.app>';
 
 export async function sendWelcomeEmail(email: string, code: string) {
-    console.log(`[Email] Attempting to send welcome email to: ${email}`);
+    logger.info('Attempting to send welcome email', { email });
     try {
         const info = await transporter.sendMail({
             from: DEFAULT_FROM,
@@ -33,16 +34,16 @@ export async function sendWelcomeEmail(email: string, code: string) {
                 </div>
             `
         });
-        console.log(`[Email] Welcome email sent successfully to ${email}. MessageId: ${info.messageId}`);
+        logger.info('Welcome email sent successfully', { email, messageId: info.messageId });
         return info;
     } catch (error) {
-        console.error(`[Email] Failed to send welcome email to ${email}:`, error);
+        logger.error('Failed to send welcome email', { email, error: error instanceof Error ? error.message : String(error) });
         throw error;
     }
 }
 
 export async function sendPasswordResetEmail(email: string, code: string) {
-    console.log(`[Email] Attempting to send password reset email to: ${email}`);
+    logger.info('Attempting to send password reset email', { email });
     try {
         const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login`;
         const info = await transporter.sendMail({
@@ -71,10 +72,10 @@ export async function sendPasswordResetEmail(email: string, code: string) {
                 </div>
             `
         });
-        console.log(`[Email] Password reset email sent successfully to ${email}. MessageId: ${info.messageId}`);
+        logger.info('Password reset email sent successfully', { email, messageId: info.messageId });
         return info;
     } catch (error) {
-        console.error(`[Email] Failed to send password reset email to ${email}:`, error);
+        logger.error('Failed to send password reset email', { email, error: error instanceof Error ? error.message : String(error) });
         throw error;
     }
 }

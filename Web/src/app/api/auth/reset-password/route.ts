@@ -2,9 +2,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuthCode } from '@/lib/auth/tokens';
-import { hashPassword } from '@/lib/auth/auth-email';
+import { hashPassword, validatePassword } from '@/lib/auth/auth-email';
 import { AuthCodeType } from '@prisma/client';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
+import { handleError } from '@/lib/errors/handler';
 
 export async function POST(request: NextRequest) {
     try {
@@ -34,8 +35,14 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // specific password validation could go here, but assumed frontend does it too
-        // or we rely on the auth-email lib
+        const passwordValidation = validatePassword(password);
+        if (!passwordValidation.valid) {
+            return NextResponse.json(
+                { error: passwordValidation.errors[0] },
+                { status: 400 }
+            );
+        }
+
         const passwordHash = await hashPassword(password);
 
         await prisma.user.update({
@@ -50,10 +57,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true });
 
     } catch (error) {
-        console.error('Reset password error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
+        return handleError(error);
     }
 }

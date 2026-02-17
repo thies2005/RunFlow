@@ -14,3 +14,18 @@ yarn-error.log*
 # Capacitor
 android/
 ios/
+
+# Docker files
+Dockerfile
+docker-compose*.yml
+
+# Build artifacts and development
+backups/
+scripts/
+.agent/
+tests/
+jest.config*
+playwright*
+
+# Documentation
+*.md

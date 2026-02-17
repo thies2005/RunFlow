@@ -3,7 +3,7 @@
 import { signIn, useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Activity, Target, TrendingUp, Zap, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Activity, Target, TrendingUp, Zap, Mail, Lock, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ConnectWithStravaButton } from '@/components';

@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession } from "next-auth"
+import { DefaultSession } from "next-auth"
 
 declare module 'cookie';
 
@@ -6,7 +6,7 @@ declare module "next-auth" {
     /**
      * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
      */
-    interface Session {
+    interface Session { // eslint-disable-line no-unused-vars
         user: {
             id: string;
             name?: string | null;

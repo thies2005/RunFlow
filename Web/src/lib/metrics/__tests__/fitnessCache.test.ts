@@ -40,7 +40,7 @@ describe('Fitness Cache', () => {
     });
 
     // Mock activities
-    const activities = [];
+    const activities: any[] = [];
     // Just return empty or some dummy activities, doesn't matter for the DB call count logic
     // The logic iterates days regardless of activities.
     (prisma.activity.findMany as jest.Mock).mockResolvedValue(activities);

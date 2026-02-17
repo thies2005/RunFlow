@@ -2,10 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { RefreshCw, AlertCircle, BarChart3 } from 'lucide-react';
+import { RefreshCw, AlertCircle, BarChart3, Hand } from 'lucide-react';
 import { Session } from 'next-auth';
 import { UseMutationResult } from '@tanstack/react-query';
-import { RaceCountdown, ActivityList, Footer, UserMenu } from '@/components';
+import { RaceCountdown, ActivityList, Footer, UserMenu, UserAvatar } from '@/components';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
@@ -23,7 +23,7 @@ interface DashboardViewProps {
     error: Error | null;
     onOpenSettings: () => void;
     onOpenProfile: () => void;
-    onEditWorkout: (workout: Workout, complete?: boolean) => void;
+    onEditWorkout: (_workout: Workout, _complete?: boolean) => void;
     onInvalidateQueries: () => void;
     showHeader?: boolean;
 }
@@ -99,21 +99,23 @@ export function DashboardView({
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="mb-8">
                         <div className="flex items-center justify-between">
-                            <h1 className="text-3xl font-bold text-foreground mb-2">
-                                <span className="hidden sm:inline">Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}! 👋</span>
-                                <span className="sm:hidden">Welcome back! 👋</span>
+                            <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
+                                <span className="hidden sm:inline">Welcome back, {session?.user?.name?.split(' ')[0] || 'Runner'}!</span>
+                                <span className="sm:hidden">Welcome back!</span>
+                                <Hand className="w-8 h-8 text-accent-orange" />
                             </h1>
                             <div className="sm:hidden">
                                 <UserMenu
                                     onOpenProfile={onOpenProfile}
                                     onOpenSettings={onOpenSettings}
                                     trigger={
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img
-                                            src={session?.user?.image || ''}
-                                            alt={session?.user?.name || 'User'}
-                                            className="w-10 h-10 rounded-full border border-glass-border"
-                                        />
+                                        <div className="rounded-full border border-glass-border">
+                                            <UserAvatar
+                                                image={session?.user?.image}
+                                                name={session?.user?.name}
+                                                className="w-10 h-10"
+                                            />
+                                        </div>
                                     }
                                 />
                             </div>

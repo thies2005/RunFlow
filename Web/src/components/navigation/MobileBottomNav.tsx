@@ -1,12 +1,5 @@
 'use client';
 
-import { Home, Calendar, BarChart3, Bot } from 'lucide-react';
-
-interface MobileBottomNavProps {
-    activeIndex: number;
-    onTabChange: (index: number) => void;
-}
-
 // Tabs are now passed as props
 export interface NavTab {
     icon: any;
@@ -16,7 +9,7 @@ export interface NavTab {
 
 interface MobileBottomNavProps {
     activeIndex: number;
-    onTabChange: (index: number) => void;
+    onTabChange: (_index: number) => void;
     tabs: NavTab[];
 }
 

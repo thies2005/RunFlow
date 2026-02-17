@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Copy, Key, Shield, Zap, Database, Activity, BarChart, Trophy, Heart } from 'lucide-react';
+import { ArrowLeft, Key, Shield, Zap, Database, Activity, BarChart, Trophy, Heart } from 'lucide-react';
 
 export const metadata: Metadata = {
     title: 'RunFlow API Documentation',

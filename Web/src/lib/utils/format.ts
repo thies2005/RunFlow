@@ -1,3 +1,5 @@
+import { SECONDS_PER_HOUR } from '@/lib/constants';
+
 /**
  * Shared formatting utilities for RunFlow
  * L-02: Consolidated time/duration/pace formatting functions
@@ -9,8 +11,8 @@
 export function formatDuration(seconds: number | null | undefined): string {
     if (seconds === null || seconds === undefined || seconds <= 0) return '0:00';
 
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
+    const hours = Math.floor(seconds / SECONDS_PER_HOUR);
+    const mins = Math.floor((seconds % SECONDS_PER_HOUR) / 60);
     const secs = Math.round(seconds % 60);
 
     if (hours > 0) {
@@ -25,8 +27,8 @@ export function formatDuration(seconds: number | null | undefined): string {
 export function formatRaceTime(totalSeconds: number): string {
     if (totalSeconds <= 0) return '0:00';
 
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const hours = Math.floor(totalSeconds / SECONDS_PER_HOUR);
+    const minutes = Math.floor((totalSeconds % SECONDS_PER_HOUR) / 60);
     const seconds = Math.round(totalSeconds % 60);
 
     if (hours > 0) {
@@ -80,7 +82,7 @@ export function parseTimeToSeconds(timeStr: string): number {
 
     if (parts.length === 3) {
         // HH:MM:SS
-        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        return parts[0] * SECONDS_PER_HOUR + parts[1] * 60 + parts[2];
     } else if (parts.length === 2) {
         // MM:SS
         return parts[0] * 60 + parts[1];

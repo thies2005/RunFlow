@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { syncUserActivities, getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
+import { handleError } from '@/lib/errors/handler';
+import { logger } from '@/lib/logging/logger';
 
 export async function POST(request: NextRequest) {
     try {
@@ -20,8 +22,7 @@ export async function POST(request: NextRequest) {
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
-            console.error('Sync POST: No session or user ID');
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return handleError(new Error('Unauthorized'));
         }
 
         // Check if sync already in progress
@@ -38,39 +39,30 @@ export async function POST(request: NextRequest) {
         const range = body.range || 'SINCE_LAST_ACTIVITY'; // Default to incremental sync to save API calls
 
         // Start sync
-        console.log(`Starting sync for user ${session.user.id} with range: ${range}`);
+        logger.info('Starting sync', { userId: session.user.id, range });
         const result = await syncUserActivities(session.user.id, range);
-        console.log(`Sync complete for user ${session.user.id}:`, result);
+        logger.info('Sync complete', { userId: session.user.id, result });
 
         return NextResponse.json({
             success: true,
             ...result,
         }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {
-        console.error('Sync error:', error);
-        return NextResponse.json(
-            { error: 'Failed to sync activities' },
-            { status: 500 }
-        );
+        return handleError(error);
     }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
-            console.error('Sync GET: No session or user ID');
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return handleError(new Error('Unauthorized'));
         }
 
         const status = await getSyncStatus(session.user.id);
         return NextResponse.json(status);
     } catch (error) {
-        console.error('Sync status error:', error);
-        return NextResponse.json(
-            { error: 'Failed to get sync status' },
-            { status: 500 }
-        );
+        return handleError(error);
     }
 }

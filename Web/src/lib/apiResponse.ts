@@ -5,6 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { safeStringify } from '@/lib/json/serializer';
 
 interface CacheOptions {
     /** Max age in seconds for the cache. Default: 300 (5 minutes) */
@@ -34,12 +35,14 @@ export function cachedResponse<T>(
     } = options;
 
     const visibility = isPrivate ? 'private' : 'public';
+    const jsonString = safeStringify(data);
 
-    return NextResponse.json(data, {
+    return new NextResponse(jsonString, {
         status,
         headers: {
             'Cache-Control': `${visibility}, s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`,
             'Vary': 'Accept-Encoding, Authorization',
+            'Content-Type': 'application/json',
         },
     });
 }
@@ -49,12 +52,14 @@ export function cachedResponse<T>(
  * Use for sensitive data or real-time endpoints
  */
 export function noCacheResponse<T>(data: T, status: number = 200): NextResponse<T> {
-    return NextResponse.json(data, {
+    const jsonString = safeStringify(data);
+    return new NextResponse(jsonString, {
         status,
         headers: {
             'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
             'Pragma': 'no-cache',
             'Expires': '0',
+            'Content-Type': 'application/json',
         },
     });
 }

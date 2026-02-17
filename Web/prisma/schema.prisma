@@ -21,6 +21,7 @@ model User {
   name          String?
   image         String?
   emailVerified DateTime?
+  isAdmin       Boolean   @default(false)
 
   // Email/Password Authentication
   passwordHash String? // bcrypt hashed password for email auth users
@@ -130,7 +131,11 @@ model GlobalAiSettings {
 
   // Active Provider Configuration
   activeProviderId String?
-  activeProvider   AiProvider? @relation(fields: [activeProviderId], references: [id])
+  activeProvider   AiProvider? @relation("ActiveProvider", fields: [activeProviderId], references: [id])
+
+  // Fallback Provider Configuration
+  fallbackProviderId String?
+  fallbackProvider   AiProvider? @relation("FallbackProvider", fields: [fallbackProviderId], references: [id])
 
   updatedAt DateTime @updatedAt
 }
@@ -152,7 +157,8 @@ model AiProvider {
   monthlyTokenLimit       BigInt?  // Null = unlimited. Using BigInt for high limits.
   lastUsageReset          DateTime @default(now())
 
-  globalSettings GlobalAiSettings[]
+  activeInSettings    GlobalAiSettings[] @relation("ActiveProvider")
+  fallbackInSettings  GlobalAiSettings[] @relation("FallbackProvider")
   dailyUsage     AiDailyTokenUsage[]
 
   createdAt DateTime @default(now())
@@ -347,6 +353,8 @@ model Activity {
   // Relations
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedWorkouts Workout[]
+  laps           Lap[]
+  splits         Split[]
 
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -357,6 +365,37 @@ model Activity {
   @@index([userId, type, startDate]) // For filtering by type within date range
   @@index([userId, hasHeartrate]) // For HR-based metrics queries
   @@index([userId, estimatedVdot]) // For VDOT trend analytics
+  @@index([stravaId])
+}
+
+model Lap {
+  id         String    @id @default(cuid())
+  activityId String
+  index      Int
+  startDate  DateTime
+  endDate    DateTime
+  distance   Float?
+  movingTime Int?
+  totalElevationGain Float?
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([activityId])
+}
+
+model Split {
+  id         String    @id @default(cuid())
+  activityId String
+  index      Int
+  distance   Float?
+  movingTime Int?
+  averageSpeed Float?
+  averageHr    Float?
+  totalElevationGain Float?
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([activityId])
 }
 
 enum ActivityType {

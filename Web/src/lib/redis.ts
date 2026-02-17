@@ -3,28 +3,18 @@
 
 // Minimal Redis interface for our usage
 export interface RedisClient {
-    set(key: string, value: string, options?: { ex?: number; nx?: boolean }): Promise<string | null>;
-    get(key: string): Promise<string | null>;
-    del(key: string): Promise<number>;
-    incr(key: string): Promise<number>;
-    expire(key: string, seconds: number): Promise<number>;
-    ttl(key: string): Promise<number>;
+    set(_key: string, _value: string, _options?: { ex?: number; nx?: boolean }): Promise<string | null>;
+    get(_key: string): Promise<string | null>;
+    del(_key: string): Promise<number>;
+    incr(_key: string): Promise<number>;
+    expire(_key: string, _seconds: number): Promise<number>;
+    ttl(_key: string): Promise<number>;
 }
+
+import { logger } from '@/lib/logging/logger';
 
 let redisClient: RedisClient | null = null;
 let redisInitialized = false;
-
-/**
- * Dynamic import helper for optional @upstash/redis dependency
- * Using Function constructor as a safer alternative to eval() for optional dynamic requires
- * This prevents webpack from bundling the dependency at build time
- */
-function dynamicRequire(moduleName: string): unknown {
-    // Using Function constructor instead of eval() for better security
-    // This is still a dynamic require but with a slightly better security profile
-    const requireFn = new Function('return require')() as NodeRequire;
-    return requireFn(moduleName);
-}
 
 /**
  * Initialize and return the Redis client if authentication is available.
@@ -39,18 +29,17 @@ export async function getRedisClient(): Promise<RedisClient | null> {
     const redisToken = process.env.REDIS_TOKEN;
 
     if (!redisUrl) {
-        redisInitialized = true; // Mark as initialized (but null) to stop retry
+        redisInitialized = true;
         return null;
     }
 
     try {
-        // Dynamic import to prevent webpack from bundling @upstash/redis
-        const { Redis: DynamicRedis } = dynamicRequire('@upstash/redis') as { Redis: new (options: { url: string; token: string }) => RedisClient };
+        const { Redis: DynamicRedis } = await import('@upstash/redis') as { Redis: new (_options: { url: string; token: string }) => RedisClient };
 
         redisClient = new DynamicRedis({ url: redisUrl, token: redisToken || '' });
-        console.log('[Redis] Client initialized successfully');
+        logger.info('Redis client initialized successfully');
     } catch (error) {
-        console.warn('[Redis] Failed to initialize client (optional dependency missing?):', error);
+        logger.warn('Failed to initialize Redis client (optional dependency missing)', { error: error instanceof Error ? error.message : String(error) });
     }
 
     redisInitialized = true;
@@ -72,7 +61,7 @@ export async function acquireLock(key: string, ttlSeconds: number): Promise<bool
         const result = await redis.set(key, 'locked', { ex: ttlSeconds, nx: true });
         return result === 'OK';
     } catch (error) {
-        console.error('[Redis] Lock error:', error);
+        logger.error('Redis lock error', { key, error: error instanceof Error ? error.message : String(error) });
         return true; // Fail open to allow DB lock to handle it
     }
 }
@@ -87,6 +76,6 @@ export async function releaseLock(key: string): Promise<void> {
     try {
         await redis.del(key);
     } catch (error) {
-        console.error('[Redis] Release lock error:', error);
+        logger.error('Redis release lock error', { key, error: error instanceof Error ? error.message : String(error) });
     }
 }

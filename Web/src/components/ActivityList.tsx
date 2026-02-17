@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, memo, useCallback, useMemo } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
     Activity,
@@ -58,17 +58,17 @@ function isCrossTraining(type: string): boolean {
 
 const getWorkoutTypeStyle = (type: WorkoutType) => {
     switch (type) {
-        case 'LONG_RUN': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-        case 'TEMPO': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-        case 'INTERVALS': return 'bg-red-500/10 text-red-400 border-red-500/20';
-        case 'RACE': return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';
-        case 'RECOVERY': return 'bg-green-500/10 text-green-400 border-green-500/20';
-        case 'STRENGTH': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-        default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+        case 'LONG_RUN': return 'bg-workout-long-run/10 text-workout-long-run border-workout-long-run/20';
+        case 'TEMPO': return 'bg-workout-tempo/10 text-workout-tempo border-workout-tempo/20';
+        case 'INTERVALS': return 'bg-workout-interval/10 text-workout-interval border-workout-interval/20';
+        case 'RACE': return 'bg-workout-race/10 text-workout-race border-workout-race/20';
+        case 'RECOVERY': return 'bg-workout-recovery/10 text-workout-recovery border-workout-recovery/20';
+        case 'STRENGTH': return 'bg-workout-strength/10 text-workout-strength border-workout-strength/20';
+        default: return 'bg-workout-easy/10 text-workout-easy border-workout-easy/20';
     }
 };
 
-// ⚡ Bolt: Wrapped in memo to prevent unnecessary re-renders during list updates
+// Bolt: Wrapped in memo to prevent unnecessary re-renders during list updates
 const ActivityCard = memo(function ActivityCard({ activity }: { activity: ActivityListItem }) {
     const crossTraining = isCrossTraining(activity.type);
     const showTag = activity.trainingType && activity.trainingType !== 'EASY' && activity.trainingType !== 'OTHER';
@@ -184,7 +184,7 @@ ActivityCard.displayName = 'ActivityCard';
 export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionFactor }: ActivityListProps) {
     const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
 
-    // ⚡ Memoized handlers to prevent re-creating functions on each render
+    // Memoized handlers to prevent re-creating functions on each render
     const handleActivityClick = useCallback((activity: ActivityListItem) => {
         setSelectedActivity(activity);
     }, []);
@@ -219,7 +219,7 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
     if (activities.length === 0) {
         return (
             <div className="glass-card p-8 text-center">
-                <span className="text-4xl mb-4 block">🏃</span>
+                <Activity className="w-16 h-16 mx-auto text-gray-400 mb-4 block" />
                 <p className="text-foreground-muted">No activities yet</p>
                 <p className="text-sm text-foreground-muted mt-2">
                     Connect Strava and sync your activities to get started
@@ -232,14 +232,16 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
         <>
             <div className="space-y-3">
                 {activities.map((activity, index) => (
-                    <div
+                    <button
                         key={activity.id}
-                        className="animate-slide-in cursor-pointer"
+                        type="button"
+                        className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full"
                         style={{ animationDelay: `${index * 0.05}s` }}
                         onClick={() => handleActivityClick(activity)}
+                        aria-label={`View details for ${activity.name}`}
                     >
                         <ActivityCard activity={activity} />
-                    </div>
+                    </button>
                 ))}
             </div>
 

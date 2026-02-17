@@ -5,6 +5,8 @@ import { createAuthCode } from '@/lib/auth/tokens';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { AuthCodeType } from '@prisma/client';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
+import { logger } from '@/lib/logging/logger';
+import { handleError } from '@/lib/errors/handler';
 
 export async function POST(request: NextRequest) {
     try {
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
             try {
                 await sendPasswordResetEmail(user.email!, code);
             } catch (emailError) {
-                console.error(`[Auth ForgotPassword] Failed to send reset email to ${user.email}:`, emailError);
+                logger.error('Failed to send reset email', { email: user.email, error: emailError instanceof Error ? emailError.message : String(emailError) });
             }
         }
 
@@ -50,10 +52,6 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
-        console.error('Forgot password error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
+        return handleError(error);
     }
 }

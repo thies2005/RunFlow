@@ -3,9 +3,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuthCode } from '@/lib/auth/tokens';
 import { AuthCodeType } from '@prisma/client';
+import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limiting - M-01 fix
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = await checkRateLimitAsync(clientId, { limit: 10, windowSeconds: 3600, prefix: 'verify-email' });
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json({ error: 'Too many verification attempts. Please try again later.' }, { status: 429 });
+        }
+
         const { email, code } = await request.json();
 
         if (!email || !code) {

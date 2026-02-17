@@ -41,6 +41,10 @@ jest.mock('@/lib/metrics/vdot', () => ({
     calculateTrainingPaces: jest.fn(() => ({ threshold: 300 })),
 }));
 
+jest.mock('@/lib/utils/bigint', () => ({
+    safeBigInt: jest.fn((val) => BigInt(val)),
+}));
+
 jest.mock('@/lib/metrics/fitnessCache', () => ({
     updateFitnessCache: jest.fn(),
 }));
@@ -59,6 +63,7 @@ jest.mock('@/lib/redis', () => ({
         del: jest.fn(),
         incr: jest.fn(() => Promise.resolve(1)),
         expire: jest.fn(),
+        ttl: jest.fn(() => Promise.resolve(100)),
     })),
 }));
 

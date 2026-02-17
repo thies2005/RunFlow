@@ -15,7 +15,6 @@ import {
     formatContextForAi,
     buildSystemPrompt,
     checkUsageLimit,
-    checkProviderLimit,
     incrementUsage,
     buildExtendedHistoryContext,
     generateCompletion,
@@ -24,6 +23,8 @@ import {
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
+import { handleError } from '@/lib/errors/handler';
+import { logger } from '@/lib/logging/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,12 +45,13 @@ Reply ONLY with "HISTORY_QUERY" or "NORMAL".`;
         ]);
         return response.trim().toUpperCase().includes('HISTORY_QUERY') ? 'HISTORY_QUERY' : 'NORMAL';
     } catch (e) {
-        console.error('Intent detection failed', e);
+        logger.error('Intent detection failed', { error: e instanceof Error ? e.message : String(e) });
         return 'NORMAL';
     }
 }
 
 export async function POST(request: NextRequest) {
+    let userId: string | undefined;
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
@@ -59,7 +61,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        const userId = session.user.id;
+        userId = session.user.id;
 
         // Per-request rate limit: 10 requests per minute per user
         const rateLimitResult = await checkRateLimitAsync(userId, {
@@ -120,7 +122,7 @@ export async function POST(request: NextRequest) {
 
         const readableStream = new ReadableStream({
             async start(controller) {
-                console.log(`AI Chat: Starting stream for user ${userId}, session ${sessionId}`);
+                logger.info('AI Chat: Starting stream', { userId, sessionId });
                 try {
                     // 1. Send Session ID immediately to acknowledge the request
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sessionId })}\n\n`));
@@ -138,15 +140,25 @@ export async function POST(request: NextRequest) {
 
                     // Create user message immediately so it's in the DB if the frontend reloads history
                     await prisma.chatMessage.create({
-                        data: { userId, role: 'user', content: message, activityId, sessionId },
+                        data: { userId: userId!, role: 'user', content: message, activityId, sessionId },
                     });
 
                     // Check if AI is enabled for this user
-                    const config = await getAiConfig(userId);
-                    if (!config) throw new Error('AI features not enabled. Add your own API key or contact admin.');
+                    let config = await getAiConfig(userId!); // userId is checked above via session
+                    if (!config) {
+                        // Provide specific error message
+                        const userAiSettings = await prisma.userAiSettings.findUnique({ where: { userId: userId! } });
+                        if (!userAiSettings || !userAiSettings.adminAllowed) {
+                            throw new Error('AI access has not been granted by the admin. Contact admin to enable AI for your account.');
+                        } else if (!userAiSettings.aiEnabled) {
+                            throw new Error('AI features are disabled. Enable AI in your settings (click the gear icon).');
+                        } else {
+                            throw new Error('No AI provider configured. Add your own API key in settings or contact admin.');
+                        }
+                    }
 
                     // Check usage limits
-                    const usageStatus = await checkUsageLimit(userId);
+                    const usageStatus = await checkUsageLimit(userId!);
                     if (!usageStatus.canUse) throw new Error(usageStatus.reason);
 
                     // Get global and user settings
@@ -156,14 +168,14 @@ export async function POST(request: NextRequest) {
                     ]);
 
                     // Build context
-                    const userContext = await buildUserContext(userId);
+                    const userContext = await buildUserContext(userId!);
                     let contextString = formatContextForAi(userContext);
 
                     // Lazy load extended history
                     if ((userSettings as any)?.accessAllActivities) {
                         const intent = await detectIntent(config, message);
                         if (intent === 'HISTORY_QUERY') {
-                            const extendedHistory = await buildExtendedHistoryContext(userId);
+                            const extendedHistory = await buildExtendedHistoryContext(userId!);
                             contextString += extendedHistory;
                         }
                     }
@@ -205,8 +217,25 @@ export async function POST(request: NextRequest) {
                     const inputTokens = countTokens(`${systemPrompt}\n\n--- Athlete Data ---\n${contextString}`, config.model) + countTokens(message, config.model);
 
                     // 3. Start the actual AI stream
-                    console.log(`[STREAM START] Session: ${sessionId}, User: ${userId}, Model: ${config.model}`);
-                    const stream = await streamChat(config, aiMessages);
+                    logger.debug('Stream starting', { sessionId, userId, model: config.model });
+
+                    let stream;
+                    try {
+                        stream = await streamChat(config, aiMessages);
+                    } catch (primaryError) {
+                        if (config.fallback) {
+                            logger.warn('Primary provider failed, switching to fallback', {
+                                primaryModel: config.model,
+                                fallbackModel: config.fallback.model,
+                                error: primaryError instanceof Error ? primaryError.message : String(primaryError)
+                            });
+                            // Use fallback config but keep same context
+                            config = config.fallback;
+                            stream = await streamChat(config, aiMessages);
+                        } else {
+                            throw primaryError;
+                        }
+                    }
 
                     let tokenCount = 0;
                     for await (const token of stream) {
@@ -216,11 +245,11 @@ export async function POST(request: NextRequest) {
 
                         // Log progress every 10 tokens
                         if (tokenCount % 10 === 0) {
-                            console.log(`[STREAM PROGRESS] Session: ${sessionId}, Tokens: ${tokenCount}, Response length: ${fullResponse.length}`);
+                            logger.debug('Stream progress', { sessionId, tokenCount, responseLength: fullResponse.length });
                         }
                     }
 
-                    console.log(`[STREAM END] Session: ${sessionId}, Total tokens: ${tokenCount}, Final response length: ${fullResponse.length}`);
+                    logger.debug('Stream ended', { sessionId, tokenCount, responseLength: fullResponse.length });
 
                     controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
                     controller.close();
@@ -228,7 +257,7 @@ export async function POST(request: NextRequest) {
                     // 4. Post-stream processing (Saving AI response to DB)
                     try {
                         await prisma.chatMessage.create({
-                            data: { userId, role: 'assistant', content: fullResponse, activityId, sessionId },
+                            data: { userId: userId!, role: 'assistant', content: fullResponse, activityId, sessionId },
                         });
                         await prisma.chatSession.update({
                             where: { id: sessionId },
@@ -236,16 +265,28 @@ export async function POST(request: NextRequest) {
                         });
 
                         const outputTokens = countTokens(fullResponse, config.model);
-                        await incrementUsage(userId, { inputTokens, outputTokens }, config.providerId);
-                        console.log(`[DB SAVE] Session: ${sessionId}, Saved ${fullResponse.length} chars to database`);
+                        await incrementUsage(userId!, { inputTokens, outputTokens }, config.providerId);
+                        logger.debug('Saved AI response to database', { sessionId, responseLength: fullResponse.length });
                     } catch (dbError) {
-                        console.error('[DB ERROR] Failed to save AI response or update usage', dbError);
+                        logger.error('Failed to save AI response or update usage', { sessionId, error: dbError instanceof Error ? dbError.message : String(dbError) });
                     } finally {
                         clearInterval(heartbeat);
                     }
                 } catch (error) {
-                    console.error(`[STREAM ERROR] Session: ${sessionId}, Error:`, error);
+                    logger.error('Stream error', { sessionId, error: error instanceof Error ? error.message : String(error) });
                     clearInterval(heartbeat);
+
+                    // If no response was generated, clean up the orphaned session/message
+                    if (!fullResponse && sessionId) {
+                        try {
+                            await prisma.chatMessage.deleteMany({ where: { sessionId } });
+                            await prisma.chatSession.delete({ where: { id: sessionId } });
+                            logger.info('Cleaned up empty session after stream error', { sessionId });
+                        } catch (cleanupError) {
+                            logger.warn('Failed to cleanup empty session', { sessionId, error: String(cleanupError) });
+                        }
+                    }
+
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
                     controller.close();
                 }
@@ -260,12 +301,6 @@ export async function POST(request: NextRequest) {
             },
         });
     } catch (error) {
-        console.error('AI Chat error:', error);
-        return new Response(JSON.stringify({
-            error: error instanceof Error ? error.message : String(error)
-        }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+        return handleError(error);
     }
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, memo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart, ComposedChart, Bar } from 'recharts';
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, ComposedChart, Bar } from 'recharts';
 
 interface DataPoint {
     date: string;
@@ -21,7 +21,7 @@ export type TimeRange = 'ALL' | '1Y' | '6M' | '3M' | '1M';
 interface CombinedAnalyticsChartProps {
     data: DataPoint[];
     timeRange: TimeRange;
-    onTimeRangeChange: (range: TimeRange) => void;
+    onTimeRangeChange: (_range: TimeRange) => void;
 }
 
 const SERIES_CONFIG = {
@@ -41,7 +41,7 @@ const SeriesToggleButtons = memo(({
     onToggle
 }: {
     visibleSeries: Record<SeriesKey, boolean>;
-    onToggle: (key: SeriesKey) => void;
+    onToggle: (_key: SeriesKey) => void;
 }) => {
     return (
         <>
@@ -78,7 +78,7 @@ const TimeRangeButtons = memo(({
     onTimeRangeChange
 }: {
     timeRange: TimeRange;
-    onTimeRangeChange: (range: TimeRange) => void;
+    onTimeRangeChange: (_range: TimeRange) => void;
 }) => {
     const ranges: TimeRange[] = ['1M', '3M', '6M', '1Y', 'ALL'];
 
@@ -418,10 +418,10 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
 
             {/* Legend */}
             <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-foreground-muted">
-                <span>🟡 VO2max = Aerobic power</span>
-                <span>🟢 CTL = Long-term fitness</span>
-                <span>🔴 ATL = Short-term fatigue</span>
-                <span>🔵 TSB = Form (CTL - ATL)</span>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-yellow-400"></div><span>VO2max = Aerobic power</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-green-500"></div><span>CTL = Long-term fitness</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-red-500"></div><span>ATL = Short-term fatigue</span></div>
+                <div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div><span>TSB = Form (CTL - ATL)</span></div>
             </div>
         </div >
     );

@@ -119,7 +119,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
     const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
     // Fetch current settings
-    const { data, isLoading, refetch } = useQuery({
+    const { data, isLoading } = useQuery({
         queryKey: ['ai-settings'],
         queryFn: async () => {
             const res = await fetch('/api/ai/settings');
@@ -259,12 +259,12 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)] flex items-center justify-center z-50 p-4">
             <div className="bg-gray-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-800">
                     <div className="flex items-center gap-3">
-                        <Bot className="w-6 h-6 text-purple-400" />
+                        <Bot className="w-6 h-6 text-accent-purple" />
                         <h2 className="text-xl font-semibold text-white">AI Features</h2>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-white">
@@ -276,14 +276,14 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
-                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                            <Loader2 className="w-8 h-8 text-accent-purple animate-spin" />
                         </div>
                     ) : (
                         <>
                             {/* Master Toggle */}
                             <div className={`p-4 rounded-xl border-2 transition-all ${data?.settings?.adminAllowed
                                 ? aiEnabled
-                                    ? 'bg-purple-500/10 border-purple-500/50'
+                                    ? 'bg-accent-purple/10 border-accent-purple/50'
                                     : 'bg-gray-800/50 border-gray-700'
                                 : 'bg-red-500/5 border-red-500/20 grayscale'
                                 }`}>
@@ -301,7 +301,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     <button
                                         onClick={() => setAiEnabled(!aiEnabled)}
                                         disabled={!data?.settings?.adminAllowed}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${aiEnabled ? 'bg-purple-600' : 'bg-gray-700'
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${aiEnabled ? 'bg-accent-purple' : 'bg-gray-700'
                                             } ${!data?.settings?.adminAllowed ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                     >
                                         <span
@@ -318,9 +318,6 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     </div>
                                 )}
                             </div>
-
-                            {/* Status Banner - Deprecated in favor of the master toggle above, but kept for legacy message check if needed */}
-                            {/* {data?.settings?.aiEnabled && ... } */}
 
                             <div className={`space-y-6 transition-all ${!aiEnabled || !data?.settings?.adminAllowed ? 'opacity-50 pointer-events-none' : ''}`}>
 
@@ -387,6 +384,16 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             >
                                                 Zhipu AI (GLM) Preset
                                             </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setCustomBaseUrl('https://openrouter.ai/api/v1');
+                                                    setCustomModel('deepseek/deepseek-r1:free');
+                                                }}
+                                                className="text-[10px] px-2 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-400 rounded border border-gray-700 transition"
+                                            >
+                                                OpenRouter Preset
+                                            </button>
                                         </div>
 
                                         <label htmlFor="customBaseUrl" className="sr-only">Base URL</label>
@@ -396,7 +403,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             placeholder="Base URL (default: https://api.openai.com/v1)"
                                             value={customBaseUrl}
                                             onChange={(e) => setCustomBaseUrl(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-500 focus:outline-none"
+                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-accent-purple focus:outline-none"
                                         />
 
                                         <div className="relative">
@@ -407,7 +414,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                 placeholder={data?.settings?.hasCustomApiKey ? '••••••••••••••••' : 'API Key'}
                                                 value={customApiKey}
                                                 onChange={(e) => setCustomApiKey(e.target.value)}
-                                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 pr-10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                                                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 pr-10 text-white text-sm focus:border-accent-purple focus:outline-none"
                                             />
                                             <button
                                                 type="button"
@@ -425,14 +432,14 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             placeholder="Model (default: gpt-4o-mini)"
                                             value={customModel}
                                             onChange={(e) => setCustomModel(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-500 focus:outline-none"
+                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-accent-purple focus:outline-none"
                                         />
 
                                         {/* Test API Key Button */}
                                         <button
                                             onClick={handleTestApiKey}
                                             disabled={testingKey || !customApiKey}
-                                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition"
+                                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-accent-purple hover:bg-purple-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-sm font-medium transition"
                                         >
                                             {testingKey ? (
                                                 <>
@@ -480,7 +487,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => toggleAllAccess(true)}
-                                                className="text-xs text-purple-400 hover:text-purple-300"
+                                                className="text-xs text-accent-purple hover:text-accent-purple"
                                             >
                                                 Enable All
                                             </button>
@@ -512,7 +519,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                             [option.key]: e.target.checked,
                                                         }))
                                                     }
-                                                    className="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500 focus:ring-offset-gray-900"
+                                                    className="mt-1 w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent-purple focus:ring-accent-purple focus:ring-offset-gray-900"
                                                 />
                                                 <div>
                                                     <p className="text-sm text-white">{option.label}</p>
@@ -536,11 +543,11 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                                 key={mode.value}
                                                 onClick={() => setFeedbackMode(mode.value)}
                                                 className={`p-3 rounded-lg border text-left transition-colors ${feedbackMode === mode.value
-                                                    ? 'border-purple-500 bg-purple-500/10'
+                                                    ? 'border-accent-purple bg-accent-purple/10'
                                                     : 'border-gray-700 hover:border-gray-600'
                                                     }`}
                                             >
-                                                <p className={`text-sm font-medium ${feedbackMode === mode.value ? 'text-purple-300' : 'text-white'
+                                                <p className={`text-sm font-medium ${feedbackMode === mode.value ? 'text-accent-purple' : 'text-white'
                                                     }`}>
                                                     {mode.label}
                                                 </p>
@@ -566,7 +573,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                         onChange={(e) => setCustomPrompt(e.target.value)}
                                         placeholder="I'm recovering from a knee injury and should avoid high-intensity work..."
                                         rows={3}
-                                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-500 focus:outline-none resize-none"
+                                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-accent-purple focus:outline-none resize-none"
                                     />
                                 </div>
 
@@ -599,7 +606,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                     <button
                         onClick={handleSave}
                         disabled={saveMutation.isPending}
-                        className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 transition-colors"
+                        className="px-4 py-2 bg-accent-purple hover:bg-accent-purple text-white rounded-lg flex items-center gap-2 disabled:opacity-50 transition-colors"
                     >
                         {saveMutation.isPending ? (
                             <Loader2 className="w-4 h-4 animate-spin" />

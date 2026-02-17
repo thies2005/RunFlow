@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, RefreshCw, Settings2 } from 'lucide-react';
 import {
-    LineChart, Line, AreaChart, Area, BarChart, Bar,
+    LineChart, Line, AreaChart, Area,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
     PieChart, Pie, Cell
 } from 'recharts';
@@ -23,8 +23,7 @@ import {
 import {
     formatTime,
     calculateTrainingPaces,
-    formatPace,
-    type TrainingPaces
+    formatPace
 } from '@/lib/metrics/vdot';
 import type { Activity, Goal } from '@/lib/types';
 
@@ -131,7 +130,7 @@ export default function AnalyticsPage() {
     });
 
     // Calculated data - uses server data where available, local calculations for derived values only
-    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, racePredictions, combinedData, trainingPaces } = useMemo(() => {
+    const { runalyzeMetrics, vo2TrendData, shapeTrendData, fitnessData, combinedData, trainingPaces } = useMemo(() => {
         const activities: Activity[] = activitiesData?.activities || [];
 
         // Get values from server APIs

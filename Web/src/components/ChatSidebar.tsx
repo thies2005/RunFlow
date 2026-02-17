@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, MessageSquare, Trash2, MoreVertical, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, MessageSquare, Trash2, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface ChatSession {
@@ -58,6 +58,19 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
         if (confirm('Delete this chat?')) {
             setDeletingId(id);
             deleteSession.mutate(id);
+        }
+    };
+
+    const handleDeleteAll = async () => {
+        if (confirm('Are you sure you want to delete ALL chat history? This cannot be undone.')) {
+            try {
+                const res = await fetch('/api/ai/chat/sessions?all=true', { method: 'DELETE' });
+                if (!res.ok) throw new Error('Failed to delete history');
+                queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
+                router.push('/chat');
+            } catch (error) {
+                alert('Failed to delete history');
+            }
         }
     };
 
@@ -120,6 +133,16 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
                         </Link>
                     ))
                 )}
+            </div>
+
+            <div className="p-4 border-t border-white/5">
+                <button
+                    onClick={handleDeleteAll}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete All History</span>
+                </button>
             </div>
         </div>
     );

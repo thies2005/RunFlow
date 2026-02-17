@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 export default function StravaPoweredFooter() {
     return (
         <div className="w-full flex justify-center items-center py-4 bg-transparent mt-8">

@@ -178,8 +178,22 @@ const nextConfig = {
                 hostname: "dgalywyr863hv.cloudfront.net",
                 pathname: "/pictures/**",
             },
+            {
+                protocol: "https",
+                hostname: "*.strava.com",
+            },
+            {
+                protocol: "https",
+                hostname: "lh3.googleusercontent.com",
+            },
+            {
+                protocol: "https",
+                hostname: "avatars.githubusercontent.com",
+            },
         ],
     },
+    // Security headers are now handled in middleware.ts for proper nonce support
+    // Keeping only non-CSP security headers here
     async headers() {
         return [
             {
@@ -187,6 +201,7 @@ const nextConfig = {
                 headers: [
                     { key: 'X-Content-Type-Options', value: 'nosniff' },
                     { key: 'X-Frame-Options', value: 'DENY' },
+                    { key: 'X-XSS-Protection', value: '1; mode=block' },
                     { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
                     { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
                     { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' }

@@ -8,7 +8,14 @@ import { encryptToken } from '@/lib/crypto';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+
 export async function GET(request: NextRequest) {
+    const rateLimit = await adminRateLimit(request, 'read');
+    if (!rateLimit.success) {
+        return rateLimit.error;
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
@@ -33,12 +40,13 @@ export async function GET(request: NextRequest) {
             prisma.userAiSettings.count({ where: { customApiKey: { not: null } } }),
         ]);
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             settings: {
                 defaultBaseUrl: globalSettings.defaultBaseUrl,
                 hasDefaultApiKey: !!globalSettings.defaultApiKey, // Don't return the key itself
                 defaultModel: globalSettings.defaultModel,
                 activeProviderId: globalSettings.activeProviderId,
+                fallbackProviderId: globalSettings.fallbackProviderId,
                 // Tier settings
                 tier1Name: globalSettings.tier1Name,
                 tier1DailyLimit: globalSettings.tier1DailyLimit,
@@ -69,6 +77,8 @@ export async function GET(request: NextRequest) {
                 usersWithCustomKey,
             },
         });
+
+        return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
         console.error('Admin AI settings GET error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -79,9 +89,13 @@ export async function GET(request: NextRequest) {
  * PUT - Update global AI settings
  */
 export async function PUT(request: NextRequest) {
-    // Validate CSRF token
     if (!validateCsrfToken(request)) {
         return csrfValidationErrorResponse();
+    }
+
+    const rateLimit = await adminRateLimit(request, 'write');
+    if (!rateLimit.success) {
+        return rateLimit.error;
     }
 
     const authResult = await requireAdmin(request);
@@ -161,13 +175,14 @@ export async function PUT(request: NextRequest) {
             update: updateData,
         });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             success: true,
             settings: {
                 defaultBaseUrl: settings.defaultBaseUrl,
                 hasDefaultApiKey: !!settings.defaultApiKey,
                 defaultModel: settings.defaultModel,
                 activeProviderId: settings.activeProviderId,
+                fallbackProviderId: settings.fallbackProviderId,
                 dailyMessageLimit: settings.dailyMessageLimit,
                 monthlyMessageLimit: settings.monthlyMessageLimit,
                 systemPrompt: settings.systemPrompt,
@@ -179,10 +194,13 @@ export async function PUT(request: NextRequest) {
                 tier1MonthlyTokenLimit: settings.tier1MonthlyTokenLimit,
             },
         });
+
+        return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
         console.error('Admin AI settings PUT error:', error);
+        // M-20 fix: Don't leak error messages in production
         return NextResponse.json({
-            error: error instanceof Error ? error.message : String(error)
+            error: process.env.NODE_ENV === 'production' ? 'Internal server error' : (error instanceof Error ? error.message : String(error))
         }, { status: 500 });
     }
 }

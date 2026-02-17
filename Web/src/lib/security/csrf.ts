@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { DAY_MS } from '@/lib/constants';
 
 const CSRF_COOKIE_NAME = 'csrf_token';
-const CSRF_TOKEN_EXPIRATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const CSRF_TOKEN_EXPIRATION = DAY_MS; // 24 hours in milliseconds
 
 interface CsrfTokenData {
     token: string;
@@ -16,8 +17,18 @@ export function setCsrfCookie(response: NextResponse): string {
     const token = generateCsrfToken();
     const expiresAt = Date.now() + CSRF_TOKEN_EXPIRATION;
 
+    // Set httpOnly cookie for server-side validation
     response.cookies.set(CSRF_COOKIE_NAME, JSON.stringify({ token, expiresAt }), {
-        httpOnly: false,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: CSRF_TOKEN_EXPIRATION / 1000,
+        path: '/',
+    });
+
+    // Set non-httpOnly cookie for client-side access (same token)
+    response.cookies.set(`${CSRF_COOKIE_NAME}_client`, token, {
+        httpOnly: false, // Client can read this
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: CSRF_TOKEN_EXPIRATION / 1000,

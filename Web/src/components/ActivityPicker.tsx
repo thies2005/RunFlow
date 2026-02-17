@@ -6,7 +6,7 @@ import { Activity, Check, Loader2 } from 'lucide-react';
 
 interface ActivityPickerProps {
     selectedId: string | null;
-    onSelect: (activityId: string | null) => void;
+    onSelect: (_activityId: string | null) => void;
 }
 
 interface RecentActivity {

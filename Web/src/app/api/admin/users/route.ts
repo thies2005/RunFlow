@@ -9,9 +9,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { handleError } from '@/lib/errors/handler';
 
 export async function GET(request: NextRequest) {
-    // Require admin authentication
+    const rateLimit = await adminRateLimit(request, 'read');
+    if (!rateLimit.success) {
+        return rateLimit.error;
+    }
+
     const authResult = await requireAdmin(request);
     if ('error' in authResult) {
         return authResult.error;
@@ -73,7 +79,7 @@ export async function GET(request: NextRequest) {
             aiSettings: user.aiSettings,
         }));
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             users: transformedUsers,
             total,
             page,
@@ -81,11 +87,9 @@ export async function GET(request: NextRequest) {
             totalPages: Math.ceil(total / limit),
         });
 
+        return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
+
     } catch (error) {
-        console.error('[Admin Users] Error:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch users' },
-            { status: 500 }
-        );
+        return handleError(error);
     }
 }

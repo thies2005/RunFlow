@@ -1,12 +1,12 @@
 'use client';
 
-import { useInfiniteQuery, useQuery, InfiniteData } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, ArrowLeft, Plus } from 'lucide-react';
 import { ActivityList, Footer, ErrorBoundary } from '@/components';
 import { useSession } from 'next-auth/react';
 import { useState, lazy, Suspense } from 'react';
-import { ActivityListItem, AnalyticsStats, ActivitiesResponse } from '@/lib/types';
+import { AnalyticsStats, ActivitiesResponse } from '@/lib/types';
 
 // Lazy load the modal component - only loads when opened
 const ManualActivityModal = lazy(() => import('@/components/ManualActivityModal'));
@@ -34,7 +34,6 @@ export default function ActivitiesPage() {
         fetchNextPage,
         hasNextPage,
         isFetchingNextPage,
-        status: queryStatus,
         isLoading,
         refetch,
         isRefetching

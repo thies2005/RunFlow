@@ -7,6 +7,7 @@
  */
 
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import { logger } from '@/lib/logging/logger';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16; // 128 bits for GCM
@@ -24,7 +25,7 @@ function getEncryptionKey(): Buffer | null {
 
     const key = Buffer.from(keyBase64, 'base64');
     if (key.length !== 32) {
-        console.error('ENCRYPTION_KEY must be 32 bytes (256 bits). Got:', key.length);
+        logger.error('ENCRYPTION_KEY must be 32 bytes (256 bits)', { keyLength: key.length });
         return null;
     }
 
@@ -103,7 +104,10 @@ export function decryptToken(encryptedToken: string): string {
     } catch (error) {
         // Decryption failed - key mismatch or corrupted data
         // Fallback: return raw value (assuming plaintext migration)
-        console.warn('Token decryption failed, returning raw value:', error);
+        logger.error('Token decryption failed - possible key mismatch or data corruption. Returning raw value as migration fallback.', {
+            error: error instanceof Error ? error.message : String(error),
+            tokenLength: encryptedToken.length,
+        });
         return encryptedToken;
     }
 }
@@ -113,4 +117,9 @@ export function decryptToken(encryptedToken: string): string {
  */
 export function isEncryptionEnabled(): boolean {
     return getEncryptionKey() !== null;
+}
+
+// Startup check to warn if encryption is disabled
+if (!getEncryptionKey() && process.env.NODE_ENV !== 'test') {
+    console.warn('[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.');
 }

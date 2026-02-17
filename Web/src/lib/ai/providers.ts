@@ -5,6 +5,7 @@
 
 import { prisma } from '@/lib/db';
 import { decryptToken } from '@/lib/crypto';
+import { logger } from '@/lib/logging/logger';
 
 export interface ChatMessage {
     role: 'system' | 'user' | 'assistant';
@@ -18,10 +19,102 @@ export interface AiConfig {
     model: string;
     keyOverride?: boolean;
     providerId?: string;
+    fallback?: AiConfig;
+}
+
+const DEFAULT_ALLOWED_BASE_URLS = [
+    'https://api.openai.com/v1',
+    'https://api.anthropic.com',
+    'https://generativelanguage.googleapis.com',
+    'https://openrouter.ai/api/v1',
+];
+
+function isPrivateIP(hostname: string): boolean {
+    const privatePatterns = [
+        /^127\./,
+        /^10\./,
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+        /^192\.168\./,
+        /^::1$/,
+        /^localhost$/,
+        /^0\.0\.0\.0$/,
+        /^::$/,
+        /^fc00:/i,
+        /^fe80:/i,
+    ];
+
+    return privatePatterns.some(pattern => pattern.test(hostname));
+}
+
+export function validateUrl(url: string, allowedBaseUrls: readonly string[] = DEFAULT_ALLOWED_BASE_URLS): boolean {
+    try {
+        const parsed = new URL(url);
+
+        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+            return false;
+        }
+
+        if (isPrivateIP(parsed.hostname)) {
+            return false;
+        }
+
+        if (parsed.hostname === '0.0.0.0' || parsed.hostname === '[::]' || parsed.hostname === 'localhost') {
+            return false;
+        }
+
+        const isAllowedBase = allowedBaseUrls.some(allowed => url.startsWith(allowed));
+        return isAllowedBase;
+    } catch {
+        return false;
+    }
+}
+
+export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & { allowedUrls?: string[] }): Promise<Response> {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+    if (!validateUrl(url, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
+        throw new Error(`SSRF Protection: Blocked request to disallowed URL: ${url}`);
+    }
+
+    const response = await fetch(input, init);
+
+    if (!response.ok) {
+        return response;
+    }
+
+    const finalUrl = response.url;
+
+    if (finalUrl && finalUrl !== url && !validateUrl(finalUrl, init?.allowedUrls || DEFAULT_ALLOWED_BASE_URLS)) {
+        response.body?.cancel();
+        throw new Error(`SSRF Protection: Blocked redirect to disallowed URL: ${finalUrl}`);
+    }
+
+    return response;
+}
+
+export function validateBaseUrl(baseUrl: string, extraAllowedUrls: string[] = []): boolean {
+    try {
+        const url = new URL(baseUrl);
+        const allAllowed = [...DEFAULT_ALLOWED_BASE_URLS, ...extraAllowedUrls];
+
+        // Verify exact hostname match to prevent SSRF bypasses
+        const allowedHostname = allAllowed
+            .map(allowed => new URL(allowed).hostname)
+            .some(host => url.hostname === host);
+
+        if (!allowedHostname) {
+            return false;
+        }
+
+        // Ensure it starts with the allowed prefix
+        return allAllowed.some(allowed => baseUrl.startsWith(allowed));
+    } catch {
+        return false;
+    }
 }
 
 export interface StreamOptions {
-    onToken?: (token: string) => void;
+    onToken?: (_token: string) => void;
     signal?: AbortSignal;
 }
 
@@ -46,9 +139,14 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
     if (userSettings.customApiKey && userSettings.usageTier === 'none') {
         const decryptedKey = decryptToken(userSettings.customApiKey);
         if (decryptedKey) {
+            const baseUrl = userSettings.customBaseUrl || 'https://api.openai.com/v1';
+            if (!validateBaseUrl(baseUrl)) {
+                logger.warn('[AI Config] Invalid customBaseUrl detected', { baseUrl, userId });
+                return null;
+            }
             return {
                 provider: 'openai', // Custom keys assume OpenAI-compatible for now
-                baseUrl: userSettings.customBaseUrl || 'https://api.openai.com/v1',
+                baseUrl,
                 apiKey: decryptedKey,
                 model: userSettings.customModel || 'gpt-4o-mini',
             };
@@ -59,19 +157,34 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
     // Check for active provider in Global Settings
     const globalSettings = await prisma.globalAiSettings.findUnique({
         where: { id: 'singleton' },
-        include: { activeProvider: true }
+        include: {
+            activeProvider: true,
+            fallbackProvider: true,
+        }
     });
 
     // 1. Use Active Provider if set
     if (globalSettings?.activeProvider) {
         const decryptedKey = decryptToken(globalSettings.activeProvider.apiKey);
         if (decryptedKey) {
+            const baseUrl = globalSettings.activeProvider.baseUrl;
+            if (!validateBaseUrl(baseUrl)) {
+                logger.warn('[AI Config] Invalid activeProvider.baseUrl detected', { baseUrl, providerId: globalSettings.activeProvider.id });
+                return null;
+            }
             return {
-                provider: globalSettings.activeProvider.type as any,
-                baseUrl: globalSettings.activeProvider.baseUrl,
+                provider: globalSettings.activeProvider.type as 'openai' | 'anthropic' | 'google',
+                baseUrl,
                 apiKey: decryptedKey,
                 model: globalSettings.activeProvider.models[0] || 'gpt-4o-mini', // Default to first available model
                 providerId: globalSettings.activeProvider.id,
+                fallback: globalSettings.fallbackProvider ? {
+                    provider: globalSettings.fallbackProvider.type as 'openai' | 'anthropic' | 'google',
+                    baseUrl: globalSettings.fallbackProvider.baseUrl,
+                    apiKey: decryptToken(globalSettings.fallbackProvider.apiKey) || '',
+                    model: globalSettings.fallbackProvider.models[0] || 'gpt-4o-mini',
+                    providerId: globalSettings.fallbackProvider.id,
+                } : undefined,
             };
         }
         // Fall through if active provider key is invalid
@@ -81,9 +194,14 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
     if (globalSettings?.defaultApiKey) {
         const decryptedKey = decryptToken(globalSettings.defaultApiKey);
         if (decryptedKey) {
+            const baseUrl = globalSettings.defaultBaseUrl;
+            if (!validateBaseUrl(baseUrl)) {
+                logger.warn('[AI Config] Invalid defaultBaseUrl detected', { baseUrl });
+                return null;
+            }
             return {
                 provider: 'openai', // Legacy is always OpenAI-compatible
-                baseUrl: globalSettings.defaultBaseUrl,
+                baseUrl,
                 apiKey: decryptedKey,
                 model: globalSettings.defaultModel,
             };
@@ -130,7 +248,7 @@ async function streamOpenAI(
     options?: StreamOptions
 ): Promise<AsyncIterable<string>> {
     try {
-        const response = await fetch(`${config.baseUrl}/chat/completions`, {
+        const response = await safeFetch(`${config.baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -164,7 +282,7 @@ async function streamOpenAI(
                 let isReasoning = false;
                 let chunkCount = 0;
                 let yieldCount = 0;
-                console.log('[OPENAI STREAM] Starting async iterator');
+                logger.info('[OPENAI STREAM] Starting async iterator', { model: config.model, provider: config.provider });
                 try {
                     while (true) {
                         const { done, value } = await reader.read();
@@ -172,12 +290,12 @@ async function streamOpenAI(
                         const bytesRead = value?.length || 0;
 
                         if (done) {
-                            console.log(`[OPENAI STREAM] Reader done. Chunks: ${chunkCount}, Yields: ${yieldCount}`);
+                            logger.info('[OPENAI STREAM] Reader done', { chunkCount, yieldCount, model: config.model });
                             break;
                         }
 
                         if (chunkCount % 5 === 0) {
-                            console.log(`[OPENAI STREAM] Chunk ${chunkCount}, Bytes: ${bytesRead}, Buffer: ${lineBuffer.length}`);
+                            logger.info('[OPENAI STREAM] Processing chunks', { chunkCount, bytesRead, bufferSize: lineBuffer.length, model: config.model });
                         }
 
                         lineBuffer += decoder.decode(value, { stream: true });
@@ -193,7 +311,9 @@ async function streamOpenAI(
                                 const json = JSON.parse(trimmed.slice(6));
 
                                 if (json.error) {
-                                    throw new Error(`OpenAI provider error: ${json.error.message || JSON.stringify(json.error)}`);
+                                    const errorMsg = json.error.message || JSON.stringify(json.error);
+                                    logger.error('[OPENAI STREAM] Provider error', { error: errorMsg, model: config.model, provider: config.provider });
+                                    throw new Error(`OpenAI provider error: ${errorMsg}`);
                                 }
 
                                 const delta = json.choices?.[0]?.delta;
@@ -222,27 +342,27 @@ async function streamOpenAI(
                                 }
                             } catch (error) {
                                 if (error instanceof Error && error.message.startsWith('OpenAI provider error:')) {
-                                    console.error('[OPENAI STREAM] Provider error:', error.message);
                                     throw error;
                                 }
-                                console.warn('[OPENAI STREAM] Skipped invalid JSON line');
+                                logger.warn('[OPENAI STREAM] Skipped invalid JSON line', { line: trimmed, model: config.model });
                             }
                         }
                     }
                 } catch (error) {
-                    console.error('[OPENAI STREAM] Error in iterator:', error);
+                    logger.error('[OPENAI STREAM] Error in iterator', { error: error instanceof Error ? error.message : String(error), model: config.model, provider: config.provider, chunkCount, yieldCount });
                     throw error;
                 } finally {
+                    // M-07 fix: Use matching closing tag </think> instead of </thinking>
                     if (isReasoning) {
                         yield '</think>';
                         yieldCount++;
                     }
-                    console.log(`[OPENAI STREAM] Cleanup. Total yields: ${yieldCount}`);
+                    logger.info('[OPENAI STREAM] Cleanup', { yieldCount, model: config.model });
                     reader.releaseLock();
                 }
             }
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         handlePermissionError(error, config);
         throw error;
     }
@@ -260,7 +380,7 @@ async function streamAnthropic(
         const systemMessage = messages.find(m => m.role === 'system');
         const userMessages = messages.filter(m => m.role !== 'system');
 
-        const response = await fetch(`${config.baseUrl}/v1/messages`, {
+        const response = await safeFetch(`${config.baseUrl}/v1/messages`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -324,14 +444,14 @@ async function streamAnthropic(
                         }
                     }
                 } catch (error) {
-                    console.error('Anthropic stream error:', error);
+                    logger.error('Anthropic stream error', { error: error instanceof Error ? error.message : String(error), model: config.model, provider: config.provider });
                     throw error;
                 } finally {
                     reader.releaseLock();
                 }
             }
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         handlePermissionError(error, config);
         throw error;
     }
@@ -356,7 +476,7 @@ async function streamGoogle(
 
         const url = `${config.baseUrl}/v1beta/models/${config.model}:streamGenerateContent?key=${config.apiKey}`;
 
-        const response = await fetch(url, {
+        const response = await safeFetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -423,19 +543,19 @@ async function streamGoogle(
                                 }
                             } catch (e) {
                                 if (e instanceof Error && e.message.startsWith('Google error:')) throw e;
-                                console.warn('[GEMINI STREAM] Failed to parse chunk:', e, 'JSON:', jsonStr.substring(0, 100));
+                                logger.warn('[GEMINI STREAM] Failed to parse chunk', { error: e instanceof Error ? e.message : String(e), jsonPreview: jsonStr.substring(0, 100), model: config.model });
                             }
                         }
                     }
                 } catch (error) {
-                    console.error('Google stream error:', error);
+                    logger.error('Google stream error', { error: error instanceof Error ? error.message : String(error), model: config.model, provider: config.provider });
                     throw error;
                 } finally {
                     reader.releaseLock();
                 }
             }
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         handlePermissionError(error, config);
         throw error;
     }
@@ -484,8 +604,8 @@ async function handleError(response: Response) {
     throw new Error(errorMessage);
 }
 
-function handlePermissionError(error: any, config: AiConfig) {
-    if (error.name === 'TypeError' && error.message === 'fetch failed') {
+function handlePermissionError(error: unknown, config: AiConfig) {
+    if (error instanceof Error && error.name === 'TypeError' && error.message === 'fetch failed') {
         throw new Error(`Failed to connect to ${config.provider} at ${config.baseUrl}. Please check the URL and internet connection.`);
     }
 }
@@ -495,7 +615,7 @@ export async function generateCompletion(
     messages: ChatMessage[]
 ): Promise<string> {
     try {
-        const response = await fetch(`${config.baseUrl}/chat/completions`, {
+        const response = await safeFetch(`${config.baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -511,7 +631,7 @@ export async function generateCompletion(
         if (!response.ok) await handleError(response);
         const data = await response.json();
         return data.choices?.[0]?.message?.content || '';
-    } catch (error: any) {
+    } catch (error: unknown) {
         handlePermissionError(error, config);
         throw error;
     }
@@ -521,13 +641,13 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
     try {
         if (config.provider === 'google') {
             const url = `${config.baseUrl}/v1beta/models/${config.model}?key=${config.apiKey}`;
-            const res = await fetch(url);
+            const res = await safeFetch(url, { allowedUrls: [config.baseUrl] });
             if (res.ok) return { success: true, model: config.model };
             const data = await res.json();
             return { success: false, error: data.error?.message || 'Google API Error' };
         }
         if (config.provider === 'anthropic') {
-            const res = await fetch(`${config.baseUrl}/v1/messages`, {
+            const res = await safeFetch(`${config.baseUrl}/v1/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -538,13 +658,15 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
                     model: config.model,
                     max_tokens: 1,
                     messages: [{ role: 'user', content: 'Hi' }]
-                })
+                }),
+                allowedUrls: [config.baseUrl],
             });
             if (res.ok) return { success: true, model: config.model };
             const data = await res.json();
             return { success: false, error: data.error?.message || 'Anthropic API Error' };
         }
-        const chatResponse = await fetch(`${config.baseUrl}/chat/completions`, {
+
+        const chatResponse = await safeFetch(`${config.baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -555,8 +677,11 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
                 messages: [{ role: 'user', content: 'Hi' }],
                 max_tokens: 5,
             }),
+            allowedUrls: [config.baseUrl],
         });
+
         if (chatResponse.ok) return { success: true, model: config.model };
+
         let errorMessage = `API returned ${chatResponse.status}`;
         try {
             const data = await chatResponse.json();
@@ -566,7 +691,8 @@ export async function testAiConfig(config: AiConfig): Promise<{ success: boolean
             if (text) errorMessage += `: ${text}`;
         }
         return { success: false, error: errorMessage };
-    } catch (error: any) {
-        return { success: false, error: error.message || String(error) };
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        return { success: false, error: message };
     }
 }

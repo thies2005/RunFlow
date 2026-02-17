@@ -2,12 +2,14 @@
  * Admin Authentication Utilities
  * 
  * Provides JWT-based authentication for the admin dashboard.
- * Credentials are validated against environment variables.
+ * Credentials are validated against environment variables and database.
  */
 
 import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { prisma } from '@/lib/db';
+import { verifyPassword } from '@/lib/auth/auth-email';
 
 // JWT configuration - uses lazy initialization to avoid build-time errors
 let _jwtSecret: Uint8Array | null = null;
@@ -28,8 +30,11 @@ function getJwtSecret(): Uint8Array {
     }
 
     _jwtSecret = new TextEncoder().encode(
-        secret || 'development-secret-change-in-production-min-32-chars'
+        secret || crypto.randomBytes(32).toString('base64')
     );
+    if (!secret) {
+        console.warn('[SECURITY] JWT_SECRET not set. Using random ephemeral secret (tokens will not survive restarts).');
+    }
     return _jwtSecret;
 }
 
@@ -45,28 +50,42 @@ export interface AdminJWTPayload extends JWTPayload {
 }
 
 /**
- * Verify admin credentials against environment variables
+ * Verify admin credentials against environment variables and database
  */
-export function verifyAdminCredentials(username: string, password: string): boolean {
+export async function verifyAdminCredentials(username: string, password: string): Promise<boolean> {
     const adminUsername = process.env.ADMIN_USERNAME;
     const adminPassword = process.env.ADMIN_PASSWORD;
 
-    if (!adminUsername || !adminPassword) {
-        console.error('[Admin Auth] ADMIN_USERNAME or ADMIN_PASSWORD not configured');
-        return false;
-    }
-
-    // Constant-time comparison to prevent timing attacks
     const safeCompare = (a: string, b: string) => {
         const bufA = Buffer.from(a);
         const bufB = Buffer.from(b);
         return bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);
     };
 
-    const usernameValid = safeCompare(username, adminUsername);
-    const passwordValid = safeCompare(password, adminPassword);
+    if (adminUsername && adminPassword) {
+        const usernameValid = safeCompare(username, adminUsername);
+        const passwordValid = safeCompare(password, adminPassword);
 
-    return usernameValid && passwordValid;
+        if (usernameValid && passwordValid) {
+            return true;
+        }
+    }
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email: username.toLowerCase() },
+            select: { isAdmin: true, passwordHash: true }
+        });
+
+        if (user?.isAdmin && user.passwordHash) {
+            const passwordValid = await verifyPassword(password, user.passwordHash);
+            return passwordValid;
+        }
+    } catch (error) {
+        console.error('[Admin Auth] Database error:', error);
+    }
+
+    return false;
 }
 
 /**

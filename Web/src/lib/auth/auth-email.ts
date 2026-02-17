@@ -7,12 +7,18 @@
 import bcrypt from 'bcryptjs';
 
 const SALT_ROUNDS = 12;
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 12;
 
 /**
  * Hash a password using bcrypt
  */
 export async function hashPassword(password: string): Promise<string> {
+    const validation = validatePassword(password);
+
+    if (!validation.valid) {
+        throw new Error(validation.errors.join(', '));
+    }
+
     return bcrypt.hash(password, SALT_ROUNDS);
 }
 
@@ -51,6 +57,20 @@ export function validatePassword(password: string): { valid: boolean; errors: st
 
     if (!/[0-9]/.test(password)) {
         errors.push('Password must contain at least one number');
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password)) {
+        errors.push('Password must contain at least one special character');
+    }
+
+    const lowerPassword = password.toLowerCase();
+    const forbiddenPatterns = ['password', '123456', 'qwerty', 'admin', 'test'];
+
+    for (const pattern of forbiddenPatterns) {
+        if (lowerPassword.includes(pattern)) {
+            errors.push(`Password contains a common/forbidden pattern`);
+            break;
+        }
     }
 
     return {

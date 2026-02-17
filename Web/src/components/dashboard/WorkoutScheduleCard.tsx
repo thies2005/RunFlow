@@ -1,12 +1,12 @@
 import { Workout } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { Edit2, Check } from 'lucide-react';
+import { Edit2, Check, Activity, Zap, Flame, Dumbbell, Moon, Bike, Waves, Target, Rocket } from 'lucide-react';
 
 interface WorkoutScheduleCardProps {
     weeklyWorkouts: Workout[];
     today: string;
-    onEditWorkout: (workout: Workout) => void;
-    onCompleteWorkout: (workout: Workout) => void;
+    onEditWorkout: (_workout: Workout) => void;
+    onCompleteWorkout: (_workout: Workout) => void;
 }
 
 export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorkout, onCompleteWorkout }: WorkoutScheduleCardProps) {
@@ -40,8 +40,8 @@ export default function WorkoutScheduleCard({ weeklyWorkouts, today, onEditWorko
                                 }`}>
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-green-500/20' : (isTodayPending || isNextPending) ? 'bg-accent-orange/20' : 'bg-surface'}`}>
-                                            <span className="text-sm">{workout.workoutType === 'EASY' ? '🏃' : workout.workoutType === 'LONG_RUN' ? '🚀' : workout.workoutType === 'TEMPO' ? '⚡' : workout.workoutType === 'INTERVALS' ? '🔥' : workout.workoutType === 'STRENGTH' ? '💪' : workout.workoutType === 'REST' ? '😴' : workout.workoutType === 'RIDE' ? '🚴' : workout.workoutType === 'SWIM' ? '🏊' : '🎯'}</span>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${workout.isCompleted ? 'bg-green-500/20' : (isTodayPending || isNextPending) ? 'bg-accent-orange/20' : 'bg-surface'}`}>
+                                            {workout.workoutType === 'EASY' ? <Activity className="w-4 h-4" /> : workout.workoutType === 'LONG_RUN' ? <Rocket className="w-4 h-4" /> : workout.workoutType === 'TEMPO' ? <Zap className="w-4 h-4" /> : workout.workoutType === 'INTERVALS' ? <Flame className="w-4 h-4" /> : workout.workoutType === 'STRENGTH' ? <Dumbbell className="w-4 h-4" /> : workout.workoutType === 'REST' ? <Moon className="w-4 h-4" /> : workout.workoutType === 'RIDE' ? <Bike className="w-4 h-4" /> : workout.workoutType === 'SWIM' ? <Waves className="w-4 h-4" /> : <Target className="w-4 h-4" />}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">

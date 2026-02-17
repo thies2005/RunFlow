@@ -10,7 +10,6 @@ import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import {
     getAiConfig,
-    generateCompletion,
     buildUserContext,
     buildActivityContext,
     formatContextForAi,
@@ -19,6 +18,8 @@ import {
     ACTIVITY_FEEDBACK_PROMPTS,
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
+import { handleError } from '@/lib/errors/handler';
+import { countTokens } from '@/lib/ai/tokenCounter';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,8 +59,7 @@ export async function GET(request: NextRequest) {
             cached: !!feedback,
         });
     } catch (error) {
-        console.error('Get activity feedback error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return handleError(error);
     }
 }
 
@@ -134,6 +134,16 @@ export async function POST(request: NextRequest) {
             generateFeedback(config, ACTIVITY_FEEDBACK_PROMPTS.goalTrajectory, baseContext, activityStr),
         ]);
 
+        // M-04 fix: Calculate token usage for accurate tracking
+        // Estimate input tokens: 3 prompts each with system prompt + user context + activity context
+        const singleInputTokens = countTokens(baseContext, config.model) + countTokens(activityStr, config.model);
+        const inputTokens = singleInputTokens * 3; // 3 API calls
+        
+        // Estimate output tokens: sum of all responses
+        const outputTokens = countTokens(plannedComparison, config.model) + 
+                            countTokens(progressAnalysis, config.model) + 
+                            countTokens(goalTrajectory, config.model);
+
         // Save to cache
         const feedback = await prisma.activityAiFeedback.upsert({
             where: { activityId },
@@ -151,16 +161,15 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Count as 1 usage (even though it's 3 API calls, it's 1 user action)
-        await incrementUsage(userId);
+        // Count as 1 usage with accurate token counts
+        await incrementUsage(userId, { inputTokens, outputTokens }, config.providerId);
 
         return NextResponse.json({
             feedback,
             cached: false,
         });
     } catch (error) {
-        console.error('Generate activity feedback error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return handleError(error);
     }
 }
 

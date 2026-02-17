@@ -13,6 +13,7 @@ import {
     ReferenceLine,
 } from 'recharts';
 import { format } from 'date-fns';
+import { BarChart2 } from 'lucide-react';
 
 interface FitnessDataPoint {
     date: string;
@@ -95,7 +96,7 @@ function FitnessChart({ data, isLoading }: FitnessChartProps) {
     if (data.length === 0) {
         return (
             <div className="glass-card p-6 h-80 flex flex-col items-center justify-center">
-                <span className="text-4xl mb-4">📊</span>
+                <BarChart2 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                 <p className="text-foreground-muted">Not enough data for fitness chart</p>
                 <p className="sm text-foreground-muted mt-2">
                     Sync more activities with heart rate data

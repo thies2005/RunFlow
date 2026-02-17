@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, EyeOff, Save, Loader2, Zap, XCircle, BarChart3 } from 'lucide-react';
+import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3 } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -113,6 +113,7 @@ const AnalyticsTab = ({ }: any) => {
 const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, setActionMessage }: any) => {
     const [providers, setProviders] = useState<any[]>([]);
     const [activeProviderId, setActiveProviderId] = useState<string | null>(settings?.activeProviderId || null);
+    const [fallbackProviderId, setFallbackProviderId] = useState<string | null>(settings?.fallbackProviderId || null);
     const [showProviderForm, setShowProviderForm] = useState(false);
     const [editingProvider, setEditingProvider] = useState<any | null>(null);
 
@@ -146,6 +147,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
     useEffect(() => {
         if (settings) {
             setActiveProviderId(settings.activeProviderId);
+            setFallbackProviderId(settings.fallbackProviderId);
             setFormData(prev => ({
                 ...prev,
                 tier1Name: settings.tier1Name || prev.tier1Name,
@@ -189,7 +191,8 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                 headers: csrfHeaders(),
                 body: JSON.stringify({
                     ...formData,
-                    activeProviderId
+                    activeProviderId,
+                    fallbackProviderId
                 }),
             });
             if (!res.ok) throw new Error('Failed to save settings');
@@ -210,6 +213,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
             if (!res.ok) throw new Error('Failed to delete');
             fetchProviders();
             if (activeProviderId === id) setActiveProviderId(null);
+            if (fallbackProviderId === id) setFallbackProviderId(null);
             setActionMessage({ type: 'success', text: 'Provider deleted' });
         } catch (error: any) {
             setActionMessage({ type: 'error', text: error.message });
@@ -259,11 +263,11 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                 ) : (
                     <div className="grid gap-4">
                         {providers.map(provider => (
-                            <div key={provider.id} className={`p-4 rounded-lg border flex items-center justify-between ${activeProviderId === provider.id ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500' : 'border-gray-200 bg-white'}`}>
+                            <div key={provider.id} className={`p-4 rounded-lg border flex items-center justify-between ${activeProviderId === provider.id ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-500' : fallbackProviderId === provider.id ? 'border-amber-500 bg-amber-50 ring-1 ring-amber-500' : 'border-gray-200 bg-white'}`}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-3 h-3 rounded-full ${activeProviderId === provider.id ? 'bg-purple-600' : 'bg-gray-300'}`} />
+                                    <div className={`w-3 h-3 rounded-full ${activeProviderId === provider.id ? 'bg-purple-600' : fallbackProviderId === provider.id ? 'bg-amber-500' : 'bg-gray-300'}`} />
                                     <div>
-                                        <h4 className="font-medium text-gray-900">{provider.name}</h4>
+                                        <h4 className="font-medium text-gray-900">{provider.name} {activeProviderId === provider.id && '(Active)'} {fallbackProviderId === provider.id && '(Fallback)'}</h4>
                                         <p className="text-xs text-gray-500 flex gap-2">
                                             <span className="uppercase bg-gray-100 px-1.5 rounded">{provider.type}</span>
                                             <span>{provider.models.join(', ')}</span>
@@ -277,6 +281,14 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                             className="px-3 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 rounded border border-purple-200"
                                         >
                                             Set Active
+                                        </button>
+                                    )}
+                                    {fallbackProviderId !== provider.id && activeProviderId !== provider.id && (
+                                        <button
+                                            onClick={() => setFallbackProviderId(provider.id)}
+                                            className="px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 rounded border border-amber-200"
+                                        >
+                                            Set Fallback
                                         </button>
                                     )}
                                     <button
@@ -443,7 +455,7 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
 
             {/* Provider Modal/Form Overlay */}
             {showProviderForm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)] flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
                         <h3 className="text-lg font-bold text-gray-900">{editingProvider ? 'Edit Provider' : 'Add New Provider'}</h3>
                         <ProviderForm
@@ -876,7 +888,7 @@ function DashboardContent() {
     };
 
     const handleBackupAction = async (action: 'create' | 'restore', backupName?: string) => {
-        if (action === 'restore' && !confirm(`⚠️ WARNING: This will overwrite the current database with ${backupName}. This action is destructive. Are you sure?`)) return;
+        if (action === 'restore' && !confirm(`WARNING: This will overwrite the current database with ${backupName}. This action is destructive. Are you sure?`)) return;
 
         setProcessing(true);
         setActionMessage(null);

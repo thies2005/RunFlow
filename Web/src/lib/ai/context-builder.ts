@@ -3,7 +3,7 @@
  */
 
 import { prisma } from '@/lib/db';
-import type { UserAiSettings } from '@prisma/client';
+import { DAY_MS } from '@/lib/constants';
 
 export interface UserContext {
     // Basic info
@@ -215,8 +215,8 @@ export async function buildUserContext(userId: string): Promise<UserContext> {
     // Training plan
     if (settings.accessTrainingPlan && user.goals.length > 0) {
         const now = new Date();
-        const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const nextWeek = new Date(now.getTime() + 7 * DAY_MS);
+        const lastWeek = new Date(now.getTime() - 7 * DAY_MS);
 
         const workouts = await prisma.workout.findMany({
             where: {

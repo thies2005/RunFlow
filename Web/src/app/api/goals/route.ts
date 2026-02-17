@@ -8,6 +8,11 @@ import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings 
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/apiResponse';
+import { validateBody } from '@/lib/validation/validator';
+import { goalSchema } from '@/lib/validation/schemas';
+import { handleError } from '@/lib/errors/handler';
+import { logger } from '@/lib/logging/logger';
+import { RaceType, WorkoutType } from '@prisma/client';
 
 // GET - List goals
 export async function GET(request: NextRequest) {
@@ -51,8 +56,7 @@ export async function GET(request: NextRequest) {
 
         return cachedResponse({ goals }, { maxAge: 60, staleWhileRevalidate: 30 });
     } catch (error) {
-        console.error('List goals error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return handleError(error);
     }
 }
 
@@ -76,7 +80,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await request.json();
+        const validation = await validateBody(goalSchema, request);
+        if (!validation.success) {
+            return validation.error;
+        }
+
         const {
             name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks,
             runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
@@ -84,7 +92,7 @@ export async function POST(request: NextRequest) {
             longRunDay, workoutDay,
             calibrationTime, calibrationDistance, calibrationFactor,
             planStartDate
-        } = body;
+        } = validation.data;
 
         // If calibration factor is provided, update global user settings immediately
         // We start this operation but don't await it yet to allow parallel execution
@@ -95,17 +103,6 @@ export async function POST(request: NextRequest) {
         }).then(res => ({ result: res, error: null }))
           .catch(err => ({ result: null, error: err }))
         : Promise.resolve({ result: null, error: null });
-
-        if (!name || !raceType || !raceDate) {
-            // Ensure we wait for the update to complete or fail
-            const updateResult = await userUpdatePromise;
-            if (updateResult.error) throw updateResult.error;
-
-            return NextResponse.json(
-                { error: 'Missing required fields' },
-                { status: 400 }
-            );
-        }
 
         // Calculate current VDOT from calibration data if provided
         let currentVdot: number | null = null;
@@ -246,7 +243,8 @@ export async function POST(request: NextRequest) {
             if (runActivities.length > 0) {
                 const maxHR = user?.hrMax || 185;
                 const correctionFactor = user?.vdotCorrectionFactor || 1.0;
-                const { effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities as any, maxHR, correctionFactor);
+                // M-06 fix: Use proper ActivityForShape[] type instead of any
+                const { effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities as import('@/lib/metrics/runalyze').ActivityForShape[], maxHR, correctionFactor);
                 if (effectiveVO2max > 0) {
                     currentVdot = effectiveVO2max;
                 }
@@ -272,7 +270,7 @@ export async function POST(request: NextRequest) {
             } else {
                 // Absolute fallback: Default to VDOT 30 (Beginner)
                 // This ensures a plan is ALWAYS generated
-                console.log('No VDOT data available. Defaulting to VDOT 30.');
+                logger.info('No VDOT data available. Defaulting to VDOT 30.', { userId: session.user.id });
                 currentVdot = 30.0;
             }
 
@@ -289,7 +287,8 @@ export async function POST(request: NextRequest) {
             try {
                 const workouts = generateTrainingPlan({
                     vdot: currentVdot,
-                    raceType: raceType as any,
+                    // M-06 fix: raceType is validated by Zod schema to match RaceType enum
+                    raceType: raceType as RaceType,
                     raceDate: new Date(raceDate),
                     startDate: planStartDate ? new Date(planStartDate) : new Date(),
                     runsPerWeek: runsPerWeek ?? 4,
@@ -308,7 +307,8 @@ export async function POST(request: NextRequest) {
                         data: workouts.map(w => ({
                             goalId: goal.id,
                             scheduledDate: w.date,
-                            workoutType: w.type as any,
+                            // M-06 fix: workoutType is WorkoutType from generateTrainingPlan
+                            workoutType: w.type as WorkoutType,
                             description: w.description,
                             targetDistance: w.totalDistance,
                             targetPace: w.targetPace || 0,
@@ -318,7 +318,7 @@ export async function POST(request: NextRequest) {
                     });
                 }
             } catch (error) {
-                console.error('Failed to generate training plan:', error);
+                logger.error('Failed to generate training plan', { userId: session.user.id, goalId: goal.id, error: error instanceof Error ? error.message : String(error) });
             }
         }
 
@@ -328,7 +328,6 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ goal }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {
-        console.error('Create goal error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return handleError(error);
     }
 }

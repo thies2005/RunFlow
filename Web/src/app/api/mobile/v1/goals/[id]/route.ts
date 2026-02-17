@@ -11,6 +11,7 @@ import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { z } from 'zod';
 
 export async function GET(
     request: NextRequest,
@@ -96,7 +97,25 @@ export async function PUT(
             return errorResponses.notFound('Goal');
         }
 
+        // M-19 fix: Add input validation for goal updates
+        const goalUpdateSchema = z.object({
+            name: z.string().min(1).max(255).optional(),
+            targetTime: z.number().int().positive().optional(),
+            isActive: z.boolean().optional(),
+            currentVdot: z.number().positive().optional(),
+        });
+
         const body = await request.json();
+        
+        try {
+            goalUpdateSchema.parse(body);
+        } catch (validationError) {
+            return NextResponse.json(
+                { error: 'Invalid input data', details: validationError },
+                { status: 400 }
+            );
+        }
+
         const { name, targetTime, isActive, currentVdot } = body;
 
         const goal = await prisma.goal.update({

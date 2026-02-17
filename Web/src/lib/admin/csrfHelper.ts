@@ -5,7 +5,7 @@
  * and provides it for inclusion in fetch headers.
  */
 
-const CSRF_COOKIE_NAME = 'csrf_token';
+const CSRF_COOKIE_NAME = 'csrf_token_client';
 
 /**
  * Get the CSRF token from the cookie for use in fetch requests.
@@ -16,14 +16,9 @@ export function getCsrfToken(): string {
 
     const cookies = document.cookie.split(';');
     for (const cookie of cookies) {
-        const [name, ...valueParts] = cookie.trim().split('=');
+        const [name, value] = cookie.trim().split('=');
         if (name === CSRF_COOKIE_NAME) {
-            try {
-                const data = JSON.parse(decodeURIComponent(valueParts.join('=')));
-                return data.token || '';
-            } catch {
-                return '';
-            }
+            return decodeURIComponent(value || '');
         }
     }
     return '';

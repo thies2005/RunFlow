@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, RefreshCw, BarChart2, Calendar, Link2 } from 'lucide-react';
+import { ArrowRight, RefreshCw, Calendar, Link2 } from 'lucide-react';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import PlanSetupForm from './PlanSetupForm';
 import SyncPlatformSelector from './SyncPlatformSelector';
@@ -56,7 +56,7 @@ export default function OnboardingWizard() {
     // to confirm they see the result (even if 0 activities)
 
     // Analysis Logic (Step 2 and 3) - fetch stats for VO2max
-    const { data: statsData, isLoading: statsLoading } = useQuery({
+    const { data: statsData } = useQuery({
         queryKey: ['analytics-stats'],
         queryFn: async () => {
             const res = await fetch('/api/analytics/stats');

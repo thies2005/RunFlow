@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { Book, X, ChevronRight, MessageSquare } from 'lucide-react';
-import { PROMPT_LIBRARY, PromptCategory, PromptTemplate } from '@/lib/data/prompts';
+import { PROMPT_LIBRARY } from '@/lib/data/prompts';
 
 interface PromptLibraryProps {
     isOpen: boolean;
     onClose: () => void;
-    onSelectPrompt: (text: string) => void;
+    onSelectPrompt: (_text: string) => void;
 }
 
 export default function PromptLibrary({ isOpen, onClose, onSelectPrompt }: PromptLibraryProps) {
@@ -18,7 +18,7 @@ export default function PromptLibrary({ isOpen, onClose, onSelectPrompt }: Promp
     const activeCategory = PROMPT_LIBRARY.find((c) => c.category === selectedCategory);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm">
             <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-white/5">

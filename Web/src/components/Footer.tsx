@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { PoweredByStravaLogo } from './StravaLogos';
+import { Heart } from 'lucide-react';
 
 export const Footer: React.FC = () => {
     return (
@@ -13,7 +14,7 @@ export const Footer: React.FC = () => {
                         Support
                     </Link>
                 </div>
-                <p className="text-gray-500 text-xs">RunFlow • Built with ❤️ for runners</p>
+                <p className="text-gray-500 text-xs flex items-center gap-1">RunFlow • Built with <Heart className="w-3 h-3 text-red-500" /> for runners</p>
                 <span className="text-gray-500 text-[10px] font-mono">v1.2.0</span>
             </div>
         </footer>

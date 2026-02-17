@@ -2,11 +2,10 @@
 import { prisma } from '@/lib/db';
 import { Activity } from '@prisma/client';
 import { calculateTrimpFromZones } from './trimp';
+import { DAY_MS } from '@/lib/constants';
 import {
     calculateRunningTss,
-    getActivityContribution,
-    DailyLoad,
-    calculateDecayFactor
+    getActivityContribution
 } from './fitness';
 
 // Constants need to match fitness.ts
@@ -75,7 +74,7 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
 
             // Gap = number of days from baseline to the day before startDate
             // e.g., Baseline Jan 15, Start Jan 20 -> Days 16, 17, 18, 19 are gap = 4 days
-            const msPerDay = 24 * 60 * 60 * 1000;
+            const msPerDay = DAY_MS;
             const gapDays = Math.round((startDate.getTime() - baselineDate.getTime()) / msPerDay) - 1;
 
             if (gapDays > 0) {
@@ -271,7 +270,7 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
         }> = [];
 
         // Iterate from day after latest until today (using timestamps for safety)
-        const msPerDay = 24 * 60 * 60 * 1000;
+        const msPerDay = DAY_MS;
         const startTime = latestDate.getTime() + msPerDay;
         const endTime = today.getTime();
 

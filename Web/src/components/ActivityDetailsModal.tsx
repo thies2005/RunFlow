@@ -140,13 +140,14 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     const { createPortal } = require('react-dom');
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-2xl bg-background border border-glass-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="relative w-full max-w-2xl bg-background border border-glass-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col" role="dialog" aria-modal="true" aria-labelledby="activity-title">
                 {/* Header */}
                 <div className="relative p-6 border-b border-glass-border bg-gradient-to-r from-accent-purple/10 to-accent-pink/10 shrink-0">
                     <button
                         onClick={onClose}
                         className="absolute right-4 top-4 p-2 text-foreground-muted hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors"
+                        aria-label="Close activity details"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -166,6 +167,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                         onChange={(e) => setName(e.target.value)}
                                         className="text-xl font-bold text-foreground bg-background-secondary border border-glass-border rounded px-2 py-1 focus:outline-none focus:border-accent-purple w-full"
                                         autoFocus
+                                        aria-label="Activity name input"
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') handleSaveName();
                                             if (e.key === 'Escape') {
@@ -178,6 +180,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                         onClick={handleSaveName}
                                         disabled={isSavingName}
                                         className="p-1.5 bg-green-500/10 text-green-500 hover:bg-green-500/20 rounded transition-colors"
+                                        aria-label="Save activity name"
                                     >
                                         <Check className="w-4 h-4" />
                                     </button>
@@ -187,16 +190,18 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             setName(activity.name);
                                         }}
                                         className="p-1.5 hover:bg-surface-hover text-foreground-muted hover:text-foreground rounded transition-colors"
+                                        aria-label="Cancel editing name"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
                                 </div>
                             ) : (
                                 <div className="flex items-start gap-2 mb-1 group">
-                                    <h2 className="text-xl font-bold text-foreground">{name}</h2>
+                                    <h2 id="activity-title" className="text-xl font-bold text-foreground">{name}</h2>
                                     <button
                                         onClick={() => setIsEditingName(true)}
                                         className="p-1 text-foreground-muted opacity-0 group-hover:opacity-100 hover:text-foreground transition-all"
+                                        aria-label="Edit activity name"
                                     >
                                         <Edit2 className="w-4 h-4" />
                                     </button>
@@ -229,6 +234,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                     onChange={(e) => handleTypeChange(e.target.value as WorkoutType)}
                                     className="bg-transparent border-none text-sm text-foreground focus:ring-0 cursor-pointer appearance-none pr-8 outline-none"
                                     disabled={isUpdatingType}
+                                    aria-label="Select workout type"
                                 >
                                     {WORKOUT_TYPES.map(type => (
                                         <option key={type} value={type} className="bg-background-secondary text-foreground">

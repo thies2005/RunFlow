@@ -5,6 +5,8 @@ import { useSession, signOut } from 'next-auth/react';
 import { Settings, LogOut, User, Moon, Sun, Monitor, ChevronDown } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
+import { UserAvatar } from '@/components/UserAvatar';
+
 export function UserMenu({
     onOpenProfile,
     onOpenSettings,
@@ -38,11 +40,10 @@ export function UserMenu({
                     <button
                         className="flex items-center gap-2 p-1 rounded-full hover:bg-surface-hover transition-colors border border-transparent hover:border-glass-border"
                     >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={session.user.image || ''}
-                            alt={session.user.name || 'User'}
-                            className="w-8 h-8 rounded-full border border-glass-border"
+                        <UserAvatar
+                            image={session.user.image}
+                            name={session.user.name}
+                            className="w-8 h-8 border border-glass-border"
                         />
                         <ChevronDown className={`w-4 h-4 text-foreground-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                     </button>

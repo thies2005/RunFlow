@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logger } from '@/lib/logging/logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+    const rateLimit = await adminRateLimit(req, 'read');
+    if (!rateLimit.success) {
+        return rateLimit.error;
+    }
+
     const authResult = await requireAdmin(req);
     if ('error' in authResult) {
         return authResult.error;
@@ -67,7 +74,7 @@ export async function GET(req: NextRequest) {
             totalTokens: (u.inputTokensUsedThisMonth || 0) + (u.outputTokensUsedThisMonth || 0)
         })).sort((a, b) => b.totalTokens - a.totalTokens);
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             dailyUsage: dailyUsage.map(d => ({
                 date: d.date.toISOString().split('T')[0],
                 provider: d.provider.name,
@@ -78,8 +85,10 @@ export async function GET(req: NextRequest) {
             topUsers: formattedTopUsers
         });
 
+        return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
+
     } catch (error) {
-        console.error('Analytics error:', error);
+        logger.error('Failed to fetch analytics', { error: error instanceof Error ? error.message : String(error) });
         return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
     }
 }

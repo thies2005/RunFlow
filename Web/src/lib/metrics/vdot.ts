@@ -6,6 +6,8 @@
  * Used for race predictions and training pace calculations
  */
 
+import { SECONDS_PER_HOUR } from '@/lib/constants';
+
 export type RaceDistance = '5K' | '10K' | 'HALF' | 'MARATHON';
 
 export interface RaceInput {
@@ -79,8 +81,6 @@ export function calculateVdot(input: RaceInput): number {
  * Inverse of the calculateVdot function
  */
 export function predictRaceTime(vdot: number, distance: RaceDistance): number {
-    const distanceMeters = DISTANCES[distance];
-
     // Binary search for the time that gives this VDOT
     let low = 600;   // 10 minutes
     let high = 18000; // 5 hours
@@ -189,8 +189,8 @@ export function analyzeRace(input: RaceInput): VdotResult {
  * Format seconds to MM:SS or HH:MM:SS
  */
 export function formatTime(seconds: number): string {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
+    const hours = Math.floor(seconds / SECONDS_PER_HOUR);
+    const mins = Math.floor((seconds % SECONDS_PER_HOUR) / 60);
     const secs = seconds % 60;
 
     if (hours > 0) {

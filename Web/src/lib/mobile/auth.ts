@@ -10,6 +10,7 @@ import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
+import crypto from 'crypto';
 
 // JWT configuration - uses lazy initialization to avoid build-time errors
 let _jwtSecret: Uint8Array | null = null;
@@ -26,8 +27,11 @@ function getJwtSecret(): Uint8Array {
     }
 
     _jwtSecret = new TextEncoder().encode(
-        secret || 'development-secret-change-in-production-min-32-chars'
+        secret || crypto.randomBytes(32).toString('base64')
     );
+    if (!secret) {
+        console.warn('[SECURITY] JWT_SECRET not set. Using random ephemeral secret (tokens will not survive restarts).');
+    }
     return _jwtSecret;
 }
 

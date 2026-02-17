@@ -1,0 +1,2 @@
+-- Add missing isAdmin column for existing databases
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isAdmin" BOOLEAN NOT NULL DEFAULT false;

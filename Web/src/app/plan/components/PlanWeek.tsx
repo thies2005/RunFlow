@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { format, addDays, isToday, isSameDay, differenceInWeeks, isBefore, startOfWeek } from 'date-fns';
+import { format, addDays, isToday, isSameDay, differenceInWeeks, isBefore } from 'date-fns';
 import { DraggableWorkout } from '@/app/plan/components/DraggableWorkout';
 import { DroppableDay } from '@/app/plan/components/DroppableDay';
 import { getPhase, formatDuration, RUN_TYPES } from '@/lib/plan/utils';
@@ -10,10 +10,10 @@ interface PlanWeekProps {
     weekWorkouts: WorkoutWithLinkedActivity[];
     weekIndex: number;
     raceDate: Date;
-    handleCreate: (date: Date) => void;
-    handleEdit: (workout: WorkoutWithLinkedActivity) => void;
-    handleComplete: (workout: WorkoutWithLinkedActivity, e: React.MouseEvent) => void;
-    handleActivityClick: (activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, e: React.MouseEvent) => void;
+    handleCreate: (_date: Date) => void;
+    handleEdit: (_workout: WorkoutWithLinkedActivity) => void;
+    handleComplete: (_workout: WorkoutWithLinkedActivity, _e: React.MouseEvent) => void;
+    handleActivityClick: (_activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, _e: React.MouseEvent) => void;
     showUnlinked: boolean;
     unlinkedActivities?: UnlinkedActivity[];
 }

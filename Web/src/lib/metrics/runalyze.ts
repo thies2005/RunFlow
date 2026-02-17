@@ -3,7 +3,8 @@
  * Based on the Runalyze methodology for predicting race performance
  */
 
-import { calculateVdot, predictRaceTime, type RaceDistance } from './vdot';
+import { predictRaceTime, type RaceDistance } from './vdot';
+import { DAY_MS } from '@/lib/constants';
 
 // ============================================
 // Constants (extracted magic numbers)
@@ -18,41 +19,23 @@ const MIN_DURATION_FOR_CALCULATION = 720; // 12 minutes
 /** Minimum Heart Rate percentage (of maxHR) for inclusion in VO2max calculation */
 const MIN_HR_PERCENT_FOR_CALCULATION = 0.60;
 
-/** Daily decay factor for time-weighted averages (5% per day) */
-const DAILY_DECAY_FACTOR = 0.95;
-
-/** Minimum long run distance in meters for marathon shape scoring */
-const MIN_LONG_RUN_DISTANCE = 13000; // 13km
-
-/** Maximum shape penalty for marathon predictions (30% slower at 0% shape) */
-const MAX_MARATHON_SHAPE_PENALTY = 0.30;
-
-/** Maximum shape penalty for half marathon predictions (15% slower at 0% shape) */
-const MAX_HALF_SHAPE_PENALTY = 0.15;
-
-/** Target long run points for 100% shape score */
-const TARGET_LONG_RUN_POINTS = 10;
-
-/** Target weekly cross-training minutes for 100% score */
-const TARGET_CROSS_TRAINING_WEEKLY_MINUTES = 300;
-
 /**
  * Activity data needed for calculations
  */
 export type ActivityForShape = {
     startDate: string | Date;
-    distance: number;      // meters
-    movingTime: number;    // seconds
+    distance: number;
+    movingTime: number;
     averageHr?: number | null;
     hasHeartrate: boolean;
-    type?: string;           // Activity type (RUN, RIDE, SWIM, etc.)
-    hrZone1Time?: number;    // seconds in Zone 1
-    hrZone2Time?: number;    // seconds in Zone 2
-    hrZone3Time?: number;    // seconds in Zone 3  
-    hrZone4Time?: number;    // seconds in Zone 4
-    hrZone5Time?: number;    // seconds in Zone 5
-    hrZone6Time?: number;    // seconds in Zone 6
-    hrZone7Time?: number;    // seconds in Zone 7
+    type?: string;
+    hrZone1Time?: number | null;
+    hrZone2Time?: number | null;
+    hrZone3Time?: number | null;
+    hrZone4Time?: number | null;
+    hrZone5Time?: number | null;
+    hrZone6Time?: number | null;
+    hrZone7Time?: number | null;
 };
 
 /**
@@ -138,7 +121,7 @@ export function calculateGeneralAerobicScore(
     lookbackDays: number = 90
 ): { score: number; totalMinutes: number; activityTypes: string[] } {
     const now = new Date();
-    const cutoffDate = new Date(now.getTime() - lookbackDays * 24 * 60 * 60 * 1000);
+    const cutoffDate = new Date(now.getTime() - lookbackDays * DAY_MS);
 
     // Filter to non-running activities within the lookback period
     const runningTypes = ['RUN', 'VIRTUAL_RUN', 'TRAIL_RUN'];
@@ -219,8 +202,8 @@ export function calculateMarathonShape(
 
     const now = new Date();
     const nowTime = now.getTime();
-    const sixMonthsAgoTime = nowTime - 182 * 24 * 60 * 60 * 1000;
-    const tenWeeksAgoTime = nowTime - 70 * 24 * 60 * 60 * 1000;
+    const sixMonthsAgoTime = nowTime - 182 * DAY_MS;
+    const tenWeeksAgoTime = nowTime - 70 * DAY_MS;
 
     // Pre-calculate timestamps for efficient filtering and calculation
     // This avoids parsing dates repeatedly inside loops
@@ -253,7 +236,7 @@ export function calculateMarathonShape(
     let longRunPoints = 0;
     longRuns.forEach(run => {
         const distKm = run.distance / 1000;
-        const daysAgo = (nowTime - run.timestamp) / (24 * 60 * 60 * 1000);
+        const daysAgo = (nowTime - run.timestamp) / DAY_MS;
 
         // Points formula: exponential for distance, decay for recency
         // Base: 0.5 points at 13km, ~1.1 at 30km, ~1.8 at 35km
@@ -404,6 +387,7 @@ export function solveCalibrationFactor(
 
     // Base predicted (without calibration)
     const baseShapePenalty = (1 - Math.min(shapePercent, 100) / 100) * shapeImpact;
+    // eslint-disable-next-line no-unused-vars
     const basePredictedSeconds = optimalSeconds * (1 + baseShapePenalty);
 
     // If actual == basePredicted, factor = 1.0
@@ -458,7 +442,7 @@ export function calculateWeightedEffectiveVO2max(
 
         if (vo2 > 0) {
             // Weight by recency: more recent = higher weight
-            const daysAgo = (now.getTime() - new Date(a.startDate).getTime()) / (24 * 60 * 60 * 1000);
+            const daysAgo = (now.getTime() - new Date(a.startDate).getTime()) / DAY_MS;
             const weight = Math.pow(0.95, daysAgo); // 5% decay per day
 
             weightedSum += vo2 * weight;

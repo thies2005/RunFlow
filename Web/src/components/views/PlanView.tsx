@@ -1,14 +1,11 @@
-import { useState, useMemo, memo } from 'react';
+import { useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Calendar, Eye, EyeOff } from 'lucide-react';
 import { format, startOfWeek } from 'date-fns';
 import {
     DndContext,
-    useSensor,
     useSensors,
     DragEndEvent,
-    PointerSensor,
-    TouchSensor,
 } from '@dnd-kit/core';
 import { PlanWeek } from '@/app/plan/components/PlanWeek';
 import { ErrorBoundary, Footer } from '@/components';
@@ -18,13 +15,13 @@ interface PlanViewProps {
     data: PlanResponse | undefined;
     isLoading: boolean;
     showUnlinked: boolean;
-    setShowUnlinked: (show: boolean) => void;
+    setShowUnlinked: (_show: boolean) => void;
     sensors: ReturnType<typeof useSensors>;
-    handleDragEnd: (event: DragEndEvent) => void;
-    handleEdit: (workout: WorkoutWithLinkedActivity) => void;
-    handleComplete: (workout: WorkoutWithLinkedActivity, e: React.MouseEvent) => void;
-    handleCreate: (date: Date) => void;
-    handleActivityClick: (activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, e: React.MouseEvent) => void;
+    handleDragEnd: (_event: DragEndEvent) => void;
+    handleEdit: (_workout: WorkoutWithLinkedActivity) => void;
+    handleComplete: (_workout: WorkoutWithLinkedActivity, _e: React.MouseEvent) => void;
+    handleCreate: (_date: Date) => void;
+    handleActivityClick: (_activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, _e: React.MouseEvent) => void;
     showHeader?: boolean;
 }
 

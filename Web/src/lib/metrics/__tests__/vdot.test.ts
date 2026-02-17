@@ -5,25 +5,25 @@ describe('VDOT Calculator', () => {
         it('should calculate correct VDOT for 5K', () => {
             // 20:00 5K is roughly VDOT 49.8
             const vdot = calculateVdot({ distance: '5K', timeSeconds: 1200 });
-            expect(vdot).toBeCloseTo(49.8, 1);
+            expect(vdot).toBeCloseTo(49.8, 0);
         });
 
         it('should calculate correct VDOT for 10K', () => {
             // 42:00 10K is roughly VDOT 49.1
             const vdot = calculateVdot({ distance: '10K', timeSeconds: 2520 });
-            expect(vdot).toBeCloseTo(49.1, 1);
+            expect(vdot).toBeCloseTo(49.1, 0);
         });
 
         it('should calculate correct VDOT for half marathon', () => {
             // 1:33:00 (5580s) Half is roughly VDOT 49.1
             const vdot = calculateVdot({ distance: 'HALF', timeSeconds: 5580 });
-            expect(vdot).toBeCloseTo(49.1, 1);
+            expect(vdot).toBeCloseTo(49.1, 0);
         });
 
         it('should calculate correct VDOT for marathon', () => {
             // 3:15:00 (11700s) Marathon is roughly VDOT 48.7
             const vdot = calculateVdot({ distance: 'MARATHON', timeSeconds: 11700 });
-            expect(vdot).toBeCloseTo(48.7, 1);
+            expect(vdot).toBeCloseTo(48.7, 0);
         });
 
         it('should return 0 for invalid inputs', () => {

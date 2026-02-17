@@ -34,15 +34,8 @@ Sentry.init({
 
     // Before sending event
     beforeSend(event, hint) {
-        // Add additional context
-        if (hint.originalException instanceof Error) {
-            event.extra = {
-                ...event.extra,
-                errorMessage: hint.originalException.message,
-                errorStack: hint.originalException.stack,
-            };
-        }
-
+        // Sentry already captures error details in the main event.
+        // Only add non-sensitive context here.
         return event;
     },
 });

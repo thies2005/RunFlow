@@ -9,9 +9,11 @@
  * Fallback: Standard Promise execution with error logging
  */
 
+import { logger } from '@/lib/logging/logger';
+
 // Type for Vercel's waitUntil context
 interface WaitUntilContext {
-    waitUntil: (promise: Promise<unknown>) => void;
+    waitUntil: (_promise: Promise<unknown>) => void;
 }
 
 // Global store for pending promises (fallback mechanism)
@@ -28,7 +30,7 @@ export function runBackgroundTask<T>(
     context?: WaitUntilContext
 ): void {
     const taskPromise = task().catch((error) => {
-        console.error('[BackgroundTask] Error:', error);
+        logger.error('Background task error', { error: error instanceof Error ? error.message : String(error) });
     });
 
     // Use Vercel's waitUntil if available

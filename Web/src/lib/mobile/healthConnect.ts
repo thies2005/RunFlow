@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { Health, HealthDataType, WorkoutType, Workout } from '@capgo/capacitor-health';
+import { Health, HealthDataType, WorkoutType } from '@capgo/capacitor-health';
 
 export const isMobile = () => Capacitor.isNativePlatform();
 

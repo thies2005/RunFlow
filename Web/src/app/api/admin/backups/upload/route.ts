@@ -9,18 +9,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
+import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import * as fs from 'fs';
 import * as path from 'path';
-import { pipeline } from 'stream';
-import { promisify } from 'util';
 
-const pump = promisify(pipeline);
 const BACKUPS_DIR = path.join(process.cwd(), 'backups');
 
 export async function POST(request: NextRequest) {
     // Validate CSRF token
     if (!validateCsrfToken(request)) {
         return csrfValidationErrorResponse();
+    }
+
+    const rateLimit = await adminRateLimit(request, 'sensitive');
+    if (!rateLimit.success) {
+        return rateLimit.error;
     }
 
     const authResult = await requireAdmin(request);
@@ -81,11 +84,13 @@ export async function POST(request: NextRequest) {
 
         console.log(`[Admin Backup Upload] Saved: ${file.name} (${buffer.length} bytes)`);
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             success: true,
             message: 'Backup uploaded successfully',
             filename: file.name
         });
+
+        return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
 
     } catch (error) {
         console.error('[Admin Backup Upload] Error:', error);

@@ -74,7 +74,17 @@ export async function GET(req: Request) {
         }
 
         // Fetch unlinked activities within the plan period (if requested)
-        let unlinkedActivities: any[] = [];
+        // M-06 fix: Define proper type for unlinked activities
+        let unlinkedActivities: Array<{
+            id: string;
+            name: string;
+            startDate: Date;
+            distance: number;
+            movingTime: number;
+            averageHr: number | null;
+            averageSpeed: number | null;
+            type: string;
+        }> = [];
         if (includeUnlinked) {
             const planStartDate = activeGoal.createdAt;
             const planEndDate = activeGoal.raceDate;

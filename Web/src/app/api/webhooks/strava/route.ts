@@ -82,8 +82,6 @@ export async function GET(req: Request) {
         return new NextResponse('Server Configuration Error', { status: 500 });
     }
 
-    logger.info('[Strava Webhook] FULL URL:', { url: req.url });
-    logger.info('[Strava Webhook] HEADERS:', Object.fromEntries(req.headers.entries()));
 
     const receivedToken = token?.trim();
     const expectedToken = verifyToken?.trim();

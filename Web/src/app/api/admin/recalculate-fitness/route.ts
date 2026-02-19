@@ -1,4 +1,3 @@
-
 /**
  * Admin Endpoint: Recalculate Fitness
  * 
@@ -15,6 +14,7 @@ import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import pLimit from 'p-limit';
 
 export const maxDuration = 300;
 
@@ -53,38 +53,55 @@ export async function POST(request: NextRequest) {
 
         console.log(`[Admin] Found ${users.length} users to process.`);
 
-        const results = [];
+        // 3. Fetch earliest activities for relevant users efficiently
+        // Use groupBy to get the earliest activity date for each user in one query
+        const whereClause = targetUserId ? { userId: targetUserId } : undefined;
 
-        // 3. Process each user
-        for (const user of users) {
+        const userActivities = await prisma.activity.groupBy({
+            by: ['userId'],
+            _min: {
+                startDate: true
+            },
+            where: whereClause
+        });
+
+        // Create a map for O(1) lookup: userId -> earliestDate
+        const activityMap = new Map<string, Date>();
+        userActivities.forEach(group => {
+            if (group._min.startDate) {
+                activityMap.set(group.userId, group._min.startDate);
+            }
+        });
+
+        // 4. Process users concurrently with rate limiting
+        const limit = pLimit(5); // limit concurrency to avoid overloading the database
+
+        const promises = users.map(user => limit(async () => {
             try {
-                // Find earliest activity date for this user
-                const firstActivity = await prisma.activity.findFirst({
-                    where: { userId: user.id },
-                    orderBy: { startDate: 'asc' },
-                    select: { startDate: true }
-                });
+                const startDate = activityMap.get(user.id);
 
-                if (firstActivity) {
-                    console.log(`[Admin] Recalculating for user ${user.email} (Start: ${firstActivity.startDate.toISOString()})`);
+                if (startDate) {
+                    console.log(`[Admin] Recalculating for user ${user.email} (Start: ${startDate.toISOString()})`);
 
                     // We pass the earliest activity as a "modified activity".
                     // The updateFitnessCache logic will:
                     // 1. Look for baseline before this date (likely none).
                     // 2. Start from 0/0.
                     // 3. Recalculate everything from that date forward to today.
-                    await updateFitnessCache(user.id, [{ startDate: firstActivity.startDate }]);
+                    await updateFitnessCache(user.id, [{ startDate: startDate }]);
 
-                    results.push({ userId: user.id, email: user.email, status: 'success', startDate: firstActivity.startDate });
+                    return { userId: user.id, email: user.email, status: 'success', startDate: startDate };
                 } else {
                     console.log(`[Admin] User ${user.email} has no activities. Skipping.`);
-                    results.push({ userId: user.id, email: user.email, status: 'skipped', reason: 'no_activities' });
+                    return { userId: user.id, email: user.email, status: 'skipped', reason: 'no_activities' };
                 }
             } catch (err: any) {
                 console.error(`[Admin] Failed to recalculate for user ${user.email}:`, err);
-                results.push({ userId: user.id, email: user.email, status: 'error', error: err.message });
+                return { userId: user.id, email: user.email, status: 'error', error: err.message };
             }
-        }
+        }));
+
+        const results = await Promise.all(promises);
 
         const response = NextResponse.json({
             message: 'Recalculation complete',

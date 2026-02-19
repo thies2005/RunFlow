@@ -112,7 +112,8 @@ export default function Dashboard() {
     // Onboarding Redirect (Check if user has completed onboarding by having an active goal)
     // Users with an active goal have completed onboarding - don't redirect them
     // Do NOT redirect if there's an error (show the error instead)
-    if (status === 'authenticated' && !isLoading && !activeGoal && !hasError) {
+    const hasOnboarded = goalsList.length > 0;
+    if (status === 'authenticated' && !isLoading && !hasOnboarded && !hasError) {
         router.push('/onboarding');
         return null;
     }

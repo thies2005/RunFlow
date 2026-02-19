@@ -18,7 +18,6 @@ import { prisma } from '@/lib/db';
 import { refreshStravaToken } from './oauth';
 import { fetchStravaActivities, fetchSingleActivity, fetchActivityStreams, fetchAthleteProfile } from './fetch';
 import { DAY_MS } from '@/lib/constants';
-export { rateLimiter } from './fetch';
 import { enrichActivityMetrics, transformActivityData, type MetricsInput } from './transform';
 import { upsertActivity, createNewActivityNotification, updateUserProfile, updateSyncStatus, fetchExistingActivities, getLastActivityDate } from './persistence';
 import { calculateAndSaveFitnessMetrics, type ModifiedActivity } from './fitness';

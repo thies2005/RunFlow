@@ -21,12 +21,8 @@ async function main() {
                 console.log('    AI Enabled:', s.aiEnabled);
                 console.log('    Custom API Key Set:', !!s.customApiKey);
                 if (s.customApiKey) {
-                    try {
-                        const decrypted = decryptToken(s.customApiKey);
-                        console.log('    Decrypted Key Start:', (decrypted ? decrypted.substring(0, 10) : 'NULL/FAILED') + '...');
-                    } catch (e) {
-                        console.log('    Could not decrypt key (might be plaintext):', s.customApiKey.substring(0, 10));
-                    }
+                    // We don't log the key even in part for security reasons
+                    console.log('    Custom API Key: [PRESENT]');
                 }
                 console.log('    Custom Base URL:', s.customBaseUrl);
             } else {

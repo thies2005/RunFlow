@@ -3,9 +3,22 @@ const fs = require('fs');
 const zlib = require('zlib');
 const { createDecipheriv } = require('crypto');
 
-const BACKUP_PATH = 'C:/Users/thies/Antigravity/Full RunFlow/runflow-backup-2026-02-11T15-58-51-536Z.sql.gz';
-const KEY_BASE64 = 'biQGWN2GVnCScfVKmn3/dH8Ky203KM9AEJtFypnQwVE=';
+const BACKUP_PATH = process.env.BACKUP_PATH || 'C:/Users/thies/Antigravity/Full RunFlow/runflow-backup-2026-02-11T15-58-51-536Z.sql.gz';
+const KEY_BASE64 = process.env.ENCRYPTION_KEY;
+
+if (!KEY_BASE64) {
+    console.error('Error: ENCRYPTION_KEY environment variable is required.');
+    console.error('Usage: ENCRYPTION_KEY=<base64_key> BACKUP_PATH=<path_to_backup> node scan_strings.js');
+    process.exit(1);
+}
+
 const KEY = Buffer.from(KEY_BASE64, 'base64');
+
+if (KEY.length !== 32) {
+    console.error('Error: ENCRYPTION_KEY must be a valid 32-byte base64 string.');
+    process.exit(1);
+}
+
 const ALGORITHM = 'aes-256-gcm';
 
 function decryptToken(encryptedToken) {

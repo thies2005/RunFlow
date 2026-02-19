@@ -18,13 +18,14 @@ import { prisma } from '@/lib/db';
 import { refreshStravaToken } from './oauth';
 import { fetchStravaActivities, fetchSingleActivity, fetchActivityStreams, fetchAthleteProfile } from './fetch';
 import { DAY_MS } from '@/lib/constants';
-export { rateLimiter } from './fetch';
 import { enrichActivityMetrics, transformActivityData, type MetricsInput } from './transform';
 import { upsertActivity, createNewActivityNotification, updateUserProfile, updateSyncStatus, fetchExistingActivities, getLastActivityDate } from './persistence';
 import { calculateAndSaveFitnessMetrics, type ModifiedActivity } from './fitness';
 import { logger } from '@/lib/logging/logger';
+import pLimit from 'p-limit';
 
 const HR_MAX_UPPER_BOUND = 220;
+const SYNC_CONCURRENCY = 10;
 
 function getRangeStartTimestamp(range?: string): number | undefined {
     if (!range || range === 'ALL') return undefined;
@@ -166,7 +167,9 @@ export async function syncUserActivities(userId: string, range?: string): Promis
             const stravaIds = activities.map(a => BigInt(a.id));
             const existingMap = await fetchExistingActivities(stravaIds);
 
-            for (const activity of activities) {
+            const limit = pLimit(SYNC_CONCURRENCY);
+
+            const results = await Promise.all(activities.map((activity, index) => limit(async () => {
                 try {
                     const existing = existingMap.get(BigInt(activity.id).toString()) || null;
 
@@ -193,7 +196,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         }
                     }
 
-                    if (page === 1 && skipped < 3) {
+                    if (page === 1 && (skipped + index) < 3) {
                         logger.info('Activity sync status', { 
                             activityId: activity.id, 
                             isNew, 
@@ -204,14 +207,15 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     }
 
                     if (!isNew && !needsUpdate) {
-                        skipped++;
-                        continue;
+                        return { status: 'skipped' as const };
                     }
 
                     if (activity.max_heartrate &&
                         activity.max_heartrate > (currentHrMax || 0) + 5 &&
                         activity.max_heartrate < HR_MAX_UPPER_BOUND) {
 
+                        // Note: This might have race conditions in parallel execution,
+                        // but worst case is multiple redundant updates.
                         currentHrMax = activity.max_heartrate;
 
                         await updateUserProfile(userId, { hrMax: currentHrMax });
@@ -249,6 +253,8 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     const activityData = transformActivityData(activity, metrics);
                     activityData.streams = streams;
 
+                    let resultStatus: 'synced' = 'synced';
+
                     if (isNew) {
                         await prisma.activity.create({
                             data: {
@@ -257,7 +263,6 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                                 ...activityData
                             },
                         });
-                        synced++;
                     } else if (needsUpdate) {
                         await prisma.activity.update({
                             where: { id: existing.id },
@@ -266,15 +271,29 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                                 updatedAt: new Date()
                             }
                         });
-                        synced++;
                     }
 
                     if (isNew || needsUpdate) {
-                        modifiedActivities.push({ startDate: new Date(activity.start_date) });
+                        return { status: 'synced' as const, modifiedDate: new Date(activity.start_date) };
                     }
+
+                    return { status: 'skipped' as const };
 
                 } catch (err) {
                     logger.error('Error syncing activity', { activityId: activity.id, error: err instanceof Error ? err.message : String(err) });
+                    return { status: 'error' as const };
+                }
+            })));
+
+            for (const result of results) {
+                if (result.status === 'synced') {
+                    synced++;
+                    if (result.modifiedDate) {
+                        modifiedActivities.push({ startDate: result.modifiedDate });
+                    }
+                } else if (result.status === 'skipped') {
+                    skipped++;
+                } else if (result.status === 'error') {
                     errors++;
                 }
             }

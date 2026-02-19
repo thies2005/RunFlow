@@ -37,49 +37,60 @@ export async function GET(request: NextRequest) {
             return errorResponses.unauthorized();
         }
 
-        // Try cache
-        const cacheKey = `mobile:stats:${user.id}`;
-        const redis = await getRedisClient();
-
-        if (redis) {
-            try {
-                const cached = await redis.get(cacheKey);
-                if (cached) {
-                    const data = JSON.parse(cached);
-                    const response = cachedResponse(data, {
-                        maxAge: CACHE_TTL,
-                        staleWhileRevalidate: 60,
-                        private: true
-                    });
-
-                    // Add rate limit headers
-                    const headers = rateLimitHeaders(rateLimitResult);
-                    Object.entries(headers).forEach(([key, value]) => {
-                        response.headers.set(key, value);
-                    });
-
-                    return response;
-                }
-            } catch (cacheError) {
-                console.error('[Mobile Stats Cache] Error reading from cache:', cacheError);
-            }
-        }
-
-        // Fetch user settings and active goal
-        const [userData, activeGoal] = await Promise.all([
+        // Fetch checks for caching (User settings, Goal, Last Activity Update)
+        const [userData, activeGoal, lastActivityUpdate, activityCount, redis] = await Promise.all([
             prisma.user.findUnique({
                 where: { id: user.id },
-                select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true }
+                select: {
+                    hrMax: true,
+                    vdotCorrectionFactor: true,
+                    includeCrossTraining: true,
+                    updatedAt: true
+                }
             }),
             prisma.goal.findFirst({
                 where: { userId: user.id, isActive: true },
-            })
+                select: {
+                    currentVdot: true,
+                    updatedAt: true,
+                    isActive: true
+                }
+            }),
+            prisma.activity.findFirst({
+                where: { userId: user.id },
+                orderBy: { updatedAt: 'desc' },
+                select: { updatedAt: true }
+            }),
+            prisma.activity.count({
+                where: { userId: user.id }
+            }),
+            getRedisClient()
         ]);
 
         const maxHR = userData?.hrMax || 185;
         const vdotCorrectionFactor = userData?.vdotCorrectionFactor || 1.0;
         const includeCrossTraining = userData?.includeCrossTraining ?? true;
         const currentVdot = activeGoal?.currentVdot || null;
+
+        // Try Cache
+        // Cache key includes update timestamps and count to ensure validity (even on deletion)
+        const userUpdate = userData?.updatedAt?.getTime() || 0;
+        const goalUpdate = activeGoal?.updatedAt?.getTime() || 0;
+        const activityUpdate = lastActivityUpdate?.updatedAt?.getTime() || 0;
+
+        const cacheKey = `analytics:stats:${user.id}:v1:${userUpdate}:${goalUpdate}:${activityUpdate}:${activityCount}`;
+
+        if (redis) {
+            try {
+                const cached = await redis.get(cacheKey);
+                if (cached) {
+                    return NextResponse.json(JSON.parse(cached), { headers: rateLimitHeaders(rateLimitResult) });
+                }
+            } catch (e) {
+                // Ignore cache errors and proceed to calculation
+                console.error('Cache read error:', e);
+            }
+        }
 
         // Fetch activities for last 6 months
         const sixMonthsAgo = new Date();
@@ -144,12 +155,13 @@ export async function GET(request: NextRequest) {
             hrMax: maxHR
         };
 
-        // Store in cache
+        // Update Cache
         if (redis) {
             try {
-                await redis.set(cacheKey, JSON.stringify(responseData), { ex: CACHE_TTL });
-            } catch (cacheError) {
-                console.error('[Mobile Stats Cache] Error writing to cache:', cacheError);
+                // Cache for 24 hours (key invalidation handles updates)
+                await redis.set(cacheKey, JSON.stringify(responseData), { ex: 86400 });
+            } catch (e) {
+                console.error('[Mobile Stats Cache] Cache write error:', e);
             }
         }
 

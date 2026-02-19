@@ -20,7 +20,7 @@ jest.mock('@/lib/db', () => ({
             findMany: jest.fn(),
         },
         activity: {
-            findFirst: jest.fn(),
+            groupBy: jest.fn(),
         },
     },
 }));
@@ -52,9 +52,10 @@ describe('POST /api/admin/recalculate-fitness', () => {
                 email: 'user2@example.com',
             },
         ]);
-        (prisma.activity.findFirst as jest.Mock).mockResolvedValue({
-            startDate: new Date('2023-01-01'),
-        });
+        (prisma.activity.groupBy as jest.Mock).mockResolvedValue([
+            { userId: 'user-1', _min: { startDate: new Date('2023-01-01') } },
+            { userId: 'user-2', _min: { startDate: new Date('2023-01-02') } },
+        ]);
         (updateFitnessCache as jest.Mock).mockResolvedValue(undefined);
     });
 
@@ -74,6 +75,13 @@ describe('POST /api/admin/recalculate-fitness', () => {
         expect(data).toHaveProperty('totalUsers', 2);
         expect(data).toHaveProperty('results');
         expect(data.results).toHaveLength(2);
+
+        // Verify groupBy was called correctly
+        expect(prisma.activity.groupBy).toHaveBeenCalledWith({
+            by: ['userId'],
+            _min: { startDate: true },
+            where: undefined
+        });
     });
 
     it('should handle successful request for specific user', async () => {
@@ -82,6 +90,9 @@ describe('POST /api/admin/recalculate-fitness', () => {
                 id: 'user-1',
                 email: 'user1@example.com',
             },
+        ]);
+        (prisma.activity.groupBy as jest.Mock).mockResolvedValue([
+            { userId: 'user-1', _min: { startDate: new Date('2023-01-01') } },
         ]);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/admin/recalculate-fitness', {
@@ -101,6 +112,11 @@ describe('POST /api/admin/recalculate-fitness', () => {
                 where: { id: 'user-1' },
             })
         );
+        expect(prisma.activity.groupBy).toHaveBeenCalledWith({
+            by: ['userId'],
+            _min: { startDate: true },
+            where: { userId: 'user-1' }
+        });
     });
 
     it('should return 401 when not admin', async () => {
@@ -139,7 +155,7 @@ describe('POST /api/admin/recalculate-fitness', () => {
     });
 
     it('should skip users without activities', async () => {
-        (prisma.activity.findFirst as jest.Mock).mockResolvedValue(null);
+        (prisma.activity.groupBy as jest.Mock).mockResolvedValue([]);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/admin/recalculate-fitness', {
             method: 'POST',

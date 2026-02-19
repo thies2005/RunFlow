@@ -150,7 +150,15 @@ async function checkRateLimitRedis(
             limit,
         };
     } catch (error) {
-        return checkRateLimitInMemory(key, limit, windowSeconds);
+        console.error('Redis rate limit error:', error);
+        // Fail closed for security in case of Redis failure
+        return {
+            allowed: false,
+            remaining: 0,
+            resetAt: Math.floor((now + windowMs) / 1000),
+            limit,
+            retryAfter: 60,
+        };
     }
 }
 
@@ -174,6 +182,19 @@ export async function checkRateLimitAsync(
     const hasRedis = await initRedis();
     if (hasRedis && redisClient) {
         return checkRateLimitRedis(key, limit, windowSeconds);
+    }
+
+    // In production, we must not fall back to in-memory rate limiting as it's ineffective
+    // in serverless environments (per-instance state).
+    if (process.env.NODE_ENV === 'production') {
+        console.error('Security: Redis not available in production. Rate limiting would be ineffective.');
+        return {
+            allowed: false,
+            remaining: 0,
+            resetAt: Math.floor((Date.now() + windowSeconds * 1000) / 1000),
+            limit,
+            retryAfter: 60,
+        };
     }
 
     return checkRateLimitInMemory(key, limit, windowSeconds);

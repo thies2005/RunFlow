@@ -3,7 +3,8 @@
  * Replaces all 'any' types throughout the codebase
  */
 
-import { ActivityType as PrismaActivityType } from '@prisma/client';
+import { ActivityType } from '@prisma/client';
+export { ActivityType } from '@prisma/client';
 
 // ============================================
 // Activity Type Utilities (M-09)
@@ -60,7 +61,7 @@ export interface Activity {
     id: string;
     stravaId: bigint;
     userId: string;
-    type: PrismaActivityType;
+    type: ActivityType;
     sportType: string | null;
     name: string;
     description: string | null;
@@ -215,7 +216,7 @@ export interface WorkoutWithLinkedActivity extends Workout {
 export interface ActivityListItem {
     id: string;
     stravaId: string;
-    type: 'RUN' | 'VIRTUAL_RIDE' | 'RIDE' | 'WALK' | 'HIKE' | 'SWIM' | 'WORKOUT' | 'OTHER';
+    type: ActivityType;
     sportType: string | null;
     name: string;
     description: string | null;

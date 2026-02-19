@@ -11,12 +11,11 @@
  */
 
 import type { Sex } from './trimp';
+import { ActivityType } from '@/lib/types';
 
 // ============================================
 // Types
 // ============================================
-
-export type ActivityType = 'RUN' | 'RIDE' | 'VIRTUAL_RIDE' | 'SWIM' | 'WALK' | 'HIKE' | 'WORKOUT' | 'OTHER';
 
 export interface CalorieInput {
     durationMinutes: number;

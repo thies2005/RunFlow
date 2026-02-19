@@ -9,8 +9,8 @@
  * - Metrics enrichment
  */
 
-import { WorkoutType } from '@/lib/types';
-import { type ActivityType as CalorieActivityType, calculateCalories, calculateAge } from '@/lib/metrics/calories';
+import { ActivityType, WorkoutType } from '@/lib/types';
+import { calculateCalories, calculateAge } from '@/lib/metrics/calories';
 import { calculateTrimp, type Sex } from '@/lib/metrics/trimp';
 import { calculateRunningTss, getActivityContribution } from '@/lib/metrics/fitness';
 import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
@@ -25,7 +25,7 @@ const HR_MAX_UPPER_BOUND = 220;
 export interface ActivityData {
     name: string;
     description: string | null;
-    type: any;
+    type: ActivityType;
     sportType: string;
     startDate: Date;
     timezone: string;
@@ -88,19 +88,19 @@ export interface ZoneTimes {
     z7: number;
 }
 
-function mapActivityType(stravaType: string): string {
-    const typeMap: Record<string, string> = {
-        'Run': 'RUN',
-        'VirtualRun': 'RUN',
-        'TrailRun': 'RUN',
-        'Ride': 'RIDE',
-        'VirtualRide': 'VIRTUAL_RIDE',
-        'Walk': 'WALK',
-        'Hike': 'HIKE',
-        'Swim': 'SWIM',
-        'Workout': 'WORKOUT',
+function mapActivityType(stravaType: string): ActivityType {
+    const typeMap: Record<string, ActivityType> = {
+        'Run': ActivityType.RUN,
+        'VirtualRun': ActivityType.RUN,
+        'TrailRun': ActivityType.RUN,
+        'Ride': ActivityType.RIDE,
+        'VirtualRide': ActivityType.VIRTUAL_RIDE,
+        'Walk': ActivityType.WALK,
+        'Hike': ActivityType.HIKE,
+        'Swim': ActivityType.SWIM,
+        'Workout': ActivityType.WORKOUT,
     };
-    return typeMap[stravaType] || 'OTHER';
+    return typeMap[stravaType] || ActivityType.OTHER;
 }
 
 function determineWorkoutType(activity: StravaActivity): WorkoutType {
@@ -165,6 +165,7 @@ export function enrichActivityMetrics(input: MetricsInput): {
     const { activity, user, currentHrMax, streams, goals } = input;
     const effectiveHrMax = currentHrMax || DEFAULT_HR_MAX;
     const effectiveHrRest = user.hrRest || DEFAULT_HR_REST;
+    const mappedType = mapActivityType(activity.type);
 
     let trimp: number | null = null;
     if (activity.has_heartrate && activity.average_heartrate) {
@@ -180,10 +181,9 @@ export function enrichActivityMetrics(input: MetricsInput): {
 
     let calculatedCalories: number | null = activity.calories ?? null;
     if (calculatedCalories === null || calculatedCalories === 0) {
-        const activityTypeForCalories = mapActivityType(activity.type) as CalorieActivityType;
         const calorieResult = calculateCalories({
             durationMinutes: activity.moving_time / 60,
-            activityType: activityTypeForCalories,
+            activityType: mappedType,
             weightKg: user.weight ?? undefined,
             averageHr: activity.average_heartrate,
             age: user.birthDate ? calculateAge(user.birthDate) : undefined,
@@ -194,7 +194,7 @@ export function enrichActivityMetrics(input: MetricsInput): {
     }
 
     let runningTss: number | null = null;
-    const contribution = getActivityContribution(activity.type);
+    const contribution = getActivityContribution(mappedType);
     if (contribution.contributesToRunningTss && activity.distance > 0) {
         let thresholdPace = 300;
         if (goals && goals.length > 0) {

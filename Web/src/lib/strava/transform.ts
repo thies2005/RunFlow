@@ -86,7 +86,7 @@ export interface ZoneTimes {
     z7: number;
 }
 
-function mapActivityType(stravaType: string): string {
+export function mapActivityType(stravaType: string): string {
     const typeMap: Record<string, string> = {
         'Run': 'RUN',
         'VirtualRun': 'RUN',
@@ -97,6 +97,9 @@ function mapActivityType(stravaType: string): string {
         'Hike': 'HIKE',
         'Swim': 'SWIM',
         'Workout': 'WORKOUT',
+        'Rowing': 'ROWING',
+        'Elliptical': 'ELLIPTICAL',
+        'StairStepper': 'STAIR_STEPPER',
     };
     return typeMap[stravaType] || 'OTHER';
 }
@@ -191,7 +194,7 @@ export function enrichActivityMetrics(input: MetricsInput): {
     }
 
     let runningTss: number | null = null;
-    const contribution = getActivityContribution(activity.type);
+    const contribution = getActivityContribution(mapActivityType(activity.type));
     if (contribution.contributesToRunningTss && activity.distance > 0) {
         let thresholdPace = 300;
         if (goals && goals.length > 0) {

@@ -1,81 +1,74 @@
 import { calculateZoneTimes } from './transform';
 
 describe('calculateZoneTimes', () => {
-    it('should calculate time in zones correctly', () => {
-        // Create heart rate data
-        const heartrates = [
-            100, // z1 (<= 110)
-            110, // z1 (<= 110)
-            120, // z2 (<= 130)
-            130, // z2 (<= 130)
-            140, // z3 (<= 150)
-            150, // z3 (<= 150)
-            160, // z4 (<= 170)
-            170, // z4 (<= 170)
-            180, // z5 (<= 180)
-            190, // z6 (<= 190)
-            200  // z7 (> 190)
-        ];
+    // Standard zone thresholds for testing
+    const defaultZoneThresholds = {
+        z1: 130,
+        z2: 140,
+        z3: 150,
+        z4: 160,
+        z5: 170,
+        z6: 180,
+    };
 
-        // Create time data (seconds)
-        const times = [
-            0,
-            10,
-            20,
-            30,
-            40,
-            50,
-            60,
-            70,
-            80,
-            90,
-            100
-        ];
+    it('should calculate zones correctly for basic inputs', () => {
+        const heartrates = [120, 135, 145, 155, 165, 175, 185];
+        const times = [0, 5, 10, 15, 20, 25, 30];
 
-        // Define zone thresholds
-        const zoneThresholds = {
-            z1: 110,
-            z2: 130,
-            z3: 150,
-            z4: 170,
-            z5: 180,
-            z6: 190
-        };
+        const result = calculateZoneTimes(heartrates, times, defaultZoneThresholds);
 
-        const result = calculateZoneTimes(heartrates, times, zoneThresholds);
+        expect(result).toEqual({ z1: 5, z2: 5, z3: 5, z4: 5, z5: 5, z6: 5, z7: 1 });
+    });
 
-        // Expected durations:
-        // i=0: hr=100 (z1), duration=10-0=10 -> z1+=10
-        // i=1: hr=110 (z1), duration=20-10=10 -> z1+=10
-        // i=2: hr=120 (z2), duration=30-20=10 -> z2+=10
-        // i=3: hr=130 (z2), duration=40-30=10 -> z2+=10
-        // i=4: hr=140 (z3), duration=50-40=10 -> z3+=10
-        // i=5: hr=150 (z3), duration=60-50=10 -> z3+=10
-        // i=6: hr=160 (z4), duration=70-60=10 -> z4+=10
-        // i=7: hr=170 (z4), duration=80-70=10 -> z4+=10
-        // i=8: hr=180 (z5), duration=90-80=10 -> z5+=10
-        // i=9: hr=190 (z6), duration=100-90=10 -> z6+=10
-        // i=10: hr=200 (z7), duration=1 (default) -> z7+=1
+    it('should cap duration at 10 seconds', () => {
+        const heartrates = [120, 120];
+        const times = [0, 20]; // 20s gap
 
-        expect(result.z1).toBe(20);
-        expect(result.z2).toBe(20);
-        expect(result.z3).toBe(20);
-        expect(result.z4).toBe(20);
-        expect(result.z5).toBe(10);
-        expect(result.z6).toBe(10);
+        const result = calculateZoneTimes(heartrates, times, defaultZoneThresholds);
+
+        expect(result.z1).toBe(11);
+        expect(result.z2).toBe(0);
+    });
+
+    it('should handle small durations correctly', () => {
+        const heartrates = [120, 120];
+        const times = [0, 2]; // 2s gap
+
+        const result = calculateZoneTimes(heartrates, times, defaultZoneThresholds);
+
+        expect(result.z1).toBe(3);
+    });
+
+    it('should handle exact threshold boundaries', () => {
+        const heartrates = [130, 131];
+        const times = [0, 5];
+
+        const result = calculateZoneTimes(heartrates, times, defaultZoneThresholds);
+
+        expect(result.z1).toBe(5);
+        expect(result.z2).toBe(1);
+    });
+
+    it('should handle values in Zone 7', () => {
+        const heartrates = [200];
+        const times = [0];
+
+        const result = calculateZoneTimes(heartrates, times, defaultZoneThresholds);
+
         expect(result.z7).toBe(1);
     });
 
-    it('should handle gaps in time correctly (max 10s)', () => {
-         const heartrates = [100, 100];
-         const times = [0, 20]; // 20s gap
-         const zoneThresholds = { z1: 110, z2: 130, z3: 150, z4: 170, z5: 180, z6: 190 };
+    it('should handle empty arrays', () => {
+        const result = calculateZoneTimes([], [], defaultZoneThresholds);
+        expect(result).toEqual({ z1: 0, z2: 0, z3: 0, z4: 0, z5: 0, z6: 0, z7: 0 });
+    });
 
-         const result = calculateZoneTimes(heartrates, times, zoneThresholds);
+    it('should use default thresholds if not provided', () => {
+        const heartrates = [50, 65, 75, 85, 92, 98, 110];
+        const times = [0, 5, 10, 15, 20, 25, 30];
 
-         // i=0: hr=100, duration = min(20-0, 10) = 10 -> z1+=10
-         // i=1: hr=100, duration = 1 -> z1+=1
+        const result = calculateZoneTimes(heartrates, times);
 
-         expect(result.z1).toBe(11);
+        expect(result).toEqual({ z1: 5, z2: 5, z3: 5, z4: 5, z5: 5, z6: 5, z7: 1 });
     });
 });

@@ -177,7 +177,7 @@ export function getActivityContribution(activityType: string): ActivityContribut
     const type = activityType.toUpperCase();
 
     // Running activities
-    if (type === 'RUN' || type === 'VIRTUAL_RUN' || type === 'TRAIL_RUN') {
+    if (type === 'RUN') {
         return {
             contributesToCtl: true,
             contributesToRunningTss: true,

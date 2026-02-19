@@ -25,6 +25,7 @@ import { logger } from '@/lib/logging/logger';
 import pLimit from 'p-limit';
 
 const HR_MAX_UPPER_BOUND = 220;
+const SYNC_CONCURRENCY = 10;
 
 function getRangeStartTimestamp(range?: string): number | undefined {
     if (!range || range === 'ALL') return undefined;
@@ -166,7 +167,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
             const stravaIds = activities.map(a => BigInt(a.id));
             const existingMap = await fetchExistingActivities(stravaIds);
 
-            const limit = pLimit(5);
+            const limit = pLimit(SYNC_CONCURRENCY);
 
             const results = await Promise.all(activities.map((activity, index) => limit(async () => {
                 try {

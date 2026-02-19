@@ -25,16 +25,7 @@ export function formatDuration(seconds: number | null | undefined): string {
  * Format seconds to race time (H:MM:SS)
  */
 export function formatRaceTime(totalSeconds: number): string {
-    if (totalSeconds <= 0) return '0:00';
-
-    const hours = Math.floor(totalSeconds / SECONDS_PER_HOUR);
-    const minutes = Math.floor((totalSeconds % SECONDS_PER_HOUR) / 60);
-    const seconds = Math.round(totalSeconds % 60);
-
-    if (hours > 0) {
-        return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return formatDuration(totalSeconds);
 }
 
 /**

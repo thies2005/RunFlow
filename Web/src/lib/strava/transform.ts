@@ -19,8 +19,6 @@ import type { StravaActivity } from './fetch';
 
 const DEFAULT_HR_MAX = 185;
 const DEFAULT_HR_REST = 60;
-// eslint-disable-next-line no-unused-vars
-const HR_MAX_UPPER_BOUND = 220;
 
 export interface ActivityData {
     name: string;

@@ -5,34 +5,34 @@ import { createHmac } from 'crypto';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { safeBigInt } from '@/lib/utils/bigint';
 import { runBackgroundTask } from '@/lib/utils/backgroundTask';
+import { logger } from '@/lib/logging/logger';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-const VERIFY_TOKEN = process.env.STRAVA_VERIFY_TOKEN;
-const CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET;
 
 /**
  * Verify Strava webhook signature using HMAC-SHA256
  * Strava signs webhooks with: HMAC-SHA256(client_secret, body)
  */
 function verifyWebhookSignature(rawBody: string, signature: string | null): boolean {
-    if (!CLIENT_SECRET) {
+    const clientSecret = process.env.STRAVA_CLIENT_SECRET;
+
+    if (!clientSecret) {
         // SECURITY: Fail closed in production - reject webhooks if secret is missing
         if (process.env.NODE_ENV === 'production') {
-            console.error('CRITICAL: STRAVA_CLIENT_SECRET not set in production!');
+            logger.error('CRITICAL: STRAVA_CLIENT_SECRET not set in production!');
             return false;
         }
-        console.warn('STRAVA_CLIENT_SECRET not set, skipping signature verification (dev only)');
+        logger.warn('STRAVA_CLIENT_SECRET not set, skipping signature verification (dev only)');
         return true;
     }
 
     if (!signature) {
-        console.warn('No signature provided in webhook request');
+        logger.warn('No signature provided in webhook request');
         return false;
     }
 
-    const expectedSignature = createHmac('sha256', CLIENT_SECRET)
+    const expectedSignature = createHmac('sha256', clientSecret)
         .update(rawBody)
         .digest('hex');
 
@@ -74,31 +74,31 @@ export async function GET(req: Request) {
     const token = url.searchParams.get('hub.verify_token');
     const challenge = url.searchParams.get('hub.challenge');
 
+    const verifyToken = process.env.STRAVA_VERIFY_TOKEN;
+
     // SECURITY: Fail closed if VERIFY_TOKEN is not configured
-    if (!VERIFY_TOKEN) {
-        console.error('CRITICAL: STRAVA_VERIFY_TOKEN not set!');
+    if (!verifyToken) {
+        logger.error('CRITICAL: STRAVA_VERIFY_TOKEN not set!');
         return new NextResponse('Server Configuration Error', { status: 500 });
     }
 
-    console.log('[Strava Webhook] FULL URL:', req.url);
-    console.log('[Strava Webhook] HEADERS:', Object.fromEntries(req.headers.entries()));
 
     const receivedToken = token?.trim();
-    const expectedToken = VERIFY_TOKEN?.trim();
+    const expectedToken = verifyToken?.trim();
 
-    console.log('[Strava Webhook] Token verification:', {
+    logger.info('[Strava Webhook] Token verification:', {
         match: receivedToken === expectedToken
     });
 
     if (mode === 'subscribe' && receivedToken === expectedToken) {
-        console.log('[Strava Webhook] Verification successful');
+        logger.info('[Strava Webhook] Verification successful');
         return new NextResponse(JSON.stringify({ 'hub.challenge': challenge }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
     }
 
-    console.warn('[Strava Webhook] Verification failed.', {
+    logger.warn('[Strava Webhook] Verification failed.', {
         mode,
         hasToken: !!receivedToken,
         tokenLengthMatch: receivedToken?.length === expectedToken?.length
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
         // Verify webhook signature
         const signature = req.headers.get('x-hub-signature');
         if (!verifyWebhookSignature(rawBody, signature)) {
-            console.error('Webhook signature verification failed');
+            logger.error('Webhook signature verification failed');
             return new NextResponse('Forbidden', { status: 403 });
         }
 
@@ -138,18 +138,18 @@ export async function POST(req: NextRequest) {
         }
 
         if (!isValidWebhookPayload(body)) {
-            console.error('Invalid webhook payload structure');
+            logger.error('Invalid webhook payload structure');
             return new NextResponse('Bad Request', { status: 400 });
         }
 
         const { object_type, aspect_type, object_id, owner_id, updates } = body;
 
-        console.log('Webhook received:', { object_type, aspect_type, owner_id });
+        logger.info('Webhook received:', { object_type, aspect_type, owner_id });
 
         // Handle Deauthorization
         // Event: object_type='athlete', updates={ authorized: 'false' }
         if (object_type === 'athlete' && updates?.authorized === 'false') {
-            console.log(`Deauthorization received for Strava Athlete ${owner_id}`);
+            logger.info(`Deauthorization received for Strava Athlete ${owner_id}`);
 
             const stravaId = owner_id.toString();
 
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
                 await prisma.user.delete({
                     where: { id: account.userId }
                 });
-                console.log(`Deleted user ${account.userId} due to Strava deauthorization.`);
+                logger.info(`Deleted user ${account.userId} due to Strava deauthorization.`);
             }
         }
 
@@ -194,9 +194,9 @@ export async function POST(req: NextRequest) {
                     runBackgroundTask(async () => {
                         try {
                             await syncActivityById(userId, activityId);
-                            console.log(`[BackgroundTask] Synced activity ${activityId} for user ${userId}`);
+                            logger.info(`[BackgroundTask] Synced activity ${activityId} for user ${userId}`);
                         } catch (error) {
-                            console.error(`[BackgroundTask] Failed to sync activity ${activityId}:`, error);
+                            logger.error(`[BackgroundTask] Failed to sync activity ${activityId}:`, { error: error instanceof Error ? error.message : String(error) });
                         }
                     });
                 } else if (aspect_type === 'delete') {
@@ -204,16 +204,16 @@ export async function POST(req: NextRequest) {
                     await prisma.activity.deleteMany({
                         where: { stravaId: safeBigInt(object_id) }
                     });
-                    console.log(`Deleted activity ${object_id} due to Strava webhook.`);
+                    logger.info(`Deleted activity ${object_id} due to Strava webhook.`);
                 }
             } else {
-                console.warn(`Webhook: No user found for Strava athlete ${stravaAthleteId}`);
+                logger.warn(`Webhook: No user found for Strava athlete ${stravaAthleteId}`);
             }
         }
 
         return new NextResponse('EVENT_RECEIVED', { status: 200 });
     } catch (error) {
-        console.error('Webhook error:', error);
+        logger.error('Webhook error:', { error: error instanceof Error ? error.message : String(error) });
         return new NextResponse('Internal Server Error', { status: 500 });
     }
 }

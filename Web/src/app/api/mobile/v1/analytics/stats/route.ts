@@ -12,8 +12,12 @@ import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { getRedisClient } from '@/lib/redis';
+import { cachedResponse } from '@/lib/apiResponse';
 
 export const dynamic = 'force-dynamic';
+
+const CACHE_TTL = 300; // 5 minutes
 
 export async function GET(request: NextRequest) {
     try {
@@ -31,6 +35,34 @@ export async function GET(request: NextRequest) {
         const user = await getAuthenticatedUser(request);
         if (!user) {
             return errorResponses.unauthorized();
+        }
+
+        // Try cache
+        const cacheKey = `mobile:stats:${user.id}`;
+        const redis = await getRedisClient();
+
+        if (redis) {
+            try {
+                const cached = await redis.get(cacheKey);
+                if (cached) {
+                    const data = JSON.parse(cached);
+                    const response = cachedResponse(data, {
+                        maxAge: CACHE_TTL,
+                        staleWhileRevalidate: 60,
+                        private: true
+                    });
+
+                    // Add rate limit headers
+                    const headers = rateLimitHeaders(rateLimitResult);
+                    Object.entries(headers).forEach(([key, value]) => {
+                        response.headers.set(key, value);
+                    });
+
+                    return response;
+                }
+            } catch (cacheError) {
+                console.error('[Mobile Stats Cache] Error reading from cache:', cacheError);
+            }
         }
 
         // Fetch user settings and active goal
@@ -97,7 +129,7 @@ export async function GET(request: NextRequest) {
         const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
-        return NextResponse.json({
+        const responseData = {
             currentWeekMileage,
             effectiveVO2max,
             rawVO2max,
@@ -110,7 +142,30 @@ export async function GET(request: NextRequest) {
             workloadRatio,
             easyTrimp,
             hrMax: maxHR
-        }, { headers: rateLimitHeaders(rateLimitResult) });
+        };
+
+        // Store in cache
+        if (redis) {
+            try {
+                await redis.set(cacheKey, JSON.stringify(responseData), { ex: CACHE_TTL });
+            } catch (cacheError) {
+                console.error('[Mobile Stats Cache] Error writing to cache:', cacheError);
+            }
+        }
+
+        const response = cachedResponse(responseData, {
+            maxAge: CACHE_TTL,
+            staleWhileRevalidate: 60,
+            private: true
+        });
+
+        // Add rate limit headers
+        const headers = rateLimitHeaders(rateLimitResult);
+        Object.entries(headers).forEach(([key, value]) => {
+            response.headers.set(key, value);
+        });
+
+        return response;
 
     } catch (error) {
         return handleApiError(error, {

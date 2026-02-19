@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import {
     Activity, Bike, Move, ChevronDown, ChevronUp,
     AlertCircle, AlertTriangle, Save, Check, Target, Waves, Dumbbell, Rocket, BarChart2
@@ -34,11 +33,9 @@ interface PlanSetupFormProps {
 export default function PlanSetupForm({
     mode,
     onSuccess,
-    onCancel: _onCancel,
     effectiveVO2max: propEffectiveVO2max = 0,
     shapePercent: propShapePercent = 0
 }: PlanSetupFormProps) {
-    const _router = useRouter();
     const queryClient = useQueryClient();
 
     // Target Race (onboarding only)

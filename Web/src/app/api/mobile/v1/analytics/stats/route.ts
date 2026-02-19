@@ -13,8 +13,11 @@ import { AnalyticsService } from '@/lib/services/analytics';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { getRedisClient } from '@/lib/redis';
+import { cachedResponse } from '@/lib/apiResponse';
 
 export const dynamic = 'force-dynamic';
+
+const CACHE_TTL = 300; // 5 minutes
 
 export async function GET(request: NextRequest) {
     try {
@@ -158,11 +161,23 @@ export async function GET(request: NextRequest) {
                 // Cache for 24 hours (key invalidation handles updates)
                 await redis.set(cacheKey, JSON.stringify(responseData), { ex: 86400 });
             } catch (e) {
-                console.error('Cache write error:', e);
+                console.error('[Mobile Stats Cache] Cache write error:', e);
             }
         }
 
-        return NextResponse.json(responseData, { headers: rateLimitHeaders(rateLimitResult) });
+        const response = cachedResponse(responseData, {
+            maxAge: CACHE_TTL,
+            staleWhileRevalidate: 60,
+            private: true
+        });
+
+        // Add rate limit headers
+        const headers = rateLimitHeaders(rateLimitResult);
+        Object.entries(headers).forEach(([key, value]) => {
+            response.headers.set(key, value);
+        });
+
+        return response;
 
     } catch (error) {
         return handleApiError(error, {

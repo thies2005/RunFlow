@@ -1,5 +1,5 @@
 
-import { rateLimiter } from '../strava/sync';
+import { rateLimiter } from '../strava/fetch';
 import { getRedisClient } from '../redis';
 
 // Mock dependencies

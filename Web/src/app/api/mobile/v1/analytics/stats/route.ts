@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { getRedisClient } from '@/lib/redis';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,21 +34,60 @@ export async function GET(request: NextRequest) {
             return errorResponses.unauthorized();
         }
 
-        // Fetch user settings and active goal
-        const [userData, activeGoal] = await Promise.all([
+        // Fetch checks for caching (User settings, Goal, Last Activity Update)
+        const [userData, activeGoal, lastActivityUpdate, activityCount, redis] = await Promise.all([
             prisma.user.findUnique({
                 where: { id: user.id },
-                select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true }
+                select: {
+                    hrMax: true,
+                    vdotCorrectionFactor: true,
+                    includeCrossTraining: true,
+                    updatedAt: true
+                }
             }),
             prisma.goal.findFirst({
                 where: { userId: user.id, isActive: true },
-            })
+                select: {
+                    currentVdot: true,
+                    updatedAt: true,
+                    isActive: true
+                }
+            }),
+            prisma.activity.findFirst({
+                where: { userId: user.id },
+                orderBy: { updatedAt: 'desc' },
+                select: { updatedAt: true }
+            }),
+            prisma.activity.count({
+                where: { userId: user.id }
+            }),
+            getRedisClient()
         ]);
 
         const maxHR = userData?.hrMax || 185;
         const vdotCorrectionFactor = userData?.vdotCorrectionFactor || 1.0;
         const includeCrossTraining = userData?.includeCrossTraining ?? true;
         const currentVdot = activeGoal?.currentVdot || null;
+
+        // Try Cache
+        // Cache key includes update timestamps and count to ensure validity (even on deletion)
+        const userUpdate = userData?.updatedAt?.getTime() || 0;
+        const goalUpdate = activeGoal?.updatedAt?.getTime() || 0;
+        const activityUpdate = lastActivityUpdate?.updatedAt?.getTime() || 0;
+
+        const cacheKey = `analytics:stats:${user.id}:v1:${userUpdate}:${goalUpdate}:${activityUpdate}:${activityCount}`;
+
+        if (redis) {
+            try {
+                const cached = await redis.get(cacheKey);
+                if (cached) {
+                    return NextResponse.json(JSON.parse(cached), { headers: rateLimitHeaders(rateLimitResult) });
+                }
+            } catch (e) {
+                // Ignore cache errors and proceed to calculation
+                console.error('Cache read error:', e);
+            }
+        }
 
         // Fetch activities for last 6 months
         const sixMonthsAgo = new Date();
@@ -97,7 +137,7 @@ export async function GET(request: NextRequest) {
         const { ctl, atl, tsb, workloadRatio } = AnalyticsService.calculateFitnessMetrics(runActivities);
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
-        return NextResponse.json({
+        const responseData = {
             currentWeekMileage,
             effectiveVO2max,
             rawVO2max,
@@ -110,7 +150,19 @@ export async function GET(request: NextRequest) {
             workloadRatio,
             easyTrimp,
             hrMax: maxHR
-        }, { headers: rateLimitHeaders(rateLimitResult) });
+        };
+
+        // Update Cache
+        if (redis) {
+            try {
+                // Cache for 24 hours (key invalidation handles updates)
+                await redis.set(cacheKey, JSON.stringify(responseData), { ex: 86400 });
+            } catch (e) {
+                console.error('Cache write error:', e);
+            }
+        }
+
+        return NextResponse.json(responseData, { headers: rateLimitHeaders(rateLimitResult) });
 
     } catch (error) {
         return handleApiError(error, {

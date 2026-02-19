@@ -122,7 +122,6 @@ function determineWorkoutType(activity: StravaActivity): WorkoutType {
 export function calculateZoneTimes(
     heartrates: number[],
     times: number[],
-    hrMax: number,
     zoneThresholds: { z1: number; z2: number; z3: number; z4: number; z5: number; z6: number } = { z1: 60, z2: 70, z3: 80, z4: 90, z5: 95, z6: 100 }
 ): ZoneTimes {
     const zones = { z1: 0, z2: 0, z3: 0, z4: 0, z5: 0, z6: 0, z7: 0 };
@@ -231,7 +230,7 @@ export function enrichActivityMetrics(input: MetricsInput): {
             z5: user.hrZone5Max ?? 178,
             z6: user.hrZone6Max ?? 187,
         };
-        zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, effectiveHrMax, zoneThresholds);
+        zoneTimes = calculateZoneTimes(streams.heartrate, streams.time, zoneThresholds);
     }
 
     return {

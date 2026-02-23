@@ -50,26 +50,51 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
             // WEB UI LOGIC (PWA / Browser)
             setHasPermission(true);
             const startWebScanner = async () => {
+                let html5QrCode: Html5Qrcode | null = null;
                 try {
-                    const html5QrCode = new Html5Qrcode("web-reader");
+                    // 1. Ask for permission first before touching the div
+                    const cameras = await Html5Qrcode.getCameras();
+                    if (!cameras || cameras.length === 0) {
+                        console.error("No cameras found.");
+                        return;
+                    }
+
+                    // 2. Initialize scanner
+                    html5QrCode = new Html5Qrcode("web-reader");
                     webScannerRef.current = html5QrCode;
 
-                    await html5QrCode.start(
-                        { facingMode: "environment" },
-                        { fps: 10, qrbox: { width: 250, height: 250 } },
-                        (decodedText) => {
-                            stopWebScanner();
-                            onScan(decodedText);
-                        },
-                        (error) => { /* ignore */ }
-                    );
+                    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+                    try {
+                        // Try rear camera first
+                        await html5QrCode.start(
+                            { facingMode: "environment" },
+                            config,
+                            (decodedText) => {
+                                stopWebScanner();
+                                onScan(decodedText);
+                            },
+                            (error) => { /* ignore stream noise */ }
+                        );
+                    } catch (err) {
+                        // Fallback to first available camera
+                        await html5QrCode.start(
+                            cameras[0].id,
+                            config,
+                            (decodedText) => {
+                                stopWebScanner();
+                                onScan(decodedText);
+                            },
+                            (error) => { /* ignore */ }
+                        );
+                    }
                 } catch (err) {
                     console.error("Error starting web scanner:", err);
                 }
             };
 
-            // Small timeout to ensure the div is rendered before starting
-            setTimeout(startWebScanner, 100);
+            // Small delay to allow modal div to fully render
+            setTimeout(startWebScanner, 300);
         }
 
         return () => {
@@ -94,9 +119,11 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
             try {
                 webScannerRef.current.stop().then(() => {
                     webScannerRef.current?.clear();
-                }).catch(console.error);
+                }).catch(() => {
+                    webScannerRef.current?.clear();
+                });
             } catch (err) {
-                console.error("Scanner may not have been scanning", err);
+                console.error("Scanner stop error", err);
             }
         }
     };

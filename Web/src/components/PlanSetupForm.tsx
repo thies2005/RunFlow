@@ -374,9 +374,9 @@ export default function PlanSetupForm({
                 body: JSON.stringify({
                     name: goalName,
                     raceType,
-                    raceDate,
-                    planStartDate,
-                    planWeeks: computedPlanWeeks,
+                    raceDate: new Date(raceDate).toISOString(),
+                    planStartDate: new Date(planStartDate).toISOString(),
+                    planWeeks: Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (1000 * 60 * 60 * 24 * 7))),
                     runsPerWeek,
                     ridesPerWeek,
                     swimsPerWeek,
@@ -385,11 +385,11 @@ export default function PlanSetupForm({
                     peakWeeks,
                     buildWeeks,
                     weeklyMileageGoal: weeklyMileage * 1000, // Convert km to meters
-                    // Always include the computed goal time
-                    ...(computedTargetTime && { targetTime: computedTargetTime }),
-                    // Include calibration data if provided
+                    // Always include the computed goal time (ensure integer)
+                    ...(computedTargetTime && { targetTime: Math.round(computedTargetTime) }),
+                    // Include calibration data if provided (ensure integer times)
                     ...(timeSeconds > 0 && {
-                        calibrationTime: timeSeconds,
+                        calibrationTime: Math.round(timeSeconds),
                         calibrationDistance,
                         calibrationActivityId: calibrationMode === 'activity' ? selectedActivityId : undefined,
                         calibrationFactor,
@@ -1492,6 +1492,16 @@ export default function PlanSetupForm({
             )}
 
             {/* Submit Button */}
+            {mode === 'onboarding' && (
+                <button
+                    onClick={() => {
+                        onSuccess?.();
+                    }}
+                    className="btn-secondary w-full flex items-center justify-center gap-2 py-3 font-medium"
+                >
+                    Skip for now
+                </button>
+            )}
             <button
                 onClick={handleSubmit}
                 disabled={isLoading}

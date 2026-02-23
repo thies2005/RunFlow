@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, AlertCircle, BarChart3, MessageSquare, Hand, Heart } from 'lucide-react';
+import { RefreshCw, AlertCircle, BarChart3, MessageSquare, Hand, Heart, Target } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -105,18 +105,7 @@ export default function Dashboard() {
         return null;
     }
 
-    // Onboarding Redirect (Check if user has completed onboarding by having an active goal)
-    // Users with an active goal have completed onboarding - don't redirect them
     const hasError = error || syncMutation.error;
-
-    // Onboarding Redirect (Check if user has completed onboarding by having an active goal)
-    // Users with an active goal have completed onboarding - don't redirect them
-    // Do NOT redirect if there's an error (show the error instead)
-    const hasOnboarded = goalsList.length > 0;
-    if (status === 'authenticated' && !isLoading && !hasOnboarded && !hasError) {
-        router.push('/onboarding');
-        return null;
-    }
 
     return (
         <div className="min-h-screen bg-background">
@@ -223,10 +212,28 @@ export default function Dashboard() {
                             />
                         </div>
                         <div className="lg:col-span-1">
-                            <RaceCountdown
-                                goal={activeGoal ?? null}
-                                className="h-full"
-                            />
+                            {activeGoal ? (
+                                <RaceCountdown
+                                    goal={activeGoal}
+                                    className="h-full"
+                                />
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center bg-surface/50 border border-glass-border rounded-xl p-8 text-center">
+                                    <div className="w-16 h-16 rounded-full bg-accent-orange/10 flex items-center justify-center mb-4">
+                                        <Target className="w-8 h-8 text-accent-orange" />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-foreground mb-2">No Active Training Plan</h3>
+                                    <p className="text-gray-400 mb-6 text-sm">
+                                        You don't have an active training plan yet. Create one when you're ready to start training!
+                                    </p>
+                                    <button
+                                        onClick={() => router.push('/onboarding')}
+                                        className="btn-primary py-2 px-6"
+                                    >
+                                        Create Training Plan
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <div className="lg:col-span-1 h-full flex flex-col">
                             <TrainingStatusCard />

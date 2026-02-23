@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { RefreshCw, AlertCircle, BarChart3, Hand } from 'lucide-react';
+import { RefreshCw, AlertCircle, BarChart3, Hand, Target } from 'lucide-react';
 import { Session } from 'next-auth';
 import { UseMutationResult } from '@tanstack/react-query';
 import { RaceCountdown, ActivityList, Footer, UserMenu, UserAvatar } from '@/components';
@@ -135,10 +135,28 @@ export function DashboardView({
                             />
                         </div>
                         <div className="lg:col-span-1">
-                            <RaceCountdown
-                                goal={activeGoal ?? null}
-                                className="h-full"
-                            />
+                            {activeGoal ? (
+                                <RaceCountdown
+                                    goal={activeGoal}
+                                    className="h-full"
+                                />
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center bg-surface/50 border border-glass-border rounded-xl p-8 text-center">
+                                    <div className="w-16 h-16 rounded-full bg-accent-orange/10 flex items-center justify-center mb-4">
+                                        <Target className="w-8 h-8 text-accent-orange" />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-foreground mb-2">No Active Training Plan</h3>
+                                    <p className="text-gray-400 mb-6 text-sm">
+                                        You don't have an active training plan yet. Create one when you're ready to start training!
+                                    </p>
+                                    <button
+                                        onClick={() => router.push('/onboarding')}
+                                        className="btn-primary py-2 px-6"
+                                    >
+                                        Create Training Plan
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <div className="lg:col-span-1 h-full flex flex-col">
                             <TrainingStatusCard />

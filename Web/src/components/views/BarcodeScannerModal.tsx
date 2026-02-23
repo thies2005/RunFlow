@@ -31,6 +31,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
                 if (camera === 'granted' || camera === 'limited') {
                     setHasPermission(true);
                     // Hide Next.js background to show native camera view beneath it!
+                    document.body.classList.add('barcode-scanner-active');
                     document.body.style.background = 'transparent';
                     document.documentElement.style.background = 'transparent';
 
@@ -81,6 +82,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
     }, [isOpen, isNative]);
 
     const stopNativeScanner = async () => {
+        document.body.classList.remove('barcode-scanner-active');
         document.body.style.background = ''; // Restore app background
         document.documentElement.style.background = '';
         await BarcodeScanner.stopScan();
@@ -102,8 +104,12 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/90 pb-safe">
-            <div className="flex justify-between items-center p-4 pt-12">
+        <div className={`fixed inset-0 z-[100] flex flex-col pb-safe barcode-scanner-modal ${isNative ? 'bg-transparent' : 'bg-black/90'}`}>
+            {isNative && (
+                <div className="absolute inset-0 bg-black/60 z-0 select-none pointer-events-none" />
+            )}
+
+            <div className="flex justify-between items-center p-4 pt-12 relative z-10">
                 <h2 className="text-white font-bold text-lg">Scan Barcode</h2>
                 <button onClick={onClose} className="p-2 bg-white/10 rounded-full">
                     <X className="w-6 h-6 text-white" />

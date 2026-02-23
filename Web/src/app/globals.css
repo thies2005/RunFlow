@@ -412,3 +412,14 @@ textarea {
     color: white;
   }
 }
+
+/* --- Capacitor Barcode Scanner Hacks --- */
+body.barcode-scanner-active {
+  background: transparent !important;
+  visibility: hidden; /* Hides all Next.js UI including opaque backgrounds */
+}
+
+/* But keep our modal wrapper visible! */
+body.barcode-scanner-active .barcode-scanner-modal {
+  visibility: visible;
+}

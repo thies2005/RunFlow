@@ -30,6 +30,15 @@ export async function GET(request: Request) {
             protein: nutriments.proteins_100g || 0,
             carbs: nutriments.carbohydrates_100g || 0,
             fats: nutriments.fat_100g || 0,
+            // Micronutrients
+            fiber: nutriments.fiber_100g || 0,
+            sugar: nutriments.sugars_100g || 0,
+            saturatedFat: nutriments['saturated-fat_100g'] || 0,
+            sodium: nutriments.sodium_100g || 0,
+            potassium: nutriments.potassium_100g || 0,
+            cholesterol: nutriments.cholesterol_100g || 0,
+            calcium: nutriments.calcium_100g || 0,
+            iron: nutriments.iron_100g || 0,
         };
 
         return NextResponse.json(standardData);

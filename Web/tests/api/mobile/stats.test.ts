@@ -26,7 +26,7 @@ jest.mock('@/lib/rateLimit', () => ({
     checkRateLimitAsync: jest.fn(),
     getClientIdentifier: jest.fn(),
     RATE_LIMITS: { general: {} },
-    rateLimitHeaders: jest.fn(),
+    rateLimitHeaders: jest.fn(() => ({})),
 }));
 
 jest.mock('@/lib/services/analytics', () => ({
@@ -41,15 +41,19 @@ jest.mock('@/lib/services/analytics', () => ({
 
 // Mock Next.js objects
 const mockJson = jest.fn();
-jest.mock('next/server', () => ({
-    NextRequest: jest.fn(),
-    NextResponse: {
-        json: (body: any, init: any) => {
+jest.mock('next/server', () => {
+    class MockNextResponse {
+        constructor(public body: any, public init?: any) { }
+        static json(body: any, init: any) {
             mockJson(body, init);
-            return { body, init };
-        },
-    },
-}));
+            const res = new MockNextResponse(body, init); res.headers = new Map(); return res;
+        }
+    }
+    return {
+        NextRequest: jest.fn(),
+        NextResponse: MockNextResponse,
+    };
+});
 
 // Import the route handler AFTER mocks
 import { GET } from '@/app/api/mobile/v1/analytics/stats/route';
@@ -62,6 +66,9 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
         jest.clearAllMocks();
         (getAuthenticatedUser as jest.Mock).mockResolvedValue(mockUser);
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
+
+        const { rateLimitHeaders } = require('@/lib/rateLimit');
+        (rateLimitHeaders as jest.Mock).mockReturnValue({});
 
         // Default mocks
         (prisma.user.findUnique as jest.Mock).mockResolvedValue({
@@ -121,7 +128,7 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
         (prisma.activity.findMany as jest.Mock).mockResolvedValue(mockActivities);
 
         const request = new NextRequest('http://localhost/api/mobile/v1/analytics/stats');
-        await GET(request);
+        const response = await GET(request);
 
         // Verify calculation
         expect(prisma.activity.findMany).toHaveBeenCalled();
@@ -135,13 +142,10 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
             expect.objectContaining({ ex: 86400 })
         );
 
-        expect(mockJson).toHaveBeenCalledWith(
-            expect.objectContaining({ ctl: 10 }),
-            expect.anything()
-        );
+        expect((response as any).body).toContain('"ctl":10');
     });
 
-     it('should handle redis failure gracefully', async () => {
+    it('should handle redis failure gracefully', async () => {
         // Redis client throws error on get
         const mockRedis = {
             get: jest.fn().mockRejectedValue(new Error('Redis error')),
@@ -152,15 +156,15 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
         (prisma.activity.findMany as jest.Mock).mockResolvedValue([]);
 
         const request = new NextRequest('http://localhost/api/mobile/v1/analytics/stats');
-        await GET(request);
+        const response = await GET(request);
 
         // Should fall back to calculation
         expect(prisma.activity.findMany).toHaveBeenCalled();
-        expect(mockJson).toHaveBeenCalled();
+        expect((response as any).body).toContain('"ctl":10');
     });
 
     it('should use new cache key when data updates', async () => {
-         const mockRedis = {
+        const mockRedis = {
             get: jest.fn().mockResolvedValue(null),
             set: jest.fn(),
         };
@@ -180,7 +184,7 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
     });
 
     it('should use new cache key when activity count changes (deletion)', async () => {
-         const mockRedis = {
+        const mockRedis = {
             get: jest.fn().mockResolvedValue(null),
             set: jest.fn(),
         };
@@ -196,3 +200,4 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
         expect(mockRedis.get).toHaveBeenCalledWith(expectedKey);
     });
 });
+

@@ -17,7 +17,7 @@ describe('Logger', () => {
 
   describe('Production Environment', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
     });
 
     it('should log error as JSON string', () => {
@@ -87,7 +87,7 @@ describe('Logger', () => {
 
   describe('Development Environment', () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
     });
 
     it('should log error with color', () => {

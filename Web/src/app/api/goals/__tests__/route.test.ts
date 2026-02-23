@@ -53,7 +53,7 @@ jest.mock('@/lib/validation/validator', () => ({
 }));
 
 jest.mock('@/lib/errors/handler', () => ({
-    handleError: jest.fn(),
+    handleError: jest.fn((e) => { console.error('TEST CAUGHT ENTIRE ERROR: ', e); return new Response('error', { status: 500 }); }),
 }));
 
 jest.mock('@/lib/metrics/vdot', () => ({
@@ -66,6 +66,7 @@ jest.mock('@/lib/metrics/vdot', () => ({
             'MARATHON': 11400,
         },
     })),
+    predictRaceTime: jest.fn(() => 11400),
 }));
 
 jest.mock('@/lib/plans', () => ({
@@ -290,7 +291,7 @@ describe('POST /api/goals', () => {
         });
 
         const response = await POST(mockRequest);
-
+        if (response.status !== 200) console.log(await response.clone().text());
         expect(response.status).toBe(200);
     });
 
@@ -309,3 +310,5 @@ describe('POST /api/goals', () => {
         expect(handleError).toHaveBeenCalled();
     });
 });
+
+

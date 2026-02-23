@@ -2,25 +2,25 @@ import { safeBigInt } from '../bigint';
 
 describe('safeBigInt', () => {
     it('returns bigint as is', () => {
-        expect(safeBigInt(10n)).toBe(10n);
-        expect(safeBigInt(-10n)).toBe(-10n);
-        expect(safeBigInt(0n)).toBe(0n);
+        expect(safeBigInt(BigInt(10))).toBe(BigInt(10));
+        expect(safeBigInt(BigInt(-10))).toBe(BigInt(-10));
+        expect(safeBigInt(BigInt(0))).toBe(BigInt(0));
     });
 
     it('converts number to bigint (floored)', () => {
-        expect(safeBigInt(10)).toBe(10n);
-        expect(safeBigInt(10.5)).toBe(10n);
-        expect(safeBigInt(10.9)).toBe(10n);
-        expect(safeBigInt(-10.5)).toBe(-11n);
-        expect(safeBigInt(0)).toBe(0n);
+        expect(safeBigInt(10)).toBe(BigInt(10));
+        expect(safeBigInt(10.5)).toBe(BigInt(10));
+        expect(safeBigInt(10.9)).toBe(BigInt(10));
+        expect(safeBigInt(-10.5)).toBe(BigInt(-11));
+        expect(safeBigInt(0)).toBe(BigInt(0));
     });
 
     it('converts valid integer string to bigint', () => {
-        expect(safeBigInt('10')).toBe(10n);
-        expect(safeBigInt('-10')).toBe(-10n);
-        expect(safeBigInt('0')).toBe(0n);
-        expect(safeBigInt('')).toBe(0n); // BigInt('') is 0n
-        expect(safeBigInt('  123  ')).toBe(123n); // BigInt trims whitespace
+        expect(safeBigInt('10')).toBe(BigInt(10));
+        expect(safeBigInt('-10')).toBe(BigInt(-10));
+        expect(safeBigInt('0')).toBe(BigInt(0));
+        expect(safeBigInt('')).toBe(BigInt(0)); // BigInt('') is 0n
+        expect(safeBigInt('  123  ')).toBe(BigInt(123)); // BigInt trims whitespace
     });
 
     it('throws Error for boolean', () => {

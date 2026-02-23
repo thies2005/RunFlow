@@ -29,7 +29,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
             const startNativeScanner = async () => {
                 const { camera } = await BarcodeScanner.requestPermissions();
                 if (camera === 'granted' || camera === 'limited') {
-                    setHasPermission(true);
+                    _setHasPermission(true);
                     // Hide Next.js background to show native camera view beneath it!
                     document.body.classList.add('barcode-scanner-active');
                     document.body.style.background = 'transparent';
@@ -48,7 +48,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
             startNativeScanner();
         } else {
             // WEB UI LOGIC (PWA / Browser)
-            setHasPermission(true);
+            _setHasPermission(true);
             const startWebScanner = async () => {
                 let html5QrCode: Html5Qrcode | null = null;
                 try {

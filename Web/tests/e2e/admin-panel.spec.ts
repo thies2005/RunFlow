@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/login');
 });
 
-async function loginAdmin(page) {
+async function loginAdmin(page: any) {
   await page.click('button:has-text("Email")');
   await page.fill('input[type="email"]', 'admin@example.com');
   await page.fill('input[type="password"]', 'AdminPass123!');

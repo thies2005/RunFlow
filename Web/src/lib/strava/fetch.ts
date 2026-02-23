@@ -91,12 +91,12 @@ export const rateLimiter = {
             const ttl = await redis.ttl(RATE_LIMIT_KEY);
 
             if (ttl === -1) {
-                 logger.warn('Rate limit key found without TTL, forcing expiration');
-                 await redis.expire(RATE_LIMIT_KEY, windowSeconds);
-                 const waitTime = windowSeconds;
-                 logger.info('Rate limit reached (Redis, no TTL fixed), waiting', { waitSeconds: waitTime });
-                 await new Promise(resolve => setTimeout(resolve, (waitTime + 1) * 1000));
-                 continue;
+                logger.warn('Rate limit key found without TTL, forcing expiration');
+                await redis.expire(RATE_LIMIT_KEY, windowSeconds);
+                const waitTime = windowSeconds;
+                logger.info('Rate limit reached (Redis, no TTL fixed), waiting', { waitSeconds: waitTime });
+                await new Promise(resolve => setTimeout(resolve, (waitTime + 1) * 1000));
+                continue;
             }
 
             if (ttl === -2) {
@@ -257,7 +257,7 @@ export async function getStravaAthleteWeight(userId: string): Promise<number | n
     }
 
     // Decrypt the access token
-    let accessToken = decryptToken(account.access_token);
+    let accessToken: string | null = decryptToken(account.access_token);
     if (!accessToken) {
         logger.warn('Failed to decrypt Strava access token', { userId });
         return null;

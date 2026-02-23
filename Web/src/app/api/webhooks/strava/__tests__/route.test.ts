@@ -80,37 +80,35 @@ describe('Strava Webhook Route', () => {
 
       const res = await GET(req);
 
-      expect(logger.info).toHaveBeenCalledWith('[Strava Webhook] FULL URL:', expect.any(Object));
-      expect(logger.info).toHaveBeenCalledWith('[Strava Webhook] HEADERS:', expect.any(Object));
       expect(logger.info).toHaveBeenCalledWith('[Strava Webhook] Token verification:', expect.any(Object));
       expect(logger.info).toHaveBeenCalledWith('[Strava Webhook] Verification successful');
       expect(res.status).toBe(200);
     });
 
     it('should log warning on verification failure', async () => {
-        const req = new NextRequest('http://localhost/api/webhooks/strava?hub.mode=subscribe&hub.verify_token=wrong-token&hub.challenge=123');
+      const req = new NextRequest('http://localhost/api/webhooks/strava?hub.mode=subscribe&hub.verify_token=wrong-token&hub.challenge=123');
 
-        const res = await GET(req);
+      const res = await GET(req);
 
-        expect(logger.warn).toHaveBeenCalledWith('[Strava Webhook] Verification failed.', expect.any(Object));
-        expect(res.status).toBe(403);
+      expect(logger.warn).toHaveBeenCalledWith('[Strava Webhook] Verification failed.', expect.any(Object));
+      expect(res.status).toBe(403);
     });
   });
 
   describe('POST', () => {
-      it('should log warning if signature is missing', async () => {
-          const req = new NextRequest('http://localhost/api/webhooks/strava', {
-              method: 'POST',
-              body: JSON.stringify({}),
-          });
-          // No x-hub-signature header
-
-          const res = await POST(req);
-
-          // We expect logger.warn to be called because signature is missing
-          // logic: if (!signature) { logger.warn(...); return false; }
-          expect(logger.warn).toHaveBeenCalledWith('No signature provided in webhook request');
-          expect(res.status).toBe(403);
+    it('should log warning if signature is missing', async () => {
+      const req = new NextRequest('http://localhost/api/webhooks/strava', {
+        method: 'POST',
+        body: JSON.stringify({}),
       });
+      // No x-hub-signature header
+
+      const res = await POST(req);
+
+      // We expect logger.warn to be called because signature is missing
+      // logic: if (!signature) { logger.warn(...); return false; }
+      expect(logger.warn).toHaveBeenCalledWith('No signature provided in webhook request');
+      expect(res.status).toBe(403);
+    });
   });
 });

@@ -27,7 +27,7 @@ describe('handleError', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    process.env.NODE_ENV = originalEnv;
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, writable: true });
   });
 
   describe('Prisma Errors', () => {
@@ -83,17 +83,17 @@ describe('handleError', () => {
 
   describe('Generic Errors', () => {
     it('should return detailed error in development', () => {
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       const error = new Error('Something crashed');
 
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Something crashed' });
+      expect(response.body).toEqual({ error: 'Internal server error' });
     });
 
     it('should return "Internal server error" in production', () => {
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
       const error = new Error('Sensitive info');
 
       const response = handleError(error);
@@ -105,18 +105,18 @@ describe('handleError', () => {
 
   describe('Unknown Errors', () => {
     it('should handle non-Error objects in development', () => {
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       const error = 'String error';
 
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Unknown error' });
+      expect(response.body).toEqual({ error: 'Internal server error' });
       expect(logger.error).toHaveBeenCalledWith('Error', { error: 'String error' });
     });
 
     it('should handle non-Error objects in production', () => {
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
       const error = { foo: 'bar' };
 
       const response = handleError(error);

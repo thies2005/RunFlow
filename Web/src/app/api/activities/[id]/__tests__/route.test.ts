@@ -60,7 +60,7 @@ describe('GET /api/activities/[id]', () => {
     it('should handle successful request', async () => {
         const mockRequest = new NextRequest('http://localhost:3000/api/activities/activity-1');
 
-        const response = await GET(mockRequest, { params: { id: 'activity-1' } });
+        const response = await GET(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
         const data = await response.json();
 
         expect(response.status).toBe(200);
@@ -73,7 +73,7 @@ describe('GET /api/activities/[id]', () => {
 
         const mockRequest = new NextRequest('http://localhost:3000/api/activities/activity-1');
 
-        const response = await GET(mockRequest, { params: { id: 'activity-1' } });
+        const response = await GET(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(response.status).toBe(401);
     });
@@ -83,7 +83,7 @@ describe('GET /api/activities/[id]', () => {
 
         const mockRequest = new NextRequest('http://localhost:3000/api/activities/activity-1');
 
-        const response = await GET(mockRequest, { params: { id: 'activity-1' } });
+        const response = await GET(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(response.status).toBe(404);
     });
@@ -99,7 +99,7 @@ describe('GET /api/activities/[id]', () => {
 
         const mockRequest = new NextRequest('http://localhost:3000/api/activities/activity-1');
 
-        const response = await GET(mockRequest, { params: { id: 'activity-1' } });
+        const response = await GET(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(response.status).toBe(200);
     });
@@ -110,7 +110,7 @@ describe('GET /api/activities/[id]', () => {
 
         const mockRequest = new NextRequest('http://localhost:3000/api/activities/activity-1');
 
-        const response = await GET(mockRequest, { params: { id: 'activity-1' } });
+        const response = await GET(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(handleError).toHaveBeenCalled();
     });
@@ -142,7 +142,7 @@ describe('PATCH /api/activities/[id]', () => {
             body: JSON.stringify({ name: 'Updated Name' }),
         });
 
-        const response = await PATCH(mockRequest, { params: { id: 'activity-1' } });
+        const response = await PATCH(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
         const data = await response.json();
 
         expect(response.status).toBe(200);
@@ -158,7 +158,7 @@ describe('PATCH /api/activities/[id]', () => {
             body: JSON.stringify({ name: 'Updated Name' }),
         });
 
-        const response = await PATCH(mockRequest, { params: { id: 'activity-1' } });
+        const response = await PATCH(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(response.status).toBe(401);
     });
@@ -170,7 +170,7 @@ describe('PATCH /api/activities/[id]', () => {
             body: JSON.stringify({ name: '   ' }),
         });
 
-        const response = await PATCH(mockRequest, { params: { id: 'activity-1' } });
+        const response = await PATCH(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(response.status).toBe(400);
     });
@@ -184,7 +184,7 @@ describe('PATCH /api/activities/[id]', () => {
             body: JSON.stringify({ name: 'Updated Name' }),
         });
 
-        const response = await PATCH(mockRequest, { params: { id: 'activity-1' } });
+        const response = await PATCH(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(response.status).toBe(404);
     });
@@ -201,7 +201,7 @@ describe('PATCH /api/activities/[id]', () => {
             body: JSON.stringify({ name: 'Updated Name' }),
         });
 
-        const response = await PATCH(mockRequest, { params: { id: 'activity-1' } });
+        const response = await PATCH(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(response.status).toBe(403);
     });
@@ -215,7 +215,7 @@ describe('PATCH /api/activities/[id]', () => {
             body: JSON.stringify({ name: 'Updated Name' }),
         });
 
-        const response = await PATCH(mockRequest, { params: { id: 'activity-1' } });
+        const response = await PATCH(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(response.status).toBe(429);
     });
@@ -230,7 +230,7 @@ describe('PATCH /api/activities/[id]', () => {
             body: JSON.stringify({ name: 'Updated Name' }),
         });
 
-        const response = await PATCH(mockRequest, { params: { id: 'activity-1' } });
+        const response = await PATCH(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
         expect(handleError).toHaveBeenCalled();
     });

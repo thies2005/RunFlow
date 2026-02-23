@@ -30,7 +30,7 @@ describe('checkRateLimitAsync Security', () => {
 
     it('fails closed when REDIS_URL is missing in PRODUCTION', async () => {
         delete process.env.REDIS_URL;
-        process.env.NODE_ENV = 'production';
+        Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
 
         const { checkRateLimitAsync } = await import('../rateLimit');
 
@@ -60,7 +60,7 @@ describe('checkRateLimitAsync Security', () => {
 
     it('falls back to in-memory when REDIS_URL is missing in DEVELOPMENT', async () => {
         delete process.env.REDIS_URL;
-        process.env.NODE_ENV = 'development';
+        Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
 
         const { checkRateLimitAsync } = await import('../rateLimit');
 

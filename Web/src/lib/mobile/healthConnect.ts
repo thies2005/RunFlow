@@ -507,9 +507,9 @@ export async function syncHistoricalHealthData(
                 }
 
                 // Extract just the values
-                for (const [dateKey, data] of weightByDate) {
+                weightByDate.forEach((data, dateKey) => {
                     weightMap.set(dateKey, data.value);
-                }
+                });
             }
         } catch (error) {
             console.error('Failed to read weight from Health Connect:', error);

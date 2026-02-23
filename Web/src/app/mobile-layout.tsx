@@ -477,7 +477,7 @@ export function MobileLayout() {
                 {showAiChat && (
                     <div className="h-full flex flex-col bg-background relative">
                         {/* Sticky Header */}
-                        <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
+                        <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50">
                             <div className="flex items-center justify-between px-4 py-3">
                                 <button
                                     onClick={() => setIsMobileSidebarOpen(true)}

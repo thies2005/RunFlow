@@ -62,7 +62,7 @@ function ChatContent() {
                 </header>
 
                 {/* Mobile Header */}
-                <header className="md:hidden flex items-center justify-between p-4 border-b border-white/5 bg-[#1c1c1e]">
+                <header className="md:hidden flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-white/5 bg-[#1c1c1e]">
                     <button
                         onClick={() => setIsMobileSidebarOpen(true)}
                         className="p-2 -ml-2 text-gray-400 hover:text-white"

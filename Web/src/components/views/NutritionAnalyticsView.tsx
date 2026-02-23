@@ -570,7 +570,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
 
   return (
     <div className="min-h-full bg-background pb-20">
-      <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
+      <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center">
             <button onClick={onClose} className="mr-3">

@@ -385,15 +385,14 @@ export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
 /**
  * Sync the last N days of health data (steps, weight)
  * Call this when Health Tracking is first enabled.
+ * Uses batch syncing for efficiency.
+ *
+ * @param days - Number of days to look back (default: 30)
+ * @returns Object with sync results and Strava fallback status
  */
-export async function backfillHistoricalHealth(days = 30): Promise<void> {
-    if (!isMobile()) return;
-
-    for (let i = 0; i < days; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        await syncDailyHealth(d);
-    }
+export async function backfillHistoricalHealth(days: number = 30): Promise<SyncHistoricalResult> {
+    // Use the efficient batch sync function
+    return syncHistoricalHealthData(days);
 }
 
 /**

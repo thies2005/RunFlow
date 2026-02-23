@@ -98,45 +98,47 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Batch upsert all records
+        // Batch upsert all records using a transaction for efficiency
         let syncedCount = 0;
 
-        for (const entry of recordsToSync) {
-            const { date, steps, weight } = entry;
+        await prisma.$transaction(async (tx) => {
+            for (const entry of recordsToSync) {
+                const { date, steps, weight } = entry;
 
-            if (!date) continue;
+                if (!date) continue;
 
-            const dateObj = getMidnightUTCDate(date);
+                const dateObj = getMidnightUTCDate(date);
 
-            // Only update if we have actual data (not undefined/null)
-            const updateData: { steps?: number; weight?: number } = {};
-            if (steps !== undefined && steps !== null) {
-                updateData.steps = steps;
-            }
-            if (weight !== undefined && weight !== null) {
-                updateData.weight = weight;
-            }
-
-            // Skip if no actual data to update
-            if (Object.keys(updateData).length === 0) continue;
-
-            await prisma.dailyHealthLog.upsert({
-                where: {
-                    userId_date: {
-                        userId: session.user.id,
-                        date: dateObj
-                    }
-                },
-                update: updateData,
-                create: {
-                    userId: session.user.id,
-                    date: dateObj,
-                    ...updateData
+                // Only update if we have actual data (not undefined/null)
+                const updateData: { steps?: number; weight?: number } = {};
+                if (steps !== undefined && steps !== null) {
+                    updateData.steps = steps;
                 }
-            });
+                if (weight !== undefined && weight !== null) {
+                    updateData.weight = weight;
+                }
 
-            syncedCount++;
-        }
+                // Skip if no actual data to update
+                if (Object.keys(updateData).length === 0) continue;
+
+                await tx.dailyHealthLog.upsert({
+                    where: {
+                        userId_date: {
+                            userId: session.user.id,
+                            date: dateObj
+                        }
+                    },
+                    update: updateData,
+                    create: {
+                        userId: session.user.id,
+                        date: dateObj,
+                        ...updateData
+                    }
+                });
+
+                syncedCount++;
+            }
+        });
 
         const response: BatchSyncResponse = {
             success: true,

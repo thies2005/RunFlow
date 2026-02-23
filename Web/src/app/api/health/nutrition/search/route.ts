@@ -38,15 +38,23 @@ export async function GET(request: Request) {
                 if (!p.product_name) continue;
 
                 combinedResults.push({
-                    id: `off-${p.code || Math.random()}`, // Temp ID, will be upserted by barcode/created later
+                    id: `off-${p.code || Math.random()}`,
                     name: p.product_name || 'Unknown',
                     brand: p.brands || '',
-                    barcode: p.code,
+                    barcode: p.code ? String(p.code) : null,
                     calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || p.nutriments?.['energy-kcal_value'] || 0),
                     protein: parseFloat(p.nutriments?.proteins_100g || p.nutriments?.proteins_value || 0),
                     carbs: parseFloat(p.nutriments?.carbohydrates_100g || p.nutriments?.carbohydrates_value || 0),
                     fats: parseFloat(p.nutriments?.fat_100g || p.nutriments?.fat_value || 0),
-                    servingSize: p.serving_quantity || 100,
+                    fiber: parseFloat(p.nutriments?.fiber_100g || p.nutriments?.fiber_value || 0),
+                    sugar: parseFloat(p.nutriments?.sugars_100g || p.nutriments?.sugars_value || 0),
+                    saturatedFat: parseFloat(p.nutriments?.['saturated-fat_100g'] || p.nutriments?.['saturated-fat_value'] || 0),
+                    sodium: parseFloat(p.nutriments?.sodium_100g || p.nutriments?.sodium_value || 0),
+                    potassium: parseFloat(p.nutriments?.potassium_100g || p.nutriments?.potassium_value || 0),
+                    cholesterol: parseFloat(p.nutriments?.cholesterol_100g || p.nutriments?.cholesterol_value || 0),
+                    calcium: parseFloat(p.nutriments?.calcium_100g || p.nutriments?.calcium_value || 0),
+                    iron: parseFloat(p.nutriments?.iron_100g || p.nutriments?.iron_value || 0),
+                    servingSize: p.serving_quantity ? String(p.serving_quantity) : '100g',
                 });
             }
         }

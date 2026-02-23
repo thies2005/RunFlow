@@ -525,7 +525,7 @@ export async function syncHistoricalHealthData(
 
         const healthData: HealthDataEntry[] = [];
 
-        for (const dateKey of allDates) {
+        allDates.forEach(dateKey => {
             const entry: HealthDataEntry = { date: dateKey };
 
             if (stepsMap.has(dateKey)) {
@@ -540,7 +540,7 @@ export async function syncHistoricalHealthData(
             if (entry.steps !== undefined || entry.weight !== undefined) {
                 healthData.push(entry);
             }
-        }
+        });
 
         // Send to backend batch sync endpoint
         const response = await fetch('/api/health/sync-batch', {

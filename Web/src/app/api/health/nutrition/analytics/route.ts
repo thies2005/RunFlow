@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { auth } from '@/auth';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/strava/oauth';
 
 interface DailyNutrition {
   date: string;
@@ -30,8 +31,11 @@ interface TopContributors {
   calories: FoodContribution[];
 }
 
+// Helper to safely convert nullable number to number, defaulting to 0
+const safeNumber = (value: number | null): number => value ?? 0;
+
 export async function GET(request: Request) {
-  const session = await auth();
+  const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -64,8 +68,10 @@ export async function GET(request: Request) {
     const targetCarbs = Math.round((target.dailyCalories * target.carbsPercent / 100) / 4);
     const targetFats = Math.round((target.dailyCalories * target.fatsPercent / 100) / 9);
 
-    // Fetch all nutrition logs in date range
-    const logs = await prisma.nutritionLog.findMany({
+    // OPTIMIZATION: Use Prisma's groupBy for database-level aggregation
+    // This performs the summation at the database level instead of in-memory
+    const groupedData = await prisma.nutritionLog.groupBy({
+      by: ['date'],
       where: {
         userId: session.user.id,
         date: {
@@ -73,85 +79,83 @@ export async function GET(request: Request) {
           lte: endDate
         }
       },
-      include: {
-        foodItem: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
+      _sum: {
+        calories: true,
+        protein: true,
+        carbs: true,
+        fats: true,
+        fiber: true,
+        sugar: true,
+        saturatedFat: true,
+        sodium: true,
+        potassium: true,
+        cholesterol: true,
+        calcium: true,
+        iron: true,
       },
       orderBy: {
         date: 'asc'
       }
     });
 
-    // Group by date and calculate totals
-    const dailyMap = new Map<string, DailyNutrition>();
-    const foodContributions = new Map<string, {
-      sodium: number;
-      sugar: number;
-      calories: number;
-      foodName: string;
-      foodItemId: string;
-    }>();
+    // Map the grouped data to our expected format, safely handling nulls
+    const dailyData: DailyNutrition[] = groupedData.map((group) => ({
+      date: group.date,
+      calories: safeNumber(group._sum.calories),
+      protein: safeNumber(group._sum.protein),
+      carbs: safeNumber(group._sum.carbs),
+      fats: safeNumber(group._sum.fats),
+      fiber: safeNumber(group._sum.fiber),
+      sugar: safeNumber(group._sum.sugar),
+      saturatedFat: safeNumber(group._sum.saturatedFat),
+      sodium: safeNumber(group._sum.sodium),
+      potassium: safeNumber(group._sum.potassium),
+      cholesterol: safeNumber(group._sum.cholesterol),
+      calcium: safeNumber(group._sum.calcium),
+      iron: safeNumber(group._sum.iron),
+    }));
 
-    for (const log of logs) {
-      const date = log.date;
+    // OPTIMIZATION: Use a separate aggregation query for top contributors
+    // This is more efficient than fetching all logs and grouping in memory
+    const foodContributions = await prisma.nutritionLog.groupBy({
+      by: ['foodItemId'],
+      where: {
+        userId: session.user.id,
+        date: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      _sum: {
+        sodium: true,
+        sugar: true,
+        calories: true,
+      },
+    });
 
-      if (!dailyMap.has(date)) {
-        dailyMap.set(date, {
-          date,
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fats: 0,
-          fiber: 0,
-          sugar: 0,
-          saturatedFat: 0,
-          sodium: 0,
-          potassium: 0,
-          cholesterol: 0,
-          calcium: 0,
-          iron: 0
-        });
+    // Fetch food item names for the contributors (batched query)
+    const foodItemIds = foodContributions.map(fc => fc.foodItemId);
+    const foodItems = await prisma.foodItem.findMany({
+      where: {
+        id: { in: foodItemIds }
+      },
+      select: {
+        id: true,
+        name: true,
       }
+    });
 
-      const day = dailyMap.get(date)!;
-      day.calories += log.calories;
-      day.protein += log.protein;
-      day.carbs += log.carbs;
-      day.fats += log.fats;
-      day.fiber += log.fiber || 0;
-      day.sugar += log.sugar || 0;
-      day.saturatedFat += log.saturatedFat || 0;
-      day.sodium += log.sodium || 0;
-      day.potassium += log.potassium || 0;
-      day.cholesterol += log.cholesterol || 0;
-      day.calcium += log.calcium || 0;
-      day.iron += log.iron || 0;
+    // Create a map for quick lookup
+    const foodItemMap = new Map(foodItems.map(item => [item.id, item.name]));
 
-      // Track food contributions
-      const key = log.foodItem.id;
-      if (!foodContributions.has(key)) {
-        foodContributions.set(key, {
-          sodium: 0,
-          sugar: 0,
-          calories: 0,
-          foodName: log.foodItem.name,
-          foodItemId: log.foodItem.id
-        });
-      }
-      const contrib = foodContributions.get(key)!;
-      contrib.sodium += log.sodium || 0;
-      contrib.sugar += log.sugar || 0;
-      contrib.calories += log.calories;
-    }
-
-    // Convert map to array and sort by date
-    const dailyData = Array.from(dailyMap.values()).sort((a, b) =>
-      a.date.localeCompare(b.date)
-    );
+    // Build contributors array with food names
+    const contributorsArray = foodContributions.map((fc) => ({
+      foodItemId: fc.foodItemId,
+      foodName: foodItemMap.get(fc.foodItemId) || 'Unknown Food',
+      sodium: safeNumber(fc._sum.sodium),
+      sugar: safeNumber(fc._sum.sugar),
+      calories: safeNumber(fc._sum.calories),
+    }));
 
     // Calculate average daily values
     const avgDaily = dailyData.length > 0 ? {
@@ -174,14 +178,13 @@ export async function GET(request: Request) {
     let totalProteinDiff = 0;
     let totalCarbsDiff = 0;
     let totalFatsDiff = 0;
-    let daysWithLogs = 0;
+    let daysWithLogs = dailyData.length;
 
     for (const day of dailyData) {
       totalCalorieDiff += Math.abs(day.calories - target.dailyCalories) / target.dailyCalories;
       totalProteinDiff += Math.abs(day.protein - targetProtein) / targetProtein;
       totalCarbsDiff += Math.abs(day.carbs - targetCarbs) / targetCarbs;
       totalFatsDiff += Math.abs(day.fats - targetFats) / targetFats;
-      daysWithLogs++;
     }
 
     const adherenceScore = daysWithLogs > 0 ? Math.round(
@@ -189,7 +192,6 @@ export async function GET(request: Request) {
     ) : 0;
 
     // Calculate top contributors (top 3 for each category)
-    const contributorsArray = Array.from(foodContributions.values());
     const topContributors: TopContributors = {
       sodium: contributorsArray
         .sort((a, b) => b.sodium - a.sodium)
@@ -207,7 +209,7 @@ export async function GET(request: Request) {
 
     // Get today's data for the daily goal ring
     const today = new Date().toISOString().split('T')[0];
-    const todayData = dailyMap.get(today) || {
+    const todayData = dailyData.find(d => d.date === today) || {
       date: today,
       calories: 0,
       protein: 0,

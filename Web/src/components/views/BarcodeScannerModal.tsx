@@ -9,12 +9,12 @@ import { X } from 'lucide-react';
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onScan: (barcode: string) => void;
+    onScan: (_barcode: string) => void;
 }
 
 export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
     const [isNative, setIsNative] = useState(false);
-    const [hasPermission, setHasPermission] = useState(false);
+    const [_hasPermission, _setHasPermission] = useState(false);
     const webScannerRef = useRef<Html5Qrcode | null>(null);
 
     useEffect(() => {
@@ -74,7 +74,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
                                 stopWebScanner();
                                 onScan(decodedText);
                             },
-                            (error) => { /* ignore stream noise */ }
+                            (_error) => { /* ignore stream noise */ }
                         );
                     } catch (err) {
                         // Fallback to first available camera
@@ -85,7 +85,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
                                 stopWebScanner();
                                 onScan(decodedText);
                             },
-                            (error) => { /* ignore */ }
+                            (_error) => { /* ignore */ }
                         );
                     }
                 } catch (err) {
@@ -104,7 +104,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
                 stopWebScanner();
             }
         };
-    }, [isOpen, isNative]);
+    }, [isOpen, isNative, onScan]);
 
     const stopNativeScanner = async () => {
         document.body.classList.remove('barcode-scanner-active');

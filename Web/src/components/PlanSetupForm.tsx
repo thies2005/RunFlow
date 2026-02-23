@@ -10,7 +10,6 @@ import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { formatTime, calculateVdot, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
 import {
     calculateProjectedGoalTime,
-    calculateWeeksUntilRace,
     type PlanSettings
 } from '@/lib/metrics/goalProjection';
 

@@ -3,7 +3,6 @@
  */
 import { handleError } from '../handler';
 import { Prisma } from '@prisma/client';
-import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger';
 
 // Mock NextResponse

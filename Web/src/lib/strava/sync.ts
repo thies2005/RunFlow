@@ -253,8 +253,6 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     const activityData = transformActivityData(activity, metrics);
                     activityData.streams = streams;
 
-                    let resultStatus: 'synced' = 'synced';
-
                     if (isNew) {
                         await prisma.activity.create({
                             data: {

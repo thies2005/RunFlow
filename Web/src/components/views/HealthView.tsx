@@ -1,9 +1,9 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone } from 'lucide-react';
-import { syncDailyHealth, backfillHistoricalHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult } from '@/lib/mobile/healthConnect';
+import { syncDailyHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult } from '@/lib/mobile/healthConnect';
 import { format } from 'date-fns';
 import { AddSupplementModal } from './AddSupplementModal';
 import { HealthTrendModal } from './HealthTrendModal';
@@ -25,7 +25,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
 
-    const handleBarcodeScanned = async (barcode: string) => {
+    const handleBarcodeScanned = useCallback(async (barcode: string) => {
         setIsScannerOpen(false);
         try {
             const res = await fetch(`/api/health/nutrition/scan?barcode=${barcode}`);
@@ -36,7 +36,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
             console.error(error);
             alert("Error finding food");
         }
-    };
+    }, []);
 
     const handleSyncHistoricalData = async () => {
         setIsSyncingHistory(true);
@@ -75,7 +75,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
     // ... (rest of queries)
     const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const { data: dailyData, isLoading: isDailyLoading } = useQuery({
+    const { data: dailyData } = useQuery({
         queryKey: ['daily-health', todayStr],
         queryFn: async () => {
             const res = await fetch(`/api/health/daily?date=${todayStr}`);

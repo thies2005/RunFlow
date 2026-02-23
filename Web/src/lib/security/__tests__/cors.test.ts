@@ -1,4 +1,4 @@
-import { validateOrigin, setCorsHeaders } from '../cors';
+import { validateOrigin as _validateOrigin, setCorsHeaders as _setCorsHeaders } from '../cors';
 import { NextRequest } from 'next/server';
 
 // Mock environment

@@ -456,7 +456,7 @@ export async function syncHistoricalHealthData(
 
     try {
         // Request read permissions for Steps and Weight
-        const hasPermission = await requestHealthPermissions();
+        await requestHealthPermissions();
 
         // Query for Steps aggregated by day
         const stepsMap = new Map<string, number>();

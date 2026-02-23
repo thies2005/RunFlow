@@ -14,7 +14,7 @@ interface MobileSwipeLayoutProps {
     showHealth?: boolean;
 }
 
-const BASE_PATHS = ['/', '/plan', '/analytics'];
+const _BASE_PATHS = ['/', '/plan', '/analytics'];
 
 export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, showHealth = false }: MobileSwipeLayoutProps) {
     const router = useRouter();

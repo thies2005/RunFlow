@@ -155,7 +155,7 @@ describe('Zone Analytics', () => {
             // Karvonen: ((max - rest) * intensity) + rest
             const hrMax = 200;
             const hrRest = 50;
-            const hrr = 150; // 200 - 50
+            // const hrr = 150; // 200 - 50
 
             // Expected calculations:
             // Z1: 50-60% -> (0.5 * 150 + 50) to (0.6 * 150 + 50) -> 75+50=125 to 90+50=140

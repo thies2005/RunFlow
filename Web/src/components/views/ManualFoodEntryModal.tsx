@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, Search, Loader2, Save, ArrowLeft, Plus } from 'lucide-react';
+import { X, Search, Loader2, Save, ArrowLeft } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 

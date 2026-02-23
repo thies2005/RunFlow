@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json(response);
     } catch (error) {
-        logger.error('Batch health sync error', { error });
+        logger.error('Batch health sync error', { error: error instanceof Error ? error.message : String(error) });
         return handleError(error);
     }
 }

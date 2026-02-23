@@ -7,6 +7,7 @@ import { syncDailyHealth, backfillHistoricalHealth, isMobile } from '@/lib/mobil
 import { format } from 'date-fns';
 import { AddSupplementModal } from './AddSupplementModal';
 import { HealthTrendModal } from './HealthTrendModal';
+import { BarcodeScannerModal } from './BarcodeScannerModal';
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -17,6 +18,20 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isMobileDevice, setIsMobileDevice] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [activeTrendMetric, setActiveTrendMetric] = useState<'steps' | 'weight' | null>(null);
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+    const handleBarcodeScanned = async (barcode: string) => {
+        setIsScannerOpen(false);
+        try {
+            const res = await fetch(`/api/health/nutrition/scan?barcode=${barcode}`);
+            const data = await res.json();
+            console.log("Found Food!", data);
+            alert(`Found: ${data.name} - ${data.calories}kcal`);
+        } catch (error) {
+            console.error(error);
+            alert("Error finding food");
+        }
+    };
 
     useEffect(() => {
         setIsMobileDevice(isMobile());
@@ -205,18 +220,21 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                     )}
                 </div>
 
-                {/* Coming Soon Food Card */}
-                <div className="glass-card p-4 rounded-xl border border-dashed border-white/20 bg-white/5 opacity-70 cursor-not-allowed">
-                    <div className="flex items-center justify-between">
+                {/* Coming Soon Food Card replaced with actual scanner */}
+                <button
+                    onClick={() => setIsScannerOpen(true)}
+                    className="w-full glass-card p-4 rounded-xl border border-glass-border hover:bg-white/10 transition-colors text-left"
+                >
+                    <div className="flex items-center justify-between mb-2">
                         <div>
-                            <h3 className="font-semibold text-gray-300">Food & Calories</h3>
-                            <p className="text-xs text-gray-500 mt-1">Nutrition tracking coming in a future update.</p>
+                            <h3 className="font-semibold text-white">Food & Calories</h3>
+                            <p className="text-xs text-gray-400 mt-1">Scan a barcode to log a meal</p>
                         </div>
-                        <div className="px-2 py-1 bg-white/10 rounded text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                            Soon
+                        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            <Plus className="w-4 h-4 text-blue-400" />
                         </div>
                     </div>
-                </div>
+                </button>
             </div>
 
             <AddSupplementModal
@@ -228,6 +246,12 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                 isOpen={activeTrendMetric !== null}
                 onClose={() => setActiveTrendMetric(null)}
                 metric={activeTrendMetric}
+            />
+
+            <BarcodeScannerModal
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                onScan={handleBarcodeScanned}
             />
         </div>
     );

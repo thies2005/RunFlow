@@ -89,6 +89,7 @@ model User {
   healthTrackingEnabled Boolean @default(false)
   supplements         Supplement[]
   dailyHealthLogs     DailyHealthLog[]
+  nutritionLogs       NutritionLog[]
 }
 
 // ============================================
@@ -715,3 +716,42 @@ model AiUsageHistory {
   @@index([userId])
   @@index([timestamp])
 }
+
+// ============================================
+// Nutrition & Food Tracking
+// ============================================
+
+model FoodItem {
+  id          String         @id @default(cuid())
+  name        String
+  brand       String?
+  barcode     String?        @unique
+  calories    Float
+  protein     Float
+  carbs       Float
+  fats        Float
+  servingSize String?
+  
+  logs        NutritionLog[]
+}
+
+model NutritionLog {
+  id         String    @id @default(cuid())
+  userId     String
+  date       String    // e.g., "yyyy-MM-dd"
+  mealType   String?   // e.g., "BREAKFAST", "LUNCH", "DINNER", "SNACK"
+  quantity   Float     // e.g., 1.5 (for 1.5 servings)
+  
+  // Snapshot of macros at the time of logging
+  calories   Float
+  protein    Float
+  carbs      Float
+  fats       Float
+
+  foodItemId String
+  foodItem   FoodItem  @relation(fields: [foodItemId], references: [id])
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime  @default(now())
+}
+

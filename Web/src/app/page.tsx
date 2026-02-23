@@ -224,7 +224,7 @@ export default function Dashboard() {
                                     </div>
                                     <h3 className="text-xl font-semibold text-foreground mb-2">No Active Training Plan</h3>
                                     <p className="text-gray-400 mb-6 text-sm">
-                                        You don't have an active training plan yet. Create one when you're ready to start training!
+                                        You don&apos;t have an active training plan yet. Create one when you&apos;re ready to start training!
                                     </p>
                                     <button
                                         onClick={() => router.push('/onboarding')}

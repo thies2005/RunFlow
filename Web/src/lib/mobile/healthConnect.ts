@@ -418,3 +418,158 @@ export async function writeManualWeight(weightKg: number, date: Date = new Date(
         throw error;
     }
 }
+
+/**
+ * Sync historical health data result
+ */
+export interface SyncHistoricalResult {
+    synced: number;
+    stravaFallbackUsed: boolean;
+    error?: string;
+}
+
+/**
+ * Health data entry for batch sync
+ */
+export interface HealthDataEntry {
+    date: string; // YYYY-MM-DD
+    steps?: number;
+    weight?: number;
+}
+
+/**
+ * Sync historical health data (Steps and Weight) from Health Connect
+ * for the specified number of days. Falls back to Strava for weight if unavailable.
+ *
+ * @param daysToSync - Number of days to look back (default: 30)
+ * @returns Object with sync results and Strava fallback status
+ */
+export async function syncHistoricalHealthData(
+    daysToSync: number = 30
+): Promise<SyncHistoricalResult> {
+    if (!isMobile()) {
+        return { synced: 0, stravaFallbackUsed: false, error: 'Not a mobile device' };
+    }
+
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - daysToSync);
+
+    try {
+        // Request read permissions for Steps and Weight
+        const hasPermission = await requestHealthPermissions();
+
+        // Query for Steps aggregated by day
+        const stepsMap = new Map<string, number>();
+        try {
+            const stepsResult = await Health.readSamples({
+                dataType: 'steps',
+                startDate: start.toISOString(),
+                endDate: end.toISOString(),
+                limit: 10000,
+            });
+
+            if (stepsResult.samples) {
+                // Aggregate steps by day (YYYY-MM-DD)
+                for (const sample of stepsResult.samples) {
+                    const date = new Date(sample.startDate);
+                    const dateKey = date.toISOString().split('T')[0];
+                    const currentSteps = stepsMap.get(dateKey) || 0;
+                    stepsMap.set(dateKey, currentSteps + sample.value);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to read steps from Health Connect:', error);
+        }
+
+        // Query for Weight - get the most recent entry per day
+        const weightMap = new Map<string, number>();
+        try {
+            const weightResult = await Health.readSamples({
+                dataType: 'weight',
+                startDate: start.toISOString(),
+                endDate: end.toISOString(),
+                limit: 1000,
+            });
+
+            if (weightResult.samples) {
+                // For each date, keep only the most recent weight entry
+                const weightByDate = new Map<string, { value: number; timestamp: number }>();
+
+                for (const sample of weightResult.samples) {
+                    const date = new Date(sample.startDate);
+                    const dateKey = date.toISOString().split('T')[0];
+                    const timestamp = new Date(sample.startDate).getTime();
+
+                    const existing = weightByDate.get(dateKey);
+                    if (!existing || timestamp > existing.timestamp) {
+                        weightByDate.set(dateKey, { value: sample.value, timestamp });
+                    }
+                }
+
+                // Extract just the values
+                for (const [dateKey, data] of weightByDate) {
+                    weightMap.set(dateKey, data.value);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to read weight from Health Connect:', error);
+        }
+
+        // Combine data into unified format
+        const allDates = new Set<string>();
+        for (let i = 0; i < daysToSync; i++) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            allDates.add(d.toISOString().split('T')[0]);
+        }
+
+        const healthData: HealthDataEntry[] = [];
+
+        for (const dateKey of allDates) {
+            const entry: HealthDataEntry = { date: dateKey };
+
+            if (stepsMap.has(dateKey)) {
+                entry.steps = stepsMap.get(dateKey);
+            }
+
+            if (weightMap.has(dateKey)) {
+                entry.weight = weightMap.get(dateKey);
+            }
+
+            // Only include entries that have at least some data
+            if (entry.steps !== undefined || entry.weight !== undefined) {
+                healthData.push(entry);
+            }
+        }
+
+        // Send to backend batch sync endpoint
+        const response = await fetch('/api/health/sync-batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: healthData }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            return {
+                synced: 0,
+                stravaFallbackUsed: false,
+                error: errorData.error || 'Failed to sync data'
+            };
+        }
+
+        const result = await response.json();
+        return {
+            synced: result.synced || 0,
+            stravaFallbackUsed: result.stravaFallbackUsed || false
+        };
+    } catch (error) {
+        console.error('Failed to sync historical health data:', error);
+        return {
+            synced: 0,
+            stravaFallbackUsed: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        };
+    }
+}

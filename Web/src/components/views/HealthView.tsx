@@ -2,8 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3 } from 'lucide-react';
-import { syncDailyHealth, backfillHistoricalHealth, isMobile } from '@/lib/mobile/healthConnect';
+import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone } from 'lucide-react';
+import { syncDailyHealth, backfillHistoricalHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult } from '@/lib/mobile/healthConnect';
 import { format } from 'date-fns';
 import { AddSupplementModal } from './AddSupplementModal';
 import { HealthTrendModal } from './HealthTrendModal';
@@ -23,6 +23,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
+    const [isSyncingHistory, setIsSyncingHistory] = useState(false);
 
     const handleBarcodeScanned = async (barcode: string) => {
         setIsScannerOpen(false);
@@ -34,6 +35,31 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         } catch (error) {
             console.error(error);
             alert("Error finding food");
+        }
+    };
+
+    const handleSyncHistoricalData = async () => {
+        setIsSyncingHistory(true);
+        try {
+            const result: SyncHistoricalResult = await syncHistoricalHealthData(30);
+
+            if (result.error) {
+                alert(`Sync failed: ${result.error}`);
+            } else {
+                let message = `Synced ${result.synced} days of health data.`;
+                if (result.stravaFallbackUsed) {
+                    message += ' Weight imported from Strava.';
+                }
+                alert(message);
+            }
+
+            // Invalidate queries to refresh charts
+            queryClient.invalidateQueries({ queryKey: ['daily-health'] });
+        } catch (error) {
+            console.error('Failed to sync historical data:', error);
+            alert('Failed to sync health data. Please try again.');
+        } finally {
+            setIsSyncingHistory(false);
         }
     };
 
@@ -177,6 +203,39 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         </div>
                     </button>
                 </div>
+
+                {/* Device Health Sync Section */}
+                {isMobileDevice && (
+                    <div className="glass-card p-4 rounded-xl border border-glass-border">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 className="font-semibold text-white flex items-center gap-2">
+                                    <Smartphone className="w-4 h-4 text-cyan-400" /> Device Health Data
+                                </h3>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Syncs steps and weight from Health Connect. Falls back to Strava weight if unavailable.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleSyncHistoricalData}
+                            disabled={isSyncingHistory}
+                            className="w-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 transition-colors rounded-lg px-4 py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isSyncingHistory ? (
+                                <>
+                                    <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
+                                    <span className="text-sm font-medium text-cyan-400">Syncing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <RefreshCw className="w-4 h-4 text-cyan-400" />
+                                    <span className="text-sm font-medium text-cyan-400">Sync Device Health Data</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                )}
 
                 {/* Supplements List */}
                 <div className="glass-card p-4 rounded-xl border border-glass-border">

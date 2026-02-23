@@ -211,3 +211,83 @@ export async function fetchAthleteProfile(accessToken: string) {
 
     return response.json();
 }
+
+/**
+ * Strava Athlete Profile Response
+ */
+export interface StravaAthleteProfile {
+    id: number;
+    username?: string;
+    firstname?: string;
+    lastname?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    sex?: string;
+    weight?: number; // kg
+    profile_medium?: string;
+    profile?: string;
+}
+
+/**
+ * Get the current athlete's weight from Strava
+ * Returns weight in kg, or null if not set
+ */
+export async function getStravaAthleteWeight(userId: string): Promise<number | null> {
+    const { prisma } = await import('@/lib/db');
+    const { decryptToken } = await import('@/lib/crypto');
+
+    // Find user's Strava account with access token
+    const account = await prisma.account.findFirst({
+        where: {
+            userId,
+            provider: 'strava'
+        },
+        select: {
+            access_token: true,
+            expires_at: true,
+            refresh_token: true,
+            id: true
+        }
+    });
+
+    if (!account?.access_token) {
+        logger.warn('No Strava account found for user', { userId });
+        return null;
+    }
+
+    // Decrypt the access token
+    let accessToken = decryptToken(account.access_token);
+    if (!accessToken) {
+        logger.warn('Failed to decrypt Strava access token', { userId });
+        return null;
+    }
+
+    // Check if token needs refresh (with 5 min buffer)
+    const now = Math.floor(Date.now() / 1000);
+    if (account.expires_at && account.expires_at < now + 300) {
+        // Import refreshStravaToken dynamically to avoid circular dependency
+        const { refreshStravaToken } = await import('@/lib/strava/oauth');
+        accessToken = await refreshStravaToken(userId);
+        if (!accessToken) {
+            logger.warn('Failed to refresh Strava token for weight fetch', { userId });
+            return null;
+        }
+    }
+
+    await rateLimiter.checkAndWait();
+
+    const response = await fetch(`${STRAVA_API_BASE}/athlete`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+        logger.warn('Failed to fetch Strava athlete for weight', { status: response.status, userId });
+        return null;
+    }
+
+    const athlete: StravaAthleteProfile = await response.json();
+
+    // Strava returns weight in kg, may be null or undefined
+    return athlete.weight ?? null;
+}

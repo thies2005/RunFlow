@@ -94,6 +94,28 @@ export async function POST(request: NextRequest) {
             planStartDate
         } = validation.data;
 
+        // Resolve plan weeks and clamp phases
+        const resolvedPlanWeeks = Math.max(4, planWeeks || calculateWeeksUntilRace(new Date(raceDate)));
+
+        let safeTaper = taperWeeks ?? 2;
+        let safePeak = peakWeeks ?? 4;
+        let safeBuild = buildWeeks ?? 4;
+
+        if (safeTaper + safePeak + safeBuild > resolvedPlanWeeks) {
+            const proportion = resolvedPlanWeeks / (safeTaper + safePeak + safeBuild);
+            safeTaper = Math.max(1, Math.round(safeTaper * proportion));
+            safePeak = Math.max(1, Math.round(safePeak * proportion));
+            safeBuild = Math.max(0, resolvedPlanWeeks - safeTaper - safePeak);
+
+            if (safeBuild < 0) {
+                safeBuild = 0;
+                safePeak = Math.max(1, resolvedPlanWeeks - safeTaper);
+                if (safeTaper + safePeak > resolvedPlanWeeks) {
+                    safeTaper = Math.max(0, resolvedPlanWeeks - safePeak);
+                }
+            }
+        }
+
         // If calibration factor is provided, update global user settings immediately
         // We start this operation but don't await it yet to allow parallel execution
         // We catch errors to prevent unhandled rejections if the main flow fails elsewhere
@@ -101,8 +123,8 @@ export async function POST(request: NextRequest) {
             where: { id: session.user.id },
             data: { vdotCorrectionFactor: calibrationFactor }
         }).then(res => ({ result: res, error: null }))
-          .catch(err => ({ result: null, error: err }))
-        : Promise.resolve({ result: null, error: null });
+            .catch(err => ({ result: null, error: err }))
+            : Promise.resolve({ result: null, error: null });
 
         // Calculate current VDOT from calibration data if provided
         let currentVdot: number | null = null;
@@ -176,16 +198,15 @@ export async function POST(request: NextRequest) {
                 'MARATHON': 'MARATHON',
             };
             const projectionDistance = projectionDistanceMap[raceType] || 'MARATHON';
-            const weeksUntilRace = calculateWeeksUntilRace(new Date(raceDate));
 
             const planSettings: PlanSettings = {
-                durationWeeks: weeksUntilRace,
+                durationWeeks: resolvedPlanWeeks,
                 runsPerWeek: runsPerWeek ?? 4,
                 weeklyMileageGoal: (weeklyMileageGoal || 40000) / 1000,
                 raceDistance: projectionDistance,
-                taperWeeks: taperWeeks ?? 2,
-                peakWeeks: peakWeeks ?? 4,
-                buildWeeks: buildWeeks ?? 4,
+                taperWeeks: safeTaper,
+                peakWeeks: safePeak,
+                buildWeeks: safeBuild,
             };
 
             const projection = calculateProjectedGoalTime(currentVdot, planSettings, 70);
@@ -200,7 +221,7 @@ export async function POST(request: NextRequest) {
                 raceDate: new Date(raceDate),
                 targetTime: targetTime || calculatedTargetTime || null,
                 weeklyMileageGoal: weeklyMileageGoal || null,
-                planWeeks: planWeeks || 12,
+                planWeeks: resolvedPlanWeeks,
                 runsPerWeek: runsPerWeek ?? 4,
                 ridesPerWeek: ridesPerWeek ?? 0,
                 strengthPerWeek: strengthPerWeek ?? 0,
@@ -295,9 +316,9 @@ export async function POST(request: NextRequest) {
                     ridesPerWeek: ridesPerWeek ?? 0,
                     strengthPerWeek: strengthPerWeek ?? 0,
                     swimsPerWeek: swimsPerWeek ?? 0,
-                    taperWeeks: taperWeeks ?? 2,
-                    peakWeeks: peakWeeks ?? 4,
-                    buildWeeks: buildWeeks ?? 4,
+                    taperWeeks: safeTaper,
+                    peakWeeks: safePeak,
+                    buildWeeks: safeBuild,
                     longRunDay: longRunDay ?? 0,
                     workoutDay: workoutDay ?? 3,
                 });

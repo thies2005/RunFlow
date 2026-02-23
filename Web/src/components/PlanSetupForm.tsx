@@ -311,6 +311,32 @@ export default function PlanSetupForm({
         }
     }, [selectedActivityId, activitiesData, calibrationDistance, effectiveVO2max]); // Re-run when dist changes
 
+    // Auto-calculate dynamic Plan Weeks
+    const msPerWeek: number = 1000 * 60 * 60 * 24 * 7;
+    const computedPlanWeeks: number = Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek));
+
+    // Clamp Training Phases if they exceed available plan weeks
+    useEffect(() => {
+        if (taperWeeks + peakWeeks + buildWeeks > computedPlanWeeks) {
+            const sum = taperWeeks + peakWeeks + buildWeeks;
+            let newTaper = Math.max(1, Math.round((taperWeeks / sum) * computedPlanWeeks));
+            let newPeak = Math.max(1, Math.round((peakWeeks / sum) * computedPlanWeeks));
+            let newBuild = computedPlanWeeks - newTaper - newPeak;
+
+            if (newBuild < 0) {
+                newBuild = 0;
+                newPeak = Math.max(1, computedPlanWeeks - newTaper);
+                if (newTaper + newPeak > computedPlanWeeks) {
+                    newTaper = Math.max(0, computedPlanWeeks - newPeak);
+                }
+            }
+
+            setTaperWeeks(newTaper);
+            setPeakWeeks(newPeak);
+            setBuildWeeks(newBuild);
+        }
+    }, [computedPlanWeeks, taperWeeks, peakWeeks, buildWeeks]);
+
     // Onboarding mutation (create goal)
     const createGoalMutation = useMutation({
         mutationFn: async () => {
@@ -328,10 +354,9 @@ export default function PlanSetupForm({
                     'MARATHON': 'MARATHON',
                 };
                 const mappedDistance = raceDistanceMap[raceType] || 'MARATHON';
-                const weeksUntilRace = calculateWeeksUntilRace(new Date(raceDate));
                 const calibratedVO2max = effectiveVO2max * calibrationFactor;
                 const planSettings: PlanSettings = {
-                    durationWeeks: weeksUntilRace,
+                    durationWeeks: computedPlanWeeks,
                     runsPerWeek: runsPerWeek,
                     weeklyMileageGoal: weeklyMileage,
                     raceDistance: mappedDistance,
@@ -351,7 +376,7 @@ export default function PlanSetupForm({
                     raceType,
                     raceDate,
                     planStartDate,
-                    planWeeks: 12,
+                    planWeeks: computedPlanWeeks,
                     runsPerWeek,
                     ridesPerWeek,
                     swimsPerWeek,
@@ -756,15 +781,12 @@ export default function PlanSetupForm({
                 };
                 const mappedDistance = raceDistanceMap[raceType] || 'MARATHON';
 
-                // Calculate weeks until race
-                const weeksUntilRace = calculateWeeksUntilRace(new Date(raceDate));
-
                 // Use calibrated VO2max if calibration has been done
                 const calibratedVO2max = effectiveVO2max * calibrationFactor;
 
                 // Build plan settings from form state
                 const planSettings: PlanSettings = {
-                    durationWeeks: weeksUntilRace,
+                    durationWeeks: computedPlanWeeks,
                     runsPerWeek: runsPerWeek,
                     weeklyMileageGoal: weeklyMileage,
                     raceDistance: mappedDistance,
@@ -908,7 +930,7 @@ export default function PlanSetupForm({
                                 {goalTimeSeconds !== null ? (
                                     <span className="text-accent-orange">Custom goal</span>
                                 ) : (
-                                    <>Projected based on {weeksUntilRace} weeks of training</>
+                                    <>Projected based on {computedPlanWeeks} weeks of training</>
                                 )}
                             </p>
                         </div>

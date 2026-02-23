@@ -14,3 +14,4 @@ export { UserMenu } from './UserMenu';
 export { ErrorBoundary, ChartErrorBoundary } from './ErrorBoundary';
 export { default as SyncPlatformSelector } from './SyncPlatformSelector';
 export { UserAvatar } from './UserAvatar';
+export { PullToRefresh } from './PullToRefresh';

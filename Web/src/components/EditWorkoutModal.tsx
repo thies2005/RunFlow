@@ -114,6 +114,8 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['plan'] });
             queryClient.invalidateQueries({ queryKey: ['recent-activities'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+            queryClient.invalidateQueries({ queryKey: ['activities'] });
             onClose();
         }
     });

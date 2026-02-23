@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -9,7 +10,37 @@ export async function GET(request: Request) {
     }
 
     try {
-        // Call the free Open Food Facts API
+        // OPTIMIZATION: Check local database first before making external API call
+        // This serves as a cache for previously scanned items, significantly reducing
+        // latency and avoiding rate limits on the Open Food Facts API
+        const cachedItem = await prisma.foodItem.findUnique({
+            where: { barcode: barcode }
+        });
+
+        if (cachedItem) {
+            // Return the cached data in the exact format the frontend expects
+            return NextResponse.json({
+                name: cachedItem.name,
+                brand: cachedItem.brand,
+                barcode: cachedItem.barcode,
+                servingSize: cachedItem.servingSize,
+                calories: cachedItem.calories,
+                protein: cachedItem.protein,
+                carbs: cachedItem.carbs,
+                fats: cachedItem.fats,
+                // Micronutrients - safely handle null values by defaulting to 0
+                fiber: cachedItem.fiber ?? 0,
+                sugar: cachedItem.sugar ?? 0,
+                saturatedFat: cachedItem.saturatedFat ?? 0,
+                sodium: cachedItem.sodium ?? 0,
+                potassium: cachedItem.potassium ?? 0,
+                cholesterol: cachedItem.cholesterol ?? 0,
+                calcium: cachedItem.calcium ?? 0,
+                iron: cachedItem.iron ?? 0,
+            });
+        }
+
+        // Item not found in local database, fetch from Open Food Facts API
         const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
         const data = await res.json();
 

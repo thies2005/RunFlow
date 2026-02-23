@@ -6,6 +6,7 @@ import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare
 import { syncDailyHealth, backfillHistoricalHealth, isMobile } from '@/lib/mobile/healthConnect';
 import { format } from 'date-fns';
 import { AddSupplementModal } from './AddSupplementModal';
+import { HealthTrendModal } from './HealthTrendModal';
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -14,6 +15,8 @@ interface HealthViewProps {
 export default function HealthView({ showHeader = true }: HealthViewProps) {
     const queryClient = useQueryClient();
     const [isMobileDevice, setIsMobileDevice] = useState(true);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [activeTrendMetric, setActiveTrendMetric] = useState<'steps' | 'weight' | null>(null);
 
     useEffect(() => {
         setIsMobileDevice(isMobile());
@@ -25,7 +28,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         }
     }, [queryClient]);
 
-    // Query daily health logged data (including steps & weight from DB, and supplement logs)
+    // ... (rest of queries)
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     const { data: dailyData, isLoading: isDailyLoading } = useQuery({
         queryKey: ['daily-health', todayStr],
@@ -36,7 +39,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         }
     });
 
-    // Query supplement templates
     const { data: supplements, isLoading: isSupplementsLoading } = useQuery({
         queryKey: ['supplements'],
         queryFn: async () => {
@@ -65,27 +67,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
         }
     });
-
-    const updateManualWeightMutation = useMutation({
-        mutationFn: async (weight: number) => {
-            const res = await fetch('/api/health/daily', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    date: todayStr,
-                    action: 'updateHealth',
-                    weight
-                })
-            });
-            if (!res.ok) throw new Error('Failed to update weight');
-            return res.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['daily-health'] });
-        }
-    });
-
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     // Group supplements by time of day
     const morningSupplements = supplements?.filter((s: any) => s.timeOfDay === 'MORNING') || [];
@@ -141,29 +122,37 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
                 {/* Steps and Weight Cards */}
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="glass-card p-4 rounded-xl border border-glass-border">
+                    <button
+                        onClick={() => setActiveTrendMetric('steps')}
+                        className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
+                    >
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2 text-green-400 font-medium">
                                 <ActivitySquare className="w-4 h-4" /> Steps
                             </div>
+                            <ChevronRight className="w-4 h-4 text-gray-500" />
                         </div>
                         <div className="flex items-baseline gap-1">
                             <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.steps || 0}</span>
                             <span className="text-xs text-gray-400 font-medium">steps today</span>
                         </div>
-                    </div>
+                    </button>
 
-                    <div className="glass-card p-4 rounded-xl border border-glass-border">
+                    <button
+                        onClick={() => setActiveTrendMetric('weight')}
+                        className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
+                    >
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2 text-blue-400 font-medium">
                                 <Activity className="w-4 h-4" /> Weight
                             </div>
+                            <ChevronRight className="w-4 h-4 text-gray-500" />
                         </div>
                         <div className="flex items-baseline gap-1">
                             <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.weight ? dailyData.dailyHealth.weight.toFixed(1) : '--'}</span>
                             <span className="text-xs text-gray-400 font-medium">kg</span>
                         </div>
-                    </div>
+                    </button>
                 </div>
 
                 {/* Supplements List */}
@@ -233,6 +222,12 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
             <AddSupplementModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
+            />
+
+            <HealthTrendModal
+                isOpen={activeTrendMetric !== null}
+                onClose={() => setActiveTrendMetric(null)}
+                metric={activeTrendMetric}
             />
         </div>
     );

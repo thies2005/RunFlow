@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw, Settings2 } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Settings2, Heart } from 'lucide-react';
 import {
     LineChart, Line, AreaChart, Area,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -337,6 +337,12 @@ export default function AnalyticsPage() {
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
                             <h1 className="text-xl font-bold text-foreground">Performance Analytics</h1>
+                            {userData?.healthTrackingEnabled && (
+                                <button onClick={() => router.push('/health')} className="ml-4 btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
+                                    <Heart className="w-5 h-5" />
+                                    <span className="hidden sm:inline">Health</span>
+                                </button>
+                            )}
                         </div>
                         <button
                             onClick={() => recalculateMutation.mutate()}

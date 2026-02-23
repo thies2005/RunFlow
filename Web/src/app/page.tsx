@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, AlertCircle, BarChart3, MessageSquare, Hand } from 'lucide-react';
+import { RefreshCw, AlertCircle, BarChart3, MessageSquare, Hand, Heart } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -140,6 +140,12 @@ export default function Dashboard() {
                                     <BarChart3 className="w-5 h-5" />
                                     <span className="hidden sm:inline">Analytics</span>
                                 </button>
+                                {statsData?.healthTrackingEnabled && (
+                                    <button onClick={() => router.push('/health')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
+                                        <Heart className="w-5 h-5" />
+                                        <span className="hidden sm:inline">Health</span>
+                                    </button>
+                                )}
                                 {showAiCoach && (
                                     <button onClick={() => router.push('/chat')} className="btn-secondary text-foreground flex items-center gap-2 py-2 px-3 sm:px-4">
                                         <MessageSquare className="w-5 h-5" />

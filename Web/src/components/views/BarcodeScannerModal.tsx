@@ -35,10 +35,12 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
                     document.documentElement.style.background = 'transparent';
 
                     await BarcodeScanner.startScan();
-                    BarcodeScanner.addListener('barcodeScanned', async (result) => {
-                        // Stop scanning after successful read
-                        await stopNativeScanner();
-                        onScan(result.barcode.rawValue);
+                    BarcodeScanner.addListener('barcodesScanned', async (event: any) => {
+                        if (event.barcodes && event.barcodes.length > 0) {
+                            // Stop scanning after successful read
+                            await stopNativeScanner();
+                            onScan(event.barcodes[0].rawValue);
+                        }
                     });
                 }
             };

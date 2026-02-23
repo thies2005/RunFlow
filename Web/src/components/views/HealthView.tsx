@@ -2,12 +2,13 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare } from 'lucide-react';
+import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search } from 'lucide-react';
 import { syncDailyHealth, backfillHistoricalHealth, isMobile } from '@/lib/mobile/healthConnect';
 import { format } from 'date-fns';
 import { AddSupplementModal } from './AddSupplementModal';
 import { HealthTrendModal } from './HealthTrendModal';
 import { BarcodeScannerModal } from './BarcodeScannerModal';
+import { ManualFoodEntryModal } from './ManualFoodEntryModal';
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -19,6 +20,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [activeTrendMetric, setActiveTrendMetric] = useState<'steps' | 'weight' | null>(null);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
 
     const handleBarcodeScanned = async (barcode: string) => {
         setIsScannerOpen(false);
@@ -220,21 +222,35 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                     )}
                 </div>
 
-                {/* Coming Soon Food Card replaced with actual scanner */}
-                <button
-                    onClick={() => setIsScannerOpen(true)}
-                    className="w-full glass-card p-4 rounded-xl border border-glass-border hover:bg-white/10 transition-colors text-left"
-                >
-                    <div className="flex items-center justify-between mb-2">
+                {/* Food Logging Section */}
+                <div className="glass-card p-4 rounded-xl border border-glass-border">
+                    <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="font-semibold text-white">Food & Calories</h3>
-                            <p className="text-xs text-gray-400 mt-1">Scan a barcode to log a meal</p>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                            <Plus className="w-4 h-4 text-blue-400" />
+                            <p className="text-xs text-gray-400 mt-1">Log your daily nutrition</p>
                         </div>
                     </div>
-                </button>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            onClick={() => setIsScannerOpen(true)}
+                            className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                <Camera className="w-5 h-5 text-blue-400" />
+                            </div>
+                            <span className="text-sm font-medium text-white">Scan Barcode</span>
+                        </button>
+                        <button
+                            onClick={() => setIsManualEntryOpen(true)}
+                            className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <Search className="w-5 h-5 text-green-400" />
+                            </div>
+                            <span className="text-sm font-medium text-white">Search / Manual</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <AddSupplementModal
@@ -252,6 +268,11 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                 isOpen={isScannerOpen}
                 onClose={() => setIsScannerOpen(false)}
                 onScan={handleBarcodeScanned}
+            />
+
+            <ManualFoodEntryModal
+                isOpen={isManualEntryOpen}
+                onClose={() => setIsManualEntryOpen(false)}
             />
         </div>
     );

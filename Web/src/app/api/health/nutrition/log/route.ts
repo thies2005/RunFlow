@@ -6,25 +6,35 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { userId, date, mealType, quantity, foodItem } = body;
 
-        // Upsert the FoodItem dictionary entry
-        const dbFoodItem = await prisma.foodItem.upsert({
-            where: {
-                barcode: foodItem.barcode || 'NO_BARCODE_FALLBACK', // handle gracefully if manual
-            },
-            update: {
-                // Optionally update fields if you want to keep dictionary fresh
-            },
-            create: {
-                name: foodItem.name,
-                brand: foodItem.brand,
-                barcode: foodItem.barcode,
-                calories: foodItem.calories,
-                protein: foodItem.protein,
-                carbs: foodItem.carbs,
-                fats: foodItem.fats,
-                servingSize: foodItem.servingSize,
-            }
-        });
+        let dbFoodItem;
+        if (foodItem.barcode) {
+            dbFoodItem = await prisma.foodItem.upsert({
+                where: { barcode: foodItem.barcode },
+                update: {},
+                create: {
+                    name: foodItem.name,
+                    brand: foodItem.brand,
+                    barcode: foodItem.barcode,
+                    calories: foodItem.calories,
+                    protein: foodItem.protein,
+                    carbs: foodItem.carbs,
+                    fats: foodItem.fats,
+                    servingSize: foodItem.servingSize,
+                }
+            });
+        } else {
+            dbFoodItem = await prisma.foodItem.create({
+                data: {
+                    name: foodItem.name,
+                    brand: foodItem.brand,
+                    calories: foodItem.calories,
+                    protein: foodItem.protein,
+                    carbs: foodItem.carbs,
+                    fats: foodItem.fats,
+                    servingSize: foodItem.servingSize,
+                }
+            });
+        }
 
         // Create the user's log record with snapshot macros based on quantity
         const log = await prisma.nutritionLog.create({

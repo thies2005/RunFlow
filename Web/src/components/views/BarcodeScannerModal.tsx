@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { X } from 'lucide-react';
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
 export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
     const [isNative, setIsNative] = useState(false);
     const [hasPermission, setHasPermission] = useState(false);
-    const webScannerRef = useRef<Html5QrcodeScanner | null>(null);
+    const webScannerRef = useRef<Html5Qrcode | null>(null);
 
     useEffect(() => {
         setIsNative(Capacitor.isNativePlatform());
@@ -48,18 +48,27 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
         } else {
             // WEB UI LOGIC (PWA / Browser)
             setHasPermission(true);
-            webScannerRef.current = new Html5QrcodeScanner(
-                "web-reader",
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                false
-            );
-            webScannerRef.current.render(
-                (decodedText) => {
-                    stopWebScanner();
-                    onScan(decodedText);
-                },
-                (error) => { /* ignore constant stream of scan failures */ }
-            );
+            const startWebScanner = async () => {
+                try {
+                    const html5QrCode = new Html5Qrcode("web-reader");
+                    webScannerRef.current = html5QrCode;
+
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText) => {
+                            stopWebScanner();
+                            onScan(decodedText);
+                        },
+                        (error) => { /* ignore */ }
+                    );
+                } catch (err) {
+                    console.error("Error starting web scanner:", err);
+                }
+            };
+
+            // Small timeout to ensure the div is rendered before starting
+            setTimeout(startWebScanner, 100);
         }
 
         return () => {
@@ -80,7 +89,13 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
 
     const stopWebScanner = () => {
         if (webScannerRef.current) {
-            webScannerRef.current.clear().catch(console.error);
+            try {
+                webScannerRef.current.stop().then(() => {
+                    webScannerRef.current?.clear();
+                }).catch(console.error);
+            } catch (err) {
+                console.error("Scanner may not have been scanning", err);
+            }
         }
     };
 

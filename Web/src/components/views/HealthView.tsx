@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare } from 'lucide-react';
 import { syncDailyHealth, backfillHistoricalHealth, isMobile } from '@/lib/mobile/healthConnect';
 import { format } from 'date-fns';
+import { AddSupplementModal } from './AddSupplementModal';
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -84,6 +85,8 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         }
     });
 
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
     // Group supplements by time of day
     const morningSupplements = supplements?.filter((s: any) => s.timeOfDay === 'MORNING') || [];
     const noonSupplements = supplements?.filter((s: any) => s.timeOfDay === 'NOON') || [];
@@ -139,8 +142,10 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                 {/* Steps and Weight Cards */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="glass-card p-4 rounded-xl border border-glass-border">
-                        <div className="flex items-center gap-2 mb-2 text-green-400 font-medium">
-                            <ActivitySquare className="w-4 h-4" /> Steps
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 text-green-400 font-medium">
+                                <ActivitySquare className="w-4 h-4" /> Steps
+                            </div>
                         </div>
                         <div className="flex items-baseline gap-1">
                             <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.steps || 0}</span>
@@ -158,7 +163,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.weight ? dailyData.dailyHealth.weight.toFixed(1) : '--'}</span>
                             <span className="text-xs text-gray-400 font-medium">kg</span>
                         </div>
-                        {/* We could add manual weight entry here on click */}
                     </div>
                 </div>
 
@@ -168,14 +172,26 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         <h3 className="font-semibold text-white flex items-center gap-2">
                             <Battery className="w-4 h-4 text-purple-400" /> Daily Supplements
                         </h3>
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="bg-white/10 hover:bg-white/15 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                        >
+                            <Plus className="w-3.5 h-3.5" /> Add
+                        </button>
                     </div>
 
                     {isSupplementsLoading ? (
                         <p className="text-xs text-gray-500">Loading supplements...</p>
                     ) : supplements?.length === 0 ? (
-                        <div className="text-center py-6 border border-dashed border-white/10 rounded-lg">
-                            <p className="text-sm text-gray-400 mb-2">No supplements configured.</p>
-                        </div>
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="w-full text-center py-6 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-colors group flex flex-col items-center justify-center gap-2"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Plus className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <p className="text-sm text-gray-400 tracking-wide font-medium group-hover:text-white transition-colors">Tap to add your first supplement</p>
+                        </button>
                     ) : (
                         <div className="space-y-4">
                             {morningSupplements.length > 0 && (
@@ -212,8 +228,12 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         </div>
                     </div>
                 </div>
-
             </div>
+
+            <AddSupplementModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+            />
         </div>
     );
 }

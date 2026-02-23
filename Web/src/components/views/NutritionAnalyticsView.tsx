@@ -31,6 +31,7 @@ import { NutritionGoalsModal } from './NutritionGoalsModal';
 
 interface NutritionAnalyticsViewProps {
   onClose: () => void;
+  onOpenGoals?: () => void;
 }
 
 interface AnalyticsData {
@@ -110,9 +111,14 @@ const MICRO_LIMITS = {
   fiber: 30,     // g per day recommended minimum
 };
 
-export default function NutritionAnalyticsView({ onClose }: NutritionAnalyticsViewProps) {
+export default function NutritionAnalyticsView({ onClose, onOpenGoals }: NutritionAnalyticsViewProps) {
   const [dateRange, setDateRange] = useState<DateRangePreset>('7days');
   const [isGoalsOpen, setIsGoalsOpen] = useState(false);
+
+  const handleOpenGoals = () => {
+    if (onOpenGoals) onOpenGoals();
+    else setIsGoalsOpen(true);
+  };
 
   const { data: analytics, isLoading, error } = useQuery<AnalyticsData>({
     queryKey: ['nutrition-analytics', dateRange],
@@ -145,109 +151,58 @@ export default function NutritionAnalyticsView({ onClose }: NutritionAnalyticsVi
     return Math.max(0, analytics.target.dailyCalories - analytics.today.calories);
   }, [analytics]);
 
-  // Render loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-full bg-background pb-20">
-        <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-          <div className="flex items-center px-4 py-3">
-            <button onClick={onClose} className="mr-3">
-              <ArrowLeft className="w-5 h-5 text-white" />
-            </button>
-            <span className="text-lg font-bold text-white flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-pink-500" /> Nutrition Analytics
-            </span>
-          </div>
-        </header>
-        <div className="flex items-center justify-center h-64">
+  // Render content conditionally
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-[60vh]">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-400">Loading analytics...</p>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  // Render error state
-  if (error || !analytics) {
-    return (
-      <div className="min-h-full bg-background pb-20">
-        <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-          <div className="flex items-center px-4 py-3">
-            <button onClick={onClose} className="mr-3">
-              <ArrowLeft className="w-5 h-5 text-white" />
-            </button>
-            <span className="text-lg font-bold text-white flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-pink-500" /> Nutrition Analytics
-            </span>
-          </div>
-        </header>
-        <div className="flex items-center justify-center h-64 px-4">
+    if (error || !analytics) {
+      return (
+        <div className="flex items-center justify-center h-[60vh] px-4">
           <div className="text-center">
             <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <p className="text-white font-semibold mb-2">Failed to load analytics</p>
             <p className="text-gray-400 text-sm">Please try again later</p>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  // Render empty state
-  if (analytics.daysWithLogs === 0) {
-    return (
-      <div className="min-h-full bg-background pb-20">
-        <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-          <div className="flex items-center px-4 py-3">
-            <button onClick={onClose} className="mr-3">
-              <ArrowLeft className="w-5 h-5 text-white" />
-            </button>
-            <span className="text-lg font-bold text-white flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-pink-500" /> Nutrition Analytics
-            </span>
-          </div>
-        </header>
-        <div className="flex items-center justify-center h-64 px-4">
+    if (analytics.daysWithLogs === 0) {
+      return (
+        <div className="flex items-center justify-center h-[60vh] px-4">
           <div className="text-center max-w-sm">
             <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
               <Utensils className="w-8 h-8 text-gray-400" />
             </div>
             <p className="text-white font-semibold mb-2">No nutrition data yet</p>
-            <p className="text-gray-400 text-sm mb-4">Start logging your meals to see detailed analytics and insights</p>
+            <p className="text-gray-400 text-sm mb-6">Start logging your meals to see detailed analytics and insights</p>
+            <button
+              onClick={handleOpenGoals}
+              className="bg-pink-500/20 text-pink-400 px-6 py-3 rounded-xl text-sm font-semibold mb-3 w-full"
+            >
+              Set Nutrition Goals First
+            </button>
             <button
               onClick={onClose}
-              className="bg-pink-500/20 text-pink-400 px-4 py-2 rounded-lg text-sm font-semibold"
+              className="bg-white/5 text-gray-300 px-6 py-3 rounded-xl text-sm font-semibold w-full"
             >
               Go to Health Dashboard
             </button>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  return (
-    <div className="min-h-full bg-background pb-20">
-      <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center">
-            <button onClick={onClose} className="mr-3">
-              <ArrowLeft className="w-5 h-5 text-white" />
-            </button>
-            <span className="text-lg font-bold text-white flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-pink-500" /> Nutrition Analytics
-            </span>
-          </div>
-          <button
-            onClick={() => setIsGoalsOpen(true)}
-            className="bg-pink-500/20 text-pink-400 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
-          >
-            <Target className="w-3.5 h-3.5" /> Goals
-          </button>
-        </div>
-      </header>
-
+    return (
       <div className="p-4 space-y-4 max-w-2xl mx-auto">
         {/* Date Range Selector */}
         <div className="flex gap-2 overflow-x-auto pb-2">
@@ -282,6 +237,7 @@ export default function NutritionAnalyticsView({ onClose }: NutritionAnalyticsVi
                 <PieChart>
                   <Pie
                     data={[
+                      /* Goal limit styling adjustments */
                       { name: 'Consumed', value: analytics.today.calories },
                       { name: 'Remaining', value: remainingCalories },
                     ]}
@@ -609,11 +565,38 @@ export default function NutritionAnalyticsView({ onClose }: NutritionAnalyticsVi
           </div>
         </div>
       </div>
+    );
+  };
 
-      <NutritionGoalsModal
-        isOpen={isGoalsOpen}
-        onClose={() => setIsGoalsOpen(false)}
-      />
+  return (
+    <div className="min-h-full bg-background pb-20">
+      <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center">
+            <button onClick={onClose} className="mr-3">
+              <ArrowLeft className="w-5 h-5 text-white" />
+            </button>
+            <span className="text-lg font-bold text-white flex items-center gap-2">
+              <Utensils className="w-5 h-5 text-pink-500" /> Nutrition Analytics
+            </span>
+          </div>
+          <button
+            onClick={handleOpenGoals}
+            className="bg-pink-500/20 text-pink-400 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1"
+          >
+            <Target className="w-3.5 h-3.5" /> Goals
+          </button>
+        </div>
+      </header>
+
+      {renderContent()}
+
+      {!onOpenGoals && (
+        <NutritionGoalsModal
+          isOpen={isGoalsOpen}
+          onClose={() => setIsGoalsOpen(false)}
+        />
+      )}
     </div>
   );
 }

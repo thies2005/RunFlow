@@ -60,7 +60,8 @@ export async function GET(request: Request) {
         return NextResponse.json({
             ...returnTarget,
             userProfile: user,
-            avgActiveCalories
+            avgActiveCalories,
+            isDefault: !target
         });
     } catch (error) {
         console.error("Error fetching nutrition target:", error);

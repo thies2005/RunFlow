@@ -2,20 +2,23 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
-import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone } from 'lucide-react';
+import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target } from 'lucide-react';
 import { syncDailyHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult } from '@/lib/mobile/healthConnect';
 import { format } from 'date-fns';
+import { useSession } from 'next-auth/react';
 import { AddSupplementModal } from './AddSupplementModal';
 import { HealthTrendModal } from './HealthTrendModal';
 import { BarcodeScannerModal } from './BarcodeScannerModal';
 import { ManualFoodEntryModal } from './ManualFoodEntryModal';
 import NutritionAnalyticsView from './NutritionAnalyticsView';
+import { NutritionGoalsModal } from './NutritionGoalsModal';
 
 interface HealthViewProps {
     showHeader?: boolean;
 }
 
 export default function HealthView({ showHeader = true }: HealthViewProps) {
+    const { data: session } = useSession();
     const queryClient = useQueryClient();
     const [isMobileDevice, setIsMobileDevice] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -23,6 +26,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
+    const [isGoalsOpen, setIsGoalsOpen] = useState(false);
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
 
     const handleBarcodeScanned = useCallback(async (barcode: string) => {
@@ -93,6 +97,17 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         }
     });
 
+    // Fetch nutrition targets to see if they need setup
+    const { data: targetData } = useQuery({
+        queryKey: ['nutrition-target', session?.user?.id],
+        queryFn: async () => {
+            const res = await fetch(`/api/health/nutrition/target?userId=${session?.user?.id}`);
+            if (!res.ok) throw new Error('Failed to fetch targets');
+            return res.json();
+        },
+        enabled: !!session?.user?.id
+    });
+
     const toggleSupplementMutation = useMutation({
         mutationFn: async ({ supplementId, taken }: { supplementId: string, taken: boolean }) => {
             const res = await fetch('/api/health/daily', {
@@ -143,9 +158,12 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     };
 
     return (
-        <div className="min-h-full bg-background pb-20">
+        <div className="min-h-full bg-background pb-20 flex flex-col">
             {showAnalytics ? (
-                <NutritionAnalyticsView onClose={() => setShowAnalytics(false)} />
+                <NutritionAnalyticsView
+                    onClose={() => setShowAnalytics(false)}
+                    onOpenGoals={() => setIsGoalsOpen(true)}
+                />
             ) : (
                 <>
                     {showHeader && (
@@ -158,194 +176,216 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         </header>
                     )}
 
-            <div className={`p-4 ${!showHeader ? 'pt-8' : ''} space-y-6 max-w-lg mx-auto`}>
-                {!isMobileDevice && (
-                    <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-start gap-3">
-                        <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                        <div className="text-sm">
-                            <p className="font-semibold text-blue-400 mb-1">Mobile App Recommended</p>
-                            <p className="text-blue-200/80">Step and weight tracking use Health Connect, which is only available on identical mobile apps. You can manually enter weight here or track supplements.</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Steps and Weight Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                    <button
-                        onClick={() => setActiveTrendMetric('steps')}
-                        className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
-                    >
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2 text-green-400 font-medium">
-                                <ActivitySquare className="w-4 h-4" /> Steps
+                    <div className={`p-4 ${!showHeader ? 'pt-8' : ''} space-y-6 max-w-lg mx-auto`}>
+                        {!isMobileDevice && (
+                            <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-start gap-3">
+                                <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                                <div className="text-sm">
+                                    <p className="font-semibold text-blue-400 mb-1">Mobile App Recommended</p>
+                                    <p className="text-blue-200/80">Step and weight tracking use Health Connect, which is only available on identical mobile apps. You can manually enter weight here or track supplements.</p>
+                                </div>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-gray-500" />
-                        </div>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.steps || 0}</span>
-                            <span className="text-xs text-gray-400 font-medium">steps today</span>
-                        </div>
-                    </button>
+                        )}
 
-                    <button
-                        onClick={() => setActiveTrendMetric('weight')}
-                        className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
-                    >
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2 text-blue-400 font-medium">
-                                <Activity className="w-4 h-4" /> Weight
+                        {/* Steps and Weight Cards */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                onClick={() => setActiveTrendMetric('steps')}
+                                className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2 text-green-400 font-medium">
+                                        <ActivitySquare className="w-4 h-4" /> Steps
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                                </div>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.steps || 0}</span>
+                                    <span className="text-xs text-gray-400 font-medium">steps today</span>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveTrendMetric('weight')}
+                                className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2 text-blue-400 font-medium">
+                                        <Activity className="w-4 h-4" /> Weight
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                                </div>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.weight ? dailyData.dailyHealth.weight.toFixed(1) : '--'}</span>
+                                    <span className="text-xs text-gray-400 font-medium">kg</span>
+                                </div>
+                            </button>
+                        </div>
+
+                        {/* Device Health Sync Section */}
+                        {isMobileDevice && (
+                            <div className="glass-card p-4 rounded-xl border border-glass-border">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="font-semibold text-white flex items-center gap-2">
+                                            <Smartphone className="w-4 h-4 text-cyan-400" /> Device Health Data
+                                        </h3>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Syncs steps and weight from Health Connect. Falls back to Strava weight if unavailable.
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleSyncHistoricalData}
+                                    disabled={isSyncingHistory}
+                                    className="w-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 transition-colors rounded-lg px-4 py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isSyncingHistory ? (
+                                        <>
+                                            <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
+                                            <span className="text-sm font-medium text-cyan-400">Syncing...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RefreshCw className="w-4 h-4 text-cyan-400" />
+                                            <span className="text-sm font-medium text-cyan-400">Sync Device Health Data</span>
+                                        </>
+                                    )}
+                                </button>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-gray-500" />
-                        </div>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.weight ? dailyData.dailyHealth.weight.toFixed(1) : '--'}</span>
-                            <span className="text-xs text-gray-400 font-medium">kg</span>
-                        </div>
-                    </button>
-                </div>
+                        )}
 
-                {/* Device Health Sync Section */}
-                {isMobileDevice && (
-                    <div className="glass-card p-4 rounded-xl border border-glass-border">
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
+                        {/* Supplements List */}
+                        <div className="glass-card p-4 rounded-xl border border-glass-border">
+                            <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-semibold text-white flex items-center gap-2">
-                                    <Smartphone className="w-4 h-4 text-cyan-400" /> Device Health Data
+                                    <Battery className="w-4 h-4 text-purple-400" /> Daily Supplements
                                 </h3>
-                                <p className="text-xs text-gray-400 mt-1">
-                                    Syncs steps and weight from Health Connect. Falls back to Strava weight if unavailable.
-                                </p>
+                                <button
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="bg-white/10 hover:bg-white/15 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                                >
+                                    <Plus className="w-3.5 h-3.5" /> Add
+                                </button>
                             </div>
-                        </div>
-                        <button
-                            onClick={handleSyncHistoricalData}
-                            disabled={isSyncingHistory}
-                            className="w-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 transition-colors rounded-lg px-4 py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSyncingHistory ? (
-                                <>
-                                    <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
-                                    <span className="text-sm font-medium text-cyan-400">Syncing...</span>
-                                </>
+
+                            {isSupplementsLoading ? (
+                                <p className="text-xs text-gray-500">Loading supplements...</p>
+                            ) : supplements?.length === 0 ? (
+                                <button
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="w-full text-center py-6 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-colors group flex flex-col items-center justify-center gap-2"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <Plus className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <p className="text-sm text-gray-400 tracking-wide font-medium group-hover:text-white transition-colors">Tap to add your first supplement</p>
+                                </button>
                             ) : (
-                                <>
-                                    <RefreshCw className="w-4 h-4 text-cyan-400" />
-                                    <span className="text-sm font-medium text-cyan-400">Sync Device Health Data</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                )}
-
-                {/* Supplements List */}
-                <div className="glass-card p-4 rounded-xl border border-glass-border">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-white flex items-center gap-2">
-                            <Battery className="w-4 h-4 text-purple-400" /> Daily Supplements
-                        </h3>
-                        <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="bg-white/10 hover:bg-white/15 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                        >
-                            <Plus className="w-3.5 h-3.5" /> Add
-                        </button>
-                    </div>
-
-                    {isSupplementsLoading ? (
-                        <p className="text-xs text-gray-500">Loading supplements...</p>
-                    ) : supplements?.length === 0 ? (
-                        <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="w-full text-center py-6 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-colors group flex flex-col items-center justify-center gap-2"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <Plus className="w-5 h-5 text-gray-400" />
-                            </div>
-                            <p className="text-sm text-gray-400 tracking-wide font-medium group-hover:text-white transition-colors">Tap to add your first supplement</p>
-                        </button>
-                    ) : (
-                        <div className="space-y-4">
-                            {morningSupplements.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Morning</h4>
-                                    {morningSupplements.map(renderSupplementItem)}
-                                </div>
-                            )}
-                            {noonSupplements.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-4">Noon</h4>
-                                    {noonSupplements.map(renderSupplementItem)}
-                                </div>
-                            )}
-                            {eveningSupplements.length > 0 && (
-                                <div>
-                                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-4">Evening</h4>
-                                    {eveningSupplements.map(renderSupplementItem)}
+                                <div className="space-y-4">
+                                    {morningSupplements.length > 0 && (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Morning</h4>
+                                            {morningSupplements.map(renderSupplementItem)}
+                                        </div>
+                                    )}
+                                    {noonSupplements.length > 0 && (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-4">Noon</h4>
+                                            {noonSupplements.map(renderSupplementItem)}
+                                        </div>
+                                    )}
+                                    {eveningSupplements.length > 0 && (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-4">Evening</h4>
+                                            {eveningSupplements.map(renderSupplementItem)}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
-                    )}
-                </div>
 
-                {/* Food Logging Section */}
-                <div className="glass-card p-4 rounded-xl border border-glass-border">
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 className="font-semibold text-white">Food & Calories</h3>
-                            <p className="text-xs text-gray-400 mt-1">Log your daily nutrition</p>
+                        {/* Food Logging Section */}
+                        <div className="glass-card p-4 rounded-xl border border-glass-border">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="font-semibold text-white">Food & Calories</h3>
+                                    <p className="text-xs text-gray-400 mt-1">Log your daily nutrition</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowAnalytics(true)}
+                                    className="bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 transition-colors rounded-lg px-3 py-1.5 flex items-center gap-1.5"
+                                >
+                                    <BarChart3 className="w-3.5 h-3.5 text-pink-400" />
+                                    <span className="text-xs font-medium text-pink-400">Analytics</span>
+                                </button>
+                            </div>
+
+                            {targetData?.isDefault && (
+                                <div className="bg-pink-500/10 border border-pink-500/20 rounded-xl p-4 mb-4 flex items-start gap-3">
+                                    <Target className="w-5 h-5 text-pink-400 shrink-0 mt-0.5" />
+                                    <div className="flex-1">
+                                        <h4 className="text-sm font-semibold text-pink-400 mb-1">Set Your Nutrition Goals</h4>
+                                        <p className="text-xs text-pink-200/70 mb-3">Define your calorie and macro targets to unlock personalized insights and detailed adherence scoring.</p>
+                                        <button
+                                            onClick={() => setIsGoalsOpen(true)}
+                                            className="bg-pink-500 text-white text-xs font-semibold px-4 py-2 rounded-lg w-full shadow-lg shadow-pink-500/20 hover:bg-pink-600 transition-colors"
+                                        >
+                                            Setup Goals
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => setIsScannerOpen(true)}
+                                    className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                        <Camera className="w-5 h-5 text-blue-400" />
+                                    </div>
+                                    <span className="text-sm font-medium text-white">Scan Barcode</span>
+                                </button>
+                                <button
+                                    onClick={() => setIsManualEntryOpen(true)}
+                                    className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                        <Search className="w-5 h-5 text-green-400" />
+                                    </div>
+                                    <span className="text-sm font-medium text-white">Search / Manual</span>
+                                </button>
+                            </div>
                         </div>
-                        <button
-                            onClick={() => setShowAnalytics(true)}
-                            className="bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 transition-colors rounded-lg px-3 py-1.5 flex items-center gap-1.5"
-                        >
-                            <BarChart3 className="w-3.5 h-3.5 text-pink-400" />
-                            <span className="text-xs font-medium text-pink-400">Analytics</span>
-                        </button>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <button
-                            onClick={() => setIsScannerOpen(true)}
-                            className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                <Camera className="w-5 h-5 text-blue-400" />
-                            </div>
-                            <span className="text-sm font-medium text-white">Scan Barcode</span>
-                        </button>
-                        <button
-                            onClick={() => setIsManualEntryOpen(true)}
-                            className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                                <Search className="w-5 h-5 text-green-400" />
-                            </div>
-                            <span className="text-sm font-medium text-white">Search / Manual</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
 
-            <AddSupplementModal
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-            />
+                    <AddSupplementModal
+                        isOpen={isAddModalOpen}
+                        onClose={() => setIsAddModalOpen(false)}
+                    />
 
-            <HealthTrendModal
-                isOpen={activeTrendMetric !== null}
-                onClose={() => setActiveTrendMetric(null)}
-                metric={activeTrendMetric}
-            />
+                    <HealthTrendModal
+                        isOpen={activeTrendMetric !== null}
+                        onClose={() => setActiveTrendMetric(null)}
+                        metric={activeTrendMetric}
+                    />
 
-            <BarcodeScannerModal
-                isOpen={isScannerOpen}
-                onClose={() => setIsScannerOpen(false)}
-                onScan={handleBarcodeScanned}
-            />
+                    <BarcodeScannerModal
+                        isOpen={isScannerOpen}
+                        onClose={() => setIsScannerOpen(false)}
+                        onScan={handleBarcodeScanned}
+                    />
 
-            <ManualFoodEntryModal
-                isOpen={isManualEntryOpen}
-                onClose={() => setIsManualEntryOpen(false)}
-            />
+                    <ManualFoodEntryModal
+                        isOpen={isManualEntryOpen}
+                        onClose={() => setIsManualEntryOpen(false)}
+                    />
+
+                    <NutritionGoalsModal
+                        isOpen={isGoalsOpen}
+                        onClose={() => setIsGoalsOpen(false)}
+                    />
                 </>
             )}
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Search, Loader2, Save, ArrowLeft } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -36,6 +36,25 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess }: Props) {
     const [selectedFood, setSelectedFood] = useState<any | null>(null);
     const [quantity, setQuantity] = useState('1');
     const [mealType, setMealType] = useState('SNACK');
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        window.history.pushState({ modal: 'ManualFoodEntry' }, '');
+
+        const handlePopState = () => {
+            onClose();
+        };
+
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+            if (window.history.state?.modal === 'ManualFoodEntry') {
+                window.history.back();
+            }
+        };
+    }, [isOpen, onClose]);
 
     const resetState = () => {
         setActiveTab('search');
@@ -140,7 +159,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess }: Props) {
             <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-white/10 shrink-0">
                     <div className="flex items-center gap-2">
                         {selectedFood && (
                             <button onClick={() => setSelectedFood(null)} className="p-1 -ml-2 text-gray-400 hover:text-white">

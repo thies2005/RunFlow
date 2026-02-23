@@ -9,6 +9,7 @@ const REQUIRED_READ_PERMISSIONS: HealthDataType[] = [
     'heartRate',
     'steps',
     'calories',
+    'weight'
 ];
 
 // Map plugin workout types to RunFlow activity types
@@ -92,7 +93,7 @@ export async function requestHealthPermissions(): Promise<boolean> {
         // First request the basic data type permissions the plugin supports
         await Health.requestAuthorization({
             read: REQUIRED_READ_PERMISSIONS,
-            write: [],
+            write: ['weight'],
         });
 
         // Open Health Connect settings so user can grant Workouts/Exercise permission
@@ -322,4 +323,98 @@ export async function syncHealthData(
 
     console.log(`Health Connect sync complete: ${synced} new, ${skipped} skipped, ${errors} errors`);
     return { synced, errors, skipped };
+}
+
+/**
+ * Fetch steps and weight for a single day, and sync to backend
+ */
+export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
+    if (!isMobile()) return;
+
+    // Use midnight to midnight (UTC) for the target date to align with backend
+    const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    const end = new Date(start);
+    end.setUTCDate(start.getUTCDate() + 1);
+
+    try {
+        const [stepsResult, weightResult] = await Promise.all([
+            Health.readSamples({
+                dataType: 'steps',
+                startDate: start.toISOString(),
+                endDate: end.toISOString(),
+                limit: 1000,
+            }),
+            Health.readSamples({
+                dataType: 'weight',
+                startDate: start.toISOString(),
+                endDate: end.toISOString(),
+                limit: 1, // Only care about latest weight for the day
+            })
+        ]);
+
+        let totalSteps = 0;
+        if (stepsResult.samples) {
+            totalSteps = stepsResult.samples.reduce((sum, s) => sum + s.value, 0);
+        }
+
+        let weightKg: number | undefined;
+        if (weightResult.samples && weightResult.samples.length > 0) {
+            // Take the most recent weight
+            const sortedWeights = [...weightResult.samples].sort(
+                (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+            );
+            weightKg = sortedWeights[0].value;
+        }
+
+        // Post to backend
+        await fetch('/api/health/daily', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                date: start.toISOString(),
+                action: 'updateHealth',
+                steps: totalSteps > 0 ? totalSteps : undefined,
+                weight: weightKg
+            }),
+        });
+    } catch (error) {
+        console.error('Failed to sync daily health:', error);
+    }
+}
+
+/**
+ * Sync the last N days of health data (steps, weight)
+ * Call this when Health Tracking is first enabled.
+ */
+export async function backfillHistoricalHealth(days = 30): Promise<void> {
+    if (!isMobile()) return;
+
+    for (let i = 0; i < days; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        await syncDailyHealth(d);
+    }
+}
+
+/**
+ * Manually write weight to Google Health and the backend
+ */
+export async function writeManualWeight(weightKg: number, date: Date = new Date()): Promise<void> {
+    if (!isMobile()) return;
+
+    try {
+        await Health.saveSample({
+            dataType: 'weight',
+            value: weightKg,
+            unit: 'kilogram',
+            startDate: date.toISOString(),
+            endDate: date.toISOString(),
+        });
+
+        // Trigger a sync so the backend gets the new weight
+        await syncDailyHealth(date);
+    } catch (error) {
+        console.error('Failed to write weight to Health Connect:', error);
+        throw error;
+    }
 }

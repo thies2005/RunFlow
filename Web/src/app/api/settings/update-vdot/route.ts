@@ -30,6 +30,7 @@ export async function GET() {
                 thresholdHeartRate: true,
                 includeCrossTraining: true,
                 useImperial: true,
+                healthTrackingEnabled: true,
             }
         });
 
@@ -51,6 +52,7 @@ export async function GET() {
             hrZone6Max: user?.hrZone6Max || 187,
             includeCrossTraining: user?.includeCrossTraining ?? true,
             useImperial: user?.useImperial ?? false,
+            healthTrackingEnabled: user?.healthTrackingEnabled ?? false,
             runsPerWeek: activeGoal?.runsPerWeek || 4,
             ridesPerWeek: activeGoal?.ridesPerWeek || 0,
             strengthPerWeek: activeGoal?.strengthPerWeek || 0,

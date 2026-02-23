@@ -98,6 +98,8 @@ services:
     image: postgres:16-alpine
     container_name: runflow-db
     restart: unless-stopped
+    ports:
+      - "5434:5432"
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-runflow}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}

@@ -4,30 +4,31 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { MobileBottomNav } from './MobileBottomNav';
-import { Home, Calendar, BarChart3, Bot } from 'lucide-react';
+import { Home, Calendar, BarChart3, Bot, Heart } from 'lucide-react';
 import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 
 interface MobileSwipeLayoutProps {
     children: React.ReactNode[];
     onPageChange?: (_index: number) => void;
     showAiChat?: boolean;
+    showHealth?: boolean;
 }
 
 const BASE_PATHS = ['/', '/plan', '/analytics'];
 
-export function MobileSwipeLayout({ children, onPageChange, showAiChat = true }: MobileSwipeLayoutProps) {
+export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, showHealth = false }: MobileSwipeLayoutProps) {
     const router = useRouter();
     const pathname = usePathname();
-
-    // Dynamically build paths and tabs
-    const paths = useMemo(() => showAiChat ? [...BASE_PATHS, '/chat'] : BASE_PATHS, [showAiChat]);
 
     const tabs = useMemo(() => [
         { icon: Home, label: 'Home', path: '/' },
         { icon: Calendar, label: 'Plan', path: '/plan' },
         { icon: BarChart3, label: 'Analytics', path: '/analytics' },
+        ...(showHealth ? [{ icon: Heart, label: 'Health', path: '/health' }] : []),
         ...(showAiChat ? [{ icon: Bot, label: 'Coach', path: '/chat' }] : []),
-    ], [showAiChat]);
+    ], [showAiChat, showHealth]);
+
+    const paths = useMemo(() => tabs.map(t => t.path), [tabs]);
 
     const getIndexFromPath = useCallback((_path: string) => {
         const _index = paths.indexOf(_path);
@@ -41,7 +42,7 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true }:
         if (newIndex !== activeIndex) {
             setActiveIndex(newIndex);
         }
-    }, [pathname, activeIndex, showAiChat, getIndexFromPath]); // Re-run if showAiChat changes
+    }, [pathname, activeIndex, showAiChat, showHealth, getIndexFromPath]); // Re-run if config changes
 
     // Simplified navigation - no swiping, no sliding
     const handleTabChange = useCallback((index: number) => {

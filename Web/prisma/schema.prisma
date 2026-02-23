@@ -84,6 +84,11 @@ model User {
   chatMessages  ChatMessage[]
   chatSessions  ChatSession[]
   usageHistory  AiUsageHistory[]
+  
+  // Health Tracking
+  healthTrackingEnabled Boolean @default(false)
+  supplements         Supplement[]
+  dailyHealthLogs     DailyHealthLog[]
 }
 
 // ============================================
@@ -429,6 +434,60 @@ model DailyFitness {
   runningTss Float @default(0)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+// ============================================
+// Health Tracking (Supplements, Steps, Weight)
+// ============================================
+
+model Supplement {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  amount    Float
+  unit      String           // e.g. "mg", "g", "IU", "capsules", "drops"
+  timeOfDay String           // "MORNING" | "NOON" | "EVENING"
+  daysOfWeek Json            // array of ints [0,1,2,3,4,5,6] (0=Sunday)
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs      SupplementLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, timeOfDay])
+}
+
+model SupplementLog {
+  id           String   @id @default(cuid())
+  supplementId String
+  date         DateTime @db.Date // Midnight UTC for the logged day
+  taken        Boolean  @default(false)
+
+  supplement   Supplement @relation(fields: [supplementId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([supplementId, date])
+}
+
+model DailyHealthLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date // Midnight UTC for the logged day
+  steps     Int?
+  weight    Float?   // kg
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt // useful for checking "last synced"
 
   @@unique([userId, date])
   @@index([userId, date])

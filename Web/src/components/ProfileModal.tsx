@@ -34,6 +34,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     // Display preferences
     const [useImperial, setUseImperial] = useState(false);
 
+    // Health Tracking
+    const [healthTrackingEnabled, setHealthTrackingEnabled] = useState(false);
+
     const [message, setMessage] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -82,6 +85,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             }
             if (typeof settingsData.useImperial === 'boolean') {
                 setUseImperial(settingsData.useImperial);
+            }
+            if (typeof settingsData.healthTrackingEnabled === 'boolean') {
+                setHealthTrackingEnabled(settingsData.healthTrackingEnabled);
             }
         }
     }, [settingsData]);
@@ -135,6 +141,31 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             setMessage('Error updating profile. Please try again.');
         }
     });
+
+    const healthToggleMutation = useMutation({
+        mutationFn: async (enabled: boolean) => {
+            const res = await fetch('/api/user/health-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ healthTrackingEnabled: enabled }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!res.ok) throw new Error('Failed to update health settings');
+            return res.json();
+        },
+        onSuccess: (data) => {
+            setHealthTrackingEnabled(data.healthTrackingEnabled);
+            queryClient.invalidateQueries({ queryKey: ['user-settings'] });
+            setMessage(data.healthTrackingEnabled ? 'Health tracking enabled!' : 'Health tracking disabled.');
+            setTimeout(() => setMessage(''), 2000);
+        },
+        onError: () => {
+            setMessage('Error updating health settings. Please try again.');
+        }
+    });
+
+    const handleHealthToggle = () => {
+        healthToggleMutation.mutate(!healthTrackingEnabled);
+    };
 
     const resyncMutation = useMutation({
         mutationFn: async () => {
@@ -436,6 +467,29 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                             Configure AI Coach
                         </button>
                         <p className="text-[10px] text-gray-500 mt-2">Get personalized training advice, activity feedback, and more</p>
+                    </div>
+
+                    {/* Health Tracking Section */}
+                    <div className="pt-2 border-t border-white/10">
+                        <label className="block text-xs text-green-400 mb-3 uppercase font-semibold">Health Tracking</label>
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                            <div>
+                                <p className="text-sm text-white">Enable Health Features</p>
+                                <p className="text-[10px] text-gray-500">Track weight, steps, and supplements</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleHealthToggle}
+                                disabled={healthToggleMutation.isPending}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${healthTrackingEnabled ? 'bg-green-500' : 'bg-white/20'
+                                    } ${healthToggleMutation.isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                <span
+                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${healthTrackingEnabled ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
                     </div>
 
                     {message && (

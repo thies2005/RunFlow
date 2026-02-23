@@ -24,6 +24,7 @@ import ActivityDetailsModal from '@/components/ActivityDetailsModal';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import AiChat from '@/components/AiChat';
 import AiSettingsModal from '@/components/AiSettingsModal';
+import HealthView from '@/components/views/HealthView';
 import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
 import type { Workout, Goal, Activity } from '@/lib/types';
@@ -153,6 +154,9 @@ export function MobileLayout() {
 
     // Determine if AI chat should be shown
     const showAiChat = aiSettingsData?.settings?.adminAllowed;
+
+    // Determine if Health should be shown
+    const showHealth = userData?.healthTrackingEnabled === true;
 
     // Analytics History Query
     const { data: historyData } = useQuery({
@@ -408,8 +412,8 @@ export function MobileLayout() {
 
     return (
         <>
-            <MobileSwipeLayout showAiChat={showAiChat}>
-                {/* Dashboard View */}
+            <MobileSwipeLayout showAiChat={showAiChat} showHealth={showHealth}>
+                {/* Dashboard View - always index 0 */}
                 <DashboardView
                     session={session}
                     statsData={dashboardStats}
@@ -427,7 +431,7 @@ export function MobileLayout() {
                     showHeader={false}
                 />
 
-                {/* Plan View */}
+                {/* Plan View - always index 1 */}
                 <PlanView
                     data={planData}
                     isLoading={isPlanLoading}
@@ -442,7 +446,7 @@ export function MobileLayout() {
                     showHeader={false}
                 />
 
-                {/* Analytics View */}
+                {/* Analytics View - always index 2 */}
                 <AnalyticsView
                     runalyzeMetrics={analyticsMetrics.runalyzeMetrics}
                     vo2TrendData={analyticsMetrics.vo2TrendData}
@@ -462,8 +466,14 @@ export function MobileLayout() {
                     showHeader={false}
                 />
 
+                {/* Health View — index 3, ONLY rendered when health is enabled so tabs align */}
+                {showHealth && (
+                    <HealthView
+                        showHeader={false}
+                    />
+                )}
 
-                {/* Chat View */}
+                {/* Chat View — always LAST; index depends on whether Health tab is present */}
                 {showAiChat && (
                     <div className="h-full flex flex-col bg-background relative">
                         {/* Sticky Header */}

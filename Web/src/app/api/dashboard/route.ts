@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
         // 1. User Settings & Active Goals
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true }
+            select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true, healthTrackingEnabled: true }
         });
 
         const activeGoalsPromise = prisma.goal.findMany({
@@ -216,7 +216,8 @@ export async function GET(req: NextRequest) {
             easyTrimp,
             hrMax: maxHR,
             maxCtl,
-            maxAtl
+            maxAtl,
+            healthTrackingEnabled: user?.healthTrackingEnabled ?? false
         };
 
         // Serialize BigInt for recent activities

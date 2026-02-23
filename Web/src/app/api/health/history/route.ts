@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { authOptions } from '@/lib/strava/oauth';
+import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
     try {
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Format dates consistently for the frontend charts
-        const formattedHistory = history.map((log: { date: Date; steps: number; weight: number | null }) => ({
+        const formattedHistory = history.map((log: { date: Date; steps: number | null; weight: number | null }) => ({
             ...log,
             dateStr: log.date.toISOString().split('T')[0]
         }));

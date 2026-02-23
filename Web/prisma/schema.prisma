@@ -90,6 +90,7 @@ model User {
   supplements         Supplement[]
   dailyHealthLogs     DailyHealthLog[]
   nutritionLogs       NutritionLog[]
+  nutritionTarget     UserNutritionTarget?
 }
 
 // ============================================
@@ -731,7 +732,17 @@ model FoodItem {
   carbs       Float
   fats        Float
   servingSize String?
-  
+
+  // Micronutrients
+  fiber          Float?
+  sugar          Float?
+  saturatedFat   Float?
+  sodium         Float?
+  potassium      Float?
+  cholesterol    Float?
+  calcium        Float?
+  iron           Float?
+
   logs        NutritionLog[]
 }
 
@@ -741,17 +752,43 @@ model NutritionLog {
   date       String    // e.g., "yyyy-MM-dd"
   mealType   String?   // e.g., "BREAKFAST", "LUNCH", "DINNER", "SNACK"
   quantity   Float     // e.g., 1.5 (for 1.5 servings)
-  
+
   // Snapshot of macros at the time of logging
   calories   Float
   protein    Float
   carbs      Float
   fats       Float
 
+  // Snapshot of micronutrients at the time of logging
+  fiber          Float?
+  sugar          Float?
+  saturatedFat   Float?
+  sodium         Float?
+  potassium      Float?
+  cholesterol    Float?
+  calcium        Float?
+  iron           Float?
+
   foodItemId String
   foodItem   FoodItem  @relation(fields: [foodItemId], references: [id])
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   createdAt  DateTime  @default(now())
+}
+
+model UserNutritionTarget {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  dailyCalories  Int      @default(2000)
+  proteinPercent Float    @default(30)  // 30%
+  carbsPercent   Float    @default(40)  // 40%
+  fatsPercent    Float    @default(30)  // 30%
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
 }
 

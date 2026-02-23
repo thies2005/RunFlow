@@ -2,13 +2,14 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search } from 'lucide-react';
+import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3 } from 'lucide-react';
 import { syncDailyHealth, backfillHistoricalHealth, isMobile } from '@/lib/mobile/healthConnect';
 import { format } from 'date-fns';
 import { AddSupplementModal } from './AddSupplementModal';
 import { HealthTrendModal } from './HealthTrendModal';
 import { BarcodeScannerModal } from './BarcodeScannerModal';
 import { ManualFoodEntryModal } from './ManualFoodEntryModal';
+import NutritionAnalyticsView from './NutritionAnalyticsView';
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -21,6 +22,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [activeTrendMetric, setActiveTrendMetric] = useState<'steps' | 'weight' | null>(null);
     const [isScannerOpen, setIsScannerOpen] = useState(false);
     const [isManualEntryOpen, setIsManualEntryOpen] = useState(false);
+    const [showAnalytics, setShowAnalytics] = useState(false);
 
     const handleBarcodeScanned = async (barcode: string) => {
         setIsScannerOpen(false);
@@ -116,15 +118,19 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
     return (
         <div className="min-h-full bg-background pb-20">
-            {showHeader && (
-                <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-                    <div className="flex items-center px-4 py-3">
-                        <span className="text-lg font-bold text-white flex items-center gap-2">
-                            <HeartPulse className="w-5 h-5 text-red-500" /> Health
-                        </span>
-                    </div>
-                </header>
-            )}
+            {showAnalytics ? (
+                <NutritionAnalyticsView onClose={() => setShowAnalytics(false)} />
+            ) : (
+                <>
+                    {showHeader && (
+                        <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
+                            <div className="flex items-center px-4 py-3">
+                                <span className="text-lg font-bold text-white flex items-center gap-2">
+                                    <HeartPulse className="w-5 h-5 text-red-500" /> Health
+                                </span>
+                            </div>
+                        </header>
+                    )}
 
             <div className={`p-4 ${!showHeader ? 'pt-8' : ''} space-y-6 max-w-lg mx-auto`}>
                 {!isMobileDevice && (
@@ -229,6 +235,13 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             <h3 className="font-semibold text-white">Food & Calories</h3>
                             <p className="text-xs text-gray-400 mt-1">Log your daily nutrition</p>
                         </div>
+                        <button
+                            onClick={() => setShowAnalytics(true)}
+                            className="bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 transition-colors rounded-lg px-3 py-1.5 flex items-center gap-1.5"
+                        >
+                            <BarChart3 className="w-3.5 h-3.5 text-pink-400" />
+                            <span className="text-xs font-medium text-pink-400">Analytics</span>
+                        </button>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <button
@@ -274,6 +287,8 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                 isOpen={isManualEntryOpen}
                 onClose={() => setIsManualEntryOpen(false)}
             />
+                </>
+            )}
         </div>
     );
 }

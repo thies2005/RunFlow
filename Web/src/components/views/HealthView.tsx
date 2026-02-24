@@ -219,10 +219,10 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     };
 
     const renderStack = (stack: any) => {
-        if (!stack.supplements || stack.supplements.length === 0) return null;
+        const hasSupplements = stack.supplements && stack.supplements.length > 0;
 
         // Check if all supplements in stack are taken today
-        const allTaken = stack.supplements.every((supp: any) => {
+        const allTaken = hasSupplements && stack.supplements.every((supp: any) => {
             const log = getSupplementLog(supp.id);
             return log?.taken;
         });
@@ -243,52 +243,56 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         <h4 className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors flex items-center gap-1.5">
                             {stack.name} {stack.timeOfDay && <span className="text-[10px] uppercase font-bold text-gray-500 bg-white/10 px-1.5 py-0.5 rounded ml-1">{stack.timeOfDay}</span>}
                         </h4>
-                        <p className="text-[10px] text-gray-500 mt-0.5">{stack.supplements.length} items</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">{stack.supplements?.length || 0} items</p>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setStatsConfig({ isOpen: true, targetId: stack.id, targetType: 'stack', targetName: stack.name });
-                            }}
-                            className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20"
-                        >
-                            <BarChart3 className="w-3 h-3 text-gray-400" />
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                toggleStackMutation.mutate({ stackId: stack.id, taken: !allTaken });
-                            }}
-                            className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors border ${allTaken ? 'bg-blue-500 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] text-white' : 'bg-transparent border-gray-500 text-gray-500 hover:border-gray-400'}`}
-                        >
-                            {allTaken ? <HeartPulse className="w-4 h-4" /> : <div className="w-2.5 h-2.5 rounded-full bg-gray-500" />}
-                        </button>
-                    </div>
+                    {hasSupplements && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setStatsConfig({ isOpen: true, targetId: stack.id, targetType: 'stack', targetName: stack.name });
+                                }}
+                                className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20"
+                            >
+                                <BarChart3 className="w-3 h-3 text-gray-400" />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleStackMutation.mutate({ stackId: stack.id, taken: !allTaken });
+                                }}
+                                className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors border ${allTaken ? 'bg-blue-500 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)] text-white' : 'bg-transparent border-gray-500 text-gray-500 hover:border-gray-400'}`}
+                            >
+                                {allTaken ? <HeartPulse className="w-4 h-4" /> : <div className="w-2.5 h-2.5 rounded-full bg-gray-500" />}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Stack Items */}
-                <div className="p-2 space-y-1">
-                    {stack.supplements.map((supp: any) => {
-                        const log = getSupplementLog(supp.id);
-                        const isTaken = log?.taken || false;
+                {hasSupplements && (
+                    <div className="p-2 space-y-1">
+                        {stack.supplements.map((supp: any) => {
+                            const log = getSupplementLog(supp.id);
+                            const isTaken = log?.taken || false;
 
-                        return (
-                            <SupplementItem
-                                key={supp.id}
-                                supplement={supp}
-                                isTaken={isTaken}
-                                variant="stack-item"
-                                onEdit={(s) => {
-                                    setSupplementToEdit(s);
-                                    setIsAddModalOpen(true);
-                                }}
-                                onToggle={(id, taken) => toggleSupplementMutation.mutate({ supplementId: id, taken })}
-                            />
-                        )
-                    })}
-                </div>
+                            return (
+                                <SupplementItem
+                                    key={supp.id}
+                                    supplement={supp}
+                                    isTaken={isTaken}
+                                    variant="stack-item"
+                                    onEdit={(s) => {
+                                        setSupplementToEdit(s);
+                                        setIsAddModalOpen(true);
+                                    }}
+                                    onToggle={(id, taken) => toggleSupplementMutation.mutate({ supplementId: id, taken })}
+                                />
+                            )
+                        })}
+                    </div>
+                )}
             </div>
         );
     }

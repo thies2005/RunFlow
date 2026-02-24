@@ -81,6 +81,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['supplements'] });
+            queryClient.invalidateQueries({ queryKey: ['supplement-stacks'] });
             resetForm();
             onClose();
         }
@@ -94,6 +95,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['supplements'] });
+            queryClient.invalidateQueries({ queryKey: ['supplement-stacks'] });
             resetForm();
             onClose();
         }

@@ -231,13 +231,13 @@ export function getClientIdentifier(request: Request): string {
 
     const identifierData = `${ipAddress}|${userAgent}`;
 
-    let hash = 0;
+    let hash = 2166136261;
     for (let i = 0; i < identifierData.length; i++) {
-        const char = identifierData.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
+        hash ^= identifierData.charCodeAt(i);
+        // FNV-1a prime step optimized for 32-bit JS bitwise operations
+        hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
     }
-    return Math.abs(hash).toString(36);
+    return (hash >>> 0).toString(36);
 }
 
 export function rateLimitHeaders(result: RateLimitResult): Record<string, string> {

@@ -228,11 +228,16 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
                     {workout && (
                         <button
                             onClick={() => deleteMutation.mutate()}
-                            className="px-4 py-3 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                            disabled={deleteMutation.isPending}
+                            className="px-4 py-3 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
                             aria-label="Delete workout"
                             title="Delete workout"
                         >
-                            <Trash2 className="w-5 h-5" />
+                            {deleteMutation.isPending ? (
+                                <div className="w-5 h-5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Trash2 className="w-5 h-5" />
+                            )}
                         </button>
                     )}
                     <button

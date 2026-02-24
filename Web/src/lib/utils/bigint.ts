@@ -11,7 +11,7 @@
  */
 export function safeBigInt(value: unknown): bigint {
     if (typeof value === 'bigint') return value;
-    if (typeof value === 'number') return BigInt(Math.floor(value));
+    if (typeof value === 'number') return BigInt(Math.trunc(value));
     if (typeof value === 'string') return BigInt(value);
     throw new Error(`Cannot convert ${typeof value} to BigInt`);
 }

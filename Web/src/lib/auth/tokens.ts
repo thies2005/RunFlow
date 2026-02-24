@@ -18,9 +18,9 @@ export const CODE_EXPIRY_MINUTES = 15;
  */
 export function generateAuthCode(): string {
     const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const bytes = randomBytes(6);
+    const bytes = randomBytes(8);
     let code = '';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
         code += chars.charAt(bytes[i] % chars.length);
     }
     return code;

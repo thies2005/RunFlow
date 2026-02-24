@@ -10,8 +10,8 @@ import { logger, generateRequestId } from '@/lib/logging/logger'
 const getAllowedOrigins = (): string[] => {
     const origins: string[] = [];
 
-    // Production domains - add your deployed domain(s) here
-    origins.push('https://runflow.schuelken.uk');
+    // Production domains are handled below via NEXT_PUBLIC_APP_URL
+    // removed hardcoded runflow.schuelken.uk
 
     // Add the app URL from environment
     if (process.env.NEXT_PUBLIC_APP_URL) {

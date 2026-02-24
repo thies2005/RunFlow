@@ -17,16 +17,15 @@ const AUTH_TAG_LENGTH = 16; // 128 bits
  * Get encryption key from environment
  * Returns null if not configured (encryption disabled)
  */
-function getEncryptionKey(): Buffer | null {
+function getEncryptionKey(): Buffer {
     const keyBase64 = process.env.ENCRYPTION_KEY;
     if (!keyBase64) {
-        return null;
+        throw new Error('CRITICAL SECURITY ERROR: ENCRYPTION_KEY environment variable is missing.');
     }
 
     const key = Buffer.from(keyBase64, 'base64');
     if (key.length !== 32) {
-        logger.error('ENCRYPTION_KEY must be 32 bytes (256 bits)', { keyLength: key.length });
-        return null;
+        throw new Error(`CRITICAL SECURITY ERROR: ENCRYPTION_KEY must be 32 bytes (256 bits). Got ${key.length} bytes.`);
     }
 
     return key;
@@ -121,10 +120,19 @@ export function decryptToken(encryptedToken: string): string {
  * Check if encryption is enabled
  */
 export function isEncryptionEnabled(): boolean {
-    return getEncryptionKey() !== null;
+    try {
+        getEncryptionKey();
+        return true;
+    } catch {
+        return false;
+    }
 }
 
-// Startup check to warn if encryption is disabled
-if (!getEncryptionKey() && process.env.NODE_ENV !== 'test') {
-    console.warn('[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.');
+// Startup check to enforce encryption config
+try {
+    getEncryptionKey();
+} catch (error) {
+    if (process.env.NODE_ENV !== 'test') {
+        throw error;
+    }
 }

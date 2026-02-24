@@ -98,7 +98,7 @@ export function calculateEffectiveVO2max(
     );
 
     // Guard: prevent division by zero or near-zero
-    if (percentVO2max <= 0.1) {
+    if (percentVO2max <= 0.01) {
         return 0;
     }
 

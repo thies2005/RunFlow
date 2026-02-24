@@ -501,7 +501,6 @@ export default function PlanSetupForm({
     };
 
     const isLoading = createGoalMutation.isPending || updateSettingsMutation.isPending;
-    const [_isEditingTime, _setIsEditingTime] = useState(false);
 
     const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
 
@@ -518,7 +517,7 @@ export default function PlanSetupForm({
 
     return (
         <div className="space-y-6">
-            <TargetRaceSection 
+            <TargetRaceSection
                 mode={mode}
                 goalName={goalName}
                 setGoalName={setGoalName}
@@ -531,7 +530,7 @@ export default function PlanSetupForm({
                 formErrors={formErrors}
             />
 
-            <CalibrationSection 
+            <CalibrationSection
                 calibrationMode={calibrationMode}
                 setCalibrationMode={setCalibrationMode}
                 selectedActivityId={selectedActivityId}
@@ -550,7 +549,7 @@ export default function PlanSetupForm({
                 raceActivities={raceActivities}
             />
 
-            <GoalTimeRenderer 
+            <GoalTimeRenderer
                 mode={mode}
                 effectiveVO2max={effectiveVO2max}
                 calibrationFactor={calibrationFactor}
@@ -574,7 +573,7 @@ export default function PlanSetupForm({
                 setIsEditingGoalTime={setIsEditingGoalTime}
             />
 
-            <PlanVolumeSection 
+            <PlanVolumeSection
                 runsPerWeek={runsPerWeek}
                 setRunsPerWeek={setRunsPerWeek}
                 ridesPerWeek={ridesPerWeek}
@@ -601,7 +600,7 @@ export default function PlanSetupForm({
                 setRestDays={setRestDays}
             />
 
-            <HeartRateZonesSection 
+            <HeartRateZonesSection
                 showHeartRate={showHeartRate}
                 setShowHeartRate={setShowHeartRate}
                 maxHeartRate={maxHeartRate}

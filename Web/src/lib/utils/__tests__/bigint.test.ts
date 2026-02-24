@@ -7,11 +7,11 @@ describe('safeBigInt', () => {
         expect(safeBigInt(BigInt(0))).toBe(BigInt(0));
     });
 
-    it('converts number to bigint (floored)', () => {
+    it('converts number to bigint (truncated)', () => {
         expect(safeBigInt(10)).toBe(BigInt(10));
         expect(safeBigInt(10.5)).toBe(BigInt(10));
         expect(safeBigInt(10.9)).toBe(BigInt(10));
-        expect(safeBigInt(-10.5)).toBe(BigInt(-11));
+        expect(safeBigInt(-10.5)).toBe(BigInt(-10));
         expect(safeBigInt(0)).toBe(BigInt(0));
     });
 

@@ -2,14 +2,14 @@ import { generateAuthCode } from '../tokens';
 
 describe('tokens', () => {
     describe('generateAuthCode', () => {
-        it('should generate a code of length 6', () => {
+        it('should generate a code of length 8', () => {
             const code = generateAuthCode();
-            expect(code).toHaveLength(6);
+            expect(code).toHaveLength(8);
         });
 
         it('should generate a code with allowed characters', () => {
             const code = generateAuthCode();
-            const allowedChars = /^[0-9A-Z]{6}$/;
+            const allowedChars = /^[0-9A-Z]{8}$/;
             expect(code).toMatch(allowedChars);
         });
 

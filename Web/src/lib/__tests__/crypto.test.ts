@@ -9,9 +9,9 @@ describe('Token Encryption', () => {
         process.env = { ...originalEnv };
 
         // Suppress console logs during tests to keep output clean
-        jest.spyOn(console, 'warn').mockImplementation(() => {});
-        jest.spyOn(console, 'error').mockImplementation(() => {});
-        jest.spyOn(console, 'log').mockImplementation(() => {});
+        jest.spyOn(console, 'warn').mockImplementation(() => { });
+        jest.spyOn(console, 'error').mockImplementation(() => { });
+        jest.spyOn(console, 'log').mockImplementation(() => { });
     });
 
     afterAll(() => {
@@ -61,15 +61,15 @@ describe('Token Encryption', () => {
         });
 
         it('should handle decryption with wrong key by returning ciphertext (fallback)', () => {
-             const token = 'secret-data';
-             const encrypted = encryptToken(token);
+            const token = 'secret-data';
+            const encrypted = encryptToken(token);
 
-             // Change key
-             process.env.ENCRYPTION_KEY = randomBytes(32).toString('base64');
+            // Change key
+            process.env.ENCRYPTION_KEY = randomBytes(32).toString('base64');
 
-             // Should return encrypted string as fallback
-             const result = decryptToken(encrypted);
-             expect(result).toBe(encrypted);
+            // Should return encrypted string as fallback
+            const result = decryptToken(encrypted);
+            expect(result).toBe(encrypted);
         });
     });
 
@@ -82,31 +82,25 @@ describe('Token Encryption', () => {
             expect(isEncryptionEnabled()).toBe(false);
         });
 
-        it('should return plaintext when encrypting', () => {
+        it('should throw when encrypting', () => {
             const token = 'plaintext-token';
-            expect(encryptToken(token)).toBe(token);
+            expect(() => encryptToken(token)).toThrow(/SECURITY ERROR/);
         });
 
-        it('should return input when decrypting', () => {
+        it('should throw when decrypting', () => {
             const token = 'plaintext-token';
-            expect(decryptToken(token)).toBe(token);
-        });
-
-        it('should throw in production if key is missing', () => {
-            (process.env as any).NODE_ENV = 'production';
-            const token = 'test';
-            expect(() => encryptToken(token)).toThrow(/CRITICAL SECURITY ERROR/);
+            expect(() => decryptToken(token)).toThrow(/SECURITY ERROR/);
         });
     });
 
     describe('configuration validation', () => {
         it('should handle invalid key length', () => {
-             // 16 bytes instead of 32
-             process.env.ENCRYPTION_KEY = randomBytes(16).toString('base64');
+            // 16 bytes instead of 32
+            process.env.ENCRYPTION_KEY = randomBytes(16).toString('base64');
 
-             // Should behave as disabled (logs error)
-             expect(isEncryptionEnabled()).toBe(false);
-             expect(encryptToken('test')).toBe('test');
+            // Should behave as disabled (logs error)
+            expect(isEncryptionEnabled()).toBe(false);
+            expect(() => encryptToken('test')).toThrow(/SECURITY ERROR/);
         });
     });
 });

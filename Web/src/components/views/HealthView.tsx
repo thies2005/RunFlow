@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
-import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target } from 'lucide-react';
+import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target, Sparkles, BookOpen } from 'lucide-react';
 import { syncDailyHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult } from '@/lib/mobile/healthConnect';
 import { Capacitor } from '@capacitor/core';
 
@@ -15,6 +15,9 @@ import { BarcodeScannerModal } from './BarcodeScannerModal';
 import { ManualFoodEntryModal } from './ManualFoodEntryModal';
 import NutritionAnalyticsView from './NutritionAnalyticsView';
 import { NutritionGoalsModal } from './NutritionGoalsModal';
+import { FoodScannerModal } from './FoodScannerModal';
+import { FoodScanResultView } from './FoodScanResultView';
+import { MealLibraryModal } from './MealLibraryModal';
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -33,6 +36,9 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
     const [scannedFood, setScannedFood] = useState<any | null>(null);
+    const [isFoodScannerOpen, setIsFoodScannerOpen] = useState(false);
+    const [scanResult, setScanResult] = useState<any | null>(null);
+    const [isMealLibraryOpen, setIsMealLibraryOpen] = useState(false);
 
     const handleBarcodeScanned = useCallback(async (barcode: string) => {
         setIsScannerOpen(false);
@@ -348,11 +354,21 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             )}
 
                             <div className="grid grid-cols-2 gap-3">
+                                {/* AI Food Scanner - Primary */}
+                                <button
+                                    onClick={() => setIsFoodScannerOpen(true)}
+                                    className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 border border-amber-500/20 transition-all rounded-lg p-3 flex flex-col items-center justify-center gap-2 col-span-2"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                                        <Sparkles className="w-5 h-5 text-amber-400" />
+                                    </div>
+                                    <span className="text-sm font-medium text-white">📸 AI Food Scan</span>
+                                    <span className="text-[11px] text-gray-400">Snap a photo for instant analysis</span>
+                                </button>
+
                                 <button
                                     onClick={async () => {
                                         if (!IS_NATIVE) {
-                                            // Request camera permission directly in the click handler
-                                            // to preserve the user gesture context for the browser
                                             try {
                                                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                                                 setCameraStream(stream);
@@ -378,6 +394,15 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                         <Search className="w-5 h-5 text-green-400" />
                                     </div>
                                     <span className="text-sm font-medium text-white">Search / Manual</span>
+                                </button>
+                                <button
+                                    onClick={() => setIsMealLibraryOpen(true)}
+                                    className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2 col-span-2"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                        <BookOpen className="w-5 h-5 text-purple-400" />
+                                    </div>
+                                    <span className="text-sm font-medium text-white">📚 Meal Library</span>
                                 </button>
                             </div>
                         </div>
@@ -419,6 +444,43 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                     <NutritionGoalsModal
                         isOpen={isGoalsOpen}
                         onClose={() => setIsGoalsOpen(false)}
+                    />
+
+                    <FoodScannerModal
+                        isOpen={isFoodScannerOpen}
+                        onClose={() => setIsFoodScannerOpen(false)}
+                        onScanComplete={(result) => {
+                            setIsFoodScannerOpen(false);
+                            setScanResult(result);
+                        }}
+                    />
+
+                    {scanResult && (
+                        <FoodScanResultView
+                            isOpen={!!scanResult}
+                            result={scanResult}
+                            onClose={() => setScanResult(null)}
+                            onLogSuccess={() => {
+                                queryClient.invalidateQueries({ queryKey: ['daily-health'] });
+                            }}
+                        />
+                    )}
+
+                    <MealLibraryModal
+                        isOpen={isMealLibraryOpen}
+                        onClose={() => setIsMealLibraryOpen(false)}
+                        onSelectMeal={(meal) => {
+                            setIsMealLibraryOpen(false);
+                            setScanResult({
+                                mealName: meal.name,
+                                items: meal.items,
+                                totalCalories: meal.totalCalories,
+                                totalProtein: meal.totalProtein,
+                                totalCarbs: meal.totalCarbs,
+                                totalFats: meal.totalFats,
+                                confidence: 'high' as const,
+                            });
+                        }}
                     />
                 </>
             )}

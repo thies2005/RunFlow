@@ -66,6 +66,11 @@ export async function GET(request: NextRequest) {
                 tier3DailyTokenLimit: globalSettings.tier3DailyTokenLimit,
                 tier3MonthlyTokenLimit: globalSettings.tier3MonthlyTokenLimit,
 
+                // CalorieSnap limits
+                tier1CalorieSnapLimit: globalSettings.tier1CalorieSnapLimit,
+                tier2CalorieSnapLimit: globalSettings.tier2CalorieSnapLimit,
+                tier3CalorieSnapLimit: globalSettings.tier3CalorieSnapLimit,
+
                 // Legacy (deprecated)
                 dailyMessageLimit: globalSettings.dailyMessageLimit,
                 monthlyMessageLimit: globalSettings.monthlyMessageLimit,
@@ -120,6 +125,9 @@ export async function PUT(request: NextRequest) {
             tier3Name, tier3DailyLimit, tier3MonthlyLimit,
             tier3DailyTokenLimit, tier3MonthlyTokenLimit,
 
+            // CalorieSnap limits
+            tier1CalorieSnapLimit, tier2CalorieSnapLimit, tier3CalorieSnapLimit,
+
             // Legacy
             dailyMessageLimit,
             monthlyMessageLimit,
@@ -160,6 +168,11 @@ export async function PUT(request: NextRequest) {
         if (tier3MonthlyLimit !== undefined) updateData.tier3MonthlyLimit = parseInt(tier3MonthlyLimit) || 0;
         if (tier3DailyTokenLimit !== undefined) updateData.tier3DailyTokenLimit = parseInt(tier3DailyTokenLimit) || 0;
         if (tier3MonthlyTokenLimit !== undefined) updateData.tier3MonthlyTokenLimit = parseInt(tier3MonthlyTokenLimit) || 0;
+
+        // CalorieSnap limits
+        if (tier1CalorieSnapLimit !== undefined) updateData.tier1CalorieSnapLimit = parseInt(tier1CalorieSnapLimit) || 0;
+        if (tier2CalorieSnapLimit !== undefined) updateData.tier2CalorieSnapLimit = parseInt(tier2CalorieSnapLimit) || 0;
+        if (tier3CalorieSnapLimit !== undefined) updateData.tier3CalorieSnapLimit = parseInt(tier3CalorieSnapLimit) || 0;
 
         // Legacy (deprecated)
         if (dailyMessageLimit !== undefined) updateData.dailyMessageLimit = parseInt(dailyMessageLimit) || 50;

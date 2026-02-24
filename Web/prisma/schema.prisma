@@ -91,6 +91,7 @@ model User {
   dailyHealthLogs     DailyHealthLog[]
   nutritionLogs       NutritionLog[]
   nutritionTarget     UserNutritionTarget?
+  savedMeals          SavedMeal[]
 }
 
 // ============================================
@@ -128,6 +129,11 @@ model GlobalAiSettings {
 
   tier3DailyTokenLimit   Int @default(200000)
   tier3MonthlyTokenLimit Int @default(2000000)
+
+  // CalorieSnap (AI Food Scan) Limits per Tier
+  tier1CalorieSnapLimit  Int @default(1)   // Basic: 1 scan/day
+  tier2CalorieSnapLimit  Int @default(3)   // Standard: 3 scans/day
+  tier3CalorieSnapLimit  Int @default(6)   // Premium: 6 scans/day
 
   // Legacy limits (deprecated, use tiers instead)
   dailyMessageLimit   Int @default(50)
@@ -217,6 +223,9 @@ model UserAiSettings {
   outputTokensUsedThisMonth Int @default(0)
 
   lastUsageReset DateTime @default(now())
+
+  // CalorieSnap (AI Food Scan) usage tracking
+  calorieSnapsUsedToday Int @default(0)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -790,5 +799,40 @@ model UserNutritionTarget {
   updatedAt      DateTime @updatedAt
 
   @@index([userId])
+}
+
+// ============================================
+// Saved Meals (AI Food Scanner Library)
+// ============================================
+
+model SavedMeal {
+  id            String          @id @default(cuid())
+  userId        String
+  name          String          // e.g. "Greek Salad with Olive Oil"
+  totalCalories Float
+  totalProtein  Float
+  totalCarbs    Float
+  totalFats     Float
+
+  items         SavedMealItem[]
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model SavedMealItem {
+  id             String    @id @default(cuid())
+  savedMealId    String
+  name           String    // e.g. "Olive Oil"
+  estimatedGrams Float     // e.g. 27
+  calories       Float
+  protein        Float
+  carbs          Float
+  fats           Float
+
+  savedMeal      SavedMeal @relation(fields: [savedMealId], references: [id], onDelete: Cascade)
 }
 

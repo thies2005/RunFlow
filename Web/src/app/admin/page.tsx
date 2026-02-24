@@ -137,6 +137,10 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
         tier3DailyTokenLimit: settings?.tier3DailyTokenLimit || 200000,
         tier3MonthlyTokenLimit: settings?.tier3MonthlyTokenLimit || 2000000,
 
+        tier1CalorieSnapLimit: settings?.tier1CalorieSnapLimit ?? 1,
+        tier2CalorieSnapLimit: settings?.tier2CalorieSnapLimit ?? 3,
+        tier3CalorieSnapLimit: settings?.tier3CalorieSnapLimit ?? 6,
+
         systemPrompt: settings?.systemPrompt || '',
     });
 
@@ -167,6 +171,10 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                 tier3MonthlyLimit: settings.tier3MonthlyLimit ?? prev.tier3MonthlyLimit,
                 tier3DailyTokenLimit: settings.tier3DailyTokenLimit ?? prev.tier3DailyTokenLimit,
                 tier3MonthlyTokenLimit: settings.tier3MonthlyTokenLimit ?? prev.tier3MonthlyTokenLimit,
+
+                tier1CalorieSnapLimit: settings.tier1CalorieSnapLimit ?? prev.tier1CalorieSnapLimit,
+                tier2CalorieSnapLimit: settings.tier2CalorieSnapLimit ?? prev.tier2CalorieSnapLimit,
+                tier3CalorieSnapLimit: settings.tier3CalorieSnapLimit ?? prev.tier3CalorieSnapLimit,
 
                 systemPrompt: settings.systemPrompt || prev.systemPrompt,
             }));
@@ -366,6 +374,17 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                     />
                                 </div>
                             </div>
+                            <div className="border-t border-gray-100 pt-2">
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">📸 CalorieSnap / Day</label>
+                                    <input
+                                        type="number"
+                                        value={formData.tier1CalorieSnapLimit}
+                                        onChange={(e) => setFormData({ ...formData, tier1CalorieSnapLimit: parseInt(e.target.value) || 0 })}
+                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                     {/* Tier 2 */}
@@ -397,6 +416,12 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                     <input type="number" value={formData.tier2MonthlyTokenLimit} onChange={e => setFormData({ ...formData, tier2MonthlyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
                                 </div>
                             </div>
+                            <div className="border-t border-gray-100 pt-2">
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">📸 CalorieSnap / Day</label>
+                                    <input type="number" value={formData.tier2CalorieSnapLimit} onChange={e => setFormData({ ...formData, tier2CalorieSnapLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                     {/* Tier 3 */}
@@ -426,6 +451,12 @@ const AiSettingsTab = ({ settings, stats, onRefresh, processing, setProcessing, 
                                 <div>
                                     <label className="text-gray-500 text-xs block mb-1">Monthly Tokens</label>
                                     <input type="number" value={formData.tier3MonthlyTokenLimit} onChange={e => setFormData({ ...formData, tier3MonthlyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
+                                </div>
+                            </div>
+                            <div className="border-t border-gray-100 pt-2">
+                                <div>
+                                    <label className="text-gray-500 text-xs block mb-1">📸 CalorieSnap / Day</label>
+                                    <input type="number" value={formData.tier3CalorieSnapLimit} onChange={e => setFormData({ ...formData, tier3CalorieSnapLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
                                 </div>
                             </div>
                         </div>

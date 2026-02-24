@@ -326,35 +326,34 @@ export async function syncHealthData(
 }
 
 /**
- * Deduplicate health samples by interval.
- * When multiple sources provide data for the same period, we take the maximum value.
- * This prevents double-counting if both Google Fit and Samsung Health (or other apps)
- * are contributing the same intervals to Health Connect.
+ * Deduplicate health samples by source.
+ * Different apps (e.g. Google Fit, Samsung Health, Watch apps) often report
+ * overlapping data. By grouping samples by their source app and taking the
+ * maximum total from any single source, we prevent double-counting and
+ * effectively trust the tracker that recorded the most activity for the day.
  */
 function deduplicateSamples(samples: any[]): number {
     if (!samples || samples.length === 0) return 0;
 
-    // Group samples by unique interval key
-    const intervalMap = new Map<string, number>();
+    // Group sample sums by their source (e.g., 'com.google.android.apps.fitness')
+    const sourceTotals = new Map<string, number>();
 
     for (const sample of samples) {
-        // Create a unique key for the interval
-        const key = `${sample.startDate}_${sample.endDate}`;
-        const currentValue = intervalMap.get(key) || 0;
-
-        // Take the maximum value for this interval
-        if (sample.value > currentValue) {
-            intervalMap.set(key, sample.value);
-        }
+        // Fallback to 'unknown' if no source is provided so we don't lose data
+        const source = sample.sourceName || sample.sourceId || 'unknown_source';
+        const currentTotal = sourceTotals.get(source) || 0;
+        sourceTotals.set(source, currentTotal + sample.value);
     }
 
-    // Sum the unique/deduplicated intervals
-    let total = 0;
-    intervalMap.forEach(value => {
-        total += value;
+    // Find the maximum total across all sources
+    let maxTotal = 0;
+    sourceTotals.forEach(total => {
+        if (total > maxTotal) {
+            maxTotal = total;
+        }
     });
 
-    return total;
+    return maxTotal;
 }
 
 /**

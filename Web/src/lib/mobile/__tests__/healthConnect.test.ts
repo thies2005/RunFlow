@@ -33,25 +33,38 @@ describe('Health Connect Deduplication', () => {
         });
     });
 
-    it('should deduplicate overlapping samples by taking the maximum', async () => {
+    it('should deduplicate overlapping samples by taking the maximum total from any single source', async () => {
         const mockSamples = [
+            // Source A: Total = 600 steps (e.g. Google Fit)
             {
                 startDate: '2023-10-01T10:00:00Z',
                 endDate: '2023-10-01T10:15:00Z',
-                value: 500, // Source A
+                value: 400,
                 dataType: 'steps',
+                sourceName: 'com.google.fit'
             },
             {
-                startDate: '2023-10-01T10:00:00Z',
+                startDate: '2023-10-01T14:00:00Z',
+                endDate: '2023-10-01T14:15:00Z',
+                value: 200,
+                dataType: 'steps',
+                sourceName: 'com.google.fit'
+            },
+
+            // Source B: Total = 850 steps (e.g. Samsung Health, caught more activity)
+            {
+                startDate: '2023-10-01T10:05:00Z',
                 endDate: '2023-10-01T10:15:00Z',
-                value: 450, // Source B (Lower value, should be ignored)
+                value: 350,
                 dataType: 'steps',
+                sourceName: 'com.sec.android.app.shealth'
             },
             {
-                startDate: '2023-10-01T10:15:01Z',
-                endDate: '2023-10-01T10:30:00Z',
-                value: 300, // New interval
+                startDate: '2023-10-01T14:00:00Z',
+                endDate: '2023-10-01T14:30:00Z',
+                value: 500,
                 dataType: 'steps',
+                sourceName: 'com.sec.android.app.shealth'
             }
         ];
 
@@ -60,9 +73,9 @@ describe('Health Connect Deduplication', () => {
 
         await syncDailyHealth(new Date('2023-10-01'));
 
-        // Check if fetch was called with deduplicated total (500 + 300 = 800)
+        // Check if fetch was called with the maximum source total (850 from Source B)
         expect(global.fetch).toHaveBeenCalledWith('/api/health/daily', expect.objectContaining({
-            body: expect.stringContaining('"steps":800')
+            body: expect.stringContaining('"steps":850')
         }));
     });
 

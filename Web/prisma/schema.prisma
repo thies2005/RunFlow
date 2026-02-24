@@ -88,6 +88,7 @@ model User {
   // Health Tracking
   healthTrackingEnabled Boolean @default(false)
   supplements         Supplement[]
+  supplementStacks    SupplementStack[]
   dailyHealthLogs     DailyHealthLog[]
   nutritionLogs       NutritionLog[]
   nutritionTarget     UserNutritionTarget?
@@ -454,6 +455,23 @@ model DailyFitness {
 // Health Tracking (Supplements, Steps, Weight)
 // ============================================
 
+model SupplementStack {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  timeOfDay String?  // Optional, morning/noon/evening grouping
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+
+  supplements Supplement[]
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, timeOfDay])
+}
+
 model Supplement {
   id        String   @id @default(cuid())
   userId    String
@@ -465,6 +483,9 @@ model Supplement {
   order     Int      @default(0)
   isActive  Boolean  @default(true)
 
+  stackId   String?
+  stack     SupplementStack? @relation(fields: [stackId], references: [id], onDelete: SetNull)
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs      SupplementLog[]
 
@@ -472,6 +493,7 @@ model Supplement {
   updatedAt DateTime @updatedAt
 
   @@index([userId, timeOfDay])
+  @@index([stackId])
 }
 
 model SupplementLog {

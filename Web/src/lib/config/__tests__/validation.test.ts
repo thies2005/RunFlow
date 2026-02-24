@@ -9,6 +9,10 @@ describe('Environment Validation', () => {
     delete process.env.ENCRYPTION_KEY;
     delete process.env.JWT_SECRET;
     delete process.env.STRAVA_CLIENT_SECRET;
+    // Clear credentials to prevent new admin/postgres checks from interfering
+    delete process.env.ADMIN_USERNAME;
+    delete process.env.ADMIN_PASSWORD;
+    delete process.env.POSTGRES_PASSWORD;
   });
 
   afterAll(() => {

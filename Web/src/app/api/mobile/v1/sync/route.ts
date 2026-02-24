@@ -45,9 +45,10 @@ export async function POST(request: NextRequest) {
         const range = body.range || 'SINCE_LAST_ACTIVITY';
 
         // Start sync
-        console.log(`[Mobile API] Starting sync for user ${user.id} with range: ${range}`);
-        const result = await syncUserActivities(user.id, range);
-        console.log(`[Mobile API] Sync complete for user ${user.id}:`, result);
+        console.log(`[Mobile API] Starting background sync for user ${user.id} with range: ${range}`);
+        syncUserActivities(user.id, range).catch((err) => {
+            console.error(`[Mobile API] Background sync failed for user ${user.id}:`, err);
+        });
 
         // Get updated sync status for response
         const updatedStatus = await getSyncStatus(user.id);
@@ -56,11 +57,11 @@ export async function POST(request: NextRequest) {
             success: true,
             // Android QuickSyncResponse compatibility
             syncStarted: true,
-            activitiesSynced: result.synced || 0,
+            activitiesSynced: 0, // Not available synchronously
             lastSyncAt: updatedStatus.lastSyncAt?.toISOString() || null,
             // Original fields for backward compatibility
-            synced: result.synced,
-            skipped: result.skipped,
+            synced: 0,
+            skipped: 0,
         }, { headers: rateLimitHeaders(rateLimitResult) });
 
 

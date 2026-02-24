@@ -16,6 +16,7 @@ const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const MAX_PER_PAGE = 200;
 const RATE_LIMIT_REQUESTS = 95;
 const RATE_LIMIT_WINDOW_MS = 15 * MINUTE_MS;
+const MAX_RETRIES = 3;
 
 const RATE_LIMIT_KEY = 'strava:rate_limit:requests';
 
@@ -113,7 +114,8 @@ export const rateLimiter = {
 export async function fetchStravaActivities(
     accessToken: string,
     page: number = 1,
-    after?: number
+    after?: number,
+    _retryCount: number = 0
 ): Promise<StravaActivity[]> {
     await rateLimiter.checkAndWait();
 
@@ -136,10 +138,13 @@ export async function fetchStravaActivities(
     );
 
     if (response.status === 429) {
+        if (_retryCount >= MAX_RETRIES) {
+            throw new Error(`Strava rate limit exceeded: max retries (${MAX_RETRIES}) reached`);
+        }
         const retryAfter = parseInt(response.headers.get('Retry-After') || '900');
         logger.warn('Rate limited by Strava, waiting', { retryAfter });
         await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-        return fetchStravaActivities(accessToken, page, after);
+        return fetchStravaActivities(accessToken, page, after, _retryCount + 1);
     }
 
     if (!response.ok) {

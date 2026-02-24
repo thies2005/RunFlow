@@ -118,6 +118,35 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(log);
         }
 
+        if (action === 'toggleStack') {
+            const { stackId, taken } = body;
+
+            // Verify ownership
+            const stack = await prisma.supplementStack.findUnique({
+                where: { id: stackId },
+                include: { supplements: true }
+            });
+
+            if (!stack || stack.userId !== session.user.id) {
+                return NextResponse.json({ error: 'Stack not found' }, { status: 404 });
+            }
+
+            // Upsert logs for all supplements in the stack
+            const results = [];
+            for (const supp of stack.supplements) {
+                const log = await prisma.supplementLog.upsert({
+                    where: {
+                        supplementId_date: { supplementId: supp.id, date }
+                    },
+                    update: { taken },
+                    create: { supplementId: supp.id, date, taken }
+                });
+                results.push(log);
+            }
+
+            return NextResponse.json(results);
+        }
+
         if (action === 'updateHealth') {
             const { steps, weight } = body;
 

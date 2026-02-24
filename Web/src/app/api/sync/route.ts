@@ -39,13 +39,15 @@ export async function POST(request: NextRequest) {
         const range = body.range || 'SINCE_LAST_ACTIVITY'; // Default to incremental sync to save API calls
 
         // Start sync
-        logger.info('Starting sync', { userId: session.user.id, range });
-        const result = await syncUserActivities(session.user.id, range);
-        logger.info('Sync complete', { userId: session.user.id, result });
+        logger.info('Starting sync (background mode)', { userId: session.user.id, range });
+        syncUserActivities(session.user.id, range).catch((err) => {
+            logger.error('Background sync failed', { userId: session.user.id, error: err instanceof Error ? err.message : String(err) });
+        });
 
         return NextResponse.json({
             success: true,
-            ...result,
+            status: 'started',
+            message: 'Sync started in background'
         }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {
         return handleError(error);

@@ -111,7 +111,10 @@ function FitnessChart({ data, isLoading }: FitnessChartProps) {
                 Fitness & Form (CTL / ATL / TSB)
             </h3>
 
-            <div className="h-64">
+            <div className="h-64" role="img" aria-label="Fitness and form chart showing CTL (fitness), ATL (fatigue), and TSB (form) trends over time">
+                <span className="sr-only">
+                    {`Fitness trend chart with ${chartData.length} data points. Latest values: CTL ${chartData[chartData.length - 1]?.ctl?.toFixed(1)}, ATL ${chartData[chartData.length - 1]?.atl?.toFixed(1)}, TSB ${chartData[chartData.length - 1]?.tsb?.toFixed(1)}`}
+                </span>
                 <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartData}>
                         <defs>

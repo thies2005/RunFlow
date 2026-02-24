@@ -40,6 +40,14 @@ export type EnvVarSchema = z.infer<typeof envVarSchema>
 export function validateEnvironmentVariables(): void {
   const errors: string[] = []
 
+  if (process.env.ADMIN_USERNAME === 'admin' && process.env.ADMIN_PASSWORD === 'admin') {
+    errors.push(`Security: ADMIN_USERNAME and ADMIN_PASSWORD are using default 'admin/admin' credentials`)
+  }
+
+  if (process.env.POSTGRES_PASSWORD === 'runflow') {
+    errors.push(`Security: POSTGRES_PASSWORD is using the default 'runflow' credential`)
+  }
+
   for (const envVar of REQUIRED_ENV_VARS) {
     const value = process.env[envVar]
 

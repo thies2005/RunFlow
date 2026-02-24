@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
 
         const supplements = await prisma.supplement.findMany({
             where: { userId: session.user.id },
-            orderBy: [{ timeOfDay: 'asc' }, { order: 'asc' }]
+            orderBy: [{ timeOfDay: 'asc' }, { order: 'asc' }],
+            include: { stack: true }
         });
 
         return NextResponse.json(supplements);
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { name, amount, unit, timeOfDay, daysOfWeek, isActive } = body;
+        const { name, amount, unit, timeOfDay, daysOfWeek, isActive, stackId } = body;
 
         const supplement = await prisma.supplement.create({
             data: {
@@ -40,7 +41,8 @@ export async function POST(request: NextRequest) {
                 unit,
                 timeOfDay,
                 daysOfWeek: daysOfWeek || [0, 1, 2, 3, 4, 5, 6],
-                isActive: isActive ?? true
+                isActive: isActive ?? true,
+                stackId: stackId || null,
             }
         });
 
@@ -58,7 +60,7 @@ export async function PUT(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { id, name, amount, unit, timeOfDay, daysOfWeek, isActive, order } = body;
+        const { id, name, amount, unit, timeOfDay, daysOfWeek, isActive, order, stackId } = body;
 
         // Ensure user owns this supplement
         const existing = await prisma.supplement.findUnique({ where: { id } });
@@ -76,6 +78,7 @@ export async function PUT(request: NextRequest) {
                 daysOfWeek: daysOfWeek ?? existing.daysOfWeek,
                 isActive: isActive ?? existing.isActive,
                 order: order ?? existing.order,
+                stackId: stackId !== undefined ? stackId : existing.stackId,
             }
         });
 

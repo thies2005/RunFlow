@@ -44,6 +44,13 @@ function formatBytes(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+function sanitizeShellArg(value: string, fieldName: string): string {
+  if (!/^[a-zA-Z0-9.\-_]+$/.test(value)) {
+    throw new Error(`Invalid ${fieldName}: contains disallowed characters`)
+  }
+  return value
+}
+
 function parseDatabaseUrl(): { host: string; port: string; user: string; pass: string; name: string } | null {
   const dbUrl = process.env.DATABASE_URL
   if (!dbUrl) {
@@ -84,12 +91,16 @@ export async function createBackup(name?: string): Promise<BackupMetadata> {
   }
 
   const { host, port, user, pass, name: dbName } = dbConfig
+  const safeHost = sanitizeShellArg(host, 'host')
+  const safePort = sanitizeShellArg(port, 'port')
+  const safeUser = sanitizeShellArg(user, 'user')
+  const safeDbName = sanitizeShellArg(dbName, 'database name')
 
-  logger.info('[Backup] Creating backup', { backupName, backupPath, db: dbName })
+  logger.info('[Backup] Creating backup', { backupName, backupPath, db: safeDbName })
 
   try {
-    const command = `pg_dump -h "${host}" -p "${port}" -U "${user}" -d "${dbName}" -F p -f "${backupPath}"`
-    
+    const command = `pg_dump -h "${safeHost}" -p "${safePort}" -U "${safeUser}" -d "${safeDbName}" -F p -f "${backupPath}"`
+
     await execAsync(command, {
       env: {
         ...process.env,
@@ -139,12 +150,16 @@ export async function restoreBackup(backupPath: string): Promise<void> {
   }
 
   const { host, port, user, pass, name: dbName } = dbConfig
+  const safeHost = sanitizeShellArg(host, 'host')
+  const safePort = sanitizeShellArg(port, 'port')
+  const safeUser = sanitizeShellArg(user, 'user')
+  const safeDbName = sanitizeShellArg(dbName, 'database name')
 
-  logger.info('[Backup] Restoring backup', { backupPath: fullPath, db: dbName })
+  logger.info('[Backup] Restoring backup', { backupPath: fullPath, db: safeDbName })
 
   try {
-    const command = `psql -h "${host}" -p "${port}" -U "${user}" -d "${dbName}" -f "${fullPath}"`
-    
+    const command = `psql -h "${safeHost}" -p "${safePort}" -U "${safeUser}" -d "${safeDbName}" -f "${fullPath}"`
+
     await execAsync(command, {
       env: {
         ...process.env,
@@ -162,7 +177,7 @@ export async function restoreBackup(backupPath: string): Promise<void> {
 
 export async function cleanupOldBackups(): Promise<{ deleted: number; kept: number }> {
   ensureBackupDir()
-  
+
   logger.info('[Backup] Cleaning up old backups based on retention policy', {})
 
   try {
@@ -222,7 +237,7 @@ export function listBackups(): BackupMetadata[] {
         const stats = fs.statSync(path.join(BACKUP_DIR, f))
         const age = (Date.now() - stats.mtime.getTime()) / DAY_MS
         let type: 'daily' | 'weekly' | 'monthly' = 'daily'
-        
+
         if (age > 30) {
           type = 'monthly'
         } else if (age > 7) {

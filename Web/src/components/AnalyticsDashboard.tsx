@@ -81,7 +81,7 @@ const formatZoneTime = (minutes: number) => {
 const ZoneTrendChart = memo(({ data }: { data: HistoryResponse['zoneTrend'] }) => (
     <div className="glass-card p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Training Zone Trend</h3>
-        <div className="h-64">
+        <div className="h-64" role="img" aria-label="Training Zone Trend Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
@@ -113,7 +113,7 @@ ZoneTrendChart.displayName = 'ZoneTrendChart';
 const WeeklyVolumeChart = memo(({ data }: { data: HistoryResponse['weeklyVolume'] }) => (
     <div className="glass-card p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Weekly Volume</h3>
-        <div className="h-64">
+        <div className="h-64" role="img" aria-label="Weekly Volume Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
@@ -163,7 +163,7 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
             <h3 className="text-lg font-semibold text-white mb-4">Time in Zones Distribution</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Pie Chart */}
-                <div className="h-64">
+                <div className="h-64" role="img" aria-label="Time in Zones Distribution Pie Chart">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -220,7 +220,7 @@ ZonePieChart.displayName = 'ZonePieChart';
 const VDOTTrendChart = memo(({ data }: { data: HistoryResponse['vdotTrend'] }) => (
     <div className="glass-card p-6">
         <h3 className="text-lg font-semibold text-white mb-4">VDOT Trend</h3>
-        <div className="h-64">
+        <div className="h-64" role="img" aria-label="VDOT Trend Line Chart">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
@@ -239,7 +239,7 @@ VDOTTrendChart.displayName = 'VDOTTrendChart';
 const FitnessTrendChart = memo(({ data }: { data: HistoryResponse['fitnessTrend'] }) => (
     <div className="glass-card p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Fitness Tracking (Impulse-Response)</h3>
-        <div className="h-64">
+        <div className="h-64" role="img" aria-label="Fitness Tracking Chart showing CTL, ATL, and TSB">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />

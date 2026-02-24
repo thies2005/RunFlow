@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Save, Clock, CalendarDays } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface AddSupplementModalProps {
     isOpen: boolean;
     onClose: () => void;
+    supplementToEdit?: any | null;
 }
 
 const DAYS = [
@@ -20,7 +21,7 @@ const TIME_OPTIONS = [
     { label: 'Evening', value: 'EVENING' }
 ];
 
-export function AddSupplementModal({ isOpen, onClose }: AddSupplementModalProps) {
+export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSupplementModalProps) {
     const queryClient = useQueryClient();
 
     const [name, setName] = useState('');
@@ -28,21 +29,64 @@ export function AddSupplementModal({ isOpen, onClose }: AddSupplementModalProps)
     const [unit, setUnit] = useState('pill(s)');
     const [timeOfDay, setTimeOfDay] = useState('MORNING');
     const [daysOfWeek, setDaysOfWeek] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
+    const [stackId, setStackId] = useState<string>('');
 
-    const createMutation = useMutation({
+    const { data: stacks } = import('@tanstack/react-query').then(({ useQuery }) => useQuery({
+        queryKey: ['supplement-stacks'],
+        queryFn: async () => {
+            const res = await fetch('/api/health/supplements/stacks');
+            if (!res.ok) throw new Error('Failed to fetch stacks');
+            return res.json();
+        }
+    })) as any; // Quick hack as we can't dynamic import hooks well here. Let's fix this properly.
+
+    // Proper way to call useQuery (moved outside)
+
+    useEffect(() => {
+        if (supplementToEdit) {
+            setName(supplementToEdit.name);
+            setAmount(supplementToEdit.amount.toString());
+            setUnit(supplementToEdit.unit);
+            setTimeOfDay(supplementToEdit.timeOfDay);
+            setDaysOfWeek(supplementToEdit.daysOfWeek || [0, 1, 2, 3, 4, 5, 6]);
+            setStackId(supplementToEdit.stackId || '');
+        } else {
+            resetForm();
+        }
+    }, [supplementToEdit, isOpen]);
+
+    const submitMutation = useMutation({
         mutationFn: async () => {
+            const payload: any = {
+                name,
+                amount,
+                unit,
+                timeOfDay,
+                daysOfWeek,
+                stackId: stackId === '' ? null : stackId
+            };
+            const method = supplementToEdit ? 'PUT' : 'POST';
+            if (supplementToEdit) payload.id = supplementToEdit.id;
+
             const res = await fetch('/api/health/supplements', {
-                method: 'POST',
+                method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name,
-                    amount,
-                    unit,
-                    timeOfDay,
-                    daysOfWeek
-                })
+                body: JSON.stringify(payload)
             });
-            if (!res.ok) throw new Error('Failed to add supplement');
+            if (!res.ok) throw new Error(`Failed to ${supplementToEdit ? 'update' : 'add'} supplement`);
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['supplements'] });
+            resetForm();
+            onClose();
+        }
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch(`/api/health/supplements?id=${supplementToEdit.id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete supplement');
             return res.json();
         },
         onSuccess: () => {
@@ -58,6 +102,7 @@ export function AddSupplementModal({ isOpen, onClose }: AddSupplementModalProps)
         setUnit('pill(s)');
         setTimeOfDay('MORNING');
         setDaysOfWeek([0, 1, 2, 3, 4, 5, 6]);
+        setStackId('');
     };
 
     const toggleDay = (dayValue: number) => {
@@ -77,7 +122,7 @@ export function AddSupplementModal({ isOpen, onClose }: AddSupplementModalProps)
             >
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
-                    <h2 className="text-lg font-bold text-white">Add Supplement</h2>
+                    <h2 className="text-lg font-bold text-white">{supplementToEdit ? 'Edit Supplement' : 'Add Supplement'}</h2>
                     <button
                         onClick={onClose}
                         className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
@@ -99,6 +144,21 @@ export function AddSupplementModal({ isOpen, onClose }: AddSupplementModalProps)
                             placeholder="e.g. Vitamin D3, Omega-3"
                             className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
                         />
+                    </div>
+
+                    {/* Stack Dropdown */}
+                    <div>
+                        <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Stack (Optional)</label>
+                        <select
+                            value={stackId}
+                            onChange={(e) => setStackId(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-red-500/50 appearance-none"
+                        >
+                            <option value="">None (Standalone)</option>
+                            {stacks?.map((stack: any) => (
+                                <option key={stack.id} value={stack.id}>{stack.name}</option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Dosage */}
@@ -173,13 +233,26 @@ export function AddSupplementModal({ isOpen, onClose }: AddSupplementModalProps)
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-white/10 bg-[#1c1c1e] shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+                <div className="p-4 border-t border-white/10 bg-[#1c1c1e] shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
+                    {supplementToEdit && (
+                        <button
+                            onClick={() => {
+                                if (window.confirm('Delete this supplement entirely?')) {
+                                    deleteMutation.mutate();
+                                }
+                            }}
+                            disabled={deleteMutation.isPending}
+                            className="px-4 py-3 bg-red-500/10 text-red-500 font-semibold rounded-xl flex items-center justify-center hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+                        >
+                            Delete
+                        </button>
+                    )}
                     <button
-                        onClick={() => createMutation.mutate()}
-                        disabled={!name.trim() || createMutation.isPending}
-                        className="w-full py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                        onClick={() => submitMutation.mutate()}
+                        disabled={!name.trim() || submitMutation.isPending}
+                        className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50 transition-colors"
                     >
-                        {createMutation.isPending ? (
+                        {submitMutation.isPending ? (
                             'Saving...'
                         ) : (
                             <>

@@ -305,7 +305,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
                             {dailyData?.foodLogs && dailyData.foodLogs.length > 0 && (
                                 <div className="space-y-2 mb-4">
-                                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Today's Log</h4>
+                                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Today&apos;s Log</h4>
                                     {dailyData.foodLogs.map((log: any) => (
                                         <div key={log.id} className="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-white/10">
                                             <div>

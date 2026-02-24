@@ -18,6 +18,7 @@ import { NutritionGoalsModal } from './NutritionGoalsModal';
 import { FoodScannerModal } from './FoodScannerModal';
 import { FoodScanResultView } from './FoodScanResultView';
 import { MealLibraryModal } from './MealLibraryModal';
+import { NutritionLogHistoryView } from './NutritionLogHistoryView';
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -39,6 +40,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isFoodScannerOpen, setIsFoodScannerOpen] = useState(false);
     const [scanResult, setScanResult] = useState<any | null>(null);
     const [isMealLibraryOpen, setIsMealLibraryOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
     const handleBarcodeScanned = useCallback(async (barcode: string) => {
         setIsScannerOpen(false);
@@ -184,10 +186,20 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                 <>
                     {showHeader && (
                         <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50 pt-[env(safe-area-inset-top)]">
-                            <div className="flex items-center px-4 py-3">
+                            <div className="flex items-center justify-between px-4 py-3">
                                 <span className="text-lg font-bold text-white flex items-center gap-2">
                                     <HeartPulse className="w-5 h-5 text-red-500" /> Health
                                 </span>
+                                {isMobileDevice && (
+                                    <button
+                                        onClick={handleSyncHistoricalData}
+                                        disabled={isSyncingHistory}
+                                        className="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors"
+                                        aria-label="Sync Health Data"
+                                    >
+                                        <RefreshCw className={`w-5 h-5 text-gray-400 ${isSyncingHistory ? 'animate-spin' : ''}`} />
+                                    </button>
+                                )}
                             </div>
                         </header>
                     )}
@@ -238,38 +250,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             </button>
                         </div>
 
-                        {/* Device Health Sync Section */}
-                        {isMobileDevice && (
-                            <div className="glass-card p-4 rounded-xl border border-glass-border">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                        <h3 className="font-semibold text-white flex items-center gap-2">
-                                            <Smartphone className="w-4 h-4 text-cyan-400" /> Device Health Data
-                                        </h3>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            Syncs steps and weight from Health Connect. Falls back to Strava weight if unavailable.
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={handleSyncHistoricalData}
-                                    disabled={isSyncingHistory}
-                                    className="w-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 transition-colors rounded-lg px-4 py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isSyncingHistory ? (
-                                        <>
-                                            <RefreshCw className="w-4 h-4 text-cyan-400 animate-spin" />
-                                            <span className="text-sm font-medium text-cyan-400">Syncing...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <RefreshCw className="w-4 h-4 text-cyan-400" />
-                                            <span className="text-sm font-medium text-cyan-400">Sync Device Health Data</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        )}
+
 
                         {/* Food Logging Section */}
                         <div className="glass-card p-4 rounded-xl border border-glass-border">
@@ -303,23 +284,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 </div>
                             )}
 
-                            {dailyData?.foodLogs && dailyData.foodLogs.length > 0 && (
-                                <div className="space-y-2 mb-4">
-                                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Today&apos;s Log</h4>
-                                    {dailyData.foodLogs.map((log: any) => (
-                                        <div key={log.id} className="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-white/10">
-                                            <div>
-                                                <p className="text-sm font-medium text-white">{log.foodItem?.name || log.mealType || 'Unknown Food'}</p>
-                                                <p className="text-xs text-gray-400">{log.quantity}x {log.mealType || 'SNACK'}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-bold text-pink-400">{Math.round(log.calories)} kcal</p>
-                                                <p className="text-[10px] text-gray-500">{Math.round(log.protein)}g P · {Math.round(log.carbs)}g C · {Math.round(log.fats)}g F</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+
 
                             <div className="grid grid-cols-2 gap-3">
                                 {/* AI Food Scanner - Primary */}
@@ -373,6 +338,48 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                     <span className="text-sm font-medium text-white">📚 Meal Library</span>
                                 </button>
                             </div>
+
+                            {dailyData?.foodLogs && dailyData.foodLogs.length > 0 ? (
+                                <div className="mt-6">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Log Preview</h4>
+                                        <button
+                                            onClick={() => setIsHistoryOpen(true)}
+                                            className="text-xs font-medium text-pink-400 hover:text-pink-300 flex items-center gap-1"
+                                        >
+                                            View All History <ChevronRight className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2 cursor-pointer" onClick={() => setIsHistoryOpen(true)}>
+                                        {dailyData.foodLogs.slice(0, 3).map((log: any) => (
+                                            <div key={log.id} className="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                                                <div>
+                                                    <p className="text-sm font-medium text-white line-clamp-1">{log.foodItem?.name || log.mealType || 'Unknown Food'}</p>
+                                                    <p className="text-xs text-gray-400">{log.quantity}x {log.mealType || 'SNACK'}</p>
+                                                </div>
+                                                <div className="text-right whitespace-nowrap">
+                                                    <p className="text-sm font-bold text-pink-400">{Math.round(log.calories)} kcal</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {dailyData.foodLogs.length > 3 && (
+                                            <div className="text-center py-2 text-xs text-gray-400">
+                                                + {dailyData.foodLogs.length - 3} more items today
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="mt-6 text-center py-4 border border-dashed border-white/10 rounded-lg">
+                                    <p className="text-sm text-gray-400 mb-2">No food logged yet today</p>
+                                    <button
+                                        onClick={() => setIsHistoryOpen(true)}
+                                        className="text-xs font-medium text-pink-400 hover:text-pink-300 flex items-center gap-1 mx-auto"
+                                    >
+                                        View History <ChevronRight className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Supplements List */}
@@ -499,6 +506,11 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 confidence: 'high' as const,
                             });
                         }}
+                    />
+
+                    <NutritionLogHistoryView
+                        isOpen={isHistoryOpen}
+                        onClose={() => setIsHistoryOpen(false)}
                     />
                 </>
             )}

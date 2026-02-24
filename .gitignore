@@ -27,6 +27,9 @@ memory_heap_dumps/
 *.apk
 *.aar
 
+# BLS food database source (large XLSX)
+data/bls/
+
 # OS
 .DS_Store
 Thumbs.db

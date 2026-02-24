@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { searchBLS } from '@/lib/data/blsSearch';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -10,59 +11,138 @@ export async function GET(request: Request) {
     }
 
     try {
-        // 1. Search local DB first
-        const localResults = await prisma.foodItem.findMany({
-            where: {
-                name: {
-                    contains: query,
-                    mode: 'insensitive'
-                }
-            },
-            take: 10
+        // Run all three sources in parallel for fastest response
+        const [localResults, blsResults, offResult] = await Promise.allSettled([
+            // 1. Local DB (Prisma) — instant
+            prisma.foodItem.findMany({
+                where: {
+                    name: {
+                        contains: query,
+                        mode: 'insensitive'
+                    }
+                },
+                take: 10
+            }),
+
+            // 2. BLS German food database — instant (local JSON)
+            Promise.resolve(searchBLS(query, 15)),
+
+            // 3. Open Food Facts API — may take 500ms-2000ms
+            fetchOFFWithTimeout(query, 3000),
+        ]);
+
+        // Collect results from each source
+        const combined: Array<Record<string, unknown>> = [];
+        const seenNames = new Set<string>();
+
+        // Helper to add results with deduplication
+        const addResults = (items: Array<Record<string, unknown>>, source: string) => {
+            for (const item of items) {
+                const name = String(item.name || '').toLowerCase().trim();
+                if (!name) continue;
+
+                // Skip if we already have a very similar item
+                if (seenNames.has(name)) continue;
+                seenNames.add(name);
+
+                combined.push({ ...item, source: source });
+            }
+        };
+
+        // Priority: Local DB first (user's own items), then BLS (instant), then OFF (external)
+        if (localResults.status === 'fulfilled') {
+            addResults(localResults.value as Array<Record<string, unknown>>, 'local');
+        }
+
+        if (blsResults.status === 'fulfilled') {
+            addResults(blsResults.value, 'bls');
+        }
+
+        if (offResult.status === 'fulfilled' && offResult.value) {
+            addResults(offResult.value, 'off');
+        }
+
+        // Score and rank combined results by relevance
+        const queryLower = query.toLowerCase();
+        const scored = combined.map(item => {
+            const name = String(item.name || '').toLowerCase();
+            let score = 0;
+
+            // Source priority bonus
+            if (item.source === 'local') score += 10;
+            else if (item.source === 'bls') score += 5;
+
+            // Name relevance scoring
+            if (name === queryLower) score += 100;
+            else if (name.startsWith(queryLower)) score += 80;
+            else if (new RegExp(`(?:^|[\\s,;(])${escapeRegex(queryLower)}`).test(name)) score += 60;
+            else if (name.includes(queryLower)) score += 40;
+            else score += 20;
+
+            return { item, score };
         });
 
-        // 2. Fallback to Open Food Facts text search
+        scored.sort((a, b) => b.score - a.score);
+
+        // Return top 25 results
+        return NextResponse.json(scored.slice(0, 25).map(s => s.item));
+    } catch (error) {
+        console.error("Food search error:", error);
+        return NextResponse.json({ error: 'Failed to search foods' }, { status: 500 });
+    }
+}
+
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Fetch from Open Food Facts with a timeout so BLS results aren't delayed.
+ */
+async function fetchOFFWithTimeout(query: string, timeoutMs: number): Promise<Array<Record<string, unknown>>> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
         const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
-        const offRes = await fetch(offUrl, { headers: { 'User-Agent': 'RunFlow - WebApp' } });
+        const offRes = await fetch(offUrl, {
+            headers: { 'User-Agent': 'RunFlow - WebApp' },
+            signal: controller.signal,
+        });
 
-        const combinedResults = [...localResults];
+        if (!offRes.ok) return [];
 
-        if (offRes.ok) {
-            const offData = await offRes.json();
-            const offProducts = offData.products || [];
+        const offData = await offRes.json();
+        const offProducts = offData.products || [];
 
-            // Map OFF to our schema
-            for (const p of offProducts) {
-                // Skip if we already have it from local db based on barcode or if vital info is missing
-                if (p.code && combinedResults.some(r => r.barcode === p.code)) continue;
-                if (!p.product_name) continue;
-
-                combinedResults.push({
+        return offProducts
+            .filter((p: Record<string, unknown>) => p.product_name)
+            .map((p: Record<string, unknown>) => {
+                const nutriments = (p.nutriments || {}) as Record<string, unknown>;
+                return {
                     id: `off-${p.code || Math.random()}`,
                     name: p.product_name || 'Unknown',
                     brand: p.brands || '',
                     barcode: p.code ? String(p.code) : null,
-                    calories: parseFloat(p.nutriments?.['energy-kcal_100g'] || p.nutriments?.['energy-kcal_value'] || 0),
-                    protein: parseFloat(p.nutriments?.proteins_100g || p.nutriments?.proteins_value || 0),
-                    carbs: parseFloat(p.nutriments?.carbohydrates_100g || p.nutriments?.carbohydrates_value || 0),
-                    fats: parseFloat(p.nutriments?.fat_100g || p.nutriments?.fat_value || 0),
-                    fiber: parseFloat(p.nutriments?.fiber_100g || p.nutriments?.fiber_value || 0),
-                    sugar: parseFloat(p.nutriments?.sugars_100g || p.nutriments?.sugars_value || 0),
-                    saturatedFat: parseFloat(p.nutriments?.['saturated-fat_100g'] || p.nutriments?.['saturated-fat_value'] || 0),
-                    sodium: parseFloat(p.nutriments?.sodium_100g || p.nutriments?.sodium_value || 0),
-                    potassium: parseFloat(p.nutriments?.potassium_100g || p.nutriments?.potassium_value || 0),
-                    cholesterol: parseFloat(p.nutriments?.cholesterol_100g || p.nutriments?.cholesterol_value || 0),
-                    calcium: parseFloat(p.nutriments?.calcium_100g || p.nutriments?.calcium_value || 0),
-                    iron: parseFloat(p.nutriments?.iron_100g || p.nutriments?.iron_value || 0),
+                    calories: parseFloat(String(nutriments['energy-kcal_100g'] || nutriments['energy-kcal_value'] || 0)),
+                    protein: parseFloat(String(nutriments.proteins_100g || nutriments.proteins_value || 0)),
+                    carbs: parseFloat(String(nutriments.carbohydrates_100g || nutriments.carbohydrates_value || 0)),
+                    fats: parseFloat(String(nutriments.fat_100g || nutriments.fat_value || 0)),
+                    fiber: parseFloat(String(nutriments.fiber_100g || nutriments.fiber_value || 0)),
+                    sugar: parseFloat(String(nutriments.sugars_100g || nutriments.sugars_value || 0)),
+                    saturatedFat: parseFloat(String(nutriments['saturated-fat_100g'] || nutriments['saturated-fat_value'] || 0)),
+                    sodium: parseFloat(String(nutriments.sodium_100g || nutriments.sodium_value || 0)),
+                    potassium: parseFloat(String(nutriments.potassium_100g || nutriments.potassium_value || 0)),
+                    cholesterol: parseFloat(String(nutriments.cholesterol_100g || nutriments.cholesterol_value || 0)),
+                    calcium: parseFloat(String(nutriments.calcium_100g || nutriments.calcium_value || 0)),
+                    iron: parseFloat(String(nutriments.iron_100g || nutriments.iron_value || 0)),
                     servingSize: p.serving_quantity ? String(p.serving_quantity) : '100g',
-                });
-            }
-        }
-
-        // Return combined results, limited to top 20
-        return NextResponse.json(combinedResults.slice(0, 20));
-    } catch (error) {
-        console.error("Food search error:", error);
-        return NextResponse.json({ error: 'Failed to search foods' }, { status: 500 });
+                };
+            });
+    } catch {
+        // Timeout or network error — OFF is optional, BLS covers us
+        return [];
+    } finally {
+        clearTimeout(timer);
     }
 }

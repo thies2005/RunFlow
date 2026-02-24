@@ -10,12 +10,13 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     onScan: (_barcode: string) => void;
+    preAuthorizedStream?: MediaStream | null;
 }
 
 // Evaluate synchronously so the very first render knows which path to take
 const IS_NATIVE = Capacitor.isNativePlatform();
 
-export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
+export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStream }: Props) {
     const [error, setError] = useState<string | null>(null);
     const webScannerRef = useRef<Html5Qrcode | null>(null);
     const scanHandledRef = useRef(false);
@@ -86,25 +87,10 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
             const startWebScanner = async () => {
                 let html5QrCode: Html5Qrcode | null = null;
                 try {
-                    // 1. Explicitly request permission to trigger the browser's native prompt immediately.
-                    // This must happen synchronously in the gesture chain (or close to it) so the browser doesn't auto-deny.
-                    try {
-                        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                        // We just needed the permission grant, so stop the stream immediately
-                        stream.getTracks().forEach(track => track.stop());
-                    } catch (permErr: any) {
-                        console.error("Permission request failed:", permErr);
-                        if (permErr?.name === 'NotAllowedError' || permErr?.message?.includes('Permission')) {
-                            setError('Camera permission was denied. Please allow camera access in your browser settings.');
-                            return;
-                        }
-                    }
-
-                    // 2. Now that we have permission, ask Html5Qrcode for cameras
-                    const cameras = await Html5Qrcode.getCameras();
-                    if (!cameras || cameras.length === 0) {
-                        setError('No cameras found on this device.');
-                        return;
+                    // Stop the pre-authorized stream tracks — Html5Qrcode manages its own stream,
+                    // but permission is already granted from the click handler
+                    if (preAuthorizedStream) {
+                        preAuthorizedStream.getTracks().forEach(track => track.stop());
                     }
 
                     html5QrCode = new Html5Qrcode("web-reader");
@@ -127,12 +113,18 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
                             () => { /* ignore stream noise */ }
                         );
                     } catch {
-                        await html5QrCode.start(
-                            cameras[0].id,
-                            config,
-                            onSuccess,
-                            () => { /* ignore */ }
-                        );
+                        // Fallback: try to get camera list and use first one
+                        const cameras = await Html5Qrcode.getCameras();
+                        if (cameras && cameras.length > 0) {
+                            await html5QrCode.start(
+                                cameras[0].id,
+                                config,
+                                onSuccess,
+                                () => { /* ignore */ }
+                            );
+                        } else {
+                            setError('No cameras found on this device.');
+                        }
                     }
                 } catch (err: any) {
                     console.error("Error starting web scanner:", err);
@@ -144,7 +136,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
                 }
             };
 
-            // Start immediately to preserve the gesture context, not in a setTimeout
+            // Start immediately — permission was already granted in the click handler
             startWebScanner();
         }
 

@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
 import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target } from 'lucide-react';
 import { syncDailyHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult } from '@/lib/mobile/healthConnect';
+import { Capacitor } from '@capacitor/core';
+
+const IS_NATIVE = Capacitor.isNativePlatform();
 import { format } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { AddSupplementModal } from './AddSupplementModal';
@@ -28,6 +31,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [isGoalsOpen, setIsGoalsOpen] = useState(false);
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
+    const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
     const handleBarcodeScanned = useCallback(async (barcode: string) => {
         setIsScannerOpen(false);
@@ -339,7 +343,20 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <button
-                                    onClick={() => setIsScannerOpen(true)}
+                                    onClick={async () => {
+                                        if (!IS_NATIVE) {
+                                            // Request camera permission directly in the click handler
+                                            // to preserve the user gesture context for the browser
+                                            try {
+                                                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                                                setCameraStream(stream);
+                                            } catch (err) {
+                                                alert('Camera permission is required to scan barcodes. Please allow camera access in your browser settings.');
+                                                return;
+                                            }
+                                        }
+                                        setIsScannerOpen(true);
+                                    }}
                                     className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2"
                                 >
                                     <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -373,8 +390,15 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
                     <BarcodeScannerModal
                         isOpen={isScannerOpen}
-                        onClose={() => setIsScannerOpen(false)}
+                        onClose={() => {
+                            setIsScannerOpen(false);
+                            if (cameraStream) {
+                                cameraStream.getTracks().forEach(t => t.stop());
+                                setCameraStream(null);
+                            }
+                        }}
                         onScan={handleBarcodeScanned}
+                        preAuthorizedStream={cameraStream}
                     />
 
                     <ManualFoodEntryModal

@@ -48,6 +48,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
         result.items.map(() => 1)
     );
     const [mealType, setMealType] = useState('LUNCH');
+    const [globalMultiplier, setGlobalMultiplier] = useState(1);
     const [isSaving, setIsSaving] = useState(false);
     const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
@@ -59,15 +60,18 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
         });
     };
 
-    // Calculate adjusted totals
-    const adjustedItems = result.items.map((item, i) => ({
-        ...item,
-        estimatedGrams: Math.round(item.estimatedGrams * multipliers[i]),
-        calories: Math.round(item.calories * multipliers[i]),
-        protein: Math.round(item.protein * multipliers[i] * 10) / 10,
-        carbs: Math.round(item.carbs * multipliers[i] * 10) / 10,
-        fats: Math.round(item.fats * multipliers[i] * 10) / 10,
-    }));
+    // Calculate adjusted totals (combines per-item multiplier with global multiplier)
+    const adjustedItems = result.items.map((item, i) => {
+        const totalMult = multipliers[i] * globalMultiplier;
+        return {
+            ...item,
+            estimatedGrams: Math.round(item.estimatedGrams * totalMult),
+            calories: Math.round(item.calories * totalMult),
+            protein: Math.round(item.protein * totalMult * 10) / 10,
+            carbs: Math.round(item.carbs * totalMult * 10) / 10,
+            fats: Math.round(item.fats * totalMult * 10) / 10,
+        };
+    });
 
     const totals = adjustedItems.reduce(
         (acc, item) => ({
@@ -269,7 +273,30 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                 </div>
 
                 {/* Actions Footer */}
-                <div className="p-4 border-t border-white/10 shrink-0 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <div className="p-4 border-t border-white/10 shrink-0 space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                    {/* Global Portion Slider */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="text-sm font-medium text-white">Overall Portion Size</label>
+                            <span className="text-sm font-bold text-amber-400">{globalMultiplier}x</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0.25"
+                            max="3"
+                            step="0.25"
+                            value={globalMultiplier}
+                            onChange={(e) => setGlobalMultiplier(parseFloat(e.target.value))}
+                            className="w-full accent-amber-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-[10px] text-gray-500 mt-1 px-1">
+                            <span>0.25x</span>
+                            <span>1x</span>
+                            <span>2x</span>
+                            <span>3x</span>
+                        </div>
+                    </div>
+
                     {/* Meal Type */}
                     <select
                         value={mealType}

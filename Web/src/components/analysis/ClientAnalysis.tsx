@@ -7,50 +7,12 @@ import { format } from 'date-fns';
 import { ArrowLeft, Calendar, MapPin, Clock, Zap, Heart, Mountain } from 'lucide-react';
 import Link from 'next/link';
 import InteractiveStreamsChart from '@/components/InteractiveStreamsChart';
+import { ChartTooltip } from '@/components/charts/ChartTooltip';
 
 interface ClientAnalysisProps {
     activity: Activity;
 }
 
-const CustomTooltip = ({ active, payload, label, labelFormatter, formatter }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="glass-card p-4 border border-glass-border">
-                {label !== undefined && (
-                    <p className="text-foreground-muted text-sm mb-2">
-                        {labelFormatter ? labelFormatter(label) : label}
-                    </p>
-                )}
-                <div className="space-y-1">
-                    {payload.map((entry: any, index: number) => {
-                        let val = entry.value;
-                        if (formatter) {
-                            const formatted = formatter(val, entry.name);
-                            if (Array.isArray(formatted)) {
-                                val = formatted[0];
-                            } else {
-                                val = formatted;
-                            }
-                        }
-                        return (
-                            <div key={index} className="flex items-center gap-2 text-sm">
-                                <div
-                                    className="w-2 h-2 rounded-full"
-                                    style={{ backgroundColor: entry.color || entry.fill || entry.stroke }}
-                                />
-                                <span className="text-foreground-muted">{entry.name}:</span>
-                                <span className="text-foreground font-medium">
-                                    {val}{entry.unit || ''}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    }
-    return null;
-};
 
 export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
     const streams = activity.streams as any;
@@ -249,7 +211,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                 <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
                                 <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
                                 <Tooltip
-                                    content={<CustomTooltip labelFormatter={formatXAxis} />}
+                                    content={<ChartTooltip labelFormatter={formatXAxis} />}
                                 />
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                                 <Area type="monotone" dataKey="hr" stroke="#ef4444" fillOpacity={1} fill="url(#colorHr)" unit=" bpm" />
@@ -275,7 +237,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                 <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
                                 <YAxis domain={['dataMax', 'dataMin']} stroke="#6b7280" ticks={[0, 3, 6, 9, 12, 15]} />
                                 <Tooltip
-                                    content={<CustomTooltip
+                                    content={<ChartTooltip
                                         labelFormatter={formatXAxis}
                                         formatter={(value: number) => {
                                             const mins = Math.floor(value);
@@ -309,7 +271,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
                                     <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
                                     <Tooltip
-                                        content={<CustomTooltip labelFormatter={formatXAxis} />}
+                                        content={<ChartTooltip labelFormatter={formatXAxis} />}
                                     />
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                                     <Area type="monotone" dataKey="altitude" stroke="#9ca3af" fillOpacity={1} fill="url(#colorAlt)" unit=" m" />
@@ -337,7 +299,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                     <XAxis dataKey="time" tickFormatter={formatXAxis} stroke="#6b7280" />
                                     <YAxis domain={['auto', 'auto']} stroke="#6b7280" />
                                     <Tooltip
-                                        content={<CustomTooltip labelFormatter={formatXAxis} />}
+                                        content={<ChartTooltip labelFormatter={formatXAxis} />}
                                     />
                                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                                     <Area type="monotone" dataKey="cadence" stroke="#a855f7" fillOpacity={1} fill="url(#colorCad)" connectNulls />

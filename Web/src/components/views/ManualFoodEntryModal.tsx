@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { X, Search, Loader2, Save, ArrowLeft } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 
 interface FoodData {
     name: string;
@@ -225,12 +227,12 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                         {activeTab === 'search' && (
                             <div className="flex-1 flex flex-col overflow-hidden">
                                 <form onSubmit={searchFood} className="p-4 shrink-0 flex gap-2">
-                                    <input
+                                    <Input
                                         type="text"
                                         value={query}
                                         onChange={e => setQuery(e.target.value)}
                                         placeholder="Search bananas, apples..."
-                                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                                        className="flex-1 !bg-white/5 border-white/10"
                                     />
                                     <button
                                         type="submit"
@@ -269,29 +271,23 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                         {activeTab === 'custom' && (
                             <form onSubmit={handleCustomSubmit} className="flex-1 overflow-y-auto p-4 space-y-4">
                                 <div>
-                                    <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Food Name *</label>
-                                    <input required type="text" value={customName} onChange={e => setCustomName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-600 focus:outline-none" placeholder="e.g. Homemade Pasta" />
+                                    <Input required label="Food Name *" type="text" value={customName} onChange={e => setCustomName(e.target.value)} className="!bg-white/5 border-white/10" placeholder="e.g. Homemade Pasta" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Calories (kcal) *</label>
-                                        <input required type="number" step="any" value={customCalories} onChange={e => setCustomCalories(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-600 focus:outline-none" placeholder="0" />
+                                        <Input required label="Calories (kcal) *" type="number" step="any" value={customCalories} onChange={e => setCustomCalories(e.target.value)} className="!bg-white/5 border-white/10" placeholder="0" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Serving Size</label>
-                                        <input type="text" value={customServingSize} onChange={e => setCustomServingSize(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-600 focus:outline-none" placeholder="e.g. 100g or 1 piece" />
+                                        <Input label="Serving Size" type="text" value={customServingSize} onChange={e => setCustomServingSize(e.target.value)} className="!bg-white/5 border-white/10" placeholder="e.g. 100g or 1 piece" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Protein (g)</label>
-                                        <input type="number" step="any" value={customProtein} onChange={e => setCustomProtein(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-600 focus:outline-none" placeholder="0" />
+                                        <Input label="Protein (g)" type="number" step="any" value={customProtein} onChange={e => setCustomProtein(e.target.value)} className="!bg-white/5 border-white/10" placeholder="0" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Carbs (g)</label>
-                                        <input type="number" step="any" value={customCarbs} onChange={e => setCustomCarbs(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-600 focus:outline-none" placeholder="0" />
+                                        <Input label="Carbs (g)" type="number" step="any" value={customCarbs} onChange={e => setCustomCarbs(e.target.value)} className="!bg-white/5 border-white/10" placeholder="0" />
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Fats (g)</label>
-                                        <input type="number" step="any" value={customFats} onChange={e => setCustomFats(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-600 focus:outline-none" placeholder="0" />
+                                        <Input label="Fats (g)" type="number" step="any" value={customFats} onChange={e => setCustomFats(e.target.value)} className="!bg-white/5 border-white/10" placeholder="0" />
                                     </div>
                                 </div>
                                 <button type="submit" disabled={!customName || !customCalories} className="w-full mt-2 bg-blue-600 disabled:bg-gray-600 text-white font-semibold py-3 flex items-center justify-center gap-2 rounded-xl transition-colors">
@@ -329,28 +325,28 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Quantity (Number of servings)</label>
-                                <input
+                                <Input
+                                    label="Quantity (Number of servings)"
                                     type="number"
                                     step="0.1"
                                     value={quantity}
                                     onChange={e => setQuantity(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-600 focus:outline-none"
+                                    className="!bg-white/5 border-white/10"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Meal Type</label>
-                                <select
+                                <Select
+                                    label="Meal Type"
                                     value={mealType}
                                     onChange={e => setMealType(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none appearance-none"
+                                    className="!bg-white/5 border-white/10"
                                 >
                                     <option value="BREAKFAST">Breakfast</option>
                                     <option value="LUNCH">Lunch</option>
                                     <option value="DINNER">Dinner</option>
                                     <option value="SNACK">Snack</option>
-                                </select>
+                                </Select>
                             </div>
                         </div>
 

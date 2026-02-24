@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 import { BarChart2 } from 'lucide-react';
+import { ChartTooltip } from '@/components/charts/ChartTooltip';
 
 interface FitnessDataPoint {
     date: string;
@@ -27,53 +28,6 @@ interface FitnessChartProps {
     isLoading?: boolean;
 }
 
-function CustomTooltip({ active, payload, label }: any) {
-    if (active && payload && payload.length) {
-        const ctl = payload.find((p: any) => p.dataKey === 'ctl')?.value;
-        const atl = payload.find((p: any) => p.dataKey === 'atl')?.value;
-        const tsb = payload.find((p: any) => p.dataKey === 'tsb')?.value;
-
-        let tsbStatus = 'Neutral';
-        let tsbColor = '#facc15';
-        if (tsb >= 25) {
-            tsbStatus = 'Peaked';
-            tsbColor = '#4ade80';
-        } else if (tsb >= 10) {
-            tsbStatus = 'Fresh';
-            tsbColor = '#4ade80';
-        } else if (tsb <= -25) {
-            tsbStatus = 'Very Fatigued';
-            tsbColor = '#ef4444';
-        } else if (tsb <= -10) {
-            tsbStatus = 'Fatigued';
-            tsbColor = '#fb923c';
-        }
-
-        return (
-            <div className="glass-card p-4">
-                <p className="text-foreground-muted text-sm mb-2">
-                    {format(new Date(label), 'MMM d, yyyy')}
-                </p>
-                <div className="space-y-1">
-                    <p className="text-sm">
-                        <span className="text-blue-500">CTL (Fitness):</span>{' '}
-                        <span className="text-foreground font-medium">{ctl?.toFixed(1)}</span>
-                    </p>
-                    <p className="text-sm">
-                        <span className="text-red-500">ATL (Fatigue):</span>{' '}
-                        <span className="text-foreground font-medium">{atl?.toFixed(1)}</span>
-                    </p>
-                    <p className="text-sm">
-                        <span style={{ color: tsbColor }}>TSB (Form):</span>{' '}
-                        <span className="text-foreground font-medium">{tsb?.toFixed(1)}</span>
-                        <span className="text-foreground-muted ml-2">({tsbStatus})</span>
-                    </p>
-                </div>
-            </div>
-        );
-    }
-    return null;
-}
 
 function FitnessChart({ data, isLoading }: FitnessChartProps) {
     // Memoize chart data with better dependency tracking
@@ -139,7 +93,26 @@ function FitnessChart({ data, isLoading }: FitnessChartProps) {
                             tick={{ fill: 'var(--foreground-muted)', fontSize: 12 }}
                             axisLine={{ stroke: 'var(--glass-border)' }}
                         />
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip content={<ChartTooltip
+                            labelFormatter={(label: any) => format(new Date(label), 'MMM d, yyyy')}
+                            formatter={(value: any, name: string) => {
+                                if (name === 'tsb' || name === 'Form (TSB)') {
+                                    let tsbStatus = 'Neutral';
+                                    if (value >= 25) tsbStatus = 'Peaked';
+                                    else if (value >= 10) tsbStatus = 'Fresh';
+                                    else if (value <= -25) tsbStatus = 'Very Fatigued';
+                                    else if (value <= -10) tsbStatus = 'Fatigued';
+
+                                    return [
+                                        <span key="tsb-val">{value?.toFixed(1)} <span className="text-foreground-muted ml-1">({tsbStatus})</span></span>,
+                                        'Form (TSB)'
+                                    ];
+                                }
+                                if (name === 'ctl' || name === 'Fitness (CTL)') return [value?.toFixed(1), 'Fitness (CTL)'];
+                                if (name === 'atl' || name === 'Fatigue (ATL)') return [value?.toFixed(1), 'Fatigue (ATL)'];
+                                return typeof value === 'number' ? value.toFixed(1) : value;
+                            }}
+                        />} />
                         <Legend
                             wrapperStyle={{ paddingTop: '1rem' }}
                             formatter={(value) => {

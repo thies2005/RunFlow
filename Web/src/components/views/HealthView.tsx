@@ -21,6 +21,7 @@ import { MealLibraryModal } from './MealLibraryModal';
 import { NutritionLogHistoryView } from './NutritionLogHistoryView';
 import { AddStackModal } from './AddStackModal';
 import { SupplementStatsModal } from './SupplementStatsModal';
+import { SupplementItem } from '@/components/health/SupplementItem';
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -202,39 +203,18 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         const isTaken = log?.taken || false;
 
         return (
-            <div key={supp.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10 mb-2 group">
-                <div
-                    className="flex-1 cursor-pointer"
-                    onClick={() => {
-                        setSupplementToEdit(supp);
-                        setIsAddModalOpen(true);
-                    }}
-                >
-                    <p className="text-sm font-medium text-white group-hover:text-blue-400 transition-colors">{supp.name}</p>
-                    <p className="text-xs text-gray-500">{supp.amount} {supp.unit}</p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setStatsConfig({ isOpen: true, targetId: supp.id, targetType: 'supplement', targetName: supp.name });
-                        }}
-                        className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20"
-                    >
-                        <BarChart3 className="w-3 h-3 text-gray-400" />
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            toggleSupplementMutation.mutate({ supplementId: supp.id, taken: !isTaken })
-                        }}
-                        className={`w-6 h-6 rounded border flex items-center justify-center transition-colors ${isTaken ? 'bg-green-500 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'bg-transparent border-gray-500'}`}
-                    >
-                        {isTaken && <HeartPulse className="w-3 h-3 text-white" />}
-                    </button>
-                </div>
-            </div>
+            <SupplementItem
+                key={supp.id}
+                supplement={supp}
+                isTaken={isTaken}
+                variant="standalone"
+                onEdit={(s) => {
+                    setSupplementToEdit(s);
+                    setIsAddModalOpen(true);
+                }}
+                onToggle={(id, taken) => toggleSupplementMutation.mutate({ supplementId: id, taken })}
+                onShowStats={(id, name) => setStatsConfig({ isOpen: true, targetId: id, targetType: 'supplement', targetName: name })}
+            />
         );
     };
 
@@ -295,28 +275,17 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         const isTaken = log?.taken || false;
 
                         return (
-                            <div key={supp.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors group/item">
-                                <div
-                                    className="flex-1 cursor-pointer"
-                                    onClick={() => {
-                                        setSupplementToEdit(supp);
-                                        setIsAddModalOpen(true);
-                                    }}
-                                >
-                                    <p className="text-xs font-medium text-gray-300 group-hover/item:text-blue-300 transition-colors">{supp.name}</p>
-                                    <p className="text-[10px] text-gray-500">{supp.amount} {supp.unit}</p>
-                                </div>
-
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleSupplementMutation.mutate({ supplementId: supp.id, taken: !isTaken })
-                                    }}
-                                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isTaken ? 'bg-green-500 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'bg-transparent border-gray-500'}`}
-                                >
-                                    {isTaken && <HeartPulse className="w-2.5 h-2.5 text-white" />}
-                                </button>
-                            </div>
+                            <SupplementItem
+                                key={supp.id}
+                                supplement={supp}
+                                isTaken={isTaken}
+                                variant="stack-item"
+                                onEdit={(s) => {
+                                    setSupplementToEdit(s);
+                                    setIsAddModalOpen(true);
+                                }}
+                                onToggle={(id, taken) => toggleSupplementMutation.mutate({ supplementId: id, taken })}
+                            />
                         )
                     })}
                 </div>

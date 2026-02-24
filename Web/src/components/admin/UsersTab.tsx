@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Activity, Mail, Trash2 } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
+import useConfirmAction from '@/hooks/useConfirmAction';
 
 interface UsersTabProps {
     users: any[];
@@ -22,9 +23,15 @@ export default function UsersTab({
     setActionMessage,
     fetchAllData
 }: UsersTabProps) {
+    const { confirm, ConfirmDialog } = useConfirmAction();
 
     const handleResetPassword = async (userId: string, userEmail: string) => {
-        if (!window.confirm(`Are you sure you want to send a password reset email to ${userEmail}?`)) return;
+        const isConfirmed = await confirm({
+            title: 'Reset Password',
+            message: `Are you sure you want to send a password reset email to ${userEmail}?`,
+            confirmText: 'Send Email'
+        });
+        if (!isConfirmed) return;
 
         setProcessing(true);
         setActionMessage(null);
@@ -47,7 +54,12 @@ export default function UsersTab({
             ? `Recalculate fitness history for ${userEmail}? This may take a few seconds.`
             : 'Recalculate fitness history for ALL users? This checks all activities and rebuilds cache. It may take a while.';
 
-        if (!window.confirm(confirmMsg)) return;
+        const isConfirmed = await confirm({
+            title: 'Recalculate Fitness',
+            message: confirmMsg,
+            confirmText: 'Recalculate'
+        });
+        if (!isConfirmed) return;
 
         setProcessing(true);
         setActionMessage(null);
@@ -77,7 +89,13 @@ export default function UsersTab({
     };
 
     const handleDeleteUser = async (userId: string) => {
-        if (!window.confirm('Are you sure you want to delete this user? This action CANNOT be undone.')) return;
+        const isConfirmed = await confirm({
+            title: 'Delete User',
+            message: 'Are you sure you want to delete this user? This action CANNOT be undone.',
+            confirmText: 'Delete',
+            isDestructive: true
+        });
+        if (!isConfirmed) return;
 
         setProcessing(true);
         try {
@@ -247,6 +265,7 @@ export default function UsersTab({
                     </tbody>
                 </table>
             </div>
+            <ConfirmDialog />
         </div>
     );
 }

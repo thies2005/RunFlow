@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { X, Save, Clock } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Input } from '@/components/ui/Input';
+import useConfirmAction from '@/hooks/useConfirmAction';
 
 interface AddStackModalProps {
     isOpen: boolean;
@@ -19,6 +21,7 @@ const TIME_OPTIONS = [
 
 export function AddStackModal({ isOpen, onClose, stackToEdit }: AddStackModalProps) {
     const queryClient = useQueryClient();
+    const { confirm, ConfirmDialog } = useConfirmAction();
 
     const [name, setName] = useState('');
     const [timeOfDay, setTimeOfDay] = useState('MORNING');
@@ -90,13 +93,13 @@ export function AddStackModal({ isOpen, onClose, stackToEdit }: AddStackModalPro
                 <div className="p-4 overflow-y-auto flex-1 space-y-6">
                     {/* Name */}
                     <div>
-                        <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Stack Name</label>
-                        <input
+                        <Input
+                            label="Stack Name"
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Brain Stack, Pre-workout"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
+                            className="!bg-white/5 border-white/10"
                         />
                     </div>
 
@@ -124,8 +127,14 @@ export function AddStackModal({ isOpen, onClose, stackToEdit }: AddStackModalPro
                 <div className="p-4 border-t border-white/10 bg-[#1c1c1e] shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
                     {stackToEdit && (
                         <button
-                            onClick={() => {
-                                if (window.confirm('Delete this stack? The supplements will remain but become standalone.')) {
+                            onClick={async () => {
+                                const isConfirmed = await confirm({
+                                    title: 'Delete Stack',
+                                    message: 'Delete this stack? The supplements will remain but become standalone.',
+                                    confirmText: 'Delete',
+                                    isDestructive: true
+                                });
+                                if (isConfirmed) {
                                     deleteMutation.mutate();
                                 }
                             }}
@@ -144,6 +153,7 @@ export function AddStackModal({ isOpen, onClose, stackToEdit }: AddStackModalPro
                     </button>
                 </div>
             </div>
+            <ConfirmDialog />
         </div>
     );
 }

@@ -17,6 +17,9 @@ import {
     CheckCircle,
     XCircle,
 } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
 
 interface AiSettingsModalProps {
     isOpen: boolean;
@@ -259,21 +262,16 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)] flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-800">
-                    <div className="flex items-center gap-3">
-                        <Bot className="w-6 h-6 text-accent-purple" />
-                        <h2 className="text-xl font-semibold text-white">AI Features</h2>
-                    </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">
-                        <X className="w-6 h-6" />
-                    </button>
-                </div>
-
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="AI Features"
+            icon={<Bot className="w-6 h-6 text-accent-purple" />}
+            maxWidth="lg"
+        >
+            <div className="flex flex-col max-h-[75vh]">
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                <div className="flex-1 overflow-y-auto pr-2 space-y-6">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="w-8 h-8 text-accent-purple animate-spin" />
@@ -396,14 +394,13 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             </button>
                                         </div>
 
-                                        <label htmlFor="customBaseUrl" className="sr-only">Base URL</label>
-                                        <input
+                                        <Input
                                             id="customBaseUrl"
                                             type="text"
                                             placeholder="Base URL (default: https://api.openai.com/v1)"
                                             value={customBaseUrl}
                                             onChange={(e) => setCustomBaseUrl(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-accent-purple focus:outline-none"
+                                            className="!bg-gray-800 border-gray-700"
                                         />
 
                                         <div className="relative">
@@ -425,14 +422,13 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                             </button>
                                         </div>
 
-                                        <label htmlFor="customModel" className="sr-only">Model</label>
-                                        <input
+                                        <Input
                                             id="customModel"
                                             type="text"
                                             placeholder="Model (default: gpt-4o-mini)"
                                             value={customModel}
                                             onChange={(e) => setCustomModel(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-accent-purple focus:outline-none"
+                                            className="!bg-gray-800 border-gray-700"
                                         />
 
                                         {/* Test API Key Button */}
@@ -566,14 +562,13 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                                     <p className="text-xs text-gray-500">
                                         Add context about your training (e.g., injuries, preferences)
                                     </p>
-                                    <label htmlFor="customPrompt" className="sr-only">Custom Instructions</label>
-                                    <textarea
+                                    <Textarea
                                         id="customPrompt"
                                         value={customPrompt}
                                         onChange={(e) => setCustomPrompt(e.target.value)}
                                         placeholder="I'm recovering from a knee injury and should avoid high-intensity work..."
                                         rows={3}
-                                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-accent-purple focus:outline-none resize-none"
+                                        className="!bg-gray-800 border-gray-700"
                                     />
                                 </div>
 
@@ -596,7 +591,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-gray-800 flex justify-end gap-3">
+                <div className="pt-4 mt-6 border-t border-gray-800 flex justify-end gap-3">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
@@ -617,6 +612,6 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                     </button>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Upload, Plus, Database, Download } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
+import useConfirmAction from '@/hooks/useConfirmAction';
 
 interface BackupsTabProps {
     backups: any[];
@@ -17,6 +18,7 @@ export default function BackupsTab({
     setActionMessage,
     fetchAllData
 }: BackupsTabProps) {
+    const { confirm, ConfirmDialog } = useConfirmAction();
 
     const handleUploadBackup = async (file: File) => {
         setProcessing(true);
@@ -45,7 +47,15 @@ export default function BackupsTab({
     };
 
     const handleBackupAction = async (action: 'create' | 'restore', backupName?: string) => {
-        if (action === 'restore' && !window.confirm(`WARNING: This will overwrite the current database with ${backupName}. This action is destructive. Are you sure?`)) return;
+        if (action === 'restore') {
+            const isConfirmed = await confirm({
+                title: 'Restore Database',
+                message: `WARNING: This will overwrite the current database with ${backupName}. This action is destructive. Are you sure?`,
+                confirmText: 'Restore',
+                isDestructive: true
+            });
+            if (!isConfirmed) return;
+        }
 
         setProcessing(true);
         setActionMessage(null);
@@ -158,6 +168,7 @@ export default function BackupsTab({
                     )}
                 </div>
             </div>
+            <ConfirmDialog />
         </div>
     );
 }

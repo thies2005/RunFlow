@@ -3,6 +3,8 @@
 import { useState, useMemo, memo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { predictRaceTime, formatTime } from '@/lib/metrics/vdot';
+import { calculateShapePenalty } from '@/lib/metrics/calibration';
+import { ChartTooltip } from '@/components/charts/ChartTooltip';
 
 interface RacePredictionChartProps {
     effectiveVO2max: number;
@@ -17,33 +19,6 @@ const RACE_COLORS = {
     'Marathon': '#ef4444',
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="glass-card p-4 border border-glass-border">
-                <p className="text-foreground-muted text-sm mb-2">{label}</p>
-                <div className="space-y-1">
-                    {payload.map((entry: any, index: number) => {
-                        const totalSecs = Math.round(Number(entry.value) * 60);
-                        return (
-                            <div key={index} className="flex items-center gap-2 text-sm">
-                                <div
-                                    className="w-2 h-2 rounded-full"
-                                    style={{ backgroundColor: entry.color || entry.fill }}
-                                />
-                                <span className="text-foreground-muted">{entry.name}:</span>
-                                <span className="text-foreground font-medium">
-                                    {formatTime(totalSecs)}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    }
-    return null;
-};
 
 function RacePredictionChart({
     effectiveVO2max,
@@ -68,7 +43,7 @@ function RacePredictionChart({
         return distances.map(dist => {
             const optimalSeconds = predictRaceTime(simulatedVO2Max, dist);
             const shapeImpact = shapeImpacts[dist];
-            const shapePenalty = (1 - shapePercent / 100) * shapeImpact * calibrationFactor;
+            const shapePenalty = calculateShapePenalty(shapePercent, shapeImpact, calibrationFactor);
             const predictedSeconds = optimalSeconds * (1 + shapePenalty);
 
             // Calculate time difference
@@ -197,7 +172,7 @@ function RacePredictionChart({
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
                         <XAxis type="number" stroke="#9ca3af" fontSize={12} tickFormatter={(v) => `${Math.round(v)}m`} />
                         <YAxis type="category" dataKey="name" stroke="#9ca3af" fontSize={12} width={60} />
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip content={<ChartTooltip formatter={(value: any) => formatTime(Math.round(Number(value) * 60))} />} />
                         <Bar dataKey="optimalMin" fill="#4ade80" opacity={0.3} name="Optimal" radius={[0, 4, 4, 0]} />
                         <Bar dataKey="predictedMin" name="Current Prediction" radius={[0, 4, 4, 0]}>
                             {chartData.map((entry, index) => (

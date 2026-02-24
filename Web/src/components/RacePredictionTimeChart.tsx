@@ -5,6 +5,8 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { predictRaceTime, formatTime, type RaceDistance } from '@/lib/metrics/vdot';
+import { calculateShapePenalty } from '@/lib/metrics/calibration';
+import { ChartTooltip } from '@/components/charts/ChartTooltip';
 
 interface VO2DataPoint {
     date?: string;
@@ -43,35 +45,6 @@ const RACE_DISTANCES: { key: RaceKey; distance: RaceDistance; shapeImpact: numbe
     { key: 'Marathon', distance: 'MARATHON', shapeImpact: 0.30 },
 ];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="glass-card p-4 border border-glass-border">
-                <p className="text-foreground-muted text-sm mb-2">
-                    {new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </p>
-                <div className="space-y-1">
-                    {payload.map((entry: any, index: number) => {
-                        const totalSeconds = Math.round(Number(entry.value) * 60);
-                        return (
-                            <div key={index} className="flex items-center gap-2 text-sm">
-                                <div
-                                    className="w-2 h-2 rounded-full"
-                                    style={{ backgroundColor: entry.color || entry.stroke }}
-                                />
-                                <span className="text-foreground-muted">{entry.name}:</span>
-                                <span className="text-foreground font-medium">
-                                    {formatTime(totalSeconds)}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    }
-    return null;
-};
 
 function RacePredictionTimeChart({
     vo2TrendData,
@@ -122,7 +95,7 @@ function RacePredictionTimeChart({
                 const optimal = predictRaceTime(vo2, distance);
 
                 // Apply shape penalty (same formula as calculateAllRacePredictions)
-                const penalty = (1 - Math.min(shape, 100) / 100) * shapeImpact * calibrationFactor;
+                const penalty = calculateShapePenalty(shape, shapeImpact, calibrationFactor);
                 const predicted = optimal * (1 + penalty);
 
                 dataPoint[key] = predicted / 60; // Convert to minutes for chart
@@ -205,7 +178,10 @@ function RacePredictionTimeChart({
                             domain={['dataMin - 5', 'dataMax + 5']}
                             width={50}
                         />
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip content={<ChartTooltip
+                            labelFormatter={(label: any) => new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            formatter={(value: any) => formatTime(Math.round(Number(value) * 60))}
+                        />} />
                         <Legend
                             wrapperStyle={{ fontSize: '12px' }}
                             iconType="circle"

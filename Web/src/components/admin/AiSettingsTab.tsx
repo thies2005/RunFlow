@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Bot, Eye, Trash2, Save, Loader2, Zap, AlertTriangle, CheckCircle } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
+import TierInputGroup from '@/components/admin/TierInputGroup';
+import useConfirmAction from '@/hooks/useConfirmAction';
 
 export default function AiSettingsTab({ settings, stats, onRefresh, processing, setProcessing, setActionMessage }: any) {
+    const { confirm, ConfirmDialog } = useConfirmAction();
     const [providers, setProviders] = useState<any[]>([]);
     const [activeProviderId, setActiveProviderId] = useState<string | null>(settings?.activeProviderId || null);
     const [fallbackProviderId, setFallbackProviderId] = useState<string | null>(settings?.fallbackProviderId || null);
@@ -106,7 +109,13 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
     };
 
     const handleDeleteProvider = async (id: string) => {
-        if (!window.confirm('Delete this provider?')) return;
+        const isConfirmed = await confirm({
+            title: 'Delete Provider',
+            message: 'Are you sure you want to delete this AI provider?',
+            confirmText: 'Delete',
+            isDestructive: true
+        });
+        if (!isConfirmed) return;
         setProcessing(true);
         try {
             const res = await fetch(`/api/admin/providers?id=${id}`, { method: 'DELETE', headers: { 'X-CSRF-Token': getCsrfToken() } });
@@ -216,143 +225,9 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
 
                 {/* Usage Tiers */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Tier 1 */}
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <input
-                            type="text"
-                            value={formData.tier1Name}
-                            onChange={(e) => setFormData({ ...formData, tier1Name: e.target.value })}
-                            className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-3 focus:outline-none focus:border-purple-500"
-                            placeholder="Tier 1 Name"
-                        />
-                        <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Daily Msgs</label>
-                                    <input
-                                        type="number"
-                                        value={formData.tier1DailyLimit}
-                                        onChange={(e) => setFormData({ ...formData, tier1DailyLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Monthly Msgs</label>
-                                    <input
-                                        type="number"
-                                        value={formData.tier1MonthlyLimit}
-                                        onChange={(e) => setFormData({ ...formData, tier1MonthlyLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 pt-2">
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Daily Tokens</label>
-                                    <input
-                                        type="number"
-                                        value={formData.tier1DailyTokenLimit}
-                                        onChange={(e) => setFormData({ ...formData, tier1DailyTokenLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Monthly Tokens</label>
-                                    <input
-                                        type="number"
-                                        value={formData.tier1MonthlyTokenLimit}
-                                        onChange={(e) => setFormData({ ...formData, tier1MonthlyTokenLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
-                                    />
-                                </div>
-                            </div>
-                            <div className="border-t border-gray-100 pt-2">
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">📸 CalorieSnap / Day</label>
-                                    <input
-                                        type="number"
-                                        value={formData.tier1CalorieSnapLimit}
-                                        onChange={(e) => setFormData({ ...formData, tier1CalorieSnapLimit: parseInt(e.target.value) || 0 })}
-                                        className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {/* Tier 2 */}
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <input
-                            type="text"
-                            value={formData.tier2Name}
-                            onChange={(e) => setFormData({ ...formData, tier2Name: e.target.value })}
-                            className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-3 focus:outline-none focus:border-purple-500"
-                        />
-                        <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Daily Msgs</label>
-                                    <input type="number" value={formData.tier2DailyLimit} onChange={e => setFormData({ ...formData, tier2DailyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Monthly Msgs</label>
-                                    <input type="number" value={formData.tier2MonthlyLimit} onChange={e => setFormData({ ...formData, tier2MonthlyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 pt-2">
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Daily Tokens</label>
-                                    <input type="number" value={formData.tier2DailyTokenLimit} onChange={e => setFormData({ ...formData, tier2DailyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Monthly Tokens</label>
-                                    <input type="number" value={formData.tier2MonthlyTokenLimit} onChange={e => setFormData({ ...formData, tier2MonthlyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                            </div>
-                            <div className="border-t border-gray-100 pt-2">
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">📸 CalorieSnap / Day</label>
-                                    <input type="number" value={formData.tier2CalorieSnapLimit} onChange={e => setFormData({ ...formData, tier2CalorieSnapLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {/* Tier 3 */}
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                        <input
-                            type="text"
-                            value={formData.tier3Name}
-                            onChange={(e) => setFormData({ ...formData, tier3Name: e.target.value })}
-                            className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-3 focus:outline-none focus:border-purple-500"
-                        />
-                        <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Daily Msgs</label>
-                                    <input type="number" value={formData.tier3DailyLimit} onChange={e => setFormData({ ...formData, tier3DailyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Monthly Msgs</label>
-                                    <input type="number" value={formData.tier3MonthlyLimit} onChange={e => setFormData({ ...formData, tier3MonthlyLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 pt-2">
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Daily Tokens</label>
-                                    <input type="number" value={formData.tier3DailyTokenLimit} onChange={e => setFormData({ ...formData, tier3DailyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">Monthly Tokens</label>
-                                    <input type="number" value={formData.tier3MonthlyTokenLimit} onChange={e => setFormData({ ...formData, tier3MonthlyTokenLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                            </div>
-                            <div className="border-t border-gray-100 pt-2">
-                                <div>
-                                    <label className="text-gray-500 text-xs block mb-1">📸 CalorieSnap / Day</label>
-                                    <input type="number" value={formData.tier3CalorieSnapLimit} onChange={e => setFormData({ ...formData, tier3CalorieSnapLimit: parseInt(e.target.value) || 0 })} className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <TierInputGroup tier={1} formData={formData} setFormData={setFormData} />
+                    <TierInputGroup tier={2} formData={formData} setFormData={setFormData} />
+                    <TierInputGroup tier={3} formData={formData} setFormData={setFormData} />
                 </div>
 
                 <div className="pt-4">
@@ -389,6 +264,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     </div>
                 </div>
             )}
+            <ConfirmDialog />
         </div>
     );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, memo } from 'react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, ComposedChart, Bar } from 'recharts';
+import { ChartTooltip } from '@/components/charts/ChartTooltip';
 
 interface DataPoint {
     date: string;
@@ -119,32 +120,6 @@ const useDateFormatter = (timeRange: TimeRange) => {
     }, [timeRange]);
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="glass-card p-4 border border-glass-border">
-                <p className="text-foreground-muted text-sm mb-2">
-                    {new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </p>
-                <div className="space-y-1">
-                    {payload.map((entry: any, index: number) => (
-                        <div key={index} className="flex items-center gap-2 text-sm">
-                            <div
-                                className="w-2 h-2 rounded-full"
-                                style={{ backgroundColor: entry.color || entry.stroke }}
-                            />
-                            <span className="text-foreground-muted">{entry.name}:</span>
-                            <span className="text-foreground font-medium">
-                                {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-    return null;
-};
 
 function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: CombinedAnalyticsChartProps) {
     const [visibleSeries, setVisibleSeries] = useState<Record<SeriesKey, boolean>>({
@@ -303,7 +278,7 @@ function CombinedAnalyticsChart({ data, timeRange, onTimeRangeChange }: Combined
                                 hide={true}
                             />
 
-                            <Tooltip content={<CustomTooltip />} />
+                            <Tooltip content={<ChartTooltip labelFormatter={(label: any) => new Date(label).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} formatter={(value: any) => typeof value === 'number' ? value.toFixed(1) : value} />} />
 
                             {/* VO2max Rolling Average (Smooth Line) */}
                             {visibleSeries.vo2max && (

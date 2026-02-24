@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { X, Save, Clock, CalendarDays } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import useConfirmAction from '@/hooks/useConfirmAction';
 
 interface AddSupplementModalProps {
     isOpen: boolean;
@@ -30,6 +33,8 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
     const [timeOfDay, setTimeOfDay] = useState('MORNING');
     const [daysOfWeek, setDaysOfWeek] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
     const [stackId, setStackId] = useState<string>('');
+
+    const { confirm, ConfirmDialog } = useConfirmAction();
 
     const { data: stacks } = useQuery({
         queryKey: ['supplement-stacks'],
@@ -114,152 +119,161 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center">
-            <div
-                className="bg-[#1c1c1e] w-full max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom"
-            >
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
-                    <h2 className="text-lg font-bold text-white">{supplementToEdit ? 'Edit Supplement' : 'Add Supplement'}</h2>
-                    <button
-                        onClick={onClose}
-                        className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
-                        type="button"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                {/* Body */}
-                <div className="p-4 overflow-y-auto flex-1 space-y-6">
-                    {/* Name */}
-                    <div>
-                        <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Name</label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="e.g. Vitamin D3, Omega-3"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50"
-                        />
-                    </div>
-
-                    {/* Stack Dropdown */}
-                    <div>
-                        <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Stack (Optional)</label>
-                        <select
-                            value={stackId}
-                            onChange={(e) => setStackId(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-red-500/50 appearance-none"
+        <>
+            <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center">
+                <div
+                    className="bg-[#1c1c1e] w-full max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom"
+                >
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
+                        <h2 className="text-lg font-bold text-white">{supplementToEdit ? 'Edit Supplement' : 'Add Supplement'}</h2>
+                        <button
+                            onClick={onClose}
+                            className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
+                            type="button"
                         >
-                            <option value="">None (Standalone)</option>
-                            {stacks?.map((stack: any) => (
-                                <option key={stack.id} value={stack.id}>{stack.name}</option>
-                            ))}
-                        </select>
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
 
-                    {/* Dosage */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Body */}
+                    <div className="p-4 overflow-y-auto flex-1 space-y-6">
+                        {/* Name */}
                         <div>
-                            <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Amount</label>
-                            <input
-                                type="number"
-                                step="any"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-red-500/50"
+                            <Input
+                                label="Name"
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder="e.g. Vitamin D3, Omega-3"
+                                className="!bg-white/5 border-white/10"
                             />
                         </div>
+
+                        {/* Stack Dropdown */}
                         <div>
-                            <label className="block text-xs text-gray-400 uppercase tracking-widest mb-1.5 font-medium">Unit</label>
-                            <select
-                                value={unit}
-                                onChange={(e) => setUnit(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white focus:outline-none focus:border-red-500/50 appearance-none"
+                            <Select
+                                label="Stack (Optional)"
+                                value={stackId}
+                                onChange={(e) => setStackId(e.target.value)}
+                                className="!bg-white/5 border-white/10"
                             >
-                                <option value="pill(s)">pill(s)</option>
-                                <option value="mg">mg</option>
-                                <option value="g">g</option>
-                                <option value="ml">ml</option>
-                                <option value="scoop(s)">scoop(s)</option>
-                                <option value="gummy">gummy</option>
-                            </select>
+                                <option value="">None (Standalone)</option>
+                                {stacks?.map((stack: any) => (
+                                    <option key={stack.id} value={stack.id}>{stack.name}</option>
+                                ))}
+                            </Select>
                         </div>
-                    </div>
 
-                    {/* Time of Day */}
-                    <div>
-                        <label className="flex items-center gap-1.5 text-xs text-gray-400 uppercase tracking-widest mb-2 font-medium">
-                            <Clock className="w-3.5 h-3.5" /> Time of Day
-                        </label>
-                        <div className="flex bg-white/5 p-1 rounded-lg border border-white/10">
-                            {TIME_OPTIONS.map(opt => (
-                                <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() => setTimeOfDay(opt.value)}
-                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${timeOfDay === opt.value ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                        {/* Dosage */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <Input
+                                    label="Amount"
+                                    type="number"
+                                    step="any"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    className="!bg-white/5 border-white/10"
+                                />
+                            </div>
+                            <div>
+                                <Select
+                                    label="Unit"
+                                    value={unit}
+                                    onChange={(e) => setUnit(e.target.value)}
+                                    className="!bg-white/5 border-white/10"
                                 >
-                                    {opt.label}
-                                </button>
-                            ))}
+                                    <option value="pill(s)">pill(s)</option>
+                                    <option value="mg">mg</option>
+                                    <option value="g">g</option>
+                                    <option value="ml">ml</option>
+                                    <option value="scoop(s)">scoop(s)</option>
+                                    <option value="gummy">gummy</option>
+                                </Select>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Days of Week */}
-                    <div>
-                        <label className="flex items-center gap-1.5 text-xs text-gray-400 uppercase tracking-widest mb-2 font-medium">
-                            <CalendarDays className="w-3.5 h-3.5" /> Days (Selected: {daysOfWeek.length})
-                        </label>
-                        <div className="flex justify-between gap-1">
-                            {DAYS.map(day => {
-                                const isSelected = daysOfWeek.includes(day.value);
-                                return (
+                        {/* Time of Day */}
+                        <div>
+                            <label className="flex items-center gap-1.5 text-xs text-gray-400 uppercase tracking-widest mb-2 font-medium">
+                                <Clock className="w-3.5 h-3.5" /> Time of Day
+                            </label>
+                            <div className="flex bg-white/5 p-1 rounded-lg border border-white/10">
+                                {TIME_OPTIONS.map(opt => (
                                     <button
-                                        key={day.value}
+                                        key={opt.value}
                                         type="button"
-                                        onClick={() => toggleDay(day.value)}
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${isSelected ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-white/5 text-gray-400 border border-transparent'}`}
+                                        onClick={() => setTimeOfDay(opt.value)}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${timeOfDay === opt.value ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
                                     >
-                                        {day.label}
+                                        {opt.label}
                                     </button>
-                                );
-                            })}
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Days of Week */}
+                        <div>
+                            <label className="flex items-center gap-1.5 text-xs text-gray-400 uppercase tracking-widest mb-2 font-medium">
+                                <CalendarDays className="w-3.5 h-3.5" /> Days (Selected: {daysOfWeek.length})
+                            </label>
+                            <div className="flex justify-between gap-1">
+                                {DAYS.map(day => {
+                                    const isSelected = daysOfWeek.includes(day.value);
+                                    return (
+                                        <button
+                                            key={day.value}
+                                            type="button"
+                                            onClick={() => toggleDay(day.value)}
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${isSelected ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-white/5 text-gray-400 border border-transparent'}`}
+                                        >
+                                            {day.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Footer */}
-                <div className="p-4 border-t border-white/10 bg-[#1c1c1e] shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
-                    {supplementToEdit && (
-                        <button
-                            onClick={() => {
-                                if (window.confirm('Delete this supplement entirely?')) {
-                                    deleteMutation.mutate();
-                                }
-                            }}
-                            disabled={deleteMutation.isPending}
-                            className="px-4 py-3 bg-red-500/10 text-red-500 font-semibold rounded-xl flex items-center justify-center hover:bg-red-500/20 disabled:opacity-50 transition-colors"
-                        >
-                            Delete
-                        </button>
-                    )}
-                    <button
-                        onClick={() => submitMutation.mutate()}
-                        disabled={!name.trim() || submitMutation.isPending}
-                        className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50 transition-colors"
-                    >
-                        {submitMutation.isPending ? (
-                            'Saving...'
-                        ) : (
-                            <>
-                                <Save className="w-4 h-4" /> Save Supplement
-                            </>
+                    {/* Footer */}
+                    <div className="p-4 border-t border-white/10 bg-[#1c1c1e] shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] flex gap-3">
+                        {supplementToEdit && (
+                            <button
+                                onClick={async () => {
+                                    const isConfirmed = await confirm({
+                                        title: 'Delete Supplement',
+                                        message: 'Are you sure you want to delete this supplement entirely?',
+                                        confirmText: 'Delete',
+                                        isDestructive: true
+                                    });
+                                    if (isConfirmed) {
+                                        deleteMutation.mutate();
+                                    }
+                                }}
+                                disabled={deleteMutation.isPending}
+                                className="px-4 py-3 bg-red-500/10 text-red-500 font-semibold rounded-xl flex items-center justify-center hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+                            >
+                                Delete
+                            </button>
                         )}
-                    </button>
+                        <button
+                            onClick={() => submitMutation.mutate()}
+                            disabled={!name.trim() || submitMutation.isPending}
+                            className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                        >
+                            {submitMutation.isPending ? (
+                                'Saving...'
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" /> Save Supplement
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+            <ConfirmDialog />
+        </>
     );
 }

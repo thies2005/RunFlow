@@ -8,41 +8,8 @@ import {
 } from 'recharts';
 import { predictRaceTime, formatTime, formatPace } from '@/lib/metrics/vdot';
 import LazyChartWrapper from '@/components/LazyChartWrapper';
+import { ChartTooltip } from '@/components/charts/ChartTooltip';
 
-const CustomTooltip = ({ active, payload, label, formatter }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="glass-card p-4 border border-glass-border">
-                {label && (
-                    <p className="text-foreground-muted text-sm mb-2">
-                        {label}
-                    </p>
-                )}
-                <div className="space-y-1">
-                    {payload.map((entry: any, index: number) => {
-                        let val = entry.value;
-                        if (formatter) {
-                            val = formatter(val);
-                        }
-                        return (
-                            <div key={index} className="flex items-center gap-2 text-sm">
-                                <div
-                                    className="w-2 h-2 rounded-full"
-                                    style={{ backgroundColor: entry.color || entry.stroke }}
-                                />
-                                <span className="text-foreground-muted">{entry.name}:</span>
-                                <span className="text-foreground font-medium">
-                                    {val}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    }
-    return null;
-};
 
 type AnalyticsDashboardProps = {
     currentVdot: number | null;
@@ -87,7 +54,7 @@ const ZoneTrendChart = memo(({ data }: { data: HistoryResponse['zoneTrend'] }) =
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => v >= 60 ? `${Math.round(v / 60)}h` : `${v}m`} />
-                    <Tooltip content={<CustomTooltip formatter={(value: number) => {
+                    <Tooltip content={<ChartTooltip formatter={(value: number) => {
                         if (value >= 60) {
                             const hours = Math.floor(value / 60);
                             const mins = Math.round(value % 60);
@@ -119,7 +86,7 @@ const WeeklyVolumeChart = memo(({ data }: { data: HistoryResponse['weeklyVolume'
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} unit="km" />
-                    <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} content={<CustomTooltip />} />
+                    <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} content={<ChartTooltip />} />
                     <Bar dataKey="km" fill="#60a5fa" radius={[4, 4, 0, 0]} />
                 </BarChart>
             </ResponsiveContainer>
@@ -182,7 +149,7 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
                                 ))}
                             </Pie>
                             <Tooltip
-                                content={<CustomTooltip formatter={(value: number) => formatZoneTime(value)} />}
+                                content={<ChartTooltip formatter={(value: number) => formatZoneTime(value)} />}
                             />
                         </PieChart>
                     </ResponsiveContainer>
@@ -226,7 +193,7 @@ const VDOTTrendChart = memo(({ data }: { data: HistoryResponse['vdotTrend'] }) =
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
-                    <Tooltip content={<CustomTooltip formatter={(value: number) => value.toFixed(1)} />} />
+                    <Tooltip content={<ChartTooltip formatter={(value: number) => value.toFixed(1)} />} />
                     <Line type="monotone" dataKey="vdot" stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b' }} />
                 </LineChart>
             </ResponsiveContainer>
@@ -245,7 +212,7 @@ const FitnessTrendChart = memo(({ data }: { data: HistoryResponse['fitnessTrend'
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => Math.round(val).toString()} />
-                    <Tooltip content={<CustomTooltip formatter={(value: number) => value.toFixed(1)} />} />
+                    <Tooltip content={<ChartTooltip formatter={(value: number) => value.toFixed(1)} />} />
                     <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} name="Fitness (CTL)" dot={false} />
                     <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} name="Fatigue (ATL)" dot={false} />
                     <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} name="Form (TSB)" dot={false} />

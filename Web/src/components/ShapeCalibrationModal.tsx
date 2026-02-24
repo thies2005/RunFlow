@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Calculator } from 'lucide-react';
+import { Calculator } from 'lucide-react';
 import { solveCalibrationFactor } from '@/lib/metrics/runalyze';
+import { Modal } from '@/components/ui/Modal';
 import { formatTime, predictRaceTime, calculateVdot } from '@/lib/metrics/vdot';
 import type { Activity } from '@/lib/types';
 
@@ -257,292 +258,285 @@ export default function ShapeCalibrationModal({
     const isPending = shapeMutation.isPending || vdotMutation.isPending;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm p-4">
-            <div className="bg-surface border border-glass-border rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-glass-border">
-                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                        <Calculator className="w-5 h-5 text-accent-cyan" />
-                        Calibration
-                    </h2>
-                    <button onClick={onClose} className="text-foreground-muted hover:text-foreground transition">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Calibration"
+            icon={<Calculator className="w-5 h-5 text-accent-cyan" />}
+            maxWidth="md"
+        >
+            {/* Tabs */}
+            <div className="flex border-b border-glass-border -mx-6 mb-6 px-6">
+                <button
+                    onClick={() => setMode('VDOT')}
+                    className={`flex-1 py-3 text-sm font-medium transition ${mode === 'VDOT' ? 'text-accent-cyan border-b-2 border-accent-cyan' : 'text-foreground-muted hover:text-foreground'}`}
+                >
+                    VDOT Correction
+                </button>
+                <button
+                    onClick={() => setMode('SHAPE')}
+                    className={`flex-1 py-3 text-sm font-medium transition ${mode === 'SHAPE' ? 'text-accent-orange border-b-2 border-accent-orange' : 'text-foreground-muted hover:text-foreground'}`}
+                >
+                    Shape Factor
+                </button>
+                <button
+                    onClick={() => setMode('MANUAL')}
+                    className={`flex-1 py-3 text-sm font-medium transition ${mode === 'MANUAL' ? 'text-foreground border-b-2 border-foreground' : 'text-foreground-muted hover:text-foreground'}`}
+                >
+                    Manual
+                </button>
+            </div>
 
-                {/* Tabs */}
-                <div className="flex border-b border-glass-border">
-                    <button
-                        onClick={() => setMode('VDOT')}
-                        className={`flex-1 py-3 text-sm font-medium transition ${mode === 'VDOT' ? 'text-accent-cyan border-b-2 border-accent-cyan' : 'text-foreground-muted hover:text-foreground'}`}
-                    >
-                        VDOT Correction
-                    </button>
-                    <button
-                        onClick={() => setMode('SHAPE')}
-                        className={`flex-1 py-3 text-sm font-medium transition ${mode === 'SHAPE' ? 'text-accent-orange border-b-2 border-accent-orange' : 'text-foreground-muted hover:text-foreground'}`}
-                    >
-                        Shape Factor
-                    </button>
-                    <button
-                        onClick={() => setMode('MANUAL')}
-                        className={`flex-1 py-3 text-sm font-medium transition ${mode === 'MANUAL' ? 'text-foreground border-b-2 border-foreground' : 'text-foreground-muted hover:text-foreground'}`}
-                    >
-                        Manual
-                    </button>
-                </div>
+            {/* Content */}
+            <div className="space-y-6">
+                {mode === 'VDOT' && (
+                    <div className="space-y-4">
+                        <div className="bg-accent-cyan/10 p-3 rounded-lg border border-accent-cyan/20">
+                            <p className="text-sm text-accent-cyan">
+                                Calibrate your global Effective VO2max to match your actual race performance.
+                                This updates all your historical data.
+                            </p>
+                        </div>
 
-                {/* Content */}
-                <div className="p-6 space-y-6">
-                    {mode === 'VDOT' && (
-                        <div className="space-y-4">
-                            <div className="bg-accent-cyan/10 p-3 rounded-lg border border-accent-cyan/20">
-                                <p className="text-sm text-accent-cyan">
-                                    Calibrate your global Effective VO2max to match your actual race performance.
-                                    This updates all your historical data.
-                                </p>
+                        {/* Activity Selector */}
+                        <div className="space-y-2">
+                            <label className="text-sm text-foreground-muted">Auto-fill from Recent Activity</label>
+                            <select
+                                className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground text-sm focus:border-accent-cyan outline-none"
+                                value={selectedActivityId}
+                                onChange={(e) => handleActivitySelect(e.target.value)}
+                            >
+                                <option value="">Select an activity...</option>
+                                {activities
+                                    .filter(a => a.type === 'RUN' && a.distance > 1000)
+                                    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+                                    .slice(0, 20)
+                                    .map(a => (
+                                        <option key={a.id} value={a.id}>
+                                            {new Date(a.startDate).toLocaleDateString()} - {(a.distance / 1000).toFixed(2)}km - {formatTime(a.elapsedTime || a.movingTime)}
+                                        </option>
+                                    ))
+                                }
+                            </select>
+                        </div>
+
+                        <div className="flex gap-4">
+                            <div className="flex-1">
+                                <label className="text-xs text-foreground-muted mb-1 block">Distance</label>
+                                {isCustomDistance ? (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="number"
+                                            className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-none"
+                                            placeholder="Meters"
+                                            value={customDistanceMeters}
+                                            onChange={(e) => setCustomDistanceMeters(e.target.value)}
+                                        />
+                                        <button
+                                            onClick={() => setIsCustomDistance(false)}
+                                            className="text-xs text-accent-cyan underline whitespace-nowrap"
+                                        >
+                                            Standard
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <select
+                                            className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-none"
+                                            value={vdotRaceType}
+                                            onChange={(e) => setVdotRaceType(e.target.value as RaceType)}
+                                        >
+                                            <option value="5K">5K</option>
+                                            <option value="10K">10K</option>
+                                            <option value="HALF">Half Marathon</option>
+                                            <option value="MARATHON">Marathon</option>
+                                        </select>
+                                        <button
+                                            onClick={() => { setIsCustomDistance(true); setCustomDistanceMeters(''); }}
+                                            className="text-xs text-accent-cyan underline whitespace-nowrap"
+                                        >
+                                            Custom
+                                        </button>
+                                    </div>
+                                )}
                             </div>
+                        </div>
 
-                            {/* Activity Selector */}
+                        <div className="flex gap-2 items-center">
+                            <input
+                                type="number" placeholder="HH" value={vdotHours}
+                                onChange={e => setVdotHours(validateTimeInput(e.target.value, 23))}
+                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                                min="0" max="23"
+                            />
+                            <span className="text-foreground-muted">:</span>
+                            <input
+                                type="number" placeholder="MM" value={vdotMinutes}
+                                onChange={e => setVdotMinutes(validateTimeInput(e.target.value, 59))}
+                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                                min="0" max="59"
+                            />
+                            <span className="text-foreground-muted">:</span>
+                            <input
+                                type="number" placeholder="SS" value={vdotSeconds}
+                                onChange={e => setVdotSeconds(validateTimeInput(e.target.value, 59))}
+                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                                min="0" max="59"
+                            />
+                        </div>
+
+                        {/* Results */}
+                        {vdotCalcData && (
                             <div className="space-y-2">
-                                <label className="text-sm text-foreground-muted">Auto-fill from Recent Activity</label>
-                                <select
-                                    className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground text-sm focus:border-accent-cyan outline-none"
-                                    value={selectedActivityId}
-                                    onChange={(e) => handleActivitySelect(e.target.value)}
-                                >
-                                    <option value="">Select an activity...</option>
-                                    {activities
-                                        .filter(a => a.type === 'RUN' && a.distance > 1000)
-                                        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-                                        .slice(0, 20)
-                                        .map(a => (
-                                            <option key={a.id} value={a.id}>
-                                                {new Date(a.startDate).toLocaleDateString()} - {(a.distance / 1000).toFixed(2)}km - {formatTime(a.elapsedTime || a.movingTime)}
-                                            </option>
-                                        ))
-                                    }
-                                </select>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <div className="flex-1">
-                                    <label className="text-xs text-foreground-muted mb-1 block">Distance</label>
-                                    {isCustomDistance ? (
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="number"
-                                                className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-none"
-                                                placeholder="Meters"
-                                                value={customDistanceMeters}
-                                                onChange={(e) => setCustomDistanceMeters(e.target.value)}
-                                            />
-                                            <button
-                                                onClick={() => setIsCustomDistance(false)}
-                                                className="text-xs text-accent-cyan underline whitespace-nowrap"
-                                            >
-                                                Standard
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <select
-                                                className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-none"
-                                                value={vdotRaceType}
-                                                onChange={(e) => setVdotRaceType(e.target.value as RaceType)}
-                                            >
-                                                <option value="5K">5K</option>
-                                                <option value="10K">10K</option>
-                                                <option value="HALF">Half Marathon</option>
-                                                <option value="MARATHON">Marathon</option>
-                                            </select>
-                                            <button
-                                                onClick={() => { setIsCustomDistance(true); setCustomDistanceMeters(''); }}
-                                                className="text-xs text-accent-cyan underline whitespace-nowrap"
-                                            >
-                                                Custom
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex gap-2 items-center">
-                                <input
-                                    type="number" placeholder="HH" value={vdotHours}
-                                    onChange={e => setVdotHours(validateTimeInput(e.target.value, 23))}
-                                    className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
-                                    min="0" max="23"
-                                />
-                                <span className="text-foreground-muted">:</span>
-                                <input
-                                    type="number" placeholder="MM" value={vdotMinutes}
-                                    onChange={e => setVdotMinutes(validateTimeInput(e.target.value, 59))}
-                                    className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
-                                    min="0" max="59"
-                                />
-                                <span className="text-foreground-muted">:</span>
-                                <input
-                                    type="number" placeholder="SS" value={vdotSeconds}
-                                    onChange={e => setVdotSeconds(validateTimeInput(e.target.value, 59))}
-                                    className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
-                                    min="0" max="59"
-                                />
-                            </div>
-
-                            {/* Results */}
-                            {vdotCalcData && (
-                                <div className="space-y-2">
-                                    <div className="grid grid-cols-3 gap-2 text-sm">
-                                        <div className="p-2 bg-background-secondary rounded text-center">
-                                            <p className="text-foreground-muted text-xs">Race VDOT</p>
-                                            <p className="text-foreground font-mono text-lg">{vdotCalcData.impliedVdot.toFixed(1)}</p>
-                                        </div>
-                                        <div className="p-2 bg-background-secondary rounded text-center">
-                                            <p className="text-foreground-muted text-xs">Current VDOT</p>
-                                            <p className="text-foreground-muted font-mono text-lg">{vdotCalcData.baseVdot.toFixed(1)}</p>
-                                        </div>
-                                        <div className="p-2 bg-background-secondary rounded text-center">
-                                            <p className="text-foreground-muted text-xs">Correction</p>
-                                            <p className={`font-mono text-lg ${vdotCorrectionValid ? 'text-green-400' : 'text-red-400'}`}>
-                                                {vdotCalcData.newFactor.toFixed(3)}x
-                                            </p>
-                                        </div>
+                                <div className="grid grid-cols-3 gap-2 text-sm">
+                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                        <p className="text-foreground-muted text-xs">Race VDOT</p>
+                                        <p className="text-foreground font-mono text-lg">{vdotCalcData.impliedVdot.toFixed(1)}</p>
                                     </div>
-                                    {!vdotCorrectionValid && (
-                                        <p className="text-xs text-red-400">
-                                            Correction factor must be between 0.5x and 1.5x. Your race result differs too much from current data.
+                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                        <p className="text-foreground-muted text-xs">Current VDOT</p>
+                                        <p className="text-foreground-muted font-mono text-lg">{vdotCalcData.baseVdot.toFixed(1)}</p>
+                                    </div>
+                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                        <p className="text-foreground-muted text-xs">Correction</p>
+                                        <p className={`font-mono text-lg ${vdotCorrectionValid ? 'text-green-400' : 'text-red-400'}`}>
+                                            {vdotCalcData.newFactor.toFixed(3)}x
                                         </p>
-                                    )}
-                                    <div className="text-xs text-foreground-muted text-center">
-                                        Current correction: {vdotCorrectionFactor.toFixed(3)}x
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Shape Factor Mode */}
-                    {mode === 'SHAPE' && (
-                        <div className="space-y-4">
-                            <p className="text-sm text-foreground-muted">
-                                Enter a long-distance race to calibrate the shape penalty (how much training affects predictions).
-                            </p>
-
-                            {/* Race Type */}
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setShapeRaceType('MARATHON')}
-                                    className={`px-3 py-1.5 rounded text-sm ${shapeRaceType === 'MARATHON' ? 'bg-blue-600 text-white' : 'bg-background-secondary text-foreground-muted'}`}
-                                >
-                                    Marathon
-                                </button>
-                                <button
-                                    onClick={() => setShapeRaceType('HALF')}
-                                    className={`px-3 py-1.5 rounded text-sm ${shapeRaceType === 'HALF' ? 'bg-blue-600 text-white' : 'bg-background-secondary text-foreground-muted'}`}
-                                >
-                                    Half Marathon
-                                </button>
-                            </div>
-
-                            {/* Time Input */}
-                            <div className="flex gap-2 items-center">
-                                <input
-                                    type="number" placeholder="HH" value={shapeHours} onChange={e => setShapeHours(e.target.value)}
-                                    className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
-                                />
-                                <span className="text-foreground-muted">:</span>
-                                <input
-                                    type="number" placeholder="MM" value={shapeMinutes} onChange={e => setShapeMinutes(e.target.value)}
-                                    className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
-                                />
-                                <span className="text-foreground-muted">:</span>
-                                <input
-                                    type="number" placeholder="SS" value={shapeSeconds} onChange={e => setShapeSeconds(e.target.value)}
-                                    className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
-                                />
-                            </div>
-
-                            {/* Comparison + Result */}
-                            {shapeCalcData && (
-                                <div className="space-y-2">
-                                    <div className="grid grid-cols-2 gap-2 text-sm">
-                                        <div className="p-2 bg-background-secondary rounded text-center">
-                                            <p className="text-foreground-muted text-xs">Expected</p>
-                                            <p className="text-foreground-muted font-mono">{formatTime(Math.round(shapeCalcData.basePredictedSeconds))}</p>
-                                        </div>
-                                        <div className="p-2 bg-background-secondary rounded text-center">
-                                            <p className="text-foreground-muted text-xs">Your Time</p>
-                                            <p className="text-foreground font-mono">{formatTime(shapeCalcData.actualSeconds)}</p>
-                                        </div>
-                                    </div>
-                                    <div className={`p-3 rounded-lg flex justify-between items-center ${isShapeInputValid ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-                                        <span className="text-sm text-foreground-muted">Shape Factor:</span>
-                                        <span className={`font-mono text-lg font-bold ${isShapeInputValid ? 'text-green-400' : 'text-red-400'}`}>
-                                            {shapeFactor?.toFixed(2)}x
-                                        </span>
-                                    </div>
-                                    {!isShapeInputValid && shapeFactor !== null && (
-                                        <p className="text-xs text-red-400">
-                                            Factor must be between -2.0x and 2.0x.
-                                        </p>
-                                    )}
-                                    <div className="text-[10px] text-foreground-muted font-mono text-center">
-                                        VO2:{effectiveVO2max.toFixed(1)} Shape:{shapePercent}% Opt:{Math.round(shapeCalcData.optimalSeconds)}s
-                                    </div>
+                                {!vdotCorrectionValid && (
+                                    <p className="text-xs text-red-400">
+                                        Correction factor must be between 0.5x and 1.5x. Your race result differs too much from current data.
+                                    </p>
+                                )}
+                                <div className="text-xs text-foreground-muted text-center">
+                                    Current correction: {vdotCorrectionFactor.toFixed(3)}x
                                 </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Manual Mode */}
-                    {mode === 'MANUAL' && (
-                        <div className="space-y-4">
-                            <p className="text-sm text-foreground-muted">
-                                Manually adjust the shape correction factor.
-                                <br /> &gt; 1.0 = Slower than predicted (more conservative)
-                                <br /> &lt; 1.0 = Faster than predicted (aggressive)
-                            </p>
-
-                            <div className="flex gap-4 items-center">
-                                <input
-                                    type="range" min="0.8" max="1.5" step="0.01"
-                                    value={manualFactor}
-                                    onChange={e => setManualFactor(e.target.value)}
-                                    className="flex-1 accent-accent-pink"
-                                />
-                                <input
-                                    type="number" step="0.01"
-                                    value={manualFactor}
-                                    onChange={e => setManualFactor(e.target.value)}
-                                    className="w-20 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center font-mono"
-                                />
                             </div>
-                        </div>
-                    )}
-
-                    {/* Footer / Status */}
-                    <div className="pt-4 border-t border-glass-border flex justify-end gap-3">
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleApply}
-                            disabled={
-                                isPending ||
-                                (mode === 'VDOT' && !vdotCorrectionValid) ||
-                                (mode === 'SHAPE' && !isShapeInputValid)
-                            }
-                            className="btn-primary px-4 py-2 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isPending ? 'Saving...' : 'Apply Calibration'}
-                        </button>
+                        )}
                     </div>
+                )}
+
+                {/* Shape Factor Mode */}
+                {mode === 'SHAPE' && (
+                    <div className="space-y-4">
+                        <p className="text-sm text-foreground-muted">
+                            Enter a long-distance race to calibrate the shape penalty (how much training affects predictions).
+                        </p>
+
+                        {/* Race Type */}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setShapeRaceType('MARATHON')}
+                                className={`px-3 py-1.5 rounded text-sm ${shapeRaceType === 'MARATHON' ? 'bg-blue-600 text-white' : 'bg-background-secondary text-foreground-muted'}`}
+                            >
+                                Marathon
+                            </button>
+                            <button
+                                onClick={() => setShapeRaceType('HALF')}
+                                className={`px-3 py-1.5 rounded text-sm ${shapeRaceType === 'HALF' ? 'bg-blue-600 text-white' : 'bg-background-secondary text-foreground-muted'}`}
+                            >
+                                Half Marathon
+                            </button>
+                        </div>
+
+                        {/* Time Input */}
+                        <div className="flex gap-2 items-center">
+                            <input
+                                type="number" placeholder="HH" value={shapeHours} onChange={e => setShapeHours(e.target.value)}
+                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                            />
+                            <span className="text-foreground-muted">:</span>
+                            <input
+                                type="number" placeholder="MM" value={shapeMinutes} onChange={e => setShapeMinutes(e.target.value)}
+                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                            />
+                            <span className="text-foreground-muted">:</span>
+                            <input
+                                type="number" placeholder="SS" value={shapeSeconds} onChange={e => setShapeSeconds(e.target.value)}
+                                className="w-16 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center"
+                            />
+                        </div>
+
+                        {/* Comparison + Result */}
+                        {shapeCalcData && (
+                            <div className="space-y-2">
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                        <p className="text-foreground-muted text-xs">Expected</p>
+                                        <p className="text-foreground-muted font-mono">{formatTime(Math.round(shapeCalcData.basePredictedSeconds))}</p>
+                                    </div>
+                                    <div className="p-2 bg-background-secondary rounded text-center">
+                                        <p className="text-foreground-muted text-xs">Your Time</p>
+                                        <p className="text-foreground font-mono">{formatTime(shapeCalcData.actualSeconds)}</p>
+                                    </div>
+                                </div>
+                                <div className={`p-3 rounded-lg flex justify-between items-center ${isShapeInputValid ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                                    <span className="text-sm text-foreground-muted">Shape Factor:</span>
+                                    <span className={`font-mono text-lg font-bold ${isShapeInputValid ? 'text-green-400' : 'text-red-400'}`}>
+                                        {shapeFactor?.toFixed(2)}x
+                                    </span>
+                                </div>
+                                {!isShapeInputValid && shapeFactor !== null && (
+                                    <p className="text-xs text-red-400">
+                                        Factor must be between -2.0x and 2.0x.
+                                    </p>
+                                )}
+                                <div className="text-[10px] text-foreground-muted font-mono text-center">
+                                    VO2:{effectiveVO2max.toFixed(1)} Shape:{shapePercent}% Opt:{Math.round(shapeCalcData.optimalSeconds)}s
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Manual Mode */}
+                {mode === 'MANUAL' && (
+                    <div className="space-y-4">
+                        <p className="text-sm text-foreground-muted">
+                            Manually adjust the shape correction factor.
+                            <br /> &gt; 1.0 = Slower than predicted (more conservative)
+                            <br /> &lt; 1.0 = Faster than predicted (aggressive)
+                        </p>
+
+                        <div className="flex gap-4 items-center">
+                            <input
+                                type="range" min="0.8" max="1.5" step="0.01"
+                                value={manualFactor}
+                                onChange={e => setManualFactor(e.target.value)}
+                                className="flex-1 accent-accent-pink"
+                            />
+                            <input
+                                type="number" step="0.01"
+                                value={manualFactor}
+                                onChange={e => setManualFactor(e.target.value)}
+                                className="w-20 bg-background-secondary border border-glass-border rounded p-2 text-foreground text-center font-mono"
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Footer / Status */}
+                <div className="pt-4 mt-6 border-t border-glass-border flex justify-end gap-3">
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 text-sm text-foreground-muted hover:text-foreground transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleApply}
+                        disabled={
+                            isPending ||
+                            (mode === 'VDOT' && !vdotCorrectionValid) ||
+                            (mode === 'SHAPE' && !isShapeInputValid)
+                        }
+                        className="btn-primary px-4 py-2 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isPending ? 'Saving...' : 'Apply Calibration'}
+                    </button>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 }

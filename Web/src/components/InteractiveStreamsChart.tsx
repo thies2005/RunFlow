@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import {
     LineChart,
     Line,
@@ -11,6 +11,7 @@ import {
     ResponsiveContainer,
     Legend
 } from 'recharts';
+import { ChartTooltip } from '@/components/charts/ChartTooltip';
 import { Heart, TrendingUp, Mountain, Zap } from 'lucide-react';
 
 interface Streams {
@@ -32,50 +33,6 @@ const formatPaceTooltip = (val: number) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="glass-card p-4 border border-glass-border">
-                <p className="text-foreground-muted text-sm mb-2">
-                    {Math.floor(label / 60)}m {label % 60 > 0 ? `${label % 60}s` : ''}
-                </p>
-                <div className="space-y-1">
-                    {payload.map((entry: any, index: number) => {
-                        let displayValue = entry.value;
-                        let unit = '';
-
-                        // Apply specific formatting based on the data key
-                        if (entry.name === 'Pace' || entry.name === 'GAP') {
-                            displayValue = formatPaceTooltip(entry.value);
-                            unit = '/km';
-                        } else if (entry.name === 'Heart Rate') {
-                            displayValue = Math.round(entry.value);
-                            unit = ' bpm';
-                        } else if (entry.name === 'Elevation') {
-                            displayValue = Math.round(entry.value);
-                            unit = ' m';
-                        } else if (entry.name === 'Cadence') {
-                            displayValue = Math.round(entry.value);
-                            unit = ' spm';
-                        }
-
-                        return (
-                            <div key={index} className="flex items-center gap-2 text-sm">
-                                <span style={{ color: entry.stroke }} className="font-medium">
-                                    {entry.name}:
-                                </span>
-                                <span className="text-foreground">
-                                    {displayValue}<span className="text-foreground-muted text-xs">{unit}</span>
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    }
-    return null;
-};
 
 import { ChartErrorBoundary } from '@/components/ErrorBoundary';
 
@@ -281,7 +238,16 @@ function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps)
                             axisLine={false}
                             minTickGap={30}
                         />
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip content={<ChartTooltip
+                            labelFormatter={(label: any) => `${Math.floor(label / 60)}m ${label % 60 > 0 ? `${label % 60}s` : ''}`}
+                            formatter={(value: any, name: string) => {
+                                if (name === 'Pace' || name === 'GAP') return [formatPaceTooltip(value) + '/km', name];
+                                if (name === 'Heart Rate') return [Math.round(value) + ' bpm', name];
+                                if (name === 'Elevation') return [Math.round(value) + ' m', name];
+                                if (name === 'Cadence') return [Math.round(value) + ' spm', name];
+                                return value;
+                            }}
+                        />} />
                         <Legend wrapperStyle={{ paddingTop: '10px' }} />
 
                         {enabledMetrics.heartrate && hasHeartrate && (

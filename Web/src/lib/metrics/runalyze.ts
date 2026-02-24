@@ -4,6 +4,7 @@
  */
 
 import { predictRaceTime, type RaceDistance } from './vdot';
+import { calculateShapePenalty } from './calibration';
 import { DAY_MS } from '@/lib/constants';
 
 // ============================================
@@ -325,10 +326,8 @@ export function calculatePredictedTimes(
     // At shape 100%: penalty = 0 (you can hit optimal)
     // At shape 50%: penalty = 0.15 (15% slower)
     // At shape 0%: penalty = 0.30 (30% slower)
-    const baseShapePenalty = (1 - Math.min(shapePercent, 100) / 100) * 0.30;
-
     // Calibration adjusts the penalty (>1 = more conservative, slower predictions)
-    const adjustedPenalty = baseShapePenalty * calibrationFactor;
+    const adjustedPenalty = calculateShapePenalty(shapePercent, 0.30, calibrationFactor);
 
     // Predicted = Optimal + Penalty (always slower or equal)
     const predictedSeconds = optimalSeconds * (1 + adjustedPenalty);
@@ -358,7 +357,7 @@ export function calculateAllRacePredictions(
 
     return distances.map(d => {
         const optimal = predictRaceTime(effectiveVO2max, d.key);
-        const penalty = (1 - Math.min(shapePercent, 100) / 100) * d.shapeImpact * calibrationFactor;
+        const penalty = calculateShapePenalty(shapePercent, d.shapeImpact, calibrationFactor);
         const predicted = optimal * (1 + penalty);
 
         return {
@@ -386,7 +385,7 @@ export function solveCalibrationFactor(
     const shapeImpact = raceDistance === 'MARATHON' ? 0.30 : 0.15;
 
     // Base predicted (without calibration)
-    const baseShapePenalty = (1 - Math.min(shapePercent, 100) / 100) * shapeImpact;
+    const baseShapePenalty = calculateShapePenalty(shapePercent, shapeImpact, 1.0);
     // eslint-disable-next-line no-unused-vars
     const basePredictedSeconds = optimalSeconds * (1 + baseShapePenalty);
 

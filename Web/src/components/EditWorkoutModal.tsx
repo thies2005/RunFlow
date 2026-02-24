@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Save, Trash2 } from 'lucide-react';
+import { Save, Trash2 } from 'lucide-react';
 import ActivityPicker from './ActivityPicker';
+import { Modal } from '@/components/ui/Modal';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import type { Workout } from '@/lib/types';
 
 interface EditWorkoutModalProps {
@@ -132,144 +135,116 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
         }
     });
 
-    if (!isOpen) return null;
-
     const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm animate-fade-in">
-            <div className="glass-card w-full max-w-md p-6 relative animate-slide-in">
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-                    aria-label="Close modal"
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={workout ? 'Edit Workout' : 'Add Workout'}
+            maxWidth="md"
+        >
+            <div className="space-y-4">
+                {/* Type */}
+                <Select
+                    label="Type"
+                    id="workout-type"
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}
                 >
-                    <X className="w-5 h-5" />
-                </button>
+                    {WORKOUT_TYPES.map(t => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                </Select>
 
-                <h2 className="text-xl font-bold text-white mb-6">
-                    {workout ? 'Edit Workout' : 'Add Workout'}
-                </h2>
+                {/* Date */}
+                <Input
+                    label="Date"
+                    id="workout-date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                />
 
-                <div className="space-y-4">
-                    {/* Type */}
-                    <div>
-                        <label htmlFor="workout-type" className="block text-xs text-gray-400 mb-1 uppercase">Type</label>
-                        <select
-                            id="workout-type"
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
-                            className={inputClass}
-                        >
-                            {WORKOUT_TYPES.map(t => (
-                                <option key={t.value} value={t.value}>{t.label}</option>
-                            ))}
-                        </select>
-                    </div>
+                {/* Description */}
+                <Input
+                    label="Description"
+                    id="workout-description"
+                    type="text"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                />
 
-                    {/* Date */}
-                    <div>
-                        <label htmlFor="workout-date" className="block text-xs text-gray-400 mb-1 uppercase">Date</label>
-                        <input
-                            id="workout-date"
-                            type="date"
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                            className={inputClass}
-                        />
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Distance */}
+                    <Input
+                        label={isSwim ? 'Distance (m)' : 'Distance (km)'}
+                        id="workout-distance"
+                        type="number"
+                        step={isSwim ? '50' : '0.1'}
+                        value={isSwim ? distanceM : distanceKm}
+                        onChange={(e) => isSwim
+                            ? setDistanceM(e.target.value)
+                            : setDistanceKm(e.target.value)
+                        }
+                    />
+                    {/* Duration */}
+                    <Input
+                        label="Duration (min)"
+                        id="workout-duration"
+                        type="number"
+                        value={durationMin}
+                        onChange={(e) => setDurationMin(e.target.value)}
+                    />
+                </div>
 
-                    {/* Description */}
-                    <div>
-                        <label htmlFor="workout-description" className="block text-xs text-gray-400 mb-1 uppercase">Description</label>
-                        <input
-                            id="workout-description"
-                            type="text"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className={inputClass}
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Distance */}
-                        <div>
-                            <label htmlFor="workout-distance" className="block text-xs text-gray-400 mb-1 uppercase">
-                                {isSwim ? 'Distance (m)' : 'Distance (km)'}
-                            </label>
+                {/* Status */}
+                {workout && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
                             <input
-                                id="workout-distance"
-                                type="number"
-                                step={isSwim ? '50' : '0.1'}
-                                value={isSwim ? distanceM : distanceKm}
-                                onChange={(e) => isSwim
-                                    ? setDistanceM(e.target.value)
-                                    : setDistanceKm(e.target.value)
-                                }
-                                className={inputClass}
+                                id="workout-completed"
+                                type="checkbox"
+                                checked={isCompleted}
+                                onChange={(e) => setIsCompleted(e.target.checked)}
+                                className="w-4 h-4 rounded border-gray-500 bg-white/10 accent-accent-orange"
                             />
+                            <label htmlFor="workout-completed" className="text-sm text-gray-300">Mark as Completed</label>
                         </div>
-                        {/* Duration */}
-                        <div>
-                            <label htmlFor="workout-duration" className="block text-xs text-gray-400 mb-1 uppercase">Duration (min)</label>
-                            <input
-                                id="workout-duration"
-                                type="number"
-                                value={durationMin}
-                                onChange={(e) => setDurationMin(e.target.value)}
-                                className={inputClass}
-                            />
-                        </div>
-                    </div>
 
-                    {/* Status */}
-                    {workout && (
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2">
-                                <input
-                                    id="workout-completed"
-                                    type="checkbox"
-                                    checked={isCompleted}
-                                    onChange={(e) => setIsCompleted(e.target.checked)}
-                                    className="w-4 h-4 rounded border-gray-500 bg-white/10 accent-accent-orange"
+                        {/* Activity Picker - Show when marking complete for first time */}
+                        {isCompleted && !wasCompleted && (
+                            <div className="max-h-64 overflow-y-auto">
+                                <ActivityPicker
+                                    selectedId={linkedActivityId}
+                                    onSelect={setLinkedActivityId}
                                 />
-                                <label htmlFor="workout-completed" className="text-sm text-gray-300">Mark as Completed</label>
                             </div>
-
-                            {/* Activity Picker - Show when marking complete for first time */}
-                            {isCompleted && !wasCompleted && (
-                                <div className="max-h-64 overflow-y-auto">
-                                    <ActivityPicker
-                                        selectedId={linkedActivityId}
-                                        onSelect={setLinkedActivityId}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="flex gap-3 mt-6">
-                        {workout && (
-                            <button
-                                onClick={() => deleteMutation.mutate()}
-                                className="px-4 py-3 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                                aria-label="Delete workout"
-                                title="Delete workout"
-                            >
-                                <Trash2 className="w-5 h-5" />
-                            </button>
                         )}
-                        <button
-                            onClick={() => saveMutation.mutate()}
-                            disabled={saveMutation.isPending}
-                            className="flex-1 btn-primary flex items-center justify-center gap-2 py-3"
-                        >
-                            <Save className="w-4 h-4" />
-                            {saveMutation.isPending ? 'Saving...' : 'Save'}
-                        </button>
                     </div>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                    {workout && (
+                        <button
+                            onClick={() => deleteMutation.mutate()}
+                            className="px-4 py-3 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                            aria-label="Delete workout"
+                            title="Delete workout"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+                    )}
+                    <button
+                        onClick={() => saveMutation.mutate()}
+                        disabled={saveMutation.isPending}
+                        className="flex-1 btn-primary flex items-center justify-center gap-2 py-3"
+                    >
+                        <Save className="w-4 h-4" />
+                        {saveMutation.isPending ? 'Saving...' : 'Save'}
+                    </button>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 }

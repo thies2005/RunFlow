@@ -19,6 +19,7 @@ import { MobileSwipeLayout } from '@/components/navigation';
 import ChatSidebar from '@/components/ChatSidebar';
 import { DashboardView, PlanView, AnalyticsView } from '@/components/views';
 import { SettingsModal, EditWorkoutModal } from '@/components';
+import { useAnalyticsMetrics } from '@/hooks/useAnalyticsMetrics';
 import ProfileModal from '@/components/ProfileModal';
 import ActivityDetailsModal from '@/components/ActivityDetailsModal';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';

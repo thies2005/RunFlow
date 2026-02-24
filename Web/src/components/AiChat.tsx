@@ -41,7 +41,9 @@ const cleanContent = (content: string) => {
     return cleaned;
 };
 
-export default function AiChat({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false }: AiChatProps) {
+import ErrorBoundary from '@/components/ErrorBoundary';
+
+function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false }: AiChatProps) {
     useEffect(() => {
         console.log('[AI CHAT] Component mounted');
         return () => {
@@ -510,5 +512,13 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function AiChat(props: AiChatProps) {
+    return (
+        <ErrorBoundary componentName="AiChat" showRetry>
+            <AiChatInner {...props} />
+        </ErrorBoundary>
     );
 }

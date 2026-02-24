@@ -77,7 +77,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-export default function InteractiveStreamsChart({ streams }: InteractiveStreamsChartProps) {
+import { ChartErrorBoundary } from '@/components/ErrorBoundary';
+
+function InteractiveStreamsChartInner({ streams }: InteractiveStreamsChartProps) {
     const [enabledMetrics, setEnabledMetrics] = useState({
         heartrate: true,
         pace: true,
@@ -384,5 +386,13 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                 </ResponsiveContainer>
             </div>
         </div>
+    );
+}
+
+export default function InteractiveStreamsChart(props: InteractiveStreamsChartProps) {
+    return (
+        <ChartErrorBoundary chartName="Interactive Streams Chart">
+            <InteractiveStreamsChartInner {...props} />
+        </ChartErrorBoundary>
     );
 }

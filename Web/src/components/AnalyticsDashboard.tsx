@@ -317,7 +317,9 @@ RacePredictions.displayName = 'RacePredictions';
 // Main Component
 // ============================================
 
-export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardProps) {
+import { ChartErrorBoundary } from '@/components/ErrorBoundary';
+
+function AnalyticsDashboardInner({ currentVdot }: AnalyticsDashboardProps) {
     const [timeRange, setTimeRange] = useState('12_WEEKS');
 
     // Fetch Aggregated History
@@ -379,5 +381,13 @@ export default function AnalyticsDashboard({ currentVdot }: AnalyticsDashboardPr
                 </LazyChartWrapper>
             )}
         </div>
+    );
+}
+
+export default function AnalyticsDashboard(props: AnalyticsDashboardProps) {
+    return (
+        <ChartErrorBoundary chartName="Analytics Dashboard">
+            <AnalyticsDashboardInner {...props} />
+        </ChartErrorBoundary>
     );
 }

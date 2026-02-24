@@ -16,11 +16,20 @@ const getAllowedOrigins = (): string[] => {
     // Add the app URL from environment
     if (process.env.NEXT_PUBLIC_APP_URL) {
         origins.push(process.env.NEXT_PUBLIC_APP_URL);
-        // Also add https version if http was provided and vice versa
         if (process.env.NEXT_PUBLIC_APP_URL.startsWith('http://')) {
             origins.push(process.env.NEXT_PUBLIC_APP_URL.replace('http://', 'https://'));
         } else if (process.env.NEXT_PUBLIC_APP_URL.startsWith('https://')) {
             origins.push(process.env.NEXT_PUBLIC_APP_URL.replace('https://', 'http://'));
+        }
+    }
+
+    // Fallback: NEXTAUTH_URL is always available at runtime (even in Docker)
+    if (process.env.NEXTAUTH_URL) {
+        origins.push(process.env.NEXTAUTH_URL);
+        if (process.env.NEXTAUTH_URL.startsWith('http://')) {
+            origins.push(process.env.NEXTAUTH_URL.replace('http://', 'https://'));
+        } else if (process.env.NEXTAUTH_URL.startsWith('https://')) {
+            origins.push(process.env.NEXTAUTH_URL.replace('https://', 'http://'));
         }
     }
 

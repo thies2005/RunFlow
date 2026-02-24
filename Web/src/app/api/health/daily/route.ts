@@ -33,6 +33,24 @@ export async function GET(request: NextRequest) {
             }
         });
 
+        // Get the latest weight if not in dailyHealth
+        let latestWeight = dailyHealth?.weight;
+        if (!latestWeight) {
+            const latestWeightLog = await prisma.dailyHealthLog.findFirst({
+                where: {
+                    userId: session.user.id,
+                    weight: { not: null },
+                    date: { lte: date }
+                },
+                orderBy: {
+                    date: 'desc'
+                }
+            });
+            if (latestWeightLog) {
+                latestWeight = latestWeightLog.weight;
+            }
+        }
+
         // Get supplement logs for this date (for this user's supplements)
         const supplementLogs = await prisma.supplementLog.findMany({
             where: {
@@ -45,7 +63,9 @@ export async function GET(request: NextRequest) {
         });
 
         return NextResponse.json({
-            dailyHealth,
+            dailyHealth: dailyHealth
+                ? { ...dailyHealth, weight: latestWeight }
+                : { steps: 0, weight: latestWeight, date },
             supplementLogs
         });
     } catch (error) {

@@ -43,6 +43,7 @@ interface AnalyticsData {
     targetProtein: number;
     targetCarbs: number;
     targetFats: number;
+    isDefault?: boolean;
   };
   today: {
     date: string;
@@ -177,6 +178,7 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
     }
 
     if (analytics.daysWithLogs === 0) {
+      const isGoalsSet = !analytics.target.isDefault;
       return (
         <div className="flex items-center justify-center h-[60vh] px-4">
           <div className="text-center max-w-sm">
@@ -184,12 +186,14 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
               <Utensils className="w-8 h-8 text-gray-400" />
             </div>
             <p className="text-white font-semibold mb-2">No nutrition data yet</p>
-            <p className="text-gray-400 text-sm mb-6">Start logging your meals to see detailed analytics and insights</p>
+            <p className="text-gray-400 text-sm mb-6">
+              {isGoalsSet ? "You've set your targets! Start logging your meals to see detailed analytics and insights." : "Start logging your meals to see detailed analytics and insights."}
+            </p>
             <button
               onClick={handleOpenGoals}
               className="bg-pink-500/20 text-pink-400 px-6 py-3 rounded-xl text-sm font-semibold mb-3 w-full"
             >
-              Set Nutrition Goals First
+              {isGoalsSet ? "Adjust Nutrition Goals" : "Set Nutrition Goals First"}
             </button>
             <button
               onClick={onClose}

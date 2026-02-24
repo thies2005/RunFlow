@@ -86,6 +86,21 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
             const startWebScanner = async () => {
                 let html5QrCode: Html5Qrcode | null = null;
                 try {
+                    // 1. Explicitly request permission to trigger the browser's native prompt immediately.
+                    // This must happen synchronously in the gesture chain (or close to it) so the browser doesn't auto-deny.
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        // We just needed the permission grant, so stop the stream immediately
+                        stream.getTracks().forEach(track => track.stop());
+                    } catch (permErr: any) {
+                        console.error("Permission request failed:", permErr);
+                        if (permErr?.name === 'NotAllowedError' || permErr?.message?.includes('Permission')) {
+                            setError('Camera permission was denied. Please allow camera access in your browser settings.');
+                            return;
+                        }
+                    }
+
+                    // 2. Now that we have permission, ask Html5Qrcode for cameras
                     const cameras = await Html5Qrcode.getCameras();
                     if (!cameras || cameras.length === 0) {
                         setError('No cameras found on this device.');
@@ -121,7 +136,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
                     }
                 } catch (err: any) {
                     console.error("Error starting web scanner:", err);
-                    if (err?.message?.includes('Permission')) {
+                    if (err?.message?.includes('Permission') || err?.name === 'NotAllowedError') {
                         setError('Camera permission was denied. Please allow camera access in your browser settings.');
                     } else {
                         setError('Could not start camera. Make sure the site is served over HTTPS and camera access is allowed.');
@@ -129,8 +144,8 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan }: Props) {
                 }
             };
 
-            // Small delay to allow modal div to fully render
-            setTimeout(startWebScanner, 300);
+            // Start immediately to preserve the gesture context, not in a setTimeout
+            startWebScanner();
         }
 
         return () => {

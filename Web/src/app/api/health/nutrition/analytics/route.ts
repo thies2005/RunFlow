@@ -230,7 +230,8 @@ export async function GET(request: Request) {
         ...target,
         targetProtein,
         targetCarbs,
-        targetFats
+        targetFats,
+        isDefault: !userTarget
       },
       today: todayData,
       dailyData,

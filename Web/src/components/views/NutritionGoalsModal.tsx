@@ -305,7 +305,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-white/10 shrink-0">
+                <div className="p-4 pb-8 sm:pb-4 border-t border-white/10 shrink-0">
                     <button
                         onClick={() => saveMutation.mutate()}
                         disabled={saveMutation.isPending || isLoading}

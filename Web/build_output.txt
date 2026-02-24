@@ -18,8 +18,6 @@
  Γ£ô Compiled successfully
    Linting and checking validity of types ...
 
-Failed to compile.
-
 ./src/app/admin/page.tsx
 5:8  Warning: 'Image' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
 6:55  Warning: 'Trash2' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
@@ -137,7 +135,11 @@ Failed to compile.
 8:10  Warning: 'getMidnightUTCDate' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
 
 ./src/app/mobile-layout.tsx
-22:10  Warning: 'useAnalyticsMetrics' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+3:33  Warning: 'useMemo' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+29:10  Warning: 'calculateEffectiveVO2max' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+31:30  Warning: 'Activity' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+34:5  Warning: 'calculatePredictedTimes' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+36:10  Warning: 'calculateTrainingPaces' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
 
 ./src/components/admin/BackupsTab.tsx
 9:21  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
@@ -148,13 +150,9 @@ Failed to compile.
 6:29  Warning: 'prev' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
 
 ./src/components/admin/UsersTab.tsx
-8:16  Warning: 'users' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
-11:21  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
-12:24  Warning: 'msg' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
-150:22  Error: 'Activity' is not defined.  react/jsx-no-undef
-235:46  Error: 'Activity' is not defined.  react/jsx-no-undef
-243:46  Error: 'Mail' is not defined.  react/jsx-no-undef
-251:46  Error: 'Trash2' is not defined.  react/jsx-no-undef
+9:16  Warning: 'users' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+12:21  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+13:24  Warning: 'msg' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
 
 ./src/components/AiSettingsModal.tsx
 6:5  Warning: 'X' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
@@ -169,9 +167,6 @@ Failed to compile.
 
 ./src/components/EditWorkoutModal.tsx
 138:11  Warning: 'inputClass' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
-
-./src/components/FitnessChart.tsx
-107:41  Error: Missing "key" prop for element in array  react/jsx-key
 
 ./src/components/health/SupplementItem.tsx
 8:14  Warning: 'supplement' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
@@ -292,3 +287,191 @@ Failed to compile.
 698:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
 
 info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+   Collecting page data ...
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.275Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.283Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.334Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.342Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.425Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.441Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.442Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.445Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.455Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.477Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.549Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.573Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+   Generating static pages (0/82) ...
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:45.399Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"Error","timestamp":"2026-02-24T19:30:45.598Z","environment":"production","errorId":"9b86964f","error":"Dynamic server usage: Route /api/health/nutrition/log/history couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error"}
+Error fetching health history: n [Error]: Dynamic server usage: Route /api/health/history couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at l (C:\Users\thies\Antigravity\Full RunFlow\Web\.next\server\chunks\8948.js:1:56329)
+    at u (C:\Users\thies\Antigravity\Full RunFlow\Web\.next\server\chunks\6912.js:25:118772)
+    at s (C:\Users\thies\Antigravity\Full RunFlow\Web\.next\server\chunks\6912.js:25:20300)
+    at h (C:\Users\thies\Antigravity\Full RunFlow\Web\.next\server\app\api\health\history\route.js:1:1306)
+    at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:6:38417
+    at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\next\dist\server\lib\trace\tracer.js:140:36
+    at NoopContextManager.with (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\@opentelemetry\api\build\src\context\NoopContextManager.js:25:19)
+    at ContextAPI.with (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\@opentelemetry\api\build\src\api\context.js:60:46)
+    at NoopTracer.startActiveSpan (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\@opentelemetry\api\build\src\trace\NoopTracer.js:65:31)
+    at ProxyTracer.startActiveSpan (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\@opentelemetry\api\build\src\trace\ProxyTracer.js:36:24) {
+  description: "Route /api/health/history couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+   Generating static pages (20/82) 
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:45.633Z","environment":"production","keyLength":30}
+{"level":"error","message":"Error","timestamp":"2026-02-24T19:30:45.713Z","environment":"production","errorId":"c50d4c6e","error":"Dynamic server usage: Route /api/health/supplements/stats couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error"}
+   Generating static pages (40/82) 
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:45.749Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+   Generating static pages (61/82) 
+ Γ£ô Generating static pages (82/82)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                Size     First Load JS
+Γöî Γùï /                                      4.06 kB         345 kB
+Γö£ Γùï /_not-found                            147 B          90.2 kB
+Γö£ Γùï /~offline                              546 B          90.6 kB
+Γö£ Γùï /activities                            2.76 kB         327 kB
+Γö£ ╞Æ /activity/[id]/analysis                3.77 kB         219 kB
+Γö£ Γùï /admin                                 11.6 kB         206 kB
+Γö£ Γùï /admin/login                           2 kB             92 kB
+Γö£ Γùï /analytics                             4.9 kB          329 kB
+Γö£ Γùï /api-docs                              187 B          98.9 kB
+Γö£ ╞Æ /api/activities                        0 B                0 B
+Γö£ ╞Æ /api/activities/[id]                   0 B                0 B
+Γö£ ╞Æ /api/activities/[id]/type              0 B                0 B
+Γö£ ╞Æ /api/admin/ai-settings                 0 B                0 B
+Γö£ ╞Æ /api/admin/analytics                   0 B                0 B
+Γö£ ╞Æ /api/admin/backups                     0 B                0 B
+Γö£ ╞Æ /api/admin/backups/[filename]          0 B                0 B
+Γö£ ╞Æ /api/admin/backups/upload              0 B                0 B
+Γö£ ╞Æ /api/admin/login                       0 B                0 B
+Γö£ ╞Æ /api/admin/providers                   0 B                0 B
+Γö£ ╞Æ /api/admin/recalculate-fitness         0 B                0 B
+Γö£ ╞Æ /api/admin/stats                       0 B                0 B
+Γö£ ╞Æ /api/admin/users                       0 B                0 B
+Γö£ ╞Æ /api/admin/users/[id]                  0 B                0 B
+Γö£ ╞Æ /api/admin/users/[id]/reset-password   0 B                0 B
+Γö£ ╞Æ /api/admin/users/[id]/toggle-ai        0 B                0 B
+Γö£ ╞Æ /api/ai/activity-feedback              0 B                0 B
+Γö£ ╞Æ /api/ai/chat                           0 B                0 B
+Γö£ ╞Æ /api/ai/chat/history                   0 B                0 B
+Γö£ ╞Æ /api/ai/chat/sessions                  0 B                0 B
+Γö£ ╞Æ /api/ai/settings                       0 B                0 B
+Γö£ ╞Æ /api/ai/test-key                       0 B                0 B
+Γö£ ╞Æ /api/analytics/history                 0 B                0 B
+Γö£ ╞Æ /api/analytics/stats                   0 B                0 B
+Γö£ ╞Æ /api/auth/[...nextauth]                0 B                0 B
+Γö£ ╞Æ /api/auth/forgot-password              0 B                0 B
+Γö£ ╞Æ /api/auth/register                     0 B                0 B
+Γö£ ╞Æ /api/auth/reset-password               0 B                0 B
+Γö£ ╞Æ /api/auth/strava/callback              0 B                0 B
+Γö£ ╞Æ /api/auth/verify-email                 0 B                0 B
+Γö£ ╞Æ /api/dashboard                         0 B                0 B
+Γö£ ╞Æ /api/diagnostic                        0 B                0 B
+Γö£ ╞Æ /api/external/v1/activities            0 B                0 B
+Γö£ ╞Æ /api/external/v1/fitness               0 B                0 B
+Γö£ ╞Æ /api/external/v1/goals                 0 B                0 B
+Γö£ ╞Æ /api/external/v1/plan                  0 B                0 B
+Γö£ ╞Æ /api/external/v1/stats                 0 B                0 B
+Γö£ ╞Æ /api/goals                             0 B                0 B
+Γö£ ╞Æ /api/goals/calibration                 0 B                0 B
+Γö£ ╞Æ /api/health                            0 B                0 B
+Γö£ ╞Æ /api/health/daily                      0 B                0 B
+Γö£ ╞Æ /api/health/history                    0 B                0 B
+Γö£ ╞Æ /api/health/nutrition/analytics        0 B                0 B
+Γö£ ╞Æ /api/health/nutrition/log              0 B                0 B
+Γö£ ╞Æ /api/health/nutrition/log/[id]         0 B                0 B
+Γö£ ╞Æ /api/health/nutrition/log/history      0 B                0 B
+Γö£ ╞Æ /api/health/nutrition/meals            0 B                0 B
+Γö£ ╞Æ /api/health/nutrition/scan             0 B                0 B
+Γö£ ╞Æ /api/health/nutrition/scan-image       0 B                0 B
+Γö£ ╞Æ /api/health/nutrition/search           0 B                0 B
+Γö£ ╞Æ /api/health/nutrition/target           0 B                0 B
+Γö£ ╞Æ /api/health/supplements                0 B                0 B
+Γö£ ╞Æ /api/health/supplements/stacks         0 B                0 B
+Γö£ ╞Æ /api/health/supplements/stats          0 B                0 B
+Γö£ ╞Æ /api/health/sync-batch                 0 B                0 B
+Γö£ ╞Æ /api/mobile/auth/login                 0 B                0 B
+Γö£ ╞Æ /api/mobile/auth/logout                0 B                0 B
+Γö£ ╞Æ /api/mobile/auth/refresh               0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/activities              0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/activities/[id]         0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/analytics/history       0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/analytics/stats         0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/auth/email-login        0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/auth/login              0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/auth/register           0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/dashboard               0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/goals                   0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/goals/[id]              0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/sync                    0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/user/profile            0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/workouts                0 B                0 B
+Γö£ ╞Æ /api/mobile/v1/workouts/[id]/complete  0 B                0 B
+Γö£ ╞Æ /api/monitoring/backups                0 B                0 B
+Γö£ ╞Æ /api/monitoring/metrics                0 B                0 B
+Γö£ ╞Æ /api/notifications                     0 B                0 B
+Γö£ ╞Æ /api/plan                              0 B                0 B
+Γö£ ╞Æ /api/settings/api-key                  0 B                0 B
+Γö£ ╞Æ /api/settings/profile                  0 B                0 B
+Γö£ ╞Æ /api/settings/recalculate-vdot         0 B                0 B
+Γö£ ╞Æ /api/settings/update-vdot              0 B                0 B
+Γö£ ╞Æ /api/settings/vdot-correction          0 B                0 B
+Γö£ ╞Æ /api/sync                              0 B                0 B
+Γö£ ╞Æ /api/user/delete                       0 B                0 B
+Γö£ ╞Æ /api/user/health-settings              0 B                0 B
+Γö£ ╞Æ /api/v1/activities                     0 B                0 B
+Γö£ ╞Æ /api/v1/activities/[id]                0 B                0 B
+Γö£ ╞Æ /api/v1/ai/activity-feedback           0 B                0 B
+Γö£ ╞Æ /api/v1/ai/chat                        0 B                0 B
+Γö£ ╞Æ /api/v1/ai/chat/history                0 B                0 B
+Γö£ ╞Æ /api/v1/ai/chat/sessions               0 B                0 B
+Γö£ ╞Æ /api/v1/dashboard                      0 B                0 B
+Γö£ ╞Æ /api/v1/goals                          0 B                0 B
+Γö£ ╞Æ /api/v1/plan                           0 B                0 B
+Γö£ ╞Æ /api/v1/workouts                       0 B                0 B
+Γö£ ╞Æ /api/v1/workouts/[id]                  0 B                0 B
+Γö£ ╞Æ /api/v1/workouts/[id]/complete         0 B                0 B
+Γö£ ╞Æ /api/webhooks/strava                   0 B                0 B
+Γö£ ╞Æ /api/workouts                          0 B                0 B
+Γö£ ╞Æ /api/workouts/[id]                     0 B                0 B
+Γö£ ╞Æ /api/workouts/[id]/complete            0 B                0 B
+Γö£ ╞Æ /api/workouts/reorder                  0 B                0 B
+Γö£ Γùï /apple-icon.png                        0 B                0 B
+Γö£ Γùï /chat                                  3.57 kB         176 kB
+Γö£ Γùï /health                                4.56 kB         365 kB
+Γö£ Γùï /icon.png                              0 B                0 B
+Γö£ Γùï /login                                 3.27 kB         342 kB
+Γö£ Γùï /manifest.webmanifest                  0 B                0 B
+Γö£ Γùï /onboarding                            1.66 kB         248 kB
+Γö£ Γùï /plan                                  5.57 kB         343 kB
+Γö£ Γùï /privacy                               147 B          90.2 kB
+Γö£ Γùï /register                              4.05 kB         127 kB
+Γöö Γùï /support                               187 B          98.9 kB
++ First Load JS shared by all              90 kB
+  Γö£ chunks/6997-03cc44c71deeba24.js        34.1 kB
+  Γö£ chunks/fd9d1056-a488274169479eb9.js    53.6 kB
+  Γöö other shared chunks (total)            2.29 kB
+
+
+╞Æ Middleware                               26.7 kB
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

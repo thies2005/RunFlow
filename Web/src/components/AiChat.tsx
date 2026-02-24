@@ -6,6 +6,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
+import DOMPurify from 'dompurify';
 import PromptLibrary from './PromptLibrary';
 
 interface AiChatProps {
@@ -290,7 +292,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                                     <div key={i} className={`text-sm ${msg.role === 'user' ? 'text-gray-300' : 'text-white'}`}>
                                         <span className="font-medium">{msg.role === 'user' ? 'You: ' : 'Coach: '}</span>
                                         <div className="inline-block align-top markdown-content">
-                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanContent(msg.content)}</ReactMarkdown>
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{DOMPurify.sanitize(cleanContent(msg.content))}</ReactMarkdown>
                                         </div>
                                     </div>
                                 ))}
@@ -407,6 +409,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                                                 ) : (
                                                     <ReactMarkdown
                                                         remarkPlugins={[remarkGfm]}
+                                                        rehypePlugins={[rehypeSanitize]}
                                                         components={{
                                                             h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
                                                             h2: ({ node: _node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
@@ -437,7 +440,7 @@ export default function AiChat({ activityId, sessionId, compact = false, onOpenS
                                                             a: ({ node: _node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
                                                         }}
                                                     >
-                                                        {cleanedContent}
+                                                        {DOMPurify.sanitize(cleanedContent)}
                                                     </ReactMarkdown>
                                                 )}
                                             </div>

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -13,6 +13,38 @@ interface VerificationModalProps {
 export default function VerificationModal({ isOpen, onClose, email, onVerified }: VerificationModalProps) {
     const [code, setCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const handleCodeChange = (index: number, value: string) => {
+        const newValue = value.toUpperCase();
+        const currentCodeArray = code.split('').concat(Array(6).fill('')).slice(0, 6);
+
+        // Handle paste event (values longer than 1 character)
+        if (newValue.length > 1) {
+            const pastedCode = newValue.slice(0, 6);
+            setCode(pastedCode);
+            if (pastedCode.length === 6) {
+                inputRefs.current[5]?.focus();
+            } else {
+                inputRefs.current[pastedCode.length]?.focus();
+            }
+            return;
+        }
+
+        currentCodeArray[index] = newValue;
+        const newCode = currentCodeArray.join('');
+        setCode(newCode);
+
+        if (newValue && index < 5) {
+            inputRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Backspace' && !code[index] && index > 0) {
+            inputRefs.current[index - 1]?.focus();
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -53,15 +85,19 @@ export default function VerificationModal({ isOpen, onClose, email, onVerified }
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="flex justify-center">
-                        <input
-                            type="text"
-                            value={code}
-                            onChange={(e) => setCode(e.target.value.toUpperCase())}
-                            placeholder="XCV123"
-                            className="w-full text-center text-4xl font-mono tracking-[0.5em] py-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase"
-                            maxLength={6}
-                        />
+                    <div className="flex justify-center gap-2">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <input
+                                key={i}
+                                ref={(el) => { inputRefs.current[i] = el; }}
+                                type="text"
+                                value={code[i] || ''}
+                                onChange={(e) => handleCodeChange(i, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(i, e)}
+                                className="w-12 h-14 text-center text-2xl font-semibold bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase transition-all"
+                                maxLength={6}
+                            />
+                        ))}
                     </div>
 
                     <div className="flex gap-3">

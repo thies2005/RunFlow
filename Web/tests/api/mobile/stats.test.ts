@@ -43,7 +43,10 @@ jest.mock('@/lib/services/analytics', () => ({
 const mockJson = jest.fn();
 jest.mock('next/server', () => {
     class MockNextResponse {
-        constructor(public body: any, public init?: any) { }
+        public headers: Map<string, string>;
+        constructor(public body: any, public init?: any) {
+            this.headers = new Map();
+        }
         static json(body: any, init: any) {
             mockJson(body, init);
             const res = new MockNextResponse(body, init); res.headers = new Map(); return res;

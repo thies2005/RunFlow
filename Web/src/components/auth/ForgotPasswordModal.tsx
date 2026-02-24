@@ -15,7 +15,23 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
     const [email, setEmail] = useState('');
     const [code, setCode] = useState('');
     const [newPassword, setNewPassword] = useState('');
+    const [passwordStrength, setPasswordStrength] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+
+    const checkPasswordStrength = (pass: string) => {
+        let strength = 0;
+        if (pass.length > 7) strength += 1;
+        if (/[A-Z]/.test(pass)) strength += 1;
+        if (/[0-9]/.test(pass)) strength += 1;
+        if (/[^A-Za-z0-9]/.test(pass)) strength += 1;
+        setPasswordStrength(strength);
+    };
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setNewPassword(val);
+        checkPasswordStrength(val);
+    };
 
     if (!isOpen) return null;
 
@@ -139,11 +155,32 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                             <input
                                 type="password"
                                 value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
+                                onChange={handlePasswordChange}
                                 className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                 placeholder="••••••••"
                                 required
                             />
+                            {newPassword && (
+                                <div className="mt-2">
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4].map(level => (
+                                            <div
+                                                key={level}
+                                                className={`h-1.5 flex-1 rounded-full ${passwordStrength >= level
+                                                        ? (passwordStrength < 2 ? 'bg-red-500'
+                                                            : passwordStrength < 3 ? 'bg-yellow-500'
+                                                                : passwordStrength < 4 ? 'bg-blue-500'
+                                                                    : 'bg-green-500')
+                                                        : 'bg-zinc-200 dark:bg-zinc-800'
+                                                    }`}
+                                            />
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-zinc-500 mt-1 font-medium">
+                                        {passwordStrength === 0 ? 'Too short' : passwordStrength < 2 ? 'Weak' : passwordStrength < 3 ? 'Fair' : passwordStrength < 4 ? 'Good' : 'Strong'}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                         <div className="flex gap-3 mt-6">
                             <button

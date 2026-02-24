@@ -107,6 +107,7 @@ export default function PlanSetupForm({
     const lastAutoTime = useRef<number>(0);
 
     const [message, setMessage] = useState('');
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     // Fetch race-eligible activities
     const { data: activitiesData } = useQuery({
@@ -469,6 +470,22 @@ export default function PlanSetupForm({
     });
 
     const handleSubmit = () => {
+        const errors: Record<string, string> = {};
+        if (mode === 'onboarding') {
+            if (!goalName.trim()) errors.goalName = "Goal name is required";
+            if (!raceDate) errors.raceDate = "Race date is required";
+            if (!planStartDate) errors.planStartDate = "Plan start date is required";
+        }
+
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            setMessage('Please fix the errors in the form.');
+            return;
+        }
+
+        setFormErrors({});
+        setMessage('');
+
         if (mode === 'onboarding') {
             createGoalMutation.mutate();
         } else {
@@ -508,9 +525,10 @@ export default function PlanSetupForm({
                             type="text"
                             value={goalName}
                             onChange={(e) => setGoalName(e.target.value)}
-                            className={inputClass}
+                            className={`${inputClass} ${formErrors.goalName ? 'border-red-500 focus:ring-red-500' : ''}`}
                             placeholder="e.g., Berlin Marathon 2026"
                         />
+                        {formErrors.goalName && <p className="text-red-400 text-xs mt-1">{formErrors.goalName}</p>}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -533,8 +551,9 @@ export default function PlanSetupForm({
                                 type="date"
                                 value={raceDate}
                                 onChange={(e) => setRaceDate(e.target.value)}
-                                className={inputClass}
+                                className={`${inputClass} ${formErrors.raceDate ? 'border-red-500 focus:ring-red-500' : ''}`}
                             />
+                            {formErrors.raceDate && <p className="text-red-400 text-xs mt-1">{formErrors.raceDate}</p>}
                         </div>
                     </div>
 
@@ -544,8 +563,9 @@ export default function PlanSetupForm({
                             type="date"
                             value={planStartDate}
                             onChange={(e) => setPlanStartDate(e.target.value)}
-                            className={inputClass}
+                            className={`${inputClass} ${formErrors.planStartDate ? 'border-red-500 focus:ring-red-500' : ''}`}
                         />
+                        {formErrors.planStartDate && <p className="text-red-400 text-xs mt-1">{formErrors.planStartDate}</p>}
                         <p className="text-xs text-gray-500 mt-1">When should your training plan begin?</p>
                     </div>
                 </div>
@@ -553,10 +573,17 @@ export default function PlanSetupForm({
 
             {/* Performance Calibration - First so it can feed into Goal Time */}
             <div className="border-t border-glass-border pt-6">
-                <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide mb-2">Performance Calibration</h3>
+                <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-wide">Performance Calibration</h3>
+                </div>
                 <p className="text-sm text-foreground-muted mb-4">
                     Fine-tune predictions based on a recent race or time trial result.
                 </p>
+
+                {/* Calibration Step 1: Mode */}
+                <div className="mb-2">
+                    <span className="text-xs font-semibold text-accent-orange uppercase tracking-wide">Step 1 of 3: Choose Calibration Method</span>
+                </div>
 
                 {/* Calibration Mode Toggle */}
                 <div className="flex bg-surface rounded-lg p-1 mb-4">
@@ -587,6 +614,11 @@ export default function PlanSetupForm({
                     >
                         Manual Entry
                     </button>
+                </div>
+
+                {/* Calibration Step 2: Activity/Details Selection */}
+                <div className="mb-2 mt-4">
+                    <span className="text-xs font-semibold text-accent-orange uppercase tracking-wide">Step 2 of 3: Provide Race Details</span>
                 </div>
 
                 {/* Activity Selection */}
@@ -649,10 +681,10 @@ export default function PlanSetupForm({
                         </div>
                         <div>
                             <label className="block text-xs text-foreground-muted mb-1 uppercase">Your Race Time</label>
-                            <div className="flex gap-2 items-center">
+                            <div className="flex gap-4 items-center">
                                 <input
                                     type="number"
-                                    className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                                    className="w-16 bg-surface border border-glass-border rounded-lg p-2 text-foreground text-center"
                                     placeholder="HH"
                                     value={hours}
                                     onChange={e => {
@@ -669,7 +701,7 @@ export default function PlanSetupForm({
                                 <span className="text-foreground-muted">:</span>
                                 <input
                                     type="number"
-                                    className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                                    className="w-16 bg-surface border border-glass-border rounded-lg p-2 text-foreground text-center"
                                     placeholder="MM"
                                     value={minutes}
                                     onChange={e => {
@@ -686,7 +718,7 @@ export default function PlanSetupForm({
                                 <span className="text-foreground-muted">:</span>
                                 <input
                                     type="number"
-                                    className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                                    className="w-16 bg-surface border border-glass-border rounded-lg p-2 text-foreground text-center"
                                     placeholder="SS"
                                     value={seconds}
                                     onChange={e => {
@@ -728,40 +760,45 @@ export default function PlanSetupForm({
                     if (currentSeconds <= 0) return null;
 
                     return (
-                        <div className="mt-4 p-4 bg-surface rounded-lg border border-glass-border">
-                            <h4 className="text-xs font-semibold text-foreground-muted mb-3 flex items-center gap-2">
-                                <BarChart2 className="w-4 h-4" /> Calibration Result
-                            </h4>
+                        <div className="mt-6">
+                            <div className="mb-2">
+                                <span className="text-xs font-semibold text-accent-orange uppercase tracking-wide">Step 3 of 3: Review Result</span>
+                            </div>
+                            <div className="p-4 bg-surface rounded-lg border border-glass-border">
+                                <h4 className="text-xs font-semibold text-foreground-muted mb-3 flex items-center gap-2">
+                                    <BarChart2 className="w-4 h-4" /> Calibration Result
+                                </h4>
 
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-foreground-muted">Your {distanceName} VDOT:</span>
-                                    <span className="text-lg font-bold text-accent-cyan">{raceVdot.toFixed(1)}</span>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-foreground-muted">Training VO2max:</span>
-                                    <span className="text-sm text-foreground">{effectiveVO2max.toFixed(1)}</span>
-                                </div>
-
-                                <div className="border-t border-glass-border pt-3">
+                                <div className="space-y-3">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-sm text-foreground-muted">Calibrated VO2max:</span>
-                                        <span className={`text-lg font-bold ${factorPercent >= 0 ? 'text-green-400' : 'text-amber-400'}`}>
-                                            {raceVdot.toFixed(1)} ({factorPercent >= 0 ? '+' : ''}{factorPercent.toFixed(1)}%)
-                                        </span>
+                                        <span className="text-sm text-foreground-muted">Your {distanceName} VDOT:</span>
+                                        <span className="text-lg font-bold text-accent-cyan">{raceVdot.toFixed(1)}</span>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2">
-                                        {factorPercent >= 5 ? (
-                                            <><Rocket className="w-4 h-4 inline" /> Race performance exceeds training predictions. Goal times adjusted accordingly.</>
-                                        ) : factorPercent >= 0 ? (
-                                            <><Check className="w-4 h-4 inline" /> Your race performance aligns well with training fitness.</>
-                                        ) : factorPercent >= -5 ? (
-                                            <><BarChart2 className="w-4 h-4 inline" /> Race was slightly slower than predicted. Goal times adjusted.</>
-                                        ) : (
-                                            <><AlertTriangle className="w-4 h-4 inline" /> Significant gap between training and race. Check conditions or use manual goal.</>
-                                        )}
-                                    </p>
+
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-foreground-muted">Training VO2max:</span>
+                                        <span className="text-sm text-foreground">{effectiveVO2max.toFixed(1)}</span>
+                                    </div>
+
+                                    <div className="border-t border-glass-border pt-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm text-foreground-muted">Calibrated VO2max:</span>
+                                            <span className={`text-lg font-bold ${factorPercent >= 0 ? 'text-green-400' : 'text-amber-400'}`}>
+                                                {raceVdot.toFixed(1)} ({factorPercent >= 0 ? '+' : ''}{factorPercent.toFixed(1)}%)
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            {factorPercent >= 5 ? (
+                                                <><Rocket className="w-4 h-4 inline" /> Race performance exceeds training predictions. Goal times adjusted accordingly.</>
+                                            ) : factorPercent >= 0 ? (
+                                                <><Check className="w-4 h-4 inline" /> Your race performance aligns well with training fitness.</>
+                                            ) : factorPercent >= -5 ? (
+                                                <><BarChart2 className="w-4 h-4 inline" /> Race was slightly slower than predicted. Goal times adjusted.</>
+                                            ) : (
+                                                <><AlertTriangle className="w-4 h-4 inline" /> Significant gap between training and race. Check conditions or use manual goal.</>
+                                            )}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -770,266 +807,270 @@ export default function PlanSetupForm({
             </div>
 
             {/* Dynamic Goal Race Time - Uses calibrated VO2max */}
-            {mode === 'onboarding' && effectiveVO2max > 0 && (() => {
-                // Map raceType enum to RaceDistance
-                const raceDistanceMap: Record<string, RaceDistance> = {
-                    'FIVE_K': '5K',
-                    'TEN_K': '10K',
-                    'HALF_MARATHON': 'HALF',
-                    'MARATHON': 'MARATHON',
-                };
-                const mappedDistance = raceDistanceMap[raceType] || 'MARATHON';
+            {
+                mode === 'onboarding' && effectiveVO2max > 0 && (() => {
+                    // Map raceType enum to RaceDistance
+                    const raceDistanceMap: Record<string, RaceDistance> = {
+                        'FIVE_K': '5K',
+                        'TEN_K': '10K',
+                        'HALF_MARATHON': 'HALF',
+                        'MARATHON': 'MARATHON',
+                    };
+                    const mappedDistance = raceDistanceMap[raceType] || 'MARATHON';
 
-                // Use calibrated VO2max if calibration has been done
-                const calibratedVO2max = effectiveVO2max * calibrationFactor;
+                    // Use calibrated VO2max if calibration has been done
+                    const calibratedVO2max = effectiveVO2max * calibrationFactor;
 
-                // Build plan settings from form state
-                const planSettings: PlanSettings = {
-                    durationWeeks: computedPlanWeeks,
-                    runsPerWeek: runsPerWeek,
-                    weeklyMileageGoal: weeklyMileage,
-                    raceDistance: mappedDistance,
-                    taperWeeks: taperWeeks,
-                    peakWeeks: peakWeeks,
-                    buildWeeks: buildWeeks,
-                };
+                    // Build plan settings from form state
+                    const planSettings: PlanSettings = {
+                        durationWeeks: computedPlanWeeks,
+                        runsPerWeek: runsPerWeek,
+                        weeklyMileageGoal: weeklyMileage,
+                        raceDistance: mappedDistance,
+                        taperWeeks: taperWeeks,
+                        peakWeeks: peakWeeks,
+                        buildWeeks: buildWeeks,
+                    };
 
-                // Calculate projection using calibrated VO2max
-                const projection = calculateProjectedGoalTime(
-                    calibratedVO2max,
-                    planSettings,
-                    shapePercent
-                );
+                    // Calculate projection using calibrated VO2max
+                    const projection = calculateProjectedGoalTime(
+                        calibratedVO2max,
+                        planSettings,
+                        shapePercent
+                    );
 
-                const distanceName = mappedDistance === 'HALF' ? 'Half Marathon' :
-                    mappedDistance === 'MARATHON' ? 'Marathon' : mappedDistance;
+                    const distanceName = mappedDistance === 'HALF' ? 'Half Marathon' :
+                        mappedDistance === 'MARATHON' ? 'Marathon' : mappedDistance;
 
-                // Use user-selected goal time if set, otherwise default to projected
-                const displayGoalTime = goalTimeSeconds ?? projection.projectedTime;
+                    // Use user-selected goal time if set, otherwise default to projected
+                    const displayGoalTime = goalTimeSeconds ?? projection.projectedTime;
 
-                // Calculate slider range (extend beyond optimal/conservative for manual entry flexibility)
-                const sliderMin = Math.round(projection.optimalTime * 0.9); // 10% faster than optimal
-                const sliderMax = Math.round(projection.conservativeTime * 1.1); // 10% slower than conservative
+                    // Calculate slider range (extend beyond optimal/conservative for manual entry flexibility)
+                    const sliderMin = Math.round(projection.optimalTime * 0.9); // 10% faster than optimal
+                    const sliderMax = Math.round(projection.conservativeTime * 1.1); // 10% slower than conservative
 
-                // Handle goal time updates from slider
-                const handleSliderChange = (value: number) => {
-                    setGoalTimeSeconds(value);
-                    const h = Math.floor(value / 3600);
-                    const m = Math.floor((value % 3600) / 60);
-                    const s = value % 60;
-                    setGoalTimeHours(h.toString());
-                    setGoalTimeMinutes(m.toString());
-                    setGoalTimeSecs(s.toString());
-                };
+                    // Handle goal time updates from slider
+                    const handleSliderChange = (value: number) => {
+                        setGoalTimeSeconds(value);
+                        const h = Math.floor(value / 3600);
+                        const m = Math.floor((value % 3600) / 60);
+                        const s = value % 60;
+                        setGoalTimeHours(h.toString());
+                        setGoalTimeMinutes(m.toString());
+                        setGoalTimeSecs(s.toString());
+                    };
 
-                // Handle manual time entry confirmation
-                const confirmManualEntry = () => {
-                    const totalSecs = (parseInt(goalTimeHours) || 0) * 3600 +
-                        (parseInt(goalTimeMinutes) || 0) * 60 +
-                        (parseInt(goalTimeSecs) || 0);
-                    if (totalSecs > 0) {
-                        setGoalTimeSeconds(totalSecs);
-                    }
-                    setIsEditingGoalTime(false);
-                };
+                    // Handle manual time entry confirmation
+                    const confirmManualEntry = () => {
+                        const totalSecs = (parseInt(goalTimeHours) || 0) * 3600 +
+                            (parseInt(goalTimeMinutes) || 0) * 60 +
+                            (parseInt(goalTimeSecs) || 0);
+                        if (totalSecs > 0) {
+                            setGoalTimeSeconds(totalSecs);
+                        }
+                        setIsEditingGoalTime(false);
+                    };
 
-                // Start editing with current values
-                const startEditing = () => {
-                    const time = displayGoalTime;
-                    setGoalTimeHours(Math.floor(time / 3600).toString());
-                    setGoalTimeMinutes(Math.floor((time % 3600) / 60).toString());
-                    setGoalTimeSecs((time % 60).toString());
-                    setIsEditingGoalTime(true);
-                };
+                    // Start editing with current values
+                    const startEditing = () => {
+                        const time = displayGoalTime;
+                        setGoalTimeHours(Math.floor(time / 3600).toString());
+                        setGoalTimeMinutes(Math.floor((time % 3600) / 60).toString());
+                        setGoalTimeSecs((time % 60).toString());
+                        setIsEditingGoalTime(true);
+                    };
 
-                // Reset to projected
-                const resetToProjected = () => {
-                    setGoalTimeSeconds(null);
-                    setIsEditingGoalTime(false);
-                };
+                    // Reset to projected
+                    const resetToProjected = () => {
+                        setGoalTimeSeconds(null);
+                        setIsEditingGoalTime(false);
+                    };
 
-                return (
-                    <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2 text-accent-orange">
-                                <Target className="w-5 h-5" />
-                                <h3 className="text-sm font-semibold uppercase tracking-wide">Goal {distanceName} Time</h3>
-                            </div>
-                            {goalTimeSeconds !== null && (
-                                <button
-                                    onClick={resetToProjected}
-                                    className="text-xs text-foreground-muted hover:text-accent-cyan transition-colors"
-                                >
-                                    Reset to projected
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Show calibration indicator if applied */}
-                        {calibrationFactor !== 1.0 && (
-                            <div className="mb-3 text-xs text-accent-cyan bg-accent-cyan/10 px-2 py-1 rounded inline-block">
-                                ✓ Using calibrated VO2max ({(effectiveVO2max * calibrationFactor).toFixed(1)})
-                            </div>
-                        )}
-
-                        {/* Editable Goal Time Display */}
-                        <div className="text-center mb-4">
-                            {isEditingGoalTime ? (
-                                <div className="flex items-center justify-center gap-1 mb-2">
-                                    <input
-                                        type="number"
-                                        className="w-12 bg-black/40 border border-white/20 rounded p-2 text-center text-2xl font-bold"
-                                        placeholder="H"
-                                        value={goalTimeHours}
-                                        onChange={e => setGoalTimeHours(e.target.value)}
-                                        min="0"
-                                        max="9"
-                                    />
-                                    <span className="text-2xl text-white">:</span>
-                                    <input
-                                        type="number"
-                                        className="w-12 bg-black/40 border border-white/20 rounded p-2 text-center text-2xl font-bold"
-                                        placeholder="MM"
-                                        value={goalTimeMinutes}
-                                        onChange={e => setGoalTimeMinutes(e.target.value)}
-                                        min="0"
-                                        max="59"
-                                    />
-                                    <span className="text-2xl text-white">:</span>
-                                    <input
-                                        type="number"
-                                        className="w-12 bg-black/40 border border-white/20 rounded p-2 text-center text-2xl font-bold"
-                                        placeholder="SS"
-                                        value={goalTimeSecs}
-                                        onChange={e => setGoalTimeSecs(e.target.value)}
-                                        min="0"
-                                        max="59"
-                                    />
-                                    <button
-                                        onClick={confirmManualEntry}
-                                        className="ml-2 p-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
-                                    >
-                                        <Check className="w-5 h-5" />
-                                    </button>
+                    return (
+                        <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2 text-accent-orange">
+                                    <Target className="w-5 h-5" />
+                                    <h3 className="text-sm font-semibold uppercase tracking-wide">Goal {distanceName} Time</h3>
                                 </div>
-                            ) : (
-                                <button
-                                    onClick={startEditing}
-                                    className="group hover:bg-surface-hover p-2 rounded-lg transition-colors"
-                                >
-                                    <div className="text-3xl font-bold text-foreground mb-1 group-hover:text-accent-orange transition-colors">
-                                        {formatTime(displayGoalTime)}
-                                    </div>
-                                    <span className="text-xs text-foreground-muted group-hover:text-foreground">
-                                        Click to edit manually
-                                    </span>
-                                </button>
+                                {goalTimeSeconds !== null && (
+                                    <button
+                                        onClick={resetToProjected}
+                                        className="text-xs text-foreground-muted hover:text-accent-cyan transition-colors"
+                                    >
+                                        Reset to projected
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Show calibration indicator if applied */}
+                            {calibrationFactor !== 1.0 && (
+                                <div className="mb-3 text-xs text-accent-cyan bg-accent-cyan/10 px-2 py-1 rounded inline-block">
+                                    ✓ Using calibrated VO2max ({(effectiveVO2max * calibrationFactor).toFixed(1)})
+                                </div>
                             )}
-                            <p className="text-xs text-gray-400 mt-1">
-                                {goalTimeSeconds !== null ? (
-                                    <span className="text-accent-orange">Custom goal</span>
+
+                            {/* Editable Goal Time Display */}
+                            <div className="text-center mb-4">
+                                {isEditingGoalTime ? (
+                                    <div className="flex items-center justify-center gap-1 mb-2">
+                                        <input
+                                            type="number"
+                                            className="w-12 bg-black/40 border border-white/20 rounded p-2 text-center text-2xl font-bold"
+                                            placeholder="H"
+                                            value={goalTimeHours}
+                                            onChange={e => setGoalTimeHours(e.target.value)}
+                                            min="0"
+                                            max="9"
+                                        />
+                                        <span className="text-2xl text-white">:</span>
+                                        <input
+                                            type="number"
+                                            className="w-12 bg-black/40 border border-white/20 rounded p-2 text-center text-2xl font-bold"
+                                            placeholder="MM"
+                                            value={goalTimeMinutes}
+                                            onChange={e => setGoalTimeMinutes(e.target.value)}
+                                            min="0"
+                                            max="59"
+                                        />
+                                        <span className="text-2xl text-white">:</span>
+                                        <input
+                                            type="number"
+                                            className="w-12 bg-black/40 border border-white/20 rounded p-2 text-center text-2xl font-bold"
+                                            placeholder="SS"
+                                            value={goalTimeSecs}
+                                            onChange={e => setGoalTimeSecs(e.target.value)}
+                                            min="0"
+                                            max="59"
+                                        />
+                                        <button
+                                            onClick={confirmManualEntry}
+                                            className="ml-2 p-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 transition-colors"
+                                        >
+                                            <Check className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 ) : (
-                                    <>Projected based on {computedPlanWeeks} weeks of training</>
+                                    <button
+                                        onClick={startEditing}
+                                        className="group hover:bg-surface-hover p-2 rounded-lg transition-colors"
+                                    >
+                                        <div className="text-3xl font-bold text-foreground mb-1 group-hover:text-accent-orange transition-colors">
+                                            {formatTime(displayGoalTime)}
+                                        </div>
+                                        <span className="text-xs text-foreground-muted group-hover:text-foreground">
+                                            Click to edit manually
+                                        </span>
+                                    </button>
                                 )}
-                            </p>
-                        </div>
+                                <p className="text-xs text-gray-400 mt-1">
+                                    {goalTimeSeconds !== null ? (
+                                        <span className="text-accent-orange">Custom goal</span>
+                                    ) : (
+                                        <>Projected based on {computedPlanWeeks} weeks of training</>
+                                    )}
+                                </p>
+                            </div>
 
-                        {/* Interactive Slider */}
-                        <div className="mb-4">
-                            <input
-                                type="range"
-                                min={sliderMin}
-                                max={sliderMax}
-                                step="30"
-                                value={displayGoalTime}
-                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
-                                onChange={(e) => handleSliderChange(parseInt(e.target.value))}
-                            />
-                            <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                <span className="text-green-400">{formatTime(projection.optimalTime)} (Optimal)</span>
-                                <span className="text-accent-orange">{formatTime(projection.conservativeTime)} (Conservative)</span>
+                            {/* Interactive Slider */}
+                            <div className="mb-4">
+                                <input
+                                    type="range"
+                                    min={sliderMin}
+                                    max={sliderMax}
+                                    step="30"
+                                    value={displayGoalTime}
+                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                                    onChange={(e) => handleSliderChange(parseInt(e.target.value))}
+                                />
+                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span className="text-green-400">{formatTime(projection.optimalTime)} (Optimal)</span>
+                                    <span className="text-accent-orange">{formatTime(projection.conservativeTime)} (Conservative)</span>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Improvement Stats */}
-                        <div className="grid grid-cols-2 gap-3 text-xs bg-white/5 rounded-lg p-3">
-                            <div>
-                                <span className="text-gray-400 block mb-1">VO2max</span>
-                                <span className="text-white font-semibold">{calibratedVO2max.toFixed(1)}</span>
-                                <span className="text-gray-500"> → </span>
-                                <span className="text-accent-cyan font-semibold">{projection.projectedVdot}</span>
-                                {projection.improvementPercent > 0 && (
-                                    <span className="text-green-400 ml-1">(+{projection.improvementPercent}%)</span>
-                                )}
-                            </div>
-                            <div>
-                                <span className="text-gray-400 block mb-1">Marathon Shape</span>
-                                <span className="text-white font-semibold">{shapePercent}%</span>
-                                <span className="text-gray-500"> → </span>
-                                <span className="text-accent-cyan font-semibold">{projection.projectedShape}%</span>
-                                {projection.shapeImprovementPercent > 0 && (
-                                    <span className="text-green-400 ml-1">(+{projection.shapeImprovementPercent.toFixed(1)}%)</span>
-                                )}
+                            {/* Improvement Stats */}
+                            <div className="grid grid-cols-2 gap-3 text-xs bg-white/5 rounded-lg p-3">
+                                <div>
+                                    <span className="text-gray-400 block mb-1">VO2max</span>
+                                    <span className="text-white font-semibold">{calibratedVO2max.toFixed(1)}</span>
+                                    <span className="text-gray-500"> → </span>
+                                    <span className="text-accent-cyan font-semibold">{projection.projectedVdot}</span>
+                                    {projection.improvementPercent > 0 && (
+                                        <span className="text-green-400 ml-1">(+{projection.improvementPercent}%)</span>
+                                    )}
+                                </div>
+                                <div>
+                                    <span className="text-gray-400 block mb-1">Marathon Shape</span>
+                                    <span className="text-white font-semibold">{shapePercent}%</span>
+                                    <span className="text-gray-500"> → </span>
+                                    <span className="text-accent-cyan font-semibold">{projection.projectedShape}%</span>
+                                    {projection.shapeImprovementPercent > 0 && (
+                                        <span className="text-green-400 ml-1">(+{projection.shapeImprovementPercent.toFixed(1)}%)</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                );
-            })()}
+                    );
+                })()
+            }
 
             {/* Fallback Goal Time Entry for users without VO2max data */}
-            {mode === 'onboarding' && effectiveVO2max <= 0 && (
-                <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
-                    <div className="flex items-center gap-2 text-accent-orange mb-3">
-                        <Target className="w-5 h-5" />
-                        <h3 className="text-sm font-semibold uppercase tracking-wide">Goal Time (Optional)</h3>
+            {
+                mode === 'onboarding' && effectiveVO2max <= 0 && (
+                    <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
+                        <div className="flex items-center gap-2 text-accent-orange mb-3">
+                            <Target className="w-5 h-5" />
+                            <h3 className="text-sm font-semibold uppercase tracking-wide">Goal Time (Optional)</h3>
+                        </div>
+                        <p className="text-xs text-gray-400 mb-4">
+                            No fitness data available for predictions. You can enter a goal time manually or skip this.
+                        </p>
+                        <div className="flex gap-2 items-center justify-center">
+                            <input
+                                type="number"
+                                className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                                placeholder="HH"
+                                value={goalTimeHours}
+                                onChange={e => setGoalTimeHours(e.target.value)}
+                                min="0"
+                            />
+                            <span className="text-foreground-muted">:</span>
+                            <input
+                                type="number"
+                                className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                                placeholder="MM"
+                                value={goalTimeMinutes}
+                                onChange={e => setGoalTimeMinutes(e.target.value)}
+                                min="0"
+                                max="59"
+                            />
+                            <span className="text-foreground-muted">:</span>
+                            <input
+                                type="number"
+                                className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
+                                placeholder="SS"
+                                value={goalTimeSecs}
+                                onChange={e => {
+                                    setGoalTimeSecs(e.target.value);
+                                    // Calculate and set goalTimeSeconds when user enters values
+                                    const totalSecs = (parseInt(goalTimeHours) || 0) * 3600 +
+                                        (parseInt(goalTimeMinutes) || 0) * 60 +
+                                        (parseInt(e.target.value) || 0);
+                                    if (totalSecs > 0) {
+                                        setGoalTimeSeconds(totalSecs);
+                                    }
+                                }}
+                                min="0"
+                                max="59"
+                            />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2 text-center">
+                            Enter your target finish time (leave blank to skip)
+                        </p>
                     </div>
-                    <p className="text-xs text-gray-400 mb-4">
-                        No fitness data available for predictions. You can enter a goal time manually or skip this.
-                    </p>
-                    <div className="flex gap-2 items-center justify-center">
-                        <input
-                            type="number"
-                            className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
-                            placeholder="HH"
-                            value={goalTimeHours}
-                            onChange={e => setGoalTimeHours(e.target.value)}
-                            min="0"
-                        />
-                        <span className="text-foreground-muted">:</span>
-                        <input
-                            type="number"
-                            className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
-                            placeholder="MM"
-                            value={goalTimeMinutes}
-                            onChange={e => setGoalTimeMinutes(e.target.value)}
-                            min="0"
-                            max="59"
-                        />
-                        <span className="text-foreground-muted">:</span>
-                        <input
-                            type="number"
-                            className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
-                            placeholder="SS"
-                            value={goalTimeSecs}
-                            onChange={e => {
-                                setGoalTimeSecs(e.target.value);
-                                // Calculate and set goalTimeSeconds when user enters values
-                                const totalSecs = (parseInt(goalTimeHours) || 0) * 3600 +
-                                    (parseInt(goalTimeMinutes) || 0) * 60 +
-                                    (parseInt(e.target.value) || 0);
-                                if (totalSecs > 0) {
-                                    setGoalTimeSeconds(totalSecs);
-                                }
-                            }}
-                            min="0"
-                            max="59"
-                        />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 text-center">
-                        Enter your target finish time (leave blank to skip)
-                    </p>
-                </div>
-            )}
+                )
+            }
 
             {/* Plan Volume */}
             <div className="border-t border-glass-border pt-6">
@@ -1512,27 +1553,31 @@ export default function PlanSetupForm({
             </div>
 
             {/* Message */}
-            {message && (
-                <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${message.includes('Error') || message.includes('Failed')
-                    ? 'bg-red-500/10 text-red-400'
-                    : 'bg-green-500/10 text-green-400'
-                    }`}>
-                    <AlertCircle className="w-4 h-4" />
-                    {message}
-                </div>
-            )}
+            {
+                message && (
+                    <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${message.includes('Error') || message.includes('Failed')
+                        ? 'bg-red-500/10 text-red-400'
+                        : 'bg-green-500/10 text-green-400'
+                        }`}>
+                        <AlertCircle className="w-4 h-4" />
+                        {message}
+                    </div>
+                )
+            }
 
             {/* Submit Button */}
-            {mode === 'onboarding' && (
-                <button
-                    onClick={() => {
-                        onSuccess?.();
-                    }}
-                    className="btn-secondary w-full flex items-center justify-center gap-2 py-3 font-medium"
-                >
-                    Skip for now
-                </button>
-            )}
+            {
+                mode === 'onboarding' && (
+                    <button
+                        onClick={() => {
+                            onSuccess?.();
+                        }}
+                        className="btn-secondary w-full flex items-center justify-center gap-2 py-3 font-medium"
+                    >
+                        Skip for now
+                    </button>
+                )
+            }
             <button
                 onClick={handleSubmit}
                 disabled={isLoading}
@@ -1551,11 +1596,13 @@ export default function PlanSetupForm({
                 )}
             </button>
 
-            {mode === 'settings' && (
-                <p className="text-xs text-foreground-muted text-center">
-                    Adjusting settings will regenerate future workouts. Completed workouts are preserved.
-                </p>
-            )}
+            {
+                mode === 'settings' && (
+                    <p className="text-xs text-foreground-muted text-center">
+                        Adjusting settings will regenerate future workouts. Completed workouts are preserved.
+                    </p>
+                )
+            }
         </div>
     );
 }

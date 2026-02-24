@@ -10,10 +10,18 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
     PieChart, Pie, Cell
 } from 'recharts';
-import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
-import RacePredictionChart from '@/components/RacePredictionChart';
-import RacePredictionTimeChart from '@/components/RacePredictionTimeChart';
-import CombinedAnalyticsChart, { TimeRange } from '@/components/CombinedAnalyticsChart';
+import dynamic from 'next/dynamic';
+import type { TimeRange } from '@/components/CombinedAnalyticsChart';
+
+// Dynamic imports for heavy chart components to enable lazy loading and reduce initial bundle size
+const ShapeCalibrationModal = dynamic(() => import('@/components/ShapeCalibrationModal'), { ssr: false });
+const RacePredictionChart = dynamic(() => import('@/components/RacePredictionChart'), { ssr: false });
+const RacePredictionTimeChart = dynamic(() => import('@/components/RacePredictionTimeChart'), { ssr: false });
+const CombinedAnalyticsChart = dynamic(() => import('@/components/CombinedAnalyticsChart'), { ssr: false });
+const TrendChartsSection = dynamic(() => import('@/components/analytics/TrendChartsSection'), { ssr: false });
+const ZoneDistributionSection = dynamic(() => import('@/components/analytics/ZoneDistributionSection'), { ssr: false });
+const TopMetricsSection = dynamic(() => import('@/components/analytics/TopMetricsSection'), { ssr: false });
+const TrainingPacesSection = dynamic(() => import('@/components/analytics/TrainingPacesSection'), { ssr: false });
 import { Footer } from '@/components';
 import {
     calculatePredictedTimes,
@@ -33,7 +41,6 @@ export default function AnalyticsPage() {
     const queryClient = useQueryClient();
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
     const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
-    const [zonesTimeRange, setZonesTimeRange] = useState<'1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'>('1Y');
 
     // Filter helpers
     const filterByTimeRange = <T extends { date?: string; week?: string }>(data: T[], range: TimeRange): T[] => {
@@ -364,67 +371,10 @@ export default function AnalyticsPage() {
                 ) : (
                     <>
                         {/* === TOP METRICS === */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Effective VO2max */}
-                            <div className="glass-card p-6 text-center">
-                                <p className="text-foreground-muted text-sm mb-2">Effective VO2max</p>
-                                <p className="text-4xl font-bold text-foreground">
-                                    {runalyzeMetrics.effectiveVO2max > 0 ? runalyzeMetrics.effectiveVO2max.toFixed(1) : '-'}
-                                </p>
-                                <p className="text-xs text-foreground-muted mt-1">Pace + Heart Rate based</p>
-                            </div>
-
-                            {/* Marathon Shape */}
-                            <div className="glass-card p-6 text-center">
-                                <p className="text-foreground-muted text-sm mb-2">Marathon Shape</p>
-                                <p className={`text-4xl font-bold ${runalyzeMetrics.shape >= 100 ? 'text-green-400' :
-                                    runalyzeMetrics.shape >= 70 ? 'text-yellow-400' : 'text-red-400'
-                                    }`}>
-                                    {runalyzeMetrics.shape}%
-                                </p>
-                                <div className="flex justify-center gap-4 mt-2 text-xs text-foreground-muted">
-                                    <span>Mileage: {runalyzeMetrics.mileageScore}%</span>
-                                    <span>Long Runs: {runalyzeMetrics.longRunScore}%</span>
-                                    {runalyzeMetrics.crossTrainingScore > 0 && (
-                                        <span>X-Train: {runalyzeMetrics.crossTrainingScore}%</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Predictions */}
-                            <div className="glass-card p-6 text-center relative">
-                                <button
-                                    onClick={() => setIsCalibrationOpen(true)}
-                                    className="absolute top-2 right-2 p-2 text-gray-500 hover:text-accent-pink transition"
-                                    title="Calibrate"
-                                >
-                                    <Settings2 className="w-4 h-4" />
-                                </button>
-                                <p className="text-gray-400 text-sm mb-2">Marathon Prediction</p>
-                                <div className="flex justify-center items-baseline gap-3">
-                                    <div>
-                                        <p className="text-xs text-gray-500">Optimal</p>
-                                        <p className="text-lg font-semibold text-green-400">
-                                            {runalyzeMetrics.optimalTime > 0 ? formatTime(runalyzeMetrics.optimalTime) : '-'}
-                                        </p>
-                                    </div>
-                                    <span className="text-gray-600">→</span>
-                                    <div>
-                                        <p className="text-xs text-gray-500 flex items-center justify-center gap-1">
-                                            Predicted
-                                            {runalyzeMetrics.calibrationFactor !== 1.0 && (
-                                                <span className="text-accent-blue text-[10px] bg-accent-blue/10 px-1 rounded">
-                                                    {runalyzeMetrics.calibrationFactor.toFixed(2)}x
-                                                </span>
-                                            )}
-                                        </p>
-                                        <p className="text-2xl font-bold text-foreground">
-                                            {runalyzeMetrics.predictedTime > 0 ? formatTime(runalyzeMetrics.predictedTime) : '-'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <TopMetricsSection
+                            runalyzeMetrics={runalyzeMetrics}
+                            setIsCalibrationOpen={setIsCalibrationOpen}
+                        />
 
 
                         {/* Combined Analytics Chart */}
@@ -436,143 +386,11 @@ export default function AnalyticsPage() {
                         />
 
                         {/* Time in Zones Pie Chart */}
-                        {(() => {
-                            // Filter activities by zones time range (separate from main chart)
-                            const activities: Activity[] = activitiesData?.activities || [];
-                            const now = new Date();
-                            const cutoff = new Date();
-                            switch (zonesTimeRange) {
-                                case '1Y': cutoff.setFullYear(now.getFullYear() - 1); break;
-                                case '6M': cutoff.setMonth(now.getMonth() - 6); break;
-                                case '3M': cutoff.setMonth(now.getMonth() - 3); break;
-                                case '1M': cutoff.setMonth(now.getMonth() - 1); break;
-                                case '1W': cutoff.setDate(now.getDate() - 7); break;
-                                default: cutoff.setTime(0); // ALL
-                            }
+                        <ZoneDistributionSection
+                            activities={activitiesData?.activities || []}
+                            userData={userData}
+                        />
 
-                            const filteredActivities = zonesTimeRange === 'ALL'
-                                ? activities
-                                : activities.filter(a => new Date(a.startDate) >= cutoff);
-
-                            // Aggregate zone times
-                            const zoneTotals = filteredActivities.reduce((acc, activity) => ({
-                                Z1: acc.Z1 + (activity.hrZone1Time || 0),
-                                Z2: acc.Z2 + (activity.hrZone2Time || 0),
-                                Z3: acc.Z3 + (activity.hrZone3Time || 0),
-                                Z4: acc.Z4 + (activity.hrZone4Time || 0),
-                                Z5: acc.Z5 + (activity.hrZone5Time || 0),
-                                Z6: acc.Z6 + (activity.hrZone6Time || 0),
-                                Z7: acc.Z7 + (activity.hrZone7Time || 0),
-                            }), { Z1: 0, Z2: 0, Z3: 0, Z4: 0, Z5: 0, Z6: 0, Z7: 0 });
-
-                            const total = Object.values(zoneTotals).reduce((sum, v) => sum + v, 0);
-                            if (total === 0) return null;
-
-                            // Get HR zone thresholds from userData
-                            const z1Max = userData?.hrZone1Max || 130;
-                            const z2Max = userData?.hrZone2Max || 148;
-                            const z3Max = userData?.hrZone3Max || 160;
-                            const z4Max = userData?.hrZone4Max || 170;
-                            const z5Max = userData?.hrZone5Max || 178;
-                            const z6Max = userData?.hrZone6Max || 187;
-
-                            const pieData = [
-                                { name: 'Z1 Recovery', value: zoneTotals.Z1, color: '#10b981', hrRange: `<${z1Max}` },
-                                { name: 'Z2 Aerobic', value: zoneTotals.Z2, color: '#84cc16', hrRange: `${z1Max}-${z2Max}` },
-                                { name: 'Z3 Tempo', value: zoneTotals.Z3, color: '#eab308', hrRange: `${z2Max}-${z3Max}` },
-                                { name: 'Z4 Threshold', value: zoneTotals.Z4, color: '#f97316', hrRange: `${z3Max}-${z4Max}` },
-                                { name: 'Z5 VO2max', value: zoneTotals.Z5, color: '#ef4444', hrRange: `${z4Max}-${z5Max}` },
-                                { name: 'Z6 Anaerobic', value: zoneTotals.Z6, color: '#6366f1', hrRange: `${z5Max}-${z6Max}` },
-                                { name: 'Z7 Neuromuscular', value: zoneTotals.Z7, color: '#9333ea', hrRange: `>${z6Max}` },
-                            ].filter(d => d.value > 0);
-
-                            const formatZoneTime = (seconds: number) => {
-                                const hours = Math.floor(seconds / 3600);
-                                const mins = Math.floor((seconds % 3600) / 60);
-                                if (hours > 0) {
-                                    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-                                }
-                                return `${mins}m`;
-                            };
-
-                            const zonesRanges: ('1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL')[] = ['1W', '1M', '3M', '6M', '1Y', 'ALL'];
-
-                            return (
-                                <div className="glass-card p-6">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-semibold text-foreground">Time in Zones Distribution</h3>
-                                        <div className="flex bg-background-secondary rounded-lg p-1 border border-glass-border">
-                                            {zonesRanges.map(range => (
-                                                <button
-                                                    key={range}
-                                                    onClick={() => setZonesTimeRange(range)}
-                                                    className={`px-2 py-1 text-xs font-medium rounded transition-all ${zonesTimeRange === range
-                                                        ? 'bg-zinc-700 text-white shadow-sm'
-                                                        : 'text-foreground-muted hover:text-foreground'
-                                                        }`}
-                                                    style={zonesTimeRange === range ? { backgroundColor: 'var(--accent-purple)' } : {}}
-                                                >
-                                                    {range}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {/* Pie Chart */}
-                                        <div className="h-64 min-h-[256px] w-full relative">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <PieChart>
-                                                    <Pie
-                                                        data={pieData}
-                                                        cx="50%"
-                                                        cy="50%"
-                                                        innerRadius={50}
-                                                        outerRadius={90}
-                                                        paddingAngle={2}
-                                                        dataKey="value"
-                                                        isAnimationActive={false}
-                                                        label={({ percent }) => percent > 0.05 ? `${Math.round(percent * 100)}%` : ''}
-                                                        labelLine={false}
-                                                    >
-                                                        {pieData.map((entry, index) => (
-                                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                                        ))}
-                                                    </Pie>
-                                                    <Tooltip
-                                                        contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
-                                                        formatter={(value: number) => formatZoneTime(value)}
-                                                    />
-                                                </PieChart>
-                                            </ResponsiveContainer>
-                                        </div>
-
-                                        {/* Legend & Breakdown with HR Ranges */}
-                                        <div className="flex flex-col justify-center space-y-2">
-                                            {pieData.map((zone, i) => {
-                                                const pct = (zone.value / total) * 100;
-                                                return (
-                                                    <div key={i} className="flex items-center justify-between p-2 hover:bg-white/5 rounded">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: zone.color }} />
-                                                            <span className="text-foreground-muted text-sm">{zone.name}</span>
-                                                            <span className="text-foreground-muted text-[10px] opacity-60">({zone.hrRange} bpm)</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-foreground font-mono text-sm">{formatZoneTime(zone.value)}</span>
-                                                            <span className="text-foreground-muted text-xs w-12 text-right">{Math.round(pct)}%</span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                            <div className="border-t border-glass-border pt-2 mt-2 flex justify-between">
-                                                <span className="text-foreground-muted text-sm">Total</span>
-                                                <span className="text-foreground font-mono text-sm">{formatZoneTime(total)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })()}
                         {/* Race Prediction Chart with Shape Slider */}
                         <RacePredictionChart
                             effectiveVO2max={runalyzeMetrics.effectiveVO2max}
@@ -588,165 +406,18 @@ export default function AnalyticsPage() {
                         />
 
                         {/* Training Paces & Heart Rate Section */}
-                        <div className="glass-card p-6">
-                            <h3 className="text-lg font-semibold text-foreground mb-4">Training Paces & Heart Rate</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                {/* Easy */}
-                                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
-                                    <p className="text-green-400 text-xs font-semibold mb-1 uppercase tracking-wider">Easy (E)</p>
-                                    <p className="text-foreground font-bold text-lg">
-                                        {runalyzeMetrics.effectiveVO2max > 0
-                                            ? `${formatPace(trainingPaces?.easy.min || 0)} - ${formatPace(trainingPaces?.easy.max || 0)}`
-                                            : '-'}
-                                    </p>
-                                    <p className="text-green-300 text-sm mt-1">
-                                        {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.65)}-${Math.round(userData.user.hrMax * 0.79)} bpm` : '-'}
-                                    </p>
-                                    <p className="text-[10px] text-foreground-muted mt-0.5">65-79% HRmax</p>
-                                </div>
-
-                                {/* Marathon */}
-                                <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
-                                    <p className="text-blue-400 text-xs font-semibold mb-1 uppercase tracking-wider">Marathon (M)</p>
-                                    <p className="text-foreground font-bold text-lg">
-                                        {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.marathon || 0) : '-'}
-                                    </p>
-                                    <p className="text-blue-300 text-sm mt-1">
-                                        {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.78)}-${Math.round(userData.user.hrMax * 0.82)} bpm` : '-'}
-                                    </p>
-                                    <p className="text-[10px] text-foreground-muted mt-0.5">78-82% HRmax</p>
-                                </div>
-
-                                {/* Threshold */}
-                                <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-center">
-                                    <p className="text-yellow-400 text-xs font-semibold mb-1 uppercase tracking-wider">Threshold (T)</p>
-                                    <p className="text-foreground font-bold text-lg">
-                                        {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.threshold || 0) : '-'}
-                                    </p>
-                                    <p className="text-yellow-300 text-sm mt-1">
-                                        {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.88)}-${Math.round(userData.user.hrMax * 0.92)} bpm` : '-'}
-                                    </p>
-                                    <p className="text-[10px] text-foreground-muted mt-0.5">88-92% HRmax</p>
-                                </div>
-
-                                {/* Interval */}
-                                <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
-                                    <p className="text-orange-400 text-xs font-semibold mb-1 uppercase tracking-wider">Interval (I)</p>
-                                    <p className="text-foreground font-bold text-lg">
-                                        {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.interval || 0) : '-'}
-                                    </p>
-                                    <p className="text-orange-300 text-sm mt-1">
-                                        {userData?.user?.hrMax ? `${Math.round(userData.user.hrMax * 0.98)}-${Math.round(userData.user.hrMax * 1.0)} bpm` : '-'}
-                                    </p>
-                                    <p className="text-[10px] text-foreground-muted mt-0.5">98-100% HRmax</p>
-                                </div>
-
-                                {/* Repetition */}
-                                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
-                                    <p className="text-red-400 text-xs font-semibold mb-1 uppercase tracking-wider">Repetition (R)</p>
-                                    <p className="text-foreground font-bold text-lg">
-                                        {runalyzeMetrics.effectiveVO2max > 0 ? formatPace(trainingPaces?.repetition || 0) : '-'}
-                                    </p>
-                                    <p className="text-red-300 text-sm mt-1">
-                                        {userData?.user?.hrMax ? `>${Math.round(userData.user.hrMax * 1.0)} bpm` : '-'}
-                                    </p>
-                                    <p className="text-[10px] text-foreground-muted mt-0.5">100%+ HRmax</p>
-                                </div>
-                            </div>
-                        </div>
+                        <TrainingPacesSection
+                            effectiveVO2max={runalyzeMetrics.effectiveVO2max}
+                            trainingPaces={trainingPaces}
+                            maxHr={userData?.user?.hrMax || userData?.hrMax}
+                        />
 
                         {/* === TREND CHARTS === */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* VO2max Trend (Rolling Average) */}
-                            <div className="glass-card p-6">
-                                <h3 className="text-lg font-semibold text-foreground mb-4">Effective VO2max Trend</h3>
-                                <div className="h-64 min-h-[256px] w-full relative">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={filteredVo2Trend}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
-                                            <XAxis
-                                                dataKey="date"
-                                                stroke="var(--foreground-muted)"
-                                                fontSize={11}
-                                                tickLine={false}
-                                                minTickGap={timeRange === '1M' ? 20 : 50}
-                                                tickFormatter={(val) => {
-                                                    const date = new Date(val);
-                                                    if (timeRange === '1M') {
-                                                        return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                                                    } else if (['3M', '6M'].includes(timeRange)) {
-                                                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                                    } else {
-                                                        return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                                                    }
-                                                }}
-                                            />
-                                            <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['auto', 'auto']} />
-                                            <Tooltip
-                                                contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
-                                                labelStyle={{ color: 'var(--foreground)' }}
-                                                itemStyle={{ color: 'var(--foreground)' }}
-                                                labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                            />
-                                            <Line
-                                                type="monotone"
-                                                dataKey="vo2"
-                                                stroke="none"
-                                                isAnimationActive={false}
-                                                dot={{ r: 3, fill: '#f59e0b', fillOpacity: 1 }}
-                                                name="VO2max (Run)"
-                                            />
-                                            <Line
-                                                type="monotone"
-                                                dataKey="vo2Rolling"
-                                                stroke="#f59e0b"
-                                                strokeWidth={2}
-                                                dot={false}
-                                                isAnimationActive={false}
-                                                name="VO2max (Avg)"
-                                            />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-
-                            {/* Shape Trend */}
-                            <div className="glass-card p-6">
-                                <h3 className="text-lg font-semibold text-foreground mb-4">Marathon Shape Trend</h3>
-                                <div className="h-64 min-h-[256px] w-full relative">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={filteredShapeTrend}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                                            <XAxis
-                                                dataKey="week"
-                                                stroke="#9ca3af"
-                                                fontSize={11}
-                                                tickLine={false}
-                                                minTickGap={timeRange === '1M' ? 20 : 50}
-                                                tickFormatter={(val) => {
-                                                    const date = new Date(val);
-                                                    if (timeRange === '1M') {
-                                                        return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                                                    } else if (['3M', '6M'].includes(timeRange)) {
-                                                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                                    } else {
-                                                        return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                                                    }
-                                                }}
-                                            />
-                                            <YAxis stroke="var(--foreground-muted)" fontSize={11} tickLine={false} domain={[0, 120]} />
-                                            <Tooltip
-                                                contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
-                                                labelStyle={{ color: 'var(--foreground)' }}
-                                                itemStyle={{ color: 'var(--foreground)' }}
-                                                labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                            />
-                                            <Area type="monotone" dataKey="shape" stroke="#10b981" fill="#10b981" fillOpacity={0.3} isAnimationActive={false} name="Shape %" />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        </div>
+                        <TrendChartsSection
+                            filteredVo2Trend={filteredVo2Trend}
+                            filteredShapeTrend={filteredShapeTrend}
+                            timeRange={timeRange}
+                        />
 
                         {/* === FITNESS & FORM === */}
                         <div className="glass-card p-6">

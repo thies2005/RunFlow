@@ -90,7 +90,14 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
     const data = useMemo(() => {
         if (!streams?.time) return [];
 
-        return streams.time.map((t, i) => {
+        const timeLength = streams.time.length;
+        // Simple downsampling: target ~2000 points max for rendering performance
+        const step = timeLength > 2000 ? Math.ceil(timeLength / 2000) : 1;
+
+        const processed = [];
+
+        for (let i = 0; i < timeLength; i += step) {
+            const t = streams.time[i];
             const point: Record<string, number | null> = { time: t };
 
             // Heart rate
@@ -114,10 +121,10 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
             // Calculate grade from altitude change and use metabolic cost ratio
             if (streams.velocity_smooth && streams.altitude && streams.velocity_smooth[i] !== undefined) {
                 const mPerS = streams.velocity_smooth[i];
-                if (mPerS > 0.5 && i > 0 && streams.altitude[i] !== undefined && streams.altitude[i - 1] !== undefined) {
+                if (mPerS > 0.5 && i >= step && streams.altitude[i] !== undefined && streams.altitude[i - step] !== undefined) {
                     // Calculate grade (vertical / horizontal distance)
-                    const timeDelta = streams.time[i] - streams.time[i - 1];
-                    const elevDelta = streams.altitude[i] - streams.altitude[i - 1];
+                    const timeDelta = streams.time[i] - streams.time[i - step];
+                    const elevDelta = streams.altitude[i] - streams.altitude[i - step];
                     const horizDist = mPerS * timeDelta;
                     const grade = horizDist > 0 ? (elevDelta / horizDist) * 100 : 0; // as percentage
 
@@ -158,9 +165,17 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                 point.cadence = streams.cadence[i] * 2;
             }
 
-            return point;
-        });
-    }, [streams]);
+            processed.push(point);
+        }
+
+        return processed;
+    }, [
+        streams?.time,
+        streams?.heartrate,
+        streams?.velocity_smooth,
+        streams?.altitude,
+        streams?.cadence
+    ]);
 
     // Determine which streams are available
     const hasHeartrate = Boolean(streams?.heartrate?.length);

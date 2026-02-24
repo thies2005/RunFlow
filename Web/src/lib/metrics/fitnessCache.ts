@@ -124,6 +124,7 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
         });
 
         // Iterate day by day from startDate to today
+        let daysProcessed = 0;
         for (let d = new Date(startDate); d <= today; d.setUTCDate(d.getUTCDate() + 1)) {
             const dateKey = getDateKey(d);
             const dailyActivities = activityMap.get(dateKey) || [];
@@ -175,6 +176,12 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                 trimp: dailyTrimp,
                 runningTss: dailyRunningTss
             });
+
+            // Yield event loop every 30 days to avoid blocking
+            daysProcessed++;
+            if (daysProcessed % 30 === 0) {
+                await new Promise(r => setTimeout(r, 0));
+            }
         }
 
         // 6. Batch Update
@@ -274,6 +281,7 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
         const startTime = latestDate.getTime() + msPerDay;
         const endTime = today.getTime();
 
+        let daysProcessed = 0;
         for (let timestamp = startTime; timestamp <= endTime; timestamp += msPerDay) {
             // Apply decay (0 load for these gap days)
             currentCtl = currentCtl * ctlDecay;
@@ -291,6 +299,12 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
                 trimp: 0,
                 runningTss: 0
             });
+
+            // Yield event loop every 30 days to avoid blocking
+            daysProcessed++;
+            if (daysProcessed % 30 === 0) {
+                await new Promise(r => setTimeout(r, 0));
+            }
         }
 
         // 3. Batch Insert

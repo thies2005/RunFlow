@@ -9,6 +9,7 @@ import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders
 import { cachedResponse } from '@/lib/apiResponse';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 import { handleError } from '@/lib/errors/handler';
+import { getRedisClient } from '@/lib/redis';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,6 @@ export async function GET(req: NextRequest) {
 
         const userId = session.user.id;
 
-        // --- PARALLEL DATA FETCHING ---
         // Parse 'date' query param to anchor "current week"
         const url = new URL(req.url);
         const dateParam = url.searchParams.get('date');
@@ -41,6 +41,20 @@ export async function GET(req: NextRequest) {
         // Check if refDate is valid
         const validRefDate = !isNaN(refDate.getTime()) ? refDate : new Date();
 
+        // Try Redis Cache
+        const redisClient = await getRedisClient();
+        const cacheKey = `dashboard:v2:${userId}:${validRefDate.toISOString().split('T')[0]}`;
+
+        try {
+            const cachedData = await redisClient?.get(cacheKey);
+            if (cachedData) {
+                return cachedResponse(JSON.parse(cachedData), { maxAge: 60, staleWhileRevalidate: 30 });
+            }
+        } catch (e) {
+            console.error('Redis cache error:', e);
+        }
+
+        // --- PARALLEL DATA FETCHING ---
         // 1. User Settings & Active Goals
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
@@ -226,12 +240,20 @@ export async function GET(req: NextRequest) {
             stravaId: a.stravaId.toString()
         }));
 
-        return cachedResponse({
+        const responseData = {
             stats,
             recentActivities: { activities: serializedActivities }, // Match expected format or simplfy? Keeping nested for compatibility
             goals: { goals },
             syncStatus
-        }, { maxAge: 60, staleWhileRevalidate: 30 });
+        };
+
+        try {
+            await redisClient?.set(cacheKey, JSON.stringify(responseData), { ex: 60 });
+        } catch (e) {
+            console.error('Redis cache set error:', e);
+        }
+
+        return cachedResponse(responseData, { maxAge: 60, staleWhileRevalidate: 30 });
 
     } catch (error) {
         return handleError(error);

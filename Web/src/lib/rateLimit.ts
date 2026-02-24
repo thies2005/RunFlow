@@ -184,17 +184,10 @@ export async function checkRateLimitAsync(
         return checkRateLimitRedis(key, limit, windowSeconds);
     }
 
-    // In production, we must not fall back to in-memory rate limiting as it's ineffective
-    // in serverless environments (per-instance state).
+    // In serverless environments, in-memory rate limiting is ineffective (per-instance state).
+    // For Docker/long-running processes, in-memory fallback is acceptable.
     if (process.env.NODE_ENV === 'production') {
-        console.error('Security: Redis not available in production. Rate limiting would be ineffective.');
-        return {
-            allowed: false,
-            remaining: 0,
-            resetAt: Math.floor((Date.now() + windowSeconds * 1000) / 1000),
-            limit,
-            retryAfter: 60,
-        };
+        console.warn('Security: Redis not available in production. Falling back to in-memory rate limiting.');
     }
 
     return checkRateLimitInMemory(key, limit, windowSeconds);

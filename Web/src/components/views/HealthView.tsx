@@ -32,14 +32,20 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isGoalsOpen, setIsGoalsOpen] = useState(false);
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+    const [scannedFood, setScannedFood] = useState<any | null>(null);
 
     const handleBarcodeScanned = useCallback(async (barcode: string) => {
         setIsScannerOpen(false);
         try {
             const res = await fetch(`/api/health/nutrition/scan?barcode=${barcode}`);
             const data = await res.json();
-            console.log("Found Food!", data);
-            alert(`Found: ${data.name} - ${data.calories}kcal`);
+            if (res.ok && data.name) {
+                // Pass scanned food directly to the log modal
+                setScannedFood(data);
+                setIsManualEntryOpen(true);
+            } else {
+                alert(data.error || 'Product not found');
+            }
         } catch (error) {
             console.error(error);
             alert("Error finding food");
@@ -403,7 +409,11 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
                     <ManualFoodEntryModal
                         isOpen={isManualEntryOpen}
-                        onClose={() => setIsManualEntryOpen(false)}
+                        onClose={() => {
+                            setIsManualEntryOpen(false);
+                            setScannedFood(null);
+                        }}
+                        initialFood={scannedFood}
                     />
 
                     <NutritionGoalsModal

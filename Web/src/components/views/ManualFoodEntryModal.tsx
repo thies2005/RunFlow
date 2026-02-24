@@ -6,13 +6,25 @@ import { X, Search, Loader2, Save, ArrowLeft } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 
+interface FoodData {
+    name: string;
+    brand?: string;
+    barcode?: string | null;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    servingSize?: string;
+}
+
 interface Props {
     isOpen: boolean;
     onClose: () => void;
     onLogSuccess?: () => void;
+    initialFood?: FoodData | null;
 }
 
-export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess }: Props) {
+export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFood }: Props) {
     const { data: session } = useSession();
     const userId = session?.user?.id;
     const queryClient = useQueryClient();
@@ -36,6 +48,22 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess }: Props) {
     const [selectedFood, setSelectedFood] = useState<any | null>(null);
     const [quantity, setQuantity] = useState('1');
     const [mealType, setMealType] = useState('SNACK');
+
+    // When opened with initialFood (e.g. from barcode scan), jump straight to log view
+    useEffect(() => {
+        if (isOpen && initialFood) {
+            setSelectedFood({
+                name: initialFood.name,
+                brand: initialFood.brand || '',
+                barcode: initialFood.barcode || null,
+                calories: initialFood.calories || 0,
+                protein: initialFood.protein || 0,
+                carbs: initialFood.carbs || 0,
+                fats: initialFood.fats || 0,
+                servingSize: initialFood.servingSize || '100g',
+            });
+        }
+    }, [isOpen, initialFood]);
 
     useEffect(() => {
         if (!isOpen) return;

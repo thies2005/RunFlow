@@ -147,7 +147,7 @@ export function BarcodeScannerModal({ isOpen, onClose, onScan, preAuthorizedStre
                 stopWebScanner();
             }
         };
-    }, [isOpen, onScan, stopNativeScanner, stopWebScanner]);
+    }, [isOpen, onScan, stopNativeScanner, stopWebScanner, preAuthorizedStream]);
 
     if (!isOpen) return null;
 

@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         const startDate = new Date();
         startDate.setDate(endDate.getDate() - days);
 
-        let logs = [];
+        let logs: { date: Date; taken: boolean }[] = [];
 
         if (stackId) {
             // Verify ownership

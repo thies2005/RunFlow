@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Save, Clock, CalendarDays } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 
 interface AddSupplementModalProps {
     isOpen: boolean;
@@ -31,16 +31,14 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
     const [daysOfWeek, setDaysOfWeek] = useState<number[]>([0, 1, 2, 3, 4, 5, 6]);
     const [stackId, setStackId] = useState<string>('');
 
-    const { data: stacks } = import('@tanstack/react-query').then(({ useQuery }) => useQuery({
+    const { data: stacks } = useQuery({
         queryKey: ['supplement-stacks'],
         queryFn: async () => {
             const res = await fetch('/api/health/supplements/stacks');
             if (!res.ok) throw new Error('Failed to fetch stacks');
             return res.json();
         }
-    })) as any; // Quick hack as we can't dynamic import hooks well here. Let's fix this properly.
-
-    // Proper way to call useQuery (moved outside)
+    });
 
     useEffect(() => {
         if (supplementToEdit) {

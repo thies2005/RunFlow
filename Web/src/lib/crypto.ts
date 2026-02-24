@@ -128,11 +128,5 @@ export function isEncryptionEnabled(): boolean {
     }
 }
 
-// Startup check to enforce encryption config
-try {
-    getEncryptionKey();
-} catch (error) {
-    if (process.env.NODE_ENV !== 'test') {
-        throw error;
-    }
-}
+// Note: Encryption key is validated at runtime when encrypt/decrypt functions are called.
+// We do NOT validate at module load time because env vars may not be available during build.

@@ -188,7 +188,14 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     });
 
     // Filtering standalone supplements
-    const standaloneSupps = supplements?.filter((s: any) => !s.stackId) || [];
+    const todayDayOfWeek = new Date().getDay();
+    const isSuppActiveToday = (supp: any) => {
+        if (supp.isActive === false) return false;
+        if (!supp.daysOfWeek || supp.daysOfWeek.length === 0) return true;
+        return supp.daysOfWeek.includes(todayDayOfWeek);
+    };
+
+    const standaloneSupps = supplements?.filter((s: any) => !s.stackId && isSuppActiveToday(s)) || [];
 
     const morningStandalone = standaloneSupps.filter((s: any) => s.timeOfDay === 'MORNING');
     const noonStandalone = standaloneSupps.filter((s: any) => s.timeOfDay === 'NOON');
@@ -219,10 +226,11 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     };
 
     const renderStack = (stack: any) => {
-        const hasSupplements = stack.supplements && stack.supplements.length > 0;
+        const activeSupplements = (stack.supplements || []).filter(isSuppActiveToday);
+        const hasSupplements = activeSupplements.length > 0;
 
         // Check if all supplements in stack are taken today
-        const allTaken = hasSupplements && stack.supplements.every((supp: any) => {
+        const allTaken = hasSupplements && activeSupplements.every((supp: any) => {
             const log = getSupplementLog(supp.id);
             return log?.taken;
         });
@@ -273,7 +281,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                 {/* Stack Items */}
                 {hasSupplements && (
                     <div className="p-2 space-y-1">
-                        {stack.supplements.map((supp: any) => {
+                        {activeSupplements.map((supp: any) => {
                             const log = getSupplementLog(supp.id);
                             const isTaken = log?.taken || false;
 

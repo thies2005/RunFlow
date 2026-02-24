@@ -131,9 +131,17 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ error: 'Stack not found' }, { status: 404 });
             }
 
-            // Upsert logs for all supplements in the stack
+            const dayOfWeek = date.getUTCDay();
+            const activeSupplements = stack.supplements.filter(s => {
+                const days = s.daysOfWeek as number[] | null | undefined;
+                if (s.isActive === false) return false;
+                if (!days || days.length === 0) return true;
+                return days.includes(dayOfWeek);
+            });
+
+            // Upsert logs for all active supplements in the stack
             const results = [];
-            for (const supp of stack.supplements) {
+            for (const supp of activeSupplements) {
                 const log = await prisma.supplementLog.upsert({
                     where: {
                         supplementId_date: { supplementId: supp.id, date }

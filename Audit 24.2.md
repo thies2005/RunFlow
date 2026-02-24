@@ -448,7 +448,7 @@
 
 ## Medium Risk Issues
 
-### M-01: Incorrect Zone Time Calculation
+### [FIXED] M-01: Incorrect Zone Time Calculation
 **File:** Web/src/lib/strava/transform.ts:140-142
 **Category:** Bug (Logic Error)
 **Severity:** MEDIUM
@@ -457,7 +457,7 @@
 
 ---
 
-### M-02: Missing Error Handling in upsertActivity
+### [FIXED] M-02: Missing Error Handling in upsertActivity
 **File:** Web/src/lib/strava/persistence.ts:88-108
 **Category:** Bug (Error Handling)
 **Severity:** MEDIUM
@@ -466,7 +466,7 @@
 
 ---
 
-### M-03: Async Parameter Access Pattern
+### [FALSE POSITIVE] M-03: Async Parameter Access Pattern
 **File:** Web/src/app/api/admin/users/[id]/route.ts:67
 **Category:** Bug (Code Pattern)
 **Severity:** MEDIUM
@@ -475,7 +475,7 @@
 
 ---
 
-### M-04: Unsafe Type Assertions
+### [FIXED] M-04: Unsafe Type Assertions
 **File:** Web/src/lib/strava/persistence.ts:30, 45, 71, 93, 103
 **Category:** Bug (Type Safety)
 **Severity:** MEDIUM
@@ -484,7 +484,7 @@
 
 ---
 
-### M-05: Inclusive Date Loop Boundary
+### [FALSE POSITIVE] M-05: Inclusive Date Loop Boundary
 **File:** Web/src/lib/metrics/fitness.ts:90
 **Category:** Bug (Off-by-One Error)
 **Severity:** MEDIUM
@@ -493,7 +493,7 @@
 
 ---
 
-### M-06: Array Index Out of Bounds Risk
+### [FIXED] M-06: Array Index Out of Bounds Risk
 **File:** Web/src/lib/strava/transform.ts:140-142
 **Category:** Bug (Boundary Condition)
 **Severity:** MEDIUM
@@ -502,7 +502,7 @@
 
 ---
 
-### M-07: Potential Memory Leak in Rate Limiter
+### [FIXED] M-07: Potential Memory Leak in Rate Limiter
 **File:** Web/src/lib/strava/fetch.ts:76-110
 **Category:** Bug (Resource Leak)
 **Severity:** MEDIUM
@@ -511,7 +511,7 @@
 
 ---
 
-### M-08: Missing Timeout in Email Transporter
+### [FIXED] M-08: Missing Timeout in Email Transporter
 **File:** Web/src/lib/email.ts:5-13
 **Category:** Bug (Resource Management)
 **Severity:** MEDIUM
@@ -520,7 +520,7 @@
 
 ---
 
-### M-09: Fitness Cache Update Race Condition
+### [FALSE POSITIVE] M-09: Fitness Cache Update Race Condition
 **File:** Web/src/lib/metrics/fitnessCache.ts:185-200
 **Category:** Bug (Race Condition)
 **Severity:** MEDIUM
@@ -529,7 +529,7 @@
 
 ---
 
-### M-10: Silent Failure in Token Decryption
+### [FALSE POSITIVE] M-10: Silent Failure in Token Decryption
 **File:** Web/src/lib/crypto.ts:104-112
 **Category:** Bug (Error Handling)
 **Severity:** MEDIUM
@@ -538,7 +538,7 @@
 
 ---
 
-### M-11: Generic Error Messages
+### [FIXED] M-11: Generic Error Messages
 **File:** Web/src/lib/errors/handler.ts:34-37
 **Category:** Bug (Error Messages)
 **Severity:** MEDIUM
@@ -547,7 +547,7 @@
 
 ---
 
-### M-12: Missing Try-Catch in Session Callback
+### [FIXED] M-12: Missing Try-Catch in Session Callback
 **File:** Web/src/lib/strava/oauth.ts:127-173
 **Category:** Bug (Error Handling)
 **Severity:** MEDIUM
@@ -556,7 +556,7 @@
 
 ---
 
-### M-13: Incorrect Fitness Cache Calculation on Activity Modification
+### [FIXED] M-13: Incorrect Fitness Cache Calculation on Activity Modification
 **File:** Web/src/lib/metrics/fitnessCache.ts:46-55
 **Category:** Bug (Data Logic)
 **Severity:** MEDIUM
@@ -565,7 +565,7 @@
 
 ---
 
-### M-14: Missing Validation for Email Parameter
+### [FALSE POSITIVE] M-14: Missing Validation for Email Parameter
 **File:** Web/src/app/api/auth/reset-password/route.ts:20
 **Category:** Bug (Input Validation)
 **Severity:** MEDIUM
@@ -574,7 +574,7 @@
 
 ---
 
-### M-15: No Timeout on External API Calls
+### [FIXED] M-15: No Timeout on External API Calls
 **File:** Web/src/app/api/health/nutrition/scan/route.ts:44
 **Category:** Bug (API Design)
 **Severity:** MEDIUM
@@ -583,7 +583,7 @@
 
 ---
 
-### M-16: Missing CSRF Validation on Mobile Endpoints
+### [FALSE POSITIVE] M-16: Missing CSRF Validation on Mobile Endpoints
 **File:** Web/src/app/api/mobile/v1/activities/route.ts:25-41
 **Category:** Security (CSRF)
 **Severity:** MEDIUM
@@ -592,7 +592,7 @@
 
 ---
 
-### M-17: Missing Length Validation on Barcode
+### [FIXED] M-17: Missing Length Validation on Barcode
 **File:** Web/src/app/api/health/nutrition/scan/route.ts:5-10
 **Category:** Security (Input Validation)
 **Severity:** MEDIUM
@@ -601,7 +601,7 @@
 
 ---
 
-### M-18: Partial Path Traversal Protection
+### [FALSE POSITIVE] M-18: Partial Path Traversal Protection
 **File:** Web/src/app/api/admin/backups/[filename]/route.ts:29-40
 **Category:** Security (Path Traversal)
 **Severity:** MEDIUM
@@ -610,7 +610,7 @@
 
 ---
 
-### M-19: File Upload Path Traversal Attempt
+### [FALSE POSITIVE] M-19: File Upload Path Traversal Attempt
 **File:** Web/src/app/api/admin/backups/upload/route.ts:46-81
 **Category:** Security (Path Traversal)
 **Severity:** MEDIUM
@@ -619,7 +619,7 @@
 
 ---
 
-### M-20: Insufficient Type Validation in API
+### [FALSE POSITIVE] M-20: Insufficient Type Validation in API
 **File:** Web/src/app/api/activities/route.ts:36-49
 **Category:** Security (Input Validation)
 **Severity:** MEDIUM
@@ -628,7 +628,7 @@
 
 ---
 
-### M-21: Missing Validation on Admin Operations
+### [FALSE POSITIVE] M-21: Missing Validation on Admin Operations
 **File:** Web/src/app/api/admin/users/route.ts:28-30
 **Category:** Security (Input Validation)
 **Severity:** MEDIUM
@@ -637,7 +637,7 @@
 
 ---
 
-### M-22: Weak Password Policy
+### [FALSE POSITIVE] M-22: Weak Password Policy
 **File:** Web/src/lib/auth/auth-email.ts:10, 43-79
 **Category:** Security (Authentication)
 **Severity:** MEDIUM
@@ -646,7 +646,7 @@
 
 ---
 
-### M-23: Admin Token Reuse Risk
+### [FIXED] M-23: Admin Token Reuse Risk
 **File:** Web/src/lib/admin/auth.ts:44, 100
 **Category:** Security (Authentication)
 **Severity:** MEDIUM
@@ -655,7 +655,7 @@
 
 ---
 
-### M-24: Password Reset Without Expiration Enforcement
+### [FALSE POSITIVE] M-24: Password Reset Without Expiration Enforcement
 **File:** Web/src/app/api/auth/forgot-password/route.ts:38-46
 **Category:** Security (Authentication)
 **Severity:** MEDIUM
@@ -664,7 +664,7 @@
 
 ---
 
-### M-25: Debug Mode Enabled in Production Risk
+### [FALSE POSITIVE] M-25: Debug Mode Enabled in Production Risk
 **File:** Web/src/lib/strava/oauth.ts:233
 **Category:** Security (Configuration)
 **Severity:** MEDIUM
@@ -673,7 +673,7 @@
 
 ---
 
-### M-26: Docker Image Using Latest Tag
+### [FIXED] M-26: Docker Image Using Latest Tag
 **File:** Web/docker-compose.yml:162
 **Category:** Security (Configuration)
 **Severity:** MEDIUM
@@ -683,7 +683,7 @@
 
 ---
 
-### M-27: Sensitive Data in Logs
+### [FIXED] M-27: Sensitive Data in Logs
 **File:** Web/src/app/api/admin/backups/upload/route.ts:85
 **Category:** Security (Logging)
 **Severity:** MEDIUM
@@ -692,7 +692,7 @@
 
 ---
 
-### M-28: Error Messages Reveal Internal Details
+### [FALSE POSITIVE] M-28: Error Messages Reveal Internal Details
 **File:** Web/src/app/api/mobile/v1/workouts/route.ts:98-100
 **Category:** Security (Information Disclosure)
 **Severity:** MEDIUM
@@ -701,7 +701,7 @@
 
 ---
 
-### M-29: HSTS Not Configured
+### [FALSE POSITIVE] M-29: HSTS Not Configured
 **File:** Web/src/middleware.ts:119-140
 **Category:** Security (Headers)
 **Severity:** MEDIUM
@@ -711,7 +711,7 @@
 
 ---
 
-### M-30: AnalyticsDashboard Chart Grid Issues
+### [FIXED] M-30: AnalyticsDashboard Chart Grid Issues
 **File:** Web/src/components/AnalyticsDashboard.tsx:261-283
 **Category:** UI (Responsive Design)
 **Severity:** MEDIUM
@@ -720,7 +720,7 @@
 
 ---
 
-### M-31: RacePredictionChart Grid Not Responsive
+### [FIXED] M-31: RacePredictionChart Grid Not Responsive
 **File:** Web/src/components/RacePredictionChart.tsx:176-191
 **Category:** UI (Responsive Design)
 **Severity:** MEDIUM
@@ -729,7 +729,7 @@
 
 ---
 
-### M-32: EditWorkoutModal Input Width Issues
+### [FIXED] M-32: EditWorkoutModal Input Width Issues
 **File:** Web/src/components/EditWorkoutModal.tsx:194-223
 **Category:** UI (Responsive Design)
 **Severity:** MEDIUM
@@ -738,7 +738,7 @@
 
 ---
 
-### M-33: InteractiveStreamsChart Fixed Height
+### [FIXED] M-33: InteractiveStreamsChart Fixed Height
 **File:** Web/src/components/InteractiveStreamsChart.tsx:254-369
 **Category:** UI (Responsive Design)
 **Severity:** MEDIUM
@@ -747,7 +747,7 @@
 
 ---
 
-### M-34: VerificationModal Color Contrast Issues
+### [FIXED] M-34: VerificationModal Color Contrast Issues
 **File:** Web/src/components/auth/VerificationModal.tsx:76-78
 **Category:** UI (Accessibility)
 **Severity:** MEDIUM
@@ -756,7 +756,7 @@
 
 ---
 
-### M-35: ManualActivityModal Missing Required Field Indicators
+### [FIXED] M-35: ManualActivityModal Missing Required Field Indicators
 **File:** Web/src/components/ManualActivityModal.tsx:79-122
 **Category:** UI (Accessibility)
 **Severity:** MEDIUM
@@ -765,7 +765,7 @@
 
 ---
 
-### M-36: Mixed Button Classes Across Components
+### [FALSE POSITIVE] M-36: Mixed Button Classes Across Components
 **File:** Multiple components
 **Category:** UI (Inconsistent Styling)
 **Severity:** MEDIUM
@@ -774,7 +774,7 @@
 
 ---
 
-### M-37: Inconsistent Modal Backdrop
+### [FALSE POSITIVE] M-37: Inconsistent Modal Backdrop
 **File:** EditWorkoutModal.tsx:140, SettingsModal.tsx:19, ManualActivityModal.tsx:68
 **Category:** UI (Inconsistent Styling)
 **Severity:** MEDIUM
@@ -783,7 +783,7 @@
 
 ---
 
-### M-38: Color Usage Inconsistencies
+### [FALSE POSITIVE] M-38: Color Usage Inconsistencies
 **File:** Web/src/app/globals.css:236-274
 **Category:** UI (Inconsistent Styling)
 **Severity:** MEDIUM
@@ -792,7 +792,7 @@
 
 ---
 
-### M-39: DashboardView Header Overlap Issue
+### [FALSE POSITIVE] M-39: DashboardView Header Overlap Issue
 **File:** Web/src/components/views/DashboardView.tsx:54-83
 **Category:** UI (Layout)
 **Severity:** MEDIUM
@@ -801,7 +801,7 @@
 
 ---
 
-### M-40: PlanView Week Cards Not Responsive
+### [FALSE POSITIVE] M-40: PlanView Week Cards Not Responsive
 **File:** Web/src/components/views/PlanView.tsx:156-172
 **Category:** UI (Layout)
 **Severity:** MEDIUM
@@ -810,7 +810,7 @@
 
 ---
 
-### M-41: EditWorkoutModal No Validation Messages
+### [FALSE POSITIVE] M-41: EditWorkoutModal No Validation Messages
 **File:** Web/src/components/EditWorkoutModal.tsx:86-121
 **Category:** UI (Error States)
 **Severity:** MEDIUM
@@ -819,7 +819,7 @@
 
 ---
 
-### M-42: PlanSetupForm Mutation Error Handling Minimal
+### [DEFERRED] M-42: PlanSetupForm Mutation Error Handling Minimal
 **File:** Web/src/components/PlanSetupForm.tsx:406-409, 466-468
 **Category:** UI (Error States)
 **Severity:** MEDIUM
@@ -828,7 +828,7 @@
 
 ---
 
-### M-43: ManualActivityModal No Loading State on Submit
+### [FALSE POSITIVE] M-43: ManualActivityModal No Loading State on Submit
 **File:** Web/src/components/ManualActivityModal.tsx:54-64
 **Category:** UI (Loading States)
 **Severity:** MEDIUM
@@ -837,7 +837,7 @@
 
 ---
 
-### M-44: AnalyticsDashboard No Empty State for Charts
+### [FALSE POSITIVE] M-44: AnalyticsDashboard No Empty State for Charts
 **File:** Web/src/components/AnalyticsDashboard.tsx:337-382
 **Category:** UI (Empty States)
 **Severity:** MEDIUM
@@ -846,7 +846,7 @@
 
 ---
 
-### M-45: Inconsistent Text Scales
+### [FALSE POSITIVE] M-45: Inconsistent Text Scales
 **File:** Multiple components
 **Category:** UI (Typography)
 **Severity:** MEDIUM
@@ -855,7 +855,7 @@
 
 ---
 
-### M-46: Small Tap Targets on Mobile
+### [FALSE POSITIVE] M-46: Small Tap Targets on Mobile
 **File:** Web/src/components/views/DashboardView.tsx:72-81
 **Category:** UI (Touch Targets)
 **Severity:** MEDIUM
@@ -864,7 +864,7 @@
 
 ---
 
-### M-47: Crowded Form Layout in PlanSetupForm
+### [DEFERRED] M-47: Crowded Form Layout in PlanSetupForm
 **File:** Web/src/components/PlanSetupForm.tsx:652-703
 **Category:** UI (Form Usability)
 **Severity:** MEDIUM
@@ -873,7 +873,7 @@
 
 ---
 
-### M-48: Chart Data Not Memoized Properly
+### [DEFERRED] M-48: Chart Data Not Memoized Properly
 **File:** Web/src/components/InteractiveStreamsChart.tsx:89-163
 **Category:** UI (Performance)
 **Severity:** MEDIUM
@@ -882,7 +882,7 @@
 
 ---
 
-### M-49: Multiple useEffect Hooks in PlanSetupForm
+### [DEFERRED] M-49: Multiple useEffect Hooks in PlanSetupForm
 **File:** Web/src/components/PlanSetupForm.tsx:158-337
 **Category:** UI (Performance)
 **Severity:** MEDIUM
@@ -891,7 +891,7 @@
 
 ---
 
-### M-50: VerificationModal Code Input UX
+### [DEFERRED] M-50: VerificationModal Code Input UX
 **File:** Web/src/components/auth/VerificationModal.tsx:57-64
 **Category:** UI (Form Usability)
 **Severity:** MEDIUM
@@ -900,7 +900,7 @@
 
 ---
 
-### M-51: PlanSetupForm Complex Calibration Flow
+### [DEFERRED] M-51: PlanSetupForm Complex Calibration Flow
 **File:** Web/src/components/PlanSetupForm.tsx:561-632
 **Category:** UI (Form Usability)
 **Severity:** MEDIUM
@@ -909,7 +909,7 @@
 
 ---
 
-### M-52: ForgotPasswordModal Password Strength Indicator Missing
+### [DEFERRED] M-52: ForgotPasswordModal Password Strength Indicator Missing
 **File:** Web/src/components/auth/ForgotPasswordModal.tsx:138-146
 **Category:** UI (Form Usability)
 **Severity:** MEDIUM
@@ -918,7 +918,7 @@
 
 ---
 
-### M-53: Card Components Different Glass Effect
+### [FALSE POSITIVE] M-53: Card Components Different Glass Effect
 **File:** Multiple card files
 **Category:** UI (Component Consistency)
 **Severity:** MEDIUM
@@ -927,7 +927,7 @@
 
 ---
 
-### M-54: Chart Tooltip Inconsistencies
+### [DEFERRED] M-54: Chart Tooltip Inconsistencies
 **File:** Multiple chart files
 **Category:** UI (Component Consistency)
 **Severity:** MEDIUM
@@ -936,7 +936,7 @@
 
 ---
 
-### M-55: Repeated Calibration Factor Calculation
+### [DEFERRED] M-55: Repeated Calibration Factor Calculation
 **File:** Web/src/components/PlanSetupForm.tsx:658-666, 676-682, 693-699
 **Category:** Code Quality (Duplication)
 **Severity:** MEDIUM
@@ -945,7 +945,7 @@
 
 ---
 
-### M-56: Tier Input Field Duplication
+### [DEFERRED] M-56: Tier Input Field Duplication
 **File:** Web/src/app/admin/page.tsx:326-388, 390-425, 427-462
 **Category:** Code Quality (Duplication)
 **Severity:** MEDIUM
@@ -954,7 +954,7 @@
 
 ---
 
-### M-57: Confirm Dialog Pattern Duplication
+### [DEFERRED] M-57: Confirm Dialog Pattern Duplication
 **File:** Web/src/app/admin/page.tsx:217-231, 802-815, 853-867
 **Category:** Code Quality (Duplication)
 **Severity:** MEDIUM
@@ -963,7 +963,7 @@
 
 ---
 
-### M-58: Supplement Item Rendering Duplication
+### [DEFERRED] M-58: Supplement Item Rendering Duplication
 **File:** Web/src/components/views/HealthView.tsx:217-237, 297-320
 **Category:** Code Quality (Duplication)
 **Severity:** MEDIUM
@@ -972,7 +972,7 @@
 
 ---
 
-### M-59: MobileLayout Analytics Metrics Complex
+### [DEFERRED] M-59: MobileLayout Analytics Metrics Complex
 **File:** Web/src/app/mobile-layout.tsx:225-358
 **Category:** Code Quality (Complexity)
 **Severity:** MEDIUM
@@ -981,7 +981,7 @@
 
 ---
 
-### M-60: OpenAI Stream Function Complex
+### [DEFERRED] M-60: OpenAI Stream Function Complex
 **File:** Web/src/lib/ai/providers.ts:265-408
 **Category:** Code Quality (Complexity)
 **Severity:** MEDIUM
@@ -1480,89 +1480,173 @@
 | Web/src/app/api/activities/ | 3 | Security, Performance |
 | Web/src/middleware.ts | 3 | Security, Configuration |
 
-### Recommended Action Plan
+### Implementation Plan — Remaining & Deferred Issues
 
-#### Phase 1: Critical Security Fixes (Week 1)
-1. Replace all default credentials in .env
-2. Generate and set strong cryptographic secrets
-3. Fix command injection in backup scheduler
-4. Fix JWT secret generation issue
-5. Fix encryption fallback behavior
+> **Last updated:** February 24, 2026
+> **Scope:** All unfixed HIGH, deferred MEDIUM, LOW, and feature issues from this audit.
+> All Critical issues and 18 Medium issues have already been fixed in the initial remediation pass.
 
-#### Phase 2: High Priority Issues (Weeks 2-3)
-1. Fix all race conditions in sync operations
-2. Implement CSRF protection for all state-changing routes
-3. Add XSS sanitization to react-markdown
-4. Add HSTS header
-5. Fix infinite retry loops
-6. Add database indexes
-7. Implement Redis caching for dashboard
-8. Move Strava sync to background queue
-9. Fix critical accessibility issues (ARIA labels)
-10. Lazy load charts
+---
 
-#### Phase 3: Code Quality Refactoring (Weeks 4-5)
-1. Split PlanSetupForm (1529 lines) into components
-2. Split admin/page.tsx (1307 lines) into tab modules
-3. Split mobile-layout.tsx (592 lines) into hooks
-4. Add Error Boundaries for complex components
-5. Extract duplicate code into reusable functions
-6. Remove magic numbers, use named constants
-7. Remove dead code
+#### Phase 1: Security Hardening (H-10)
 
-#### Phase 4: UI/UX Improvements (Weeks 6-7)
-1. Implement search functionality
-2. Add advanced filtering and sorting
-3. Implement skeleton loading states
-4. Enable offline support
-5. Add data export/import
-6. Enhance form validation
-7. Improve keyboard accessibility
-8. Add comprehensive ARIA labels
-9. Implement toast notifications
+| Issue | File | Change |
+|-------|------|--------|
+| **H-10** XSS via react-markdown | `components/AiChat.tsx` | Install `dompurify` + `@types/dompurify`. Wrap all `<ReactMarkdown>` output with `DOMPurify.sanitize()` before rendering. Add rehype plugin `rehype-sanitize` as a secondary defense. |
 
-#### Phase 5: Performance Optimizations (Week 8)
-1. Optimize database queries (reduce over-fetching)
-2. Fix N+1 query patterns
-3. Optimize rolling average algorithm (O(n²) → O(n))
-4. Downsample chart data
-5. Add response compression
-6. Reduce PWA cache TTL
-7. Combine analytics API calls
+```bash
+npm install dompurify @types/dompurify rehype-sanitize
+```
 
-#### Phase 6: Additional Features (Ongoing)
-1. Internationalization support
-2. User preferences and customization
-3. Activity bulk actions
-4. Activity comparison features
-5. Advanced date filtering
+```diff
+// AiChat.tsx
++import DOMPurify from 'dompurify';
++import rehypeSanitize from 'rehype-sanitize';
 
-### Estimated Effort
+-<ReactMarkdown>{message.content}</ReactMarkdown>
++<ReactMarkdown rehypePlugins={[rehypeSanitize]}>
++  {DOMPurify.sanitize(message.content)}
++</ReactMarkdown>
+```
 
-| Phase | Estimated Time |
-|-------|----------------|
-| Phase 1: Critical Security Fixes | 1 week |
-| Phase 2: High Priority Issues | 2 weeks |
-| Phase 3: Code Quality Refactoring | 2 weeks |
-| Phase 4: UI/UX Improvements | 2 weeks |
-| Phase 5: Performance Optimizations | 1 week |
-| Phase 6: Additional Features | Ongoing |
-| **Total** | **8+ weeks** |
+**Verification:** Paste `<img src=x onerror=alert(1)>` into AI chat → should render as escaped text, not execute.
+
+---
+
+#### Phase 2: UI & Responsive Layout (H-13, M-42, M-47, M-50, M-51, M-52)
+
+| Issue | File | Change |
+|-------|------|--------|
+| **H-13** Dashboard tablet layout | `views/DashboardView.tsx:128` | Add `md:grid-cols-2` breakpoint between mobile and `lg:grid-cols-3`. |
+| **M-42** PlanSetupForm inline errors | `PlanSetupForm.tsx:406-468` | Add `formErrors` state object. Display `<p className="text-red-400 text-xs mt-1">` below each relevant field on mutation error. |
+| **M-47** PlanSetupForm form spacing | `PlanSetupForm.tsx:652-703` | Increase `gap-2` → `gap-4` on time input grid. Add `p-2` to individual inputs. |
+| **M-50** Verification code UX | `auth/VerificationModal.tsx:57-64` | Replace single input with 6 individual `<input maxLength={1}>` elements with auto-focus on change. |
+| **M-51** Calibration flow UX | `PlanSetupForm.tsx:561-632` | Add step indicator (`Step 1 of 3`) and descriptive help text for each calibration stage. |
+| **M-52** Password strength indicator | `auth/ForgotPasswordModal.tsx:138-146` | Add `PasswordStrengthMeter` component showing strength bar + requirements checklist below the new password field. |
+
+```diff
+// DashboardView.tsx
+-<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
++<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+```
+
+**Verification:** Resize browser to 768px–1024px → cards should show in 2 columns. Check PlanSetupForm for consistent field spacing.
+
+---
+
+#### Phase 3: Performance (H-19, H-28, H-30, H-31, H-32, M-48, M-49)
+
+| Issue | File | Change |
+|-------|------|--------|
+| **H-19** ActivityList virtualization | `ActivityList.tsx:231` | Install `react-window`. Replace `.map()` render with `<FixedSizeList>` for lists > 50 items. |
+| **H-28** Dashboard Redis cache | `api/dashboard/route.ts:135` | Add Redis `GET`/`SET` with 60s TTL around the dashboard aggregation query. Invalidate on sync completion. |
+| **H-30** Lazy load charts | `analytics/page.tsx:432-588` | Wrap all chart components with `next/dynamic(() => import(...), { ssr: false })`. |
+| **H-31** Split analytics page | `analytics/page.tsx` | Extract into: `TopMetrics.tsx`, `ZoneDistributionSection.tsx`, `TrainingPacesSection.tsx`, `TrendChartsSection.tsx`. |
+| **H-32** Async fitness cache | `metrics/fitnessCache.ts:126-178` | Batch the day-loop into chunks of 30 days with `await new Promise(r => setTimeout(r, 0))` between chunks to yield the event loop. |
+| **M-48** Streams chart memoization | `InteractiveStreamsChart.tsx:89-163` | Add `streams` reference equality check in `useMemo` deps. Consider downsampling streams >5000 points with Largest-Triangle-Three-Buckets. |
+| **M-49** PlanSetupForm effects | `PlanSetupForm.tsx:158-337` | Consolidate related `useEffect` hooks into fewer combined effects. Extract dependent state calculations into `useMemo` where possible. |
+
+```bash
+npm install react-window @types/react-window
+```
+
+**Verification:** Load analytics page with 500+ activities → ensure charts lazy load on scroll. Check dashboard response time with Redis cache hit vs miss.
+
+---
+
+#### Phase 4: Code Quality — God Component Refactoring (H-22, H-23, H-24, H-25, H-26)
+
+| Issue | File | Change |
+|-------|------|--------|
+| **H-22** Split PlanSetupForm (1529 lines) | `PlanSetupForm.tsx` | Extract into: `TargetRaceSection`, `CalibrationSection`, `GoalTimeSection`, `HeartRateZonesSection`, `PlanVolumeSection`. Share form state via React context or prop drilling. |
+| **H-23** Split Admin page (1307 lines) | `admin/page.tsx` | Extract into tab modules: `AnalyticsTab.tsx`, `AiSettingsTab.tsx`, `UsersTab.tsx`, `BackupsTab.tsx`. |
+| **H-24** Split MobileLayout (592 lines) | `mobile-layout.tsx` | Extract hooks: `useDashboardQueries()`, `usePlanQueries()`, `useAnalyticsData()`, `useModalState()`. |
+| **H-25** Inline IIFE refactor | `PlanSetupForm.tsx:773-977` | Extract the 205-line goal time IIFE into a standalone `GoalTimeRenderer` component. |
+| **H-26** Add Error Boundaries | `AiChat.tsx`, `AnalyticsDashboard.tsx`, `InteractiveStreamsChart.tsx` | Create `<ChartErrorBoundary>` and `<StreamErrorBoundary>` components. Wrap all chart and AI streaming components. |
+
+**Approach:** Perform one component at a time. After each split, run `npm run build` to catch type/import errors. Do NOT change behavior — only reorganize.
+
+**Verification:** `npm run build` passes after each refactor. All existing tests continue to pass.
+
+---
+
+#### Phase 5: Code Quality — Duplication & Consistency (H-20, H-21, M-54, M-55, M-56, M-57, M-58)
+
+| Issue | File | Change |
+|-------|------|--------|
+| **H-20** Shared Modal component | New: `components/ui/Modal.tsx` | Create `<Modal isOpen onClose title>` with consistent backdrop, z-index, close button, focus trap, `role="dialog"`, `aria-modal`. Migrate all modals to use it. |
+| **H-21** Shared form inputs | New: `components/ui/Input.tsx`, `Select.tsx`, `Textarea.tsx` | Create shared form primitives with consistent styling, error state, label, and required indicator. |
+| **M-54** Shared chart tooltip | New: `components/charts/ChartTooltip.tsx` | Extract `CustomTooltip` pattern into a shared component with configurable formatter. Update all charts. |
+| **M-55** Calibration factor util | `lib/metrics/calibration.ts` | Extract the duplicated VDOT calibration calculation from `PlanSetupForm.tsx:658-699` into a reusable `calculateCalibrationFactor()` utility. |
+| **M-56** Tier input component | New: `components/admin/TierInputGroup.tsx` | Replace the 3 near-identical tier input blocks in `admin/page.tsx:326-462` with a single `<TierInputGroup tier={1|2|3} />` component. |
+| **M-57** Shared confirm dialog | New: `hooks/useConfirmAction.ts` | Extract the repeated confirm/retry/mutation pattern into a `useConfirmAction(message, mutationFn)` hook. |
+| **M-58** Supplement renderer | New: `components/health/SupplementItem.tsx` | Consolidate the duplicate supplement rendering logic from `HealthView.tsx:217-320` into a single `<SupplementItem>` component. |
+
+**Verification:** Grep for duplicate patterns to confirm they've been consolidated. Run full test suite.
+
+---
+
+#### Phase 6: Code Complexity Reduction (M-59, M-60)
+
+| Issue | File | Change |
+|-------|------|--------|
+| **M-59** Analytics metrics | `mobile-layout.tsx:225-358` | Extract the 134-line `useMemo` into a standalone `useAnalyticsMetrics(stats)` hook in `hooks/useAnalyticsMetrics.ts`. |
+| **M-60** OpenAI stream function | `lib/ai/providers.ts:265-408` | Split the 144-line function into: `handleRetry()`, `parseStreamContent()`, `createAsyncIterator()`. Each function <40 lines. |
+
+**Verification:** `npm run build` + existing AI chat tests pass.
+
+---
+
+#### Phase 7: Low Risk Issues (L-01 through L-29)
+
+These are low-priority improvements that can be addressed individually as time permits:
+
+| Issue | File | Change |
+|-------|------|--------|
+| **L-01** BigInt conversion | `lib/utils/bigint.ts:14` | Use `BigInt(Math.trunc(value))` instead of `Math.floor()` |
+| **L-02** VDOT division guard | `lib/metrics/runalyze.ts:100` | Change guard from `<= 0.1` to `<= 0.01` |
+| **L-03** Empty activity array | `lib/metrics/fitness.ts:55` | Return decayed values for date range even when no activities |
+| **L-04** Hash overflow | `lib/rateLimit.ts:234` | Replace custom hash with `crypto.createHash('sha256')` |
+| **L-05** Deprecated crypto API | `lib/crypto.ts` | Migrate to Web Crypto API — low urgency, current implementation is secure |
+| **L-06** Key validation in dev | `lib/crypto.ts:26` | Add warning log when encryption key is missing in development |
+| **L-07** Auth code strength | `lib/auth/tokens.ts:19` | Increase to 8-character codes for stronger brute-force resistance |
+| **L-08** CORS env variable | `middleware.ts:14` | Move hardcoded domain to `NEXT_PUBLIC_APP_URL` environment variable |
+| **L-09** Admin delete verification | `api/admin/users/[id]/route.ts:52` | Add password re-authentication before user deletion |
+| **L-10** Dependency audit | `package.json` | Run `npm audit fix` and update vulnerable packages |
+| **L-11** Delete button loading | `EditWorkoutModal.tsx:264` | Add `isPending` check to delete mutation button |
+| **L-12** Underscore convention | `PlanSetupForm.tsx:480` | Remove unused `_isEditingTime` / `_setIsEditingTime` or document usage |
+
+**Remaining L-13 through L-29:** Address as part of ongoing maintenance. See individual issue descriptions above.
+
+---
+
+### Phase Priority & Estimated Effort
+
+| Phase | Focus Area | Issues | Estimated Time |
+|-------|-----------|--------|----------------|
+| **Phase 1** | Security Hardening | H-10 | 0.5 days |
+| **Phase 2** | UI & Responsive | H-13, M-42, M-47, M-50–M-52 | 2–3 days |
+| **Phase 3** | Performance | H-19, H-28, H-30–H-32, M-48–M-49 | 3–4 days |
+| **Phase 4** | God Component Refactor | H-22–H-26 | 4–5 days |
+| **Phase 5** | Duplication Cleanup | H-20–H-21, M-54–M-58 | 3–4 days |
+| **Phase 6** | Complexity Reduction | M-59–M-60 | 1 day |
+| **Phase 7** | Low Risk Polish | L-01 through L-29 | 2–3 days |
+| | | **Total** | **~16–20 days** |
 
 ### Risk Assessment
 
-**Overall Risk Level:** HIGH
-- 9 critical issues that could lead to system compromise or data loss
-- 32 high-risk issues affecting functionality and user experience
-- Multiple security vulnerabilities requiring immediate attention
+**Overall Risk Level:** MEDIUM (down from HIGH after initial remediation)
+- All 9 critical issues have been resolved
+- 18 medium issues fixed in previous pass
+- Remaining items are primarily code quality, performance, and UX improvements
+- No remaining security issues rated above HIGH (only H-10 XSS via markdown)
 
 **Recommendations:**
-1. Address all Critical issues before production deployment
-2. Implement automated security scanning (Snyk, OWASP ZAP, npm audit)
-3. Establish security code review process
-4. Regular penetration testing before releases
-5. Set up CI/CD pipeline with automated testing and linting
-6. Implement error tracking (Sentry) for production monitoring
+1. Prioritize **Phase 1** (H-10 XSS) as the only remaining security vulnerability
+2. Phases 2–3 deliver the most visible user-facing improvements
+3. Phases 4–5 reduce technical debt and improve maintainability
+4. Run `npm audit` monthly and update dependencies (L-10)
+5. Consider adding Sentry for production error monitoring
 
 ---
 

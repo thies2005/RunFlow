@@ -173,7 +173,7 @@ function RacePredictionChart({
             </div>
 
             {/* Prediction Cards */}
-            <div className="grid grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                 {predictions.map((p) => (
                     <div key={p.name} className="text-center p-3 bg-white/5 rounded-lg border-l-4" style={{ borderColor: p.color }}>
                         <p className="text-xs text-gray-400 mb-1">{p.name}</p>

@@ -12,6 +12,13 @@ import { prisma } from '@/lib/db';
 import { safeBigInt } from '@/lib/utils/bigint';
 import type { ActivityData } from './transform';
 import { logger } from '@/lib/logging/logger';
+import { ActivityType } from '@prisma/client';
+
+export function validateActivityType(type: string): ActivityType {
+    const valid: ActivityType[] = ['RUN', 'RIDE', 'VIRTUAL_RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER'];
+    if (valid.includes(type as ActivityType)) return type as ActivityType;
+    return 'OTHER';
+}
 
 export async function saveActivitiesToDatabase(
     userId: string,
@@ -20,36 +27,38 @@ export async function saveActivitiesToDatabase(
     let created = 0;
     let updated = 0;
 
-    for (const { activityId, data, isNew } of activities) {
-        if (isNew) {
-            await prisma.activity.create({
-                data: {
-                    userId,
-                    stravaId: safeBigInt(activityId),
-                    ...data,
-                    type: data.type as any,
-                },
-            });
-            created++;
-        } else {
-            const existing = await prisma.activity.findFirst({
-                where: { stravaId: safeBigInt(activityId) },
-                select: { id: true }
-            });
-
-            if (existing) {
-                await prisma.activity.update({
-                    where: { id: existing.id },
+    await prisma.$transaction(async (tx) => {
+        for (const { activityId, data, isNew } of activities) {
+            if (isNew) {
+                await tx.activity.create({
                     data: {
+                        userId,
+                        stravaId: safeBigInt(activityId),
                         ...data,
-                        type: data.type as any,
-                        updatedAt: new Date()
-                    }
+                        type: validateActivityType(data.type),
+                    },
                 });
-                updated++;
+                created++;
+            } else {
+                const existing = await tx.activity.findFirst({
+                    where: { stravaId: safeBigInt(activityId) },
+                    select: { id: true }
+                });
+
+                if (existing) {
+                    await tx.activity.update({
+                        where: { id: existing.id },
+                        data: {
+                            ...data,
+                            type: validateActivityType(data.type),
+                            updatedAt: new Date()
+                        }
+                    });
+                    updated++;
+                }
             }
         }
-    }
+    });
 
     return { created, updated };
 }
@@ -68,7 +77,7 @@ export async function updateExistingActivity(
             where: { id: existing.id },
             data: {
                 ...data,
-                type: data.type as any,
+                type: validateActivityType(data.type),
                 updatedAt: new Date()
             }
         });
@@ -90,7 +99,7 @@ export async function upsertActivity(
             where: { id: existing.id },
             data: {
                 ...data,
-                type: data.type as any,
+                type: validateActivityType(data.type),
                 updatedAt: new Date()
             }
         });
@@ -101,7 +110,7 @@ export async function upsertActivity(
                 userId,
                 stravaId: safeBigInt(activityId),
                 ...data,
-                type: data.type as any,
+                type: validateActivityType(data.type),
             }
         });
         return { created: true };

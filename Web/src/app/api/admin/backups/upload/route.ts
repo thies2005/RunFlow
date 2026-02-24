@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logger } from '@/lib/logging/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -82,7 +83,11 @@ export async function POST(request: NextRequest) {
 
         fs.writeFileSync(filePath, buffer);
 
-        console.log(`[Admin Backup Upload] Saved: ${file.name} (${buffer.length} bytes)`);
+        logger.info('Admin backup uploaded', {
+            admin: authResult.admin.username,
+            filename: sanitizedFilename,
+            sizeBytes: buffer.length,
+        });
 
         const response = NextResponse.json({
             success: true,

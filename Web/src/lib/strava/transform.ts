@@ -137,8 +137,8 @@ export function calculateZoneTimes(
     const z6Ceil = zoneThresholds.z6;
 
     for (let i = 0; i < heartrates.length; i++) {
-        const duration = (i < times.length - 1)
-            ? Math.min(times[i + 1] - times[i], 10)
+        const duration = (i < times.length - 1 && i + 1 < times.length)
+            ? Math.min(Math.max(times[i + 1] - times[i], 0), 30)
             : 1;
 
         const hr = heartrates[i];

@@ -41,7 +41,7 @@ function getJwtSecret(): Uint8Array {
 const JWT_ISSUER = 'runflow-admin';
 const JWT_AUDIENCE = 'runflow-admin';
 
-const ADMIN_TOKEN_EXPIRY = '24h';
+const ADMIN_TOKEN_EXPIRY = '2h';
 const ADMIN_COOKIE_NAME = 'runflow_admin_token';
 
 export interface AdminJWTPayload extends JWTPayload {

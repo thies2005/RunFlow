@@ -261,21 +261,21 @@ const StatsGrid = memo(({ currentVdot, totals }: { currentVdot: number | null; t
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass-card p-4 text-center">
             <p className="text-gray-400 text-sm mb-1">Current VDOT</p>
-            <p className="text-3xl font-bold text-white">{currentVdot?.toFixed(1) || '-'}</p>
+            <p className="text-xl sm:text-3xl font-bold text-white">{currentVdot?.toFixed(1) || '-'}</p>
         </div>
         <div className="glass-card p-4 text-center">
             <p className="text-gray-400 text-sm mb-1">Total Distance</p>
-            <p className="text-3xl font-bold text-white">
+            <p className="text-xl sm:text-3xl font-bold text-white">
                 {totals?.distance || 0}<span className="text-sm text-gray-500 font-normal ml-1">km</span>
             </p>
         </div>
         <div className="glass-card p-4 text-center">
             <p className="text-gray-400 text-sm mb-1">Total Activities</p>
-            <p className="text-3xl font-bold text-white">{totals?.activities || 0}</p>
+            <p className="text-xl sm:text-3xl font-bold text-white">{totals?.activities || 0}</p>
         </div>
         <div className="glass-card p-4 text-center">
             <p className="text-gray-400 text-sm mb-1">Avg Pace</p>
-            <p className="text-3xl font-bold text-white">
+            <p className="text-xl sm:text-3xl font-bold text-white">
                 {totals?.averagePace ? formatPace(totals.averagePace).replace('/km', '') : '-'}
             </p>
         </div>

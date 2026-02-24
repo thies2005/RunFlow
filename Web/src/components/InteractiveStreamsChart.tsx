@@ -251,7 +251,7 @@ export default function InteractiveStreamsChart({ streams }: InteractiveStreamsC
                 )}
             </div>
 
-            <div className="h-[400px] w-full bg-white/5 rounded-xl border border-white/10 p-4">
+            <div className="h-[300px] md:h-[400px] w-full bg-white/5 rounded-xl border border-white/10 p-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" opacity={0.4} vertical={false} />

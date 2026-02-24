@@ -1,533 +1,336 @@
+FAIL src/lib/errors/__tests__/handler.test.ts
+  ΓùÅ handleError ΓÇ║ Prisma Errors ΓÇ║ should handle P2002 (Unique constraint violation) with 409
 
-> runflow@1.2.8 test
-> jest
+    expect(received).toEqual(expected) // deep equality
 
-PASS src/app/api/mobile/v1/activities/route.test.ts
+    - Expected  - 1
+    + Received  + 0
+
+      Object {
+        "error": "Duplicate entry",
+    -   "errorId": Any<String>,
+      }
+
+      41 |
+      42 |       expect(response.status).toBe(409);
+    > 43 |       expect(response.body).toEqual({ error: 'Duplicate entry', errorId: expect.any(String) });
+         |                             ^
+      44 |       expect(logger.error).toHaveBeenCalledWith('Error', { error: 'Unique constraint failed' });
+      45 |     });
+      46 |
+
+      at Object.toEqual (src/lib/errors/__tests__/handler.test.ts:43:29)
+
+  ΓùÅ handleError ΓÇ║ Prisma Errors ΓÇ║ should handle P2025 (Record not found) with 404
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 0
+
+      Object {
+        "error": "Resource not found",
+    -   "errorId": Any<String>,
+      }
+
+      54 |
+      55 |       expect(response.status).toBe(404);
+    > 56 |       expect(response.body).toEqual({ error: 'Resource not found', errorId: expect.any(String) });
+         |                             ^
+      57 |     });
+      58 |
+      59 |     it('should handle other Prisma errors with 500', () => {
+
+      at Object.toEqual (src/lib/errors/__tests__/handler.test.ts:56:29)
+
+  ΓùÅ handleError ΓÇ║ Prisma Errors ΓÇ║ should handle other Prisma errors with 500
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 0
+
+      Object {
+        "error": "Database error",
+    -   "errorId": Any<String>,
+      }
+
+      66 |
+      67 |       expect(response.status).toBe(500);
+    > 68 |       expect(response.body).toEqual({ error: 'Database error', errorId: expect.any(String) });
+         |                             ^
+      69 |     });
+      70 |   });
+      71 |
+
+      at Object.toEqual (src/lib/errors/__tests__/handler.test.ts:68:29)
+
+  ΓùÅ handleError ΓÇ║ Syntax Errors ΓÇ║ should handle SyntaxError with 400
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 0
+
+      Object {
+        "error": "Invalid request format",
+    -   "errorId": Any<String>,
+      }
+
+      77 |
+      78 |       expect(response.status).toBe(400);
+    > 79 |       expect(response.body).toEqual({ error: 'Invalid request format', errorId: expect.any(String) });
+         |                             ^
+      80 |       expect(logger.error).toHaveBeenCalledWith('Error', { error: 'Unexpected token' });
+      81 |     });
+      82 |   });
+
+      at Object.toEqual (src/lib/errors/__tests__/handler.test.ts:79:29)
+
+  ΓùÅ handleError ΓÇ║ Unknown Errors ΓÇ║ should handle non-Error objects in development
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+      "Error",
+      Object {
+        "error": "String error",
+    +   "errorId": "e0f66de6",
+      },
+
+    Number of calls: 1
+
+      113 |       expect(response.status).toBe(500);
+      114 |       expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
+    > 115 |       expect(logger.error).toHaveBeenCalledWith('Error', { error: 'String error' });
+          |                            ^
+      116 |     });
+      117 |
+      118 |     it('should handle non-Error objects in production', () => {
+
+      at Object.toHaveBeenCalledWith (src/lib/errors/__tests__/handler.test.ts:115:28)
+
+  ΓùÅ handleError ΓÇ║ Unknown Errors ΓÇ║ should handle non-Error objects in production
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    - Expected
+    + Received
+
+      "Error",
+      Object {
+        "error": "[object Object]",
+    +   "errorId": "030ceabd",
+      },
+
+    Number of calls: 1
+
+      124 |       expect(response.status).toBe(500);
+      125 |       expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
+    > 126 |       expect(logger.error).toHaveBeenCalledWith('Error', { error: '[object Object]' });
+          |                            ^
+      127 |     });
+      128 |   });
+      129 | });
+
+      at Object.toHaveBeenCalledWith (src/lib/errors/__tests__/handler.test.ts:126:28)
+
+PASS src/app/api/admin/recalculate-fitness/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:44:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:54:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:84:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] Recalculating for user user2@example.com (Start: 2023-01-02T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:84:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] Starting fitness recalculation for user user-1...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:44:17)
+
+    console.log
+      [Admin] Found 1 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:54:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:84:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:44:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:54:17)
+
+    console.log
+      [Admin] User user1@example.com has no activities. Skipping.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:95:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] User user2@example.com has no activities. Skipping.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:95:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:44:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:54:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:84:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] Recalculating for user user2@example.com (Start: 2023-01-02T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:84:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Failed to recalculate for user user1@example.com: Error: Fitness cache error
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:177:61)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+
+       97 |                 }
+       98 |             } catch (err: any) {
+    >  99 |                 console.error(`[Admin] Failed to recalculate for user ${user.email}:`, err);
+          |                         ^
+      100 |                 return { userId: user.id, email: user.email, status: 'error', error: err.message };
+      101 |             }
+      102 |         }));
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:99:25)
+
+    console.error
+      [Admin] Failed to recalculate for user user2@example.com: Error: Fitness cache error
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:177:61)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+
+       97 |                 }
+       98 |             } catch (err: any) {
+    >  99 |                 console.error(`[Admin] Failed to recalculate for user ${user.email}:`, err);
+          |                         ^
+      100 |                 return { userId: user.id, email: user.email, status: 'error', error: err.message };
+      101 |             }
+      102 |         }));
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:99:25)
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:44:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:54:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:84:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] Recalculating for user user2@example.com (Start: 2023-01-02T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:84:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:44:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:54:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:84:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] Recalculating for user user2@example.com (Start: 2023-01-02T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:84:29)
+          at Array.map (<anonymous>)
+
+PASS src/lib/strava/transform.test.ts
 PASS src/lib/metrics/__tests__/fitnessCache.test.ts
   ΓùÅ Console
 
     console.log
       [FitnessCache] Updated 30 days for user user1. Latest CTL: 4.9, ATL: 0.1
 
-      at log (src/lib/metrics/fitnessCache.ts:204:17)
+      at log (src/lib/metrics/fitnessCache.ts:203:17)
 
-PASS src/lib/metrics/__tests__/trimp.test.ts
-PASS src/lib/metrics/__tests__/runalyze.test.ts
-PASS src/lib/services/__tests__/analytics.test.ts
 PASS src/lib/metrics/__tests__/fitness.test.ts
-PASS src/lib/metrics/__tests__/goalProjection.test.ts
-PASS src/lib/__tests__/config.test.ts
-  ΓùÅ Console
 
-    console.warn
-      
-      === CONFIGURATION WARNINGS (dev only) ===
-
-      77 |     // Log warnings in development
-      78 |     if (errors.length > 0) {
-    > 79 |         console.warn('\n=== CONFIGURATION WARNINGS (dev only) ===');
-         |                 ^
-      80 |         errors.forEach(err => console.warn(`  - ${err}`));
-      81 |         console.warn('==========================================\n');
-      82 |     }
-
-      at warn (src/lib/config.ts:79:17)
-      at validateConfig (src/lib/__tests__/config.test.ts:26:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:26:48)
-
-    console.warn
-        - Missing required environment variable: NEXTAUTH_SECRET
-
-      78 |     if (errors.length > 0) {
-      79 |         console.warn('\n=== CONFIGURATION WARNINGS (dev only) ===');
-    > 80 |         errors.forEach(err => console.warn(`  - ${err}`));
-         |                                       ^
-      81 |         console.warn('==========================================\n');
-      82 |     }
-      83 | }
-
-      at warn (src/lib/config.ts:80:39)
-          at Array.forEach (<anonymous>)
-      at forEach (src/lib/config.ts:80:16)
-      at validateConfig (src/lib/__tests__/config.test.ts:26:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:26:48)
-
-    console.warn
-        - Security: JWT_SECRET appears to be using a default/example value.
-
-      78 |     if (errors.length > 0) {
-      79 |         console.warn('\n=== CONFIGURATION WARNINGS (dev only) ===');
-    > 80 |         errors.forEach(err => console.warn(`  - ${err}`));
-         |                                       ^
-      81 |         console.warn('==========================================\n');
-      82 |     }
-      83 | }
-
-      at warn (src/lib/config.ts:80:39)
-          at Array.forEach (<anonymous>)
-      at forEach (src/lib/config.ts:80:16)
-      at validateConfig (src/lib/__tests__/config.test.ts:26:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:26:48)
-
-    console.warn
-      ==========================================
-
-      79 |         console.warn('\n=== CONFIGURATION WARNINGS (dev only) ===');
-      80 |         errors.forEach(err => console.warn(`  - ${err}`));
-    > 81 |         console.warn('==========================================\n');
-         |                 ^
-      82 |     }
-      83 | }
-      84 |
-
-      at warn (src/lib/config.ts:81:17)
-      at validateConfig (src/lib/__tests__/config.test.ts:26:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:26:48)
-
-    console.error
-      
-      === CONFIGURATION ERROR ===
-
-      66 |     // Only throw in production
-      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
-    > 68 |         console.error('\n=== CONFIGURATION ERROR ===');
-         |                 ^
-      69 |         errors.forEach(err => console.error(`  - ${err}`));
-      70 |         console.error('===========================\n');
-      71 |         throw new Error(
-
-      at error (src/lib/config.ts:68:17)
-      at validateConfig (src/lib/__tests__/config.test.ts:35:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:35:44)
-
-    console.error
-        - Missing required environment variable: NEXTAUTH_SECRET
-
-      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
-      68 |         console.error('\n=== CONFIGURATION ERROR ===');
-    > 69 |         errors.forEach(err => console.error(`  - ${err}`));
-         |                                       ^
-      70 |         console.error('===========================\n');
-      71 |         throw new Error(
-      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
-
-      at error (src/lib/config.ts:69:39)
-          at Array.forEach (<anonymous>)
-      at forEach (src/lib/config.ts:69:16)
-      at validateConfig (src/lib/__tests__/config.test.ts:35:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:35:44)
-
-    console.error
-        - Security: JWT_SECRET appears to be using a default/example value.
-
-      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
-      68 |         console.error('\n=== CONFIGURATION ERROR ===');
-    > 69 |         errors.forEach(err => console.error(`  - ${err}`));
-         |                                       ^
-      70 |         console.error('===========================\n');
-      71 |         throw new Error(
-      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
-
-      at error (src/lib/config.ts:69:39)
-          at Array.forEach (<anonymous>)
-      at forEach (src/lib/config.ts:69:16)
-      at validateConfig (src/lib/__tests__/config.test.ts:35:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:35:44)
-
-    console.error
-      ===========================
-
-      68 |         console.error('\n=== CONFIGURATION ERROR ===');
-      69 |         errors.forEach(err => console.error(`  - ${err}`));
-    > 70 |         console.error('===========================\n');
-         |                 ^
-      71 |         throw new Error(
-      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
-      73 |             `See logs above for details.`
-
-      at error (src/lib/config.ts:70:17)
-      at validateConfig (src/lib/__tests__/config.test.ts:35:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:35:44)
-
-    console.error
-      
-      === CONFIGURATION ERROR ===
-
-      66 |     // Only throw in production
-      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
-    > 68 |         console.error('\n=== CONFIGURATION ERROR ===');
-         |                 ^
-      69 |         errors.forEach(err => console.error(`  - ${err}`));
-      70 |         console.error('===========================\n');
-      71 |         throw new Error(
-
-      at error (src/lib/config.ts:68:17)
-      at validateConfig (src/lib/__tests__/config.test.ts:44:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:44:44)
-
-    console.error
-        - Security: NEXTAUTH_SECRET appears to be using a default/example value. Generate a secure value with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-
-      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
-      68 |         console.error('\n=== CONFIGURATION ERROR ===');
-    > 69 |         errors.forEach(err => console.error(`  - ${err}`));
-         |                                       ^
-      70 |         console.error('===========================\n');
-      71 |         throw new Error(
-      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
-
-      at error (src/lib/config.ts:69:39)
-          at Array.forEach (<anonymous>)
-      at forEach (src/lib/config.ts:69:16)
-      at validateConfig (src/lib/__tests__/config.test.ts:44:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:44:44)
-
-    console.error
-        - Security: JWT_SECRET appears to be using a default/example value.
-
-      67 |     if (errors.length > 0 && process.env.NODE_ENV === 'production') {
-      68 |         console.error('\n=== CONFIGURATION ERROR ===');
-    > 69 |         errors.forEach(err => console.error(`  - ${err}`));
-         |                                       ^
-      70 |         console.error('===========================\n');
-      71 |         throw new Error(
-      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
-
-      at error (src/lib/config.ts:69:39)
-          at Array.forEach (<anonymous>)
-      at forEach (src/lib/config.ts:69:16)
-      at validateConfig (src/lib/__tests__/config.test.ts:44:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:44:44)
-
-    console.error
-      ===========================
-
-      68 |         console.error('\n=== CONFIGURATION ERROR ===');
-      69 |         errors.forEach(err => console.error(`  - ${err}`));
-    > 70 |         console.error('===========================\n');
-         |                 ^
-      71 |         throw new Error(
-      72 |             `Configuration validation failed with ${errors.length} error(s). ` +
-      73 |             `See logs above for details.`
-
-      at error (src/lib/config.ts:70:17)
-      at validateConfig (src/lib/__tests__/config.test.ts:44:26)
-      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
-      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
-      at Object.toThrow (src/lib/__tests__/config.test.ts:44:44)
-
-    console.warn
-      [Config] Missing NONEXISTENT, using empty string (dev only)
-
-       95 |             throw new Error(`Required environment variable ${name} is not set`);
-       96 |         }
-    >  97 |         console.warn(`[Config] Missing ${name}, using empty string (dev only)`);
-          |                 ^
-       98 |         return '';
-       99 |     }
-      100 |
-
-      at warn (src/lib/config.ts:97:17)
-      at Object.getRequiredEnv (src/lib/__tests__/config.test.ts:68:20)
-
-FAIL src/lib/metrics/__tests__/vdot.test.ts
-  ΓùÅ VDOT Calculator ΓÇ║ calculateVdot ΓÇ║ should calculate correct VDOT for 10K
-
-    expect(received).toBeCloseTo(expected, precision)
-
-    Expected: 49
-    Received: 49.1
-
-    Expected precision:    1
-    Expected difference: < 0.05
-    Received difference:   0.10000000000000142
-
-      12 |             // 42:00 10K is roughly VDOT 49
-      13 |             const vdot = calculateVdot({ distance: '10K', timeSeconds: 2520 });
-    > 14 |             expect(vdot).toBeCloseTo(49, 1);
-         |                          ^
-      15 |         });
-      16 |
-      17 |         it('should calculate correct VDOT for half marathon', () => {
-
-      at Object.toBeCloseTo (src/lib/metrics/__tests__/vdot.test.ts:14:26)
-
-  ΓùÅ VDOT Calculator ΓÇ║ calculateVdot ΓÇ║ should calculate correct VDOT for half marathon
-
-    expect(received).toBeCloseTo(expected, precision)
-
-    Expected: 49
-    Received: 49.1
-
-    Expected precision:    1
-    Expected difference: < 0.05
-    Received difference:   0.10000000000000142
-
-      18 |             // 1:33:00 (5580s) Half is roughly VDOT 49
-      19 |             const vdot = calculateVdot({ distance: 'HALF', timeSeconds: 5580 });
-    > 20 |             expect(vdot).toBeCloseTo(49, 1);
-         |                          ^
-      21 |         });
-      22 |
-      23 |         it('should calculate correct VDOT for marathon', () => {
-
-      at Object.toBeCloseTo (src/lib/metrics/__tests__/vdot.test.ts:20:26)
-
-  ΓùÅ VDOT Calculator ΓÇ║ calculateVdot ΓÇ║ should calculate correct VDOT for marathon
-
-    expect(received).toBeCloseTo(expected, precision)
-
-    Expected: 49
-    Received: 48.7
-
-    Expected precision:    1
-    Expected difference: < 0.05
-    Received difference:   0.29999999999999716
-
-      24 |             // 3:15:00 (11700s) Marathon is roughly VDOT 49
-      25 |             const vdot = calculateVdot({ distance: 'MARATHON', timeSeconds: 11700 });
-    > 26 |             expect(vdot).toBeCloseTo(49, 1);
-         |                          ^
-      27 |         });
-      28 |
-      29 |         it('should return 0 for invalid inputs', () => {
-
-      at Object.toBeCloseTo (src/lib/metrics/__tests__/vdot.test.ts:26:26)
-
-  ΓùÅ VDOT Calculator ΓÇ║ predictRaceTime ΓÇ║ should predict reasonable 5K time for VDOT 50
-
-    expect(received).toBeCloseTo(expected, precision)
-
-    Expected: 1176
-    Received: 1197
-
-    Expected precision:    30
-    Expected difference: < 5e-31
-    Received difference:   21
-
-      62 |             // VDOT 50 -> 5K ~19:36 (1176s)
-      63 |             const time = predictRaceTime(50, '5K');
-    > 64 |             expect(time).toBeCloseTo(1176, 30); // Within 30 seconds
-         |                          ^
-      65 |         });
-      66 |
-      67 |         it('should predict reasonable half marathon time for VDOT 50', () => {
-
-      at Object.toBeCloseTo (src/lib/metrics/__tests__/vdot.test.ts:64:26)
-
-  ΓùÅ VDOT Calculator ΓÇ║ predictRaceTime ΓÇ║ should predict reasonable half marathon time for VDOT 50
-
-    expect(received).toBeCloseTo(expected, precision)
-
-    Expected: 89.5
-    Received: 91.56666666666666
-
-    Expected precision:    3
-    Expected difference: < 0.0005
-    Received difference:   2.066666666666663
-
-      69 |             const time = predictRaceTime(50, 'HALF');
-      70 |             const minutes = time / 60;
-    > 71 |             expect(minutes).toBeCloseTo(89.5, 3); // ~1:29:30
-         |                             ^
-      72 |         });
-      73 |
-      74 |         it('should predict faster time for higher VDOT', () => {
-
-      at Object.toBeCloseTo (src/lib/metrics/__tests__/vdot.test.ts:71:29)
-
-PASS src/lib/admin/__tests__/auth.test.ts
-  ΓùÅ Console
-
-    console.error
-      [Admin Auth] ADMIN_USERNAME or ADMIN_PASSWORD not configured
-
-      53 |
-      54 |     if (!adminUsername || !adminPassword) {
-    > 55 |         console.error('[Admin Auth] ADMIN_USERNAME or ADMIN_PASSWORD not configured');
-         |                 ^
-      56 |         return false;
-      57 |     }
-      58 |
-
-      at error (src/lib/admin/auth.ts:55:17)
-      at Object.<anonymous> (src/lib/admin/__tests__/auth.test.ts:47:38)
-
-FAIL src/lib/strava/sync.test.ts
-  ΓùÅ syncUserActivities Performance ΓÇ║ should query the database for each activity (N+1 issue)
-
-    TypeError: (0 , _redis.getRedisClient) is not a function
-
-      56 |
-      57 |     async checkAndWait(): Promise<void> {
-    > 58 |         const redis = await getRedisClient();
-         |                                           ^
-      59 |
-      60 |         if (redis) {
-      61 |             return this.checkAndWaitRedis(redis);
-
-      at Object.checkAndWait (src/lib/strava/sync.ts:58:43)
-      at checkAndWait (src/lib/strava/sync.ts:226:23)
-      at fetchActivities (src/lib/strava/sync.ts:527:38)
-      at Object.<anonymous> (src/lib/strava/sync.test.ts:130:9)
-
-PASS src/lib/__tests__/apiError.test.ts
-  ΓùÅ Console
-
-    console.error
-      [API Error] {
-        error: {
-          name: 'ApiError',
-          message: 'User not found',
-          stack: 'ApiError: User not found\n' +
-            '    at ApiError.notFound (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\apiError.ts:77:16)\n' +
-            '    at Object.notFound (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\__tests__\\apiError.test.ts:110:32)\n' +
-            '    at Promise.then.completed (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:298:28)\n' +
-            '    at new Promise (<anonymous>)\n' +
-            '    at callAsyncCircusFn (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:231:10)\n' +
-            '    at _callCircusTest (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:316:40)\n' +
-            '    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n' +
-            '    at _runTest (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:252:3)\n' +
-            '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:126:9)\n' +
-            '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:121:9)\n' +
-            '    at run (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:71:3)\n' +
-            '    at runAndTransformResultsToJestFormat (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n' +
-            '    at jestAdapter (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n' +
-            '    at runTestInternal (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n' +
-            '    at runTest (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:444:34)\n' +
-            '    at Object.worker (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\testWorker.js:106:12)'
-        }
-      }
-
-      119 | ): NextResponse<ApiErrorResponse> {
-      120 |     // Log the error with context
-    > 121 |     console.error('[API Error]', {
-          |             ^
-      122 |         ...logContext,
-      123 |         error: error instanceof Error ? {
-      124 |             name: error.name,
-
-      at error (src/lib/apiError.ts:121:13)
-      at Object.<anonymous> (src/lib/__tests__/apiError.test.ts:111:40)
-
-    console.error
-      [API Error] {
-        error: {
-          name: 'Error',
-          message: 'Something went wrong',
-          stack: 'Error: Something went wrong\n' +
-            '    at Object.<anonymous> (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\__tests__\\apiError.test.ts:119:23)\n' +
-            '    at Promise.then.completed (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:298:28)\n' +
-            '    at new Promise (<anonymous>)\n' +
-            '    at callAsyncCircusFn (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:231:10)\n' +
-            '    at _callCircusTest (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:316:40)\n' +
-            '    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n' +
-            '    at _runTest (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:252:3)\n' +
-            '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:126:9)\n' +
-            '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:121:9)\n' +
-            '    at run (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:71:3)\n' +
-            '    at runAndTransformResultsToJestFormat (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n' +
-            '    at jestAdapter (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n' +
-            '    at runTestInternal (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n' +
-            '    at runTest (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:444:34)\n' +
-            '    at Object.worker (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\testWorker.js:106:12)'
-        }
-      }
-
-      119 | ): NextResponse<ApiErrorResponse> {
-      120 |     // Log the error with context
-    > 121 |     console.error('[API Error]', {
-          |             ^
-      122 |         ...logContext,
-      123 |         error: error instanceof Error ? {
-      124 |             name: error.name,
-
-      at error (src/lib/apiError.ts:121:13)
-      at Object.<anonymous> (src/lib/__tests__/apiError.test.ts:120:40)
-
-    console.error
-      [API Error] {
-        error: {
-          name: 'Error',
-          message: 'Sensitive database error',
-          stack: 'Error: Sensitive database error\n' +
-            '    at Object.<anonymous> (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\__tests__\\apiError.test.ts:128:23)\n' +
-            '    at Promise.then.completed (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:298:28)\n' +
-            '    at new Promise (<anonymous>)\n' +
-            '    at callAsyncCircusFn (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:231:10)\n' +
-            '    at _callCircusTest (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:316:40)\n' +
-            '    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n' +
-            '    at _runTest (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:252:3)\n' +
-            '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:126:9)\n' +
-            '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:121:9)\n' +
-            '    at run (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:71:3)\n' +
-            '    at runAndTransformResultsToJestFormat (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n' +
-            '    at jestAdapter (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n' +
-            '    at runTestInternal (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n' +
-            '    at runTest (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:444:34)\n' +
-            '    at Object.worker (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\testWorker.js:106:12)'
-        }
-      }
-
-      119 | ): NextResponse<ApiErrorResponse> {
-      120 |     // Log the error with context
-    > 121 |     console.error('[API Error]', {
-          |             ^
-      122 |         ...logContext,
-      123 |         error: error instanceof Error ? {
-      124 |             name: error.name,
-
-      at error (src/lib/apiError.ts:121:13)
-      at Object.<anonymous> (src/lib/__tests__/apiError.test.ts:129:40)
-
-    console.error
-      [API Error] { error: 'string error' }
-
-      119 | ): NextResponse<ApiErrorResponse> {
-      120 |     // Log the error with context
-    > 121 |     console.error('[API Error]', {
-          |             ^
-      122 |         ...logContext,
-      123 |         error: error instanceof Error ? {
-      124 |             name: error.name,
-
-      at error (src/lib/apiError.ts:121:13)
-      at Object.<anonymous> (src/lib/__tests__/apiError.test.ts:135:40)
-
-PASS src/lib/metrics/__tests__/calories.test.ts
-PASS src/lib/__tests__/stravaSync.test.ts
-  ΓùÅ Console
-
-    console.log
-      [Strava] Rate limit reached (Redis), waiting 1s
-
-      at Object.log [as info] (src/lib/strava/sync.ts:39:21)
-
-
-Test Suites: 2 failed, 12 passed, 14 total
-Tests:       6 failed, 132 passed, 138 total
+Test Suites: 1 failed, 4 passed, 5 total
+Tests:       6 failed, 25 passed, 31 total
 Snapshots:   0 total
-Time:        6.278 s
-Ran all test suites.
+Time:        1.452 s
+Ran all test suites matching /transform|fitness|fitnessCache|handler/i.

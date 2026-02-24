@@ -74,10 +74,12 @@ export const rateLimiter = {
         this.requests++;
     },
 
-    async checkAndWaitRedis(redis: RedisClient): Promise<void> {
+    async checkAndWaitRedis(redis: RedisClient, maxAttempts: number = 10): Promise<void> {
         const windowSeconds = Math.ceil(RATE_LIMIT_WINDOW_MS / 1000);
+        let attempts = 0;
 
-        while (true) {
+        while (attempts < maxAttempts) {
+            attempts++;
             const current = await redis.incr(RATE_LIMIT_KEY);
 
             if (current === 1) {
@@ -108,6 +110,8 @@ export const rateLimiter = {
             logger.info('Rate limit reached (Redis), waiting', { waitSeconds: waitTime });
             await new Promise(resolve => setTimeout(resolve, (waitTime + 1) * 1000));
         }
+
+        throw new Error('Strava rate limit exceeded: max retry attempts reached in Redis rate limiter');
     }
 };
 

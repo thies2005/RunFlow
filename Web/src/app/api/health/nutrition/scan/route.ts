@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+const BARCODE_REGEX = /^\d{8,14}$/;
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const barcode = searchParams.get('barcode');
 
     if (!barcode) {
         return NextResponse.json({ error: 'Barcode is required' }, { status: 400 });
+    }
+
+    if (!BARCODE_REGEX.test(barcode)) {
+        return NextResponse.json({ error: 'Invalid barcode format' }, { status: 400 });
     }
 
     try {
@@ -41,8 +47,18 @@ export async function GET(request: Request) {
         }
 
         // Item not found in local database, fetch from Open Food Facts API
-        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-        const data = await res.json();
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+
+        let data;
+        try {
+            const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${encodeURIComponent(barcode)}.json`, {
+                signal: controller.signal
+            });
+            data = await res.json();
+        } finally {
+            clearTimeout(timeout);
+        }
 
         if (data.status !== 1 || !data.product) {
             return NextResponse.json({ error: 'Product not found' }, { status: 404 });

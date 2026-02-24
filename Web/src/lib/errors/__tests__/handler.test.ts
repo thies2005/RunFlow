@@ -40,8 +40,8 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(409);
-      expect(response.body).toEqual({ error: 'Duplicate entry' });
-      expect(logger.error).toHaveBeenCalledWith('Error', { error: 'Unique constraint failed' });
+      expect(response.body).toEqual({ error: 'Duplicate entry', errorId: expect.any(String) });
+      expect(logger.error).toHaveBeenCalledWith('Error', { error: 'Unique constraint failed', errorId: expect.any(String) });
     });
 
     it('should handle P2025 (Record not found) with 404', () => {
@@ -53,7 +53,7 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(404);
-      expect(response.body).toEqual({ error: 'Resource not found' });
+      expect(response.body).toEqual({ error: 'Resource not found', errorId: expect.any(String) });
     });
 
     it('should handle other Prisma errors with 500', () => {
@@ -65,7 +65,7 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Database error' });
+      expect(response.body).toEqual({ error: 'Database error', errorId: expect.any(String) });
     });
   });
 
@@ -76,8 +76,8 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(400);
-      expect(response.body).toEqual({ error: 'Invalid request format' });
-      expect(logger.error).toHaveBeenCalledWith('Error', { error: 'Unexpected token' });
+      expect(response.body).toEqual({ error: 'Invalid request format', errorId: expect.any(String) });
+      expect(logger.error).toHaveBeenCalledWith('Error', { error: 'Unexpected token', errorId: expect.any(String) });
     });
   });
 
@@ -89,7 +89,7 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Internal server error' });
+      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
     });
 
     it('should return "Internal server error" in production', () => {
@@ -99,7 +99,7 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Internal server error' });
+      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
     });
   });
 
@@ -111,8 +111,8 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Internal server error' });
-      expect(logger.error).toHaveBeenCalledWith('Error', { error: 'String error' });
+      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
+      expect(logger.error).toHaveBeenCalledWith('Error', { error: 'String error', errorId: expect.any(String) });
     });
 
     it('should handle non-Error objects in production', () => {
@@ -122,8 +122,8 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Internal server error' });
-      expect(logger.error).toHaveBeenCalledWith('Error', { error: '[object Object]' });
+      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
+      expect(logger.error).toHaveBeenCalledWith('Error', { error: '[object Object]', errorId: expect.any(String) });
     });
   });
 });

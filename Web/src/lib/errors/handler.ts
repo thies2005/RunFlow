@@ -1,38 +1,40 @@
 import { Prisma } from '@prisma/client'
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logging/logger'
+import crypto from 'crypto'
 
 export function handleError(error: unknown): NextResponse {
-  logger.error('Error', { error: error instanceof Error ? error.message : String(error) })
+  const errorId = crypto.randomUUID().substring(0, 8)
+  logger.error('Error', { errorId, error: error instanceof Error ? error.message : String(error) })
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2002') {
       return NextResponse.json(
-        { error: 'Duplicate entry' },
+        { error: 'Duplicate entry', errorId },
         { status: 409 }
       )
     }
     if (error.code === 'P2025') {
       return NextResponse.json(
-        { error: 'Resource not found' },
+        { error: 'Resource not found', errorId },
         { status: 404 }
       )
     }
     return NextResponse.json(
-      { error: 'Database error' },
+      { error: 'Database error', errorId },
       { status: 500 }
     )
   }
 
   if (error instanceof SyntaxError) {
     return NextResponse.json(
-      { error: 'Invalid request format' },
+      { error: 'Invalid request format', errorId },
       { status: 400 }
     )
   }
 
   return NextResponse.json(
-    { error: getSafeErrorMessage(error) },
+    { error: getSafeErrorMessage(error), errorId },
     { status: 500 }
   )
 }

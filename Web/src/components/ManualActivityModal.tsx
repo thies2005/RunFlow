@@ -78,7 +78,7 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
 
                     {/* Title */}
                     <div>
-                        <label className="block text-xs text-foreground-muted mb-1">Title</label>
+                        <label className="block text-xs text-foreground-muted mb-1">Title <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             required
@@ -95,7 +95,7 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
                     {/* Date & Type */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1">Date & Time</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Date & Time <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-foreground-muted" />
                                 <input
@@ -129,7 +129,7 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
                     {/* Stats */}
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1">Dist (km)</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Dist (km) <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <Activity className="absolute left-3 top-2.5 w-4 h-4 text-foreground-muted" />
                                 <input
@@ -143,7 +143,7 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
                             </div>
                         </div>
                         <div>
-                            <label className="block text-xs text-foreground-muted mb-1">Dur (min)</label>
+                            <label className="block text-xs text-foreground-muted mb-1">Dur (min) <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <Clock className="absolute left-3 top-2.5 w-4 h-4 text-foreground-muted" />
                                 <input

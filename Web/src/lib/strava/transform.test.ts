@@ -20,13 +20,13 @@ describe('calculateZoneTimes', () => {
         expect(result).toEqual({ z1: 5, z2: 5, z3: 5, z4: 5, z5: 5, z6: 5, z7: 1 });
     });
 
-    it('should cap duration at 10 seconds', () => {
+    it('should cap duration at 30 seconds', () => {
         const heartrates = [120, 120];
         const times = [0, 20]; // 20s gap
 
         const result = calculateZoneTimes(heartrates, times, defaultZoneThresholds);
 
-        expect(result.z1).toBe(11);
+        expect(result.z1).toBe(21);
         expect(result.z2).toBe(0);
     });
 

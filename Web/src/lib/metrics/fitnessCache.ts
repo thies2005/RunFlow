@@ -141,7 +141,8 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
                     // Try zone-based calculation
                     trimp = calculateTrimpFromZones(
                         a.hrZone1Time, a.hrZone2Time, a.hrZone3Time,
-                        a.hrZone4Time, a.hrZone5Time
+                        a.hrZone4Time, a.hrZone5Time, a.hrZone6Time,
+                        a.hrZone7Time
                     );
                 }
 

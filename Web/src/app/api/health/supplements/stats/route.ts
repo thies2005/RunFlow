@@ -20,16 +20,40 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const supplementId = searchParams.get('supplementId');
         const stackId = searchParams.get('stackId');
-        const days = parseInt(searchParams.get('days') || '30', 10);
+        const range = searchParams.get('range') || '1M';
 
         if (!supplementId && !stackId) {
             return NextResponse.json({ error: 'Missing supplementId or stackId' }, { status: 400 });
         }
 
         // Calculate the date range
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setDate(endDate.getDate() - days);
+        const now = new Date();
+        const endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+        const startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+
+        switch (range) {
+            case '1W':
+                startDate.setUTCDate(startDate.getUTCDate() - 7);
+                break;
+            case '1M':
+                startDate.setUTCMonth(startDate.getUTCMonth() - 1);
+                break;
+            case '6M':
+                startDate.setUTCMonth(startDate.getUTCMonth() - 6);
+                break;
+            case '1Y':
+                startDate.setUTCFullYear(startDate.getUTCFullYear() - 1);
+                break;
+            case 'ALL':
+                startDate.setUTCFullYear(2000); // effectively no cutoff
+                break;
+            default:
+                startDate.setUTCMonth(startDate.getUTCMonth() - 1);
+        }
+
+        // Calculate total days for adherence
+        const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+        const daysInRange = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         let logs: { date: Date; taken: boolean }[] = [];
 
@@ -92,11 +116,16 @@ export async function GET(request: NextRequest) {
         }
 
         // Calculate a simple success rate over the requested window
-        const successRate = Math.round((logs.length / days) * 100);
+        const successRate = daysInRange > 0 ? Math.round((logs.length / daysInRange) * 100) : 0;
 
         return NextResponse.json({
+            range,
             successRate,
-            logs
+            logs: logs.map(l => ({
+                ...l,
+                dateStr: l.date.toISOString().split('T')[0],
+                value: 1 // for easy graphing
+            }))
         });
     } catch (error) {
         return handleError(error);

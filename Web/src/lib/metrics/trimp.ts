@@ -88,17 +88,24 @@ export interface ZoneTrimpInput {
     zone3Minutes: number;
     zone4Minutes: number;
     zone5Minutes: number;
+    zone6Minutes: number;
+    zone7Minutes: number;
 }
 
 export function calculateZoneTrimp(input: ZoneTrimpInput): number {
-    const { zone1Minutes, zone2Minutes, zone3Minutes, zone4Minutes, zone5Minutes } = input;
+    const {
+        zone1Minutes, zone2Minutes, zone3Minutes, zone4Minutes,
+        zone5Minutes, zone6Minutes, zone7Minutes
+    } = input;
 
     const trimp =
         zone1Minutes * 1 +
         zone2Minutes * 2 +
         zone3Minutes * 3 +
         zone4Minutes * 4 +
-        zone5Minutes * 5;
+        zone5Minutes * 5 +
+        zone6Minutes * 6 +
+        zone7Minutes * 7;
 
     return Math.round(trimp * 10) / 10;
 }
@@ -111,7 +118,9 @@ export function calculateTrimpFromZones(
     hrZone2Seconds: number | null,
     hrZone3Seconds: number | null,
     hrZone4Seconds: number | null,
-    hrZone5Seconds: number | null
+    hrZone5Seconds: number | null,
+    hrZone6Seconds: number | null,
+    hrZone7Seconds: number | null
 ): number {
     return calculateZoneTrimp({
         zone1Minutes: (hrZone1Seconds ?? 0) / 60,
@@ -119,5 +128,7 @@ export function calculateTrimpFromZones(
         zone3Minutes: (hrZone3Seconds ?? 0) / 60,
         zone4Minutes: (hrZone4Seconds ?? 0) / 60,
         zone5Minutes: (hrZone5Seconds ?? 0) / 60,
+        zone6Minutes: (hrZone6Seconds ?? 0) / 60,
+        zone7Minutes: (hrZone7Seconds ?? 0) / 60,
     });
 }

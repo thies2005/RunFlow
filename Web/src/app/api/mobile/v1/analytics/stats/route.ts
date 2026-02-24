@@ -109,9 +109,13 @@ export async function GET(request: NextRequest) {
                 trimp: true,
                 averageHr: true,
                 hasHeartrate: true,
+                hrZone1Time: true,
                 hrZone2Time: true,
                 hrZone3Time: true,
                 hrZone4Time: true,
+                hrZone5Time: true,
+                hrZone6Time: true,
+                hrZone7Time: true,
             },
             orderBy: { startDate: 'desc' },
         });

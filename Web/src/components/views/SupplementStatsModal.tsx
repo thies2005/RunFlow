@@ -1,8 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { X, Calendar as CalendarIcon, Activity as ActivityIcon } from 'lucide-react';
-import { format, subDays, isSameDay } from 'date-fns';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
+import { format, subDays, isSameDay, startOfDay } from 'date-fns';
+
+type TimeRange = '1W' | '1M' | '6M' | '1Y' | 'ALL';
 
 interface SupplementStatsModalProps {
     isOpen: boolean;
@@ -12,15 +18,17 @@ interface SupplementStatsModalProps {
     targetName: string;
 }
 
+const RANGES: TimeRange[] = ['1W', '1M', '6M', '1Y', 'ALL'];
+
 export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, targetName }: SupplementStatsModalProps) {
-    const daysToFetch = 30; // 30 day history
+    const [timeRange, setTimeRange] = useState<TimeRange>('1M');
 
     const { data: statsData, isLoading } = useQuery({
-        queryKey: ['supplement-stats', targetId, targetType],
+        queryKey: ['supplement-stats', targetId, targetType, timeRange],
         queryFn: async () => {
             if (!targetId || !targetType) return null;
             const paramName = targetType === 'stack' ? 'stackId' : 'supplementId';
-            const res = await fetch(`/api/health/supplements/stats?${paramName}=${targetId}&days=${daysToFetch}`);
+            const res = await fetch(`/api/health/supplements/stats?${paramName}=${targetId}&range=${timeRange}`);
             if (!res.ok) throw new Error('Failed to fetch stats');
             return res.json();
         },
@@ -29,18 +37,42 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
 
     if (!isOpen) return null;
 
-    // Generate last 30 days array for the grid
-    const today = new Date();
-    const pastDays = Array.from({ length: daysToFetch }).map((_, i) => subDays(today, daysToFetch - 1 - i));
+    // Process data for charts
+    const rawLogs = statsData?.logs || [];
 
-    const getDayStatus = (date: Date) => {
-        if (!statsData?.logs) return false;
-        return statsData.logs.some((log: any) => isSameDay(new Date(log.date), date) && log.taken);
+    // Generate full date range for chart
+    const generateChartData = () => {
+        const today = new Date();
+        const data = [];
+        let daysToGenerate = 30;
+
+        switch (timeRange) {
+            case '1W': daysToGenerate = 7; break;
+            case '1M': daysToGenerate = 30; break;
+            case '6M': daysToGenerate = 180; break;
+            case '1Y': daysToGenerate = 365; break;
+            case 'ALL': daysToGenerate = 365; break; // Clamp to 1Y for now if ALL is passed but not fully supported by history
+        }
+
+        for (let i = daysToGenerate - 1; i >= 0; i--) {
+            const date = subDays(today, i);
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const logFound = rawLogs.find((l: any) => l.dateStr === dateStr);
+
+            data.push({
+                dateStr,
+                date: date,
+                takenValue: logFound ? 1 : 0,
+            });
+        }
+        return data;
     };
+
+    const chartData = generateChartData();
 
     return (
         <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center">
-            <div className="bg-[#1c1c1e] w-full max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
+            <div className="bg-[#1c1c1e] w-full max-w-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
@@ -58,6 +90,22 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
 
                 {/* Body */}
                 <div className="p-5 overflow-y-auto flex-1 space-y-6">
+                    {/* Time Range Selector */}
+                    <div className="flex bg-white/5 p-1 rounded-lg border border-white/10 shrink-0 w-full sm:w-auto self-start sm:self-end">
+                        {RANGES.map(range => (
+                            <button
+                                key={range}
+                                onClick={() => setTimeRange(range)}
+                                className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md transition-colors ${timeRange === range
+                                    ? 'bg-white/10 text-white shadow-sm'
+                                    : 'text-gray-400 hover:text-gray-300'
+                                    }`}
+                            >
+                                {range}
+                            </button>
+                        ))}
+                    </div>
+
                     {isLoading ? (
                         <div className="flex justify-center py-8">
                             <div className="w-8 h-8 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" />
@@ -69,35 +117,50 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
                                 <span className="text-4xl font-black text-white mb-1">
                                     {statsData?.successRate || 0}<span className="text-xl text-blue-400">%</span>
                                 </span>
-                                <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">30-Day Adherence</span>
+                                <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">{timeRange} Adherence</span>
                             </div>
 
-                            {/* Calendar Grid */}
-                            <div>
+                            {/* Chart Map */}
+                            <div className="flex-1 w-full relative min-h-[200px]">
                                 <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-1.5">
-                                    <CalendarIcon className="w-4 h-4 text-gray-400" /> Activity Map
+                                    <CalendarIcon className="w-4 h-4 text-gray-400" /> History Map
                                 </h3>
-                                <div className="grid grid-cols-7 gap-1.5 p-3 bg-white/5 rounded-xl border border-white/10">
-                                    {/* Days of week header (optional, keeping it simple without for now) */}
-                                    {pastDays.map((date, i) => {
-                                        const isTaken = getDayStatus(date);
-                                        const isToday = isSameDay(date, today);
-
-                                        return (
-                                            <div
-                                                key={i}
-                                                title={format(date, 'MMM d, yyyy')}
-                                                className={`
-                                                    aspect-square rounded flex items-center justify-center text-[10px] font-medium transition-all
-                                                    ${isTaken ? 'bg-green-500 text-green-950 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'bg-white/5 text-transparent border border-white/5'}
-                                                    ${isToday && !isTaken ? 'ring-2 ring-white/20' : ''}
-                                                `}
-                                            >
-                                                {/* Optional: Show day number inside the squares if they are big enough */}
-                                                {/* {format(date, 'd')} */}
-                                            </div>
-                                        );
-                                    })}
+                                <div className="h-[200px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                            <XAxis
+                                                dataKey="dateStr"
+                                                stroke="#4b5563"
+                                                fontSize={10}
+                                                tickLine={false}
+                                                minTickGap={timeRange === '1M' ? 5 : 20}
+                                                tickFormatter={(val) => {
+                                                    const date = new Date(val);
+                                                    if (timeRange === '1W' || timeRange === '1M') {
+                                                        return format(date, 'MMM d');
+                                                    }
+                                                    return format(date, 'MMM yy');
+                                                }}
+                                            />
+                                            <YAxis hide domain={[0, 1]} />
+                                            <Tooltip
+                                                contentStyle={{ background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                                                labelStyle={{ color: '#fff' }}
+                                                itemStyle={{ color: '#fff' }}
+                                                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                                labelFormatter={(val) => format(new Date(val), 'EEEE, MMM d, yyyy')}
+                                                formatter={(value) => [value === 1 ? 'Taken' : 'Missed', 'Status']}
+                                            />
+                                            <Bar
+                                                dataKey="takenValue"
+                                                name="Status"
+                                                fill="#4ade80" // green-400
+                                                radius={[2, 2, 0, 0]}
+                                                isAnimationActive={false}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
                                 </div>
                                 <div className="flex items-center gap-4 mt-3 text-xs text-gray-500 justify-end">
                                     <div className="flex items-center gap-1.5">

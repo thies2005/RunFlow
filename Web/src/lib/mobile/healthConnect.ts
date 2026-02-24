@@ -326,6 +326,38 @@ export async function syncHealthData(
 }
 
 /**
+ * Deduplicate health samples by interval.
+ * When multiple sources provide data for the same period, we take the maximum value.
+ * This prevents double-counting if both Google Fit and Samsung Health (or other apps)
+ * are contributing the same intervals to Health Connect.
+ */
+function deduplicateSamples(samples: any[]): number {
+    if (!samples || samples.length === 0) return 0;
+
+    // Group samples by unique interval key
+    const intervalMap = new Map<string, number>();
+
+    for (const sample of samples) {
+        // Create a unique key for the interval
+        const key = `${sample.startDate}_${sample.endDate}`;
+        const currentValue = intervalMap.get(key) || 0;
+
+        // Take the maximum value for this interval
+        if (sample.value > currentValue) {
+            intervalMap.set(key, sample.value);
+        }
+    }
+
+    // Sum the unique/deduplicated intervals
+    let total = 0;
+    intervalMap.forEach(value => {
+        total += value;
+    });
+
+    return total;
+}
+
+/**
  * Fetch steps and weight for a single day, and sync to backend
  */
 export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
@@ -354,7 +386,7 @@ export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
 
         let totalSteps = 0;
         if (stepsResult.samples) {
-            totalSteps = stepsResult.samples.reduce((sum, s) => sum + s.value, 0);
+            totalSteps = deduplicateSamples(stepsResult.samples);
         }
 
         let weightKg: number | undefined;
@@ -469,13 +501,24 @@ export async function syncHistoricalHealthData(
             });
 
             if (stepsResult.samples) {
-                // Aggregate steps by day (YYYY-MM-DD)
+                // To aggregate historical data correctly, we group samples by day key first,
+                // then deduplicate the samples within each day.
+                const samplesByDay = new Map<string, any[]>();
+
                 for (const sample of stepsResult.samples) {
                     const date = new Date(sample.startDate);
                     const dateKey = date.toISOString().split('T')[0];
-                    const currentSteps = stepsMap.get(dateKey) || 0;
-                    stepsMap.set(dateKey, currentSteps + sample.value);
+                    if (!samplesByDay.has(dateKey)) {
+                        samplesByDay.set(dateKey, []);
+                    }
+                    samplesByDay.get(dateKey)?.push(sample);
                 }
+
+                // Now deduplicate and sum each day's samples
+                samplesByDay.forEach((samples, dateKey) => {
+                    const dailyTotal = deduplicateSamples(samples);
+                    stepsMap.set(dateKey, dailyTotal);
+                });
             }
         } catch (error) {
             console.error('Failed to read steps from Health Connect:', error);

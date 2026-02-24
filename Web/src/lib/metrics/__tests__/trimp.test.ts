@@ -132,11 +132,13 @@ describe('TRIMP Calculator', () => {
                 zone2Minutes: 20,
                 zone3Minutes: 15,
                 zone4Minutes: 10,
-                zone5Minutes: 5
+                zone5Minutes: 5,
+                zone6Minutes: 5,
+                zone7Minutes: 5
             });
 
-            // 10*1 + 20*2 + 15*3 + 10*4 + 5*5 = 10 + 40 + 45 + 40 + 25 = 160
-            expect(result).toBe(160);
+            // 10*1 + 20*2 + 15*3 + 10*4 + 5*5 + 5*6 + 5*7 = 10 + 40 + 45 + 40 + 25 + 30 + 35 = 225
+            expect(result).toBe(225);
         });
 
         it('should return 0 for zero zone times', () => {
@@ -145,7 +147,9 @@ describe('TRIMP Calculator', () => {
                 zone2Minutes: 0,
                 zone3Minutes: 0,
                 zone4Minutes: 0,
-                zone5Minutes: 0
+                zone5Minutes: 0,
+                zone6Minutes: 0,
+                zone7Minutes: 0
             });
 
             expect(result).toBe(0);
@@ -158,7 +162,9 @@ describe('TRIMP Calculator', () => {
                 zone2Minutes: 0,
                 zone3Minutes: 0,
                 zone4Minutes: 0,
-                zone5Minutes: 0
+                zone5Minutes: 0,
+                zone6Minutes: 0,
+                zone7Minutes: 0
             });
 
             const hardWorkout = calculateZoneTrimp({
@@ -166,31 +172,33 @@ describe('TRIMP Calculator', () => {
                 zone2Minutes: 0,
                 zone3Minutes: 0,
                 zone4Minutes: 0,
-                zone5Minutes: 60
+                zone5Minutes: 0,
+                zone6Minutes: 0,
+                zone7Minutes: 60
             });
 
-            expect(hardWorkout).toBe(easyWorkout * 5); // Zone 5 is 5x Zone 1
+            expect(hardWorkout).toBe(easyWorkout * 7); // Zone 7 is 7x Zone 1
         });
     });
 
     describe('calculateTrimpFromZones', () => {
         it('should convert seconds to minutes and calculate TRIMP', () => {
             // 60 seconds in each zone = 1 minute each
-            const result = calculateTrimpFromZones(60, 60, 60, 60, 60);
+            const result = calculateTrimpFromZones(60, 60, 60, 60, 60, 60, 60);
 
-            // 1*1 + 1*2 + 1*3 + 1*4 + 1*5 = 15
-            expect(result).toBe(15);
+            // 1*1 + 1*2 + 1*3 + 1*4 + 1*5 + 1*6 + 1*7 = 28
+            expect(result).toBe(28);
         });
 
         it('should handle null values as 0', () => {
-            const result = calculateTrimpFromZones(600, null, null, null, null);
+            const result = calculateTrimpFromZones(600, null, null, null, null, null, null);
 
             // 10 minutes in zone 1 only = 10
             expect(result).toBe(10);
         });
 
         it('should handle all null values', () => {
-            const result = calculateTrimpFromZones(null, null, null, null, null);
+            const result = calculateTrimpFromZones(null, null, null, null, null, null, null);
             expect(result).toBe(0);
         });
     });

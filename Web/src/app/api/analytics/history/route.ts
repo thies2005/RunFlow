@@ -124,7 +124,7 @@ export async function GET(request: Request) {
                 const dateKey = new Date(a.startDate).toISOString().split('T')[0];
 
                 // Fallback TRIMP
-                let trimp = calculateTrimpFromZones(a.hrZone1Time, a.hrZone2Time, a.hrZone3Time, a.hrZone4Time, a.hrZone5Time);
+                let trimp = calculateTrimpFromZones(a.hrZone1Time, a.hrZone2Time, a.hrZone3Time, a.hrZone4Time, a.hrZone5Time, a.hrZone6Time, a.hrZone7Time);
                 if (trimp === 0 && a.movingTime > 0) {
                     trimp = (a.movingTime / 60) * FALLBACK_TRIMP_PER_MINUTE;
                 }

@@ -659,26 +659,30 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">API Key {initialData && '(Leave blank to keep current)'}</label>
-                <div className="flex gap-2">
-                    <input
-                        type="password"
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    API Key(s) {initialData && '(Leave blank to keep current)'}
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                    Enter multiple keys separated by commas or newlines for automatic fallback on rate limits (429).
+                </p>
+                <div className="flex gap-2 items-start">
+                    <textarea
                         value={formData.apiKey}
                         onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                        className="flex-1 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400"
-                        placeholder="sk-..."
+                        className="flex-1 px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400 min-h-[80px] font-mono text-sm leading-relaxed"
+                        placeholder="sk-key1,&#10;sk-key2..."
                     />
                     <button
                         onClick={handleTest}
                         disabled={testing || (!formData.apiKey && !initialData)}
-                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-1"
+                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-1 mt-1 shrink-0"
                     >
                         {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                         Test
                     </button>
                 </div>
                 {testResult && (
-                    <p className={`text-xs mt-1 ${testResult.success ? 'text-green-600' : 'text-red-500'}`}>
+                    <p className={`text-xs mt-2 ${testResult.success ? 'text-green-600' : 'text-red-500'}`}>
                         {testResult.success ? <CheckCircle className="w-3 h-3 inline mr-1" /> : <AlertTriangle className="w-3 h-3 inline mr-1" />}
                         {testResult.message}
                     </p>

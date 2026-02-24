@@ -126,10 +126,18 @@ export async function POST(request: Request) {
             );
         }
 
-        const apiKey = decryptToken(googleProvider.apiKey);
-        if (!apiKey) {
+        const rawDecryptedKey = decryptToken(googleProvider.apiKey);
+        if (!rawDecryptedKey) {
             return NextResponse.json(
                 { error: 'Failed to decrypt Google AI provider API key' },
+                { status: 500 }
+            );
+        }
+
+        const apiKeys = rawDecryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
+        if (apiKeys.length === 0) {
+            return NextResponse.json(
+                { error: 'No valid API keys found for Google AI provider' },
                 { status: 500 }
             );
         }
@@ -154,37 +162,54 @@ export async function POST(request: Request) {
 
         // Use gemini-3-flash-preview model
         const model = 'gemini-3-flash-preview';
-        const url = `${googleProvider.baseUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
         logger.info('[Food Scanner] Calling Gemini Vision', { model, userId, hasCaption: !!caption });
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: fullPrompt },
-                        {
-                            inlineData: {
-                                mimeType,
-                                data: cleanBase64,
-                            },
-                        },
-                    ],
-                }],
-                generationConfig: {
-                    maxOutputTokens: 4096,
-                    temperature: 0.3, // Low temp for more consistent JSON
-                },
-            }),
-        });
+        let response: Response | undefined;
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            logger.error('[Food Scanner] Gemini API error', { status: response.status, error: errorText });
+        for (let i = 0; i < apiKeys.length; i++) {
+            const currentKey = apiKeys[i];
+            const url = `${googleProvider.baseUrl}/v1beta/models/${model}:generateContent?key=${currentKey}`;
+
+            response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: fullPrompt },
+                            {
+                                inlineData: {
+                                    mimeType,
+                                    data: cleanBase64,
+                                },
+                            },
+                        ],
+                    }],
+                    generationConfig: {
+                        maxOutputTokens: 4096,
+                        temperature: 0.3, // Low temp for more consistent JSON
+                    },
+                }),
+            });
+
+            if (response.ok) {
+                break;
+            }
+
+            if (response.status === 429 && i < apiKeys.length - 1) {
+                logger.warn('[Food Scanner] Rate limit hit (429), retrying with next API key', { model, keyIndex: i, totalKeys: apiKeys.length });
+                continue;
+            }
+
+            break; // Other error, or last key
+        }
+
+        if (!response || !response.ok) {
+            const errorText = response ? await response.text() : 'Network error';
+            const status = response ? response.status : 502;
+            logger.error('[Food Scanner] Gemini API error', { status, error: errorText });
             return NextResponse.json(
-                { error: `AI analysis failed (${response.status}). Please try again.` },
+                { error: `AI analysis failed (${status}). Please try again.` },
                 { status: 502 }
             );
         }

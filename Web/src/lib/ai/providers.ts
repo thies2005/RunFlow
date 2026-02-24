@@ -15,7 +15,8 @@ export interface ChatMessage {
 export interface AiConfig {
     provider: 'openai' | 'anthropic' | 'google';
     baseUrl: string;
-    apiKey: string;
+    apiKey: string; // The active key (legacy or first key)
+    apiKeys: string[]; // List of all available keys for retry
     model: string;
     keyOverride?: boolean;
     providerId?: string;
@@ -139,15 +140,17 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
     if (userSettings.customApiKey && userSettings.usageTier === 'none') {
         const decryptedKey = decryptToken(userSettings.customApiKey);
         if (decryptedKey) {
+            const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
             const baseUrl = userSettings.customBaseUrl || 'https://api.openai.com/v1';
-            if (!validateBaseUrl(baseUrl)) {
-                logger.warn('[AI Config] Invalid customBaseUrl detected', { baseUrl, userId });
+            if (!validateBaseUrl(baseUrl) || apiKeys.length === 0) {
+                logger.warn('[AI Config] Invalid custom config detected', { baseUrl, userId });
                 return null;
             }
             return {
                 provider: 'openai', // Custom keys assume OpenAI-compatible for now
                 baseUrl,
-                apiKey: decryptedKey,
+                apiKey: apiKeys[0],
+                apiKeys,
                 model: userSettings.customModel || 'gpt-4o-mini',
             };
         }
@@ -167,24 +170,39 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
     if (globalSettings?.activeProvider) {
         const decryptedKey = decryptToken(globalSettings.activeProvider.apiKey);
         if (decryptedKey) {
+            const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
             const baseUrl = globalSettings.activeProvider.baseUrl;
-            if (!validateBaseUrl(baseUrl)) {
-                logger.warn('[AI Config] Invalid activeProvider.baseUrl detected', { baseUrl, providerId: globalSettings.activeProvider.id });
+            if (!validateBaseUrl(baseUrl) || apiKeys.length === 0) {
+                logger.warn('[AI Config] Invalid activeProvider config detected', { baseUrl, providerId: globalSettings.activeProvider.id });
                 return null;
             }
+
+            let fallbackAiConfig: AiConfig | undefined;
+            if (globalSettings.fallbackProvider) {
+                const fbDecryptedKey = decryptToken(globalSettings.fallbackProvider.apiKey);
+                if (fbDecryptedKey) {
+                    const fbApiKeys = fbDecryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
+                    if (fbApiKeys.length > 0 && validateBaseUrl(globalSettings.fallbackProvider.baseUrl)) {
+                        fallbackAiConfig = {
+                            provider: globalSettings.fallbackProvider.type as 'openai' | 'anthropic' | 'google',
+                            baseUrl: globalSettings.fallbackProvider.baseUrl,
+                            apiKey: fbApiKeys[0],
+                            apiKeys: fbApiKeys,
+                            model: globalSettings.fallbackProvider.models[0] || 'gpt-4o-mini',
+                            providerId: globalSettings.fallbackProvider.id,
+                        };
+                    }
+                }
+            }
+
             return {
                 provider: globalSettings.activeProvider.type as 'openai' | 'anthropic' | 'google',
                 baseUrl,
-                apiKey: decryptedKey,
+                apiKey: apiKeys[0],
+                apiKeys,
                 model: globalSettings.activeProvider.models[0] || 'gpt-4o-mini', // Default to first available model
                 providerId: globalSettings.activeProvider.id,
-                fallback: globalSettings.fallbackProvider ? {
-                    provider: globalSettings.fallbackProvider.type as 'openai' | 'anthropic' | 'google',
-                    baseUrl: globalSettings.fallbackProvider.baseUrl,
-                    apiKey: decryptToken(globalSettings.fallbackProvider.apiKey) || '',
-                    model: globalSettings.fallbackProvider.models[0] || 'gpt-4o-mini',
-                    providerId: globalSettings.fallbackProvider.id,
-                } : undefined,
+                fallback: fallbackAiConfig,
             };
         }
         // Fall through if active provider key is invalid
@@ -194,15 +212,17 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
     if (globalSettings?.defaultApiKey) {
         const decryptedKey = decryptToken(globalSettings.defaultApiKey);
         if (decryptedKey) {
+            const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
             const baseUrl = globalSettings.defaultBaseUrl;
-            if (!validateBaseUrl(baseUrl)) {
-                logger.warn('[AI Config] Invalid defaultBaseUrl detected', { baseUrl });
+            if (!validateBaseUrl(baseUrl) || apiKeys.length === 0) {
+                logger.warn('[AI Config] Invalid default config detected', { baseUrl });
                 return null;
             }
             return {
                 provider: 'openai', // Legacy is always OpenAI-compatible
                 baseUrl,
-                apiKey: decryptedKey,
+                apiKey: apiKeys[0],
+                apiKeys,
                 model: globalSettings.defaultModel,
             };
         }
@@ -248,30 +268,49 @@ async function streamOpenAI(
     options?: StreamOptions
 ): Promise<AsyncIterable<string>> {
     try {
-        const response = await safeFetch(`${config.baseUrl}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.apiKey}`,
-            },
-            body: JSON.stringify({
-                model: config.model,
-                messages,
-                stream: true,
-                // Use max_completion_tokens for reasoning models if applicable, else max_tokens
-                ...(config.model.includes('kimi') || config.model.includes('deepseek') || config.model.includes('reasoning') || config.model.includes('o1')
-                    ? { max_completion_tokens: 4096 }
-                    : { max_tokens: 4096 }),
-                temperature: 0.7,
-            }),
-            signal: options?.signal,
-        });
+        let response: Response | undefined;
+        let activeKeyIndex = 0;
 
-        if (!response.ok) {
-            await handleError(response);
+        for (let i = 0; i < config.apiKeys.length; i++) {
+            activeKeyIndex = i;
+            const currentKey = config.apiKeys[i];
+
+            response = await safeFetch(`${config.baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentKey}`,
+                },
+                body: JSON.stringify({
+                    model: config.model,
+                    messages,
+                    stream: true,
+                    // Use max_completion_tokens for reasoning models if applicable, else max_tokens
+                    ...(config.model.includes('kimi') || config.model.includes('deepseek') || config.model.includes('reasoning') || config.model.includes('o1')
+                        ? { max_completion_tokens: 4096 }
+                        : { max_tokens: 4096 }),
+                    temperature: 0.7,
+                }),
+                signal: options?.signal,
+            });
+
+            if (response.ok) {
+                break; // Success! Break out of the retry loop.
+            }
+
+            if (response.status === 429 && i < config.apiKeys.length - 1) {
+                logger.warn('[OPENAI STREAM] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
+                continue;
+            }
+
+            break; // Other error or last key, break and handle below
         }
 
-        const reader = response.body?.getReader();
+        if (!response || !response.ok) {
+            await handleError(response!); // The last response in the loop (or undefined if apiKeys is empty)
+        }
+
+        const reader = response!.body?.getReader();
         if (!reader) throw new Error('No response body from AI provider');
 
         const decoder = new TextDecoder();
@@ -380,29 +419,48 @@ async function streamAnthropic(
         const systemMessage = messages.find(m => m.role === 'system');
         const userMessages = messages.filter(m => m.role !== 'system');
 
-        const response = await safeFetch(`${config.baseUrl}/v1/messages`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': config.apiKey,
-                'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify({
-                model: config.model,
-                system: systemMessage?.content,
-                messages: userMessages.map(m => ({ role: m.role, content: m.content })),
-                stream: true,
-                max_tokens: 4096,
-                temperature: 0.7,
-            }),
-            signal: options?.signal,
-        });
+        let response: Response | undefined;
+        let activeKeyIndex = 0;
 
-        if (!response.ok) {
-            await handleError(response);
+        for (let i = 0; i < config.apiKeys.length; i++) {
+            activeKeyIndex = i;
+            const currentKey = config.apiKeys[i];
+
+            response = await safeFetch(`${config.baseUrl}/v1/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': currentKey,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: config.model,
+                    system: systemMessage?.content,
+                    messages: userMessages.map(m => ({ role: m.role, content: m.content })),
+                    stream: true,
+                    max_tokens: 4096,
+                    temperature: 0.7,
+                }),
+                signal: options?.signal,
+            });
+
+            if (response.ok) {
+                break; // Success! Break out of the retry loop.
+            }
+
+            if (response.status === 429 && i < config.apiKeys.length - 1) {
+                logger.warn('[ANTHROPIC STREAM] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
+                continue;
+            }
+
+            break; // Other error or last key, break and handle below
         }
 
-        const reader = response.body?.getReader();
+        if (!response || !response.ok) {
+            await handleError(response!);
+        }
+
+        const reader = response!.body?.getReader();
         if (!reader) throw new Error('No response body from AI provider');
 
         const decoder = new TextDecoder();
@@ -474,31 +532,49 @@ async function streamGoogle(
             parts: [{ text: m.content }]
         })).filter(m => m.parts[0].text);
 
-        const url = `${config.baseUrl}/v1beta/models/${config.model}:streamGenerateContent?key=${config.apiKey}`;
+        let response: Response | undefined;
+        let activeKeyIndex = 0;
 
-        const response = await safeFetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                system_instruction: systemMessage ? {
-                    parts: [{ text: systemMessage.content }]
-                } : undefined,
-                contents: geminiContent,
-                generationConfig: {
-                    maxOutputTokens: 4096,
-                    temperature: 0.7,
-                }
-            }),
-            signal: options?.signal,
-        });
+        for (let i = 0; i < config.apiKeys.length; i++) {
+            activeKeyIndex = i;
+            const currentKey = config.apiKeys[i];
+            const url = `${config.baseUrl}/v1beta/models/${config.model}:streamGenerateContent?key=${currentKey}`;
 
-        if (!response.ok) {
-            await handleError(response);
+            response = await safeFetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    system_instruction: systemMessage ? {
+                        parts: [{ text: systemMessage.content }]
+                    } : undefined,
+                    contents: geminiContent,
+                    generationConfig: {
+                        maxOutputTokens: 4096,
+                        temperature: 0.7,
+                    }
+                }),
+                signal: options?.signal,
+            });
+
+            if (response.ok) {
+                break; // Success! Break out of the retry loop.
+            }
+
+            if (response.status === 429 && i < config.apiKeys.length - 1) {
+                logger.warn('[GEMINI STREAM] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
+                continue;
+            }
+
+            break; // Other error or last key, break and handle below
         }
 
-        const reader = response.body?.getReader();
+        if (!response || !response.ok) {
+            await handleError(response!);
+        }
+
+        const reader = response!.body?.getReader();
         if (!reader) throw new Error('No response body from AI provider');
 
         const decoder = new TextDecoder();
@@ -615,21 +691,41 @@ export async function generateCompletion(
     messages: ChatMessage[]
 ): Promise<string> {
     try {
-        const response = await safeFetch(`${config.baseUrl}/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${config.apiKey}`,
-            },
-            body: JSON.stringify({
-                model: config.model,
-                messages,
-                max_tokens: 1000,
-                temperature: 0.7,
-            }),
-        });
-        if (!response.ok) await handleError(response);
-        const data = await response.json();
+        let response: Response | undefined;
+        let activeKeyIndex = 0;
+
+        for (let i = 0; i < config.apiKeys.length; i++) {
+            activeKeyIndex = i;
+            const currentKey = config.apiKeys[i];
+
+            response = await safeFetch(`${config.baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${currentKey}`,
+                },
+                body: JSON.stringify({
+                    model: config.model,
+                    messages,
+                    max_tokens: 1000,
+                    temperature: 0.7,
+                }),
+            });
+
+            if (response.ok) {
+                break;
+            }
+
+            if (response.status === 429 && i < config.apiKeys.length - 1) {
+                logger.warn('[GEN COMP] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
+                continue;
+            }
+
+            break;
+        }
+
+        if (!response || !response.ok) await handleError(response!);
+        const data = await response!.json();
         return data.choices?.[0]?.message?.content || '';
     } catch (error: unknown) {
         handlePermissionError(error, config);

@@ -62,11 +62,23 @@ export async function GET(request: NextRequest) {
             include: { supplement: true }
         });
 
+        // Get nutrition logs for this date (using the string date formatted as yyyy-MM-dd)
+        const dStrForFood = date.toISOString().split('T')[0];
+        const foodLogs = await prisma.nutritionLog.findMany({
+            where: {
+                userId: session.user.id,
+                date: dStrForFood,
+            },
+            include: { foodItem: true },
+            orderBy: { createdAt: 'desc' }
+        });
+
         return NextResponse.json({
             dailyHealth: dailyHealth
                 ? { ...dailyHealth, weight: latestWeight }
                 : { steps: 0, weight: latestWeight, date },
-            supplementLogs
+            supplementLogs,
+            foodLogs
         });
     } catch (error) {
         return handleError(error);

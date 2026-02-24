@@ -271,61 +271,11 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             </div>
                         )}
 
-                        {/* Supplements List */}
-                        <div className="glass-card p-4 rounded-xl border border-glass-border">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-semibold text-white flex items-center gap-2">
-                                    <Battery className="w-4 h-4 text-purple-400" /> Daily Supplements
-                                </h3>
-                                <button
-                                    onClick={() => setIsAddModalOpen(true)}
-                                    className="bg-white/10 hover:bg-white/15 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                                >
-                                    <Plus className="w-3.5 h-3.5" /> Add
-                                </button>
-                            </div>
-
-                            {isSupplementsLoading ? (
-                                <p className="text-xs text-gray-500">Loading supplements...</p>
-                            ) : supplements?.length === 0 ? (
-                                <button
-                                    onClick={() => setIsAddModalOpen(true)}
-                                    className="w-full text-center py-6 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-colors group flex flex-col items-center justify-center gap-2"
-                                >
-                                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <Plus className="w-5 h-5 text-gray-400" />
-                                    </div>
-                                    <p className="text-sm text-gray-400 tracking-wide font-medium group-hover:text-white transition-colors">Tap to add your first supplement</p>
-                                </button>
-                            ) : (
-                                <div className="space-y-4">
-                                    {morningSupplements.length > 0 && (
-                                        <div>
-                                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Morning</h4>
-                                            {morningSupplements.map(renderSupplementItem)}
-                                        </div>
-                                    )}
-                                    {noonSupplements.length > 0 && (
-                                        <div>
-                                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-4">Noon</h4>
-                                            {noonSupplements.map(renderSupplementItem)}
-                                        </div>
-                                    )}
-                                    {eveningSupplements.length > 0 && (
-                                        <div>
-                                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-4">Evening</h4>
-                                            {eveningSupplements.map(renderSupplementItem)}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
                         {/* Food Logging Section */}
                         <div className="glass-card p-4 rounded-xl border border-glass-border">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
-                                    <h3 className="font-semibold text-white">Food & Calories</h3>
+                                    <h3 className="font-semibold text-white">Food</h3>
                                     <p className="text-xs text-gray-400 mt-1">Log your daily nutrition</p>
                                 </div>
                                 <button
@@ -350,6 +300,24 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                             Setup Goals
                                         </button>
                                     </div>
+                                </div>
+                            )}
+
+                            {dailyData?.foodLogs && dailyData.foodLogs.length > 0 && (
+                                <div className="space-y-2 mb-4">
+                                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Today's Log</h4>
+                                    {dailyData.foodLogs.map((log: any) => (
+                                        <div key={log.id} className="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-white/10">
+                                            <div>
+                                                <p className="text-sm font-medium text-white">{log.foodItem?.name || log.mealType || 'Unknown Food'}</p>
+                                                <p className="text-xs text-gray-400">{log.quantity}x {log.mealType || 'SNACK'}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-bold text-pink-400">{Math.round(log.calories)} kcal</p>
+                                                <p className="text-[10px] text-gray-500">{Math.round(log.protein)}g P · {Math.round(log.carbs)}g C · {Math.round(log.fats)}g F</p>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
 
@@ -405,6 +373,56 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                     <span className="text-sm font-medium text-white">📚 Meal Library</span>
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Supplements List */}
+                        <div className="glass-card p-4 rounded-xl border border-glass-border">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold text-white flex items-center gap-2">
+                                    <Battery className="w-4 h-4 text-purple-400" /> Daily Supplements
+                                </h3>
+                                <button
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="bg-white/10 hover:bg-white/15 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                                >
+                                    <Plus className="w-3.5 h-3.5" /> Add
+                                </button>
+                            </div>
+
+                            {isSupplementsLoading ? (
+                                <p className="text-xs text-gray-500">Loading supplements...</p>
+                            ) : supplements?.length === 0 ? (
+                                <button
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="w-full text-center py-6 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-colors group flex flex-col items-center justify-center gap-2"
+                                >
+                                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <Plus className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <p className="text-sm text-gray-400 tracking-wide font-medium group-hover:text-white transition-colors">Tap to add your first supplement</p>
+                                </button>
+                            ) : (
+                                <div className="space-y-4">
+                                    {morningSupplements.length > 0 && (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Morning</h4>
+                                            {morningSupplements.map(renderSupplementItem)}
+                                        </div>
+                                    )}
+                                    {noonSupplements.length > 0 && (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-4">Noon</h4>
+                                            {noonSupplements.map(renderSupplementItem)}
+                                        </div>
+                                    )}
+                                    {eveningSupplements.length > 0 && (
+                                        <div>
+                                            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-4">Evening</h4>
+                                            {eveningSupplements.map(renderSupplementItem)}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 

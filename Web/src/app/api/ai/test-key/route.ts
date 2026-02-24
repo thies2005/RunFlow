@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
         const config: AiConfig = {
             provider: provider || 'openai',
             apiKey,
+            apiKeys: [apiKey],
             baseUrl: baseUrl || (provider === 'google' ? 'https://generativelanguage.googleapis.com' : 'https://api.openai.com/v1'), // default base url
             model: model || 'gpt-4o-mini',
         };

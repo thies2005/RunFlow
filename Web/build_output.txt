@@ -281,41 +281,42 @@
 15:48  Warning: 'value' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
 
 ./src/lib/ai/providers.ts
-275:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
-426:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
-539:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
-698:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+448:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+561:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+720:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
 
 info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
    Collecting page data ...
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.275Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.555Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.283Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.572Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.334Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.685Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.342Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.704Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.425Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.717Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.441Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.720Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.442Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.729Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.445Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.747Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.455Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.752Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.477Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.758Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.549Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.759Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:43.573Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.768Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.813Z","environment":"production","keyLength":30}
+[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:10.840Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
    Generating static pages (0/82) ...
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:45.399Z","environment":"production","keyLength":30}
-[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"Error","timestamp":"2026-02-24T19:30:45.598Z","environment":"production","errorId":"9b86964f","error":"Dynamic server usage: Route /api/health/nutrition/log/history couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error"}
+   Generating static pages (20/82) 
 Error fetching health history: n [Error]: Dynamic server usage: Route /api/health/history couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
     at l (C:\Users\thies\Antigravity\Full RunFlow\Web\.next\server\chunks\8948.js:1:56329)
     at u (C:\Users\thies\Antigravity\Full RunFlow\Web\.next\server\chunks\6912.js:25:118772)
@@ -330,13 +331,11 @@ Error fetching health history: n [Error]: Dynamic server usage: Route /api/healt
   description: "Route /api/health/history couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
   digest: 'DYNAMIC_SERVER_USAGE'
 }
-   Generating static pages (20/82) 
-[SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:45.633Z","environment":"production","keyLength":30}
-{"level":"error","message":"Error","timestamp":"2026-02-24T19:30:45.713Z","environment":"production","errorId":"c50d4c6e","error":"Dynamic server usage: Route /api/health/supplements/stats couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error"}
+{"level":"error","message":"Error","timestamp":"2026-02-24T19:36:12.937Z","environment":"production","errorId":"72e26dcc","error":"Dynamic server usage: Route /api/health/supplements/stats couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error"}
    Generating static pages (40/82) 
-{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:30:45.749Z","environment":"production","keyLength":30}
+{"level":"error","message":"ENCRYPTION_KEY must be 32 bytes (256 bits)","timestamp":"2026-02-24T19:36:13.144Z","environment":"production","keyLength":30}
 [SECURITY] ENCRYPTION_KEY not configured. OAuth tokens will be stored in plaintext.
+{"level":"error","message":"Error","timestamp":"2026-02-24T19:36:13.311Z","environment":"production","errorId":"40cb1e04","error":"Dynamic server usage: Route /api/health/nutrition/log/history couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error"}
    Generating static pages (61/82) 
  Γ£ô Generating static pages (82/82)
    Finalizing page optimization ...

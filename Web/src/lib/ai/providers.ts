@@ -268,143 +268,165 @@ async function streamOpenAI(
     options?: StreamOptions
 ): Promise<AsyncIterable<string>> {
     try {
-        let response: Response | undefined;
-        let activeKeyIndex = 0;
-
-        for (let i = 0; i < config.apiKeys.length; i++) {
-            activeKeyIndex = i;
-            const currentKey = config.apiKeys[i];
-
-            response = await safeFetch(`${config.baseUrl}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${currentKey}`,
-                },
-                body: JSON.stringify({
-                    model: config.model,
-                    messages,
-                    stream: true,
-                    // Use max_completion_tokens for reasoning models if applicable, else max_tokens
-                    ...(config.model.includes('kimi') || config.model.includes('deepseek') || config.model.includes('reasoning') || config.model.includes('o1')
-                        ? { max_completion_tokens: 4096 }
-                        : { max_tokens: 4096 }),
-                    temperature: 0.7,
-                }),
-                signal: options?.signal,
-            });
-
-            if (response.ok) {
-                break; // Success! Break out of the retry loop.
-            }
-
-            if (response.status === 429 && i < config.apiKeys.length - 1) {
-                logger.warn('[OPENAI STREAM] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
-                continue;
-            }
-
-            break; // Other error or last key, break and handle below
-        }
-
-        if (!response || !response.ok) {
-            await handleError(response!); // The last response in the loop (or undefined if apiKeys is empty)
-        }
-
-        const reader = response!.body?.getReader();
-        if (!reader) throw new Error('No response body from AI provider');
-
-        const decoder = new TextDecoder();
-        let lineBuffer = '';
-
-        return {
-            async *[Symbol.asyncIterator]() {
-                let isReasoning = false;
-                let chunkCount = 0;
-                let yieldCount = 0;
-                logger.info('[OPENAI STREAM] Starting async iterator', { model: config.model, provider: config.provider });
-                try {
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        chunkCount++;
-                        const bytesRead = value?.length || 0;
-
-                        if (done) {
-                            logger.info('[OPENAI STREAM] Reader done', { chunkCount, yieldCount, model: config.model });
-                            break;
-                        }
-
-                        if (chunkCount % 5 === 0) {
-                            logger.info('[OPENAI STREAM] Processing chunks', { chunkCount, bytesRead, bufferSize: lineBuffer.length, model: config.model });
-                        }
-
-                        lineBuffer += decoder.decode(value, { stream: true });
-                        const lines = lineBuffer.split('\n');
-                        lineBuffer = lines.pop() || '';
-
-                        for (const line of lines) {
-                            const trimmed = line.trim();
-                            if (!trimmed || trimmed === 'data: [DONE]') continue;
-                            if (!trimmed.startsWith('data: ')) continue;
-
-                            try {
-                                const json = JSON.parse(trimmed.slice(6));
-
-                                if (json.error) {
-                                    const errorMsg = json.error.message || JSON.stringify(json.error);
-                                    logger.error('[OPENAI STREAM] Provider error', { error: errorMsg, model: config.model, provider: config.provider });
-                                    throw new Error(`OpenAI provider error: ${errorMsg}`);
-                                }
-
-                                const delta = json.choices?.[0]?.delta;
-                                if (!delta) continue;
-
-                                if (delta.reasoning_content) {
-                                    if (!isReasoning) {
-                                        yield '<think>';
-                                        yieldCount++;
-                                        isReasoning = true;
-                                    }
-                                    options?.onToken?.(delta.reasoning_content);
-                                    yield delta.reasoning_content;
-                                    yieldCount++;
-                                }
-
-                                if (delta.content) {
-                                    if (isReasoning) {
-                                        yield '</think>';
-                                        yieldCount++;
-                                        isReasoning = false;
-                                    }
-                                    options?.onToken?.(delta.content);
-                                    yield delta.content;
-                                    yieldCount++;
-                                }
-                            } catch (error) {
-                                if (error instanceof Error && error.message.startsWith('OpenAI provider error:')) {
-                                    throw error;
-                                }
-                                logger.warn('[OPENAI STREAM] Skipped invalid JSON line', { line: trimmed, model: config.model });
-                            }
-                        }
-                    }
-                } catch (error) {
-                    logger.error('[OPENAI STREAM] Error in iterator', { error: error instanceof Error ? error.message : String(error), model: config.model, provider: config.provider, chunkCount, yieldCount });
-                    throw error;
-                } finally {
-                    // M-07 fix: Use matching closing tag </think> instead of </thinking>
-                    if (isReasoning) {
-                        yield '</think>';
-                        yieldCount++;
-                    }
-                    logger.info('[OPENAI STREAM] Cleanup', { yieldCount, model: config.model });
-                    reader.releaseLock();
-                }
-            }
-        };
+        const response = await handleOpenAIRetry(config, messages, options);
+        return createOpenAIAsyncIterator(response, config, options);
     } catch (error: unknown) {
         handlePermissionError(error, config);
         throw error;
     }
+}
+
+async function handleOpenAIRetry(
+    config: AiConfig,
+    messages: ChatMessage[],
+    options?: StreamOptions
+): Promise<Response> {
+    let response: Response | undefined;
+
+    for (let i = 0; i < config.apiKeys.length; i++) {
+        const currentKey = config.apiKeys[i];
+
+        response = await safeFetch(`${config.baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentKey}`,
+            },
+            body: JSON.stringify({
+                model: config.model,
+                messages,
+                stream: true,
+                ...(config.model.includes('kimi') || config.model.includes('deepseek') || config.model.includes('reasoning') || config.model.includes('o1')
+                    ? { max_completion_tokens: 4096 }
+                    : { max_tokens: 4096 }),
+                temperature: 0.7,
+            }),
+            signal: options?.signal,
+        });
+
+        if (response.ok) break;
+
+        if (response.status === 429 && i < config.apiKeys.length - 1) {
+            logger.warn('[OPENAI STREAM] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
+            continue;
+        }
+
+        break;
+    }
+
+    if (!response || !response.ok) {
+        await handleError(response!);
+    }
+
+    return response as Response;
+}
+
+function parseOpenAIStreamContent(
+    trimmed: string,
+    config: AiConfig,
+    isReasoning: boolean,
+    options?: StreamOptions
+): { tokens: string[]; newIsReasoning: boolean } {
+    const tokens: string[] = [];
+    let newIsReasoning = isReasoning;
+
+    try {
+        const json = JSON.parse(trimmed.slice(6));
+
+        if (json.error) {
+            const errorMsg = json.error.message || JSON.stringify(json.error);
+            logger.error('[OPENAI STREAM] Provider error', { error: errorMsg, model: config.model, provider: config.provider });
+            throw new Error(`OpenAI provider error: ${errorMsg}`);
+        }
+
+        const delta = json.choices?.[0]?.delta;
+        if (!delta) return { tokens, newIsReasoning };
+
+        if (delta.reasoning_content) {
+            if (!newIsReasoning) {
+                tokens.push('<think>');
+                newIsReasoning = true;
+            }
+            options?.onToken?.(delta.reasoning_content);
+            tokens.push(delta.reasoning_content);
+        }
+
+        if (delta.content) {
+            if (newIsReasoning) {
+                tokens.push('</think>');
+                newIsReasoning = false;
+            }
+            options?.onToken?.(delta.content);
+            tokens.push(delta.content);
+        }
+    } catch (error) {
+        if (error instanceof Error && error.message.startsWith('OpenAI provider error:')) {
+            throw error;
+        }
+        logger.warn('[OPENAI STREAM] Skipped invalid JSON line', { line: trimmed, model: config.model });
+    }
+
+    return { tokens, newIsReasoning };
+}
+
+function createOpenAIAsyncIterator(
+    response: Response,
+    config: AiConfig,
+    options?: StreamOptions
+): AsyncIterable<string> {
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('No response body from AI provider');
+
+    const decoder = new TextDecoder();
+    let lineBuffer = '';
+
+    return {
+        async *[Symbol.asyncIterator]() {
+            let isReasoning = false;
+            let chunkCount = 0;
+            let yieldCount = 0;
+            logger.info('[OPENAI STREAM] Starting async iterator', { model: config.model, provider: config.provider });
+
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    chunkCount++;
+
+                    if (done) {
+                        logger.info('[OPENAI STREAM] Reader done', { chunkCount, yieldCount, model: config.model });
+                        break;
+                    }
+
+                    lineBuffer += decoder.decode(value, { stream: true });
+                    const lines = lineBuffer.split('\n');
+                    lineBuffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (!trimmed || trimmed === 'data: [DONE]') continue;
+                        if (!trimmed.startsWith('data: ')) continue;
+
+                        const parsed = parseOpenAIStreamContent(trimmed, config, isReasoning, options);
+                        for (const token of parsed.tokens) {
+                            yield token;
+                            yieldCount++;
+                        }
+                        isReasoning = parsed.newIsReasoning;
+                    }
+                }
+            } catch (error) {
+                logger.error('[OPENAI STREAM] Error in iterator', { error: error instanceof Error ? error.message : String(error), model: config.model, provider: config.provider, chunkCount, yieldCount });
+                throw error;
+            } finally {
+                if (isReasoning) {
+                    yield '</think>';
+                    yieldCount++;
+                }
+                logger.info('[OPENAI STREAM] Cleanup', { yieldCount, model: config.model });
+                reader.releaseLock();
+            }
+        }
+    };
 }
 
 /**

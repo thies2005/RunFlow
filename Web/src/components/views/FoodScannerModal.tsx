@@ -37,11 +37,15 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
     const [caption, setCaption] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const onCloseRef = useRef(onClose);
+    useEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
 
     useEffect(() => {
         if (!isOpen) return;
         window.history.pushState({ modal: 'FoodScanner' }, '');
-        const handlePopState = () => onClose();
+        const handlePopState = () => onCloseRef.current();
         window.addEventListener('popstate', handlePopState);
         return () => {
             window.removeEventListener('popstate', handlePopState);
@@ -49,7 +53,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                 window.history.back();
             }
         };
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     const resetState = () => {
         setImagePreview(null);
@@ -181,7 +185,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                             {/* Image Preview */}
                             <div className="relative rounded-2xl overflow-hidden bg-black/50">
                                 <img
-                                    src={imagePreview}
+                                    src={imageBase64 || imagePreview || undefined}
                                     alt="Food to analyze"
                                     className="w-full aspect-[4/3] object-cover"
                                 />

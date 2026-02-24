@@ -189,11 +189,10 @@ describe('PATCH /api/activities/[id]', () => {
         expect(response.status).toBe(404);
     });
 
-    it('should return 403 for activity not owned by user', async () => {
-        (prisma.activity.findUnique as jest.Mock).mockResolvedValue({
-            userId: 'other-user',
-            id: 'activity-1',
-        });
+    it('should return 404 for activity not owned by user (IDOR protection)', async () => {
+        // With the H-07 fix, findUnique includes userId in WHERE clause,
+        // so another user's activity simply won't be found (returns null)
+        (prisma.activity.findUnique as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/activities/activity-1', {
             method: 'PATCH',
@@ -203,7 +202,7 @@ describe('PATCH /api/activities/[id]', () => {
 
         const response = await PATCH(mockRequest, { params: Promise.resolve({ id: 'activity-1' }) });
 
-        expect(response.status).toBe(403);
+        expect(response.status).toBe(404);
     });
 
     it('should enforce rate limiting', async () => {

@@ -25,6 +25,8 @@ export function MobileBottomNav({ activeIndex, onTabChange, tabs }: MobileBottom
                         <button
                             key={tab.path}
                             onClick={() => onTabChange(index)}
+                            aria-label={tab.label}
+                            aria-current={isActive ? 'page' : undefined}
                             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${isActive
                                 ? 'text-accent-orange'
                                 : 'text-foreground-muted hover:text-foreground'

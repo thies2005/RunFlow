@@ -78,16 +78,12 @@ export async function PATCH(
         }
 
         const activity = await prisma.activity.findUnique({
-            where: { id },
+            where: { id, userId: session.user.id },
             select: { userId: true }
         });
 
         if (!activity) {
             return NextResponse.json({ error: 'Activity not found' }, { status: 404 });
-        }
-
-        if (activity.userId !== session.user.id) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const dataToUpdate: ActivityUpdateData = {};

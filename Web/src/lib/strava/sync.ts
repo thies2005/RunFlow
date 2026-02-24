@@ -197,12 +197,12 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     }
 
                     if (page === 1 && (skipped + index) < 3) {
-                        logger.info('Activity sync status', { 
-                            activityId: activity.id, 
-                            isNew, 
-                            needsUpdate, 
-                            hasHeartrate: activity.has_heartrate, 
-                            existingZone1: existing?.hrZone1Time 
+                        logger.info('Activity sync status', {
+                            activityId: activity.id,
+                            isNew,
+                            needsUpdate,
+                            hasHeartrate: activity.has_heartrate,
+                            existingZone1: existing?.hrZone1Time
                         });
                     }
 
@@ -214,13 +214,9 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                         activity.max_heartrate > (currentHrMax || 0) + 5 &&
                         activity.max_heartrate < HR_MAX_UPPER_BOUND) {
 
-                        // Note: This might have race conditions in parallel execution,
-                        // but worst case is multiple redundant updates.
+                        // Track highest observed HR max; persist after the loop (H-04)
                         currentHrMax = activity.max_heartrate;
-
-                        await updateUserProfile(userId, { hrMax: currentHrMax });
-
-                        logger.info('Auto-detected new HR Max', { userId, hrMax: currentHrMax });
+                        logger.info('Auto-detected new HR Max candidate', { userId, hrMax: currentHrMax });
                     }
 
                     let streams = null;
@@ -232,17 +228,17 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     const metricsInput: MetricsInput = {
                         activity,
                         user: {
-                            hrMax: user?.hrMax || null,
-                            hrRest: user?.hrRest || null,
-                            sex: user?.sex || null,
-                            weight: user?.weight || null,
-                            birthDate: user?.birthDate || null,
-                            hrZone1Max: user?.hrZone1Max || null,
-                            hrZone2Max: user?.hrZone2Max || null,
-                            hrZone3Max: user?.hrZone3Max || null,
-                            hrZone4Max: user?.hrZone4Max || null,
-                            hrZone5Max: user?.hrZone5Max || null,
-                            hrZone6Max: user?.hrZone6Max || null,
+                            hrMax: user?.hrMax ?? null,
+                            hrRest: user?.hrRest ?? null,
+                            sex: user?.sex ?? null,
+                            weight: user?.weight ?? null,
+                            birthDate: user?.birthDate ?? null,
+                            hrZone1Max: user?.hrZone1Max ?? null,
+                            hrZone2Max: user?.hrZone2Max ?? null,
+                            hrZone3Max: user?.hrZone3Max ?? null,
+                            hrZone4Max: user?.hrZone4Max ?? null,
+                            hrZone5Max: user?.hrZone5Max ?? null,
+                            hrZone6Max: user?.hrZone6Max ?? null,
                         },
                         currentHrMax,
                         streams,
@@ -302,6 +298,11 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                 logger.warn('Reached max pages limit', { userId, page });
                 break;
             }
+        }
+
+        // Commit derived maximum heart rate if we detected a new one (H-04 fix)
+        if (currentHrMax !== null && currentHrMax > (user?.hrMax || 0)) {
+            await updateUserProfile(userId, { hrMax: currentHrMax });
         }
 
         await updateSyncStatus(userId, {

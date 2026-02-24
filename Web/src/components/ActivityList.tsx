@@ -235,7 +235,7 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
                     <button
                         key={activity.id}
                         type="button"
-                        className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full"
+                        className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
                         style={{ animationDelay: `${index * 0.05}s` }}
                         onClick={() => handleActivityClick(activity)}
                         aria-label={`View details for ${activity.name}`}

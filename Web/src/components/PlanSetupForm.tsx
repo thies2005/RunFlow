@@ -1049,6 +1049,10 @@ export default function PlanSetupForm({
                         max="6"
                         value={runsPerWeek}
                         onChange={(e) => setRunsPerWeek(parseInt(e.target.value))}
+                        aria-label="Runs per week"
+                        aria-valuenow={runsPerWeek}
+                        aria-valuemin={2}
+                        aria-valuemax={6}
                         className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
                     />
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -1072,6 +1076,10 @@ export default function PlanSetupForm({
                         max="3"
                         value={ridesPerWeek}
                         onChange={(e) => setRidesPerWeek(parseInt(e.target.value))}
+                        aria-label="Rides per week"
+                        aria-valuenow={ridesPerWeek}
+                        aria-valuemin={0}
+                        aria-valuemax={3}
                         className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-accent-cyan"
                     />
                     <div className="flex justify-between text-xs text-foreground-muted mt-1">
@@ -1096,6 +1104,10 @@ export default function PlanSetupForm({
                         max="3"
                         value={swimsPerWeek}
                         onChange={(e) => setSwimsPerWeek(parseInt(e.target.value))}
+                        aria-label="Swims per week"
+                        aria-valuenow={swimsPerWeek}
+                        aria-valuemin={0}
+                        aria-valuemax={3}
                         className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-cyan-500"
                     />
                     <div className="flex justify-between text-xs text-foreground-muted mt-1">
@@ -1120,6 +1132,10 @@ export default function PlanSetupForm({
                         max="4"
                         value={strengthPerWeek}
                         onChange={(e) => setStrengthPerWeek(parseInt(e.target.value))}
+                        aria-label="Strength sessions per week"
+                        aria-valuenow={strengthPerWeek}
+                        aria-valuemin={0}
+                        aria-valuemax={4}
                         className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-purple-500"
                     />
                     <div className="flex justify-between text-xs text-foreground-muted mt-1">
@@ -1144,6 +1160,10 @@ export default function PlanSetupForm({
                         step="5"
                         value={weeklyMileage}
                         onChange={(e) => setWeeklyMileage(parseInt(e.target.value))}
+                        aria-label="Peak weekly mileage goal in kilometers"
+                        aria-valuenow={weeklyMileage}
+                        aria-valuemin={20}
+                        aria-valuemax={100}
                         className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-green-500"
                     />
                     <div className="flex justify-between text-xs text-foreground-muted mt-1">
@@ -1170,6 +1190,10 @@ export default function PlanSetupForm({
                             max="3"
                             value={taperWeeks}
                             onChange={(e) => setTaperWeeks(parseInt(e.target.value))}
+                            aria-label="Taper weeks"
+                            aria-valuenow={taperWeeks}
+                            aria-valuemin={1}
+                            aria-valuemax={3}
                             className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-teal-500"
                         />
                     </div>
@@ -1184,6 +1208,10 @@ export default function PlanSetupForm({
                             max="6"
                             value={peakWeeks}
                             onChange={(e) => setPeakWeeks(parseInt(e.target.value))}
+                            aria-label="Peak weeks"
+                            aria-valuenow={peakWeeks}
+                            aria-valuemin={2}
+                            aria-valuemax={6}
                             className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-purple-500"
                         />
                     </div>
@@ -1198,6 +1226,10 @@ export default function PlanSetupForm({
                             max="8"
                             value={buildWeeks}
                             onChange={(e) => setBuildWeeks(parseInt(e.target.value))}
+                            aria-label="Build weeks"
+                            aria-valuenow={buildWeeks}
+                            aria-valuemin={2}
+                            aria-valuemax={8}
                             className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-orange-500"
                         />
                     </div>

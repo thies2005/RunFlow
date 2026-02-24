@@ -126,7 +126,7 @@
 
 ## High Risk Issues
 
-### H-01: Concurrent Sync Without Distributed Lock
+### [FALSE POSITIVE] H-01: Concurrent Sync Without Distributed Lock
 **File:** `Web/src/lib/strava/sync.ts:46-51`
 **Category:** Bug (Race Condition)
 **Severity:** HIGH
@@ -136,7 +136,7 @@
 
 ---
 
-### H-02: Lock Fail-Open Pattern
+### [FIXED] H-02: Lock Fail-Open Pattern
 **File:** `Web/src/lib/redis.ts:55-66`
 **Category:** Bug (Race Condition)
 **Severity:** HIGH
@@ -146,7 +146,7 @@
 
 ---
 
-### H-03: Incorrect Gap Days Calculation
+### [FALSE POSITIVE] H-03: Incorrect Gap Days Calculation
 **File:** `Web/src/lib/metrics/fitnessCache.ts:78`
 **Category:** Bug (Logic Error)
 **Severity:** HIGH
@@ -156,7 +156,7 @@
 
 ---
 
-### H-04: HR Max Update Race Condition
+### [FIXED] H-04: HR Max Update Race Condition
 **File:** `Web/src/lib/strava/sync.ts:213-224`
 **Category:** Bug (Race Condition)
 **Severity:** HIGH
@@ -166,7 +166,7 @@
 
 ---
 
-### H-05: Unsafe Property Access
+### [FIXED] H-05: Unsafe Property Access
 **File:** `Web/src/lib/strava/sync.ts:234-249`
 **Category:** Bug (Null/Undefined Reference)
 **Severity:** HIGH
@@ -176,7 +176,7 @@
 
 ---
 
-### H-06: User Profile Update Loses Data
+### [FALSE POSITIVE] H-06: User Profile Update Loses Data
 **File:** `Web/src/lib/strava/sync.ts:112-119`
 **Category:** Bug (Data Corruption)
 **Severity:** HIGH
@@ -186,7 +186,7 @@
 
 ---
 
-### H-07: Missing Ownership Check (IDOR Risk)
+### [FIXED] H-07: Missing Ownership Check (IDOR Risk)
 **File:** `Web/src/app/api/activities/[id]/route.ts:80-91`
 **Category:** Security (IDOR)
 **Severity:** HIGH
@@ -196,7 +196,7 @@
 
 ---
 
-### H-08: Inconsistent CSRF Protection
+### [FALSE POSITIVE] H-08: Inconsistent CSRF Protection
 **File:** `Web/src/app/api/admin/backups/upload/route.ts:19-22`
 **Category:** Security (CSRF)
 **Severity:** HIGH
@@ -206,7 +206,7 @@
 
 ---
 
-### H-09: Missing CSRF Validation on Most Endpoints
+### [FALSE POSITIVE] H-09: Missing CSRF Validation on Most Endpoints
 **File:** Multiple POST/PUT/DELETE routes in `/api/`
 **Category:** Security (CSRF)
 **Severity:** HIGH
@@ -216,7 +216,7 @@
 
 ---
 
-### H-10: Unsanitized Markdown Rendering
+### [DEFERRED] H-10: Unsanitized Markdown Rendering
 **File:** `Web/src/components/AiChat.tsx:7, ~410-430`
 **Category:** Security (XSS)
 **Severity:** HIGH
@@ -226,7 +226,7 @@
 
 ---
 
-### H-11: CSP Allowlist Too Permissive
+### [FIXED] H-11: CSP Allowlist Too Permissive
 **File:** `Web/src/middleware.ts:119-132`
 **Category:** Security (XSS)
 **Severity:** HIGH
@@ -236,7 +236,7 @@
 
 ---
 
-### H-12: Encryption Returns Plaintext on Failure
+### [FIXED] H-12: Encryption Returns Plaintext on Failure
 **File:** `Web/src/lib/crypto.ts:47-50, 77-79`
 **Category:** Security (Misconfiguration)
 **Severity:** HIGH
@@ -246,7 +246,7 @@
 
 ---
 
-### H-13: DashboardView Inadequate Mobile Layout
+### [DEFERRED] H-13: DashboardView Inadequate Mobile Layout
 **File:** `Web/src/components/views/DashboardView.tsx:128-164`
 **Category:** UI (Responsive Design)
 **Severity:** HIGH
@@ -256,7 +256,7 @@
 
 ---
 
-### H-14: MobileBottomNav Missing ARIA Labels
+### [FIXED] H-14: MobileBottomNav Missing ARIA Labels
 **File:** `Web/src/components/navigation/MobileBottomNav.tsx:25-37`
 **Category:** UI (Accessibility)
 **Severity:** HIGH
@@ -266,7 +266,7 @@
 
 ---
 
-### H-15: ActivityList Missing Keyboard Focus Indicators
+### [FIXED] H-15: ActivityList Missing Keyboard Focus Indicators
 **File:** `Web/src/components/ActivityList.tsx:235-244`
 **Category:** UI (Accessibility)
 **Severity:** HIGH
@@ -276,7 +276,7 @@
 
 ---
 
-### H-16: ManualActivityModal No Error Display
+### [FIXED] H-16: ManualActivityModal No Error Display
 **File:** `Web/src/components/ManualActivityModal.tsx:25-64`
 **Category:** UI (Error States)
 **Severity:** HIGH
@@ -286,7 +286,7 @@
 
 ---
 
-### H-17: PlanSetupForm Slider Accessibility Issues
+### [FIXED] H-17: PlanSetupForm Slider Accessibility Issues
 **File:** `Web/src/components/PlanSetupForm.tsx:939-952`
 **Category:** UI (Accessibility)
 **Severity:** HIGH
@@ -296,7 +296,7 @@
 
 ---
 
-### H-18: ActivityDetailsModal Portal Implementation Issue
+### [FALSE POSITIVE] H-18: ActivityDetailsModal Portal Implementation Issue
 **File:** `Web/src/components/ActivityDetailsModal.tsx:140-141`
 **Category:** UI (Layout)
 **Severity:** HIGH
@@ -306,7 +306,7 @@
 
 ---
 
-### H-19: Large ActivityList Without Virtualization
+### [DEFERRED] H-19: Large ActivityList Without Virtualization
 **File:** `Web/src/components/ActivityList.tsx:231-246`
 **Category:** UI (Performance)
 **Severity:** HIGH
@@ -316,7 +316,7 @@
 
 ---
 
-### H-20: Modal Components Inconsistent Implementations
+### [DEFERRED] H-20: Modal Components Inconsistent Implementations
 **File:** Multiple modal files
 **Category:** UI (Component Consistency)
 **Severity:** HIGH
@@ -326,7 +326,7 @@
 
 ---
 
-### H-21: Form Input Components No Shared Component
+### [DEFERRED] H-21: Form Input Components No Shared Component
 **File:** Multiple form components
 **Category:** UI (Component Consistency)
 **Severity:** HIGH
@@ -336,7 +336,7 @@
 
 ---
 
-### H-22: PlanSetupForm God Component (1529 lines)
+### [DEFERRED] H-22: PlanSetupForm God Component (1529 lines)
 **File:** `Web/src/components/PlanSetupForm.tsx`
 **Category:** Code Quality (SOLID Violation)
 **Severity:** HIGH
@@ -346,7 +346,7 @@
 
 ---
 
-### H-23: Admin Page God Component (1307 lines)
+### [DEFERRED] H-23: Admin Page God Component (1307 lines)
 **File:** `Web/src/app/admin/page.tsx`
 **Category:** Code Quality (SOLID Violation)
 **Severity:** HIGH
@@ -356,7 +356,7 @@
 
 ---
 
-### H-24: MobileLayout God Component (592 lines)
+### [DEFERRED] H-24: MobileLayout God Component (592 lines)
 **File:** `Web/src/app/mobile-layout.tsx`
 **Category:** Code Quality (God Object)
 **Severity:** HIGH
@@ -366,7 +366,7 @@
 
 ---
 
-### H-25: Fitness Cache Complex IIFE (205 lines)
+### [DEFERRED] H-25: Fitness Cache Complex IIFE (205 lines)
 **File:** `Web/src/components/PlanSetupForm.tsx:773-977`
 **Category:** Code Quality (Complexity)
 **Severity:** HIGH
@@ -376,7 +376,7 @@
 
 ---
 
-### H-26: Missing Error Boundaries for Charts
+### [DEFERRED] H-26: Missing Error Boundaries for Charts
 **File:** Web/src/components/AiChat.tsx, AnalyticsDashboard.tsx, CombinedAnalyticsChart.tsx, InteractiveStreamsChart.tsx
 **Category:** Code Quality (Error Handling)
 **Severity:** HIGH
@@ -386,7 +386,7 @@
 
 ---
 
-### H-27: Missing Database Indexes
+### [FALSE POSITIVE] H-27: Missing Database Indexes
 **File:** prisma/schema.prisma (inferred)
 **Category:** Performance (Database)
 **Severity:** HIGH
@@ -396,7 +396,7 @@
 
 ---
 
-### H-28: No Redis Cache for Dashboard Queries
+### [DEFERRED] H-28: No Redis Cache for Dashboard Queries
 **File:** Web/src/app/api/dashboard/route.ts:135-141
 **Category:** Performance (Caching)
 **Severity:** HIGH
@@ -406,7 +406,7 @@
 
 ---
 
-### H-29: Combined Analytics API Calls (5 requests)
+### [FIXED] H-29: Combined Analytics API Calls (5 requests)
 **File:** Web/src/app/analytics/page.tsx:59-118
 **Category:** Performance (Network)
 **Severity:** HIGH
@@ -416,7 +416,7 @@
 
 ---
 
-### H-30: Charts Not Lazy Loaded
+### [DEFERRED] H-30: Charts Not Lazy Loaded
 **File:** Web/src/app/analytics/page.tsx:432-588
 **Category:** Performance (Bundle Size)
 **Severity:** HIGH
@@ -426,7 +426,7 @@
 
 ---
 
-### H-31: Analytics Page Component Too Large (833 lines)
+### [DEFERRED] H-31: Analytics Page Component Too Large (833 lines)
 **File:** Web/src/app/analytics/page.tsx
 **Category:** Performance (Code Splitting)
 **Severity:** HIGH
@@ -436,7 +436,7 @@
 
 ---
 
-### H-32: Fitness Cache Calculation Synchronous
+### [DEFERRED] H-32: Fitness Cache Calculation Synchronous
 **File:** Web/src/lib/metrics/fitnessCache.ts:126-178
 **Category:** Performance (Blocking)
 **Severity:** HIGH

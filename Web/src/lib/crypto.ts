@@ -103,11 +103,16 @@ export function decryptToken(encryptedToken: string): string {
         return decrypted.toString('utf8');
     } catch (error) {
         // Decryption failed - key mismatch or corrupted data
-        // Fallback: return raw value (assuming plaintext migration)
         logger.error('Token decryption failed - possible key mismatch or data corruption. Returning raw value as migration fallback.', {
             error: error instanceof Error ? error.message : String(error),
             tokenLength: encryptedToken.length,
         });
+
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error('Token decryption failed - possible key rotation or data corruption');
+        }
+
+        // Fallback: return raw value (assuming plaintext migration) for dev only
         return encryptedToken;
     }
 }

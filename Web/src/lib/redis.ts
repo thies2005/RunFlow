@@ -62,7 +62,7 @@ export async function acquireLock(key: string, ttlSeconds: number): Promise<bool
         return result === 'OK';
     } catch (error) {
         logger.error('Redis lock error', { key, error: error instanceof Error ? error.message : String(error) });
-        return true; // Fail open to allow DB lock to handle it
+        return false; // Fail closed - if Redis is configured but errors, deny concurrent access
     }
 }
 

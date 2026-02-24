@@ -20,8 +20,6 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
         hr: '',
     });
 
-    const [isLoading, setIsLoading] = useState(false);
-
     const mutation = useMutation({
         mutationFn: async (data: typeof formData) => {
             const res = await fetch('/api/activities', {
@@ -53,13 +51,10 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
         try {
             await mutation.mutateAsync(formData);
         } catch (err) {
             console.error(err);
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -75,6 +70,12 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    {mutation.isError && (
+                        <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                            Failed to create activity. Please try again.
+                        </div>
+                    )}
+
                     {/* Title */}
                     <div>
                         <label className="block text-xs text-foreground-muted mb-1">Title</label>
@@ -84,7 +85,10 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
                             className="w-full bg-background-secondary border border-glass-border rounded-lg p-2.5 text-foreground focus:ring-2 focus:ring-accent-purple outline-none"
                             placeholder="Morning Run"
                             value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            onChange={(e) => {
+                                setFormData({ ...formData, name: e.target.value });
+                                if (mutation.isError) mutation.reset();
+                            }}
                         />
                     </div>
 
@@ -168,10 +172,10 @@ export default function ManualActivityModal({ isOpen, onClose }: ManualActivityM
 
                     <button
                         type="submit"
-                        disabled={isLoading}
+                        disabled={mutation.isPending}
                         className="w-full mt-4 btn-primary py-3 flex justify-center items-center gap-2"
                     >
-                        {isLoading ? (
+                        {mutation.isPending ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             'Save Activity'

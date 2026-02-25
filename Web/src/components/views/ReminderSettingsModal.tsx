@@ -36,9 +36,13 @@ interface ReminderSettingsData {
 
 export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModalProps) {
     const queryClient = useQueryClient();
-    const isNative = Capacitor.isNativePlatform();
+    const [isNative, setIsNative] = useState(false);
     const webPush = usePushNotifications();
     const mobilePush = useMobileNotifications();
+
+    useEffect(() => {
+        setIsNative(Capacitor.isNativePlatform());
+    }, []);
 
     // Dynamically use the correct hook implementation
     const push = isNative ? mobilePush : webPush;

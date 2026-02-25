@@ -14,13 +14,16 @@ export interface MobileNotificationState {
 }
 
 export function useMobileNotifications(): MobileNotificationState {
-    const isSupported = Capacitor.isNativePlatform();
+    const [isSupported, setIsSupported] = useState(false);
     const [permission, setPermission] = useState<NotificationPermission>('default');
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!isSupported) {
+        const _isNative = Capacitor.isNativePlatform();
+        setIsSupported(_isNative);
+
+        if (!_isNative) {
             setIsLoading(false);
             return;
         }
@@ -76,10 +79,10 @@ export function useMobileNotifications(): MobileNotificationState {
         };
 
         checkStatus();
-    }, [isSupported]);
+    }, []);
 
     const subscribe = async () => {
-        if (!isSupported) return;
+        if (!Capacitor.isNativePlatform()) return;
         setIsLoading(true);
 
         try {
@@ -106,7 +109,7 @@ export function useMobileNotifications(): MobileNotificationState {
     };
 
     const unsubscribe = async () => {
-        if (!isSupported) return;
+        if (!Capacitor.isNativePlatform()) return;
         setIsLoading(true);
 
         try {

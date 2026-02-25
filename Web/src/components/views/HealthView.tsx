@@ -337,23 +337,25 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 <span className="text-lg font-bold text-white flex items-center gap-2">
                                     <HeartPulse className="w-5 h-5 text-red-500" /> Health
                                 </span>
-                                {isMobileDevice && (
+                                <div className="flex items-center gap-2">
+                                    {isMobileDevice && (
+                                        <button
+                                            onClick={handleSyncHistoricalData}
+                                            disabled={isSyncingHistory}
+                                            className="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors"
+                                            aria-label="Sync Health Data"
+                                        >
+                                            <RefreshCw className={`w-5 h-5 text-gray-400 ${isSyncingHistory ? 'animate-spin' : ''}`} />
+                                        </button>
+                                    )}
                                     <button
-                                        onClick={handleSyncHistoricalData}
-                                        disabled={isSyncingHistory}
+                                        onClick={() => setIsRemindersOpen(true)}
                                         className="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors"
-                                        aria-label="Sync Health Data"
+                                        aria-label="Notification Reminders"
                                     >
-                                        <RefreshCw className={`w-5 h-5 text-gray-400 ${isSyncingHistory ? 'animate-spin' : ''}`} />
+                                        <Bell className="w-5 h-5 text-gray-400" />
                                     </button>
-                                )}
-                                <button
-                                    onClick={() => setIsRemindersOpen(true)}
-                                    className="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors"
-                                    aria-label="Notification Reminders"
-                                >
-                                    <Bell className="w-5 h-5 text-gray-400" />
-                                </button>
+                                </div>
                             </div>
                         </header>
                     )}

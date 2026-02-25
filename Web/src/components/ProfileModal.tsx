@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot, LinkIcon } from 'lucide-react';
+import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot, LinkIcon, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { signIn, signOut } from 'next-auth/react';
 
 import { requestHealthPermissions, syncHealthData } from '@/lib/mobile/healthConnect';
 import AiSettingsModal from '@/components/AiSettingsModal';
+import { ReminderSettingsModal } from '@/components/views/ReminderSettingsModal';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 
@@ -48,6 +49,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [copied, setCopied] = useState(false);
     const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+    const [isRemindersOpen, setIsRemindersOpen] = useState(false);
     const [showReauthPrompt, setShowReauthPrompt] = useState(false);
 
     // Fetch existing settings
@@ -462,6 +464,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 />
                             </button>
                         </div>
+                        <button
+                            onClick={() => setIsRemindersOpen(true)}
+                            className="w-full mt-2 py-3 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-500/10 transition-colors text-sm flex items-center justify-center gap-2"
+                        >
+                            <Bell className="w-4 h-4" />
+                            Notification Reminders
+                        </button>
+                        <p className="text-[10px] text-gray-500 mt-2">Set reminders for supplements, meals, weight, and workouts</p>
                     </div>
 
                     {message && (
@@ -649,6 +659,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             <AiSettingsModal
                 isOpen={isAiSettingsOpen}
                 onClose={() => setIsAiSettingsOpen(false)}
+            />
+            <ReminderSettingsModal
+                isOpen={isRemindersOpen}
+                onClose={() => setIsRemindersOpen(false)}
             />
         </>
     );

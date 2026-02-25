@@ -107,10 +107,19 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                 }),
             });
 
-            const data = await res.json();
+            const text = await res.text();
+            let data: any = { error: 'Unknown error occurred' };
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                if (!res.ok) {
+                    throw new Error(`Server returned ${res.status}: ${res.statusText}`);
+                }
+                throw new Error('Failed to parse response from server');
+            }
 
             if (!res.ok) {
-                throw new Error(data.error || 'Analysis failed');
+                throw new Error(data.error || `Error ${res.status}`);
             }
 
             onScanComplete(data);

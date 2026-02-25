@@ -43,16 +43,16 @@ export async function POST(request: Request) {
             none: 0, // BYOK users: unlimited (they use their own key)
         };
 
-        const userTier = userSettings.usageTier;
+        const userTier = userSettings?.usageTier || 'tier1';
         const dailyLimit = tierLimits[userTier];
 
         // Reset counter if it's a new day
         const now = new Date();
-        const lastReset = new Date(userSettings.lastUsageReset);
+        const lastReset = userSettings?.lastUsageReset ? new Date(userSettings.lastUsageReset) : new Date(0);
         const isNewDay = now.toDateString() !== lastReset.toDateString();
 
-        let currentScans = userSettings.calorieSnapsUsedToday;
-        if (isNewDay) {
+        let currentScans = userSettings?.calorieSnapsUsedToday || 0;
+        if (isNewDay && userSettings) {
             // Reset daily counters
             await prisma.userAiSettings.update({
                 where: { userId },

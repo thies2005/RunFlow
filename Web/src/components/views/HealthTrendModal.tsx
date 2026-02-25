@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { X, ActivitySquare, Activity } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { X, ActivitySquare, Activity, Plus } from 'lucide-react';
 import {
     LineChart, Line, BarChart, Bar,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -19,7 +19,33 @@ interface HealthTrendModalProps {
 const RANGES: TimeRange[] = ['1W', '1M', '6M', '1Y', 'ALL'];
 
 export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalProps) {
+    const queryClient = useQueryClient();
     const [timeRange, setTimeRange] = useState<TimeRange>('1M');
+    const [isEnteringWeight, setIsEnteringWeight] = useState(false);
+    const [manualWeight, setManualWeight] = useState('');
+
+    const logWeightMutation = useMutation({
+        mutationFn: async (weight: number) => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const res = await fetch('/api/health/daily', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: todayStr,
+                    action: 'updateHealth',
+                    weight
+                })
+            });
+            if (!res.ok) throw new Error('Failed to log weight');
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['health-history'] });
+            queryClient.invalidateQueries({ queryKey: ['daily-health'] });
+            setIsEnteringWeight(false);
+            setManualWeight('');
+        }
+    });
 
     // Fetch historical data
     const { data: historyData, isLoading } = useQuery({
@@ -77,14 +103,55 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                         <MetricIcon className="w-5 h-5" style={{ color: metricColor }} />
                         {title}
                     </h2>
-                    <button
-                        onClick={onClose}
-                        className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
-                        type="button"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {metric === 'weight' && (
+                            <button
+                                onClick={() => setIsEnteringWeight(true)}
+                                className="p-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors text-xs font-semibold flex items-center gap-1"
+                            >
+                                <Plus className="w-4 h-4" /> Log
+                            </button>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
+                            type="button"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
+
+                {/* Manual Weight Entry */}
+                {isEnteringWeight && metric === 'weight' && (
+                    <div className="px-4 py-3 bg-white/5 border-b border-white/10 flex items-center gap-2">
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={manualWeight}
+                            onChange={(e) => setManualWeight(e.target.value)}
+                            placeholder="Weight in kg"
+                            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                            autoFocus
+                        />
+                        <button
+                            onClick={() => {
+                                const w = parseFloat(manualWeight);
+                                if (!isNaN(w) && w > 0) logWeightMutation.mutate(w);
+                            }}
+                            disabled={logWeightMutation.isPending || !manualWeight}
+                            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+                        >
+                            {logWeightMutation.isPending ? '...' : 'Save'}
+                        </button>
+                        <button
+                            onClick={() => setIsEnteringWeight(false)}
+                            className="px-4 py-2 bg-black/40 hover:bg-white/10 text-gray-300 text-sm font-semibold rounded-lg transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                )}
 
                 {/* Body */}
                 <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col min-h-[400px]">
@@ -95,8 +162,8 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md transition-colors ${timeRange === range
-                                        ? 'bg-white/10 text-white shadow-sm'
-                                        : 'text-gray-400 hover:text-gray-300'
+                                    ? 'bg-white/10 text-white shadow-sm'
+                                    : 'text-gray-400 hover:text-gray-300'
                                     }`}
                             >
                                 {range}

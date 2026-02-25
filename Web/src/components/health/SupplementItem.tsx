@@ -53,7 +53,7 @@ export function SupplementItem({
                 {onShowStats && (
                     <button
                         onClick={(e) => onShowStats(supplement.id, supplement.name, e)}
-                        className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20"
+                        className="w-6 h-6 rounded flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20"
                     >
                         <BarChart3 className="w-3 h-3 text-gray-400" />
                     </button>

@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
 import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target, Sparkles, BookOpen } from 'lucide-react';
-import { syncDailyHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult } from '@/lib/mobile/healthConnect';
+import { syncDailyHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult, isHealthConnectAvailable } from '@/lib/mobile/healthConnect';
 import { Capacitor } from '@capacitor/core';
 
 const IS_NATIVE = Capacitor.isNativePlatform();
@@ -47,6 +47,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [isGoalsOpen, setIsGoalsOpen] = useState(false);
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
+    const [hasHealthConnect, setHasHealthConnect] = useState(false);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
     const [scannedFood, setScannedFood] = useState<any | null>(null);
     const [isFoodScannerOpen, setIsFoodScannerOpen] = useState(false);
@@ -100,6 +101,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     useEffect(() => {
         setIsMobileDevice(isMobile());
         if (isMobile()) {
+            isHealthConnectAvailable().then(available => setHasHealthConnect(available));
             // Background sync of steps/weight on mount for mobile
             syncDailyHealth().then(() => {
                 queryClient.invalidateQueries({ queryKey: ['daily-health'] });
@@ -261,7 +263,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                     e.stopPropagation();
                                     setStatsConfig({ isOpen: true, targetId: stack.id, targetType: 'stack', targetName: stack.name });
                                 }}
-                                className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20"
+                                className="w-6 h-6 rounded flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20"
                             >
                                 <BarChart3 className="w-3 h-3 text-gray-400" />
                             </button>
@@ -349,22 +351,24 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             {/* Left Column: Quick Stats */}
                             <div className="flex flex-col gap-6 md:col-span-2 lg:col-span-3">
                                 {/* Steps and Weight Cards */}
-                                <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
-                                    <button
-                                        onClick={() => setActiveTrendMetric('steps')}
-                                        className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
-                                    >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2 text-green-400 font-medium">
-                                                <ActivitySquare className="w-4 h-4" /> Steps
+                                <div className={`grid gap-4 ${hasHealthConnect ? 'grid-cols-2 lg:grid-cols-1' : 'grid-cols-1'}`}>
+                                    {hasHealthConnect && (
+                                        <button
+                                            onClick={() => setActiveTrendMetric('steps')}
+                                            className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
+                                        >
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2 text-green-400 font-medium">
+                                                    <ActivitySquare className="w-4 h-4" /> Steps
+                                                </div>
+                                                <ChevronRight className="w-4 h-4 text-gray-500" />
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-gray-500" />
-                                        </div>
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.steps || 0}</span>
-                                            <span className="text-xs text-gray-400 font-medium">steps today</span>
-                                        </div>
-                                    </button>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.steps || 0}</span>
+                                                <span className="text-xs text-gray-400 font-medium">steps today</span>
+                                            </div>
+                                        </button>
+                                    )}
 
                                     <button
                                         onClick={() => setActiveTrendMetric('weight')}

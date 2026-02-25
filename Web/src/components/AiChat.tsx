@@ -355,7 +355,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
             />
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 flex flex-col justify-center">
+            <div className="flex-1 overflow-y-auto overscroll-y-contain p-4 space-y-4 min-h-0 flex flex-col justify-center">
                 <div className="max-w-5xl mx-auto w-full">
                     {messages.length === 0 ? (
                         <div className="flex flex-col items-center text-center p-8">

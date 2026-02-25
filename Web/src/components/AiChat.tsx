@@ -347,7 +347,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     }
 
     return (
-        <div className="flex-1 flex flex-col relative">
+        <div className="flex-1 flex flex-col relative min-h-0">
             <PromptLibrary
                 isOpen={isLibraryOpen}
                 onClose={closeLibrary}

@@ -349,7 +349,7 @@ export function MobileLayout() {
 
                 {/* Chat View — always LAST; index depends on whether Health tab is present */}
                 {showAiChat && (
-                    <div className="h-full flex flex-col bg-background relative">
+                    <div className="h-full flex flex-col min-h-0 bg-background relative">
                         {/* Sticky Header */}
                         <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50">
                             <div className="flex items-center justify-between px-4 py-3">

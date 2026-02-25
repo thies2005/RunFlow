@@ -80,6 +80,6 @@ export async function POST(request: Request) {
 
         return NextResponse.json(log);
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to log food' }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 });
     }
 }

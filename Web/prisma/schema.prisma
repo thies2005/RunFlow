@@ -133,10 +133,11 @@ model GlobalAiSettings {
   tier3DailyTokenLimit   Int @default(200000)
   tier3MonthlyTokenLimit Int @default(2000000)
 
-  // CalorieSnap (AI Food Scan) Limits per Tier
-  tier1CalorieSnapLimit  Int @default(1)   // Basic: 1 scan/day
-  tier2CalorieSnapLimit  Int @default(3)   // Standard: 3 scans/day
-  tier3CalorieSnapLimit  Int @default(6)   // Premium: 6 scans/day
+  // CalorieSnap (AI Food Scan) Config
+  calorieSnapModel      String @default("gemini-1.5-flash")
+  tier1CalorieSnapLimit Int    @default(1) // Basic: 1 scan/day
+  tier2CalorieSnapLimit Int    @default(3) // Standard: 3 scans/day
+  tier3CalorieSnapLimit Int    @default(6) // Premium: 6 scans/day
 
   // Legacy limits (deprecated, use tiers instead)
   dailyMessageLimit   Int @default(50)

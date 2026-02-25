@@ -36,6 +36,8 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
         tier2CalorieSnapLimit: settings?.tier2CalorieSnapLimit ?? 3,
         tier3CalorieSnapLimit: settings?.tier3CalorieSnapLimit ?? 6,
 
+        calorieSnapModel: settings?.calorieSnapModel || 'gemini-1.5-flash',
+
         systemPrompt: settings?.systemPrompt || '',
     });
 
@@ -70,6 +72,8 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 tier1CalorieSnapLimit: settings.tier1CalorieSnapLimit ?? prev.tier1CalorieSnapLimit,
                 tier2CalorieSnapLimit: settings.tier2CalorieSnapLimit ?? prev.tier2CalorieSnapLimit,
                 tier3CalorieSnapLimit: settings.tier3CalorieSnapLimit ?? prev.tier3CalorieSnapLimit,
+
+                calorieSnapModel: settings.calorieSnapModel || prev.calorieSnapModel,
 
                 systemPrompt: settings.systemPrompt || prev.systemPrompt,
             }));
@@ -230,7 +234,21 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     <TierInputGroup tier={3} formData={formData} setFormData={setFormData} />
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-4 border-t border-gray-100">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CalorieSnap (AI Food Scanner) Model ID</label>
+                    <input
+                        type="text"
+                        value={formData.calorieSnapModel}
+                        onChange={(e) => setFormData({ ...formData, calorieSnapModel: e.target.value })}
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="e.g. gemini-1.5-flash"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                        Must be a valid vision model from Google (e.g., `gemini-1.5-flash` or `gemini-1.5-pro`).
+                    </p>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100">
                     <label className="block text-sm font-medium text-gray-700 mb-1">System Prompt</label>
                     <textarea
                         value={formData.systemPrompt}

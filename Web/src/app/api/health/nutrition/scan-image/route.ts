@@ -160,9 +160,16 @@ export async function POST(request: Request) {
             }
         }
 
-        // Use gemini-3-flash-preview model
-        const model = 'gemini-3-flash-preview';
-        logger.info('[Food Scanner] Calling Gemini Vision', { model, userId, hasCaption: !!caption });
+        // Get the configured CalorieSnap model from DB (fallback to gemini-1.5-flash)
+        const model = globalSettings?.calorieSnapModel || 'gemini-1.5-flash';
+        logger.info('[Food Scanner] Initiating AI analysis', {
+            model,
+            userId,
+            hasCaption: !!caption,
+            imageLength: imageBase64.length,
+            mimeType,
+            promptLength: fullPrompt.length
+        });
 
         let response: Response | undefined;
 
@@ -207,12 +214,26 @@ export async function POST(request: Request) {
         if (!response || !response.ok) {
             const errorText = response ? await response.text() : 'Network error';
             const status = response ? response.status : 502;
-            logger.error('[Food Scanner] Gemini API error', { status, error: errorText });
+
+            logger.error('[Food Scanner] Gemini API request failed', {
+                status,
+                model,
+                userId,
+                errorText,
+                requestPayloadTokens: fullPrompt.length // estimate
+            });
+
             return NextResponse.json(
                 { error: `AI analysis failed (${status}). Please try again.` },
                 { status: 502 }
             );
         }
+
+        logger.info('[Food Scanner] Gemini API request successful', {
+            status: response.status,
+            model,
+            userId
+        });
 
         const data = await response.json();
 
@@ -226,12 +247,15 @@ export async function POST(request: Request) {
             );
         }
 
-        // Parse JSON from response (handle possible markdown wrapping)
         let parsed;
         try {
             // Try direct parse first
             parsed = JSON.parse(textContent);
+            logger.debug('[Food Scanner] Successfully parsed raw JSON response');
         } catch {
+            logger.warn('[Food Scanner] Direct JSON parse failed, attempting regex extraction', {
+                rawResponsePreview: textContent.substring(0, 150)
+            });
             // Try extracting JSON from markdown code block
             const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/);
             if (jsonMatch) {
@@ -242,7 +266,12 @@ export async function POST(request: Request) {
                 const end = textContent.lastIndexOf('}');
                 if (start !== -1 && end !== -1) {
                     parsed = JSON.parse(textContent.substring(start, end + 1));
+                    logger.debug('[Food Scanner] Successfully extracted JSON using bracket indices');
                 } else {
+                    logger.error('[Food Scanner] Failed to extract any JSON from response', {
+                        responseLength: textContent.length,
+                        userId
+                    });
                     throw new Error('Could not extract JSON from AI response');
                 }
             }

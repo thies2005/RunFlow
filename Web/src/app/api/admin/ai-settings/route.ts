@@ -66,7 +66,8 @@ export async function GET(request: NextRequest) {
                 tier3DailyTokenLimit: globalSettings.tier3DailyTokenLimit,
                 tier3MonthlyTokenLimit: globalSettings.tier3MonthlyTokenLimit,
 
-                // CalorieSnap limits
+                // CalorieSnap limits & Config
+                calorieSnapModel: globalSettings.calorieSnapModel,
                 tier1CalorieSnapLimit: globalSettings.tier1CalorieSnapLimit,
                 tier2CalorieSnapLimit: globalSettings.tier2CalorieSnapLimit,
                 tier3CalorieSnapLimit: globalSettings.tier3CalorieSnapLimit,
@@ -125,7 +126,8 @@ export async function PUT(request: NextRequest) {
             tier3Name, tier3DailyLimit, tier3MonthlyLimit,
             tier3DailyTokenLimit, tier3MonthlyTokenLimit,
 
-            // CalorieSnap limits
+            // CalorieSnap config
+            calorieSnapModel,
             tier1CalorieSnapLimit, tier2CalorieSnapLimit, tier3CalorieSnapLimit,
 
             // Legacy
@@ -169,7 +171,8 @@ export async function PUT(request: NextRequest) {
         if (tier3DailyTokenLimit !== undefined) updateData.tier3DailyTokenLimit = parseInt(tier3DailyTokenLimit) || 0;
         if (tier3MonthlyTokenLimit !== undefined) updateData.tier3MonthlyTokenLimit = parseInt(tier3MonthlyTokenLimit) || 0;
 
-        // CalorieSnap limits
+        // CalorieSnap config
+        if (calorieSnapModel !== undefined) updateData.calorieSnapModel = calorieSnapModel;
         if (tier1CalorieSnapLimit !== undefined) updateData.tier1CalorieSnapLimit = parseInt(tier1CalorieSnapLimit) || 0;
         if (tier2CalorieSnapLimit !== undefined) updateData.tier2CalorieSnapLimit = parseInt(tier2CalorieSnapLimit) || 0;
         if (tier3CalorieSnapLimit !== undefined) updateData.tier3CalorieSnapLimit = parseInt(tier3CalorieSnapLimit) || 0;
@@ -205,6 +208,7 @@ export async function PUT(request: NextRequest) {
                 tier1MonthlyLimit: settings.tier1MonthlyLimit,
                 tier1DailyTokenLimit: settings.tier1DailyTokenLimit,
                 tier1MonthlyTokenLimit: settings.tier1MonthlyTokenLimit,
+                calorieSnapModel: settings.calorieSnapModel,
             },
         });
 

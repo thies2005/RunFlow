@@ -48,6 +48,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isGoalsOpen, setIsGoalsOpen] = useState(false);
     const [isSyncingHistory, setIsSyncingHistory] = useState(false);
     const [hasHealthConnect, setHasHealthConnect] = useState(false);
+    const [bannerDismissed, setBannerDismissed] = useState(true);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
     const [scannedFood, setScannedFood] = useState<any | null>(null);
     const [isFoodScannerOpen, setIsFoodScannerOpen] = useState(false);
@@ -100,6 +101,15 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
     useEffect(() => {
         setIsMobileDevice(isMobile());
+        // Check if mobile banner was dismissed within last 7 days
+        const dismissed = localStorage.getItem('health-banner-dismissed');
+        if (dismissed) {
+            const dismissedAt = parseInt(dismissed, 10);
+            const sevenDays = 7 * 24 * 60 * 60 * 1000;
+            setBannerDismissed(Date.now() - dismissedAt < sevenDays);
+        } else {
+            setBannerDismissed(false);
+        }
         if (isMobile()) {
             isHealthConnectAvailable().then(available => setHasHealthConnect(available));
             // Background sync of steps/weight on mount for mobile
@@ -188,6 +198,9 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
         }
     });
+
+    // Show steps if Health Connect is available on this device OR if backend has step data (synced from mobile earlier)
+    const showSteps = hasHealthConnect || (dailyData?.dailyHealth?.steps && dailyData.dailyHealth.steps > 0);
 
     // Filtering standalone supplements
     const todayDayOfWeek = new Date().getDay();
@@ -338,21 +351,30 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
 
                     <div className={`p-4 ${!showHeader ? 'pt-8' : ''} mx-auto w-full max-w-lg md:max-w-3xl lg:max-w-7xl`}>
                         <div className="flex flex-col gap-6 md:grid md:grid-cols-2 lg:grid-cols-12 lg:items-start">
-                            {!isMobileDevice && (
+                            {!isMobileDevice && !bannerDismissed && (
                                 <div className="md:col-span-2 lg:col-span-12 bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-start gap-3">
                                     <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                                    <div className="text-sm">
+                                    <div className="text-sm flex-1">
                                         <p className="font-semibold text-blue-400 mb-1">Mobile App Recommended</p>
-                                        <p className="text-blue-200/80">Step and weight tracking use Health Connect, which is only available on identical mobile apps. You can manually enter weight here or track supplements.</p>
+                                        <p className="text-blue-200/80">Step and weight tracking use Health Connect, which is only available on the mobile app. You can manually enter weight here or track supplements.</p>
                                     </div>
+                                    <button
+                                        onClick={() => {
+                                            localStorage.setItem('health-banner-dismissed', Date.now().toString());
+                                            setBannerDismissed(true);
+                                        }}
+                                        className="text-blue-400/60 hover:text-blue-400 transition-colors text-xs font-medium shrink-0"
+                                    >
+                                        Dismiss
+                                    </button>
                                 </div>
                             )}
 
                             {/* Left Column: Quick Stats */}
                             <div className="flex flex-col gap-6 md:col-span-2 lg:col-span-3">
                                 {/* Steps and Weight Cards */}
-                                <div className={`grid gap-4 ${hasHealthConnect ? 'grid-cols-2 lg:grid-cols-1' : 'grid-cols-1'}`}>
-                                    {hasHealthConnect && (
+                                <div className={`grid gap-4 ${showSteps ? 'grid-cols-2 lg:grid-cols-1' : 'grid-cols-1'}`}>
+                                    {showSteps && (
                                         <button
                                             onClick={() => setActiveTrendMetric('steps')}
                                             className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"

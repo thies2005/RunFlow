@@ -19,6 +19,9 @@ export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [showVerification, setShowVerification] = useState(false);
 
+    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [healthAccepted, setHealthAccepted] = useState(false);
+
     const passwordRequirements = [
         { label: 'At least 8 characters', met: password.length >= 8 },
         { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
@@ -35,6 +38,11 @@ export default function RegisterPage() {
 
         if (!allRequirementsMet) {
             setError('Please meet all password requirements');
+            return;
+        }
+
+        if (!termsAccepted || !healthAccepted) {
+            setError('You must accept the terms and consent to data processing');
             return;
         }
 
@@ -175,9 +183,49 @@ export default function RegisterPage() {
                             <p className="text-red-400 text-sm text-center">{error}</p>
                         )}
 
+                        <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3 text-left">
+                            <label className="flex items-start gap-3 cursor-pointer group">
+                                <div className="relative flex items-start pt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        checked={termsAccepted}
+                                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                                    />
+                                    <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span className="text-sm text-gray-300 leading-tight">
+                                    I have read and agree to the <Link href="/terms" className="text-orange-500 hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-orange-500 hover:underline">Privacy Policy</Link>.
+                                </span>
+                            </label>
+
+                            <label className="flex items-start gap-3 cursor-pointer group">
+                                <div className="relative flex items-start pt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        checked={healthAccepted}
+                                        onChange={(e) => setHealthAccepted(e.target.checked)}
+                                    />
+                                    <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span className="text-sm text-gray-300 leading-tight">
+                                    I consent to the processing of my health and fitness data (GDPR Art. 9) for training analytics.
+                                </span>
+                            </label>
+                        </div>
+
                         <button
                             type="submit"
-                            disabled={isLoading || !allRequirementsMet || !passwordsMatch}
+                            disabled={isLoading || !allRequirementsMet || !passwordsMatch || !termsAccepted || !healthAccepted}
                             className="btn-primary w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'Creating account...' : 'Create Account'}

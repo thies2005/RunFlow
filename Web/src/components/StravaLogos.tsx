@@ -15,10 +15,15 @@ export const PoweredByStravaLogo = ({ className = "h-8" }: { className?: string 
 );
 
 // Inline SVG version of Strava connect button (external image URL was broken)
-export const ConnectWithStravaButton = ({ onClick }: { onClick: () => void }) => (
+export const ConnectWithStravaButton = ({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) => (
     <button
         onClick={onClick}
-        className="group relative transition-transform hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3 bg-[#FC4C02] hover:bg-[#E34402] text-white font-semibold py-3 px-6 rounded-lg shadow-lg"
+        disabled={disabled}
+        className={`group relative flex items-center gap-3 bg-[#FC4C02] text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all
+            ${disabled
+                ? 'opacity-50 cursor-not-allowed grayscale-[30%]'
+                : 'hover:bg-[#E34402] hover:-translate-y-0.5 active:translate-y-0'
+            }`}
     >
         {/* Strava Logo SVG */}
         <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor">

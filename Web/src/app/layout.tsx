@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from './providers';
 import DeepLinkHandler from '@/components/DeepLinkHandler';
 import AdaptiveLayout from './adaptive-layout';
+import CookieBanner from '@/components/CookieBanner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -34,6 +35,7 @@ export default function RootLayout({
                 <Providers>
                     <AdaptiveLayout>{children}</AdaptiveLayout>
                 </Providers>
+                <CookieBanner />
                 <DeepLinkHandler />
             </body>
         </html>

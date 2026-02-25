@@ -43,6 +43,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [message, setMessage] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     // API Key state
     const [generatedApiKey, setGeneratedApiKey] = useState<string | null>(null);
@@ -262,6 +263,46 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const handleDelete = () => {
         setIsDeleting(true);
         deleteMutation.mutate();
+    };
+
+    const handleExportData = async () => {
+        setIsExporting(true);
+        try {
+            const res = await fetch('/api/user/export');
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || 'Failed to export data');
+            }
+
+            // Get the filename from the disposition header if available
+            const disposition = res.headers.get('Content-Disposition');
+            let filename = `runflow-data-export-${new Date().toISOString().split('T')[0]}.json`;
+            if (disposition && disposition.indexOf('attachment') !== -1) {
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) {
+                    filename = matches[1].replace(/['"]/g, '');
+                }
+            }
+
+            // Create a blob and trigger download
+            const blob = await res.blob();
+            const windowUrl = window.URL || window.webkitURL;
+            const url = windowUrl.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            windowUrl.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            setMessage('Data exported successfully!');
+        } catch (error: any) {
+            setMessage(`Export failed: ${error.message}`);
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     // API Key Query
@@ -531,6 +572,16 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 Reconnect Strava
                             </button>
                             <p className="text-[10px] text-gray-500">Re-authenticate with Strava if sync is failing</p>
+
+                            <button
+                                onClick={handleExportData}
+                                disabled={isExporting}
+                                className="w-full mt-2 py-2.5 bg-white/5 border border-white/10 text-white rounded-lg hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-2"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${isExporting ? 'animate-spin' : ''}`} />
+                                {isExporting ? 'Generating Export...' : 'Download My Data (JSON)'}
+                            </button>
+                            <p className="text-[10px] text-gray-500">Export all your personal and health data.</p>
                         </div>
                     </div>
 

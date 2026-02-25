@@ -124,15 +124,22 @@ export async function GET(request: Request) {
         const dateStr = new Date().toISOString().split('T')[0];
         const filename = `runflow-data-export-${dateStr}.json`;
 
-        // Create response with JSON download headers
-        return new NextResponse(JSON.stringify(safeUserData, null, 2), {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Disposition': `attachment; filename="${filename}"`,
-                'Cache-Control': 'no-store, max-age=0',
-            },
-        });
+        // Create response with JSON download headers, handling BigInt serialization
+        return new NextResponse(
+            JSON.stringify(
+                safeUserData,
+                (key, value) => (typeof value === 'bigint' ? value.toString() : value),
+                2
+            ),
+            {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Disposition': `attachment; filename="${filename}"`,
+                    'Cache-Control': 'no-store, max-age=0',
+                },
+            }
+        );
     } catch (error) {
         console.error('Data export error:', error);
         return NextResponse.json(

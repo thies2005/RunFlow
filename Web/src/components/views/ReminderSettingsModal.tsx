@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, BellOff, Clock, Dumbbell, UtensilsCrossed, Pill, Scale, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useMobileNotifications } from '@/hooks/useMobileNotifications';
+import { Capacitor } from '@capacitor/core';
 
 interface ReminderSettingsModalProps {
     isOpen: boolean;
@@ -34,7 +36,13 @@ interface ReminderSettingsData {
 
 export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModalProps) {
     const queryClient = useQueryClient();
-    const push = usePushNotifications();
+    const isNative = Capacitor.isNativePlatform();
+    const webPush = usePushNotifications();
+    const mobilePush = useMobileNotifications();
+
+    // Dynamically use the correct hook implementation
+    const push = isNative ? mobilePush : webPush;
+
     const [localSettings, setLocalSettings] = useState<Partial<ReminderSettingsData>>({});
     const [isDirty, setIsDirty] = useState(false);
 
@@ -130,12 +138,12 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                                 </p>
                                 <p className="text-xs text-gray-400">
                                     {!push.isSupported
-                                        ? 'Not supported in this browser'
+                                        ? 'Not supported on this device/browser'
                                         : push.permission === 'denied'
-                                            ? 'Blocked — enable in browser settings'
+                                            ? isNative ? 'Blocked — enable in app settings' : 'Blocked — enable in browser settings'
                                             : push.isSubscribed
                                                 ? 'Enabled — you\'ll receive reminders'
-                                                : 'Enable to receive reminders'}
+                                                : isNative ? 'Enable to get local reminders' : 'Enable to receive reminders'}
                                 </p>
                             </div>
                         </div>
@@ -143,8 +151,8 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                             onClick={handlePushToggle}
                             disabled={!push.isSupported || push.permission === 'denied' || push.isLoading}
                             className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${push.isSubscribed
-                                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30'
-                                    : 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20'
+                                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30'
+                                : 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20'
                                 } disabled:opacity-40 disabled:cursor-not-allowed`}
                         >
                             {push.isLoading ? (
@@ -157,7 +165,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                         <div className="mt-3 flex items-start gap-2 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                             <p className="text-xs text-red-300">
-                                Notifications are blocked. Open your browser settings and allow notifications for this site to enable reminders.
+                                Notifications are blocked. Open your {isNative ? 'device' : 'browser'} settings and allow notifications to receive reminders.
                             </p>
                         </div>
                     )}

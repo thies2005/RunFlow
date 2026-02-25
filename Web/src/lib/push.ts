@@ -4,10 +4,16 @@ import { prisma } from '@/lib/db';
 // Configure VAPID keys
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
-const VAPID_SUBJECT = process.env.NEXTAUTH_URL || 'https://localhost:3000';
+const VAPID_SUBJECT = process.env.NEXTAUTH_URL?.startsWith('https')
+    ? process.env.NEXTAUTH_URL
+    : 'mailto:admin@runflow.app';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    try {
+        webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    } catch (e) {
+        console.warn('Failed to set VAPID details:', e);
+    }
 }
 
 export interface PushPayload {

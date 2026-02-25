@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
@@ -34,6 +34,8 @@ import {
     calculatePredictedTimes,
 } from '@/lib/metrics/runalyze';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
+import { Capacitor } from '@capacitor/core';
+import { syncLocalNotifications } from '@/lib/mobile/notifications';
 
 export function MobileLayout() {
     const { data: session, status } = useSession();
@@ -176,6 +178,29 @@ export function MobileLayout() {
         },
         enabled: status === 'authenticated',
     });
+
+    // Background Sync for Native Mobile Notifications
+    // Whenever the mobile layout mounts and auth is ready, fetch reminder settings to ensure alarms are in sync
+    useEffect(() => {
+        if (Capacitor.isNativePlatform() && status === 'authenticated') {
+            const syncMobileNotifications = async () => {
+                try {
+                    const response = await fetch('/api/reminders/settings');
+                    if (response.ok) {
+                        const settings = await response.json();
+                        await syncLocalNotifications(settings);
+                        console.log('Mobile notifications synchronized with server settings');
+                    }
+                } catch (err) {
+                    console.error('Failed to sync mobile notifications', err);
+                }
+            };
+            syncMobileNotifications();
+
+            // We could optionally listen for Capacitor 'appStateChange' here
+            // to re-sync every time the app comes to foreground.
+        }
+    }, [status]);
 
     // === MUTATIONS ===
 

@@ -274,7 +274,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 throw new Error(data.error || 'Failed to export data');
             }
 
-            // Get the filename from the disposition header if available
+            // Get the filename
             const disposition = res.headers.get('Content-Disposition');
             let filename = `runflow-data-export-${new Date().toISOString().split('T')[0]}.json`;
             if (disposition && disposition.indexOf('attachment') !== -1) {
@@ -285,17 +285,39 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 }
             }
 
-            // Create a blob and trigger download
-            const blob = await res.blob();
-            const windowUrl = window.URL || window.webkitURL;
-            const url = windowUrl.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            windowUrl.revokeObjectURL(url);
-            document.body.removeChild(a);
+            const { Capacitor } = await import('@capacitor/core');
+            const isNative = Capacitor.isNativePlatform();
+
+            if (isNative) {
+                const { Filesystem, Directory } = await import('@capacitor/filesystem');
+                const { Share } = await import('@capacitor/share');
+
+                // Read exactly as text so we can write it
+                const jsonText = await res.text();
+
+                const writeResult = await Filesystem.writeFile({
+                    path: filename,
+                    data: jsonText,
+                    directory: Directory.Cache,
+                });
+
+                await Share.share({
+                    title: 'My RunFlow Data Export',
+                    url: writeResult.uri,
+                });
+            } else {
+                // Web fallback
+                const blob = await res.blob();
+                const windowUrl = window.URL || window.webkitURL;
+                const url = windowUrl.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                windowUrl.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
 
             setMessage('Data exported successfully!');
         } catch (error: any) {

@@ -3,46 +3,15 @@ import { prisma } from '@/lib/db';
 import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 
-const FOOD_SCAN_PROMPT = `You are a nutrition analysis AI. Analyze this food image and identify every individual food component visible.
-
-INSTRUCTIONS:
-- Identify each distinct food item/ingredient
-- Estimate the weight in grams for each component
-- Calculate nutrition values (calories, protein, carbs, fats) for each component based on the estimated weight
-- Use standard USDA nutritional data as reference
-- If a caption is provided by the user, use it to improve your analysis (e.g., knowing specific ingredients, portion sizes, or preparation methods)
-- Be as accurate as possible with portion estimation
-
-Return ONLY valid JSON in this exact format, no markdown, no explanation:
-{
-  "mealName": "Short descriptive name for the overall meal",
-  "items": [
-    {
-      "name": "Component name",
-      "estimatedGrams": 150,
-      "calories": 200,
-      "protein": 25,
-      "carbs": 0,
-      "fats": 8
-    }
-  ],
-  "totalCalories": 200,
-  "totalProtein": 25,
-  "totalCarbs": 0,
-  "totalFats": 8,
-  "confidence": "high"
-}
-
-Confidence should be "high", "medium", or "low" based on image clarity and how identifiable the food is.`;
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
         const { imageBase64, caption, userId } = body;
 
-        if (!imageBase64 || !userId) {
+        if ((!imageBase64 && !caption?.trim()) || !userId) {
             return NextResponse.json(
-                { error: 'Image and userId are required' },
+                { error: 'Image or description and userId are required' },
                 { status: 400 }
             );
         }
@@ -142,17 +111,48 @@ export async function POST(request: Request) {
             );
         }
 
-        // Build the prompt with optional caption
-        let fullPrompt = FOOD_SCAN_PROMPT;
+        // Build the prompt dynamically based on input type
+        const basePrompt = `You are a nutrition analysis AI. Analyze this food ${imageBase64 ? 'image' : 'description'} and identify every individual food component ${imageBase64 ? 'visible' : 'mentioned'}.
+
+INSTRUCTIONS:
+- Identify each distinct food item/ingredient
+- Estimate the weight in grams for each component
+- Calculate nutrition values (calories, protein, carbs, fats) for each component based on the estimated weight
+- Use standard USDA nutritional data as reference
+${imageBase64 ? '- If a caption is provided by the user, use it to improve your analysis (e.g., knowing specific ingredients, portion sizes, or preparation methods)\n' : ''}- Be as accurate as possible with portion estimation
+
+Return ONLY valid JSON in this exact format, no markdown, no explanation:
+{
+  "mealName": "Short descriptive name for the overall meal",
+  "items": [
+    {
+      "name": "Component name",
+      "estimatedGrams": 150,
+      "calories": 200,
+      "protein": 25,
+      "carbs": 0,
+      "fats": 8
+    }
+  ],
+  "totalCalories": 200,
+  "totalProtein": 25,
+  "totalCarbs": 0,
+  "totalFats": 8,
+  "confidence": "high"
+}
+
+Confidence should be "high", "medium", or "low" based on ${imageBase64 ? 'image clarity' : 'description detail'} and how identifiable the food is.`;
+
+        let fullPrompt = basePrompt;
         if (caption?.trim()) {
-            fullPrompt += `\n\nUSER CAPTION: "${caption.trim()}"`;
+            fullPrompt += `\n\nUSER ${imageBase64 ? 'CAPTION' : 'DESCRIPTION'}: "${caption.trim()}"`;
         }
 
         // Determine the MIME type from base64 header or default to jpeg
         let mimeType = 'image/jpeg';
         let cleanBase64 = imageBase64;
 
-        if (imageBase64.startsWith('data:')) {
+        if (imageBase64 && imageBase64.startsWith('data:')) {
             const match = imageBase64.match(/^data:(image\/\w+);base64,/);
             if (match) {
                 mimeType = match[1];
@@ -166,7 +166,8 @@ export async function POST(request: Request) {
             model,
             userId,
             hasCaption: !!caption,
-            imageLength: imageBase64.length,
+            hasImage: !!imageBase64,
+            imageLength: imageBase64?.length || 0,
             mimeType,
             promptLength: fullPrompt.length
         });
@@ -182,7 +183,7 @@ export async function POST(request: Request) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{
-                        parts: [
+                        parts: imageBase64 ? [
                             { text: fullPrompt },
                             {
                                 inlineData: {
@@ -190,6 +191,8 @@ export async function POST(request: Request) {
                                     data: cleanBase64,
                                 },
                             },
+                        ] : [
+                            { text: fullPrompt }
                         ],
                     }],
                     generationConfig: {

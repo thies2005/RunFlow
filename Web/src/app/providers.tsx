@@ -8,6 +8,7 @@ import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider'
 import { NotificationProvider } from '@/components/providers/NotificationProvider';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { UnitProvider } from '@/lib/units';
+import { HealthSyncProvider } from '@/components/providers/HealthSyncProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({
@@ -27,9 +28,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                     <UnitProvider>
                         <NotificationProvider>
-                            <UserMetricsProvider>
-                                {children}
-                            </UserMetricsProvider>
+                            <HealthSyncProvider>
+                                <UserMetricsProvider>
+                                    {children}
+                                </UserMetricsProvider>
+                            </HealthSyncProvider>
                         </NotificationProvider>
                     </UnitProvider>
                 </ThemeProvider>

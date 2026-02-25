@@ -114,10 +114,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         }
         if (isMobile()) {
             isHealthConnectAvailable().then(available => setHasHealthConnect(available));
-            // Background sync of steps/weight on mount for mobile
-            syncDailyHealth().then(() => {
-                queryClient.invalidateQueries({ queryKey: ['daily-health'] });
-            });
         }
     }, [queryClient]);
 

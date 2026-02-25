@@ -12,6 +12,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
         document: '/~offline',
     },
     workboxOptions: {
+        importScripts: ['/push-sw.js'],
         skipWaiting: true,
         clientsClaim: true,
         disableDevLogs: true,

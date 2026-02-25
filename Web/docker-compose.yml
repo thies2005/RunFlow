@@ -25,6 +25,9 @@ services:
       # M-10 fix: Add Sentry environment variables for error tracking
       - SENTRY_DSN=${SENTRY_DSN}
       - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+      - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - CRON_SECRET=${CRON_SECRET}
     depends_on:
       db:
         condition: service_healthy
@@ -165,6 +168,29 @@ services:
     command: tunnel --no-autoupdate run
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - runflow-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  reminder-cron:
+    image: alpine:3.19
+    container_name: runflow-reminder-cron
+    restart: unless-stopped
+    entrypoint: /bin/sh
+    command: >
+      -c "while true; do
+        wget -q -O- http://app:3000/api/cron/reminders?secret=$${CRON_SECRET} || true;
+        sleep 300;
+      done"
+    environment:
+      - CRON_SECRET=${CRON_SECRET}
     depends_on:
       app:
         condition: service_healthy

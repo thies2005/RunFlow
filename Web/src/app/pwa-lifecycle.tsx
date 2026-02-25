@@ -14,12 +14,9 @@ export function PwaLifecycle() {
             typeof window !== "undefined" &&
             "serviceWorker" in navigator
         ) {
-            // UNREGISTER ALL SERVICE WORKERS to clear stale cache
-            navigator.serviceWorker.getRegistrations().then(function (registrations) {
-                for (let registration of registrations) {
-                    console.log('Unregistering Service Worker:', registration);
-                    registration.unregister();
-                }
+            // Register service worker for PWA + push notifications
+            navigator.serviceWorker.ready.then((registration) => {
+                console.log('Service Worker ready:', registration.scope);
             });
         }
     }, []);

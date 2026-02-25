@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
-import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target, Sparkles, BookOpen } from 'lucide-react';
+import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target, Sparkles, BookOpen, Bell } from 'lucide-react';
 import { syncDailyHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult, isHealthConnectAvailable } from '@/lib/mobile/healthConnect';
 import { Capacitor } from '@capacitor/core';
 
@@ -22,6 +22,7 @@ import { NutritionLogHistoryView } from './NutritionLogHistoryView';
 import { AddStackModal } from './AddStackModal';
 import { SupplementStatsModal } from './SupplementStatsModal';
 import { SupplementItem } from '@/components/health/SupplementItem';
+import { ReminderSettingsModal } from './ReminderSettingsModal';
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -55,6 +56,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [scanResult, setScanResult] = useState<any | null>(null);
     const [isMealLibraryOpen, setIsMealLibraryOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [isRemindersOpen, setIsRemindersOpen] = useState(false);
 
     const handleBarcodeScanned = useCallback(async (barcode: string) => {
         setIsScannerOpen(false);
@@ -345,6 +347,13 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                         <RefreshCw className={`w-5 h-5 text-gray-400 ${isSyncingHistory ? 'animate-spin' : ''}`} />
                                     </button>
                                 )}
+                                <button
+                                    onClick={() => setIsRemindersOpen(true)}
+                                    className="p-2 -mr-2 rounded-full hover:bg-white/10 transition-colors"
+                                    aria-label="Notification Reminders"
+                                >
+                                    <Bell className="w-5 h-5 text-gray-400" />
+                                </button>
                             </div>
                         </header>
                     )}
@@ -732,6 +741,11 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                     <NutritionLogHistoryView
                         isOpen={isHistoryOpen}
                         onClose={() => setIsHistoryOpen(false)}
+                    />
+
+                    <ReminderSettingsModal
+                        isOpen={isRemindersOpen}
+                        onClose={() => setIsRemindersOpen(false)}
                     />
                 </>
             )}

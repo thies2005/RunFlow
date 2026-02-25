@@ -93,6 +93,8 @@ model User {
   nutritionLogs       NutritionLog[]
   nutritionTarget     UserNutritionTarget?
   savedMeals          SavedMeal[]
+  pushSubscriptions   PushSubscription[]
+  reminderSettings    ReminderSettings?
 }
 
 // ============================================
@@ -658,6 +660,66 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, read])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String   // Public key
+  auth      String   // Auth secret
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ReminderSettings {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Supplement reminders (times as "HH:MM" strings)
+  supplementMorningEnabled Boolean @default(false)
+  supplementMorningTime    String  @default("08:00")
+  supplementNoonEnabled    Boolean @default(false)
+  supplementNoonTime       String  @default("12:00")
+  supplementEveningEnabled Boolean @default(false)
+  supplementEveningTime    String  @default("20:00")
+
+  // Weight reminder
+  weightReminderEnabled    Boolean @default(false)
+  weightReminderTime       String  @default("07:00")
+
+  // Food tracking reminders
+  foodBreakfastEnabled     Boolean @default(false)
+  foodBreakfastTime        String  @default("09:00")
+  foodLunchEnabled         Boolean @default(false)
+  foodLunchTime            String  @default("13:00")
+  foodDinnerEnabled        Boolean @default(false)
+  foodDinnerTime           String  @default("19:00")
+
+  // Workout reminders (auto from scheduled workouts)
+  workoutReminderEnabled   Boolean @default(false)
+  workoutReminderMinutes   Int     @default(60) // minutes before scheduled time
+
+  // User timezone for correct scheduling
+  timezone                 String  @default("UTC")
+
+  // Track last sent times to avoid duplicates
+  lastSupplementMorningSent DateTime?
+  lastSupplementNoonSent    DateTime?
+  lastSupplementEveningSent DateTime?
+  lastWeightSent            DateTime?
+  lastFoodBreakfastSent     DateTime?
+  lastFoodLunchSent         DateTime?
+  lastFoodDinnerSent        DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================

@@ -121,13 +121,21 @@ export async function middleware(request: NextRequest) {
         userAgent: request.headers.get('user-agent'),
     });
 
+    const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-nonce', nonce)
+
     // Continue with normal middleware chain
-    const response = NextResponse.next();
+    const response = NextResponse.next({
+        request: {
+            headers: requestHeaders,
+        },
+    });
 
     // Override CSP (allow inline scripts to avoid blank page with Next.js inline chunks)
     const csp = [
         `default-src 'self'`,
-        `script-src 'self' 'unsafe-inline'`,
+        `script-src 'self' 'nonce-${nonce}'`,
         `style-src 'self' 'unsafe-inline'`,
         `img-src 'self' data: https://*.strava.com https://*.googleusercontent.com https://dgalywyr863hv.cloudfront.net https://avatars.githubusercontent.com`,
         `font-src 'self' data:`,
@@ -149,6 +157,7 @@ export async function middleware(request: NextRequest) {
 
     // Add request ID header for tracing
     response.headers.set('x-request-id', requestId)
+    response.headers.set('x-nonce', nonce)
 
     // Log response with duration
     const duration = Date.now() - startTime;

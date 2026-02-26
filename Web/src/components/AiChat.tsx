@@ -566,7 +566,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                 </div>
             )}
 
-            <div className="sticky bottom-4 z-20 pb-safe px-4 sm:px-0 mt-auto">
+            <div className="z-20 pb-2 sm:pb-6 px-4 sm:px-0 mt-auto">
                 <div className="glass-card rounded-full p-1.5 flex items-center shadow-2xl max-w-5xl mx-auto backdrop-blur-md border border-white/10 shadow-purple-900/10">
                     {!hideInputActions && (
                         <div className="relative">

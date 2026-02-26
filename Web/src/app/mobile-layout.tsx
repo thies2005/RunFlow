@@ -28,7 +28,7 @@ import AiSettingsModal from '@/components/AiSettingsModal';
 import HealthView from '@/components/views/HealthView';
 import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
-import type { Workout, Goal, Activity } from '@/lib/types';
+import type { Workout, Goal, Activity, ActivityListItem } from '@/lib/types';
 import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
 import {
     calculatePredictedTimes,
@@ -51,8 +51,7 @@ export function MobileLayout() {
     const [initialComplete, setInitialComplete] = useState(false);
     const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
-    // M-06 fix: Use proper ActivityListItem type (matches ActivityDetailsModal props)
-    const [selectedActivity, setSelectedActivity] = useState<import('@/lib/types').ActivityListItem | null>(null);
+    const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -444,8 +443,7 @@ export function MobileLayout() {
                 key={editingWorkout?.id ?? 'new'}
                 isOpen={!!editingWorkout || !!createDate}
                 onClose={() => { setEditingWorkout(null); setCreateDate(undefined); refetchPlan(); }}
-                // M-06 fix: WorkoutWithLinkedActivity extends Workout, safe cast
-                workout={editingWorkout as import('@/lib/types').Workout | null}
+                workout={editingWorkout}
                 defaultDate={createDate}
                 goalId={activeGoal?.id || planData?.goal?.id}
                 initialComplete={initialComplete}

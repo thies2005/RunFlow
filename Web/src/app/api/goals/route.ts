@@ -308,8 +308,7 @@ export async function POST(request: NextRequest) {
             try {
                 const workouts = generateTrainingPlan({
                     vdot: currentVdot,
-                    // M-06 fix: raceType is validated by Zod schema to match RaceType enum
-                    raceType: raceType as RaceType,
+                    raceType: raceType,
                     raceDate: new Date(raceDate),
                     startDate: planStartDate ? new Date(planStartDate) : new Date(),
                     runsPerWeek: runsPerWeek ?? 4,

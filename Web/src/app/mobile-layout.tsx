@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
@@ -26,14 +26,9 @@ import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import AiChat from '@/components/AiChat';
 import AiSettingsModal from '@/components/AiSettingsModal';
 import HealthView from '@/components/views/HealthView';
-import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
-import type { Workout, Goal, Activity } from '@/lib/types';
+import type { Workout, Goal } from '@/lib/types';
 import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
-import {
-    calculatePredictedTimes,
-} from '@/lib/metrics/runalyze';
-import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { Capacitor } from '@capacitor/core';
 import { syncLocalNotifications } from '@/lib/mobile/notifications';
 
@@ -66,7 +61,6 @@ export function MobileLayout() {
     const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
     const [zonesTimeRange, setZonesTimeRange] = useState<'1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'>('1Y');
 
-    // DnD Sensors for Plan
     // DnD Sensors for Plan
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

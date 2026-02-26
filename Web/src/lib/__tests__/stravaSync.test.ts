@@ -76,11 +76,8 @@ describe('Strava Rate Limiter', () => {
 
         expect(mockRedis.incr).toHaveBeenCalledTimes(2);
         // We expect it to wait roughly 1s + buffer.
-        // 1s = 1000ms. Code waits (ttl+1)*1000 = 2000ms.
-        // Wait, code says:
-        // const waitTime = ttl > 0 ? ttl : windowSeconds;
-        // await new Promise(resolve => setTimeout(resolve, (waitTime + 1) * 1000));
-        // So if ttl=1, waitTime=1. Sleep 2000ms.
+        // The implementation waits for (ttl + 1) seconds to ensure the window has passed.
+        // With ttl=1, it waits 2 seconds (2000ms).
         expect(end - start).toBeGreaterThanOrEqual(1900);
     });
 });

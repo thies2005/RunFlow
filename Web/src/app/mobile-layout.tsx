@@ -57,6 +57,7 @@ export function MobileLayout() {
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
+    const [aiChatResetKey, setAiChatResetKey] = useState(0);
 
     // Plan State
     const [showUnlinked, setShowUnlinked] = useState(true);
@@ -311,7 +312,7 @@ export function MobileLayout() {
 
     return (
         <>
-            <MobileSwipeLayout showAiChat={showAiChat} showHealth={showHealth}>
+            <MobileSwipeLayout showAiChat={showAiChat} showHealth={showHealth} onChatTabClick={() => setAiChatResetKey(prev => prev + 1)}>
                 {/* Dashboard View - always index 0 */}
                 <DashboardView
                     session={session}
@@ -376,12 +377,21 @@ export function MobileLayout() {
                 {showAiChat && (
                     <div className="h-full flex flex-col min-h-0 bg-background relative">
                         <AiChat
+                            key={aiChatResetKey}
                             sessionId={sessionId}
                             onOpenSettings={() => setIsAiSettingsOpen(true)}
                             isPromptLibraryOpen={isPromptLibraryOpen}
                             onClosePromptLibrary={() => setIsPromptLibraryOpen(false)}
                             onOpenPromptLibrary={() => setIsPromptLibraryOpen(true)}
                             onOpenHistory={() => setIsMobileSidebarOpen(true)}
+                            onNewChat={() => {
+                                // Close sidebar if open from New Chat click inside it
+                                setIsMobileSidebarOpen(false);
+                                // Increment key to force AiChat to unmount and remount (resetting history & sessionId)
+                                setAiChatResetKey(prev => prev + 1);
+                                // Ensure we navigate without existing sessionId
+                                router.push('/chat');
+                            }}
                         />
 
                         {/* Mobile Sidebar Overlay */}

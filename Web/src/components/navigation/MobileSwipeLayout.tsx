@@ -12,11 +12,12 @@ interface MobileSwipeLayoutProps {
     onPageChange?: (_index: number) => void;
     showAiChat?: boolean;
     showHealth?: boolean;
+    onChatTabClick?: () => void;
 }
 
 const _BASE_PATHS = ['/', '/plan', '/analytics'];
 
-export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, showHealth = false }: MobileSwipeLayoutProps) {
+export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, showHealth = false, onChatTabClick }: MobileSwipeLayoutProps) {
     const router = useRouter();
     const pathname = usePathname();
 
@@ -52,6 +53,10 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, s
             setActiveIndex(index);
             router.replace(paths[index], { scroll: false });
             onPageChange?.(index);
+
+            if (isChatTab && onChatTabClick) {
+                onChatTabClick();
+            }
 
             // If navigating to Plan page, scroll to today
             if (paths[index] === '/plan') {

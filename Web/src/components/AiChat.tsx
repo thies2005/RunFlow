@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Plus, Camera, Menu } from 'lucide-react';
+import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Plus, Camera, Menu, SquarePen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
@@ -25,6 +25,7 @@ interface AiChatProps {
     onOpenPromptLibrary?: () => void;
     hideInputActions?: boolean;
     onOpenHistory?: () => void;
+    onNewChat?: () => void;
 }
 
 interface ChatMessage {
@@ -76,7 +77,7 @@ const parseMealLoggedData = (content: string): { mealName: string; calories: num
 
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false, onOpenHistory }: AiChatProps) {
+function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false, onOpenHistory, onNewChat }: AiChatProps) {
     useEffect(() => {
         console.log('[AI CHAT] Component mounted');
         return () => {
@@ -580,6 +581,15 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setShowPlusMenu(false)} />
                                     <div className="absolute bottom-14 left-0 w-48 bg-gray-900 border border-gray-700/50 shadow-xl rounded-xl p-2 z-20 flex flex-col gap-1">
+                                        {onNewChat && (
+                                            <button
+                                                onClick={() => { onNewChat(); setShowPlusMenu(false); }}
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-gray-300 transition-colors text-left"
+                                            >
+                                                <SquarePen className="w-4 h-4 text-purple-400" />
+                                                New Chat
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => { setShowFoodScanner(true); setShowPlusMenu(false); }}
                                             className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-gray-300 transition-colors text-left"

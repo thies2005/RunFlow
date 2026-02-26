@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/apiResponse';
+import { UnlinkedActivity } from '@/lib/types';
 
 export async function GET(req: Request) {
     try {
@@ -74,17 +75,7 @@ export async function GET(req: Request) {
         }
 
         // Fetch unlinked activities within the plan period (if requested)
-        // M-06 fix: Define proper type for unlinked activities
-        let unlinkedActivities: Array<{
-            id: string;
-            name: string;
-            startDate: Date;
-            distance: number;
-            movingTime: number;
-            averageHr: number | null;
-            averageSpeed: number | null;
-            type: string;
-        }> = [];
+        let unlinkedActivities: UnlinkedActivity[] = [];
         if (includeUnlinked) {
             const planStartDate = activeGoal.createdAt;
             const planEndDate = activeGoal.raceDate;
@@ -95,6 +86,8 @@ export async function GET(req: Request) {
                 select: { linkedActivityId: true }
             }).then(workouts => workouts.map(w => w.linkedActivityId as string));
 
+            // Cast prisma result to UnlinkedActivity[]
+            // Note: startDate in Prisma is Date, which is compatible with UnlinkedActivity (string | Date)
             unlinkedActivities = await prisma.activity.findMany({
                 where: {
                     userId: session.user.id,
@@ -129,4 +122,3 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
-

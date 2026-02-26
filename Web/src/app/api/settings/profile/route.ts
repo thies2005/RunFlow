@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { validateBody } from '@/lib/validation/validator';
 import { userSettingsSchema } from '@/lib/validation/schemas';
+import { parseIntSafe, parseFloatSafe } from '@/lib/utils/numbers';
 
 export async function POST(request: NextRequest) {
     try {
@@ -32,18 +33,6 @@ export async function POST(request: NextRequest) {
             includeCrossTraining,
             useImperial
         } = validation.data;
-
-        // M-06 fix: Type helpers properly (values are already validated by Zod schema)
-        const parseIntSafe = (val: number | undefined) => {
-            if (val === undefined) return undefined;
-            return Math.round(val);
-        };
-
-        // Helper to parse float safely
-        const parseFloatSafe = (val: number | undefined) => {
-            if (val === undefined) return undefined;
-            return val;
-        };
 
         await prisma.user.update({
             where: { id: session.user.id },

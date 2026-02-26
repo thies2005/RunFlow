@@ -22,7 +22,7 @@ export default function TermsPage() {
 
                 <h2>2. Eligibility</h2>
                 <p>
-                    You must be at least 16 years old to use RunFlow. By creating an account, you represent and warrant that you meet this age requirement. If you are under 16, do not use our service or provide us with any personal data.
+                    You must be at least 16 years old to use RunFlow (consistent with GDPR Art. 8 data minimization principles). By creating an account, you represent and warrant that you meet this age requirement. If you are under 16, do not use our service or provide us with any personal data.
                 </p>
 
                 <h2>3. User Accounts</h2>

@@ -104,7 +104,7 @@ model User {
 model UserConsent {
   id            String   @id @default(cuid())
   userId        String
-  consentType   String   // 'TERMS' | 'PRIVACY' | 'HEALTH_DATA'
+  consentType   String   // 'TERMS' | 'PRIVACY' | 'HEALTH_DATA' | 'AGE_REQUIREMENT'
   action        String   // 'GRANTED' | 'WITHDRAWN'
   policyVersion String?  // e.g., "2026-02-25"
   ipAddress     String?  // Hashed for audit purposes
@@ -114,6 +114,25 @@ model UserConsent {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, consentType])
+}
+
+// ============================================
+// Admin Audit Trail
+// ============================================
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminUser   String   // The internal admin identifier
+  action      String   // e.g., 'VIEW_USERS', 'DELETE_USER', 'MODIFY_SETTINGS'
+  targetType  String?  // e.g., 'USER', 'BACKUP'
+  targetId    String?  // The ID of the affected user or resource
+  details     String?  // Additional context in JSON format
+  ipAddress   String?  
+  userAgent   String?  
+  createdAt   DateTime @default(now())
+
+  @@index([adminUser])
+  @@index([createdAt])
+  @@index([action])
 }
 
 // ============================================

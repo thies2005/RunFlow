@@ -11,6 +11,7 @@ import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logger } from '@/lib/logging/logger';
+import { logAdminAction } from '@/lib/admin/auditLog';
 
 export async function DELETE(
     request: NextRequest,
@@ -55,6 +56,11 @@ export async function DELETE(
         });
 
         logger.info('User deleted', { userId, userName: user.name, userEmail: user.email });
+
+        await logAdminAction(request, 'DELETE_USER', { type: 'USER', id: userId }, {
+            deletedEmail: user.email,
+            deletedName: user.name
+        });
 
         const response = NextResponse.json({
             success: true,

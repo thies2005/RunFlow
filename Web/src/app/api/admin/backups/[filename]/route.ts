@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
 import { adminRateLimit, getRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -52,6 +53,8 @@ export async function GET(
         rateLimitHeaders.forEach((value, key) => {
             headers.set(key, value);
         });
+
+        await logAdminAction(request, 'DOWNLOAD_BACKUP', { type: 'BACKUP', id: safeFilename }, { size: stats.size });
 
         return new NextResponse(fileBuffer, {
             status: 200,

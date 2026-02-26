@@ -14,6 +14,7 @@ import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 import pLimit from 'p-limit';
 
 export const maxDuration = 300;
@@ -108,6 +109,11 @@ export async function POST(request: NextRequest) {
         }));
 
         const results = await Promise.all(promises);
+
+        await logAdminAction(request, 'RECALCULATE_FITNESS', targetUserId ? { type: 'USER', id: targetUserId } : { type: 'SYSTEM' }, {
+            totalUsersProcessed: users.length,
+            targetUserId: targetUserId || 'ALL',
+        });
 
         const response = NextResponse.json({
             message: 'Recalculation complete',

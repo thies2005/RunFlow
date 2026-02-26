@@ -11,6 +11,7 @@ import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logger } from '@/lib/logging/logger';
+import { logAdminAction } from '@/lib/admin/auditLog';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -88,6 +89,8 @@ export async function POST(request: NextRequest) {
             filename: sanitizedFilename,
             sizeBytes: buffer.length,
         });
+
+        await logAdminAction(request, 'UPLOAD_BACKUP', { type: 'BACKUP', id: sanitizedFilename }, { size: buffer.length });
 
         const response = NextResponse.json({
             success: true,

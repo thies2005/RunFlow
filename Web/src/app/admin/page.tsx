@@ -3,13 +3,14 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3 } from 'lucide-react';
+import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import AiSettingsTab from '@/components/admin/AiSettingsTab';
 import UsersTab from '@/components/admin/UsersTab';
 import BackupsTab from '@/components/admin/BackupsTab';
+import AuditLogsTab from '@/components/admin/AuditLogsTab';
 
 
 // Components
@@ -39,7 +40,7 @@ function DashboardContent() {
 
     // Tab state controlled by URL
     const tabParam = searchParams.get('tab');
-    const activeTab = tabParam === 'backups' ? 'backups' : tabParam === 'ai' ? 'ai' : tabParam === 'analytics' ? 'analytics' : 'users';
+    const activeTab = tabParam === 'backups' ? 'backups' : tabParam === 'ai' ? 'ai' : tabParam === 'analytics' ? 'analytics' : tabParam === 'audit' ? 'audit' : 'users';
 
     const [processing, setProcessing] = useState(false);
     const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -181,10 +182,17 @@ function DashboardContent() {
                         <BarChart3 className="w-4 h-4 inline mr-1" />
                         Analytics
                     </button>
+                    <button
+                        onClick={() => router.push('/admin?tab=audit')}
+                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'audit' ? 'border-b-2 border-amber-500 text-amber-600' : 'text-gray-500 hover:text-gray-800'}`}
+                    >
+                        <ClipboardList className="w-4 h-4 inline mr-1" />
+                        Audit Trail
+                    </button>
                 </div>
 
                 <div className="p-6">
-                                        {/* Users Tab */}
+                    {/* Users Tab */}
                     {activeTab === 'users' && (
                         <UsersTab
                             users={users}
@@ -197,7 +205,7 @@ function DashboardContent() {
                         />
                     )}
 
-                                        {/* Backups Tab */}
+                    {/* Backups Tab */}
                     {activeTab === 'backups' && (
                         <BackupsTab
                             backups={backups}
@@ -223,6 +231,11 @@ function DashboardContent() {
                     {/* Analytics Tab */}
                     {activeTab === 'analytics' && (
                         <AnalyticsTab />
+                    )}
+
+                    {/* Audit Logs Tab */}
+                    {activeTab === 'audit' && (
+                        <AuditLogsTab />
                     )}
                 </div>
             </div>

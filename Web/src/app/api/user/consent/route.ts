@@ -3,9 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-
-// Current policy version timestamp that users are agreeing to
-const CURRENT_POLICY_VERSION = "2026-02-25";
+import { POLICY_VERSIONS } from '@/lib/policyVersion';
 
 export async function GET(req: Request) {
     try {
@@ -20,7 +18,7 @@ export async function GET(req: Request) {
         });
 
         // Get the latest active status for each consent type
-        const activeConsents = ['TERMS', 'PRIVACY', 'HEALTH_DATA'].reduce((acc, type) => {
+        const activeConsents = Object.keys(POLICY_VERSIONS).reduce((acc, type) => {
             const latest = consents.find((c: any) => c.consentType === type);
             acc[type] = latest?.action === 'GRANTED';
             return acc;
@@ -29,7 +27,7 @@ export async function GET(req: Request) {
         return NextResponse.json({
             consents,
             active: activeConsents,
-            currentVersion: CURRENT_POLICY_VERSION
+            currentVersions: POLICY_VERSIONS
         });
     } catch (error) {
         console.error('Error fetching consents:', error);
@@ -58,7 +56,7 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { consentType, action } = body;
 
-        if (!['TERMS', 'PRIVACY', 'HEALTH_DATA'].includes(consentType)) {
+        if (!['TERMS', 'PRIVACY', 'HEALTH_DATA', 'AGE_REQUIREMENT'].includes(consentType)) {
             return NextResponse.json({ error: 'Invalid consent type' }, { status: 400 });
         }
 
@@ -76,7 +74,7 @@ export async function POST(req: Request) {
                 userId: session.user.id,
                 consentType,
                 action,
-                policyVersion: action === 'GRANTED' ? CURRENT_POLICY_VERSION : null,
+                policyVersion: action === 'GRANTED' ? POLICY_VERSIONS[consentType as keyof typeof POLICY_VERSIONS] : null,
                 ipAddress,
                 userAgent,
             }

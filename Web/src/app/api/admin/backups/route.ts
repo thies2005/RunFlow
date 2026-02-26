@@ -11,6 +11,7 @@ import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/c
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { createBackup, restoreBackup, listBackups, cleanupOldBackups } from '@/lib/backup/scheduler';
 import { handleError } from '@/lib/errors/handler';
+import { logAdminAction } from '@/lib/admin/auditLog';
 
 function formatBytes(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
@@ -48,6 +49,8 @@ export async function GET(request: NextRequest) {
                 type: b.type
             }))
         });
+
+        await logAdminAction(request, 'VIEW_BACKUPS', { type: 'SYSTEM' }, { count: backups.length });
 
         return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
@@ -101,6 +104,8 @@ export async function POST(request: NextRequest) {
                 }
             });
 
+            await logAdminAction(request, 'UPLOAD_BACKUP', { type: 'BACKUP', id: backup.name }, { size: formatBytes(backup.size) });
+
             return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
         }
 
@@ -119,6 +124,8 @@ export async function POST(request: NextRequest) {
                 message: `Database restored from ${backupName}`
             });
 
+            await logAdminAction(request, 'UPLOAD_BACKUP', { type: 'BACKUP', id: backupName }, { action: 'restore' });
+
             return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
         }
 
@@ -130,6 +137,8 @@ export async function POST(request: NextRequest) {
                 message: 'Backup cleanup completed',
                 cleanup: result
             });
+
+            await logAdminAction(request, 'DELETE_BACKUP', { type: 'SYSTEM' }, { deletedCount: result.deleted });
 
             return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
         }

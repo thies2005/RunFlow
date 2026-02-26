@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 
 /** Validate that a provider URL is safe (https only, or localhost for dev) */
 function isValidProviderUrl(url: string): boolean {
@@ -100,6 +101,12 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        await logAdminAction(request, 'MODIFY_PROVIDERS', { type: 'PROVIDER', id: provider.id }, {
+            action: 'CREATE',
+            name: provider.name,
+            slug: provider.slug
+        });
+
         const response = NextResponse.json({
             success: true,
             provider: {
@@ -163,6 +170,12 @@ export async function PUT(request: NextRequest) {
             data: updateData,
         });
 
+        await logAdminAction(request, 'MODIFY_PROVIDERS', { type: 'PROVIDER', id: provider.id }, {
+            action: 'UPDATE',
+            name: provider.name,
+            updatedFields: Object.keys(updateData)
+        });
+
         const response = NextResponse.json({
             success: true,
             provider: {
@@ -214,6 +227,10 @@ export async function DELETE(request: NextRequest) {
 
         await prisma.aiProvider.delete({
             where: { id },
+        });
+
+        await logAdminAction(request, 'MODIFY_PROVIDERS', { type: 'PROVIDER', id }, {
+            action: 'DELETE'
         });
 
         const response = NextResponse.json({ success: true });

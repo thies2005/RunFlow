@@ -12,6 +12,7 @@ import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 
 
 
@@ -72,6 +73,11 @@ export async function POST(
                     customModel: null,
                 } : {})
             },
+        });
+
+        await logAdminAction(request, 'TOGGLE_AI_ACCESS', { type: 'USER', id: userId }, {
+            newTier: tier,
+            adminAllowed
         });
 
         const response = NextResponse.json({

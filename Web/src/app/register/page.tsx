@@ -21,6 +21,7 @@ export default function RegisterPage() {
 
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [healthAccepted, setHealthAccepted] = useState(false);
+    const [isOver16, setIsOver16] = useState(false);
 
     const passwordRequirements = [
         { label: 'At least 8 characters', met: password.length >= 8 },
@@ -41,8 +42,8 @@ export default function RegisterPage() {
             return;
         }
 
-        if (!termsAccepted || !healthAccepted) {
-            setError('You must accept the terms and consent to data processing');
+        if (!termsAccepted || !healthAccepted || !isOver16) {
+            setError('You must accept the terms, consent to data processing, and confirm your age');
             return;
         }
 
@@ -79,7 +80,7 @@ export default function RegisterPage() {
             } else {
                 // Log GDPR consents to the database for Art. 7(1) proof
                 try {
-                    const consentTypes = ['TERMS', 'PRIVACY', 'HEALTH_DATA'];
+                    const consentTypes = ['TERMS', 'PRIVACY', 'HEALTH_DATA', 'AGE_REQUIREMENT'];
                     await Promise.all(consentTypes.map(type =>
                         fetch('/api/user/consent', {
                             method: 'POST',
@@ -234,11 +235,30 @@ export default function RegisterPage() {
                                     I consent to the processing of my health and fitness data (GDPR Art. 9) for training analytics.
                                 </span>
                             </label>
+
+                            <label className="flex items-start gap-3 cursor-pointer group">
+                                <div className="relative flex items-start pt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        checked={isOver16}
+                                        onChange={(e) => setIsOver16(e.target.checked)}
+                                    />
+                                    <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                        <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <span className="text-sm text-gray-300 leading-tight">
+                                    I confirm that I am at least 16 years old.
+                                </span>
+                            </label>
                         </div>
 
                         <button
                             type="submit"
-                            disabled={isLoading || !allRequirementsMet || !passwordsMatch || !termsAccepted || !healthAccepted}
+                            disabled={isLoading || !allRequirementsMet || !passwordsMatch || !termsAccepted || !healthAccepted || !isOver16}
                             className="btn-primary w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isLoading ? 'Creating account...' : 'Create Account'}

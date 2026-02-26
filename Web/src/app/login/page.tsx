@@ -25,6 +25,7 @@ export default function LoginPage() {
     // Consent checkboxes for Strava (since Strava login creates an account if it doesn't exist)
     const [stravaTermsAccepted, setStravaTermsAccepted] = useState(false);
     const [stravaHealthAccepted, setStravaHealthAccepted] = useState(false);
+    const [stravaAgeAccepted, setStravaAgeAccepted] = useState(false);
 
     useEffect(() => {
         if (status === 'authenticated') {
@@ -169,6 +170,25 @@ export default function LoginPage() {
                                         I consent to the processing of my health and fitness data (GDPR Art. 9) for training analytics.
                                     </span>
                                 </label>
+
+                                <label className="flex items-start gap-3 cursor-pointer group">
+                                    <div className="relative flex items-start pt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            className="peer sr-only"
+                                            checked={stravaAgeAccepted}
+                                            onChange={(e) => setStravaAgeAccepted(e.target.checked)}
+                                        />
+                                        <div className="w-5 h-5 rounded border-2 border-white/20 peer-focus:border-accent-orange peer-checked:bg-accent-orange peer-checked:border-accent-orange transition-all flex items-center justify-center">
+                                            <svg className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <span className="text-sm text-gray-300 leading-tight">
+                                        I confirm that I am at least 16 years old.
+                                    </span>
+                                </label>
                             </div>
 
                             <div className="flex justify-center">
@@ -176,13 +196,13 @@ export default function LoginPage() {
                                     onClick={() => {
                                         // Store pending consent in localStorage before OAuth redirect
                                         localStorage.setItem('pendingConsent', JSON.stringify({
-                                            types: ['TERMS', 'PRIVACY', 'HEALTH_DATA'],
+                                            types: ['TERMS', 'PRIVACY', 'HEALTH_DATA', 'AGE_REQUIREMENT'],
                                             action: 'GRANTED',
                                             timestamp: new Date().toISOString(),
                                         }));
                                         signIn('strava', { callbackUrl: '/' });
                                     }}
-                                    disabled={!stravaTermsAccepted || !stravaHealthAccepted}
+                                    disabled={!stravaTermsAccepted || !stravaHealthAccepted || !stravaAgeAccepted}
                                 />
                             </div>
                             <p className="text-sm text-foreground-muted">

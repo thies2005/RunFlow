@@ -9,6 +9,7 @@ import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
+import { logAdminAction } from '@/lib/admin/auditLog';
 
 export async function GET(request: NextRequest) {
     const rateLimit = await adminRateLimit(request, 'read');
@@ -210,6 +211,10 @@ export async function PUT(request: NextRequest) {
                 tier1MonthlyTokenLimit: settings.tier1MonthlyTokenLimit,
                 calorieSnapModel: settings.calorieSnapModel,
             },
+        });
+
+        await logAdminAction(request, 'MODIFY_AI_SETTINGS', { type: 'SETTINGS' }, {
+            updatedFields: Object.keys(updateData)
         });
 
         return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);

@@ -11,6 +11,7 @@ import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { handleError } from '@/lib/errors/handler';
+import { logAdminAction } from '@/lib/admin/auditLog';
 
 export async function GET(request: NextRequest) {
     const rateLimit = await adminRateLimit(request, 'read');
@@ -85,6 +86,10 @@ export async function GET(request: NextRequest) {
             page,
             limit,
             totalPages: Math.ceil(total / limit),
+        });
+
+        await logAdminAction(request, 'VIEW_USERS', undefined, {
+            page, limit, searchHasValue: !!search, returnedCount: transformedUsers.length
         });
 
         return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);

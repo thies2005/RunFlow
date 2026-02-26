@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, Calendar, Trash2, Edit2, Loader2, Save, Check } from 'lucide-react';
+import { X, Calendar, Trash2, Edit2, Loader2, Save, Check, Bookmark } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 
@@ -35,6 +35,8 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
     const queryClient = useQueryClient();
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [savingMealId, setSavingMealId] = useState<string | null>(null);
+    const [savedMealIds, setSavedMealIds] = useState<Set<string>>(new Set());
 
     // Edit state
     const [editQuantity, setEditQuantity] = useState('1');
@@ -103,6 +105,46 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
         onError: () => {
             alert('Failed to update food log');
             setIsSavingEdit(false);
+        }
+    });
+
+    const saveToLibraryMutation = useMutation({
+        mutationFn: async (log: NutritionLog) => {
+            setSavingMealId(log.id);
+            const foodName = log.foodItem?.name || 'Saved Food';
+
+            // Re-calculate the macros based on the quantity stored in the log
+            // (Assuming log macro fields represent the TOTAL macros for that log entry)
+            const res = await fetch('/api/health/nutrition/meals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId,
+                    name: foodName,
+                    totalCalories: log.calories,
+                    totalProtein: log.protein,
+                    totalCarbs: log.carbs,
+                    totalFats: log.fats,
+                    items: [{
+                        name: foodName,
+                        estimatedGrams: 100 * log.quantity, // Rough estimate, adjust if serving size parsing is needed
+                        calories: log.calories,
+                        protein: log.protein,
+                        carbs: log.carbs,
+                        fats: log.fats,
+                    }]
+                }),
+            });
+            if (!res.ok) throw new Error('Failed to save to library');
+        },
+        onSuccess: (_, log) => {
+            queryClient.invalidateQueries({ queryKey: ['saved-meals'] });
+            setSavingMealId(null);
+            setSavedMealIds((prev) => new Set(prev).add(log.id));
+        },
+        onError: () => {
+            alert('Failed to save to Meal Library');
+            setSavingMealId(null);
         }
     });
 
@@ -240,6 +282,24 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                 <>
                                                                     <span className="text-[10px] text-gray-500 pl-1">{format(parseISO(log.createdAt), 'h:mm a')}</span>
                                                                     <div className="flex gap-1">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                if (!savedMealIds.has(log.id)) {
+                                                                                    saveToLibraryMutation.mutate(log);
+                                                                                }
+                                                                            }}
+                                                                            disabled={savingMealId === log.id || savedMealIds.has(log.id)}
+                                                                            className="text-[11px] text-amber-400/80 hover:text-amber-400 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-white/5 disabled:opacity-50"
+                                                                        >
+                                                                            {savingMealId === log.id ? (
+                                                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                                                            ) : savedMealIds.has(log.id) ? (
+                                                                                <Check className="w-3 h-3 text-green-400" />
+                                                                            ) : (
+                                                                                <Bookmark className="w-3 h-3" />
+                                                                            )}
+                                                                            {savedMealIds.has(log.id) ? 'Saved' : 'Save'}
+                                                                        </button>
                                                                         <button
                                                                             onClick={() => startEditing(log)}
                                                                             className="text-[11px] text-gray-400 hover:text-white flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-white/5"

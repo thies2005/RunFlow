@@ -138,11 +138,12 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
   const chartData = useMemo(() => {
     if (!analytics?.dailyData) return [];
     return analytics.dailyData.map(day => ({
-      date: format(new Date(day.date), 'MMM dd'),
+      // Append time portion to ensure consistent date parsing locally
+      date: format(new Date(day.date + 'T12:00:00'), 'MMM dd'),
       calories: Math.round(day.calories),
-      protein: Math.round(day.protein),
-      carbs: Math.round(day.carbs),
-      fats: Math.round(day.fats),
+      protein: Math.round(day.protein) * 4,
+      carbs: Math.round(day.carbs) * 4,
+      fats: Math.round(day.fats) * 9,
     }));
   }, [analytics]);
 
@@ -384,9 +385,9 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
                   strokeDasharray="3 3"
                   label={{ value: 'Goal', fill: 'rgba(255,255,255,0.5)', fontSize: 10 }}
                 />
-                <Bar dataKey="protein" stackId="macros" fill={COLORS.protein} name="Protein (cal)" />
-                <Bar dataKey="carbs" stackId="macros" fill={COLORS.carbs} name="Carbs (cal)" />
-                <Bar dataKey="fats" stackId="macros" fill={COLORS.fats} name="Fats (cal)" />
+                <Bar dataKey="protein" stackId="macros" fill={COLORS.protein} name="Protein (kcal)" />
+                <Bar dataKey="carbs" stackId="macros" fill={COLORS.carbs} name="Carbs (kcal)" />
+                <Bar dataKey="fats" stackId="macros" fill={COLORS.fats} name="Fats (kcal)" />
               </BarChart>
             </ResponsiveContainer>
           </div>

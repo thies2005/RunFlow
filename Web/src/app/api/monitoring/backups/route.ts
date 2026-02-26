@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
         return authResult.error;
     }
 
-    const status = getBackupStatus();
-    const healthCheck = checkBackupHealth();
+    const status = await getBackupStatus();
+    const healthCheck = await checkBackupHealth();
     const backups = listBackups();
 
     return NextResponse.json({

@@ -3,11 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Camera, Loader2 } from 'lucide-react';
 
-interface ProactiveCalorieSnapWidgetProps {
-    onOpenScanner: () => void;
-}
-
-interface TargetData {
+export interface TargetData {
     dailyCalories: number;
     proteinPercent: number;
     carbsPercent: number;
@@ -15,56 +11,12 @@ interface TargetData {
     remainingCalories: number;
 }
 
-export default function ProactiveCalorieSnapWidget({ onOpenScanner }: ProactiveCalorieSnapWidgetProps) {
-    const [targetData, setTargetData] = useState<TargetData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+interface ProactiveCalorieSnapWidgetProps {
+    targetData: TargetData;
+    onOpenScanner: () => void;
+}
 
-    useEffect(() => {
-        async function fetchNutritionData() {
-            try {
-                // Fetch today's goals and remaining calories
-                const targetRes = await fetch('/api/health/nutrition/target');
-                if (targetRes.ok) {
-                    const target = await targetRes.json();
-
-                    // Also need today's totals to find remaining
-                    const historyRes = await fetch('/api/health/nutrition/log/history');
-                    let consumed = 0;
-
-                    if (historyRes.ok) {
-                        const historyData = await historyRes.json();
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        const todayLogs = historyData.filter((log: any) => log.date === todayStr);
-
-                        consumed = todayLogs.reduce((acc: number, log: any) => acc + (log.calories || 0), 0);
-                    }
-
-                    if (target) {
-                        setTargetData({
-                            ...target,
-                            remainingCalories: Math.max(0, target.dailyCalories - consumed),
-                        });
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching proactive nutrition data:', err);
-            } finally {
-                setIsLoading(false);
-            }
-        }
-
-        fetchNutritionData();
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div className="glass-card p-4 rounded-xl flex justify-center items-center border border-dashed border-gray-600">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-            </div>
-        );
-    }
-
-    // Don't show if there's no target set at all (user doesn't use nutrition tracking)
+export default function ProactiveCalorieSnapWidget({ targetData, onOpenScanner }: ProactiveCalorieSnapWidgetProps) {
     if (!targetData) return null;
 
     return (

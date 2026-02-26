@@ -375,32 +375,13 @@ export function MobileLayout() {
                 {/* Chat View — always LAST; index depends on whether Health tab is present */}
                 {showAiChat && (
                     <div className="h-full flex flex-col min-h-0 bg-background relative">
-                        {/* Sticky Header */}
-                        <header className="border-b border-glass-border backdrop-blur-md bg-background/80 sticky top-0 z-50">
-                            <div className="flex items-center justify-between px-4 py-3">
-                                <button
-                                    onClick={() => setIsMobileSidebarOpen(true)}
-                                    className="p-2 -ml-2 text-gray-400 hover:text-white transition-colors"
-                                >
-                                    <Menu className="w-6 h-6" />
-                                </button>
-                                <span className="text-lg font-bold text-white">AI Coach</span>
-                                <button
-                                    onClick={() => setIsPromptLibraryOpen(true)}
-                                    className="p-2 -mr-2 text-gray-400 hover:text-purple-400 transition-colors"
-                                >
-                                    <Book className="w-6 h-6" />
-                                </button>
-                            </div>
-                        </header>
-
                         <AiChat
                             sessionId={sessionId}
                             onOpenSettings={() => setIsAiSettingsOpen(true)}
                             isPromptLibraryOpen={isPromptLibraryOpen}
                             onClosePromptLibrary={() => setIsPromptLibraryOpen(false)}
                             onOpenPromptLibrary={() => setIsPromptLibraryOpen(true)}
-                            hideInputActions={true}
+                            onOpenHistory={() => setIsMobileSidebarOpen(true)}
                         />
 
                         {/* Mobile Sidebar Overlay */}

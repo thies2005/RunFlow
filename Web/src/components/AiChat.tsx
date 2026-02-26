@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Plus, Camera } from 'lucide-react';
+import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Plus, Camera, Menu } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
@@ -24,6 +24,7 @@ interface AiChatProps {
     onClosePromptLibrary?: () => void;
     onOpenPromptLibrary?: () => void;
     hideInputActions?: boolean;
+    onOpenHistory?: () => void;
 }
 
 interface ChatMessage {
@@ -75,7 +76,7 @@ const parseMealLoggedData = (content: string): { mealName: string; calories: num
 
 import ErrorBoundary from '@/components/ErrorBoundary';
 
-function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false }: AiChatProps) {
+function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false, onOpenHistory }: AiChatProps) {
     useEffect(() => {
         console.log('[AI CHAT] Component mounted');
         return () => {
@@ -170,6 +171,62 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     // Permission checks
     const accessActivityLogs = settingsData?.settings?.accessActivityLogs;
     const accessNutritionLogs = settingsData?.settings?.accessNutritionLogs;
+
+    // --- PROACTIVE WIDGET DATA FETCHING ---
+    const [recentActivity, setRecentActivity] = useState<any>(null);
+    const [nutritionTargetData, setNutritionTargetData] = useState<any>(null);
+
+    useEffect(() => {
+        if (!accessActivityLogs) return;
+        async function fetchRecentActivity() {
+            try {
+                const res = await fetch('/api/activities?limit=5');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.activities && data.activities.length > 0) {
+                    const mostRecent = data.activities[0];
+                    const activityDate = new Date(mostRecent.startDate);
+                    const today = new Date();
+                    if (
+                        activityDate.getDate() === today.getDate() &&
+                        activityDate.getMonth() === today.getMonth() &&
+                        activityDate.getFullYear() === today.getFullYear()
+                    ) {
+                        setRecentActivity(mostRecent);
+                    }
+                }
+            } catch (err) { }
+        }
+        fetchRecentActivity();
+    }, [accessActivityLogs]);
+
+    useEffect(() => {
+        if (!accessNutritionLogs) return;
+        async function fetchNutritionData() {
+            try {
+                const targetRes = await fetch('/api/health/nutrition/target');
+                if (targetRes.ok) {
+                    const target = await targetRes.json();
+                    const historyRes = await fetch('/api/health/nutrition/log/history');
+                    let consumed = 0;
+                    if (historyRes.ok) {
+                        const historyData = await historyRes.json();
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        const todayLogs = historyData.filter((log: any) => log.date === todayStr);
+                        consumed = todayLogs.reduce((acc: number, log: any) => acc + (log.calories || 0), 0);
+                    }
+                    if (target) {
+                        setNutritionTargetData({
+                            ...target,
+                            remainingCalories: Math.max(0, target.dailyCalories - consumed),
+                        });
+                    }
+                }
+            } catch (err) { }
+        }
+        fetchNutritionData();
+    }, [accessNutritionLogs]);
+    // --------------------------------------
 
     // Scroll to bottom
     useEffect(() => {
@@ -410,19 +467,19 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                             </div>
 
                             {/* Contextual Suggestions Timeline */}
-                            {(accessActivityLogs || accessNutritionLogs) && (
+                            {(accessActivityLogs || accessNutritionLogs) && (recentActivity || nutritionTargetData) && (
                                 <div className="mb-8 max-w-2xl">
-                                    {accessActivityLogs && (
+                                    {accessActivityLogs && recentActivity && (
                                         <TimelineNode dotColor="timeline-dot-blue" lineColor="var(--glass-border)">
                                             <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">You Just Finished</p>
-                                            <ProactiveRunWidget onAutoFillChat={(text) => handleSend(null, text)} />
+                                            <ProactiveRunWidget activity={recentActivity} onAutoFillChat={(text) => handleSend(null, text)} />
                                         </TimelineNode>
                                     )}
 
-                                    {accessNutritionLogs && (
+                                    {accessNutritionLogs && nutritionTargetData && (
                                         <TimelineNode dotColor="timeline-dot-gray" lineColor="var(--glass-border)">
                                             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Post-Run Fuel</p>
-                                            <ProactiveCalorieSnapWidget onOpenScanner={() => setShowFoodScanner(true)} />
+                                            <ProactiveCalorieSnapWidget targetData={nutritionTargetData} onOpenScanner={() => setShowFoodScanner(true)} />
                                         </TimelineNode>
                                     )}
                                 </div>
@@ -537,6 +594,15 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                             <Book className="w-4 h-4 text-purple-400" />
                                             Prompt Library
                                         </button>
+                                        {onOpenHistory && (
+                                            <button
+                                                onClick={() => { onOpenHistory(); setShowPlusMenu(false); }}
+                                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-gray-300 transition-colors text-left"
+                                            >
+                                                <Menu className="w-4 h-4 text-purple-400" />
+                                                Chat History
+                                            </button>
+                                        )}
                                     </div>
                                 </>
                             )}

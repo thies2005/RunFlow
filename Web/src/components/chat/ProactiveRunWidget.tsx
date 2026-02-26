@@ -3,6 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2, TrendingUp } from 'lucide-react';
 
+export interface RecentActivity {
+    id: string;
+    name: string;
+    type: string;
+    distance: number;
+    movingTime: number;
+    startDate: string;
+    averageHr?: number;
+}
+
 function getTimeAgo(dateString: string) {
     const activityDate = new Date(dateString);
     const now = new Date();
@@ -16,62 +26,12 @@ function getTimeAgo(dateString: string) {
 }
 
 interface ProactiveRunWidgetProps {
+    activity: RecentActivity;
     onAutoFillChat: (text: string) => void;
 }
 
-interface RecentActivity {
-    id: string;
-    name: string;
-    type: string;
-    distance: number;
-    movingTime: number;
-    startDate: string;
-    averageHr?: number;
-}
-
-export default function ProactiveRunWidget({ onAutoFillChat }: ProactiveRunWidgetProps) {
-    const [activity, setActivity] = useState<RecentActivity | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        async function fetchRecentActivity() {
-            try {
-                // Fetch recent activities (fallback approach as planned)
-                const res = await fetch('/api/activities?limit=5');
-                if (!res.ok) throw new Error('Failed to fetch');
-                const data = await res.json();
-
-                if (data.activities && data.activities.length > 0) {
-                    const mostRecent = data.activities[0];
-                    // Check if it's from today
-                    const activityDate = new Date(mostRecent.startDate);
-                    const today = new Date();
-
-                    if (
-                        activityDate.getDate() === today.getDate() &&
-                        activityDate.getMonth() === today.getMonth() &&
-                        activityDate.getFullYear() === today.getFullYear()
-                    ) {
-                        setActivity(mostRecent);
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching proactive run data:', err);
-            } finally {
-                setIsLoading(false);
-            }
-        }
-
-        fetchRecentActivity();
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div className="glass-card p-4 rounded-xl flex justify-center items-center">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-            </div>
-        );
-    }
+export default function ProactiveRunWidget({ activity, onAutoFillChat }: ProactiveRunWidgetProps) {
+    if (!activity) return null;
 
     if (!activity) return null;
 

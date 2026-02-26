@@ -90,6 +90,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     const [error, setError] = useState<string | null>(null);
     const [isPromptLibraryOpenLocal, setIsPromptLibraryOpenLocal] = useState(false);
     const [showFoodScanner, setShowFoodScanner] = useState(false);
+    const [showPlusMenu, setShowPlusMenu] = useState(false);
 
     const isLibraryOpen = isPromptLibraryOpen !== undefined ? isPromptLibraryOpen : isPromptLibraryOpenLocal;
     const closeLibrary = onClosePromptLibrary || (() => setIsPromptLibraryOpenLocal(false));
@@ -398,59 +399,34 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                 <div className="max-w-5xl mx-auto w-full">
                     {messages.length === 0 ? (
                         <div className="flex flex-col p-4 sm:p-8">
-                            <div className="flex items-center gap-4 mb-8 text-left">
-                                <div className="bg-gray-800/50 p-3 rounded-full flex-shrink-0">
-                                    <Bot className="w-8 h-8 text-purple-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-semibold text-white">AI Running Coach</h3>
-                                    <p className="text-gray-400 text-sm">Ask me anything about your training, pacing, or nutrition.</p>
-                                </div>
+                            <div className="mb-8 text-left">
+                                <p className="text-gray-400 text-lg mb-1">{(() => {
+                                    const h = new Date().getHours();
+                                    if (h < 12) return 'Good Morning';
+                                    if (h < 18) return 'Good Afternoon';
+                                    return 'Good Evening';
+                                })()},</p>
+                                <h2 className="text-3xl font-extrabold text-white leading-tight">How can I assist?</h2>
                             </div>
 
                             {/* Contextual Suggestions Timeline */}
                             {(accessActivityLogs || accessNutritionLogs) && (
                                 <div className="mb-8 max-w-2xl">
-                                    <h4 className="text-sm font-semibold text-gray-400 mb-6 uppercase tracking-wider">Contextual Suggestions</h4>
-
                                     {accessActivityLogs && (
                                         <TimelineNode dotColor="timeline-dot-blue" lineColor="var(--glass-border)">
+                                            <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">You Just Finished</p>
                                             <ProactiveRunWidget onAutoFillChat={(text) => handleSend(null, text)} />
                                         </TimelineNode>
                                     )}
 
                                     {accessNutritionLogs && (
-                                        <TimelineNode dotColor="timeline-dot-pink" lineColor="var(--glass-border)">
+                                        <TimelineNode dotColor="timeline-dot-gray" lineColor="var(--glass-border)">
+                                            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Post-Run Fuel</p>
                                             <ProactiveCalorieSnapWidget onOpenScanner={() => setShowFoodScanner(true)} />
                                         </TimelineNode>
                                     )}
                                 </div>
                             )}
-
-                            {/* Suggestions grid */}
-                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
-                                <button
-                                    onClick={openLibrary}
-                                    className="px-4 py-3 bg-gray-800/80 hover:bg-gray-700 text-purple-400 text-sm font-medium rounded-xl transition-all border border-purple-500/20 hover:border-purple-500/50 flex items-center justify-center gap-2 sm:col-span-2"
-                                >
-                                    <Book className="w-4 h-4" />
-                                    Browse Prompt Library
-                                </button>
-                                {[
-                                    'How should I prepare for my race?',
-                                    'Am I training too hard?',
-                                    'Analyze my last long run',
-                                    'Create a recovery plan',
-                                ].map((suggestion) => (
-                                    <button
-                                        key={suggestion}
-                                        onClick={() => handleSend(null, suggestion)}
-                                        className="px-4 py-3 bg-gray-800/50 hover:bg-gray-800 text-gray-300 text-sm rounded-xl transition-colors border border-white/5 hover:border-purple-500/30 text-left"
-                                    >
-                                        {suggestion}
-                                    </button>
-                                ))}
-                            </div>
                         </div>
                     ) : (
                         <>
@@ -536,13 +512,35 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
             <div className="sticky bottom-4 z-20 pb-safe px-4 sm:px-0 mt-auto">
                 <div className="glass-card rounded-full p-1.5 flex items-center shadow-2xl max-w-5xl mx-auto backdrop-blur-md border border-white/10 shadow-purple-900/10">
                     {!hideInputActions && (
-                        <button
-                            onClick={() => setShowFoodScanner(true)}
-                            className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-purple-400 transition-colors flex-shrink-0"
-                            title="Calorie Snap"
-                        >
-                            <Camera className="w-5 h-5" />
-                        </button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowPlusMenu(!showPlusMenu)}
+                                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors flex-shrink-0"
+                            >
+                                <Plus className="w-5 h-5" />
+                            </button>
+                            {showPlusMenu && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setShowPlusMenu(false)} />
+                                    <div className="absolute bottom-14 left-0 w-48 bg-gray-900 border border-gray-700/50 shadow-xl rounded-xl p-2 z-20 flex flex-col gap-1">
+                                        <button
+                                            onClick={() => { setShowFoodScanner(true); setShowPlusMenu(false); }}
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-gray-300 transition-colors text-left"
+                                        >
+                                            <Camera className="w-4 h-4 text-purple-400" />
+                                            Calorie Snap
+                                        </button>
+                                        <button
+                                            onClick={() => { openLibrary(); setShowPlusMenu(false); }}
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 text-sm text-gray-300 transition-colors text-left"
+                                        >
+                                            <Book className="w-4 h-4 text-purple-400" />
+                                            Prompt Library
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     )}
 
                     <input
@@ -550,17 +548,19 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Ask your AI coach..."
+                        placeholder="Message AI..."
                         className="flex-1 min-w-0 bg-transparent px-4 py-2 text-white placeholder-gray-400 focus:outline-none"
                     />
 
-                    <button
-                        onClick={(e) => handleSend(e)}
-                        disabled={!input.trim() || isStreaming}
-                        className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center disabled:opacity-50 transition-colors flex-shrink-0 disabled:cursor-not-allowed hover:bg-purple-500"
-                    >
-                        {isStreaming ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <Send className="w-5 h-5 text-white" />}
-                    </button>
+                    {(input.trim() || isStreaming) && (
+                        <button
+                            onClick={(e) => handleSend(e)}
+                            disabled={!input.trim() || isStreaming}
+                            className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center disabled:opacity-50 transition-colors flex-shrink-0 disabled:cursor-not-allowed hover:bg-purple-500"
+                        >
+                            {isStreaming ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <Send className="w-5 h-5 text-white" />}
+                        </button>
+                    )}
                 </div>
             </div>
 

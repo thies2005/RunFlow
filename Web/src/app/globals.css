@@ -106,35 +106,40 @@ body {
 
 /* Timeline node styling */
 .timeline-node {
-    position: relative;
-    padding-left: 1.5rem;
-    border-left: 2px solid var(--glass-border);
+  position: relative;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--glass-border);
 }
 
 .timeline-dot {
-    position: absolute;
-    left: -9px;
-    top: 0;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 2px solid var(--glass-border);
-    background: var(--background);
+  position: absolute;
+  left: -9px;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--glass-border);
+  background: var(--background);
 }
 
 .timeline-dot-blue {
-    border-color: rgba(59, 130, 246, 0.5);
-    background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.2);
 }
 
 .timeline-dot-pink {
-    border-color: rgba(247, 37, 133, 0.5);
-    background: rgba(247, 37, 133, 0.2);
+  border-color: rgba(247, 37, 133, 0.5);
+  background: rgba(247, 37, 133, 0.2);
+}
+
+.timeline-dot-gray {
+  border-color: rgba(107, 114, 128, 0.5);
+  background: rgba(107, 114, 128, 0.2);
 }
 
 /* Safe Area support for mobile keyboards */
 .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
 }
 
 /* Intensity gradient border */
@@ -449,7 +454,8 @@ textarea {
 /* --- Capacitor Barcode Scanner Hacks --- */
 body.barcode-scanner-active {
   background: transparent !important;
-  visibility: hidden; /* Hides all Next.js UI including opaque backgrounds */
+  visibility: hidden;
+  /* Hides all Next.js UI including opaque backgrounds */
 }
 
 /* But keep our modal wrapper visible! */

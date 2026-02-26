@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+import { promises as fsPromises } from 'fs'
 import * as path from 'path'
 
 export interface BackupStatus {
@@ -26,67 +26,79 @@ let status: BackupStatus = {
 }
 
 let startTime = Date.now()
+let isInitialized = false
 
-function ensureStatusDir(): void {
+async function ensureStatusDirAsync(): Promise<void> {
     const dir = path.dirname(STATUS_FILE)
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true })
+    try {
+        await fsPromises.access(dir)
+    } catch {
+        await fsPromises.mkdir(dir, { recursive: true })
     }
 }
 
-function loadStatus(): BackupStatus {
+async function loadStatusAsync(): Promise<BackupStatus> {
     try {
-        ensureStatusDir()
-        if (fs.existsSync(STATUS_FILE)) {
-            const data = fs.readFileSync(STATUS_FILE, 'utf-8')
-            return JSON.parse(data) as BackupStatus
+        await ensureStatusDirAsync()
+        try {
+            await fsPromises.access(STATUS_FILE)
+            const data = await fsPromises.readFile(STATUS_FILE, 'utf-8')
+            status = JSON.parse(data) as BackupStatus
+            isInitialized = true
+            return status
+        } catch (e) {
+            // File doesn't exist or other error, return default status
+            isInitialized = true
+            return status
         }
     } catch (error) {
         console.error('[Backup Status] Failed to load status:', error)
+        return status
     }
-    return status
 }
 
-function saveStatus(): void {
+async function saveStatusAsync(): Promise<void> {
     try {
-        ensureStatusDir()
+        await ensureStatusDirAsync()
         status.uptime = Date.now() - startTime
-        fs.writeFileSync(STATUS_FILE, JSON.stringify(status, null, 2))
+        await fsPromises.writeFile(STATUS_FILE, JSON.stringify(status, null, 2))
     } catch (error) {
         console.error('[Backup Status] Failed to save status:', error)
     }
 }
 
-export function getBackupStatus(): BackupStatus {
-    return loadStatus()
+export async function getBackupStatus(): Promise<BackupStatus> {
+    // The original implementation called loadStatus() every time which did a synchronous read.
+    // To maintain "freshness" guarantee of original code, we read from disk.
+    return loadStatusAsync()
 }
 
-export function updateBackupStatus(updates: Partial<BackupStatus>): void {
+export async function updateBackupStatus(updates: Partial<BackupStatus>): Promise<void> {
     status = { ...status, ...updates }
-    saveStatus()
+    await saveStatusAsync()
 }
 
-export function recordBackupSuccess(backupPath: string, size: number): void {
+export async function recordBackupSuccess(backupPath: string, size: number): Promise<void> {
     status.lastBackupTime = new Date().toISOString()
     status.lastBackupPath = backupPath
     status.lastBackupSize = size
     status.lastBackupSuccess = true
     status.lastBackupError = null
     status.scheduledBackupsCount += 1
-    saveStatus()
+    await saveStatusAsync()
 }
 
-export function recordBackupFailure(error: string): void {
+export async function recordBackupFailure(error: string): Promise<void> {
     status.lastBackupTime = new Date().toISOString()
     status.lastBackupSuccess = false
     status.lastBackupError = error
-    saveStatus()
+    await saveStatusAsync()
 }
 
-export function setSchedulerRunning(running: boolean): void {
+export async function setSchedulerRunning(running: boolean): Promise<void> {
     status.isSchedulerRunning = running
     if (running) {
         startTime = Date.now()
     }
-    saveStatus()
+    await saveStatusAsync()
 }

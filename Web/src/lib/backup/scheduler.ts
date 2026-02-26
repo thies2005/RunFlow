@@ -110,7 +110,7 @@ export async function createBackup(name?: string): Promise<BackupMetadata> {
   const dbConfig = parseDatabaseUrl()
   if (!dbConfig) {
     const errorMsg = 'Failed to parse DATABASE_URL'
-    recordBackupFailure(errorMsg)
+    await recordBackupFailure(errorMsg)
     throw new Error(errorMsg)
   }
 
@@ -142,7 +142,7 @@ export async function createBackup(name?: string): Promise<BackupMetadata> {
       duration
     })
 
-    recordBackupSuccess(backupPath, stats.size)
+    await recordBackupSuccess(backupPath, stats.size)
 
     return {
       name: backupName,
@@ -154,7 +154,7 @@ export async function createBackup(name?: string): Promise<BackupMetadata> {
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
     logger.error('[Backup] Backup failed', { backupName, error: errorMsg })
-    recordBackupFailure(errorMsg)
+    await recordBackupFailure(errorMsg)
     throw error
   }
 }
@@ -299,7 +299,12 @@ export function startBackupScheduler(): NodeJS.Timeout {
     }
   }, daily)
 
-  setSchedulerRunning(true)
+  // setSchedulerRunning updates status file asynchronously.
+  // We don't necessarily need to await it here since this returns the scheduler handle immediately.
+  // But good practice would be to handle the promise.
+  setSchedulerRunning(true).catch(err => {
+      logger.error('[Backup] Failed to set scheduler running status', { error: err instanceof Error ? err.message : String(err) })
+  })
   logger.info('[Backup] Backup scheduler started (interval: 24 hours)', {})
 
   return scheduler
@@ -307,6 +312,8 @@ export function startBackupScheduler(): NodeJS.Timeout {
 
 export function stopBackupScheduler(scheduler: NodeJS.Timeout): void {
   clearInterval(scheduler)
-  setSchedulerRunning(false)
+  setSchedulerRunning(false).catch(err => {
+      logger.error('[Backup] Failed to set scheduler stopped status', { error: err instanceof Error ? err.message : String(err) })
+  })
   logger.info('[Backup] Backup scheduler stopped', {})
 }

@@ -9,8 +9,8 @@ export interface BackupHealthCheck {
 
 const BACKUP_AGE_THRESHOLD = 2 * DAY_MS
 
-export function checkBackupHealth(): BackupHealthCheck {
-    const status = getBackupStatus()
+export async function checkBackupHealth(): Promise<BackupHealthCheck> {
+    const status = await getBackupStatus()
     const issues: string[] = []
     const recommendations: string[] = []
     const now = Date.now()

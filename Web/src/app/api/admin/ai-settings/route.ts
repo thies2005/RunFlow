@@ -10,6 +10,7 @@ import { requireAdmin } from '@/lib/admin/auth';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logAdminAction } from '@/lib/admin/auditLog';
+import { handleError } from '@/lib/errors/handler';
 
 export async function GET(request: NextRequest) {
     const rateLimit = await adminRateLimit(request, 'read');
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
         return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
         console.error('Admin AI settings GET error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        return handleError(error);
     }
 }
 
@@ -220,9 +221,6 @@ export async function PUT(request: NextRequest) {
         return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
         console.error('Admin AI settings PUT error:', error);
-        // M-20 fix: Don't leak error messages in production
-        return NextResponse.json({
-            error: process.env.NODE_ENV === 'production' ? 'Internal server error' : (error instanceof Error ? error.message : String(error))
-        }, { status: 500 });
+        return handleError(error);
     }
 }

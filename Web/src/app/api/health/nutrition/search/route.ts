@@ -64,6 +64,9 @@ export async function GET(request: Request) {
 
         // Score and rank combined results by relevance
         const queryLower = query.toLowerCase();
+        // Optimization: Compile regex once before loop
+        const regex = new RegExp(`(?:^|[\\s,;(])${escapeRegex(queryLower)}`);
+
         const scored = combined.map(item => {
             const name = String(item.name || '').toLowerCase();
             let score = 0;
@@ -75,7 +78,7 @@ export async function GET(request: Request) {
             // Name relevance scoring
             if (name === queryLower) score += 100;
             else if (name.startsWith(queryLower)) score += 80;
-            else if (new RegExp(`(?:^|[\\s,;(])${escapeRegex(queryLower)}`).test(name)) score += 60;
+            else if (regex.test(name)) score += 60;
             else if (name.includes(queryLower)) score += 40;
             else score += 20;
 

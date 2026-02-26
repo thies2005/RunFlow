@@ -3,6 +3,17 @@ import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logging/logger'
 import crypto from 'crypto'
 
+export function isDevelopment(): boolean {
+  return process.env.NODE_ENV === 'development'
+}
+
+export function getSafeErrorMessage(error: unknown): string {
+  if (isDevelopment()) {
+    return error instanceof Error ? error.message : 'Unknown error'
+  }
+  return 'Internal server error'
+}
+
 export function handleError(error: unknown): NextResponse {
   const errorId = crypto.randomUUID().substring(0, 8)
   logger.error('Error', { errorId, error: error instanceof Error ? error.message : String(error) })
@@ -20,6 +31,7 @@ export function handleError(error: unknown): NextResponse {
         { status: 404 }
       )
     }
+    // Generic db error
     return NextResponse.json(
       { error: 'Database error', errorId },
       { status: 500 }
@@ -37,15 +49,4 @@ export function handleError(error: unknown): NextResponse {
     { error: getSafeErrorMessage(error), errorId },
     { status: 500 }
   )
-}
-
-export function isDevelopment(): boolean {
-  return process.env.NODE_ENV === 'development'
-}
-
-export function getSafeErrorMessage(error: unknown): string {
-  if (isDevelopment()) {
-    return error instanceof Error ? error.message : 'Unknown error'
-  }
-  return 'Internal server error'
 }

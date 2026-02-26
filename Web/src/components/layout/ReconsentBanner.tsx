@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { AlertTriangle, CheckCircle, Shield, X, Lock } from 'lucide-react';
+import { CheckCircle, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ReconsentBanner() {
@@ -48,19 +48,20 @@ export default function ReconsentBanner() {
         try {
             const consentTypes = ['TERMS', 'PRIVACY', 'HEALTH_DATA', 'AGE_REQUIREMENT'];
 
-            const results = await Promise.all(consentTypes.map(type =>
-                fetch('/api/user/consent', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ consentType: type, action: 'GRANTED' }),
-                })
-            ));
+            // Prepare payload for a single batch request
+            const consents = consentTypes.map(type => ({
+                consentType: type,
+                action: 'GRANTED'
+            }));
 
-            // Check if all submissions were successful
-            const failedResults = results.filter(r => !r.ok);
-            if (failedResults.length > 0) {
-                setError('Some consents could not be saved. Please try again.');
-                return;
+            const response = await fetch('/api/user/consent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ consents }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update consents');
             }
 
             setNeedsConsent(false);

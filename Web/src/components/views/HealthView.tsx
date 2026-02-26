@@ -329,7 +329,6 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
             {showAnalytics ? (
                 <NutritionAnalyticsView
                     onClose={() => setShowAnalytics(false)}
-                    onOpenGoals={() => setIsGoalsOpen(true)}
                 />
             ) : (
                 <>

@@ -420,6 +420,8 @@ export function MobileLayout() {
                                             onCloseMobile={() => setIsMobileSidebarOpen(false)}
                                             onNewChat={() => {
                                                 setIsMobileSidebarOpen(false);
+                                                // Increment key to force AiChat to remount with fresh state
+                                                setAiChatResetKey(prev => prev + 1);
                                                 // Navigate to base chat path to clear session
                                                 router.push('/chat');
                                             }}

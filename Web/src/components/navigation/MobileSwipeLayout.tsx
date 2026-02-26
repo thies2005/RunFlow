@@ -69,7 +69,7 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, s
                 }, 100);
             }
         }
-    }, [activeIndex, router, onPageChange, paths]);
+    }, [activeIndex, router, onPageChange, paths, onChatTabClick]);
 
     const isChat = pathname === '/chat';
 

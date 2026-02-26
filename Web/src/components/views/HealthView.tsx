@@ -398,9 +398,11 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             >
                                 <div className="flex justify-between items-end mb-3">
                                     <div>
-                                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Calories Remaining</h3>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
+                                            {((targetData?.calorieTarget || 0) - (dailyData?.dailyHealth?.caloriesConsumed || 0)) < 0 ? 'Calories Over' : 'Calories Remaining'}
+                                        </h3>
                                         <p className="text-3xl font-bold text-white">
-                                            {Math.max(0, (targetData?.calorieTarget || 0) - (dailyData?.dailyHealth?.caloriesConsumed || 0))}
+                                            {Math.abs(Math.round((targetData?.calorieTarget || 0) - (dailyData?.dailyHealth?.caloriesConsumed || 0)))}
                                             <span className="text-sm text-gray-400 font-normal ml-1">kcal</span>
                                         </p>
                                     </div>
@@ -410,7 +412,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 </div>
                                 <div className="h-2 w-full bg-white/10 rounded-full mb-3 overflow-hidden">
                                     <div
-                                        className="h-full bg-pink-500 rounded-full transition-all duration-500"
+                                        className={`h-full rounded-full transition-all duration-500 ${((targetData?.calorieTarget || 0) - (dailyData?.dailyHealth?.caloriesConsumed || 0)) < 0 ? 'bg-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-pink-500'}`}
                                         style={{ width: `${Math.min(100, ((dailyData?.dailyHealth?.caloriesConsumed || 0) / (targetData?.calorieTarget || 1)) * 100)}%` }}
                                     />
                                 </div>
@@ -578,8 +580,13 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    {/* Render Stacks First */}
-                                    {stacks?.map(renderStack)}
+                                    {/* Render Stacks First (Ordered by Time of Day) */}
+                                    {stacks?.slice().sort((a: any, b: any) => {
+                                        const order: Record<string, number> = { MORNING: 1, NOON: 2, EVENING: 3 };
+                                        const valA = order[a.timeOfDay] || 4;
+                                        const valB = order[b.timeOfDay] || 4;
+                                        return valA - valB;
+                                    }).map(renderStack)}
 
                                     {/* Render Standalone Supplements grouped by Time */}
                                     {morningStandalone.length > 0 && (

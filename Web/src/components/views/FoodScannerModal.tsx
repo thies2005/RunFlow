@@ -3,6 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Camera, Upload, Sparkles, Loader2, MessageSquare } from 'lucide-react';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
+
+const IS_NATIVE = Capacitor.isNativePlatform();
 
 interface FoodScanItem {
     name: string;
@@ -90,6 +94,29 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
         reader.readAsDataURL(file);
     };
 
+    const handleCameraClick = async () => {
+        if (IS_NATIVE) {
+            try {
+                const image = await CapacitorCamera.getPhoto({
+                    quality: 90,
+                    allowEditing: false,
+                    resultType: CameraResultType.DataUrl,
+                    source: CameraSource.Camera,
+                });
+
+                if (image.dataUrl) {
+                    setImagePreview(image.dataUrl);
+                    setImageBase64(image.dataUrl);
+                    setError(null);
+                }
+            } catch (error) {
+                console.error('Camera error:', error);
+            }
+        } else {
+            cameraInputRef.current?.click();
+        }
+    };
+
     const handleAnalyze = async () => {
         if ((!imageBase64 && !caption.trim()) || !session?.user?.id) return;
 
@@ -152,7 +179,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                     {!imagePreview && !isTextOnly ? (
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <button
-                                onClick={() => cameraInputRef.current?.click()}
+                                onClick={handleCameraClick}
                                 className="w-full aspect-[4/3] border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center gap-4 hover:border-amber-400/50 hover:bg-amber-400/5 transition-all group"
                             >
                                 <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">

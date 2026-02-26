@@ -200,6 +200,12 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     // Show steps if Health Connect is available on this device OR if backend has step data (synced from mobile earlier)
     const showSteps = hasHealthConnect || (dailyData?.dailyHealth?.steps && dailyData.dailyHealth.steps > 0);
 
+    // Compute calorie/macro totals from today's food logs
+    const totalCalories = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.calories || 0), 0) || 0;
+    const totalProtein = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.protein || 0), 0) || 0;
+    const totalCarbs = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.carbs || 0), 0) || 0;
+    const totalFats = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.fats || 0), 0) || 0;
+
     // Filtering standalone supplements
     const todayDayOfWeek = new Date().getDay();
     const isSuppActiveToday = (supp: any) => {
@@ -399,10 +405,10 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 <div className="flex justify-between items-end mb-3">
                                     <div>
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
-                                            {((targetData?.calorieTarget || 0) - (dailyData?.dailyHealth?.caloriesConsumed || 0)) < 0 ? 'Calories Over' : 'Calories Remaining'}
+                                            {((targetData?.dailyCalories || 0) - totalCalories) < 0 ? 'Calories Over' : 'Calories Remaining'}
                                         </h3>
                                         <p className="text-3xl font-bold text-white">
-                                            {Math.abs(Math.round((targetData?.calorieTarget || 0) - (dailyData?.dailyHealth?.caloriesConsumed || 0)))}
+                                            {Math.abs(Math.round((targetData?.dailyCalories || 0) - totalCalories))}
                                             <span className="text-sm text-gray-400 font-normal ml-1">kcal</span>
                                         </p>
                                     </div>
@@ -412,14 +418,14 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 </div>
                                 <div className="h-2 w-full bg-white/10 rounded-full mb-3 overflow-hidden">
                                     <div
-                                        className={`h-full rounded-full transition-all duration-500 ${((targetData?.calorieTarget || 0) - (dailyData?.dailyHealth?.caloriesConsumed || 0)) < 0 ? 'bg-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-pink-500'}`}
-                                        style={{ width: `${Math.min(100, ((dailyData?.dailyHealth?.caloriesConsumed || 0) / (targetData?.calorieTarget || 1)) * 100)}%` }}
+                                        className={`h-full rounded-full transition-all duration-500 ${((targetData?.dailyCalories || 0) - totalCalories) < 0 ? 'bg-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-pink-500'}`}
+                                        style={{ width: `${Math.min(100, (totalCalories / (targetData?.dailyCalories || 1)) * 100)}%` }}
                                     />
                                 </div>
                                 <div className="flex justify-between text-xs text-gray-400 font-medium">
-                                    <span>P: {Math.round(dailyData?.dailyHealth?.proteinConsumed || 0)}g</span>
-                                    <span>C: {Math.round(dailyData?.dailyHealth?.carbsConsumed || 0)}g</span>
-                                    <span>F: {Math.round(dailyData?.dailyHealth?.fatsConsumed || 0)}g</span>
+                                    <span>P: {Math.round(totalProtein)}g</span>
+                                    <span>C: {Math.round(totalCarbs)}g</span>
+                                    <span>F: {Math.round(totalFats)}g</span>
                                 </div>
                             </button>
                         )}

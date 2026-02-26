@@ -142,8 +142,11 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
       date: format(new Date(day.date + 'T12:00:00'), 'MMM dd'),
       calories: Math.round(day.calories),
       protein: Math.round(day.protein) * 4,
+      proteinGrams: Math.round(day.protein),
       carbs: Math.round(day.carbs) * 4,
+      carbsGrams: Math.round(day.carbs),
       fats: Math.round(day.fats) * 9,
+      fatsGrams: Math.round(day.fats),
     }));
   }, [analytics]);
 
@@ -375,6 +378,13 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
                     borderRadius: '8px',
                   }}
                   labelStyle={{ color: '#fff' }}
+                  formatter={(value: any, name: string, props: any) => {
+                    const payload = props.payload;
+                    if (name.includes('Protein')) return [`${value} kcal (${payload.proteinGrams}g)`, 'Protein'];
+                    if (name.includes('Carbs')) return [`${value} kcal (${payload.carbsGrams}g)`, 'Carbs'];
+                    if (name.includes('Fats')) return [`${value} kcal (${payload.fatsGrams}g)`, 'Fats'];
+                    return [value, name];
+                  }}
                 />
                 <Legend
                   wrapperStyle={{ fontSize: '10px' }}

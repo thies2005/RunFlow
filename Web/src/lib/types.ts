@@ -198,16 +198,7 @@ export interface Workout {
  * Workout with linked activity data included (for plan views)
  */
 export interface WorkoutWithLinkedActivity extends Workout {
-    linkedActivity?: {
-        id: string;
-        name: string;
-        startDate: string | Date;
-        distance: number;
-        movingTime: number;
-        averageSpeed: number | null;
-        averageHr: number | null;
-        type: string;
-    } | null;
+    linkedActivity?: ActivityListItem | null;
 }
 
 /**
@@ -313,16 +304,7 @@ export interface SyncStatus {
     totalActivities: number;
 }
 
-export interface UnlinkedActivity {
-    id: string;
-    name: string;
-    startDate: string | Date;
-    distance: number;
-    movingTime: number;
-    averageHr: number | null;
-    averageSpeed: number | null;
-    type: string;
-}
+export type UnlinkedActivity = ActivityListItem;
 
 export interface PlanResponse {
     goal: (Goal & {

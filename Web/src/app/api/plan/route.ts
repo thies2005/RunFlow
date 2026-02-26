@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/apiResponse';
+import type { ActivityListItem } from '@/lib/types';
 
 export async function GET(req: Request) {
     try {
@@ -45,6 +46,41 @@ export async function GET(req: Request) {
             }
         }
 
+        // Define the select object to match ActivityListItem
+        const activitySelect = {
+            id: true,
+            stravaId: true,
+            type: true,
+            sportType: true,
+            name: true,
+            description: true,
+            startDate: true,
+            distance: true,
+            movingTime: true,
+            averageSpeed: true,
+            maxSpeed: true,
+            gradeAdjustedSpeed: true,
+            averageHr: true,
+            maxHr: true,
+            hasHeartrate: true,
+            totalElevation: true,
+            elevHigh: true,
+            elevLow: true,
+            calories: true,
+            trimp: true,
+            runningTss: true,
+            estimatedVdot: true,
+            averageCadence: true,
+            trainingType: true,
+            hrZone1Time: true,
+            hrZone2Time: true,
+            hrZone3Time: true,
+            hrZone4Time: true,
+            hrZone5Time: true,
+            hrZone6Time: true,
+            hrZone7Time: true,
+        };
+
         const activeGoal = await prisma.goal.findFirst({
             where: { userId: session.user.id, isActive: true },
             include: {
@@ -53,16 +89,7 @@ export async function GET(req: Request) {
                     orderBy: { scheduledDate: 'asc' },
                     include: {
                         linkedActivity: {
-                            select: {
-                                id: true,
-                                name: true,
-                                startDate: true,
-                                distance: true,
-                                movingTime: true,
-                                averageHr: true,
-                                averageSpeed: true,
-                                type: true
-                            }
+                            select: activitySelect
                         }
                     }
                 }
@@ -73,18 +100,26 @@ export async function GET(req: Request) {
             return NextResponse.json({ goal: null, unlinkedActivities: [] });
         }
 
+        // Transform BigInt to string in workouts
+        const workoutsWithSerializedActivities = activeGoal.workouts.map(workout => {
+            if (!workout.linkedActivity) return workout;
+            return {
+                ...workout,
+                linkedActivity: {
+                    ...workout.linkedActivity,
+                    stravaId: workout.linkedActivity.stravaId.toString(),
+                    startDate: workout.linkedActivity.startDate.toISOString(),
+                } as unknown as ActivityListItem
+            };
+        });
+
+        const goalWithSerializedWorkouts = {
+            ...activeGoal,
+            workouts: workoutsWithSerializedActivities
+        };
+
         // Fetch unlinked activities within the plan period (if requested)
-        // M-06 fix: Define proper type for unlinked activities
-        let unlinkedActivities: Array<{
-            id: string;
-            name: string;
-            startDate: Date;
-            distance: number;
-            movingTime: number;
-            averageHr: number | null;
-            averageSpeed: number | null;
-            type: string;
-        }> = [];
+        let unlinkedActivities: ActivityListItem[] = [];
         if (includeUnlinked) {
             const planStartDate = activeGoal.createdAt;
             const planEndDate = activeGoal.raceDate;
@@ -95,7 +130,7 @@ export async function GET(req: Request) {
                 select: { linkedActivityId: true }
             }).then(workouts => workouts.map(w => w.linkedActivityId as string));
 
-            unlinkedActivities = await prisma.activity.findMany({
+            const rawUnlinkedActivities = await prisma.activity.findMany({
                 where: {
                     userId: session.user.id,
                     startDate: {
@@ -106,22 +141,20 @@ export async function GET(req: Request) {
                         ? { notIn: allLinkedActivityIds }
                         : undefined
                 },
-                select: {
-                    id: true,
-                    name: true,
-                    startDate: true,
-                    distance: true,
-                    movingTime: true,
-                    averageHr: true,
-                    averageSpeed: true,
-                    type: true
-                },
+                select: activitySelect,
                 orderBy: { startDate: 'asc' }
             });
+
+            // Transform BigInt to string
+            unlinkedActivities = rawUnlinkedActivities.map(activity => ({
+                ...activity,
+                stravaId: activity.stravaId.toString(),
+                startDate: activity.startDate.toISOString()
+            } as unknown as ActivityListItem));
         }
 
         return cachedResponse({
-            goal: activeGoal,
+            goal: goalWithSerializedWorkouts,
             unlinkedActivities
         }, { maxAge: 60, staleWhileRevalidate: 30 });
     } catch (error) {
@@ -129,4 +162,3 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
-

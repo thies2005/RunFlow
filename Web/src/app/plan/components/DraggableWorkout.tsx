@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { GripVertical, Check, Settings } from 'lucide-react';
-import { WorkoutWithLinkedActivity } from '@/lib/types';
+import { WorkoutWithLinkedActivity, ActivityListItem } from '@/lib/types';
 import { workoutStyles, formatPace } from '@/lib/plan/utils';
 
 interface DraggableWorkoutProps {
@@ -9,7 +9,7 @@ interface DraggableWorkoutProps {
     isTodayItem: boolean;
     onClick: (_workout: WorkoutWithLinkedActivity) => void;
     onComplete: (_workout: WorkoutWithLinkedActivity, _e: React.MouseEvent) => void;
-    onActivityClick: (_activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, _e: React.MouseEvent) => void;
+    onActivityClick: (_activity: ActivityListItem, _e: React.MouseEvent) => void;
 }
 
 export function DraggableWorkout({

@@ -3,7 +3,7 @@ import { format, addDays, isToday, isSameDay, differenceInWeeks, isBefore } from
 import { DraggableWorkout } from '@/app/plan/components/DraggableWorkout';
 import { DroppableDay } from '@/app/plan/components/DroppableDay';
 import { getPhase, formatDuration, RUN_TYPES } from '@/lib/plan/utils';
-import { isRunningActivity, isCrossTrainingActivity, type WorkoutWithLinkedActivity, type UnlinkedActivity } from '@/lib/types';
+import { isRunningActivity, isCrossTrainingActivity, type WorkoutWithLinkedActivity, type UnlinkedActivity, type ActivityListItem } from '@/lib/types';
 
 interface PlanWeekProps {
     weekStartIso: string;
@@ -13,7 +13,7 @@ interface PlanWeekProps {
     handleCreate: (_date: Date) => void;
     handleEdit: (_workout: WorkoutWithLinkedActivity) => void;
     handleComplete: (_workout: WorkoutWithLinkedActivity, _e: React.MouseEvent) => void;
-    handleActivityClick: (_activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, _e: React.MouseEvent) => void;
+    handleActivityClick: (_activity: ActivityListItem, _e: React.MouseEvent) => void;
     showUnlinked: boolean;
     unlinkedActivities?: UnlinkedActivity[];
 }
@@ -143,8 +143,8 @@ export const PlanWeek = memo(function PlanWeek({
                                 <div
                                     key={activity.id}
                                     onClick={() => {
-                                        // Cast needed because handleActivityClick expects linkedActivity type
-                                        handleActivityClick(activity as any, {} as React.MouseEvent);
+                                        // No cast needed now, types align
+                                        handleActivityClick(activity, {} as React.MouseEvent);
                                     }}
                                     className="group p-3 rounded-lg flex items-center gap-3 transition-colors border border-dashed border-accent-cyan/40 bg-accent-cyan/5 cursor-pointer hover:bg-accent-cyan/10"
                                 >

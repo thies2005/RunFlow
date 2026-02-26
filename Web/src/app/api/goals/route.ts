@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { analyzeRace, type RaceDistance } from '@/lib/metrics/vdot';
 import { AnalyticsService } from '@/lib/services/analytics';
+import { type ActivityForShape } from '@/lib/metrics/runalyze';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
@@ -253,6 +254,7 @@ export async function POST(request: NextRequest) {
                     startDate: { gte: sixMonthsAgo },
                 },
                 select: {
+                    startDate: true,
                     distance: true,
                     movingTime: true,
                     averageHr: true,
@@ -265,7 +267,7 @@ export async function POST(request: NextRequest) {
                 const maxHR = user?.hrMax || 185;
                 const correctionFactor = user?.vdotCorrectionFactor || 1.0;
                 // M-06 fix: Use proper ActivityForShape[] type instead of any
-                const { effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities as import('@/lib/metrics/runalyze').ActivityForShape[], maxHR, correctionFactor);
+                const { effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities as ActivityForShape[], maxHR, correctionFactor);
                 if (effectiveVO2max > 0) {
                     currentVdot = effectiveVO2max;
                 }

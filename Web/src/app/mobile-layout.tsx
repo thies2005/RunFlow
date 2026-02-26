@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
@@ -26,14 +26,9 @@ import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
 import AiChat from '@/components/AiChat';
 import AiSettingsModal from '@/components/AiSettingsModal';
 import HealthView from '@/components/views/HealthView';
-import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
-import type { Workout, Goal, Activity } from '@/lib/types';
+import type { Workout, Goal, ActivityListItem } from '@/lib/types';
 import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
-import {
-    calculatePredictedTimes,
-} from '@/lib/metrics/runalyze';
-import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { Capacitor } from '@capacitor/core';
 import { syncLocalNotifications } from '@/lib/mobile/notifications';
 
@@ -52,7 +47,7 @@ export function MobileLayout() {
     const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
     // M-06 fix: Use proper ActivityListItem type (matches ActivityDetailsModal props)
-    const [selectedActivity, setSelectedActivity] = useState<import('@/lib/types').ActivityListItem | null>(null);
+    const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -445,7 +440,7 @@ export function MobileLayout() {
                 isOpen={!!editingWorkout || !!createDate}
                 onClose={() => { setEditingWorkout(null); setCreateDate(undefined); refetchPlan(); }}
                 // M-06 fix: WorkoutWithLinkedActivity extends Workout, safe cast
-                workout={editingWorkout as import('@/lib/types').Workout | null}
+                workout={editingWorkout as Workout | null}
                 defaultDate={createDate}
                 goalId={activeGoal?.id || planData?.goal?.id}
                 initialComplete={initialComplete}

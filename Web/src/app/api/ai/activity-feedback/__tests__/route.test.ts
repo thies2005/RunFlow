@@ -4,6 +4,11 @@
 
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { prisma } from '@/lib/db';
+import { getAiConfig, checkUsageLimit, buildActivityContext } from '@/lib/ai';
+import { generateCompletion } from '@/lib/ai/providers';
+import { handleError } from '@/lib/errors/handler';
 
 jest.mock('@/lib/strava/oauth', () => ({
     authOptions: {},
@@ -46,12 +51,6 @@ jest.mock('@/lib/ai/providers', () => ({
 jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
-
-import { getServerSession } from 'next-auth';
-import { prisma } from '@/lib/db';
-import { getAiConfig, checkUsageLimit, buildActivityContext } from '@/lib/ai';
-import { generateCompletion } from '@/lib/ai/providers';
-import { handleError } from '@/lib/errors/handler';
 
 describe('GET /api/ai/activity-feedback', () => {
     beforeEach(() => {

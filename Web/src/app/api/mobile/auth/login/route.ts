@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // M-18 fix: Add explicit parentheses for clarity
         const redirectUri = providedRedirectUri 
             ? providedRedirectUri 
             : (process.env.NEXT_PUBLIC_APP_URL

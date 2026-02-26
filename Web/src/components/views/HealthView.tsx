@@ -356,289 +356,254 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         </header>
                     )}
 
-                    <div className={`p-4 ${!showHeader ? 'pt-8' : ''} mx-auto w-full max-w-lg md:max-w-3xl lg:max-w-7xl`}>
-                        <div className="flex flex-col gap-6 md:grid md:grid-cols-2 lg:grid-cols-12 lg:items-start">
-                            {!isMobileDevice && !bannerDismissed && (
-                                <div className="md:col-span-2 lg:col-span-12 bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-start gap-3">
-                                    <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-                                    <div className="text-sm flex-1">
-                                        <p className="font-semibold text-blue-400 mb-1">Mobile App Recommended</p>
-                                        <p className="text-blue-200/80">Step and weight tracking use Health Connect, which is only available on the mobile app. You can manually enter weight here or track supplements.</p>
+                    <div className={`mx-auto w-full max-w-md flex flex-col gap-4 pb-24 p-4 ${!showHeader ? 'pt-8' : ''}`}>
+                        {!isMobileDevice && !bannerDismissed && (
+                            <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl flex items-start gap-3">
+                                <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                                <div className="text-sm flex-1">
+                                    <p className="font-semibold text-blue-400 mb-1">Mobile App Recommended</p>
+                                    <p className="text-blue-200/80">Step and weight tracking use Health Connect, which is only available on the mobile app. You can manually enter weight here or track supplements.</p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        localStorage.setItem('health-banner-dismissed', Date.now().toString());
+                                        setBannerDismissed(true);
+                                    }}
+                                    className="text-blue-400/60 hover:text-blue-400 transition-colors text-xs font-medium shrink-0"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Row 1: Goal Setup OR Macro Hero Card */}
+                        {targetData?.isDefault ? (
+                            <div className="bg-pink-500/10 border border-pink-500/20 rounded-2xl p-4 flex items-start gap-3 glass-card border-glass-border">
+                                <Target className="w-5 h-5 text-pink-400 shrink-0 mt-0.5" />
+                                <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-pink-400 mb-1">Set Your Nutrition Goals</h4>
+                                    <p className="text-xs text-pink-200/70 mb-3">Define your calorie and macro targets to unlock personalized insights and detailed adherence scoring.</p>
+                                    <button
+                                        onClick={() => setIsGoalsOpen(true)}
+                                        className="bg-pink-500 text-white text-xs font-semibold px-4 py-2 rounded-lg w-full shadow-lg shadow-pink-500/20 hover:bg-pink-600 transition-colors"
+                                    >
+                                        Setup Goals
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setShowAnalytics(true)}
+                                className="w-full text-left bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-2xl p-4 transition-all hover:bg-white/10 active:scale-[0.98]"
+                            >
+                                <div className="flex justify-between items-end mb-3">
+                                    <div>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Calories Remaining</h3>
+                                        <p className="text-3xl font-bold text-white">
+                                            {Math.max(0, (targetData?.calorieTarget || 0) - (dailyData?.dailyHealth?.caloriesConsumed || 0))}
+                                            <span className="text-sm text-gray-400 font-normal ml-1">kcal</span>
+                                        </p>
                                     </div>
+                                    <div className="text-right">
+                                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                </div>
+                                <div className="h-2 w-full bg-white/10 rounded-full mb-3 overflow-hidden">
+                                    <div
+                                        className="h-full bg-pink-500 rounded-full transition-all duration-500"
+                                        style={{ width: `${Math.min(100, ((dailyData?.dailyHealth?.caloriesConsumed || 0) / (targetData?.calorieTarget || 1)) * 100)}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-400 font-medium">
+                                    <span>P: {Math.round(dailyData?.dailyHealth?.proteinConsumed || 0)}g</span>
+                                    <span>C: {Math.round(dailyData?.dailyHealth?.carbsConsumed || 0)}g</span>
+                                    <span>F: {Math.round(dailyData?.dailyHealth?.fatsConsumed || 0)}g</span>
+                                </div>
+                            </button>
+                        )}
+
+                        {/* Row 2: Quick Stats */}
+                        <div className={`grid gap-4 ${showSteps ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                            {showSteps && (
+                                <button
+                                    onClick={() => setActiveTrendMetric('steps')}
+                                    className="glass-card border border-glass-border rounded-2xl p-4 text-left transition-all hover:bg-white/10 active:scale-[0.98]"
+                                >
+                                    <div className="flex items-center gap-2 text-green-400 font-medium mb-2">
+                                        <ActivitySquare className="w-4 h-4" /> <span className="text-xs uppercase tracking-widest text-gray-400">Steps</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.steps || 0}</span>
+                                    </div>
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setActiveTrendMetric('weight')}
+                                className={`glass-card border border-glass-border rounded-2xl p-4 text-left transition-all hover:bg-white/10 active:scale-[0.98] ${!showSteps ? 'col-span-1' : ''}`}
+                            >
+                                <div className="flex items-center gap-2 text-blue-400 font-medium mb-2">
+                                    <Activity className="w-4 h-4" /> <span className="text-xs uppercase tracking-widest text-gray-400">Weight</span>
+                                </div>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.weight ? dailyData.dailyHealth.weight.toFixed(1) : '--'}</span>
+                                    <span className="text-xs text-gray-400 font-medium">kg</span>
+                                </div>
+                            </button>
+                        </div>
+
+                        {/* Row 3: Quick Log Strip */}
+                        <div className="grid grid-cols-4 gap-3">
+                            <button
+                                onClick={() => setIsFoodScannerOpen(true)}
+                                className="glass-card border border-glass-border py-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all hover:bg-white/10 active:scale-[0.98]"
+                            >
+                                <Sparkles className="w-5 h-5 text-amber-400" />
+                                <span className="text-[10px] font-bold uppercase text-white">AI Scan</span>
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!IS_NATIVE) {
+                                        try {
+                                            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                                            setCameraStream(stream);
+                                        } catch (err) {
+                                            alert('Camera permission is required to scan barcodes. Please allow camera access in your browser settings.');
+                                            return;
+                                        }
+                                    }
+                                    setIsScannerOpen(true);
+                                }}
+                                className="glass-card border border-glass-border py-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all hover:bg-white/10 active:scale-[0.98]"
+                            >
+                                <Camera className="w-5 h-5 text-blue-400" />
+                                <span className="text-[10px] font-bold uppercase text-white">Barcode</span>
+                            </button>
+                            <button
+                                onClick={() => setIsManualEntryOpen(true)}
+                                className="glass-card border border-glass-border py-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all hover:bg-white/10 active:scale-[0.98]"
+                            >
+                                <Search className="w-5 h-5 text-green-400" />
+                                <span className="text-[10px] font-bold uppercase text-white">Search</span>
+                            </button>
+                            <button
+                                onClick={() => setIsMealLibraryOpen(true)}
+                                className="glass-card border border-glass-border py-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all hover:bg-white/10 active:scale-[0.98]"
+                            >
+                                <BookOpen className="w-5 h-5 text-purple-400" />
+                                <span className="text-[10px] font-bold uppercase text-white">Library</span>
+                            </button>
+                        </div>
+
+                        {/* Row 4: Recent Logs Widget */}
+                        <div
+                            className="glass-card border border-glass-border rounded-2xl p-4 transition-all hover:bg-white/10 active:scale-[0.98] cursor-pointer"
+                            onClick={() => setIsHistoryOpen(true)}
+                        >
+                            <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500">Recent Logs</h4>
+                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                            </div>
+                            <div className="space-y-3">
+                                {dailyData?.foodLogs && dailyData.foodLogs.length > 0 ? (
+                                    dailyData.foodLogs.slice(0, 2).map((log: any) => (
+                                        <div key={log.id} className="flex justify-between items-center">
+                                            <div className="flex-1 min-w-0 pr-4">
+                                                <p className="text-sm font-medium text-white truncate">{log.foodItem?.name || log.mealType || 'Unknown Food'}</p>
+                                            </div>
+                                            <p className="text-sm font-bold text-pink-400 whitespace-nowrap">{Math.round(log.calories)} kcal</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-400 italic">No food logged today</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Row 5: Daily Supplements & Stacks */}
+                        <div className="glass-card border border-glass-border rounded-2xl p-4 flex flex-col">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold text-white flex items-center gap-2 text-sm">
+                                    Daily Supplements
+                                </h3>
+                                <div className="flex gap-2">
                                     <button
                                         onClick={() => {
-                                            localStorage.setItem('health-banner-dismissed', Date.now().toString());
-                                            setBannerDismissed(true);
+                                            setStackToEdit(null);
+                                            setIsAddStackModalOpen(true);
                                         }}
-                                        className="text-blue-400/60 hover:text-blue-400 transition-colors text-xs font-medium shrink-0"
+                                        className="bg-white/5 hover:bg-white/10 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-white/10 transition-colors"
                                     >
-                                        Dismiss
+                                        <Plus className="w-3.5 h-3.5" /> Stack
                                     </button>
+                                    <button
+                                        onClick={() => {
+                                            setSupplementToEdit(null);
+                                            setIsAddModalOpen(true);
+                                        }}
+                                        className="bg-white/10 hover:bg-white/15 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" /> Supp
+                                    </button>
+                                </div>
+                            </div>
+
+                            {isSupplementsLoading || isStacksLoading ? (
+                                <p className="text-xs text-gray-500">Loading supplements...</p>
+                            ) : supplements?.length === 0 && stacks?.length === 0 ? (
+                                <div className="flex gap-3 mt-2">
+                                    <button
+                                        onClick={() => {
+                                            setSupplementToEdit(null);
+                                            setIsAddModalOpen(true);
+                                        }}
+                                        className="flex-1 text-center py-6 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-colors group flex flex-col items-center justify-center gap-2"
+                                    >
+                                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <Plus className="w-5 h-5 text-gray-400" />
+                                        </div>
+                                        <p className="text-sm text-gray-400 tracking-wide font-medium group-hover:text-white transition-colors">Add Supplement</p>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setStackToEdit(null);
+                                            setIsAddStackModalOpen(true);
+                                        }}
+                                        className="flex-1 text-center py-6 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-colors group flex flex-col items-center justify-center gap-2"
+                                    >
+                                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform border border-blue-500/20">
+                                            <Plus className="w-5 h-5 text-blue-400" />
+                                        </div>
+                                        <p className="text-sm text-gray-400 tracking-wide font-medium group-hover:text-blue-400 transition-colors">Create Stack</p>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {/* Render Stacks First */}
+                                    {stacks?.map(renderStack)}
+
+                                    {/* Render Standalone Supplements grouped by Time */}
+                                    {morningStandalone.length > 0 && (
+                                        <div>
+                                            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">Morning Standalones</h4>
+                                            {morningStandalone.map(renderSupplementItem)}
+                                        </div>
+                                    )}
+                                    {noonStandalone.length > 0 && (
+                                        <div>
+                                            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-4 px-1">Noon Standalones</h4>
+                                            {noonStandalone.map(renderSupplementItem)}
+                                        </div>
+                                    )}
+                                    {eveningStandalone.length > 0 && (
+                                        <div>
+                                            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-4 px-1">Evening Standalones</h4>
+                                            {eveningStandalone.map(renderSupplementItem)}
+                                        </div>
+                                    )}
                                 </div>
                             )}
-
-                            {/* Left Column: Quick Stats */}
-                            <div className="flex flex-col gap-6 md:col-span-2 lg:col-span-3">
-                                {/* Steps and Weight Cards */}
-                                <div className={`grid gap-4 ${showSteps ? 'grid-cols-2 lg:grid-cols-1' : 'grid-cols-1'}`}>
-                                    {showSteps && (
-                                        <button
-                                            onClick={() => setActiveTrendMetric('steps')}
-                                            className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
-                                        >
-                                            <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2 text-green-400 font-medium">
-                                                    <ActivitySquare className="w-4 h-4" /> Steps
-                                                </div>
-                                                <ChevronRight className="w-4 h-4 text-gray-500" />
-                                            </div>
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.steps || 0}</span>
-                                                <span className="text-xs text-gray-400 font-medium">steps today</span>
-                                            </div>
-                                        </button>
-                                    )}
-
-                                    <button
-                                        onClick={() => setActiveTrendMetric('weight')}
-                                        className="glass-card p-4 rounded-xl border border-glass-border hover:bg-white/5 transition-colors text-left"
-                                    >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2 text-blue-400 font-medium">
-                                                <Activity className="w-4 h-4" /> Weight
-                                            </div>
-                                            <ChevronRight className="w-4 h-4 text-gray-500" />
-                                        </div>
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-2xl font-bold text-white">{dailyData?.dailyHealth?.weight ? dailyData.dailyHealth.weight.toFixed(1) : '--'}</span>
-                                            <span className="text-xs text-gray-400 font-medium">kg</span>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div> {/* End Left Column */}
-
-                            {/* Middle Column: Food */}
-                            <div className="flex flex-col gap-6 md:col-span-1 lg:col-span-5">
-                                {/* Food Logging Section */}
-                                <div className="glass-card p-4 rounded-xl border border-glass-border h-full flex flex-col">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div>
-                                            <h3 className="font-semibold text-white">Food</h3>
-                                            <p className="text-xs text-gray-400 mt-1">Log your daily nutrition</p>
-                                        </div>
-                                        <button
-                                            onClick={() => setShowAnalytics(true)}
-                                            className="bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 transition-colors rounded-lg px-3 py-1.5 flex items-center gap-1.5"
-                                        >
-                                            <BarChart3 className="w-3.5 h-3.5 text-pink-400" />
-                                            <span className="text-xs font-medium text-pink-400">Analytics</span>
-                                        </button>
-                                    </div>
-
-                                    {targetData?.isDefault && (
-                                        <div className="bg-pink-500/10 border border-pink-500/20 rounded-xl p-4 mb-4 flex items-start gap-3">
-                                            <Target className="w-5 h-5 text-pink-400 shrink-0 mt-0.5" />
-                                            <div className="flex-1">
-                                                <h4 className="text-sm font-semibold text-pink-400 mb-1">Set Your Nutrition Goals</h4>
-                                                <p className="text-xs text-pink-200/70 mb-3">Define your calorie and macro targets to unlock personalized insights and detailed adherence scoring.</p>
-                                                <button
-                                                    onClick={() => setIsGoalsOpen(true)}
-                                                    className="bg-pink-500 text-white text-xs font-semibold px-4 py-2 rounded-lg w-full shadow-lg shadow-pink-500/20 hover:bg-pink-600 transition-colors"
-                                                >
-                                                    Setup Goals
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-
-
-
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {/* AI Food Scanner - Primary */}
-                                        <button
-                                            onClick={() => setIsFoodScannerOpen(true)}
-                                            className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 hover:from-amber-500/20 hover:to-orange-500/20 border border-amber-500/20 transition-all rounded-lg p-3 flex flex-col items-center justify-center gap-2 col-span-2"
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                                                <Sparkles className="w-5 h-5 text-amber-400" />
-                                            </div>
-                                            <span className="text-sm font-medium text-white">📸 AI Food Scan</span>
-                                            <span className="text-[11px] text-gray-400">Snap a photo for instant analysis</span>
-                                        </button>
-
-                                        <button
-                                            onClick={async () => {
-                                                if (!IS_NATIVE) {
-                                                    try {
-                                                        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                                                        setCameraStream(stream);
-                                                    } catch (err) {
-                                                        alert('Camera permission is required to scan barcodes. Please allow camera access in your browser settings.');
-                                                        return;
-                                                    }
-                                                }
-                                                setIsScannerOpen(true);
-                                            }}
-                                            className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2"
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                                <Camera className="w-5 h-5 text-blue-400" />
-                                            </div>
-                                            <span className="text-sm font-medium text-white">Scan Barcode</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setIsManualEntryOpen(true)}
-                                            className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2"
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                <Search className="w-5 h-5 text-green-400" />
-                                            </div>
-                                            <span className="text-sm font-medium text-white">Search / Manual</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setIsMealLibraryOpen(true)}
-                                            className="bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-lg p-3 flex flex-col items-center justify-center gap-2 col-span-2"
-                                        >
-                                            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-                                                <BookOpen className="w-5 h-5 text-purple-400" />
-                                            </div>
-                                            <span className="text-sm font-medium text-white">📚 Meal Library</span>
-                                        </button>
-                                    </div>
-
-                                    {dailyData?.foodLogs && dailyData.foodLogs.length > 0 ? (
-                                        <div className="mt-6">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Log Preview</h4>
-                                                <button
-                                                    onClick={() => setIsHistoryOpen(true)}
-                                                    className="text-xs font-medium text-pink-400 hover:text-pink-300 flex items-center gap-1"
-                                                >
-                                                    View All History <ChevronRight className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                            <div className="space-y-2 cursor-pointer" onClick={() => setIsHistoryOpen(true)}>
-                                                {dailyData.foodLogs.slice(0, 3).map((log: any) => (
-                                                    <div key={log.id} className="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                                                        <div>
-                                                            <p className="text-sm font-medium text-white line-clamp-1">{log.foodItem?.name || log.mealType || 'Unknown Food'}</p>
-                                                            <p className="text-xs text-gray-400">{log.quantity}x {log.mealType || 'SNACK'}</p>
-                                                        </div>
-                                                        <div className="text-right whitespace-nowrap">
-                                                            <p className="text-sm font-bold text-pink-400">{Math.round(log.calories)} kcal</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {dailyData.foodLogs.length > 3 && (
-                                                    <div className="text-center py-2 text-xs text-gray-400">
-                                                        + {dailyData.foodLogs.length - 3} more items today
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="mt-6 text-center py-4 border border-dashed border-white/10 rounded-lg">
-                                            <p className="text-sm text-gray-400 mb-2">No food logged yet today</p>
-                                            <button
-                                                onClick={() => setIsHistoryOpen(true)}
-                                                className="text-xs font-medium text-pink-400 hover:text-pink-300 flex items-center gap-1 mx-auto"
-                                            >
-                                                View History <ChevronRight className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div> {/* End Middle Column */}
-
-                            {/* Right Column: Supplements */}
-                            <div className="flex flex-col gap-6 md:col-span-1 lg:col-span-4">
-                                {/* Supplements List */}
-                                <div className="glass-card p-4 rounded-xl border border-glass-border h-full flex flex-col">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="font-semibold text-white flex items-center gap-2">
-                                            <Battery className="w-4 h-4 text-purple-400" /> Daily Supplements
-                                        </h3>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setStackToEdit(null);
-                                                    setIsAddStackModalOpen(true);
-                                                }}
-                                                className="bg-white/5 hover:bg-white/10 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-white/10 transition-colors"
-                                            >
-                                                <Plus className="w-3.5 h-3.5" /> Stack
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setSupplementToEdit(null);
-                                                    setIsAddModalOpen(true);
-                                                }}
-                                                className="bg-white/10 hover:bg-white/15 text-white flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                                            >
-                                                <Plus className="w-3.5 h-3.5" /> Supp
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {isSupplementsLoading || isStacksLoading ? (
-                                        <p className="text-xs text-gray-500">Loading supplements...</p>
-                                    ) : supplements?.length === 0 && stacks?.length === 0 ? (
-                                        <div className="flex gap-3 mt-2">
-                                            <button
-                                                onClick={() => {
-                                                    setSupplementToEdit(null);
-                                                    setIsAddModalOpen(true);
-                                                }}
-                                                className="flex-1 text-center py-6 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-colors group flex flex-col items-center justify-center gap-2"
-                                            >
-                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                    <Plus className="w-5 h-5 text-gray-400" />
-                                                </div>
-                                                <p className="text-sm text-gray-400 tracking-wide font-medium group-hover:text-white transition-colors">Add Supplement</p>
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setStackToEdit(null);
-                                                    setIsAddStackModalOpen(true);
-                                                }}
-                                                className="flex-1 text-center py-6 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg transition-colors group flex flex-col items-center justify-center gap-2"
-                                            >
-                                                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform border border-blue-500/20">
-                                                    <Plus className="w-5 h-5 text-blue-400" />
-                                                </div>
-                                                <p className="text-sm text-gray-400 tracking-wide font-medium group-hover:text-blue-400 transition-colors">Create Stack</p>
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-4">
-                                            {/* Render Stacks First */}
-                                            {stacks?.map(renderStack)}
-
-                                            {/* Render Standalone Supplements grouped by Time */}
-                                            {morningStandalone.length > 0 && (
-                                                <div>
-                                                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">Morning Standalones</h4>
-                                                    {morningStandalone.map(renderSupplementItem)}
-                                                </div>
-                                            )}
-                                            {noonStandalone.length > 0 && (
-                                                <div>
-                                                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-4 px-1">Noon Standalones</h4>
-                                                    {noonStandalone.map(renderSupplementItem)}
-                                                </div>
-                                            )}
-                                            {eveningStandalone.length > 0 && (
-                                                <div>
-                                                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 mt-4 px-1">Evening Standalones</h4>
-                                                    {eveningStandalone.map(renderSupplementItem)}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </div> {/* End Right Column */}
-                        </div> {/* End Grid */}
-                    </div> {/* End Container */}
+                        </div>
+                    </div>
 
                     <AddSupplementModal
                         isOpen={isAddModalOpen}

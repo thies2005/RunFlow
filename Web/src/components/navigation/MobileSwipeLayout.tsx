@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter, usePathname } from 'next/navigation';
 import { MobileBottomNav } from './MobileBottomNav';
 import { Home, Calendar, BarChart3, Bot, Heart } from 'lucide-react';
 import StravaPoweredFooter from '@/components/StravaPoweredFooter';
@@ -18,8 +17,6 @@ interface MobileSwipeLayoutProps {
 const _BASE_PATHS = ['/', '/plan', '/analytics'];
 
 export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, showHealth = false, onChatTabClick }: MobileSwipeLayoutProps) {
-    const router = useRouter();
-    const pathname = usePathname();
 
     const tabs = useMemo(() => [
         { icon: Home, label: 'Home', path: '/' },
@@ -36,14 +33,18 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, s
         return _index >= 0 ? _index : 0;
     }, [paths]);
 
-    const [activeIndex, setActiveIndex] = useState(() => getIndexFromPath(pathname));
+    const [activeIndex, setActiveIndex] = useState(() => getIndexFromPath(typeof window !== 'undefined' ? window.location.pathname : '/'));
 
+    // Listen for browser navigation (like swipe-to-go-back) to update tabs natively
     useEffect(() => {
-        const newIndex = getIndexFromPath(pathname);
-        if (newIndex !== activeIndex) {
+        const handlePopState = () => {
+            const newIndex = getIndexFromPath(window.location.pathname);
             setActiveIndex(newIndex);
-        }
-    }, [pathname, activeIndex, showAiChat, showHealth, getIndexFromPath]); // Re-run if config changes
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [getIndexFromPath]);
 
     // Simplified navigation - no swiping, no sliding
     const handleTabChange = useCallback((index: number) => {
@@ -51,7 +52,7 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, s
         const isChatTab = paths[index] === '/chat';
         if (index >= 0 && index < paths.length && (index !== activeIndex || isChatTab)) {
             setActiveIndex(index);
-            router.replace(paths[index], { scroll: false });
+            window.history.replaceState(null, '', paths[index]);
             onPageChange?.(index);
 
             if (isChatTab && onChatTabClick) {
@@ -69,9 +70,10 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, s
                 }, 100);
             }
         }
-    }, [activeIndex, router, onPageChange, paths, onChatTabClick]);
+    }, [activeIndex, onPageChange, paths, onChatTabClick]);
 
-    const isChat = pathname === '/chat';
+    // Derive from activeIndex, not pathname, since we use replaceState
+    const isChat = paths[activeIndex] === '/chat';
 
     return (
         <div

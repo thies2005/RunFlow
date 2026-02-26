@@ -135,7 +135,12 @@ export function DashboardView({
                             />
                         </div>
                         <div className="lg:col-span-1">
-                            {activeGoal ? (
+                            {isLoading ? (
+                                <div className="h-full flex flex-col items-center justify-center bg-surface/50 border border-glass-border rounded-xl p-8 min-h-[300px]">
+                                    <div className="w-8 h-8 rounded-full border-4 border-accent-orange border-t-transparent animate-spin mb-4"></div>
+                                    <p className="text-gray-400 text-sm animate-pulse">Loading plan...</p>
+                                </div>
+                            ) : activeGoal ? (
                                 <RaceCountdown
                                     goal={activeGoal}
                                     className="h-full"

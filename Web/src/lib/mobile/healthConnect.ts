@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Health, HealthDataType, WorkoutType } from '@capgo/capacitor-health';
+import { logger } from '@/lib/logging/logger';
 
 export const isMobile = () => Capacitor.isNativePlatform();
 
@@ -77,7 +78,7 @@ export async function isHealthConnectAvailable(): Promise<boolean> {
         const result = await Health.isAvailable();
         return result.available;
     } catch (error) {
-        console.error('Health Connect availability check failed:', error);
+        logger.error('Health Connect availability check failed', { error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 }
@@ -105,7 +106,7 @@ export async function requestHealthPermissions(): Promise<boolean> {
         // The actual permission check happens when we try to query workouts
         return true;
     } catch (error) {
-        console.error('Health Connect Permission Error:', error);
+        logger.error('Health Connect Permission Error', { error: error instanceof Error ? error.message : String(error) });
         return false;
     }
 }
@@ -132,7 +133,7 @@ async function getAverageHeartRate(startDate: Date, endDate: Date): Promise<numb
 
         return averageHr;
     } catch (error) {
-        console.error('Failed to get heart rate data:', error);
+        logger.error('Failed to get heart rate data', { error: error instanceof Error ? error.message : String(error) });
         return undefined;
     }
 }
@@ -200,7 +201,7 @@ async function getHeartRateZones(
             z7: Math.round(zones.z7),
         };
     } catch (error) {
-        console.error('Failed to calculate HR zones:', error);
+        logger.error('Failed to calculate HR zones', { error: error instanceof Error ? error.message : String(error) });
         return undefined;
     }
 }
@@ -224,7 +225,7 @@ export async function fetchHealthActivities(days = 30, settings?: ZoneSettings):
         });
 
         if (!result.workouts || result.workouts.length === 0) {
-            console.log('No workouts found in Health Connect');
+            logger.info('No workouts found in Health Connect');
             return [];
         }
 
@@ -263,7 +264,7 @@ export async function fetchHealthActivities(days = 30, settings?: ZoneSettings):
 
         return activities;
     } catch (error) {
-        console.error('Failed to fetch Health Connect activities:', error);
+        logger.error('Failed to fetch Health Connect activities', { error: error instanceof Error ? error.message : String(error) });
         return [];
     }
 }
@@ -285,7 +286,7 @@ export async function syncHealthData(
     let errors = 0;
     let skipped = 0;
 
-    console.log(`Found ${activities.length} activities in Health Connect`);
+    logger.info(`Found ${activities.length} activities in Health Connect`);
 
     for (const activity of activities) {
         try {
@@ -312,16 +313,16 @@ export async function syncHealthData(
                 }
             } else {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('Failed to sync activity:', activity.name, errorData);
+                logger.error('Failed to sync activity', { activityName: activity.name, error: errorData });
                 errors++;
             }
         } catch (error) {
-            console.error('Error syncing activity:', activity.name, error);
+            logger.error('Error syncing activity', { activityName: activity.name, error: error instanceof Error ? error.message : String(error) });
             errors++;
         }
     }
 
-    console.log(`Health Connect sync complete: ${synced} new, ${skipped} skipped, ${errors} errors`);
+    logger.info(`Health Connect sync complete: ${synced} new, ${skipped} skipped, ${errors} errors`);
     return { synced, errors, skipped };
 }
 
@@ -409,7 +410,7 @@ export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
             }),
         });
     } catch (error) {
-        console.error('Failed to sync daily health:', error);
+        logger.error('Failed to sync daily health', { error: error instanceof Error ? error.message : String(error) });
     }
 }
 
@@ -444,7 +445,7 @@ export async function writeManualWeight(weightKg: number, date: Date = new Date(
         // Trigger a sync so the backend gets the new weight
         await syncDailyHealth(date);
     } catch (error) {
-        console.error('Failed to write weight to Health Connect:', error);
+        logger.error('Failed to write weight to Health Connect', { error: error instanceof Error ? error.message : String(error) });
         throw error;
     }
 }
@@ -520,7 +521,7 @@ export async function syncHistoricalHealthData(
                 });
             }
         } catch (error) {
-            console.error('Failed to read steps from Health Connect:', error);
+            logger.error('Failed to read steps from Health Connect', { error: error instanceof Error ? error.message : String(error) });
         }
 
         // Query for Weight - get the most recent entry per day
@@ -554,7 +555,7 @@ export async function syncHistoricalHealthData(
                 });
             }
         } catch (error) {
-            console.error('Failed to read weight from Health Connect:', error);
+            logger.error('Failed to read weight from Health Connect', { error: error instanceof Error ? error.message : String(error) });
         }
 
         // Combine data into unified format
@@ -606,7 +607,7 @@ export async function syncHistoricalHealthData(
             stravaFallbackUsed: result.stravaFallbackUsed || false
         };
     } catch (error) {
-        console.error('Failed to sync historical health data:', error);
+        logger.error('Failed to sync historical health data', { error: error instanceof Error ? error.message : String(error) });
         return {
             synced: 0,
             stravaFallbackUsed: false,

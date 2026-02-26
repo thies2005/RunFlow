@@ -2,15 +2,53 @@
 import { AnalyticsService } from '../analytics';
 
 // Mock types
-const createActivity = (date: string, trimp: number) => ({
+const createActivity = (date: string, trimp: number, movingTime: number = 3600) => ({
     startDate: new Date(date),
-    movingTime: 3600,
+    movingTime: movingTime,
     trimp: trimp,
     type: 'RUN' as const,
     distance: 10000
 });
 
 describe('AnalyticsService', () => {
+    describe('calculateEasyTrimp', () => {
+        it('should sum moving time (in minutes) for the last 7 days', () => {
+            const referenceDate = new Date('2024-01-08T12:00:00Z');
+            // Window starts: 2024-01-01T12:00:00Z
+
+            const activities = [
+                // Inside window (Jan 1st is exactly 7 days ago)
+                createActivity('2024-01-01T13:00:00Z', 0, 3600), // 60 mins
+                createActivity('2024-01-05T10:00:00Z', 0, 1800), // 30 mins
+                createActivity('2024-01-08T09:00:00Z', 0, 1800), // 30 mins
+
+                // Outside window
+                createActivity('2024-01-01T11:00:00Z', 0, 3600), // Before window start time
+                createActivity('2023-12-31T23:00:00Z', 0, 3600), // Day before
+            ];
+
+            const result = AnalyticsService.calculateEasyTrimp(activities, referenceDate);
+
+            // Expected: 60 + 30 + 30 = 120
+            expect(result).toBe(120);
+        });
+
+        it('should return 0 for empty activities', () => {
+            const result = AnalyticsService.calculateEasyTrimp([], new Date());
+            expect(result).toBe(0);
+        });
+
+        it('should round the result', () => {
+            const activities = [
+                createActivity('2024-01-01', 0, 90), // 1.5 minutes
+            ];
+
+            // 1.5 rounds to 2
+            const result = AnalyticsService.calculateEasyTrimp(activities, new Date('2024-01-02'));
+            expect(result).toBe(2);
+        });
+    });
+
     describe('calculateHistory', () => {
         it('should calculate history and filter by date range', () => {
             const activities = [

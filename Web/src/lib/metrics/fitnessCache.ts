@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { Activity } from '@prisma/client';
 import { calculateTrimpFromZones } from './trimp';
 import { DAY_MS } from '@/lib/constants';
+import { logger } from '@/lib/logging/logger';
 import {
     calculateRunningTss,
     getActivityContribution
@@ -208,10 +209,15 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             ]);
         }
 
-        console.log(`[FitnessCache] Updated ${updates.length} days for user ${userId}. Latest CTL: ${currentCtl.toFixed(1)}, ATL: ${currentAtl.toFixed(1)}`);
+        logger.info(`[FitnessCache] Updated ${updates.length} days`, {
+            userId,
+            count: updates.length,
+            latestCtl: parseFloat(currentCtl.toFixed(1)),
+            latestAtl: parseFloat(currentAtl.toFixed(1))
+        });
     } catch (error) {
         // Log error but don't throw - fitness cache updates are non-critical
-        console.error('[FitnessCache] Error updating fitness cache:', error);
+        logger.error('[FitnessCache] Error updating fitness cache', { error });
     }
 }
 
@@ -228,7 +234,7 @@ export async function getCachedFitnessHistory(userId: string, startDate?: Date) 
             orderBy: { date: 'asc' }
         });
     } catch (error) {
-        console.error('[FitnessCache] Error retrieving cached fitness history:', error);
+        logger.error('[FitnessCache] Error retrieving cached fitness history', { error });
         return [];
     }
 }
@@ -314,14 +320,14 @@ export async function ensureFitnessCacheUpToDate(userId: string) {
                 data: inputs,
                 skipDuplicates: true
             });
-            console.log(`[FitnessCache] Auto-filled ${inputs.length} gap days for user ${userId}`);
+            logger.info(`[FitnessCache] Auto-filled ${inputs.length} gap days`, { userId, count: inputs.length });
         }
 
         // Return the values for today (last item in inputs, or calculated)
         return inputs.length > 0 ? inputs[inputs.length - 1] : latest;
 
     } catch (error) {
-        console.error('[FitnessCache] Error ensuring fitness cache update:', error);
+        logger.error('[FitnessCache] Error ensuring fitness cache update', { error });
         // Fallback to whatever we can find
         return prisma.dailyFitness.findFirst({
             where: { userId },

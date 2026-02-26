@@ -1,12 +1,9 @@
-import { exec } from 'child_process'
-import { promisify } from 'util'
+import { spawn } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
 import { DAY_MS, RETENTION } from '@/lib/constants'
 import { recordBackupSuccess, recordBackupFailure, setSchedulerRunning } from './status'
 import { logger } from '@/lib/logging/logger'
-
-const execAsync = promisify(exec)
 
 const BACKUP_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), 'backups')
 
@@ -75,6 +72,33 @@ function parseDatabaseUrl(): { host: string; port: string; user: string; pass: s
   }
 }
 
+function spawnAsync(command: string, args: string[], env: NodeJS.ProcessEnv): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Ignore stdin and stdout to prevent buffering issues, pipe stderr for error reporting
+    const child = spawn(command, args, { env, stdio: ['ignore', 'ignore', 'pipe'] })
+
+    let stderr = ''
+
+    if (child.stderr) {
+      child.stderr.on('data', (data) => {
+        stderr += data.toString()
+      })
+    }
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve()
+      } else {
+        reject(new Error(`Command failed with code ${code}: ${stderr}`))
+      }
+    })
+
+    child.on('error', (err) => {
+      reject(err)
+    })
+  })
+}
+
 export async function createBackup(name?: string): Promise<BackupMetadata> {
   const startTime = Date.now()
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -99,14 +123,14 @@ export async function createBackup(name?: string): Promise<BackupMetadata> {
   logger.info('[Backup] Creating backup', { backupName, backupPath, db: safeDbName })
 
   try {
-    const command = `pg_dump -h "${safeHost}" -p "${safePort}" -U "${safeUser}" -d "${safeDbName}" -F p -f "${backupPath}"`
-
-    await execAsync(command, {
-      env: {
+    await spawnAsync(
+      'pg_dump',
+      ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '-F', 'p', '-f', backupPath],
+      {
         ...process.env,
         PGPASSWORD: pass
       }
-    })
+    )
 
     const stats = fs.statSync(backupPath)
     const duration = Date.now() - startTime
@@ -158,14 +182,14 @@ export async function restoreBackup(backupPath: string): Promise<void> {
   logger.info('[Backup] Restoring backup', { backupPath: fullPath, db: safeDbName })
 
   try {
-    const command = `psql -h "${safeHost}" -p "${safePort}" -U "${safeUser}" -d "${safeDbName}" -f "${fullPath}"`
-
-    await execAsync(command, {
-      env: {
+    await spawnAsync(
+      'psql',
+      ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '-f', fullPath],
+      {
         ...process.env,
         PGPASSWORD: pass
       }
-    })
+    )
 
     const duration = Date.now() - startTime
     logger.info('[Backup] Backup restored successfully', { backupPath: fullPath, duration })

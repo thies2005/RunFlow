@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, Search, Loader2, Save, ArrowLeft } from 'lucide-react';
+import { X, Search, Loader2, Save, ArrowLeft, Bookmark } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/Input';
@@ -50,6 +50,9 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
     const [selectedFood, setSelectedFood] = useState<any | null>(null);
     const [quantity, setQuantity] = useState('1');
     const [mealType, setMealType] = useState('SNACK');
+
+    const [isSaving, setIsSaving] = useState(false);
+    const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
     // When opened with initialFood (e.g. from barcode scan), jump straight to log view
     useEffect(() => {
@@ -99,6 +102,8 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
         setSelectedFood(null);
         setQuantity('1');
         setMealType('SNACK');
+        setIsSaving(false);
+        setSavedMessage(null);
     };
 
     const handleClose = () => {
@@ -151,6 +156,45 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
             fats: parseFloat(customFats) || 0,
             servingSize: customServingSize,
         });
+    };
+
+    const handleSaveToLibrary = async () => {
+        if (!userId || !selectedFood) return;
+        setIsSaving(true);
+        setSavedMessage(null);
+
+        const mult = parseFloat(quantity) || 1;
+
+        try {
+            const res = await fetch('/api/health/nutrition/meals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId,
+                    name: selectedFood.name,
+                    items: [{
+                        name: selectedFood.name,
+                        estimatedGrams: 100 * mult,
+                        calories: Math.round(selectedFood.calories * mult),
+                        protein: Math.round(selectedFood.protein * mult * 10) / 10,
+                        carbs: Math.round(selectedFood.carbs * mult * 10) / 10,
+                        fats: Math.round(selectedFood.fats * mult * 10) / 10,
+                    }],
+                    totalCalories: Math.round(selectedFood.calories * mult),
+                    totalProtein: Math.round(selectedFood.protein * mult * 10) / 10,
+                    totalCarbs: Math.round(selectedFood.carbs * mult * 10) / 10,
+                    totalFats: Math.round(selectedFood.fats * mult * 10) / 10,
+                }),
+            });
+
+            if (!res.ok) throw new Error('Failed to save');
+            setSavedMessage('Saved to library!');
+            queryClient.invalidateQueries({ queryKey: ['saved-meals'] });
+        } catch {
+            alert('Failed to save to library');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const logMutation = useMutation({
@@ -350,13 +394,33 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                             </div>
                         </div>
 
-                        <div className="mt-auto pt-6">
+                        <div className="mt-auto pt-6 flex gap-2">
+                            <button
+                                onClick={handleSaveToLibrary}
+                                disabled={isSaving || !!savedMessage || !quantity}
+                                className="flex-shrink-0 bg-white/5 hover:bg-white/10 border border-white/10 transition-colors rounded-xl px-4 py-3 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                            >
+                                {isSaving ? (
+                                    <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                                ) : savedMessage ? (
+                                    <span className="text-xs text-green-400 font-medium">✓ Saved</span>
+                                ) : (
+                                    <>
+                                        <Bookmark className="w-4 h-4 text-amber-400" />
+                                        <span className="text-xs text-gray-300 font-medium">Save</span>
+                                    </>
+                                )}
+                            </button>
                             <button
                                 onClick={() => logMutation.mutate()}
                                 disabled={logMutation.isPending || !quantity}
-                                className="w-full py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                                className="flex-1 py-3 bg-white text-black font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 disabled:opacity-50 transition-colors"
                             >
-                                {logMutation.isPending ? 'Logging...' : <><Save className="w-4 h-4" /> Log {quantity} x {Math.round(selectedFood.calories * (parseFloat(quantity) || 1))} kcal</>}
+                                {logMutation.isPending ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> Logging...</>
+                                ) : (
+                                    <><Save className="w-4 h-4" /> Log {quantity} x {Math.round(selectedFood.calories * (parseFloat(quantity) || 1))} kcal</>
+                                )}
                             </button>
                         </div>
                     </div>

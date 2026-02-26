@@ -37,12 +37,19 @@ jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
 
+jest.mock('@/lib/logging/logger', () => ({
+    logger: {
+        error: jest.fn(),
+    },
+}));
+
 import { prisma } from '@/lib/db';
 import { hashPassword, validateEmail, validatePassword } from '@/lib/auth/auth-email';
 import { createAuthCode } from '@/lib/auth/tokens';
 import { sendWelcomeEmail } from '@/lib/email';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
+import { logger } from '@/lib/logging/logger';
 
 describe('POST /api/auth/register', () => {
     beforeEach(() => {
@@ -214,5 +221,33 @@ describe('POST /api/auth/register', () => {
         const response = await POST(mockRequest);
 
         expect(handleError).toHaveBeenCalled();
+    });
+
+    it('should log error when welcome email fails but still succeed', async () => {
+        const emailError = new Error('Email service down');
+        (sendWelcomeEmail as jest.Mock).mockRejectedValue(emailError);
+
+        const mockRequest = new NextRequest('http://localhost:3000/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: 'test@example.com',
+                password: 'ValidPassword123!',
+                name: 'Test User',
+            }),
+        });
+
+        const response = await POST(mockRequest);
+        const data = await response.json();
+
+        // Request should still succeed
+        expect(response.status).toBe(201);
+        expect(data).toHaveProperty('success', true);
+
+        // Error should be logged
+        expect(logger.error).toHaveBeenCalledWith(
+            '[Register] Failed to send welcome email:',
+            emailError
+        );
     });
 });

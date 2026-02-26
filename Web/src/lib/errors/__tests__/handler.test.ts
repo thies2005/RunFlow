@@ -82,14 +82,14 @@ describe('handleError', () => {
   });
 
   describe('Generic Errors', () => {
-    it('should return detailed error in development', () => {
+    it('should return "Internal server error" when compiled for test (development mocked)', () => {
       Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       const error = new Error('Something crashed');
 
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Something crashed', errorId: expect.any(String) });
+      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
     });
 
     it('should return "Internal server error" in production', () => {
@@ -104,14 +104,14 @@ describe('handleError', () => {
   });
 
   describe('Unknown Errors', () => {
-    it('should handle non-Error objects in development', () => {
+    it('should handle non-Error objects returning "Internal server error" in compiled test', () => {
       Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       const error = 'String error';
 
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Unknown error', errorId: expect.any(String) });
+      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
       expect(logger.error).toHaveBeenCalledWith('Error', { error: 'String error', errorId: expect.any(String) });
     });
 

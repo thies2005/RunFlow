@@ -21,11 +21,17 @@ export default function PrivacyPolicy() {
                     the General Data Protection Regulation (GDPR) and other applicable European data protection laws.
                 </p>
 
-                <h2>1. Data Controller</h2>
+                <h2>1. Data Controller and Data Protection Officer</h2>
                 <p>
                     The entity responsible for the processing of your personal data (Data Controller) is:<br />
-                    <strong>RunFlow</strong><br />
+                    <strong>Thies Schuelken</strong><br />
+                    Str. Viilor 40<br />
+                    400347 Cluj-Napoca<br />
+                    Romania<br />
                     Email: <a href="mailto:privacy@schuelken.uk" className="text-orange-500 hover:underline">privacy@schuelken.uk</a>
+                </p>
+                <p>
+                    Due to the scale and nature of our data processing, we are not legally required to appoint a formal Data Protection Officer (DPO) under Art. 37 GDPR. Privacy inquiries can be directed to the controller at the email above.
                 </p>
 
                 <h2>2. What Data We Collect</h2>
@@ -49,7 +55,7 @@ export default function PrivacyPolicy() {
                 <p>
                     Because RunFlow offers advanced fitness and training analytics, we process sensitive health data
                     (heart rate, weight, biometrics). <strong>This processing is strictly based on your explicit consent</strong>,
-                    which you provide during registration. You can withdraw this consent at any time by deleting your account.
+                    which you provide during registration. You can withdraw this consent at any time in your profile settings without deleting your account.
                 </p>
 
                 <h3>3.3 Legitimate Interests (Art. 6(1)(f) GDPR)</h3>
@@ -93,22 +99,39 @@ export default function PrivacyPolicy() {
                                 <td className="p-3">Barcode queries (anonymous)</td>
                                 <td className="p-3">EU</td>
                             </tr>
-                            <tr>
+                            <tr className="border-b border-gray-800">
                                 <td className="p-3"><strong>SMTP Providers</strong></td>
                                 <td className="p-3">Transactional Emails</td>
                                 <td className="p-3">Email address, names</td>
+                                <td className="p-3">Varies</td>
+                            </tr>
+                            <tr className="border-b border-gray-800">
+                                <td className="p-3"><strong>Self-Hosted Virtual Private Server</strong></td>
+                                <td className="p-3">Database & Application Hosting</td>
+                                <td className="p-3">All application data</td>
+                                <td className="p-3">Varies</td>
+                            </tr>
+                            <tr>
+                                <td className="p-3"><strong>Web Push Services (Apple/Google)</strong></td>
+                                <td className="p-3">Push Notifications</td>
+                                <td className="p-3">Platform push tokens</td>
                                 <td className="p-3">Varies</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <h2>5. Internal Administrative Access</h2>
+                <h2>5. Automated Decision-Making and Profiling</h2>
+                <p>
+                    We use algorithms (including AI models) to analyze your uploaded health and activity data to generate training insights (e.g., VDOT estimations, marathon shape, or personalized coaching). Under GDPR Art. 22, this constitutes &quot;profiling.&quot; However, these automated insights do not produce legal effects concerning you or similarly significantly affect you. They are purely advisory fitness metrics.
+                </p>
+
+                <h2>6. Internal Administrative Access</h2>
                 <p>
                     For maintenance, troubleshooting, and support purposes, designated administrative staff of RunFlow may have access to your account data. This access is strictly logged, limited to essential personnel, and governed by confidentiality agreements.
                 </p>
 
-                <h2>6. Data Retention Period</h2>
+                <h2>7. Data Retention Period</h2>
                 <p>We store your data only for as long as necessary for the respective purpose:</p>
                 <ul>
                     <li><strong>Account & Activity Data:</strong> Kept until you explicitly delete your account.</li>
@@ -117,18 +140,20 @@ export default function PrivacyPolicy() {
                     <li><strong>Error Logs (Sentry):</strong> Automatically rotated and deleted after 30-90 days.</li>
                 </ul>
 
-                <h2>7. Your GDPR Rights</h2>
+                <h2>8. Your GDPR Rights</h2>
                 <p>Under the GDPR, you have comprehensive rights regarding your personal data:</p>
                 <ul>
                     <li><strong>Right to Access (Art. 15):</strong> You can export and download your complete dataset as JSON from the profile settings.</li>
                     <li><strong>Right to Erasure (Art. 17):</strong> The &quot;Delete Account&quot; function permanently removes your personal and health data from our active systems.</li>
                     <li><strong>Right to Rectification (Art. 16):</strong> You can update inaccurate profile information within the app.</li>
-                    <li><strong>Right to Withdraw Consent (Art. 7):</strong> Since the core service relies on health data analytics, withdrawing consent requires deleting the account.</li>
+                    <li><strong>Right to Restrict Processing (Art. 18):</strong> You have the right to request the restriction of processing of your personal data under certain conditions.</li>
+                    <li><strong>Right to Object (Art. 21):</strong> You have the right to object to the processing of your personal data under certain conditions.</li>
+                    <li><strong>Right to Withdraw Consent (Art. 7):</strong> You can withdraw your explicit consent for health data processing at any time in your profile settings without deleting your account. Doing so will permanently delete your health data but allow you to continue using the application in a restricted mode.</li>
                     <li><strong>Right to Data Portability (Art. 20):</strong> We provide machine-readable exports of your activities and health logs.</li>
                     <li><strong>Right to Lodge a Complaint (Art. 77):</strong> You have the right to file a complaint with the data protection supervisory authority in your country of residence or in Germany.</li>
                 </ul>
 
-                <h2>8. Cookies and Local Storage</h2>
+                <h2>9. Cookies and Local Storage</h2>
                 <p>
                     RunFlow uses <strong>strictly necessary</strong> cookies to maintain your login session and protect against Cross-Site Request Forgery (CSRF).
                     Because these are essential for the app to function securely, they do not require prior opt-in consent. However, we inform you about them via our cookie banner.
@@ -138,12 +163,12 @@ export default function PrivacyPolicy() {
                     <li><code>csrf_token</code>: Prevents malicious cross-site attacks.</li>
                 </ul>
 
-                <h2>9. Data Security</h2>
+                <h2>10. Data Security</h2>
                 <p>
                     We protect your data through modern technical and organizational measures. All traffic is encrypted via HTTPS/TLS. API keys and passwords are one-way hashed (bcrypt/SHA-256) or symmetrically encrypted in the database.
                 </p>
 
-                <h2>10. Contact for Privacy Matters</h2>
+                <h2>11. Contact for Privacy Matters</h2>
                 <p>
                     For data export requests, deletion assistance, or privacy-related questions, please email us directly at: <a href="mailto:privacy@schuelken.uk" className="text-orange-500 hover:underline">privacy@schuelken.uk</a>.
                 </p>

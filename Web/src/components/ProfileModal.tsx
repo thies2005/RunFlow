@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot, LinkIcon, Bell } from 'lucide-react';
+import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot, LinkIcon, Bell, ShieldCheck, ShieldOff } from 'lucide-react';
 import Link from 'next/link';
 import { signIn, signOut } from 'next-auth/react';
 
@@ -52,6 +52,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
     const [isRemindersOpen, setIsRemindersOpen] = useState(false);
     const [showReauthPrompt, setShowReauthPrompt] = useState(false);
+
+    // Consent Management
+    const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+    const [isWithdrawing, setIsWithdrawing] = useState(false);
 
     // Fetch existing settings
     const { data: settingsData } = useQuery({
@@ -691,6 +695,96 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* Privacy & Consent Section */}
+                    <div className="mb-4">
+                        <h3 className="text-purple-400 font-medium mb-3 text-xs uppercase tracking-wider flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4" />
+                            Privacy & Consent
+                        </h3>
+                        <div className="bg-white/5 border border-white/10 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                                    <span className="text-sm text-gray-300">Terms of Service</span>
+                                </div>
+                                <span className="text-[10px] text-green-400">Accepted</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                                    <span className="text-sm text-gray-300">Privacy Policy</span>
+                                </div>
+                                <span className="text-[10px] text-green-400">Accepted</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    {healthTrackingEnabled ? (
+                                        <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                                    ) : (
+                                        <ShieldOff className="w-3.5 h-3.5 text-gray-500" />
+                                    )}
+                                    <span className="text-sm text-gray-300">Health Data Processing</span>
+                                </div>
+                                <span className={`text-[10px] ${healthTrackingEnabled ? 'text-green-400' : 'text-gray-500'}`}>
+                                    {healthTrackingEnabled ? 'Granted' : 'Withdrawn'}
+                                </span>
+                            </div>
+                        </div>
+                        {healthTrackingEnabled && (
+                            <div className="mt-2">
+                                {!showWithdrawConfirm ? (
+                                    <button
+                                        onClick={() => setShowWithdrawConfirm(true)}
+                                        className="w-full py-2 border border-orange-500/30 text-orange-400 rounded-lg hover:bg-orange-500/10 transition-colors text-xs flex items-center justify-center gap-2"
+                                    >
+                                        <ShieldOff className="w-3.5 h-3.5" />
+                                        Withdraw Health Data Consent
+                                    </button>
+                                ) : (
+                                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 animate-fade-in">
+                                        <p className="text-orange-200 text-xs mb-3 leading-relaxed">
+                                            <strong>Warning:</strong> Withdrawing health data consent will permanently delete all your activities, fitness metrics, health logs, supplements, and nutrition data.
+                                            Your account will continue to work in restricted mode.
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setShowWithdrawConfirm(false)}
+                                                className="flex-1 py-2 bg-white/5 text-white text-xs rounded-md hover:bg-white/10 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    setIsWithdrawing(true);
+                                                    try {
+                                                        const res = await fetch('/api/user/consent', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ consentType: 'HEALTH_DATA', action: 'WITHDRAWN' }),
+                                                        });
+                                                        if (!res.ok) throw new Error('Failed to withdraw consent');
+                                                        setHealthTrackingEnabled(false);
+                                                        setShowWithdrawConfirm(false);
+                                                        setMessage('Health data consent withdrawn. Your health data has been deleted.');
+                                                        queryClient.invalidateQueries();
+                                                    } catch {
+                                                        setMessage('Failed to withdraw consent. Please try again.');
+                                                    } finally {
+                                                        setIsWithdrawing(false);
+                                                    }
+                                                }}
+                                                disabled={isWithdrawing}
+                                                className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded-md flex items-center justify-center gap-1 transition-colors font-medium"
+                                            >
+                                                {isWithdrawing ? 'Processing...' : 'Confirm Withdrawal'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div>

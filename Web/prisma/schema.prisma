@@ -95,6 +95,25 @@ model User {
   savedMeals          SavedMeal[]
   pushSubscriptions   PushSubscription[]
   reminderSettings    ReminderSettings?
+  consents            UserConsent[]
+}
+
+// ============================================
+// Consent Management Log
+// ============================================
+model UserConsent {
+  id            String   @id @default(cuid())
+  userId        String
+  consentType   String   // 'TERMS' | 'PRIVACY' | 'HEALTH_DATA'
+  action        String   // 'GRANTED' | 'WITHDRAWN'
+  policyVersion String?  // e.g., "2026-02-25"
+  ipAddress     String?  // Hashed for audit purposes
+  userAgent     String?  // Browser/device info
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consentType])
 }
 
 // ============================================

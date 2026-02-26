@@ -77,6 +77,19 @@ export default function RegisterPage() {
             if (loginResult?.error) {
                 setError('Account created, but login failed. Please try logging in.');
             } else {
+                // Log GDPR consents to the database for Art. 7(1) proof
+                try {
+                    const consentTypes = ['TERMS', 'PRIVACY', 'HEALTH_DATA'];
+                    await Promise.all(consentTypes.map(type =>
+                        fetch('/api/user/consent', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ consentType: type, action: 'GRANTED' }),
+                        })
+                    ));
+                } catch (consentErr) {
+                    console.error('Failed to log consent:', consentErr);
+                }
                 // Instead of redirecting immediately, show verification modal
                 setShowVerification(true);
             }

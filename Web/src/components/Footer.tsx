@@ -21,6 +21,10 @@ export const Footer: React.FC = () => {
                     <Link href="/terms" className="text-gray-500 hover:text-white text-xs transition-colors">
                         Terms
                     </Link>
+                    <span className="text-gray-700 text-xs">|</span>
+                    <Link href="/impressum" className="text-gray-500 hover:text-white text-xs transition-colors">
+                        Impressum
+                    </Link>
                 </div>
                 <p className="text-gray-500 text-xs flex items-center gap-1">RunFlow • Built with <Heart className="w-3 h-3 text-red-500" /> for runners</p>
                 <span className="text-gray-500 text-[10px] font-mono">v1.2.0</span>

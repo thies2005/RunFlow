@@ -5,6 +5,7 @@ import { Providers } from './providers';
 import DeepLinkHandler from '@/components/DeepLinkHandler';
 import AdaptiveLayout from './adaptive-layout';
 import CookieBanner from '@/components/CookieBanner';
+import { PendingConsentHandler } from '@/components/PendingConsentHandler';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -34,6 +35,7 @@ export default function RootLayout({
             <body className={inter.className}>
                 <Providers>
                     <AdaptiveLayout>{children}</AdaptiveLayout>
+                    <PendingConsentHandler />
                 </Providers>
                 <CookieBanner />
                 <DeepLinkHandler />

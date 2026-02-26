@@ -173,7 +173,15 @@ export default function LoginPage() {
 
                             <div className="flex justify-center">
                                 <ConnectWithStravaButton
-                                    onClick={() => signIn('strava', { callbackUrl: '/' })}
+                                    onClick={() => {
+                                        // Store pending consent in localStorage before OAuth redirect
+                                        localStorage.setItem('pendingConsent', JSON.stringify({
+                                            types: ['TERMS', 'PRIVACY', 'HEALTH_DATA'],
+                                            action: 'GRANTED',
+                                            timestamp: new Date().toISOString(),
+                                        }));
+                                        signIn('strava', { callbackUrl: '/' });
+                                    }}
                                     disabled={!stravaTermsAccepted || !stravaHealthAccepted}
                                 />
                             </div>

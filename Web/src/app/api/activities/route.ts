@@ -173,17 +173,17 @@ export async function POST(request: NextRequest) {
         const activityType = type || 'RUN';
 
         // === Duplicate Check ===
-        // Check if an activity with the same start date (within 1 minute) and type already exists
+        // Check if an activity with the same start date (within 5 minutes) and type already exists
         const activityTimestamp = parsedDate.getTime();
-        const oneMinute = MINUTE_MS;
+        const fiveMinutes = 5 * MINUTE_MS;
 
         const existingActivity = await prisma.activity.findFirst({
             where: {
                 userId: session.user.id,
                 type: activityType as ActivityType,
                 startDate: {
-                    gte: new Date(activityTimestamp - oneMinute),
-                    lte: new Date(activityTimestamp + oneMinute),
+                    gte: new Date(activityTimestamp - fiveMinutes),
+                    lte: new Date(activityTimestamp + fiveMinutes),
                 }
             }
         });

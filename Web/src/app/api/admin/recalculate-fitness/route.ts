@@ -83,6 +83,12 @@ export async function POST(request: NextRequest) {
                 if (startDate) {
                     console.log(`[Admin] Recalculating for user ${user.email} (Start: ${startDate.toISOString()})`);
 
+                    // 0. Clean up any past duplicate activities before recalculating
+                    const deletedCount = await cleanupDuplicateActivities(user.id);
+                    if (deletedCount > 0) {
+                        console.log(`[Admin] Cleaned up ${deletedCount} duplicate activities for user ${user.email}`);
+                    }
+
                     // We pass the earliest activity as a "modified activity".
                     // The updateFitnessCache logic will:
                     // 1. Look for baseline before this date (likely none).
@@ -117,5 +123,58 @@ export async function POST(request: NextRequest) {
             { error: 'Internal server error during recalculation: ' + error.message },
             { status: 500 }
         );
+    }
+}
+
+/**
+ * Helper to clean up past duplicate activities.
+ * Deletes any Health Connect/manual activity (stravaId < 0) that has a 
+ * corresponding Strava activity (stravaId > 0) within a 5-minute window.
+ */
+async function cleanupDuplicateActivities(userId: string): Promise<number> {
+    try {
+        const negativeActivities = await prisma.activity.findMany({
+            where: {
+                userId,
+                stravaId: { lt: BigInt(0) }
+            },
+            select: {
+                id: true,
+                type: true,
+                startDate: true
+            }
+        });
+
+        if (negativeActivities.length === 0) return 0;
+
+        let deletedCount = 0;
+        const fiveMinutes = 5 * 60 * 1000;
+
+        for (const negAct of negativeActivities) {
+            const timestamp = negAct.startDate.getTime();
+            const duplicate = await prisma.activity.findFirst({
+                where: {
+                    userId,
+                    type: negAct.type,
+                    stravaId: { gt: BigInt(0) },
+                    startDate: {
+                        gte: new Date(timestamp - fiveMinutes),
+                        lte: new Date(timestamp + fiveMinutes),
+                    }
+                }
+            });
+
+            if (duplicate) {
+                await prisma.activity.delete({
+                    where: { id: negAct.id }
+                });
+                deletedCount++;
+            }
+        }
+
+        return deletedCount;
+    } catch (err) {
+        console.error(`[Admin] Error cleaning up duplicates for user ${userId}:`, err);
+        return 0;
     }
 }

@@ -30,15 +30,45 @@ export async function saveActivitiesToDatabase(
     await prisma.$transaction(async (tx) => {
         for (const { activityId, data, isNew } of activities) {
             if (isNew) {
-                await tx.activity.create({
-                    data: {
+                // Deduplicate against manual/Health Connect activities (stravaId < 0)
+                const fiveMinutes = 5 * 60 * 1000;
+                const activityTimestamp = data.startDate.getTime();
+
+                const duplicate = await tx.activity.findFirst({
+                    where: {
                         userId,
-                        stravaId: safeBigInt(activityId),
-                        ...data,
+                        stravaId: { lt: BigInt(0) },
                         type: validateActivityType(data.type),
+                        startDate: {
+                            gte: new Date(activityTimestamp - fiveMinutes),
+                            lte: new Date(activityTimestamp + fiveMinutes),
+                        }
                     },
+                    select: { id: true }
                 });
-                created++;
+
+                if (duplicate) {
+                    await tx.activity.update({
+                        where: { id: duplicate.id },
+                        data: {
+                            stravaId: safeBigInt(activityId),
+                            ...data,
+                            type: validateActivityType(data.type),
+                            updatedAt: new Date()
+                        }
+                    });
+                    updated++;
+                } else {
+                    await tx.activity.create({
+                        data: {
+                            userId,
+                            stravaId: safeBigInt(activityId),
+                            ...data,
+                            type: validateActivityType(data.type),
+                        },
+                    });
+                    created++;
+                }
             } else {
                 const existing = await tx.activity.findFirst({
                     where: { stravaId: safeBigInt(activityId) },
@@ -105,15 +135,45 @@ export async function upsertActivity(
         });
         return { created: false };
     } else {
-        await prisma.activity.create({
-            data: {
+        // Deduplicate against manual/Health Connect activities (stravaId < 0)
+        const fiveMinutes = 5 * 60 * 1000;
+        const activityTimestamp = data.startDate.getTime();
+
+        const duplicate = await prisma.activity.findFirst({
+            where: {
                 userId,
-                stravaId: safeBigInt(activityId),
-                ...data,
+                stravaId: { lt: BigInt(0) },
                 type: validateActivityType(data.type),
-            }
+                startDate: {
+                    gte: new Date(activityTimestamp - fiveMinutes),
+                    lte: new Date(activityTimestamp + fiveMinutes),
+                }
+            },
+            select: { id: true }
         });
-        return { created: true };
+
+        if (duplicate) {
+            await prisma.activity.update({
+                where: { id: duplicate.id },
+                data: {
+                    stravaId: safeBigInt(activityId),
+                    ...data,
+                    type: validateActivityType(data.type),
+                    updatedAt: new Date()
+                }
+            });
+            return { created: false };
+        } else {
+            await prisma.activity.create({
+                data: {
+                    userId,
+                    stravaId: safeBigInt(activityId),
+                    ...data,
+                    type: validateActivityType(data.type),
+                }
+            });
+            return { created: true };
+        }
     }
 }
 

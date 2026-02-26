@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Camera, Loader2 } from 'lucide-react';
+import React from 'react';
+import { Camera } from 'lucide-react';
 
 export interface TargetData {
     dailyCalories: number;

@@ -13,7 +13,7 @@ import {
     TouchSensor,
 } from '@dnd-kit/core';
 
-import { Menu, X, Book } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { MobileSwipeLayout } from '@/components/navigation';
 import ChatSidebar from '@/components/ChatSidebar';

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Loader2, TrendingUp } from 'lucide-react';
+import React from 'react';
+import { TrendingUp } from 'lucide-react';
 
 export interface RecentActivity {
     id: string;
@@ -31,8 +31,6 @@ interface ProactiveRunWidgetProps {
 }
 
 export default function ProactiveRunWidget({ activity, onAutoFillChat }: ProactiveRunWidgetProps) {
-    if (!activity) return null;
-
     if (!activity) return null;
 
     const distanceKm = (activity.distance / 1000).toFixed(1);

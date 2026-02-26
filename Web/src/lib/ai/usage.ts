@@ -338,7 +338,6 @@ export async function incrementUsage(
             messagesUsedToday: messagesUsedToday + 1,
             messagesUsedThisMonth: messagesUsedThisMonth + 1,
 
-            // M-17 fix: Fields are valid in Prisma schema, no type suppression needed
             inputTokensUsedToday: inputTokensUsedToday + inputDelta,
             outputTokensUsedToday: outputTokensUsedToday + outputDelta,
             inputTokensUsedThisMonth: inputTokensUsedThisMonth + inputDelta,

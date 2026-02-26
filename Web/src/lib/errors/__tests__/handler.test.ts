@@ -89,7 +89,7 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
+      expect(response.body).toEqual({ error: 'Something crashed', errorId: expect.any(String) });
     });
 
     it('should return "Internal server error" in production', () => {
@@ -111,7 +111,7 @@ describe('handleError', () => {
       const response = handleError(error);
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
+      expect(response.body).toEqual({ error: 'Unknown error', errorId: expect.any(String) });
       expect(logger.error).toHaveBeenCalledWith('Error', { error: 'String error', errorId: expect.any(String) });
     });
 

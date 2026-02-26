@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logging/logger';
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     // ERROR HANDLING
     // ============================================================
     if (error) {
-        console.error('[Strava Callback] Error from Strava:', error);
+        logger.error('Strava Callback Error', { error, state: state || 'unknown' });
 
         // Check if this is a mobile request
         if (state?.startsWith('android_')) {
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     // Validate code exists
     if (!code) {
-        console.error('[Strava Callback] Missing authorization code');
+        logger.error('Strava Callback Missing Code', { state: state || 'unknown' });
 
         if (state?.startsWith('android_')) {
             return NextResponse.redirect('runflow://auth?error=missing_code');
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
     // MOBILE APP FLOW (Android)
     // ============================================================
     if (state?.startsWith('android_')) {
-        console.log('[Strava Callback] Android flow detected, returning JS redirect page');
+        logger.info('Strava Callback Android Flow', { state });
 
         // For mobile: return an HTML page with JS redirect.
         // Chrome Custom Tabs don't always handle 302 redirects to custom URI schemes.
@@ -153,7 +154,7 @@ export async function GET(request: NextRequest) {
     // ============================================================
     // NextAuth handles the OAuth flow at /api/auth/callback/strava
     // We redirect to NextAuth's callback endpoint with the code
-    console.log('[Strava Callback] Web flow detected, redirecting to NextAuth');
+    logger.info('Strava Callback Web Flow', { state: state || 'unknown' });
 
     const nextAuthCallbackUrl = new URL('/api/auth/callback/strava', request.url);
     nextAuthCallbackUrl.searchParams.set('code', code);

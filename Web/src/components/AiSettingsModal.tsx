@@ -41,6 +41,8 @@ interface AiSettings {
     accessPerformance: boolean;
     accessBiometrics: boolean;
     accessAllActivities: boolean;
+    accessActivityLogs: boolean;
+    accessNutritionLogs: boolean;
     customPromptAddition: string | null;
 }
 
@@ -92,6 +94,16 @@ const DATA_ACCESS_OPTIONS = [
         key: 'accessAllActivities',
         label: 'All Activity History (Lazy Load)',
         description: 'Allow AI to search older activities when needed',
+    },
+    {
+        key: 'accessActivityLogs',
+        label: 'Activity Logs (Read Only)',
+        description: 'Allows AI to see recent runs and workouts for proactive suggestions',
+    },
+    {
+        key: 'accessNutritionLogs',
+        label: 'Nutrition Logs (Read & Write)',
+        description: 'Allows AI to see macros and log meals via Calorie Snap',
     },
 ];
 
@@ -154,6 +166,8 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
                 accessPerformance: s.accessPerformance,
                 accessBiometrics: s.accessBiometrics,
                 accessAllActivities: s.accessAllActivities,
+                accessActivityLogs: s.accessActivityLogs,
+                accessNutritionLogs: s.accessNutritionLogs,
             });
             // Don't populate API key for security
             setCustomApiKey('');

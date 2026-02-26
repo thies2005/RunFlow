@@ -250,6 +250,8 @@ model UserAiSettings {
   accessPerformance     Boolean @default(false) // VDOT, predictions
   accessBiometrics      Boolean @default(false) // Weight, height, age
   accessAllActivities   Boolean @default(false) // Allow AI to search entire history (lazy load)
+  accessActivityLogs    Boolean @default(false) // Read-only: recent runs/workouts for proactive widgets
+  accessNutritionLogs   Boolean @default(false) // Read & Write: macros, meal logging via Calorie Snap
 
   // Custom prompt additions (appended to global prompt)
   customPromptAddition String?

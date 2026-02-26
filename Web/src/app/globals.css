@@ -104,6 +104,39 @@ body {
   border-color: var(--glass-border-hover);
 }
 
+/* Timeline node styling */
+.timeline-node {
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--glass-border);
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -9px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--glass-border);
+    background: var(--background);
+}
+
+.timeline-dot-blue {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.timeline-dot-pink {
+    border-color: rgba(247, 37, 133, 0.5);
+    background: rgba(247, 37, 133, 0.2);
+}
+
+/* Safe Area support for mobile keyboards */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
 /* Intensity gradient border */
 .intensity-border {
   position: relative;

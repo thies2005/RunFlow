@@ -3,12 +3,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Plus } from 'lucide-react';
+import { Send, Bot, Loader2, AlertCircle, Settings2, Book, Plus, Camera } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
 import DOMPurify from 'dompurify';
 import PromptLibrary from './PromptLibrary';
+import ProactiveRunWidget from './chat/ProactiveRunWidget';
+import ProactiveCalorieSnapWidget from './chat/ProactiveCalorieSnapWidget';
+import MacroLoggedWidget from './chat/MacroLoggedWidget';
+import TimelineNode from './chat/TimelineNode';
+import { FoodScannerModal } from './views/FoodScannerModal';
 
 interface AiChatProps {
     activityId?: string;
@@ -41,6 +46,33 @@ const cleanContent = (content: string) => {
     return cleaned;
 };
 
+// Helper to parse streamed meal log data safely
+const parseMealLoggedData = (content: string): { mealName: string; calories: number; protein: number; carbs: number; fats: number } | null => {
+    try {
+        // Primary: explicit HTML-comment widget trigger
+        const match = content.match(/<!-- MEAL_LOGGED_WIDGET (.*?) -->/);
+        if (match && match[1]) {
+            const data = JSON.parse(match[1]);
+            if (data.mealName && typeof data.calories === 'number') {
+                return { mealName: data.mealName, calories: data.calories, protein: data.protein ?? 0, carbs: data.carbs ?? 0, fats: data.fats ?? 0 };
+            }
+        }
+
+        // Fallback: JSON code fence that explicitly contains a "MEAL_LOGGED" key
+        const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
+        if (jsonMatch && jsonMatch[1]) {
+            const data = JSON.parse(jsonMatch[1]);
+            if (data.MEAL_LOGGED && data.mealName && typeof data.calories === 'number') {
+                return { mealName: data.mealName, calories: data.calories, protein: data.protein ?? 0, carbs: data.carbs ?? 0, fats: data.fats ?? 0 };
+            }
+        }
+    } catch (e) {
+        // Stream might be incomplete, return null and wait for more data
+        return null;
+    }
+    return null;
+};
+
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false }: AiChatProps) {
@@ -57,6 +89,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     const [isStreaming, setIsStreaming] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isPromptLibraryOpenLocal, setIsPromptLibraryOpenLocal] = useState(false);
+    const [showFoodScanner, setShowFoodScanner] = useState(false);
 
     const isLibraryOpen = isPromptLibraryOpen !== undefined ? isPromptLibraryOpen : isPromptLibraryOpenLocal;
     const closeLibrary = onClosePromptLibrary || (() => setIsPromptLibraryOpenLocal(false));
@@ -133,15 +166,21 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     const adminAllowed = settingsData?.settings?.adminAllowed;
     const aiEnabled = settingsData?.settings?.aiEnabled || settingsData?.settings?.hasCustomApiKey;
 
+    // Permission checks
+    const accessActivityLogs = settingsData?.settings?.accessActivityLogs;
+    const accessNutritionLogs = settingsData?.settings?.accessNutritionLogs;
+
     // Scroll to bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isStreaming]);
 
-    const handleSend = async () => {
-        if (!input.trim() || isStreaming) return;
+    const handleSend = async (e?: React.FormEvent | React.MouseEvent | null, overrideText?: string) => {
+        if (e) e.preventDefault();
 
-        const userMessage = input.trim();
+        const userMessage = (overrideText || input).trim();
+        if (!userMessage || isStreaming) return;
+
         setInput('');
         setError(null);
         setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
@@ -358,26 +397,45 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
             <div className={`flex-1 overflow-y-auto overscroll-y-contain p-4 space-y-4 min-h-0 ${messages.length === 0 ? 'flex flex-col justify-center' : ''}`} style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
                 <div className="max-w-5xl mx-auto w-full">
                     {messages.length === 0 ? (
-                        <div className="flex flex-col items-center text-center p-8">
-                            <div className="bg-gray-800/50 p-4 rounded-full mb-6">
-                                <Bot className="w-12 h-12 text-purple-400" />
+                        <div className="flex flex-col p-4 sm:p-8">
+                            <div className="flex items-center gap-4 mb-8 text-left">
+                                <div className="bg-gray-800/50 p-3 rounded-full flex-shrink-0">
+                                    <Bot className="w-8 h-8 text-purple-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold text-white">AI Running Coach</h3>
+                                    <p className="text-gray-400 text-sm">Ask me anything about your training, pacing, or nutrition.</p>
+                                </div>
                             </div>
-                            <h3 className="text-xl font-semibold text-white mb-3">AI Running Coach</h3>
-                            <p className="text-gray-400 text-base max-w-md mb-8 leading-relaxed">
-                                Ask me anything about your training, get workout advice, or analyze your progress.
-                                I can access your activities and help you plan your next race.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+
+                            {/* Contextual Suggestions Timeline */}
+                            {(accessActivityLogs || accessNutritionLogs) && (
+                                <div className="mb-8 max-w-2xl">
+                                    <h4 className="text-sm font-semibold text-gray-400 mb-6 uppercase tracking-wider">Contextual Suggestions</h4>
+
+                                    {accessActivityLogs && (
+                                        <TimelineNode dotColor="timeline-dot-blue" lineColor="var(--glass-border)">
+                                            <ProactiveRunWidget onAutoFillChat={(text) => handleSend(null, text)} />
+                                        </TimelineNode>
+                                    )}
+
+                                    {accessNutritionLogs && (
+                                        <TimelineNode dotColor="timeline-dot-pink" lineColor="var(--glass-border)">
+                                            <ProactiveCalorieSnapWidget onOpenScanner={() => setShowFoodScanner(true)} />
+                                        </TimelineNode>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Suggestions grid */}
+                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
                                 <button
                                     onClick={openLibrary}
-                                    className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-purple-400 font-medium rounded-xl transition-all hover:scale-105 flex items-center justify-center gap-2 border border-purple-500/20 hover:border-purple-500/50 shadow-lg shadow-purple-900/10"
+                                    className="px-4 py-3 bg-gray-800/80 hover:bg-gray-700 text-purple-400 text-sm font-medium rounded-xl transition-all border border-purple-500/20 hover:border-purple-500/50 flex items-center justify-center gap-2 sm:col-span-2"
                                 >
-                                    <Book className="w-5 h-5" />
+                                    <Book className="w-4 h-4" />
                                     Browse Prompt Library
                                 </button>
-                            </div>
-                            {/* Suggestions grid - hidden on mobile */}
-                            <div className="mt-8 hidden sm:grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
                                 {[
                                     'How should I prepare for my race?',
                                     'Am I training too hard?',
@@ -386,7 +444,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 ].map((suggestion) => (
                                     <button
                                         key={suggestion}
-                                        onClick={() => setInput(suggestion)}
+                                        onClick={() => handleSend(null, suggestion)}
                                         className="px-4 py-3 bg-gray-800/50 hover:bg-gray-800 text-gray-300 text-sm rounded-xl transition-colors border border-white/5 hover:border-purple-500/30 text-left"
                                     >
                                         {suggestion}
@@ -408,43 +466,49 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                         <Loader2 className="w-3 h-3 animate-spin" />
                                                         <span>Thinking...</span>
                                                     </div>
-                                                ) : (
-                                                    <ReactMarkdown
-                                                        remarkPlugins={[remarkGfm]}
-                                                        rehypePlugins={[rehypeSanitize]}
-                                                        components={{
-                                                            h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
-                                                            h2: ({ node: _node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
-                                                            h3: ({ node: _node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
-                                                            p: ({ node: _node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
-                                                            ul: ({ node: _node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
-                                                            ol: ({ node: _node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
-                                                            li: ({ node: _node, ...props }) => <li className="pl-1" {...props} />,
-                                                            code: ({ node: _node, inline, className, children, ...props }: any) => {
-                                                                const _match = /language-(\w+)/.exec(className || '');
-                                                                return !inline ? (
-                                                                    <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
-                                                                        <code className={className} {...props}>
+                                                ) : (() => {
+                                                    const mealData = parseMealLoggedData(cleanedContent);
+                                                    if (mealData && msg.role === 'assistant') {
+                                                        return <MacroLoggedWidget {...mealData} />;
+                                                    }
+                                                    return (
+                                                        <ReactMarkdown
+                                                            remarkPlugins={[remarkGfm]}
+                                                            rehypePlugins={[rehypeSanitize]}
+                                                            components={{
+                                                                h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
+                                                                h2: ({ node: _node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
+                                                                h3: ({ node: _node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
+                                                                p: ({ node: _node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+                                                                ul: ({ node: _node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
+                                                                ol: ({ node: _node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
+                                                                li: ({ node: _node, ...props }) => <li className="pl-1" {...props} />,
+                                                                code: ({ node: _node, inline, className, children, ...props }: any) => {
+                                                                    const _match = /language-(\w+)/.exec(className || '');
+                                                                    return !inline ? (
+                                                                        <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
+                                                                            <code className={className} {...props}>
+                                                                                {children}
+                                                                            </code>
+                                                                        </pre>
+                                                                    ) : (
+                                                                        <code className="bg-black/30 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
                                                                             {children}
                                                                         </code>
-                                                                    </pre>
-                                                                ) : (
-                                                                    <code className="bg-black/30 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
-                                                                        {children}
-                                                                    </code>
-                                                                );
-                                                            },
-                                                            table: ({ node: _node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
-                                                            thead: ({ node: _node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
-                                                            th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
-                                                            td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
-                                                            blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
-                                                            a: ({ node: _node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                                                        }}
-                                                    >
-                                                        {DOMPurify.sanitize(cleanedContent)}
-                                                    </ReactMarkdown>
-                                                )}
+                                                                    );
+                                                                },
+                                                                table: ({ node: _node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
+                                                                thead: ({ node: _node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
+                                                                th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
+                                                                td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
+                                                                blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
+                                                                a: ({ node: _node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                            }}
+                                                        >
+                                                            {DOMPurify.sanitize(cleanedContent)}
+                                                        </ReactMarkdown>
+                                                    );
+                                                })()}
                                             </div>
                                             {isStreaming && i === messages.length - 1 && msg.role === 'assistant' && !msg.content && (
                                                 <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
@@ -469,48 +533,48 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                 </div>
             )}
 
-            <div className="p-2 sm:p-4 border-t border-white/10 bg-[#0a0a0a] mt-auto z-10 w-full shadow-2xl">
-                <div className="max-w-5xl mx-auto w-full flex gap-1.5 sm:gap-2">
+            <div className="sticky bottom-4 z-20 pb-safe px-4 sm:px-0 mt-auto">
+                <div className="glass-card rounded-full p-1.5 flex items-center shadow-2xl max-w-5xl mx-auto backdrop-blur-md border border-white/10 shadow-purple-900/10">
                     {!hideInputActions && (
-                        <>
-                            <button
-                                onClick={openLibrary}
-                                className="hidden sm:flex p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
-                                title="Prompt Library"
-                            >
-                                <Book className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={handleNewChat}
-                                className="hidden sm:flex p-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-purple-500/50 rounded-xl text-gray-400 hover:text-purple-400 transition-colors"
-                                title="New Chat"
-                            >
-                                <Plus className="w-5 h-5" />
-                            </button>
-                        </>
+                        <button
+                            onClick={() => setShowFoodScanner(true)}
+                            className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:text-purple-400 transition-colors flex-shrink-0"
+                            title="Calorie Snap"
+                        >
+                            <Camera className="w-5 h-5" />
+                        </button>
                     )}
+
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Ask your AI coach..."
-                        disabled={isStreaming}
-                        className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none disabled:opacity-50"
+                        className="flex-1 min-w-0 bg-transparent px-4 py-2 text-white placeholder-gray-400 focus:outline-none"
                     />
+
                     <button
-                        onClick={handleSend}
+                        onClick={(e) => handleSend(e)}
                         disabled={!input.trim() || isStreaming}
-                        className="p-2.5 sm:p-3 bg-purple-600 hover:bg-purple-500 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                        className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center disabled:opacity-50 transition-colors flex-shrink-0 disabled:cursor-not-allowed hover:bg-purple-500"
                     >
-                        {isStreaming ? (
-                            <Loader2 className="w-5 h-5 text-white animate-spin" />
-                        ) : (
-                            <Send className="w-5 h-5 text-white" />
-                        )}
+                        {isStreaming ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <Send className="w-5 h-5 text-white" />}
                     </button>
                 </div>
             </div>
+
+            {showFoodScanner && (
+                <FoodScannerModal
+                    isOpen={showFoodScanner}
+                    onClose={() => setShowFoodScanner(false)}
+                    onScanComplete={(result) => {
+                        setShowFoodScanner(false);
+                        const msg = `I just ate ${result.mealName}. It has ${result.totalCalories} kcal (${result.totalProtein}g protein, ${result.totalCarbs}g carbs, ${result.totalFats}g fat).`;
+                        handleSend(null, msg);
+                    }}
+                />
+            )}
         </div>
     );
 }

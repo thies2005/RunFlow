@@ -81,6 +81,33 @@ export interface UserContext {
         age?: number;
         sex?: string;
     };
+
+    // Nutrition data (if accessNutritionLogs)
+    nutritionToday?: {
+        totalCalories: number;
+        totalProtein: number;
+        totalCarbs: number;
+        totalFats: number;
+        target?: {
+            calories: number;
+            protein: number;
+            carbs: number;
+            fats: number;
+        };
+        remainingCalories?: number;
+        mealCount: number;
+    };
+
+    // Today's most recent activity (if accessActivityLogs)
+    todayActivity?: {
+        name: string;
+        type: string;
+        distance: number;
+        duration: number;
+        pace: number;
+        avgHr?: number;
+        completedAt: string;
+    };
 }
 
 export interface ActivityContext {
@@ -249,6 +276,73 @@ export async function buildUserContext(userId: string): Promise<UserContext> {
         };
     }
 
+    // Nutrition data (today)
+    if (settings.accessNutritionLogs) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+
+        const todayLogs = await prisma.nutritionLog.findMany({
+            where: { userId, date: todayStr },
+        });
+
+        const target = await prisma.userNutritionTarget.findUnique({
+            where: { userId },
+        });
+
+        if (todayLogs.length > 0 || target) {
+            const totals = todayLogs.reduce(
+                (acc, log) => ({
+                    calories: acc.calories + (log.calories || 0),
+                    protein: acc.protein + (log.protein || 0),
+                    carbs: acc.carbs + (log.carbs || 0),
+                    fats: acc.fats + (log.fats || 0),
+                }),
+                { calories: 0, protein: 0, carbs: 0, fats: 0 }
+            );
+
+            context.nutritionToday = {
+                totalCalories: totals.calories,
+                totalProtein: totals.protein,
+                totalCarbs: totals.carbs,
+                totalFats: totals.fats,
+                mealCount: todayLogs.length,
+                target: target ? {
+                    calories: target.dailyCalories,
+                    protein: Math.round((target.dailyCalories * (target.proteinPercent / 100)) / 4),
+                    carbs: Math.round((target.dailyCalories * (target.carbsPercent / 100)) / 4),
+                    fats: Math.round((target.dailyCalories * (target.fatsPercent / 100)) / 9),
+                } : undefined,
+                remainingCalories: target ? target.dailyCalories - totals.calories : undefined,
+            };
+        }
+    }
+
+    // Today's most recent activity (for proactive context)
+    if (settings.accessActivityLogs) {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const recentActivity = await prisma.activity.findFirst({
+            where: { userId, startDate: { gte: todayStart } },
+            orderBy: { startDate: 'desc' },
+        });
+
+        if (recentActivity) {
+            context.todayActivity = {
+                name: recentActivity.name,
+                type: recentActivity.type,
+                distance: recentActivity.distance,
+                duration: recentActivity.movingTime,
+                pace: recentActivity.distance > 0
+                    ? recentActivity.movingTime / (recentActivity.distance / 1000)
+                    : 0,
+                avgHr: recentActivity.averageHr || undefined,
+                completedAt: recentActivity.startDate.toISOString(),
+            };
+        }
+    }
+
     // Performance
     if (settings.accessPerformance) {
         context.performance = {
@@ -414,6 +508,23 @@ export function formatContextForAi(context: UserContext): string {
                 .join(', ');
             parts.push(`Upcoming workouts: ${upcoming}`);
         }
+    }
+
+    if (context.nutritionToday) {
+        const n = context.nutritionToday;
+        let nutritionStr = `Today's Nutrition: ${n.totalCalories} kcal (${n.mealCount} meals) - P: ${n.totalProtein}g, C: ${n.totalCarbs}g, F: ${n.totalFats}g`;
+        if (n.target) {
+            nutritionStr += ` | Target: ${n.target.calories} kcal (${n.remainingCalories} remaining)`;
+        }
+        parts.push(nutritionStr);
+    }
+
+    if (context.todayActivity) {
+        const a = context.todayActivity;
+        const dist = (a.distance / 1000).toFixed(1);
+        const paceMin = Math.floor(a.pace / 60);
+        const paceSec = Math.floor(a.pace % 60).toString().padStart(2, '0');
+        parts.push(`Today's Activity: ${a.name} (${a.type}) - ${dist}km at ${paceMin}:${paceSec}/km${a.avgHr ? ` | ${Math.round(a.avgHr)}bpm` : ''}`);
     }
 
     return parts.join('\n');

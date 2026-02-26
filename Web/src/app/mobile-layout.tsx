@@ -190,7 +190,6 @@ export function MobileLayout() {
                     if (response.ok) {
                         const settings = await response.json();
                         await syncLocalNotifications(settings);
-                        console.log('Mobile notifications synchronized with server settings');
                     }
                 } catch (err) {
                     console.error('Failed to sync mobile notifications', err);

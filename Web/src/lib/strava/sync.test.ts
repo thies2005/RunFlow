@@ -80,7 +80,8 @@ describe('syncUserActivities Performance', () => {
         const mockToken = 'mock-token';
 
         // Mock user
-        (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+        const mockUserFindUnique = prisma.user.findUnique as jest.Mock;
+        mockUserFindUnique.mockResolvedValue({
             id: userId,
             hrMax: 190,
             sex: 'MALE',
@@ -88,7 +89,8 @@ describe('syncUserActivities Performance', () => {
         });
 
         // Mock token
-        (refreshStravaToken as jest.Mock).mockResolvedValue(mockToken);
+        const mockRefreshStravaToken = refreshStravaToken as jest.Mock;
+        mockRefreshStravaToken.mockResolvedValue(mockToken);
 
         // Mock Strava API response
         const mockActivitiesCount = 5;
@@ -105,10 +107,12 @@ describe('syncUserActivities Performance', () => {
         }));
 
         // Mock findMany to return empty array (no existing activities)
-        (prisma.activity.findMany as jest.Mock).mockResolvedValue([]);
+        const mockActivityFindMany = prisma.activity.findMany as jest.Mock;
+        mockActivityFindMany.mockResolvedValue([]);
 
         let activitiesFetched = false;
-        (global.fetch as jest.Mock).mockImplementation((url) => {
+        const mockFetch = global.fetch as jest.Mock;
+        mockFetch.mockImplementation((url) => {
             if (typeof url === 'string' && url.includes('/athlete/activities')) {
                 if (activitiesFetched) {
                     return Promise.resolve({
@@ -142,11 +146,9 @@ describe('syncUserActivities Performance', () => {
         await syncUserActivities(userId);
 
         // Verify N+1 optimization
-        const findUniqueCalls = (prisma.activity.findUnique as jest.Mock).mock.calls.length;
-        const findManyCalls = (prisma.activity.findMany as jest.Mock).mock.calls.length;
-
-        console.log(`prisma.activity.findUnique called ${findUniqueCalls} times`);
-        console.log(`prisma.activity.findMany called ${findManyCalls} times`);
+        const mockActivityFindUnique = prisma.activity.findUnique as jest.Mock;
+        const findUniqueCalls = mockActivityFindUnique.mock.calls.length;
+        const findManyCalls = mockActivityFindMany.mock.calls.length;
 
         // findMany should be called once (per page of activities)
         expect(findManyCalls).toBeGreaterThanOrEqual(1);

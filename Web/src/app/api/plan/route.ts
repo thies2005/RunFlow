@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/apiResponse';
 import { ActivityListItem } from '@/lib/types';
-
 export async function GET(req: Request) {
     try {
         // Rate limiting check (async for Redis support)

@@ -125,13 +125,6 @@ export async function middleware(request: NextRequest) {
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-nonce', nonce)
 
-    // Continue with normal middleware chain
-    const response = NextResponse.next({
-        request: {
-            headers: requestHeaders,
-        },
-    });
-
     // Override CSP (allow inline scripts to avoid blank page with Next.js inline chunks)
     const csp = [
         `default-src 'self'`,
@@ -147,6 +140,15 @@ export async function middleware(request: NextRequest) {
         `manifest-src 'self'`,
         `upgrade-insecure-requests`
     ].join('; ')
+
+    requestHeaders.set('Content-Security-Policy', csp)
+
+    // Continue with normal middleware chain
+    const response = NextResponse.next({
+        request: {
+            headers: requestHeaders,
+        },
+    });
 
     response.headers.set('Content-Security-Policy', csp)
     response.headers.set('X-Content-Type-Options', 'nosniff')

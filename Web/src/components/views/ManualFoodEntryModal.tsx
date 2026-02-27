@@ -149,9 +149,12 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                     const offData = await offRes.json();
                     if (offData && offData.length > 0) {
                         setSearchResults(prev => {
-                            // Avoid duplicates if same item was in local DB
-                            const seenIds = new Set(prev.map(item => item.id));
-                            const newItems = offData.filter((item: any) => !seenIds.has(item.id));
+                            // Avoid duplicates if same item was in local DB by checking name and brand
+                            const seenKeys = new Set(prev.map(item => `${String(item.name || '').toLowerCase().trim()}|${String(item.brand || '').toLowerCase().trim()}`));
+                            const newItems = offData.filter((item: any) => {
+                                const key = `${String(item.name || '').toLowerCase().trim()}|${String(item.brand || '').toLowerCase().trim()}`;
+                                return !seenKeys.has(key);
+                            });
                             return [...prev, ...newItems];
                         });
                     }
@@ -333,7 +336,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                 </form>
 
                                 <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
-                                    {searchResults.length === 0 && !isSearching && query && (
+                                    {searchResults.length === 0 && !isSearching && !isOffSearching && query && (
                                         <p className="text-center text-gray-400 mt-8 text-sm">No results found.</p>
                                     )}
                                     {searchResults.map((food, i) => (

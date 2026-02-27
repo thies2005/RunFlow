@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { RaceType } from '@prisma/client'
 import { PASSWORD_POLICY } from '@/lib/constants'
 
 export const activitySchema = z.object({
@@ -21,7 +22,7 @@ export const activitySchema = z.object({
 
 export const goalSchema = z.object({
   name: z.string().min(1).max(255),
-  raceType: z.enum(['FIVE_K', 'TEN_K', 'HALF_MARATHON', 'MARATHON']),
+  raceType: z.nativeEnum(RaceType),
   raceDate: z.string().datetime(),
   targetTime: z.number().int().positive().optional(),
   weeklyMileageGoal: z.number().int().positive().optional(),

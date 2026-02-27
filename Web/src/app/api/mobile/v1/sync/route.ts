@@ -12,6 +12,7 @@ import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { syncUserActivities, getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { logger } from '@/lib/logging/logger';
 
 export async function POST(request: NextRequest) {
     try {
@@ -45,9 +46,9 @@ export async function POST(request: NextRequest) {
         const range = body.range || 'SINCE_LAST_ACTIVITY';
 
         // Start sync
-        console.log(`[Mobile API] Starting background sync for user ${user.id} with range: ${range}`);
+        logger.info('Starting background sync', { userId: user.id, range, source: 'Mobile API' });
         syncUserActivities(user.id, range).catch((err) => {
-            console.error(`[Mobile API] Background sync failed for user ${user.id}:`, err);
+            logger.error('Background sync failed', { userId: user.id, error: err, source: 'Mobile API' });
         });
 
         // Get updated sync status for response

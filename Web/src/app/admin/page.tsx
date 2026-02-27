@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList } from 'lucide-react';
+import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList, LucideIcon } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
@@ -14,7 +14,15 @@ import AuditLogsTab from '@/components/admin/AuditLogsTab';
 
 
 // Components
-const StatCard = ({ title, value, subtext, icon: Icon, color }: any) => (
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    subtext?: string;
+    icon: LucideIcon;
+    color: string;
+}
+
+const StatCard = ({ title, value, subtext, icon: Icon, color }: StatCardProps) => (
 
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-start space-x-4">
         <div className={`p-3 rounded-lg ${color}`}>

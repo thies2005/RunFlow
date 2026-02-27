@@ -4,7 +4,7 @@ interface LogContext {
   path?: string;
   method?: string;
   status?: number;
-  error?: string;
+  error?: unknown;
   duration?: number;
   [key: string]: any;
 }

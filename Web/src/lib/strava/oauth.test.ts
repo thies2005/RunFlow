@@ -68,7 +68,7 @@ describe('Strava OAuth SignIn Callback', () => {
         // Create a copy to verify mutation
         const accountPassed = { ...mockAccount };
 
-        await signInCallback({ user: mockUser, account: accountPassed, profile: undefined as any, email: undefined as any, credentials: undefined as any });
+        await signInCallback({ user: mockUser, account: accountPassed as any, profile: undefined as any, email: undefined as any, credentials: undefined as any });
 
         expect(accountPassed).not.toHaveProperty('athlete');
         expect((accountPassed as any).athlete).toBeUndefined();
@@ -85,7 +85,7 @@ describe('Strava OAuth SignIn Callback', () => {
 
         const accountPassed = { ...mockAccount };
 
-        await signInCallback({ user: mockUser, account: accountPassed, profile: undefined as any, email: undefined as any, credentials: undefined as any });
+        await signInCallback({ user: mockUser, account: accountPassed as any, profile: undefined as any, email: undefined as any, credentials: undefined as any });
 
         // Access token will be encrypted, so we can't expect strict equality on the whole object if we don't account for that
         // But here we are just checking it doesn't crash.
@@ -93,7 +93,7 @@ describe('Strava OAuth SignIn Callback', () => {
     });
 
     it('should encrypt tokens', async () => {
-         const mockUser = { id: 'user1' };
+        const mockUser = { id: 'user1' };
         const mockAccount = {
             provider: 'strava',
             type: 'oauth',
@@ -102,9 +102,9 @@ describe('Strava OAuth SignIn Callback', () => {
             refresh_token: 'raw_refresh_token',
         };
 
-         const accountPassed = { ...mockAccount };
+        const accountPassed = { ...mockAccount };
 
-        await signInCallback({ user: mockUser, account: accountPassed, profile: undefined as any, email: undefined as any, credentials: undefined as any });
+        await signInCallback({ user: mockUser, account: accountPassed as any, profile: undefined as any, email: undefined as any, credentials: undefined as any });
 
         expect(encryptToken).toHaveBeenCalledWith('raw_access_token');
         expect(encryptToken).toHaveBeenCalledWith('raw_refresh_token');

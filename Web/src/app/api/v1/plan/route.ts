@@ -112,7 +112,7 @@ export async function GET(req: Request) {
                     type: true
                 },
                 orderBy: { startDate: 'asc' }
-            });
+            }) as unknown as UnlinkedActivity[];
         }
 
         const response = cachedResponse({

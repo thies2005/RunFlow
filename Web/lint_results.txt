@@ -1,0 +1,350 @@
+﻿node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+./src/app/adaptive-layout.tsx
+26:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from 
+`next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: 
+https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/admin/page.tsx
+5:8  Warning: 'Image' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:55  Warning: 'Trash2' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:63  Warning: 'Download' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:101  Warning: 'Upload' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:109  Warning: 'Plus' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:115  Warning: 'Mail' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:126  Warning: 'Eye' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:131  Warning: 'Save' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:137  Warning: 'Loader2' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:146  Warning: 'Zap' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+7:10  Warning: 'csrfHeaders' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+7:23  Warning: 'getCsrfToken' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/analytics/page.tsx
+7:32  Warning: 'Settings2' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+9:22  Warning: 'AreaChart' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+9:33  Warning: 'Area' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+11:5  Warning: 'PieChart' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+11:15  Warning: 'Pie' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+11:20  Warning: 'Cell' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+32:5  Warning: 'formatTime' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+34:5  Warning: 'formatPace' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/activities/[id]/__tests__/route.test.ts
+113:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+232:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/activities/__tests__/route.test.ts
+112:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+125:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+133:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+144:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+280:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/analytics/__tests__/route.test.ts
+181:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+195:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+209:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/backups/__tests__/route.test.ts
+31:29  Warning: 'csrfValidationErrorResponse' is defined but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+112:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+296:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/recalculate-fitness/__tests__/route.test.ts
+201:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+213:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/stats/__tests__/route.test.ts
+172:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/users/[id]/__tests__/route.test.ts
+111:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+121:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/admin/users/__tests__/route.test.ts
+102:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+115:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+127:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+181:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/ai/activity-feedback/__tests__/route.test.ts
+134:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+315:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/ai/chat/history/__tests__/route.test.ts
+74:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+88:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+148:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+164:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/ai/chat/sessions/__tests__/route.test.ts
+102:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+161:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+194:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+286:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/ai/chat/__tests__/route.test.ts
+227:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/analytics/stats/__tests__/route.test.ts
+69:10  Warning: 'handleError' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/auth/forgot-password/__tests__/route.test.ts
+157:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/auth/register/__tests__/route.test.ts
+221:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/auth/reset-password/__tests__/route.test.ts
+203:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/dashboard/__tests__/route.test.ts
+189:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/goals/route.ts
+16:10  Warning: 'RaceType' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/goals/__tests__/route.test.ts
+141:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+158:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+308:15  Warning: 'response' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/health/nutrition/log/history/route.ts
+7:27  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/app/api/health/nutrition/target/route.ts
+46:17  Warning: 'countWithCals' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+
+./src/app/api/health/supplements/route.ts
+7:27  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/app/api/health/supplements/stacks/route.ts
+7:27  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/app/api/health/supplements/stats/route.ts
+8:10  Warning: 'getMidnightUTCDate' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/app/api/plan/route.ts
+Error: Parsing error: Merge conflict marker encountered.
+
+./src/app/api/test-db/route.ts
+4:27  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/app/api/user/consent/route.ts
+8:27  Warning: 'req' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/app/api/user/export/route.ts
+9:27  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+119:13  Warning: 'passwordHash' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+120:13  Warning: 'isAdmin' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/admin/BackupsTab.tsx
+9:21  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+10:24  Warning: 'msg' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/admin/TierInputGroup.tsx
+6:19  Warning: 'updater' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+6:29  Warning: 'prev' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/admin/UsersTab.tsx
+9:16  Warning: 'users' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+12:21  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+13:24  Warning: 'msg' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/AiChat.tsx
+354:11  Warning: 'handleNewChat' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+
+./src/components/AiSettingsModal.tsx
+6:5  Warning: 'X' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/analytics/TopMetricsSection.tsx
+8:28  Warning: 'open' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/charts/ChartTooltip.tsx
+7:23  Warning: 'label' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+8:18  Warning: 'value' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+8:30  Warning: 'name' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/chat/ProactiveRunWidget.tsx
+30:22  Warning: 'text' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/EditWorkoutModal.tsx
+138:11  Warning: 'inputClass' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/health/SupplementItem.tsx
+8:14  Warning: 'supplement' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+9:16  Warning: 'supplementId' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+9:38  Warning: 'taken' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+9:54  Warning: 'e' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+10:20  Warning: 'supplementId' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+10:42  Warning: 'supplementName' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+10:66  Warning: 'e' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/InteractiveStreamsChart.tsx
+3:29  Warning: 'memo' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/layout/ReconsentBanner.tsx
+9:19  Warning: 'session' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/ManualActivityModal.tsx
+5:10  Warning: 'Calendar' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+5:20  Warning: 'Activity' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+5:30  Warning: 'Clock' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+5:37  Warning: 'Heart' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/PlanSetupForm.tsx
+6:5  Warning: 'Activity' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:15  Warning: 'Bike' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:21  Warning: 'Move' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:27  Warning: 'ChevronDown' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:40  Warning: 'ChevronUp' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+7:18  Warning: 'AlertTriangle' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+7:46  Warning: 'Target' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+7:54  Warning: 'Waves' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+7:61  Warning: 'Dumbbell' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+7:71  Warning: 'Rocket' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+7:79  Warning: 'BarChart2' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+505:11  Warning: 'inputClass' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+511:11  Warning: 'formatActivityOption' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+
+./src/components/ProfileModal.tsx
+5:10  Warning: 'X' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+391:11  Warning: 'inputClass' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/PullToRefresh.tsx
+3:27  Warning: 'useEffect' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/setup/CalibrationSection.tsx
+14:26  Warning: 'mode' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+16:29  Warning: 'id' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+18:30  Warning: 'dist' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+20:16  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+22:18  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+24:18  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+26:28  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+44:5  Warning: 'calibrationFactor' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/setup/GoalTimeRenderer.tsx
+18:26  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+20:24  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+22:26  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+24:23  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+26:28  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/setup/HeartRateZonesSection.tsx
+11:24  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+13:23  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+15:27  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+17:17  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+19:22  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+21:27  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+23:27  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+26:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+28:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+30:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+32:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+34:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+36:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/setup/PlanVolumeSection.tsx
+5:22  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+7:23  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+9:23  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+11:26  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+13:24  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+15:21  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+17:20  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+19:21  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+21:33  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+23:21  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+25:21  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+27:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/setup/TargetRaceSection.tsx
+6:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+8:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+10:19  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+12:24  Warning: 'val' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/views/FoodScannerModal.tsx
+33:22  Warning: 'result' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+233:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from 
+`next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: 
+https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/views/HealthView.tsx
+5:58  Warning: 'Battery' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+5:121  Warning: 'Smartphone' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+6:10  Warning: 'syncDailyHealth' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/views/MealLibraryModal.tsx
+32:20  Warning: 'meal' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/views/NutritionGoalsModal.tsx
+3:31  Warning: 'FormEvent' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+3:42  Warning: 'useMemo' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/views/NutritionLogHistoryView.tsx
+5:47  Warning: 'Save' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/components/views/ReminderSettingsModal.tsx
+5:72  Warning: 'X' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+54:29  Warning: 'isLoading' is assigned a value but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+114:11  Warning: 'anyReminderEnabled' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+341:41  Warning: 'color' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+364:16  Warning: 'enabled' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+365:20  Warning: 'time' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+383:77  Warning: 'v' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/components/views/SupplementStatsModal.tsx
+9:27  Warning: 'isSameDay' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+9:38  Warning: 'startOfDay' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/hooks/useConfirmAction.tsx
+15:48  Warning: 'value' is defined but never used. Allowed unused args must match /^_/u.  no-unused-vars
+
+./src/lib/ai/providers.ts
+448:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+561:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+720:13  Warning: 'activeKeyIndex' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+
+./src/lib/api/__tests__/apiResponse.test.ts
+4:10  Warning: 'NextResponse' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+11:3  Warning: 'ApiError' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/lib/backup/status.ts
+29:5  Warning: 'isInitialized' is assigned a value but never used. Allowed unused vars must match /^_/u.  
+no-unused-vars
+
+./src/lib/mobile/notifications.ts
+1:30  Warning: 'ScheduleOptions' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/lib/services/__tests__/analytics.fitness.test.ts
+2:10  Warning: 'METRICS' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/lib/strava/oauth.test.ts
+3:10  Warning: 'prisma' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+5:10  Warning: 'logger' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/lib/__tests__/push.test.ts
+1:8  Warning: 'webpush' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+./src/middleware.test.ts
+5:23  Warning: 'NextResponse' is defined but never used. Allowed unused vars must match /^_/u.  no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: 
+https://nextjs.org/docs/basic-features/eslint#disabling-rules

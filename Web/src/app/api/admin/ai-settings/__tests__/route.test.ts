@@ -81,9 +81,9 @@ describe('/api/admin/ai-settings', () => {
 
             const request = new NextRequest('http://localhost:3000/api/admin/ai-settings');
             const response = await GET(request);
-            const data = await response.json();
+            const data = await response!.json();
 
-            expect(response.status).toBe(200);
+            expect(response!.status).toBe(200);
             expect(data.settings).toBeDefined();
             expect(data.stats).toBeDefined();
             expect(data.settings.hasDefaultApiKey).toBe(true);
@@ -120,9 +120,9 @@ describe('/api/admin/ai-settings', () => {
             });
 
             const response = await PUT(request);
-            const data = await response.json();
+            const data = await response!.json();
 
-            expect(response.status).toBe(200);
+            expect(response!.status).toBe(200);
             expect(data.success).toBe(true);
             expect(prisma.globalAiSettings.upsert).toHaveBeenCalled();
         });

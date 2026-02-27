@@ -194,12 +194,7 @@ export interface Workout {
     linkedActivityId: string | null;
 }
 
-/**
- * Workout with linked activity data included (for plan views)
- */
-export interface WorkoutWithLinkedActivity extends Workout {
-    linkedActivity?: ActivityListItem | null;
-}
+
 
 /**
  * Lightweight activity for list displays (dashboard, activity list)

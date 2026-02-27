@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
             await sendWelcomeEmail(user.email!, code);
         } catch (emailError) {
             // M-03 fix: Log email errors so they're visible in monitoring
-            logger.error('[Register] Failed to send welcome email:', emailError);
+            logger.error('[Register] Failed to send welcome email', { error: emailError });
             // We don't fail the request, but the user will need to request a new code later
         }
 

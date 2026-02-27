@@ -157,7 +157,7 @@ describe('API Response Utilities', () => {
 
   describe('handleApiError', () => {
     it('should handle Error objects in development', async () => {
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       const error = new Error('Test error');
       const response = handleApiError(error);
       const body = await response.json();
@@ -169,7 +169,7 @@ describe('API Response Utilities', () => {
     });
 
     it('should handle Error objects in production', async () => {
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
       const error = new Error('Secret error');
       const response = handleApiError(error);
       const body = await response.json();
@@ -191,7 +191,7 @@ describe('API Response Utilities', () => {
       const context = { path: '/api/fail', details: { foo: 'bar' } };
 
       // Force development to see the error message
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
 
       const response = handleApiError(error, context);
       const body = await response.json();

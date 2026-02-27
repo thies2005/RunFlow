@@ -1,0 +1,1878 @@
+﻿node.exe : PASS src/app/api/admin/login/__tests__/route.test.ts
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (PASS src/app/ap..._/route.test.ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  ΓùÅ Console
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: undefined }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [33m[WARN][0m Admin login credential mismatch { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Admin login attempt { username: 'admin' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/app/api/goals/__tests__/route.test.ts
+PASS src/app/api/admin/users/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_USERS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/app/api/activities/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.log
+      [31m[ERROR][0m Activities GET: No session or user ID { path: '/api/activities' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/app/api/ai/chat/sessions/__tests__/route.test.ts
+PASS src/app/api/auth/register/__tests__/route.test.ts
+PASS src/app/api/admin/ai-settings/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.error
+      Admin AI settings GET error: Error: Database error
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\ai-settings\__tests__\route.test.ts:94:27)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 89 |[39m         [36mreturn[39m applyRateLimitHeaders(response[33m,[39m 
+[32m'read'[39m[33m,[39m rateLimit[33m.[39mresult[33m![39m[33m.[39mremaining[33m,[39m 
+rateLimit[33m.[39mresult[33m![39m[33m.[39mreset)[33m;[39m
+     [90m 90 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 91 |[39m         console[33m.[39merror([32m'Admin AI settings GET 
+error:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 92 |[39m         [36mreturn[39m handleError(error)[33m;[39m
+     [90m 93 |[39m     }
+     [90m 94 |[39m }[0m
+
+      at error (src/app/api/admin/ai-settings/route.ts:91:17)
+      at Object.<anonymous> (src/app/api/admin/ai-settings/__tests__/route.test.ts:99:13)
+
+    console.error
+      Admin AI settings PUT error: Error: Update failed
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\ai-settings\__tests__\route.test.ts:131:27)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 221 |[39m         [36mreturn[39m applyRateLimitHeaders(response[33m,[39m 
+[32m'write'[39m[33m,[39m rateLimit[33m.[39mresult[33m![39m[33m.[39mremaining[33m,[39m 
+rateLimit[33m.[39mresult[33m![39m[33m.[39mreset)[33m;[39m
+     [90m 222 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 223 |[39m         console[33m.[39merror([32m'Admin AI settings PUT 
+error:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 224 |[39m         [36mreturn[39m handleError(error)[33m;[39m
+     [90m 225 |[39m     }
+     [90m 226 |[39m }[0m
+
+      at error (src/app/api/admin/ai-settings/route.ts:223:17)
+      at Object.<anonymous> (src/app/api/admin/ai-settings/__tests__/route.test.ts:140:13)
+
+PASS src/lib/backup/__tests__/scheduler.test.ts
+PASS src/lib/api/__tests__/apiResponse.test.ts
+PASS src/app/api/ai/chat/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'session-1', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream ended { sessionId: 'session-1', tokenCount: 2, responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Saved AI response to database { sessionId: 'session-1', responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Stream error {
+        sessionId: 'session-1',
+        error: 'AI access has not been granted by the admin. Contact admin to enable AI for your account.'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Cleaned up empty session after stream error { sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Stream error { sessionId: 'session-1', error: 'Usage limit exceeded' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Cleaned up empty session after stream error { sessionId: 'session-1' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m AI Chat: Starting stream { userId: 'user-1', sessionId: 'existing-session' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream starting { sessionId: 'existing-session', userId: 'user-1', model: 'gpt-4' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Stream ended { sessionId: 'existing-session', tokenCount: 2, responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [90m[DEBUG][0m Saved AI response to database { sessionId: 'existing-session', responseLength: 11 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/app/api/activities/[id]/__tests__/route.test.ts
+PASS tests/api/mobile/stats.test.ts
+  ΓùÅ Console
+
+    console.error
+      Cache read error: Error: Redis error
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full RunFlow\Web\tests\api\mobile\stats.test.ts:154:46)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 89 |[39m             } [36mcatch[39m (e) {
+     [90m 90 |[39m                 [90m// Ignore cache errors and proceed to calculation[39m
+    [31m[1m>[22m[39m[90m 91 |[39m                 console[33m.[39merror([32m'Cache read 
+error:'[39m[33m,[39m e)[33m;[39m
+     [90m    |[39m                         [31m[1m^[22m[39m
+     [90m 92 |[39m             }
+     [90m 93 |[39m         }
+     [90m 94 |[39m[0m
+
+      at error (src/app/api/mobile/v1/analytics/stats/route.ts:91:25)
+      at Object.<anonymous> (tests/api/mobile/stats.test.ts:162:26)
+
+PASS src/app/api/auth/reset-password/__tests__/route.test.ts
+PASS src/lib/utils/__tests__/numbers.test.ts
+PASS src/lib/__tests__/push.test.ts
+PASS src/lib/__tests__/rateLimit.security.test.ts
+  ΓùÅ Console
+
+    console.error
+      Security: Redis not available in production. Failing closed.
+
+    [0m [90m 188 |[39m     [90m// For Docker/long-running processes, in-memory fallback is acceptable.[39m
+     [90m 189 |[39m     [36mif[39m (process[33m.[39menv[33m.[39m[33mNODE_ENV[39m [33m===[39m 
+[32m'production'[39m) {
+    [31m[1m>[22m[39m[90m 190 |[39m         console[33m.[39merror([32m'Security: Redis not available in 
+production. Failing closed.'[39m)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 191 |[39m         [36mreturn[39m {
+     [90m 192 |[39m             allowed[33m:[39m [36mfalse[39m[33m,[39m
+     [90m 193 |[39m             remaining[33m:[39m [35m0[39m[33m,[39m[0m
+
+      at error (src/lib/rateLimit.ts:190:17)
+      at Object.<anonymous> (src/lib/__tests__/rateLimit.security.test.ts:37:24)
+
+    console.error
+      Redis rate limit error: Error: Redis connection failed
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\lib\__tests__\rateLimit.security.test.ts:52:36)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+    [0m [90m 151 |[39m         }[33m;[39m
+     [90m 152 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 153 |[39m         console[33m.[39merror([32m'Redis rate limit 
+error:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 154 |[39m         [90m// Fail closed for security in case of Redis failure[39m
+     [90m 155 |[39m         [36mreturn[39m {
+     [90m 156 |[39m             allowed[33m:[39m [36mfalse[39m[33m,[39m[0m
+
+      at error (src/lib/rateLimit.ts:153:17)
+
+PASS src/lib/metrics/__tests__/fitnessCache_logger.test.ts
+PASS src/lib/api/__tests__/externalAuth.test.ts
+PASS src/lib/config/__tests__/validation.test.ts
+PASS src/lib/validation/schemas.test.ts
+PASS src/app/api/admin/users/[id]/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.log
+      [36m[INFO][0m User deleted {
+        userId: 'user-1',
+        userName: 'Test User',
+        userEmail: 'test@example.com'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'DELETE_USER',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m User deleted {
+        userId: 'user-1',
+        userName: 'Test User',
+        userEmail: 'test@example.com'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'DELETE_USER',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m User deleted {
+        userId: 'user-1',
+        userName: 'Test User',
+        userEmail: 'test@example.com'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'DELETE_USER',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/__tests__/rateLimitAdmin.test.ts
+PASS src/lib/security/__tests__/cors.test.ts
+PASS src/app/api/analytics/stats/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.error
+      Stats API Error: Error: Database error
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\analytics\stats\__tests__\route.test.ts:190:65)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 168 |[39m
+     [90m 169 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 170 |[39m         console[33m.[39merror([32m'Stats API Error:'[39m[33m,[39m 
+error)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 171 |[39m         [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ error[33m:[39m [32m'Internal 
+server error'[39m }[33m,[39m { status[33m:[39m [35m500[39m })[33m;[39m
+     [90m 172 |[39m     }
+     [90m 173 |[39m }[0m
+
+      at error (src/app/api/analytics/stats/route.ts:170:17)
+      at Object.<anonymous> (src/app/api/analytics/stats/__tests__/route.test.ts:194:26)
+
+PASS src/lib/mobile/__tests__/healthConnect.test.ts
+  ΓùÅ Console
+
+    console.log
+      Setting up test...
+
+      at Object.log (src/lib/mobile/__tests__/healthConnect.test.ts:24:17)
+
+    console.log
+      Fetch called
+
+      at log (src/lib/mobile/__tests__/healthConnect.test.ts:28:21)
+
+    console.log
+      Setting up test...
+
+      at Object.log (src/lib/mobile/__tests__/healthConnect.test.ts:24:17)
+
+    console.log
+      Fetch called
+
+      at log (src/lib/mobile/__tests__/healthConnect.test.ts:28:21)
+
+PASS src/lib/strava/oauth.test.ts
+PASS tests/integration/auth-flow.test.ts
+PASS src/lib/utils/__tests__/bigint.test.ts
+PASS src/lib/ai/__tests__/context-builder.test.ts
+PASS src/lib/__tests__/config.test.ts
+  ΓùÅ Console
+
+    console.warn
+      
+      === CONFIGURATION WARNINGS (dev only) ===
+
+    [0m [90m 77 |[39m     [90m// Log warnings in development[39m
+     [90m 78 |[39m     [36mif[39m (errors[33m.[39mlength [33m>[39m [35m0[39m) {
+    [31m[1m>[22m[39m[90m 79 |[39m         console[33m.[39mwarn([32m'\n=== CONFIGURATION WARNINGS (dev only) 
+==='[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 80 |[39m         errors[33m.[39mforEach(err [33m=>[39m console[33m.[39mwarn([32m`  - 
+${err}`[39m))[33m;[39m
+     [90m 81 |[39m         
+console[33m.[39mwarn([32m'==========================================\n'[39m)[33m;[39m
+     [90m 82 |[39m     }[0m
+
+      at warn (src/lib/config.ts:79:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:26:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:26:48)
+
+    console.warn
+        - Missing required environment variable: NEXTAUTH_SECRET
+
+    [0m [90m 78 |[39m     [36mif[39m (errors[33m.[39mlength [33m>[39m [35m0[39m) {
+     [90m 79 |[39m         console[33m.[39mwarn([32m'\n=== CONFIGURATION WARNINGS (dev only) ==='[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 80 |[39m         errors[33m.[39mforEach(err [33m=>[39m 
+console[33m.[39mwarn([32m`  - ${err}`[39m))[33m;[39m
+     [90m    |[39m                                       [31m[1m^[22m[39m
+     [90m 81 |[39m         
+console[33m.[39mwarn([32m'==========================================\n'[39m)[33m;[39m
+     [90m 82 |[39m     }
+     [90m 83 |[39m }[0m
+
+      at warn (src/lib/config.ts:80:39)
+          at Array.forEach (<anonymous>)
+      at forEach (src/lib/config.ts:80:16)
+      at validateConfig (src/lib/__tests__/config.test.ts:26:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:26:48)
+
+    console.warn
+        - Security: JWT_SECRET appears to be using a default/example value.
+
+    [0m [90m 78 |[39m     [36mif[39m (errors[33m.[39mlength [33m>[39m [35m0[39m) {
+     [90m 79 |[39m         console[33m.[39mwarn([32m'\n=== CONFIGURATION WARNINGS (dev only) ==='[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 80 |[39m         errors[33m.[39mforEach(err [33m=>[39m 
+console[33m.[39mwarn([32m`  - ${err}`[39m))[33m;[39m
+     [90m    |[39m                                       [31m[1m^[22m[39m
+     [90m 81 |[39m         
+console[33m.[39mwarn([32m'==========================================\n'[39m)[33m;[39m
+     [90m 82 |[39m     }
+     [90m 83 |[39m }[0m
+
+      at warn (src/lib/config.ts:80:39)
+          at Array.forEach (<anonymous>)
+      at forEach (src/lib/config.ts:80:16)
+      at validateConfig (src/lib/__tests__/config.test.ts:26:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:26:48)
+
+    console.warn
+      ==========================================
+
+    [0m [90m 79 |[39m         console[33m.[39mwarn([32m'\n=== CONFIGURATION WARNINGS (dev only) 
+==='[39m)[33m;[39m
+     [90m 80 |[39m         errors[33m.[39mforEach(err [33m=>[39m console[33m.[39mwarn([32m`  - 
+${err}`[39m))[33m;[39m
+    [31m[1m>[22m[39m[90m 81 |[39m         
+console[33m.[39mwarn([32m'==========================================\n'[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 82 |[39m     }
+     [90m 83 |[39m }
+     [90m 84 |[39m[0m
+
+      at warn (src/lib/config.ts:81:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:26:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:26:48)
+
+    console.error
+      
+      === CONFIGURATION ERROR ===
+
+    [0m [90m 66 |[39m     [90m// Only throw in production[39m
+     [90m 67 |[39m     [36mif[39m (errors[33m.[39mlength [33m>[39m [35m0[39m [33m&&[39m 
+process[33m.[39menv[33m.[39m[33mNODE_ENV[39m [33m===[39m [32m'production'[39m) {
+    [31m[1m>[22m[39m[90m 68 |[39m         console[33m.[39merror([32m'\n=== CONFIGURATION ERROR 
+==='[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 69 |[39m         errors[33m.[39mforEach(err [33m=>[39m console[33m.[39merror([32m`  - 
+${err}`[39m))[33m;[39m
+     [90m 70 |[39m         console[33m.[39merror([32m'===========================\n'[39m)[33m;[39m
+     [90m 71 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([0m
+
+      at error (src/lib/config.ts:68:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:35:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:35:44)
+
+    console.error
+        - Missing required environment variable: NEXTAUTH_SECRET
+
+    [0m [90m 67 |[39m     [36mif[39m (errors[33m.[39mlength [33m>[39m [35m0[39m [33m&&[39m 
+process[33m.[39menv[33m.[39m[33mNODE_ENV[39m [33m===[39m [32m'production'[39m) {
+     [90m 68 |[39m         console[33m.[39merror([32m'\n=== CONFIGURATION ERROR ==='[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 69 |[39m         errors[33m.[39mforEach(err [33m=>[39m 
+console[33m.[39merror([32m`  - ${err}`[39m))[33m;[39m
+     [90m    |[39m                                       [31m[1m^[22m[39m
+     [90m 70 |[39m         console[33m.[39merror([32m'===========================\n'[39m)[33m;[39m
+     [90m 71 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m(
+     [90m 72 |[39m             [32m`Configuration validation failed with ${errors.length} error(s). `[39m 
+[33m+[39m[0m
+
+      at error (src/lib/config.ts:69:39)
+          at Array.forEach (<anonymous>)
+      at forEach (src/lib/config.ts:69:16)
+      at validateConfig (src/lib/__tests__/config.test.ts:35:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:35:44)
+
+    console.error
+        - Security: JWT_SECRET appears to be using a default/example value.
+
+    [0m [90m 67 |[39m     [36mif[39m (errors[33m.[39mlength [33m>[39m [35m0[39m [33m&&[39m 
+process[33m.[39menv[33m.[39m[33mNODE_ENV[39m [33m===[39m [32m'production'[39m) {
+     [90m 68 |[39m         console[33m.[39merror([32m'\n=== CONFIGURATION ERROR ==='[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 69 |[39m         errors[33m.[39mforEach(err [33m=>[39m 
+console[33m.[39merror([32m`  - ${err}`[39m))[33m;[39m
+     [90m    |[39m                                       [31m[1m^[22m[39m
+     [90m 70 |[39m         console[33m.[39merror([32m'===========================\n'[39m)[33m;[39m
+     [90m 71 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m(
+     [90m 72 |[39m             [32m`Configuration validation failed with ${errors.length} error(s). `[39m 
+[33m+[39m[0m
+
+      at error (src/lib/config.ts:69:39)
+          at Array.forEach (<anonymous>)
+      at forEach (src/lib/config.ts:69:16)
+      at validateConfig (src/lib/__tests__/config.test.ts:35:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:35:44)
+
+    console.error
+      ===========================
+
+    [0m [90m 68 |[39m         console[33m.[39merror([32m'\n=== CONFIGURATION ERROR ==='[39m)[33m;[39m
+     [90m 69 |[39m         errors[33m.[39mforEach(err [33m=>[39m console[33m.[39merror([32m`  - 
+${err}`[39m))[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m         
+console[33m.[39merror([32m'===========================\n'[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 71 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m(
+     [90m 72 |[39m             [32m`Configuration validation failed with ${errors.length} error(s). `[39m 
+[33m+[39m
+     [90m 73 |[39m             [32m`See logs above for details.`[39m[0m
+
+      at error (src/lib/config.ts:70:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:35:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:35:44)
+
+    console.error
+      
+      === CONFIGURATION ERROR ===
+
+    [0m [90m 66 |[39m     [90m// Only throw in production[39m
+     [90m 67 |[39m     [36mif[39m (errors[33m.[39mlength [33m>[39m [35m0[39m [33m&&[39m 
+process[33m.[39menv[33m.[39m[33mNODE_ENV[39m [33m===[39m [32m'production'[39m) {
+    [31m[1m>[22m[39m[90m 68 |[39m         console[33m.[39merror([32m'\n=== CONFIGURATION ERROR 
+==='[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 69 |[39m         errors[33m.[39mforEach(err [33m=>[39m console[33m.[39merror([32m`  - 
+${err}`[39m))[33m;[39m
+     [90m 70 |[39m         console[33m.[39merror([32m'===========================\n'[39m)[33m;[39m
+     [90m 71 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m([0m
+
+      at error (src/lib/config.ts:68:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:44:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:44:44)
+
+    console.error
+        - Security: NEXTAUTH_SECRET appears to be using a default/example value. Generate a secure value with: node -e 
+"console.log(require('crypto').randomBytes(32).toString('base64'))"
+
+    [0m [90m 67 |[39m     [36mif[39m (errors[33m.[39mlength [33m>[39m [35m0[39m [33m&&[39m 
+process[33m.[39menv[33m.[39m[33mNODE_ENV[39m [33m===[39m [32m'production'[39m) {
+     [90m 68 |[39m         console[33m.[39merror([32m'\n=== CONFIGURATION ERROR ==='[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 69 |[39m         errors[33m.[39mforEach(err [33m=>[39m 
+console[33m.[39merror([32m`  - ${err}`[39m))[33m;[39m
+     [90m    |[39m                                       [31m[1m^[22m[39m
+     [90m 70 |[39m         console[33m.[39merror([32m'===========================\n'[39m)[33m;[39m
+     [90m 71 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m(
+     [90m 72 |[39m             [32m`Configuration validation failed with ${errors.length} error(s). `[39m 
+[33m+[39m[0m
+
+      at error (src/lib/config.ts:69:39)
+          at Array.forEach (<anonymous>)
+      at forEach (src/lib/config.ts:69:16)
+      at validateConfig (src/lib/__tests__/config.test.ts:44:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:44:44)
+
+    console.error
+        - Security: JWT_SECRET appears to be using a default/example value.
+
+    [0m [90m 67 |[39m     [36mif[39m (errors[33m.[39mlength [33m>[39m [35m0[39m [33m&&[39m 
+process[33m.[39menv[33m.[39m[33mNODE_ENV[39m [33m===[39m [32m'production'[39m) {
+     [90m 68 |[39m         console[33m.[39merror([32m'\n=== CONFIGURATION ERROR ==='[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 69 |[39m         errors[33m.[39mforEach(err [33m=>[39m 
+console[33m.[39merror([32m`  - ${err}`[39m))[33m;[39m
+     [90m    |[39m                                       [31m[1m^[22m[39m
+     [90m 70 |[39m         console[33m.[39merror([32m'===========================\n'[39m)[33m;[39m
+     [90m 71 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m(
+     [90m 72 |[39m             [32m`Configuration validation failed with ${errors.length} error(s). `[39m 
+[33m+[39m[0m
+
+      at error (src/lib/config.ts:69:39)
+          at Array.forEach (<anonymous>)
+      at forEach (src/lib/config.ts:69:16)
+      at validateConfig (src/lib/__tests__/config.test.ts:44:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:44:44)
+
+    console.error
+      ===========================
+
+    [0m [90m 68 |[39m         console[33m.[39merror([32m'\n=== CONFIGURATION ERROR ==='[39m)[33m;[39m
+     [90m 69 |[39m         errors[33m.[39mforEach(err [33m=>[39m console[33m.[39merror([32m`  - 
+${err}`[39m))[33m;[39m
+    [31m[1m>[22m[39m[90m 70 |[39m         
+console[33m.[39merror([32m'===========================\n'[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 71 |[39m         [36mthrow[39m [36mnew[39m [33mError[39m(
+     [90m 72 |[39m             [32m`Configuration validation failed with ${errors.length} error(s). `[39m 
+[33m+[39m
+     [90m 73 |[39m             [32m`See logs above for details.`[39m[0m
+
+      at error (src/lib/config.ts:70:17)
+      at validateConfig (src/lib/__tests__/config.test.ts:44:26)
+      at Object.<anonymous> (node_modules/expect/build/toThrowMatchers.js:74:11)
+      at Object.throwingMatcher [as toThrow] (node_modules/expect/build/index.js:320:21)
+      at Object.toThrow (src/lib/__tests__/config.test.ts:44:44)
+
+    console.warn
+      [Config] Missing NONEXISTENT, using empty string (dev only)
+
+    [0m [90m  95 |[39m             [36mthrow[39m [36mnew[39m [33mError[39m([32m`Required environment 
+variable ${name} is not set`[39m)[33m;[39m
+     [90m  96 |[39m         }
+    [31m[1m>[22m[39m[90m  97 |[39m         console[33m.[39mwarn([32m`[Config] Missing ${name}, using empty 
+string (dev only)`[39m)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m  98 |[39m         [36mreturn[39m [32m''[39m[33m;[39m
+     [90m  99 |[39m     }
+     [90m 100 |[39m[0m
+
+      at warn (src/lib/config.ts:97:17)
+      at Object.getRequiredEnv (src/lib/__tests__/config.test.ts:68:20)
+
+PASS src/app/api/mobile/v1/activities/route.test.ts
+PASS src/lib/services/__tests__/analytics.fitness.test.ts
+PASS src/lib/__tests__/rateLimit.test.ts
+PASS src/app/admin/login/page.test.tsx
+PASS src/lib/strava/transform.test.ts
+PASS src/lib/__tests__/apiError.test.ts
+  ΓùÅ Console
+
+    console.log
+      [31m[ERROR][0m API error {
+        error: 'User not found',
+        errorName: 'ApiError',
+        errorStack: 'ApiError: User not found\n' +
+          '    at ApiError.notFound (C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\apiError.ts:80:16)\n' 
++
+          '    at Object.notFound (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\src\\lib\\__tests__\\apiError.test.ts:110:32)\n' +
+          '    at Promise.then.completed (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:298:28)\n' +
+          '    at new Promise (<anonymous>)\n' +
+          '    at callAsyncCircusFn (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:231:10)\n' +
+          '    at _callCircusTest (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:316:40)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n' +
+          '    at _runTest (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:252:3)\n' +
+          '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:126:9)\n' +
+          '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:121:9)\n' +
+          '    at run (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:71:3)\n' +
+          '    at runAndTransformResultsToJestFormat (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n' +
+          '    at jestAdapter (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n' +
+          '    at runTestInternal (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n' +
+          '    at runTest (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:444:34)\n' +
+          '    at Object.worker (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-runner\\build\\testWorker.js:106:12)'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m API error {
+        error: 'Something went wrong',
+        errorName: 'Error',
+        errorStack: 'Error: Something went wrong\n' +
+          '    at Object.<anonymous> (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\src\\lib\\__tests__\\apiError.test.ts:119:23)\n' +
+          '    at Promise.then.completed (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:298:28)\n' +
+          '    at new Promise (<anonymous>)\n' +
+          '    at callAsyncCircusFn (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:231:10)\n' +
+          '    at _callCircusTest (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:316:40)\n' +
+          '    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n' +
+          '    at _runTest (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:252:3)\n' +
+          '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:126:9)\n' +
+          '    at _runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:121:9)\n' +
+          '    at run (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:71:3)\n' +
+          '    at runAndTransformResultsToJestFormat (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n' +
+          '    at jestAdapter (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n' +
+          '    at runTestInternal (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n' +
+          '    at runTest (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:444:34)\n' +
+          '    at Object.worker (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-runner\\build\\testWorker.js:106:12)'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      {"level":"error","message":"API 
+error","timestamp":"2026-02-27T10:57:13.468Z","environment":"production","error":"Sensitive database 
+error","errorName":"Error","errorStack":"Error: Sensitive database error\n    at Object.<anonymous> 
+(C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\__tests__\\apiError.test.ts:128:23)\n    at 
+Promise.then.completed (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:298:28)\n    at new Promise (<anonymous>)\n    at 
+callAsyncCircusFn (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\utils.js:231:10)\n    at _callCircusTest 
+(C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:316:40)\n    at 
+processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at _runTest 
+(C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:252:3)\n    at 
+_runTestsForDescribeBlock (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:126:9)\n    at _runTestsForDescribeBlock 
+(C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:121:9)\n    at run 
+(C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-circus\\build\\run.js:71:3)\n    at 
+runAndTransformResultsToJestFormat (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)\n    at 
+jestAdapter (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)\n    at 
+runTestInternal (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:367:16)\n    at runTest 
+(C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\node_modules\\jest-runner\\build\\runTest.js:444:34)\n    at 
+Object.worker (C:\\Users\\thies\\Antigravity\\Full 
+RunFlow\\Web\\node_modules\\jest-runner\\build\\testWorker.js:106:12)"}
+
+      at log (src/lib/logging/logger.ts:24:13)
+
+    console.log
+      [31m[ERROR][0m API error { error: 'string error', errorName: undefined, errorStack: undefined }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/__tests__/crypto.test.ts
+PASS src/app/api/dashboard/__tests__/route.test.ts
+PASS src/lib/metrics/__tests__/trimp.test.ts
+PASS src/lib/metrics/__tests__/vdot.test.ts
+PASS src/lib/ai/__tests__/providers-ssrf.test.ts
+PASS src/lib/strava/sync.test.ts
+  ΓùÅ Console
+
+    console.log
+      [36m[INFO][0m Sync page fetched { page: 1, activityCount: 5, after: 1672531200 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Activity sync status {
+        activityId: 1000,
+        isNew: true,
+        needsUpdate: null,
+        hasHeartrate: false,
+        existingZone1: undefined
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m Activity sync status {
+        activityId: 1001,
+        isNew: true,
+        needsUpdate: null,
+        hasHeartrate: false,
+        existingZone1: undefined
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m Activity sync status {
+        activityId: 1002,
+        isNew: true,
+        needsUpdate: null,
+        hasHeartrate: false,
+        existingZone1: undefined
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+          at Array.map (<anonymous>)
+
+    console.log
+      [36m[INFO][0m Sync page fetched { page: 2, activityCount: 0, after: 1672531200 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [36m[INFO][0m Updated fitness cache { userId: 'user-123', activityCount: 5 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      prisma.activity.findUnique called 0 times
+
+      at Object.log (src/lib/strava/sync.test.ts:148:17)
+
+    console.log
+      prisma.activity.findMany called 1 times
+
+      at Object.log (src/lib/strava/sync.test.ts:149:17)
+
+PASS src/lib/admin/__tests__/auth.test.ts
+PASS src/lib/utils/__tests__/format.test.ts
+PASS src/middleware.test.ts
+PASS src/lib/logging/__tests__/logger.test.ts
+PASS src/lib/metrics/__tests__/goalProjection.test.ts
+PASS src/lib/json/__tests__/serializer.test.ts
+PASS src/lib/services/__tests__/analytics.test.ts
+PASS src/app/api/admin/recalculate-fitness/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:45:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:55:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:85:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Error cleaning up duplicates for user user-1: TypeError: _db.prisma.activity.findMany is not a function
+          at findMany (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:142:58)
+          at cleanupDuplicateActivities (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:88:48)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:4:10
+          at new Promise (<anonymous>)
+          at pTry (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:3:37)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:23:18)
+          at enqueue (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:32:4)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:60
+          at new Promise (<anonymous>)
+          at generator (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:37)
+          at limit (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:44)
+          at Array.map (<anonymous>)
+          at map (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:32)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:69:26)
+
+    [0m [90m 181 |[39m         [36mreturn[39m deletedCount[33m;[39m
+     [90m 182 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 183 |[39m         console[33m.[39merror([32m`[Admin] Error cleaning up duplicates 
+for user ${userId}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 184 |[39m         [36mreturn[39m [35m0[39m[33m;[39m
+     [90m 185 |[39m     }
+     [90m 186 |[39m }[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:183:17)
+      at cleanupDuplicateActivities (src/app/api/admin/recalculate-fitness/route.ts:88:48)
+      at node_modules/p-try/index.js:4:10
+      at pTry (node_modules/p-try/index.js:3:37)
+      at run (node_modules/p-limit/index.js:23:18)
+      at enqueue (node_modules/p-limit/index.js:32:4)
+      at node_modules/p-limit/index.js:38:60
+      at generator (node_modules/p-limit/index.js:38:37)
+      at limit (src/app/api/admin/recalculate-fitness/route.ts:80:44)
+          at Array.map (<anonymous>)
+      at map (src/app/api/admin/recalculate-fitness/route.ts:80:32)
+      at Object.<anonymous> (src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:69:26)
+
+    console.log
+      [Admin] Recalculating for user user2@example.com (Start: 2023-01-02T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:85:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Error cleaning up duplicates for user user-2: TypeError: _db.prisma.activity.findMany is not a function
+          at findMany (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:142:58)
+          at cleanupDuplicateActivities (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:88:48)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:4:10
+          at new Promise (<anonymous>)
+          at pTry (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:3:37)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:23:18)
+          at enqueue (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:32:4)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:60
+          at new Promise (<anonymous>)
+          at generator (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:37)
+          at limit (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:44)
+          at Array.map (<anonymous>)
+          at map (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:32)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:69:26)
+
+    [0m [90m 181 |[39m         [36mreturn[39m deletedCount[33m;[39m
+     [90m 182 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 183 |[39m         console[33m.[39merror([32m`[Admin] Error cleaning up duplicates 
+for user ${userId}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 184 |[39m         [36mreturn[39m [35m0[39m[33m;[39m
+     [90m 185 |[39m     }
+     [90m 186 |[39m }[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:183:17)
+      at cleanupDuplicateActivities (src/app/api/admin/recalculate-fitness/route.ts:88:48)
+      at node_modules/p-try/index.js:4:10
+      at pTry (node_modules/p-try/index.js:3:37)
+      at run (node_modules/p-limit/index.js:23:18)
+      at enqueue (node_modules/p-limit/index.js:32:4)
+      at node_modules/p-limit/index.js:38:60
+      at generator (node_modules/p-limit/index.js:38:37)
+      at limit (src/app/api/admin/recalculate-fitness/route.ts:80:44)
+          at Array.map (<anonymous>)
+      at map (src/app/api/admin/recalculate-fitness/route.ts:80:32)
+      at Object.<anonymous> (src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:69:26)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [Admin] Starting fitness recalculation for user user-1...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:45:17)
+
+    console.log
+      [Admin] Found 1 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:55:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:85:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Error cleaning up duplicates for user user-1: TypeError: _db.prisma.activity.findMany is not a function
+          at findMany (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:142:58)
+          at cleanupDuplicateActivities (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:88:48)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:4:10
+          at new Promise (<anonymous>)
+          at pTry (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:3:37)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:23:18)
+          at enqueue (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:32:4)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:60
+          at new Promise (<anonymous>)
+          at generator (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:37)
+          at limit (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:44)
+          at Array.map (<anonymous>)
+          at map (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:32)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:104:26)
+
+    [0m [90m 181 |[39m         [36mreturn[39m deletedCount[33m;[39m
+     [90m 182 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 183 |[39m         console[33m.[39merror([32m`[Admin] Error cleaning up duplicates 
+for user ${userId}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 184 |[39m         [36mreturn[39m [35m0[39m[33m;[39m
+     [90m 185 |[39m     }
+     [90m 186 |[39m }[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:183:17)
+      at cleanupDuplicateActivities (src/app/api/admin/recalculate-fitness/route.ts:88:48)
+      at node_modules/p-try/index.js:4:10
+      at pTry (node_modules/p-try/index.js:3:37)
+      at run (node_modules/p-limit/index.js:23:18)
+      at enqueue (node_modules/p-limit/index.js:32:4)
+      at node_modules/p-limit/index.js:38:60
+      at generator (node_modules/p-limit/index.js:38:37)
+      at limit (src/app/api/admin/recalculate-fitness/route.ts:80:44)
+          at Array.map (<anonymous>)
+      at map (src/app/api/admin/recalculate-fitness/route.ts:80:32)
+      at Object.<anonymous> (src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:104:26)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:45:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:55:17)
+
+    console.log
+      [Admin] User user1@example.com has no activities. Skipping.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:102:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [Admin] User user2@example.com has no activities. Skipping.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:102:29)
+          at Array.map (<anonymous>)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:45:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:55:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:85:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Error cleaning up duplicates for user user-1: TypeError: _db.prisma.activity.findMany is not a function
+          at findMany (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:142:58)
+          at cleanupDuplicateActivities (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:88:48)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:4:10
+          at new Promise (<anonymous>)
+          at pTry (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:3:37)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:23:18)
+          at enqueue (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:32:4)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:60
+          at new Promise (<anonymous>)
+          at generator (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:37)
+          at limit (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:44)
+          at Array.map (<anonymous>)
+          at map (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:32)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:185:26)
+
+    [0m [90m 181 |[39m         [36mreturn[39m deletedCount[33m;[39m
+     [90m 182 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 183 |[39m         console[33m.[39merror([32m`[Admin] Error cleaning up duplicates 
+for user ${userId}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 184 |[39m         [36mreturn[39m [35m0[39m[33m;[39m
+     [90m 185 |[39m     }
+     [90m 186 |[39m }[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:183:17)
+      at cleanupDuplicateActivities (src/app/api/admin/recalculate-fitness/route.ts:88:48)
+      at node_modules/p-try/index.js:4:10
+      at pTry (node_modules/p-try/index.js:3:37)
+      at run (node_modules/p-limit/index.js:23:18)
+      at enqueue (node_modules/p-limit/index.js:32:4)
+      at node_modules/p-limit/index.js:38:60
+      at generator (node_modules/p-limit/index.js:38:37)
+      at limit (src/app/api/admin/recalculate-fitness/route.ts:80:44)
+          at Array.map (<anonymous>)
+      at map (src/app/api/admin/recalculate-fitness/route.ts:80:32)
+      at Object.<anonymous> (src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:185:26)
+
+    console.log
+      [Admin] Recalculating for user user2@example.com (Start: 2023-01-02T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:85:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Error cleaning up duplicates for user user-2: TypeError: _db.prisma.activity.findMany is not a function
+          at findMany (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:142:58)
+          at cleanupDuplicateActivities (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:88:48)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:4:10
+          at new Promise (<anonymous>)
+          at pTry (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:3:37)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:23:18)
+          at enqueue (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:32:4)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:60
+          at new Promise (<anonymous>)
+          at generator (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:37)
+          at limit (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:44)
+          at Array.map (<anonymous>)
+          at map (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:32)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:185:26)
+
+    [0m [90m 181 |[39m         [36mreturn[39m deletedCount[33m;[39m
+     [90m 182 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 183 |[39m         console[33m.[39merror([32m`[Admin] Error cleaning up duplicates 
+for user ${userId}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 184 |[39m         [36mreturn[39m [35m0[39m[33m;[39m
+     [90m 185 |[39m     }
+     [90m 186 |[39m }[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:183:17)
+      at cleanupDuplicateActivities (src/app/api/admin/recalculate-fitness/route.ts:88:48)
+      at node_modules/p-try/index.js:4:10
+      at pTry (node_modules/p-try/index.js:3:37)
+      at run (node_modules/p-limit/index.js:23:18)
+      at enqueue (node_modules/p-limit/index.js:32:4)
+      at node_modules/p-limit/index.js:38:60
+      at generator (node_modules/p-limit/index.js:38:37)
+      at limit (src/app/api/admin/recalculate-fitness/route.ts:80:44)
+          at Array.map (<anonymous>)
+      at map (src/app/api/admin/recalculate-fitness/route.ts:80:32)
+      at Object.<anonymous> (src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:185:26)
+
+    console.error
+      [Admin] Failed to recalculate for user user1@example.com: Error: Fitness cache error
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:177:61)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 104 |[39m                 }
+     [90m 105 |[39m             } [36mcatch[39m (err[33m:[39m any) {
+    [31m[1m>[22m[39m[90m 106 |[39m                 console[33m.[39merror([32m`[Admin] Failed to recalculate 
+for user ${user.email}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 107 |[39m                 [36mreturn[39m { userId[33m:[39m user[33m.[39mid[33m,[39m 
+email[33m:[39m user[33m.[39memail[33m,[39m status[33m:[39m [32m'error'[39m[33m,[39m error[33m:[39m 
+err[33m.[39mmessage }[33m;[39m
+     [90m 108 |[39m             }
+     [90m 109 |[39m         }))[33m;[39m[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:106:25)
+
+    console.error
+      [Admin] Failed to recalculate for user user2@example.com: Error: Fitness cache error
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:177:61)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 104 |[39m                 }
+     [90m 105 |[39m             } [36mcatch[39m (err[33m:[39m any) {
+    [31m[1m>[22m[39m[90m 106 |[39m                 console[33m.[39merror([32m`[Admin] Failed to recalculate 
+for user ${user.email}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                         [31m[1m^[22m[39m
+     [90m 107 |[39m                 [36mreturn[39m { userId[33m:[39m user[33m.[39mid[33m,[39m 
+email[33m:[39m user[33m.[39memail[33m,[39m status[33m:[39m [32m'error'[39m[33m,[39m error[33m:[39m 
+err[33m.[39mmessage }[33m;[39m
+     [90m 108 |[39m             }
+     [90m 109 |[39m         }))[33m;[39m[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:106:25)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:45:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:55:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:85:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Error cleaning up duplicates for user user-1: TypeError: _db.prisma.activity.findMany is not a function
+          at findMany (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:142:58)
+          at cleanupDuplicateActivities (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:88:48)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:4:10
+          at new Promise (<anonymous>)
+          at pTry (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:3:37)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:23:18)
+          at enqueue (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:32:4)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:60
+          at new Promise (<anonymous>)
+          at generator (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:37)
+          at limit (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:44)
+          at Array.map (<anonymous>)
+          at map (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:32)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:201:26)
+
+    [0m [90m 181 |[39m         [36mreturn[39m deletedCount[33m;[39m
+     [90m 182 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 183 |[39m         console[33m.[39merror([32m`[Admin] Error cleaning up duplicates 
+for user ${userId}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 184 |[39m         [36mreturn[39m [35m0[39m[33m;[39m
+     [90m 185 |[39m     }
+     [90m 186 |[39m }[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:183:17)
+      at cleanupDuplicateActivities (src/app/api/admin/recalculate-fitness/route.ts:88:48)
+      at node_modules/p-try/index.js:4:10
+      at pTry (node_modules/p-try/index.js:3:37)
+      at run (node_modules/p-limit/index.js:23:18)
+      at enqueue (node_modules/p-limit/index.js:32:4)
+      at node_modules/p-limit/index.js:38:60
+      at generator (node_modules/p-limit/index.js:38:37)
+      at limit (src/app/api/admin/recalculate-fitness/route.ts:80:44)
+          at Array.map (<anonymous>)
+      at map (src/app/api/admin/recalculate-fitness/route.ts:80:32)
+      at Object.<anonymous> (src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:201:26)
+
+    console.log
+      [Admin] Recalculating for user user2@example.com (Start: 2023-01-02T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:85:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Error cleaning up duplicates for user user-2: TypeError: _db.prisma.activity.findMany is not a function
+          at findMany (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:142:58)
+          at cleanupDuplicateActivities (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:88:48)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:4:10
+          at new Promise (<anonymous>)
+          at pTry (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:3:37)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:23:18)
+          at enqueue (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:32:4)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:60
+          at new Promise (<anonymous>)
+          at generator (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:37)
+          at limit (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:44)
+          at Array.map (<anonymous>)
+          at map (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:32)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:201:26)
+
+    [0m [90m 181 |[39m         [36mreturn[39m deletedCount[33m;[39m
+     [90m 182 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 183 |[39m         console[33m.[39merror([32m`[Admin] Error cleaning up duplicates 
+for user ${userId}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 184 |[39m         [36mreturn[39m [35m0[39m[33m;[39m
+     [90m 185 |[39m     }
+     [90m 186 |[39m }[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:183:17)
+      at cleanupDuplicateActivities (src/app/api/admin/recalculate-fitness/route.ts:88:48)
+      at node_modules/p-try/index.js:4:10
+      at pTry (node_modules/p-try/index.js:3:37)
+      at run (node_modules/p-limit/index.js:23:18)
+      at enqueue (node_modules/p-limit/index.js:32:4)
+      at node_modules/p-limit/index.js:38:60
+      at generator (node_modules/p-limit/index.js:38:37)
+      at limit (src/app/api/admin/recalculate-fitness/route.ts:80:44)
+          at Array.map (<anonymous>)
+      at map (src/app/api/admin/recalculate-fitness/route.ts:80:32)
+      at Object.<anonymous> (src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:201:26)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [Admin] Starting fitness recalculation for ALL users...
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:45:17)
+
+    console.log
+      [Admin] Found 2 users to process.
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:55:17)
+
+    console.log
+      [Admin] Recalculating for user user1@example.com (Start: 2023-01-01T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:85:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Error cleaning up duplicates for user user-1: TypeError: _db.prisma.activity.findMany is not a function
+          at findMany (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:142:58)
+          at cleanupDuplicateActivities (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:88:48)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:4:10
+          at new Promise (<anonymous>)
+          at pTry (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:3:37)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:23:18)
+          at enqueue (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:32:4)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:60
+          at new Promise (<anonymous>)
+          at generator (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:37)
+          at limit (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:44)
+          at Array.map (<anonymous>)
+          at map (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:32)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:213:26)
+
+    [0m [90m 181 |[39m         [36mreturn[39m deletedCount[33m;[39m
+     [90m 182 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 183 |[39m         console[33m.[39merror([32m`[Admin] Error cleaning up duplicates 
+for user ${userId}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 184 |[39m         [36mreturn[39m [35m0[39m[33m;[39m
+     [90m 185 |[39m     }
+     [90m 186 |[39m }[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:183:17)
+      at cleanupDuplicateActivities (src/app/api/admin/recalculate-fitness/route.ts:88:48)
+      at node_modules/p-try/index.js:4:10
+      at pTry (node_modules/p-try/index.js:3:37)
+      at run (node_modules/p-limit/index.js:23:18)
+      at enqueue (node_modules/p-limit/index.js:32:4)
+      at node_modules/p-limit/index.js:38:60
+      at generator (node_modules/p-limit/index.js:38:37)
+      at limit (src/app/api/admin/recalculate-fitness/route.ts:80:44)
+          at Array.map (<anonymous>)
+      at map (src/app/api/admin/recalculate-fitness/route.ts:80:32)
+      at Object.<anonymous> (src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:213:26)
+
+    console.log
+      [Admin] Recalculating for user user2@example.com (Start: 2023-01-02T00:00:00.000Z)
+
+      at log (src/app/api/admin/recalculate-fitness/route.ts:85:29)
+          at Array.map (<anonymous>)
+
+    console.error
+      [Admin] Error cleaning up duplicates for user user-2: TypeError: _db.prisma.activity.findMany is not a function
+          at findMany (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:142:58)
+          at cleanupDuplicateActivities (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:88:48)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:4:10
+          at new Promise (<anonymous>)
+          at pTry (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-try\index.js:3:37)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:23:18)
+          at enqueue (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:32:4)
+          at C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:60
+          at new Promise (<anonymous>)
+          at generator (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\p-limit\index.js:38:37)
+          at limit (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:44)
+          at Array.map (<anonymous>)
+          at map (C:\Users\thies\Antigravity\Full RunFlow\Web\src\app\api\admin\recalculate-fitness\route.ts:80:32)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\admin\recalculate-fitness\__tests__\route.test.ts:213:26)
+
+    [0m [90m 181 |[39m         [36mreturn[39m deletedCount[33m;[39m
+     [90m 182 |[39m     } [36mcatch[39m (err) {
+    [31m[1m>[22m[39m[90m 183 |[39m         console[33m.[39merror([32m`[Admin] Error cleaning up duplicates 
+for user ${userId}:`[39m[33m,[39m err)[33m;[39m
+     [90m     |[39m                 [31m[1m^[22m[39m
+     [90m 184 |[39m         [36mreturn[39m [35m0[39m[33m;[39m
+     [90m 185 |[39m     }
+     [90m 186 |[39m }[0m
+
+      at error (src/app/api/admin/recalculate-fitness/route.ts:183:17)
+      at cleanupDuplicateActivities (src/app/api/admin/recalculate-fitness/route.ts:88:48)
+      at node_modules/p-try/index.js:4:10
+      at pTry (node_modules/p-try/index.js:3:37)
+      at run (node_modules/p-limit/index.js:23:18)
+      at enqueue (node_modules/p-limit/index.js:32:4)
+      at node_modules/p-limit/index.js:38:60
+      at generator (node_modules/p-limit/index.js:38:37)
+      at limit (src/app/api/admin/recalculate-fitness/route.ts:80:44)
+          at Array.map (<anonymous>)
+      at map (src/app/api/admin/recalculate-fitness/route.ts:80:32)
+      at Object.<anonymous> (src/app/api/admin/recalculate-fitness/__tests__/route.test.ts:213:26)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'RECALCULATE_FITNESS',
+        error: "Cannot read properties of undefined (reading 'create')"
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/__tests__/stravaSync.test.ts
+  ΓùÅ Console
+
+    console.log
+      [36m[INFO][0m Rate limit reached (Redis), waiting { waitSeconds: 1 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/auth/__tests__/tokens.test.ts
+PASS src/lib/auth/__tests__/auth-email.test.ts
+PASS src/lib/metrics/__tests__/calories.test.ts
+PASS src/lib/services/__tests__/analytics.vo2max.test.ts
+PASS src/lib/security/__tests__/nonce.test.ts
+PASS src/app/api/admin/stats/__tests__/route.test.ts
+PASS src/app/api/ai/chat/history/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.error
+      Error fetching chat history: Error: Database error
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\ai\chat\history\__tests__\route.test.ts:100:70)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 53 |[39m         })[33m;[39m
+     [90m 54 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 55 |[39m         console[33m.[39merror([32m'Error fetching chat 
+history:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 56 |[39m         [36mreturn[39m [36mnew[39m [33mResponse[39m([33mJSON[39m[33m.[39mstringify({ 
+error[33m:[39m [32m'Failed to fetch chat history'[39m })[33m,[39m {
+     [90m 57 |[39m             status[33m:[39m [35m500[39m[33m,[39m
+     [90m 58 |[39m             headers[33m:[39m { [32m'Content-Type'[39m[33m:[39m [32m'application/json'[39m 
+}[33m,[39m[0m
+
+      at error (src/app/api/ai/chat/history/route.ts:55:17)
+      at Object.<anonymous> (src/app/api/ai/chat/history/__tests__/route.test.ts:104:26)
+
+    console.error
+      Error clearing chat history: Error: Database error
+          at Object.<anonymous> (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\src\app\api\ai\chat\history\__tests__\route.test.ts:176:72)
+          at Promise.then.completed (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at _runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\run.js:121:9)
+          at run (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (C:\Users\thies\Antigravity\Full RunFlow\Web\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (C:\Users\thies\Antigravity\Full 
+RunFlow\Web\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 90 |[39m         })[33m;[39m
+     [90m 91 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 92 |[39m         console[33m.[39merror([32m'Error clearing chat 
+history:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 93 |[39m         [36mreturn[39m [36mnew[39m [33mResponse[39m([33mJSON[39m[33m.[39mstringify({ 
+error[33m:[39m [32m'Failed to clear chat history'[39m })[33m,[39m {
+     [90m 94 |[39m             status[33m:[39m [35m500[39m[33m,[39m
+     [90m 95 |[39m             headers[33m:[39m { [32m'Content-Type'[39m[33m:[39m [32m'application/json'[39m 
+}[33m,[39m[0m
+
+      at error (src/app/api/ai/chat/history/route.ts:92:17)
+      at Object.<anonymous> (src/app/api/ai/chat/history/__tests__/route.test.ts:182:26)
+
+PASS src/lib/backup/status.test.ts
+PASS src/lib/analytics/__tests__/zones.test.ts
+PASS src/lib/metrics/__tests__/calibration.test.ts
+PASS src/lib/metrics/__tests__/fitness.test.ts
+PASS src/app/api/auth/forgot-password/__tests__/route.test.ts
+  ΓùÅ Console
+
+    console.log
+      [31m[ERROR][0m Failed to send reset email { email: 'test@example.com', error: 'Email error' }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/ai/__tests__/prompts.test.ts
+PASS src/lib/security/__tests__/csrf.test.ts
+PASS src/app/api/admin/analytics/__tests__/route.test.ts
+PASS src/lib/errors/__tests__/handler.test.ts
+PASS src/app/api/mobile/auth/login/route.test.ts
+PASS src/app/api/webhooks/strava/__tests__/route.test.ts
+PASS src/lib/metrics/__tests__/fitnessCache.test.ts
+  ΓùÅ Console
+
+    console.log
+      [36m[INFO][0m [FitnessCache] Updated 30 days { userId: 'user1', count: 30, latestCtl: 4.9, latestAtl: 0.1 }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+PASS src/lib/metrics/__tests__/runalyze.test.ts
+PASS src/lib/ai/__tests__/tokenCounter.test.ts (7.432 s)
+PASS src/app/api/ai/activity-feedback/__tests__/route.test.ts (11.191 s)
+PASS src/app/api/admin/backups/__tests__/route.test.ts (20.667 s)
+  ΓùÅ Console
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_BACKUPS',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          'C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\admin\\auditLog.ts:48:36\n' +
+          '\n' +
+          '  45 \n' +
+          "  46 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  47 \n' +
+          'ΓåÆ 48 await prisma.adminAuditLog.create(\n' +
+          "Can't reach database server at `db:5432`\n" +
+          '\n' +
+          'Please make sure your database server is running at `db:5432`.'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_BACKUPS',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          'C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\admin\\auditLog.ts:48:36\n' +
+          '\n' +
+          '  45 \n' +
+          "  46 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  47 \n' +
+          'ΓåÆ 48 await prisma.adminAuditLog.create(\n' +
+          "Can't reach database server at `db:5432`\n" +
+          '\n' +
+          'Please make sure your database server is running at `db:5432`.'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'VIEW_BACKUPS',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          'C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\admin\\auditLog.ts:48:36\n' +
+          '\n' +
+          '  45 \n' +
+          "  46 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  47 \n' +
+          'ΓåÆ 48 await prisma.adminAuditLog.create(\n' +
+          "Can't reach database server at `db:5432`\n" +
+          '\n' +
+          'Please make sure your database server is running at `db:5432`.'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'UPLOAD_BACKUP',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          'C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\admin\\auditLog.ts:48:36\n' +
+          '\n' +
+          '  45 \n' +
+          "  46 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  47 \n' +
+          'ΓåÆ 48 await prisma.adminAuditLog.create(\n' +
+          "Can't reach database server at `db:5432`\n" +
+          '\n' +
+          'Please make sure your database server is running at `db:5432`.'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'UPLOAD_BACKUP',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          'C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\admin\\auditLog.ts:48:36\n' +
+          '\n' +
+          '  45 \n' +
+          "  46 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  47 \n' +
+          'ΓåÆ 48 await prisma.adminAuditLog.create(\n' +
+          "Can't reach database server at `db:5432`\n" +
+          '\n' +
+          'Please make sure your database server is running at `db:5432`.'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'DELETE_BACKUP',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          'C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\admin\\auditLog.ts:48:36\n' +
+          '\n' +
+          '  45 \n' +
+          "  46 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  47 \n' +
+          'ΓåÆ 48 await prisma.adminAuditLog.create(\n' +
+          "Can't reach database server at `db:5432`\n" +
+          '\n' +
+          'Please make sure your database server is running at `db:5432`.'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+    console.log
+      [31m[ERROR][0m Failed to write admin audit log {
+        action: 'UPLOAD_BACKUP',
+        error: '\n' +
+          'Invalid `prisma.adminAuditLog.create()` invocation in\n' +
+          'C:\\Users\\thies\\Antigravity\\Full RunFlow\\Web\\src\\lib\\admin\\auditLog.ts:48:36\n' +
+          '\n' +
+          '  45 \n' +
+          "  46 const userAgent = req.headers.get('user-agent') || 'unknown';\n" +
+          '  47 \n' +
+          'ΓåÆ 48 await prisma.adminAuditLog.create(\n' +
+          "Can't reach database server at `db:5432`\n" +
+          '\n' +
+          'Please make sure your database server is running at `db:5432`.'
+      }
+
+      at log (src/lib/logging/logger.ts:34:13)
+
+
+Test Suites: 74 passed, 74 total
+Tests:       620 passed, 620 total
+Snapshots:   0 total
+Time:        21.24 s
+Ran all test suites.

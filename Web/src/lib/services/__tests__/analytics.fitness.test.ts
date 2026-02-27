@@ -5,7 +5,7 @@ import { METRICS } from '@/lib/constants';
 const createActivity = (dateStr: string, trimp?: number | null, movingTime: number = 3600) => ({
     startDate: new Date(dateStr),
     movingTime, // default 60 mins
-    trimp: trimp ?? undefined, // Use undefined for missing TRIMP to test fallback logic if needed, though types say null | number. The function signature says trimp is in the Pick.
+    trimp: trimp === undefined ? null : trimp, // Use null for missing TRIMP to match Activity type
 });
 
 // The actual signature in AnalyticsService.calculateFitnessMetrics expects:

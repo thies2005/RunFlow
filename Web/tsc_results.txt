@@ -1,0 +1,3 @@
+﻿src/app/api/plan/route.ts(8,1): error TS1185: Merge conflict marker encountered.
+src/app/api/plan/route.ts(10,1): error TS1185: Merge conflict marker encountered.
+src/app/api/plan/route.ts(13,1): error TS1185: Merge conflict marker encountered.

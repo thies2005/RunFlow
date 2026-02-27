@@ -246,8 +246,8 @@ describe('POST /api/auth/register', () => {
 
         // Error should be logged
         expect(logger.error).toHaveBeenCalledWith(
-            '[Register] Failed to send welcome email:',
-            emailError
+            '[Register] Failed to send welcome email',
+            { error: emailError }
         );
     });
 });

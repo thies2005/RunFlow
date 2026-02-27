@@ -15,21 +15,18 @@ jest.mock('@/lib/logging/logger', () => ({
 }));
 
 describe('Middleware CSP', () => {
-  it('should implement nonce-based CSP and remove unsafe-inline from script-src', async () => {
+  it('should implement CSP headers allowing unsafe-inline for Next.js SSG compatibility', async () => {
     const request = new NextRequest(new URL('http://localhost:3000/'));
     const response = await middleware(request);
 
     const csp = response.headers.get('content-security-policy');
-    const nonceHeader = response.headers.get('x-nonce');
 
     expect(csp).toBeDefined();
-    expect(nonceHeader).toBeDefined();
 
     // Verify script-src
-    expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
-    expect(csp).toContain(`script-src 'self' 'nonce-${nonceHeader}'`);
+    expect(csp).toContain("script-src 'self' 'unsafe-inline' https:");
 
-    // Verify style-src (should still have unsafe-inline)
+    // Verify style-src
     expect(csp).toContain("style-src 'self' 'unsafe-inline'");
   });
 });

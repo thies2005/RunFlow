@@ -184,17 +184,13 @@ export async function checkRateLimitAsync(
         return checkRateLimitRedis(key, limit, windowSeconds);
     }
 
-    // In serverless environments, in-memory rate limiting is ineffective (per-instance state).
-    // For Docker/long-running processes, in-memory fallback is acceptable.
-    if (process.env.NODE_ENV === 'production') {
-        console.error('Security: Redis not available in production. Failing closed.');
-        return {
-            allowed: false,
-            remaining: 0,
-            resetAt: Math.floor(Date.now() / 1000) + windowSeconds,
-            limit,
-            retryAfter: windowSeconds,
-        };
+    // In serverless environments (like Vercel), in-memory rate limiting is ineffective 
+    // because state is lost between invocations. 
+    // However, for Docker/long-running processes, in-memory fallback is perfectly acceptable.
+    // We log a warning if Redis is missing in production, but we don't fail closed
+    // to ensure the app remains usable for self-hosted Docker users without Redis.
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+        console.warn('Rate Limit: Redis not available in production. Falling back to in-memory (acceptable for long-running Docker containers).');
     }
 
     return checkRateLimitInMemory(key, limit, windowSeconds);

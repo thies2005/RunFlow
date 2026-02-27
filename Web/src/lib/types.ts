@@ -321,7 +321,7 @@ export interface UnlinkedActivity {
     movingTime: number;
     averageHr: number | null;
     averageSpeed: number | null;
-    type: string;
+    type: ActivityType;
 }
 
 export interface PlanResponse {

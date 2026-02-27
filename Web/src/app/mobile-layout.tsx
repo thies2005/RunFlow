@@ -33,6 +33,7 @@ import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
 import {
     calculatePredictedTimes,
 } from '@/lib/metrics/runalyze';
+import { type UnlinkedActivity, type ActivityListItem } from '@/lib/types';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { Capacitor } from '@capacitor/core';
 import { syncLocalNotifications } from '@/lib/mobile/notifications';
@@ -52,7 +53,7 @@ export function MobileLayout() {
     const [createDate, setCreateDate] = useState<Date | undefined>(undefined);
     const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
     // M-06 fix: Use proper ActivityListItem type (matches ActivityDetailsModal props)
-    const [selectedActivity, setSelectedActivity] = useState<import('@/lib/types').ActivityListItem | null>(null);
+    const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -288,9 +289,10 @@ export function MobileLayout() {
         setCreateDate(date);
     }, []);
 
-    const handleActivityClick = useCallback((activity: any, e?: React.MouseEvent) => {
+    const handleActivityClick = useCallback((activity: UnlinkedActivity | ActivityListItem, e?: React.MouseEvent) => {
         e?.stopPropagation?.();
-        setSelectedActivity(activity);
+        // M-06 fix: UnlinkedActivity is a subset of ActivityListItem, safe to cast for modal display
+        setSelectedActivity(activity as unknown as ActivityListItem);
         setIsActivityModalOpen(true);
     }, []);
 

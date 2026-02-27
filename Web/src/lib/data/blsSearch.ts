@@ -24,14 +24,13 @@ const blsFoods: BLSFoodItem[] = blsFoodsData as BLSFoodItem[];
 /**
  * Score a food item against a search query for relevance ranking.
  */
-function scoreMatch(name: string, query: string): number {
+function scoreMatch(name: string, query: string, wordBoundaryRegex: RegExp): number {
     const lowerName = name.toLowerCase();
     const lowerQuery = query.toLowerCase();
 
     if (lowerName === lowerQuery) return 100;                    // Exact match
     if (lowerName.startsWith(lowerQuery)) return 80;             // Starts with
     // Word boundary match – query appears after a space/comma
-    const wordBoundaryRegex = new RegExp(`(?:^|[\\s,;(])${escapeRegex(lowerQuery)}`, 'i');
     if (wordBoundaryRegex.test(lowerName)) return 60;
     if (lowerName.includes(lowerQuery)) return 40;               // Substring
     return 0;
@@ -74,10 +73,13 @@ export function searchBLS(query: string, limit: number = 15): Array<{
 
     const scored: Array<{ food: BLSFoodItem; score: number }> = [];
 
+    // Compile the boundary regex once per request for performance
+    const wordBoundaryRegex = new RegExp(`(?:^|[\\s,;(])${escapeRegex(normalizedQuery)}`, 'i');
+
     for (const food of blsFoods) {
         // Score against both German and English names
-        const scoreDe = scoreMatch(food.name_de, normalizedQuery);
-        const scoreEn = scoreMatch(food.name_en, normalizedQuery);
+        const scoreDe = scoreMatch(food.name_de, normalizedQuery, wordBoundaryRegex);
+        const scoreEn = scoreMatch(food.name_en, normalizedQuery, wordBoundaryRegex);
         let bestScore = Math.max(scoreDe, scoreEn);
 
         // Multi-word matching: if all words appear in the name, give a bonus

@@ -128,7 +128,7 @@ export async function middleware(request: NextRequest) {
     // Override CSP (allow inline scripts to avoid blank page with Next.js inline chunks)
     const csp = [
         `default-src 'self'`,
-        `script-src 'self' 'nonce-${nonce}'`,
+        `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' https:`,
         `style-src 'self' 'unsafe-inline'`,
         `img-src 'self' data: https://*.strava.com https://*.googleusercontent.com https://dgalywyr863hv.cloudfront.net https://avatars.githubusercontent.com`,
         `font-src 'self' data:`,

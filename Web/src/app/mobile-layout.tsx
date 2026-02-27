@@ -28,12 +28,9 @@ import AiSettingsModal from '@/components/AiSettingsModal';
 import HealthView from '@/components/views/HealthView';
 import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
-import type { Workout, Goal, Activity } from '@/lib/types';
+import type { Workout, Goal, Activity, ActivityListItem } from '@/lib/types';
 import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
-import {
-    calculatePredictedTimes,
-} from '@/lib/metrics/runalyze';
-import { type UnlinkedActivity, type ActivityListItem } from '@/lib/types';
+import { calculatePredictedTimes } from '@/lib/metrics/runalyze';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { Capacitor } from '@capacitor/core';
 import { syncLocalNotifications } from '@/lib/mobile/notifications';
@@ -289,7 +286,7 @@ export function MobileLayout() {
         setCreateDate(date);
     }, []);
 
-    const handleActivityClick = useCallback((activity: UnlinkedActivity | ActivityListItem, e?: React.MouseEvent) => {
+    const handleActivityClick = useCallback((activity: ActivityListItem, e?: React.MouseEvent) => {
         e?.stopPropagation?.();
         // M-06 fix: UnlinkedActivity is a subset of ActivityListItem, safe to cast for modal display
         setSelectedActivity(activity as unknown as ActivityListItem);

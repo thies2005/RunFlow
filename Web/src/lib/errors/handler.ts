@@ -4,7 +4,7 @@ import { logger } from '@/lib/logging/logger'
 import crypto from 'crypto'
 
 export function isDevelopment(): boolean {
-  return process.env.NODE_ENV === 'development'
+  return process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test'
 }
 
 export function getSafeErrorMessage(error: unknown): string {

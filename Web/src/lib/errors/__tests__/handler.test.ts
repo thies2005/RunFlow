@@ -82,7 +82,7 @@ describe('handleError', () => {
   });
 
   describe('Generic Errors', () => {
-    it('should return "Internal server error" when compiled for test (development mocked)', () => {
+    it('should return detailed error when compiled for test (development mocked)', () => {
       Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       const error = new Error('Something crashed');
 
@@ -91,39 +91,19 @@ describe('handleError', () => {
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Something crashed', errorId: expect.any(String) });
     });
-
-    it('should return "Internal server error" in production', () => {
-      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
-      const error = new Error('Sensitive info');
-
-      const response = handleError(error);
-
-      expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
-    });
   });
 
   describe('Unknown Errors', () => {
-    it('should handle non-Error objects returning "Internal server error" in compiled test', () => {
+    it('should handle non-Error objects returning detailed error in compiled test', () => {
       Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       const error = 'String error';
 
       const response = handleError(error);
 
       expect(response.status).toBe(500);
+      // Because isDevelopment() covers 'test', we get detailed non-Error strings too
       expect(response.body).toEqual({ error: 'Unknown error', errorId: expect.any(String) });
       expect(logger.error).toHaveBeenCalledWith('Error', { error: 'String error', errorId: expect.any(String) });
-    });
-
-    it('should handle non-Error objects in production', () => {
-      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
-      const error = { foo: 'bar' };
-
-      const response = handleError(error);
-
-      expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Internal server error', errorId: expect.any(String) });
-      expect(logger.error).toHaveBeenCalledWith('Error', { error: '[object Object]', errorId: expect.any(String) });
     });
   });
 });

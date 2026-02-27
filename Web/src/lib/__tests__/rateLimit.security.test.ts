@@ -37,9 +37,8 @@ describe('checkRateLimitAsync Security', () => {
         const result = await checkRateLimitAsync('test-id-prod', { limit: 10, windowSeconds: 60 });
 
         expect(mockIncr).not.toHaveBeenCalled();
-        // Updated expectation: The implementation now defaults to in-memory fallback even in production if Redis is missing,
-        // effectively "failing open" to basic rate limiting rather than blocking everything.
-        expect(result.allowed).toBe(true);
+        // Updated expectation: The implementation securely fails closed in production
+        expect(result.allowed).toBe(false);
     });
 
     it('fails closed when Redis operations fail (Secure)', async () => {

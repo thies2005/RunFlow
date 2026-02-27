@@ -192,7 +192,7 @@ export function handleApiError(
 
     if (error instanceof Error) {
         return apiError(
-            process.env.NODE_ENV === 'development' ? error.message : 'An error occurred',
+            (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') ? error.message : 'An error occurred',
             500,
             ErrorCode.INTERNAL_ERROR,
             context?.details,

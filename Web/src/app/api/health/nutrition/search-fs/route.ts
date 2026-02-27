@@ -82,10 +82,14 @@ async function fetchFatSecretWithTimeout(query: string, timeoutMs: number, token
             cache: 'no-store'
         });
 
-        if (!fsRes.ok) return [];
+        if (!fsRes.ok) {
+            console.error(`FatSecret API error: ${fsRes.status} ${await fsRes.text()}`);
+            return [];
+        }
 
         const fsData = await fsRes.json();
         const results = fsData.foods?.food || [];
+        console.log(`FatSecret API returned ${Array.isArray(results) ? results.length : (results ? 1 : 0)} items for query: ${query}`);
 
         // FatSecret returns a single object if there's only 1 item, otherwise an array.
         const items = Array.isArray(results) ? results : (results ? [results] : []);
@@ -120,7 +124,8 @@ async function fetchFatSecretWithTimeout(query: string, timeoutMs: number, token
                 source: 'fs'
             };
         });
-    } catch {
+    } catch (e) {
+        console.error("FatSecret fetch error:", e);
         return [];
     } finally {
         clearTimeout(timer);

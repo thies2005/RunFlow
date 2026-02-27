@@ -109,9 +109,13 @@ async function fetchOFFWithTimeout(query: string, timeoutMs: number): Promise<Ar
             cache: 'no-store' // Ensure we don't hit Vercel edge cache since we manage it in DB
         });
 
-        if (!offRes.ok) return [];
+        if (!offRes.ok) {
+            console.error(`OFF API error: ${offRes.status} ${offRes.statusText}`);
+            return [];
+        }
 
         const offData = await offRes.json();
+        console.log(`OFF API returned ${offData.products?.length || 0} items for query: ${query}`);
         const offProducts = offData.products || [];
 
         return offProducts
@@ -139,7 +143,8 @@ async function fetchOFFWithTimeout(query: string, timeoutMs: number): Promise<Ar
                     source: 'off'
                 };
             });
-    } catch {
+    } catch (e) {
+        console.error("OFF Fetch Error:", e);
         return [];
     } finally {
         clearTimeout(timer);

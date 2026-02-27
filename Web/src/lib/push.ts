@@ -1,5 +1,6 @@
 import webpush from 'web-push';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logging/logger';
 
 // Configure VAPID keys
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
@@ -12,7 +13,7 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
     try {
         webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
     } catch (e) {
-        console.warn('Failed to set VAPID details:', e);
+        logger.warn('Failed to set VAPID details', { error: e instanceof Error ? e.message : String(e) });
     }
 }
 
@@ -32,7 +33,7 @@ export interface PushPayload {
  */
 export async function sendPushToUser(userId: string, payload: PushPayload): Promise<{ sent: number; failed: number }> {
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
-        console.warn('VAPID keys not configured, skipping push notification');
+        logger.warn('VAPID keys not configured, skipping push notification');
         return { sent: 0, failed: 0 };
     }
 
@@ -81,7 +82,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
                 if (error?.statusCode === 404 || error?.statusCode === 410) {
                     expiredIds.push(sub.id);
                 } else {
-                    console.error(`Push failed for subscription ${sub.id}:`, error?.message || error);
+                    logger.error(`Push failed for subscription ${sub.id}`, { error: error?.message || error });
                 }
             }
         })
@@ -92,7 +93,10 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
         await prisma.pushSubscription.deleteMany({
             where: { id: { in: expiredIds } },
         });
-        console.log(`Cleaned up ${expiredIds.length} expired push subscriptions for user ${userId}`);
+        logger.info(`Cleaned up ${expiredIds.length} expired push subscriptions for user ${userId}`, {
+            count: expiredIds.length,
+            userId,
+        });
     }
 
     return { sent, failed };

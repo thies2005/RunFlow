@@ -975,3 +975,18 @@ model OffFoodCache {
   @@index([query])
   @@index([updatedAt]) // For cleanup queries
 }
+
+// ============================================
+// Cache for FatSecret
+// ============================================
+
+model FatSecretFoodCache {
+  id        String   @id @default(cuid())
+  query     String   @unique
+  results   Json // Store the array of transformed FatSecret food items
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([query])
+  @@index([updatedAt]) // For cleanup queries
+}

@@ -38,6 +38,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isOffSearching, setIsOffSearching] = useState(false);
+    const [isFsSearching, setIsFsSearching] = useState(false);
 
     // Custom Entry State
     const [customName, setCustomName] = useState('');
@@ -149,7 +150,6 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                     const offData = await offRes.json();
                     if (offData && offData.length > 0) {
                         setSearchResults(prev => {
-                            // Avoid duplicates if same item was in local DB by checking name and brand
                             const seenKeys = new Set(prev.map(item => `${String(item.name || '').toLowerCase().trim()}|${String(item.brand || '').toLowerCase().trim()}`));
                             const newItems = offData.filter((item: any) => {
                                 const key = `${String(item.name || '').toLowerCase().trim()}|${String(item.brand || '').toLowerCase().trim()}`;
@@ -160,13 +160,33 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                     }
                 })
                 .catch(err => {
-                    if (err.name !== 'AbortError') {
-                        console.error("OFF search background error:", err);
+                    if (err.name !== 'AbortError') console.error("OFF search background error:", err);
+                })
+                .finally(() => setIsOffSearching(false));
+
+            // 3. Background fetch FatSecret via new API
+            setIsFsSearching(true);
+            fetch(`/api/health/nutrition/search-fs?q=${encodeURIComponent(query)}`, {
+                signal: controller.signal
+            })
+                .then(async (fsRes) => {
+                    if (!fsRes.ok) return;
+                    const fsData = await fsRes.json();
+                    if (fsData && fsData.length > 0) {
+                        setSearchResults(prev => {
+                            const seenKeys = new Set(prev.map(item => `${String(item.name || '').toLowerCase().trim()}|${String(item.brand || '').toLowerCase().trim()}`));
+                            const newItems = fsData.filter((item: any) => {
+                                const key = `${String(item.name || '').toLowerCase().trim()}|${String(item.brand || '').toLowerCase().trim()}`;
+                                return !seenKeys.has(key);
+                            });
+                            return [...prev, ...newItems];
+                        });
                     }
                 })
-                .finally(() => {
-                    setIsOffSearching(false);
-                });
+                .catch(err => {
+                    if (err.name !== 'AbortError') console.error("FatSecret search background error:", err);
+                })
+                .finally(() => setIsFsSearching(false));
 
         } catch (error: any) {
             if (error.name !== 'AbortError') {
@@ -336,7 +356,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                 </form>
 
                                 <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
-                                    {searchResults.length === 0 && !isSearching && !isOffSearching && query && (
+                                    {searchResults.length === 0 && !isSearching && !isOffSearching && !isFsSearching && query && (
                                         <p className="text-center text-gray-400 mt-8 text-sm">No results found.</p>
                                     )}
                                     {searchResults.map((food, i) => (
@@ -347,7 +367,11 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                         >
                                             <div>
                                                 <p className="font-medium text-white line-clamp-1">{food.name}</p>
-                                                <p className="text-xs text-gray-400">{food.brand ? `${food.brand} • ` : ''}{food.servingSize}{food.source === 'off' ? ' (OFF)' : ''}</p>
+                                                <p className="text-xs text-gray-400">
+                                                    {food.brand ? `${food.brand} • ` : ''}
+                                                    {food.servingSize}
+                                                    {food.source === 'off' ? ' (OFF)' : food.source === 'fs' ? ' (FatSecret)' : ''}
+                                                </p>
                                             </div>
                                             <div className="text-right shrink-0 ml-2">
                                                 <p className="text-sm font-bold text-blue-400">{Math.round(food.calories)}</p>
@@ -355,10 +379,12 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                             </div>
                                         </button>
                                     ))}
-                                    {isOffSearching && (
+                                    {(isOffSearching || isFsSearching) && (
                                         <div className="flex items-center justify-center gap-2 py-4 text-gray-500">
                                             <Loader2 className="w-4 h-4 animate-spin" />
-                                            <span className="text-xs">Searching Open Food Facts...</span>
+                                            <span className="text-xs">
+                                                Searching {isOffSearching && isFsSearching ? 'external databases...' : isOffSearching ? 'Open Food Facts...' : 'FatSecret...'}
+                                            </span>
                                         </div>
                                     )}
                                 </div>

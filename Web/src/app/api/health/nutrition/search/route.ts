@@ -11,8 +11,8 @@ export async function GET(request: Request) {
     }
 
     try {
-        // Run all three sources in parallel for fastest response
-        const [localResults, blsResults, offResult] = await Promise.allSettled([
+        // Run persistent sources in parallel
+        const [localItems, blsResults] = await Promise.all([
             // 1. Local DB (Prisma) — instant
             prisma.foodItem.findMany({
                 where: {
@@ -25,10 +25,7 @@ export async function GET(request: Request) {
             }),
 
             // 2. BLS German food database — instant (local JSON)
-            Promise.resolve(searchBLS(query, 15)),
-
-            // 3. Open Food Facts API — may take 500ms-2000ms
-            fetchOFFWithTimeout(query, 3000),
+            Promise.resolve(searchBLS(query, 20)),
         ]);
 
         // Collect results from each source
@@ -39,32 +36,23 @@ export async function GET(request: Request) {
         const addResults = (items: Array<Record<string, unknown>>, source: string) => {
             for (const item of items) {
                 const name = String(item.name || '').toLowerCase().trim();
-                if (!name) continue;
+                const brand = String(item.brand || '').toLowerCase().trim();
+                const key = `${name}|${brand}`;
 
-                // Skip if we already have a very similar item
-                if (seenNames.has(name)) continue;
-                seenNames.add(name);
+                if (!name) continue;
+                if (seenNames.has(key)) continue;
+                seenNames.add(key);
 
                 combined.push({ ...item, source: source });
             }
         };
 
-        // Priority: Local DB first (user's own items), then BLS (instant), then OFF (external)
-        if (localResults.status === 'fulfilled') {
-            addResults(localResults.value as Array<Record<string, unknown>>, 'local');
-        }
-
-        if (blsResults.status === 'fulfilled') {
-            addResults(blsResults.value, 'bls');
-        }
-
-        if (offResult.status === 'fulfilled' && offResult.value) {
-            addResults(offResult.value, 'off');
-        }
+        // Priority: Local DB first, then BLS
+        addResults(localItems as any[], 'local');
+        addResults(blsResults as any[], 'bls');
 
         // Score and rank combined results by relevance
         const queryLower = query.toLowerCase();
-        // Optimization: Compile regex once before loop
         const regex = new RegExp(`(?:^|[\\s,;(])${escapeRegex(queryLower)}`);
 
         const scored = combined.map(item => {
@@ -87,8 +75,7 @@ export async function GET(request: Request) {
 
         scored.sort((a, b) => b.score - a.score);
 
-        // Return top 25 results
-        return NextResponse.json(scored.slice(0, 25).map(s => s.item));
+        return NextResponse.json(scored.slice(0, 30).map(s => s.item));
     } catch (error) {
         console.error("Food search error:", error);
         return NextResponse.json({ error: 'Failed to search foods' }, { status: 500 });
@@ -97,55 +84,4 @@ export async function GET(request: Request) {
 
 function escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/**
- * Fetch from Open Food Facts with a timeout so BLS results aren't delayed.
- */
-async function fetchOFFWithTimeout(query: string, timeoutMs: number): Promise<Array<Record<string, unknown>>> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-    try {
-        const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=15`;
-        const offRes = await fetch(offUrl, {
-            headers: { 'User-Agent': 'RunFlow - WebApp' },
-            signal: controller.signal,
-        });
-
-        if (!offRes.ok) return [];
-
-        const offData = await offRes.json();
-        const offProducts = offData.products || [];
-
-        return offProducts
-            .filter((p: Record<string, unknown>) => p.product_name)
-            .map((p: Record<string, unknown>) => {
-                const nutriments = (p.nutriments || {}) as Record<string, unknown>;
-                return {
-                    id: `off-${p.code || Math.random()}`,
-                    name: p.product_name || 'Unknown',
-                    brand: p.brands || '',
-                    barcode: p.code ? String(p.code) : null,
-                    calories: parseFloat(String(nutriments['energy-kcal_100g'] || nutriments['energy-kcal_value'] || 0)),
-                    protein: parseFloat(String(nutriments.proteins_100g || nutriments.proteins_value || 0)),
-                    carbs: parseFloat(String(nutriments.carbohydrates_100g || nutriments.carbohydrates_value || 0)),
-                    fats: parseFloat(String(nutriments.fat_100g || nutriments.fat_value || 0)),
-                    fiber: parseFloat(String(nutriments.fiber_100g || nutriments.fiber_value || 0)),
-                    sugar: parseFloat(String(nutriments.sugars_100g || nutriments.sugars_value || 0)),
-                    saturatedFat: parseFloat(String(nutriments['saturated-fat_100g'] || nutriments['saturated-fat_value'] || 0)),
-                    sodium: parseFloat(String(nutriments.sodium_100g || nutriments.sodium_value || 0)),
-                    potassium: parseFloat(String(nutriments.potassium_100g || nutriments.potassium_value || 0)),
-                    cholesterol: parseFloat(String(nutriments.cholesterol_100g || nutriments.cholesterol_value || 0)),
-                    calcium: parseFloat(String(nutriments.calcium_100g || nutriments.calcium_value || 0)),
-                    iron: parseFloat(String(nutriments.iron_100g || nutriments.iron_value || 0)),
-                    servingSize: p.serving_quantity ? String(p.serving_quantity) : '100g',
-                };
-            });
-    } catch {
-        // Timeout or network error — OFF is optional, BLS covers us
-        return [];
-    } finally {
-        clearTimeout(timer);
-    }
 }

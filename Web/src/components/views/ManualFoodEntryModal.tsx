@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Search, Loader2, Save, ArrowLeft, Bookmark } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -37,6 +37,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
     const [query, setQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [isOffSearching, setIsOffSearching] = useState(false);
 
     // Custom Entry State
     const [customName, setCustomName] = useState('');
@@ -53,6 +54,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
 
     const [isSaving, setIsSaving] = useState(false);
     const [savedMessage, setSavedMessage] = useState<string | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // When opened with initialFood (e.g. from barcode scan), jump straight to log view
     useEffect(() => {
@@ -116,16 +118,59 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
         if (!query.trim()) return;
 
         setIsSearching(true);
+        setSearchResults([]); // Reset results for new search
+
+        // Cancel previous search if it exists
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         try {
-            const res = await fetch(`/api/health/nutrition/search?q=${encodeURIComponent(query)}`);
+            // 1. Fetch instant local/BLS results
+            const res = await fetch(`/api/health/nutrition/search?q=${encodeURIComponent(query)}`, {
+                signal: controller.signal
+            });
             if (!res.ok) throw new Error('Search failed');
             const data = await res.json();
             setSearchResults(data);
-        } catch (error) {
-            console.error(error);
-            alert("Error searching database.");
-        } finally {
+
+            // If we got results, we can stop the main loading spinner but show a subtle progress or just let them append
             setIsSearching(false);
+
+            // 2. Background fetch Open Food Facts (v2 slow API)
+            setIsOffSearching(true);
+            fetch(`/api/health/nutrition/search-off?q=${encodeURIComponent(query)}`, {
+                signal: controller.signal
+            })
+                .then(async (offRes) => {
+                    if (!offRes.ok) return;
+                    const offData = await offRes.json();
+                    if (offData && offData.length > 0) {
+                        setSearchResults(prev => {
+                            // Avoid duplicates if same item was in local DB
+                            const seenIds = new Set(prev.map(item => item.id));
+                            const newItems = offData.filter((item: any) => !seenIds.has(item.id));
+                            return [...prev, ...newItems];
+                        });
+                    }
+                })
+                .catch(err => {
+                    if (err.name !== 'AbortError') {
+                        console.error("OFF search background error:", err);
+                    }
+                })
+                .finally(() => {
+                    setIsOffSearching(false);
+                });
+
+        } catch (error: any) {
+            if (error.name !== 'AbortError') {
+                console.error(error);
+                alert("Error searching database.");
+                setIsSearching(false);
+            }
         }
     };
 
@@ -299,7 +344,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                         >
                                             <div>
                                                 <p className="font-medium text-white line-clamp-1">{food.name}</p>
-                                                <p className="text-xs text-gray-400">{food.brand ? `${food.brand} • ` : ''}{food.servingSize}</p>
+                                                <p className="text-xs text-gray-400">{food.brand ? `${food.brand} • ` : ''}{food.servingSize}{food.source === 'off' ? ' (OFF)' : ''}</p>
                                             </div>
                                             <div className="text-right shrink-0 ml-2">
                                                 <p className="text-sm font-bold text-blue-400">{Math.round(food.calories)}</p>
@@ -307,6 +352,12 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                             </div>
                                         </button>
                                     ))}
+                                    {isOffSearching && (
+                                        <div className="flex items-center justify-center gap-2 py-4 text-gray-500">
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            <span className="text-xs">Searching Open Food Facts...</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}

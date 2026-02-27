@@ -19,7 +19,7 @@ import {
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
 import { handleError } from '@/lib/errors/handler';
-import { countTokens } from '@/lib/ai/tokenCounter';
+import { countTokens, estimateChatTokens } from '@/lib/ai/tokenCounter';
 
 export const dynamic = 'force-dynamic';
 
@@ -135,10 +135,27 @@ export async function POST(request: NextRequest) {
         ]);
 
         // M-04 fix: Calculate token usage for accurate tracking
-        // Estimate input tokens: 3 prompts each with system prompt + user context + activity context
-        const singleInputTokens = countTokens(baseContext, config.model) + countTokens(activityStr, config.model);
-        const inputTokens = singleInputTokens * 3; // 3 API calls
-        
+        const prompts = [
+            ACTIVITY_FEEDBACK_PROMPTS.plannedComparison,
+            ACTIVITY_FEEDBACK_PROMPTS.progressAnalysis,
+            ACTIVITY_FEEDBACK_PROMPTS.goalTrajectory
+        ];
+
+        let inputTokens = 0;
+        for (const prompt of prompts) {
+            const messages: ChatMessage[] = [
+                {
+                    role: 'system',
+                    content: `You are a running coach analyzing an athlete's activity.\n\n${prompt}\n\n--- Athlete Profile ---\n${baseContext}`,
+                },
+                {
+                    role: 'user',
+                    content: `Here's the activity to analyze:\n\n${activityStr}`,
+                },
+            ];
+            inputTokens += estimateChatTokens(messages, config.model);
+        }
+
         // Estimate output tokens: sum of all responses
         const outputTokens = countTokens(plannedComparison, config.model) + 
                             countTokens(progressAnalysis, config.model) + 

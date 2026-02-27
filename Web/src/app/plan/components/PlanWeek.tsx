@@ -142,9 +142,8 @@ export const PlanWeek = memo(function PlanWeek({
                             ).map((activity) => (
                                 <div
                                     key={activity.id}
-                                    onClick={() => {
-                                        // Cast needed because handleActivityClick expects linkedActivity type
-                                        handleActivityClick(activity as any, {} as React.MouseEvent);
+                                    onClick={(e) => {
+                                        handleActivityClick(activity, e);
                                     }}
                                     className="group p-3 rounded-lg flex items-center gap-3 transition-colors border border-dashed border-accent-cyan/40 bg-accent-cyan/5 cursor-pointer hover:bg-accent-cyan/10"
                                 >

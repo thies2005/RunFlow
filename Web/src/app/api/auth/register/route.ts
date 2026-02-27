@@ -13,6 +13,7 @@ import { sendWelcomeEmail } from '@/lib/email';
 import { AuthCodeType } from '@prisma/client';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
+import { logger } from '@/lib/logging/logger';
 
 export async function POST(request: NextRequest) {
     try {
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
             await sendWelcomeEmail(user.email!, code);
         } catch (emailError) {
             // M-03 fix: Log email errors so they're visible in monitoring
-            console.error('[Register] Failed to send welcome email:', emailError);
+            logger.error('[Register] Failed to send welcome email:', emailError);
             // We don't fail the request, but the user will need to request a new code later
         }
 

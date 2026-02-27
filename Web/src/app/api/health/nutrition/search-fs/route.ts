@@ -66,7 +66,7 @@ async function fetchFatSecretWithTimeout(query: string, timeoutMs: number, token
         // Method based REST API for FatSecret v2 using OAuth2
         // URL format based on FatSecret API: POST https://platform.fatsecret.com/rest/server.api
         const searchParams = new URLSearchParams({
-            method: 'foods.search',
+            method: 'foods.search.v3', // Try new structured nested approach
             search_expression: query,
             format: 'json',
             max_results: '30'
@@ -88,28 +88,48 @@ async function fetchFatSecretWithTimeout(query: string, timeoutMs: number, token
         }
 
         const fsData = await fsRes.json();
-        const results = fsData.foods?.food || [];
+
+        // Handle different wrapper shapes from API versions (foods vs foods_search)
+        const root = fsData.foods_search || fsData.foods || fsData || {};
+        const results = root.results?.food || root.food || [];
+
         console.log(`FatSecret API returned ${Array.isArray(results) ? results.length : (results ? 1 : 0)} items for query: ${query}`);
 
         // FatSecret returns a single object if there's only 1 item, otherwise an array.
         const items = Array.isArray(results) ? results : (results ? [results] : []);
 
         return items.map((p: any) => {
-            // Description format: "Per 100g - Calories: 89kcal | Fat: 0.33g | Carbs: 22.84g | Protein: 1.09g"
-            const desc = p.food_description || '';
+            let calories = 0, carbs = 0, protein = 0, fats = 0, servingSize = '1 serving';
 
-            // Extract values using regex
-            const calMatch = desc.match(/Calories:\s*([\d.]+)kcal/i);
-            const fatMatch = desc.match(/Fat:\s*([\d.]+)g/i);
-            const carbMatch = desc.match(/Carbs:\s*([\d.]+)g/i);
-            const proMatch = desc.match(/Protein:\s*([\d.]+)g/i);
-            const servingMatch = desc.match(/Per\s*([^-\|]+)/i);
+            // 1) Try structured v5 API nested format
+            if (p.servings?.serving) {
+                const servings = Array.isArray(p.servings.serving) ? p.servings.serving : [p.servings.serving];
+                // Find default serving, or 100g, or just the first
+                const bestServing = servings.find((s: any) => s.is_default === "1") || servings[0];
 
-            const calories = calMatch ? parseFloat(calMatch[1]) : 0;
-            const fats = fatMatch ? parseFloat(fatMatch[1]) : 0;
-            const carbs = carbMatch ? parseFloat(carbMatch[1]) : 0;
-            const protein = proMatch ? parseFloat(proMatch[1]) : 0;
-            const servingSize = servingMatch ? servingMatch[1].trim() : '1 serving';
+                if (bestServing) {
+                    calories = parseFloat(bestServing.calories || "0");
+                    carbs = parseFloat(bestServing.carbohydrate || "0");
+                    protein = parseFloat(bestServing.protein || "0");
+                    fats = parseFloat(bestServing.fat || "0");
+                    servingSize = bestServing.serving_description || bestServing.measurement_description || '1 serving';
+                }
+            }
+            // 2) Fallback to legacy v1 text description parsing
+            else if (p.food_description) {
+                const desc = p.food_description || '';
+                const calMatch = desc.match(/Calories:\s*([\d.]+)kcal/i);
+                const fatMatch = desc.match(/Fat:\s*([\d.]+)g/i);
+                const carbMatch = desc.match(/Carbs:\s*([\d.]+)g/i);
+                const proMatch = desc.match(/Protein:\s*([\d.]+)g/i);
+                const servingMatch = desc.match(/Per\s*([^-\|]+)/i);
+
+                calories = calMatch ? parseFloat(calMatch[1]) : 0;
+                fats = fatMatch ? parseFloat(fatMatch[1]) : 0;
+                carbs = carbMatch ? parseFloat(carbMatch[1]) : 0;
+                protein = proMatch ? parseFloat(proMatch[1]) : 0;
+                servingSize = servingMatch ? servingMatch[1].trim() : '1 serving';
+            }
 
             return {
                 id: `fs-${p.food_id}`,

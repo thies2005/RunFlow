@@ -9,7 +9,7 @@ import {
 } from '@dnd-kit/core';
 import { PlanWeek } from '@/app/plan/components/PlanWeek';
 import { ErrorBoundary, Footer } from '@/components';
-import { type WorkoutWithLinkedActivity, type PlanResponse } from '@/lib/types';
+import { type WorkoutWithLinkedActivity, type PlanResponse, type ActivityListItem } from '@/lib/types';
 
 interface PlanViewProps {
     data: PlanResponse | undefined;
@@ -21,7 +21,7 @@ interface PlanViewProps {
     handleEdit: (_workout: WorkoutWithLinkedActivity) => void;
     handleComplete: (_workout: WorkoutWithLinkedActivity, _e: React.MouseEvent) => void;
     handleCreate: (_date: Date) => void;
-    handleActivityClick: (_activity: NonNullable<WorkoutWithLinkedActivity['linkedActivity']>, _e: React.MouseEvent) => void;
+    handleActivityClick: (_activity: ActivityListItem, _e: React.MouseEvent) => void;
     showHeader?: boolean;
 }
 

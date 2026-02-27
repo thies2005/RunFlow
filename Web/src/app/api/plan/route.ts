@@ -5,7 +5,12 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/apiResponse';
+<<<<<<< HEAD
 import { ActivityListItem } from '@/lib/types';
+=======
+import type { ActivityListItem } from '@/lib/types';
+
+>>>>>>> pr82
 export async function GET(req: Request) {
     try {
         // Rate limiting check (async for Redis support)
@@ -98,6 +103,7 @@ export async function GET(req: Request) {
         if (!activeGoal) {
             return NextResponse.json({ goal: null, unlinkedActivities: [] });
         }
+
 
         // Fetch unlinked activities within the plan period (if requested)
         let unlinkedActivities: ActivityListItem[] = [];

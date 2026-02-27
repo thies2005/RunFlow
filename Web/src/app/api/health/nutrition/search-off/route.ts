@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -8,9 +9,83 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Query parameter "q" is required' }, { status: 400 });
     }
 
+    const normalizedQuery = query.toLowerCase().trim();
+
     try {
-        // Fetch from Open Food Facts with a generous timeout for background fetching
-        const offResults = await fetchOFFWithTimeout(query, 8000);
+        // 1. Check cache first
+        const cacheEntry = await prisma.offFoodCache.findUnique({
+            where: { query: normalizedQuery }
+        });
+
+        if (cacheEntry) {
+            // Check if cache is older than 90 days
+            const ageInMs = Date.now() - cacheEntry.updatedAt.getTime();
+            const ninetyDaysMs = 90 * 24 * 60 * 60 * 1000;
+
+            if (ageInMs < ninetyDaysMs) {
+                // Return cached results
+                return NextResponse.json(cacheEntry.results);
+            }
+            // If expired, we fall through to fetch new data, which will overwrite this entry via upsert
+        }
+
+        // 2. Fetch from Open Food Facts with a 30s timeout (increased from 8s)
+        const offResults = await fetchOFFWithTimeout(query, 30000);
+
+        // 3. Save to cache (background task so we don't block returning the response)
+        if (offResults) {
+            // We use setTimeout so the response isn't delayed by DB writes
+            setTimeout(async () => {
+                try {
+                    // Save or update the cache entry
+                    await prisma.offFoodCache.upsert({
+                        where: { query: normalizedQuery },
+                        update: { results: offResults as any, updatedAt: new Date() },
+                        create: { query: normalizedQuery, results: offResults as any },
+                    });
+
+                    // Manage cache size: Delete entries older than 90 days
+                    const ninetyDaysAgo = new Date(Date.now() - (90 * 24 * 60 * 60 * 1000));
+                    await prisma.offFoodCache.deleteMany({
+                        where: { updatedAt: { lt: ninetyDaysAgo } }
+                    });
+
+                    // Safeguard: Ensure cache doesn't exceed ~150,000 queries (~100MB)
+                    const cacheCount = await prisma.offFoodCache.count();
+                    const MAX_CACHE_SIZE = 150000;
+
+                    if (cacheCount > MAX_CACHE_SIZE) {
+                        // Find the oldest entries to delete
+                        const overage = cacheCount - MAX_CACHE_SIZE;
+                        const oldestToKeep = await prisma.offFoodCache.findMany({
+                            select: { id: true },
+                            orderBy: { updatedAt: 'desc' },
+                            skip: MAX_CACHE_SIZE,
+                            take: 1 // We just need to know the timestamp of the 150,000th item, but deleting by ID is safer
+                        });
+
+                        if (oldestToKeep.length > 0) {
+                            // Find the IDs of the oldest items to delete
+                            const itemsToDelete = await prisma.offFoodCache.findMany({
+                                select: { id: true },
+                                orderBy: { updatedAt: 'asc' },
+                                take: overage
+                            });
+
+                            const idsToDelete = itemsToDelete.map(item => item.id);
+
+                            await prisma.offFoodCache.deleteMany({
+                                where: { id: { in: idsToDelete } }
+                            });
+                        }
+                    }
+
+                } catch (dbError) {
+                    console.error("Error saving OFF cache:", dbError);
+                }
+            }, 0);
+        }
+
         return NextResponse.json(offResults);
     } catch (error) {
         console.error("OFF search error:", error);
@@ -31,6 +106,7 @@ async function fetchOFFWithTimeout(query: string, timeoutMs: number): Promise<Ar
         const offRes = await fetch(offUrl, {
             headers: { 'User-Agent': 'RunFlow - WebApp' },
             signal: controller.signal,
+            cache: 'no-store' // Ensure we don't hit Vercel edge cache since we manage it in DB
         });
 
         if (!offRes.ok) return [];

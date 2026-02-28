@@ -12,6 +12,7 @@ import { encryptToken, decryptToken } from '@/lib/crypto';
 import { verifyPassword } from '@/lib/auth/auth-email';
 import { TIME_RANGES } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
+import { checkRateLimitAsync } from '@/lib/rateLimit';
 
 export const authOptions: AuthOptions = {
     adapter: PrismaAdapter(prisma) as any,
@@ -36,8 +37,20 @@ export const authOptions: AuthOptions = {
                     throw new Error('Email and password are required');
                 }
 
+                const identifier = credentials.email.toLowerCase();
+                const rateLimitResult = await checkRateLimitAsync(identifier, {
+                    limit: 5,
+                    windowSeconds: 300,
+                    prefix: 'login'
+                });
+
+                if (!rateLimitResult.allowed) {
+                    logger.warn('Rate limit exceeded for login', { email: identifier });
+                    throw new Error('Too many login attempts. Please try again later.');
+                }
+
                 const user = await prisma.user.findUnique({
-                    where: { email: credentials.email.toLowerCase() }
+                    where: { email: identifier }
                 });
 
                 if (!user || !user.passwordHash) {

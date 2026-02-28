@@ -3,8 +3,22 @@ import { Plus, Bot, Eye, Trash2, Save, Loader2, Zap, AlertTriangle, CheckCircle 
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import TierInputGroup from '@/components/admin/TierInputGroup';
 import useConfirmAction from '@/hooks/useConfirmAction';
+import { AdminAiSettingsData } from '@/app/admin/types';
 
-export default function AiSettingsTab({ settings, stats, onRefresh, processing, setProcessing, setActionMessage }: any) {
+interface AiSettingsTabProps {
+    settings?: AdminAiSettingsData;
+    stats?: {
+        totalUsers: number;
+        enabledUsers: number;
+        usersWithCustomKey: number;
+    };
+    onRefresh: () => void;
+    processing: boolean;
+    setProcessing: (val: boolean) => void;
+    setActionMessage: (msg: { type: 'success' | 'error', text: string } | null) => void;
+}
+
+export default function AiSettingsTab({ settings, stats, onRefresh, processing, setProcessing, setActionMessage }: AiSettingsTabProps) {
     const { confirm, ConfirmDialog } = useConfirmAction();
     const [providers, setProviders] = useState<any[]>([]);
     const [activeProviderId, setActiveProviderId] = useState<string | null>(settings?.activeProviderId || null);

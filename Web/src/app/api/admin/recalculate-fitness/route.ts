@@ -10,6 +10,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logging/logger';
+
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
@@ -42,9 +44,11 @@ export async function POST(request: NextRequest) {
             // Ignore JSON parse error, assume no body -> all users
         }
 
-        console.log(targetUserId
-            ? `[Admin] Starting fitness recalculation for user ${targetUserId}...`
-            : '[Admin] Starting fitness recalculation for ALL users...');
+        if (targetUserId) {
+            logger.info('Starting fitness recalculation for user', { targetUserId });
+        } else {
+            logger.info('Starting fitness recalculation for ALL users');
+        }
 
         // 2. Fetch users (all or specific)
         const users = await prisma.user.findMany({
@@ -52,7 +56,7 @@ export async function POST(request: NextRequest) {
             select: { id: true, email: true }
         });
 
-        console.log(`[Admin] Found ${users.length} users to process.`);
+        logger.info('Found users to process', { count: users.length });
 
         // 3. Fetch earliest activities for relevant users efficiently
         // Use groupBy to get the earliest activity date for each user in one query
@@ -82,12 +86,12 @@ export async function POST(request: NextRequest) {
                 const startDate = activityMap.get(user.id);
 
                 if (startDate) {
-                    console.log(`[Admin] Recalculating for user ${user.email} (Start: ${startDate.toISOString()})`);
+                    logger.info('Recalculating for user', { userEmail: user.email, startDate: startDate.toISOString() });
 
                     // 0. Clean up any past duplicate activities before recalculating
                     const deletedCount = await cleanupDuplicateActivities(user.id);
                     if (deletedCount > 0) {
-                        console.log(`[Admin] Cleaned up ${deletedCount} duplicate activities for user ${user.email}`);
+                        logger.info('Cleaned up duplicate activities for user', { userEmail: user.email, deletedCount });
                     }
 
                     // We pass the earliest activity as a "modified activity".
@@ -99,11 +103,11 @@ export async function POST(request: NextRequest) {
 
                     return { userId: user.id, email: user.email, status: 'success', startDate: startDate };
                 } else {
-                    console.log(`[Admin] User ${user.email} has no activities. Skipping.`);
+                    logger.info('User has no activities, skipping', { userEmail: user.email });
                     return { userId: user.id, email: user.email, status: 'skipped', reason: 'no_activities' };
                 }
             } catch (err: any) {
-                console.error(`[Admin] Failed to recalculate for user ${user.email}:`, err);
+                logger.error('Failed to recalculate for user', { userEmail: user.email, error: err });
                 return { userId: user.id, email: user.email, status: 'error', error: err.message };
             }
         }));
@@ -124,7 +128,7 @@ export async function POST(request: NextRequest) {
         return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
 
     } catch (error: any) {
-        console.error('[Admin] Global error during recalculation:', error);
+        logger.error('Global error during recalculation', { error });
         return NextResponse.json(
             { error: 'Internal server error during recalculation: ' + error.message },
             { status: 500 }
@@ -180,7 +184,7 @@ async function cleanupDuplicateActivities(userId: string): Promise<number> {
 
         return deletedCount;
     } catch (err) {
-        console.error(`[Admin] Error cleaning up duplicates for user ${userId}:`, err);
+        logger.error('Error cleaning up duplicates for user', { userId, error: err });
         return 0;
     }
 }

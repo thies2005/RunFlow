@@ -19,6 +19,7 @@ import {
 import type { ChatMessage } from '@/lib/ai';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
 import { setApiVersionHeaders } from '@/lib/api/version';
+import { logger } from '@/lib/logging/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,7 @@ Reply ONLY with "HISTORY_QUERY" or "NORMAL".`;
         ]);
         return response.trim().toUpperCase().includes('HISTORY_QUERY') ? 'HISTORY_QUERY' : 'NORMAL';
     } catch (e) {
-        console.error('Intent detection failed', e);
+        logger.error('Intent detection failed', { error: e });
         return 'NORMAL';
     }
 }
@@ -115,7 +116,6 @@ export async function POST(request: NextRequest) {
 
         const readableStream = new ReadableStream({
             async start(controller) {
-                console.log(`AI Chat: Starting stream for user ${userId}, session ${sessionId}`);
                 try {
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ sessionId })}\n\n`));
 
@@ -188,7 +188,6 @@ export async function POST(request: NextRequest) {
 
                     const inputTokens = countTokens(`${systemPrompt}\n\n--- Athlete Data ---\n${contextString}`, config.model) + countTokens(message, config.model);
 
-                    console.log(`[STREAM START] Session: ${sessionId}, User: ${userId}, Model: ${config.model}`);
                     const stream = await streamChat(config, aiMessages);
 
                     let tokenCount = 0;
@@ -196,13 +195,7 @@ export async function POST(request: NextRequest) {
                         tokenCount++;
                         fullResponse += token;
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
-
-                        if (tokenCount % 10 === 0) {
-                            console.log(`[STREAM PROGRESS] Session: ${sessionId}, Tokens: ${tokenCount}, Response length: ${fullResponse.length}`);
-                        }
                     }
-
-                    console.log(`[STREAM END] Session: ${sessionId}, Total tokens: ${tokenCount}, Final response length: ${fullResponse.length}`);
 
                     controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
                     controller.close();
@@ -218,14 +211,13 @@ export async function POST(request: NextRequest) {
 
                         const outputTokens = countTokens(fullResponse, config.model);
                         await incrementUsage(userId, { inputTokens, outputTokens }, config.providerId);
-                        console.log(`[DB SAVE] Session: ${sessionId}, Saved ${fullResponse.length} chars to database`);
                     } catch (dbError) {
-                        console.error('[DB ERROR] Failed to save AI response or update usage', dbError);
+                        logger.error('[DB ERROR] Failed to save AI response or update usage', { error: dbError });
                     } finally {
                         clearInterval(heartbeat);
                     }
                 } catch (error) {
-                    console.error(`[STREAM ERROR] Session: ${sessionId}, Error:`, error);
+                    logger.error('[STREAM ERROR]', { sessionId, error });
                     clearInterval(heartbeat);
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
                     controller.close();
@@ -243,7 +235,7 @@ export async function POST(request: NextRequest) {
         setApiVersionHeaders(response.headers);
         return response;
     } catch (error) {
-        console.error('AI Chat error:', error);
+        logger.error('AI Chat error', { error });
         const response = new Response(JSON.stringify({
             error: error instanceof Error ? error.message : String(error)
         }), {

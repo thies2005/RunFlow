@@ -182,13 +182,17 @@ async function getHeartRateZones(
                 duration = 1;
             }
 
-            if (hr <= thresholds.z1) zones.z1 += duration;
-            else if (hr <= thresholds.z2) zones.z2 += duration;
-            else if (hr <= thresholds.z3) zones.z3 += duration;
-            else if (hr <= thresholds.z4) zones.z4 += duration;
-            else if (hr <= thresholds.z5) zones.z5 += duration;
-            else if (hr <= thresholds.z6) zones.z6 += duration;
-            else zones.z7 += duration;
+            let matched = false;
+            for (const key of ['z1', 'z2', 'z3', 'z4', 'z5', 'z6'] as const) {
+                if (hr <= thresholds[key]) {
+                    zones[key] += duration;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                zones.z7 += duration;
+            }
         }
 
         return {

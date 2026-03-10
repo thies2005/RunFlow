@@ -156,26 +156,48 @@ async function cleanupDuplicateActivities(userId: string): Promise<number> {
         let deletedCount = 0;
         const fiveMinutes = 5 * 60 * 1000;
 
+        const timestamps = negativeActivities.map(a => a.startDate.getTime());
+        const minTime = Math.min(...timestamps);
+        const maxTime = Math.max(...timestamps);
+
+        const potentialDuplicates = await prisma.activity.findMany({
+            where: {
+                userId,
+                stravaId: { gt: BigInt(0) },
+                startDate: {
+                    gte: new Date(minTime - fiveMinutes),
+                    lte: new Date(maxTime + fiveMinutes),
+                }
+            },
+            select: {
+                type: true,
+                startDate: true
+            }
+        });
+
+        const idsToDelete: string[] = [];
+
         for (const negAct of negativeActivities) {
             const timestamp = negAct.startDate.getTime();
-            const duplicate = await prisma.activity.findFirst({
-                where: {
-                    userId,
-                    type: negAct.type,
-                    stravaId: { gt: BigInt(0) },
-                    startDate: {
-                        gte: new Date(timestamp - fiveMinutes),
-                        lte: new Date(timestamp + fiveMinutes),
-                    }
-                }
-            });
+
+            const duplicate = potentialDuplicates.find(posAct =>
+                posAct.type === negAct.type &&
+                posAct.startDate.getTime() >= timestamp - fiveMinutes &&
+                posAct.startDate.getTime() <= timestamp + fiveMinutes
+            );
 
             if (duplicate) {
-                await prisma.activity.delete({
-                    where: { id: negAct.id }
-                });
-                deletedCount++;
+                idsToDelete.push(negAct.id);
             }
+        }
+
+        if (idsToDelete.length > 0) {
+            await prisma.activity.deleteMany({
+                where: {
+                    id: { in: idsToDelete }
+                }
+            });
+            deletedCount = idsToDelete.length;
         }
 
         return deletedCount;

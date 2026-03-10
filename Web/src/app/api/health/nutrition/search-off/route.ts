@@ -115,7 +115,6 @@ async function fetchOFFWithTimeout(query: string, timeoutMs: number): Promise<Ar
         }
 
         const offData = await offRes.json();
-        console.log(`OFF API returned ${offData.products?.length || 0} items for query: ${query}`);
         const offProducts = offData.products || [];
 
         return offProducts

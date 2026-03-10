@@ -57,7 +57,7 @@ describe('tokens', () => {
     describe('createAuthCode', () => {
         it('should generate a code and store it in the database', async () => {
             const email = 'test@example.com';
-            const type = AuthCodeType.LOGIN;
+            const type = AuthCodeType.VERIFY_EMAIL;
 
             const code = await createAuthCode(email, type);
 
@@ -79,7 +79,7 @@ describe('tokens', () => {
     describe('verifyAuthCode', () => {
         const email = 'test@example.com';
         const code = 'ABC12345';
-        const type = AuthCodeType.LOGIN;
+        const type = AuthCodeType.VERIFY_EMAIL;
 
         it('should return false if rate limit is exceeded', async () => {
             const checkRateLimitMock = checkRateLimit as jest.Mock;

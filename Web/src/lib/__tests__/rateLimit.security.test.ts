@@ -37,8 +37,8 @@ describe('checkRateLimitAsync Security', () => {
         const result = await checkRateLimitAsync('test-id-prod', { limit: 10, windowSeconds: 60 });
 
         expect(mockIncr).not.toHaveBeenCalled();
-        // Updated expectation: The implementation securely fails closed in production
-        expect(result.allowed).toBe(false);
+        // Updated expectation: The implementation intentionally falls back to in-memory for self-hosted Docker users without Redis
+        expect(result.allowed).toBe(true);
     });
 
     it('fails closed when Redis operations fail (Secure)', async () => {

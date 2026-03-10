@@ -78,12 +78,6 @@ const parseMealLoggedData = (content: string): { mealName: string; calories: num
 import ErrorBoundary from '@/components/ErrorBoundary';
 
 function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, isPromptLibraryOpen, onClosePromptLibrary, onOpenPromptLibrary, hideInputActions = false, onOpenHistory, onNewChat }: AiChatProps) {
-    useEffect(() => {
-        console.log('[AI CHAT] Component mounted');
-        return () => {
-            console.log('[AI CHAT] Component unmounting');
-        };
-    }, []);
     const router = useRouter();
     const queryClient = useQueryClient();
     const [messages, setMessages] = useState<ChatMessage[]>([]);

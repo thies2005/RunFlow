@@ -62,7 +62,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
             if (retryCountRef.current <= MAX_RETRY_ATTEMPTS) {
                 const backoffDelay = BASE_BACKOFF_MS * Math.pow(2, retryCountRef.current - 1);
-                console.log(`Retrying in ${backoffDelay}ms (attempt ${retryCountRef.current}/${MAX_RETRY_ATTEMPTS})`);
 
                 retryTimeoutRef.current = setTimeout(() => {
                     pollNotifications();

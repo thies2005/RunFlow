@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
+import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { ActivityType } from '@prisma/client';
@@ -201,7 +202,7 @@ export async function POST(request: NextRequest) {
         // Generate manual activity ID using negative BigInt
         // Negative IDs will never collide with real Strava IDs (which are positive)
         // Combine timestamp with random component for uniqueness across concurrent requests
-        const randomSuffix = Math.floor(Math.random() * 1000000);
+        const randomSuffix = crypto.randomInt(0, 1000000);
         const stravaId = BigInt(-1) * BigInt(`${Date.now()}${randomSuffix.toString().padStart(6, '0')}`);
 
         const activity = await prisma.activity.create({

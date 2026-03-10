@@ -3,7 +3,10 @@ import { generateNonce } from '../nonce';
 describe('CSP Nonce Generation', () => {
   it('should generate a valid base64 string', () => {
     const nonce = generateNonce();
-    expect(nonce).toMatch(/^[A-Za-z0-9+/=]+$/);
+    expect(typeof nonce).toBe('string');
+    expect(nonce.length).toBeGreaterThan(0);
+    // Strict base64 regex
+    expect(nonce).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
   });
 
   it('should generate unique nonces each time', () => {

@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { createBackup, restoreBackup } from '../scheduler'
+import { createBackup, restoreBackup, listBackups } from '../scheduler'
 import * as child_process from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -33,6 +33,8 @@ jest.mock('@/lib/logging/logger', () => ({
     warn: jest.fn(),
   },
 }))
+
+import { logger } from '@/lib/logging/logger'
 
 // Mock status module
 jest.mock('../status', () => ({
@@ -138,4 +140,30 @@ describe('Backup Scheduler Security', () => {
       })
     )
   })
+})
+
+describe('listBackups', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    ;(fs.existsSync as jest.Mock).mockReturnValue(true)
+  })
+
+  it('should return an empty array when no backup files exist', () => {
+    (fs.readdirSync as jest.Mock).mockReturnValue([]);
+
+    const result = listBackups();
+
+    expect(result).toEqual([]);
+    expect(fs.readdirSync).toHaveBeenCalled();
+  });
+
+  it('should catch and log errors when fs.readdirSync fails', () => {
+    const error = new Error('EACCES: permission denied');
+    (fs.readdirSync as jest.Mock).mockImplementation(() => {
+      throw error;
+    });
+
+    expect(() => listBackups()).toThrow('EACCES: permission denied');
+    expect(logger.error).toHaveBeenCalledWith('[Backup] Failed to list backups', { error: 'EACCES: permission denied' });
+  });
 })

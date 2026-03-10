@@ -12,7 +12,6 @@ export default function DeepLinkHandler() {
             const url = new URL(event.url);
             if (url.hostname === 'runflow.schuelken.uk' || url.protocol === 'runflow:') {
                 const path = url.pathname + url.search;
-                console.log('Deep link received:', path);
 
                 // For API routes (like Auth Callbacks), we MUST force a hard navigation
                 // so the browser makes a proper request and handles Set-Cookie headers.

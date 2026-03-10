@@ -13,6 +13,7 @@ import { goalSchema } from '@/lib/validation/schemas';
 import { setApiVersionHeaders } from '@/lib/api/version';
 import { RaceType, WorkoutType } from '@prisma/client';
 import type { ActivityForShape } from '@/lib/metrics/runalyze';
+import { logger } from '@/lib/logging/logger';
 
 export async function GET(request: NextRequest) {
     try {
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
         setApiVersionHeaders(response.headers);
         return response;
     } catch (error) {
-        console.error('List goals error:', error);
+        logger.error('List goals error:', { error });
         const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
         setApiVersionHeaders(response.headers);
         return response;
@@ -272,7 +273,6 @@ export async function POST(request: NextRequest) {
                 });
                 currentVdot = result.vdot;
             } else {
-                console.log('No VDOT data available. Defaulting to VDOT 30.');
                 currentVdot = 30.0;
             }
 
@@ -317,7 +317,7 @@ export async function POST(request: NextRequest) {
                     });
                 }
             } catch (error) {
-                console.error('Failed to generate training plan:', error);
+                logger.error('Failed to generate training plan:', { error });
             }
         }
 
@@ -328,7 +328,7 @@ export async function POST(request: NextRequest) {
         setApiVersionHeaders(response.headers);
         return response;
     } catch (error) {
-        console.error('Create goal error:', error);
+        logger.error('Create goal error:', { error });
         const response = NextResponse.json({ error: 'Internal server error' }, { status: 500 });
         setApiVersionHeaders(response.headers);
         return response;

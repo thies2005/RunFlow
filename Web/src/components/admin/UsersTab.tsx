@@ -3,11 +3,12 @@ import Image from 'next/image';
 import { Activity, Mail, Trash2 } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import useConfirmAction from '@/hooks/useConfirmAction';
+import { AdminUser, AdminAiSettings } from '@/app/admin/types';
 
 interface UsersTabProps {
-    users: any[];
-    setUsers: (users: any[]) => void;
-    aiSettings: any;
+    users: AdminUser[];
+    setUsers: (users: AdminUser[]) => void;
+    aiSettings: AdminAiSettings | null;
     processing: boolean;
     setProcessing: (val: boolean) => void;
     setActionMessage: (msg: { type: 'success' | 'error', text: string } | null) => void;
@@ -25,7 +26,7 @@ export default function UsersTab({
 }: UsersTabProps) {
     const { confirm, ConfirmDialog } = useConfirmAction();
 
-    const handleResetPassword = async (userId: string, userEmail: string) => {
+    const handleResetPassword = async (userId: string, userEmail: string | null) => {
         const isConfirmed = await confirm({
             title: 'Reset Password',
             message: `Are you sure you want to send a password reset email to ${userEmail}?`,
@@ -49,7 +50,7 @@ export default function UsersTab({
         }
     };
 
-    const handleRecalculateFitness = async (userId?: string, userEmail?: string) => {
+    const handleRecalculateFitness = async (userId?: string, userEmail?: string | null) => {
         const confirmMsg = userId
             ? `Recalculate fitness history for ${userEmail}? This may take a few seconds.`
             : 'Recalculate fitness history for ALL users? This checks all activities and rebuilds cache. It may take a while.';
@@ -113,9 +114,9 @@ export default function UsersTab({
 
     const handleToggleAi = async (userId: string, tier: string) => {
         setProcessing(true);
-        setUsers(users.map((u: any) =>
+        setUsers(users.map((u: AdminUser) =>
             u.id === userId
-                ? { ...u, aiSettings: { ...u.aiSettings, usageTier: tier } }
+                ? { ...u, aiSettings: u.aiSettings ? { ...u.aiSettings, usageTier: tier } : { usageTier: tier, adminAllowed: false, aiEnabled: false } }
                 : u
         ));
 
@@ -166,7 +167,7 @@ export default function UsersTab({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                        {users.map((user: any) => (
+                        {users.map((user: AdminUser) => (
                             <tr key={user.id} className="group hover:bg-gray-50 transition">
                                 <td className="py-4">
                                     <div className="flex items-center">

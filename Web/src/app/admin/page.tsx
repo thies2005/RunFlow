@@ -11,6 +11,7 @@ import AiSettingsTab from '@/components/admin/AiSettingsTab';
 import UsersTab from '@/components/admin/UsersTab';
 import BackupsTab from '@/components/admin/BackupsTab';
 import AuditLogsTab from '@/components/admin/AuditLogsTab';
+import { AdminStats, AdminUser, AdminBackup, AdminAiSettings } from './types';
 
 
 // Components
@@ -40,10 +41,10 @@ function DashboardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const [stats, setStats] = useState<any>(null);
-    const [users, setUsers] = useState<any[]>([]);
-    const [backups, setBackups] = useState<any[]>([]);
-    const [aiSettings, setAiSettings] = useState<any>(null);
+    const [stats, setStats] = useState<AdminStats | null>(null);
+    const [users, setUsers] = useState<AdminUser[]>([]);
+    const [backups, setBackups] = useState<AdminBackup[]>([]);
+    const [aiSettings, setAiSettings] = useState<AdminAiSettings | null>(null);
     const [loading, setLoading] = useState(true);
 
     // Tab state controlled by URL

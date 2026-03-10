@@ -2,9 +2,10 @@ import React from 'react';
 import { Upload, Plus, Database, Download } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import useConfirmAction from '@/hooks/useConfirmAction';
+import { AdminBackup } from '@/app/admin/types';
 
 interface BackupsTabProps {
-    backups: any[];
+    backups: AdminBackup[];
     processing: boolean;
     setProcessing: (val: boolean) => void;
     setActionMessage: (msg: { type: 'success' | 'error', text: string } | null) => void;
@@ -129,7 +130,7 @@ export default function BackupsTab({
             <div className="space-y-4">
                 <h3 className="font-semibold text-gray-800">Available Backups</h3>
                 <div className="space-y-2">
-                    {backups.map((backup: any) => (
+                    {backups.map((backup: AdminBackup) => (
                         <div key={backup.name} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-lg hover:border-gray-200 transition">
                             <div className="flex items-center space-x-3">
                                 <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">

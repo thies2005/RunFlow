@@ -21,12 +21,10 @@ export function HealthSyncProvider({ children }: { children: React.ReactNode }) 
 
             // Function to perform the sync and invalidate queries
             const performSync = async () => {
-                console.log('HealthSyncProvider: Running automatic health sync...');
                 try {
                     await syncDailyHealth();
                     // Invalidate queries so the UI updates
                     queryClient.invalidateQueries({ queryKey: ['daily-health'] });
-                    console.log('HealthSyncProvider: Sync complete.');
                 } catch (error) {
                     console.error('HealthSyncProvider: Sync failed', error);
                 }
@@ -41,7 +39,6 @@ export function HealthSyncProvider({ children }: { children: React.ReactNode }) 
             // 3. Listen for app state changes (resume from background)
             const handleAppStateChange = async (state: { isActive: boolean }) => {
                 if (state.isActive) {
-                    console.log('App resumed, triggering health sync...');
                     performSync();
                 }
             };

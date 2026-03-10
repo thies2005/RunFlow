@@ -292,7 +292,7 @@ export async function syncHealthData(
 
     logger.info(`Found ${activities.length} activities in Health Connect`);
 
-    for (const activity of activities) {
+    const promises = activities.map(async (activity) => {
         try {
             const response = await fetch('/api/activities', {
                 method: 'POST',
@@ -311,19 +311,26 @@ export async function syncHealthData(
             if (response.ok) {
                 const data = await response.json();
                 if (data.duplicate) {
-                    skipped++;
+                    return 'skipped';
                 } else {
-                    synced++;
+                    return 'synced';
                 }
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 logger.error('Failed to sync activity', { name: activity.name, error: errorData });
-                errors++;
+                return 'error';
             }
         } catch (error) {
             logger.error('Error syncing activity', { name: activity.name, error });
-            errors++;
+            return 'error';
         }
+    });
+
+    const results = await Promise.all(promises);
+    for (const result of results) {
+        if (result === 'synced') synced++;
+        else if (result === 'skipped') skipped++;
+        else if (result === 'error') errors++;
     }
 
     logger.info('Health Connect sync complete', { synced, skipped, errors });

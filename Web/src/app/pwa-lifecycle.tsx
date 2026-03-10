@@ -15,9 +15,6 @@ export function PwaLifecycle() {
             "serviceWorker" in navigator
         ) {
             // Register service worker for PWA + push notifications
-            navigator.serviceWorker.ready.then((registration) => {
-                console.log('Service Worker ready:', registration.scope);
-            });
         }
     }, []);
 

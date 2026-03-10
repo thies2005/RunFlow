@@ -26,7 +26,6 @@ export function HealthSyncProvider({ children }: { children: React.ReactNode }) 
                     await syncDailyHealth();
                     // Invalidate queries so the UI updates
                     queryClient.invalidateQueries({ queryKey: ['daily-health'] });
-                    console.log('HealthSyncProvider: Sync complete.');
                 } catch (error) {
                     console.error('HealthSyncProvider: Sync failed', error);
                 }

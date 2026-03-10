@@ -148,6 +148,15 @@ describe('listBackups', () => {
     ;(fs.existsSync as jest.Mock).mockReturnValue(true)
   })
 
+  it('should return an empty array when no backup files exist', () => {
+    (fs.readdirSync as jest.Mock).mockReturnValue([]);
+
+    const result = listBackups();
+
+    expect(result).toEqual([]);
+    expect(fs.readdirSync).toHaveBeenCalled();
+  });
+
   it('should catch and log errors when fs.readdirSync fails', () => {
     const error = new Error('EACCES: permission denied');
     (fs.readdirSync as jest.Mock).mockImplementation(() => {

@@ -68,6 +68,26 @@ export async function GET(request: Request) {
     const targetCarbs = Math.round((target.dailyCalories * target.carbsPercent / 100) / 4);
     const targetFats = Math.round((target.dailyCalories * target.fatsPercent / 100) / 9);
 
+    // Fetch today's activity calories
+    const nowDate = new Date();
+    const todayStart = new Date(Date.UTC(nowDate.getUTCFullYear(), nowDate.getUTCMonth(), nowDate.getUTCDate()));
+    const todayEnd = new Date(todayStart);
+    todayEnd.setUTCDate(todayEnd.getUTCDate() + 1);
+
+    const todayActivities = await prisma.activity.findMany({
+      where: {
+        userId: session.user.id,
+        startDate: {
+          gte: todayStart,
+          lt: todayEnd
+        }
+      },
+      select: { calories: true }
+    });
+    const exerciseCalories = todayActivities.reduce((sum, a) => sum + (a.calories || 0), 0);
+    const exerciseCalorieFactor = (userTarget as any)?.exerciseCalorieFactor ?? 0.5;
+    const exerciseBudget = Math.round(exerciseCalories * exerciseCalorieFactor);
+
     // OPTIMIZATION: Use Prisma's groupBy for database-level aggregation
     // This performs the summation at the database level instead of in-memory
     const groupedData = await prisma.nutritionLog.groupBy({
@@ -238,7 +258,9 @@ export async function GET(request: Request) {
       avgDaily,
       adherenceScore: Math.max(0, Math.min(100, adherenceScore)),
       topContributors,
-      daysWithLogs
+      daysWithLogs,
+      exerciseCalories,
+      exerciseBudget
     });
 
   } catch (error) {

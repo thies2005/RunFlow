@@ -91,6 +91,8 @@ interface AnalyticsData {
     calories: Array<{ foodItemId: string; foodName: string; amount: number }>;
   };
   daysWithLogs: number;
+  exerciseCalories: number;
+  exerciseBudget: number;
 }
 
 type DateRangePreset = '7days' | '30days' | '90days';
@@ -150,11 +152,14 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
     }));
   }, [analytics]);
 
-  // Calculate remaining calories for today
+  // Calculate remaining calories for today (including exercise budget)
   const remainingCalories = useMemo(() => {
     if (!analytics) return 0;
-    return Math.max(0, analytics.target.dailyCalories - analytics.today.calories);
+    const effectiveTarget = analytics.target.dailyCalories + (analytics.exerciseBudget || 0);
+    return Math.max(0, effectiveTarget - analytics.today.calories);
   }, [analytics]);
+
+  const effectiveTarget = analytics ? analytics.target.dailyCalories + (analytics.exerciseBudget || 0) : 0;
 
   // Render content conditionally
   const renderContent = () => {
@@ -181,30 +186,21 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
       );
     }
 
-    if (analytics.daysWithLogs === 0) {
-      const isGoalsSet = !analytics.target.isDefault;
+    if (analytics.daysWithLogs === 0 && analytics.target.isDefault) {
       return (
-        <div className="flex items-center justify-center h-[60vh] px-4">
-          <div className="text-center max-w-sm">
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-              <Utensils className="w-8 h-8 text-gray-400" />
+        <div className="p-4">
+          <div className="bg-pink-500/10 border border-pink-500/20 rounded-2xl p-4 flex items-start gap-3 mb-6">
+            <Target className="w-5 h-5 text-pink-400 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-pink-400 mb-1">Set Up Your Goals</h4>
+              <p className="text-xs text-pink-200/70 mb-3">Set your calorie and macro targets for personalized adherence scoring.</p>
+              <button
+                onClick={handleOpenGoals}
+                className="bg-pink-500/20 text-pink-400 px-4 py-2 rounded-lg text-xs font-semibold"
+              >
+                Set Nutrition Goals
+              </button>
             </div>
-            <p className="text-white font-semibold mb-2">No nutrition data yet</p>
-            <p className="text-gray-400 text-sm mb-6">
-              {isGoalsSet ? "You've set your targets! Start logging your meals to see detailed analytics and insights." : "Start logging your meals to see detailed analytics and insights."}
-            </p>
-            <button
-              onClick={handleOpenGoals}
-              className="bg-pink-500/20 text-pink-400 px-6 py-3 rounded-xl text-sm font-semibold mb-3 w-full"
-            >
-              {isGoalsSet ? "Adjust Nutrition Goals" : "Set Nutrition Goals First"}
-            </button>
-            <button
-              onClick={onClose}
-              className="bg-white/5 text-gray-300 px-6 py-3 rounded-xl text-sm font-semibold w-full"
-            >
-              Go to Health Dashboard
-            </button>
           </div>
         </div>
       );
@@ -266,7 +262,10 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
                 <span className="text-xl font-bold text-white">
                   {Math.round(analytics.today.calories)}
                 </span>
-                <span className="text-xs text-gray-400">/ {analytics.target.dailyCalories}</span>
+                <span className="text-xs text-gray-400">/ {effectiveTarget}</span>
+              {analytics.exerciseBudget > 0 && (
+                <span className="text-[10px] text-green-400 block">+{analytics.exerciseBudget} active</span>
+              )}
               </div>
             </div>
 

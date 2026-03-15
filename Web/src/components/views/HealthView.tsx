@@ -24,6 +24,7 @@ import { SupplementStatsModal } from './SupplementStatsModal';
 import { SupplementItem } from '@/components/health/SupplementItem';
 import { ReminderSettingsModal } from './ReminderSettingsModal';
 import { AiMealSuggestionModal } from './AiMealSuggestionModal';
+import SupplementAnalyticsView from './SupplementAnalyticsView';
 const MacroRing = ({ value, target, color, label }: { value: number, target: number, color: string, label: string }) => {
     const safeTarget = target > 0 ? target : 1;
     const percentage = Math.min(value / safeTarget, 1);
@@ -102,6 +103,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isRemindersOpen, setIsRemindersOpen] = useState(false);
     const [isMealSuggestionOpen, setIsMealSuggestionOpen] = useState(false);
+    const [showSupplementAnalytics, setShowSupplementAnalytics] = useState(false);
     const [quickAddProps, setQuickAddProps] = useState<{tab?: 'search' | 'custom', mealType?: string}>({});
 
     const handleBarcodeScanned = useCallback(async (barcode: string) => {
@@ -430,6 +432,10 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                 <NutritionAnalyticsView
                     onClose={() => setShowAnalytics(false)}
                 />
+            ) : showSupplementAnalytics ? (
+                <SupplementAnalyticsView
+                    onClose={() => setShowSupplementAnalytics(false)}
+                />
             ) : (
                 <>
                     {showHeader && (
@@ -739,6 +745,12 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                     Daily Supplements
                                 </h3>
                                 <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowSupplementAnalytics(true)}
+                                        className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-blue-500/20 transition-colors"
+                                    >
+                                        <BarChart3 className="w-3.5 h-3.5" /> Analytics
+                                    </button>
                                     <button
                                         onClick={() => {
                                             setStackToEdit(null);

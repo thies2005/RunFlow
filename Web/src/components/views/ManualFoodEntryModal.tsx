@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, Search, Loader2, Save, ArrowLeft, Bookmark } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { X, Search, Loader2, Save, ArrowLeft, Bookmark, History, Star } from 'lucide-react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -41,6 +41,17 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
     const [isSearching, setIsSearching] = useState(false);
     const [isOffSearching, setIsOffSearching] = useState(false);
     const [isFsSearching, setIsFsSearching] = useState(false);
+
+    // Recent & Frequent Foods
+    const { data: recentFrequent, isLoading: isRecentLoading } = useQuery({
+        queryKey: ['recent-frequent-foods'],
+        queryFn: async () => {
+            const res = await fetch('/api/health/nutrition/recent');
+            if (!res.ok) throw new Error('Failed to fetch recent foods');
+            return res.json() as Promise<{ recent: any[], frequent: any[] }>;
+        },
+        enabled: isOpen && activeTab === 'search' && !query.trim(),
+    });
 
     // Custom Entry State
     const [customName, setCustomName] = useState('');
@@ -362,7 +373,67 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                                 </form>
 
                                 <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2">
-                                    {searchResults.length === 0 && !isSearching && !isOffSearching && !isFsSearching && query && (
+                                    {!query.trim() && isRecentLoading && (
+                                        <div className="flex items-center justify-center py-8 text-gray-500">
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                        </div>
+                                    )}
+
+                                    {!query.trim() && (recentFrequent?.recent?.length ?? 0) > 0 && (
+                                        <div className="mb-6">
+                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-1.5 px-1"><History className="w-3.5 h-3.5"/> Recent Foods</h3>
+                                            <div className="space-y-2">
+                                                {recentFrequent?.recent?.map((food: any, i: number) => (
+                                                    <button
+                                                        key={`recent-${food.id || i}`}
+                                                        onClick={() => handleSelectFood(food)}
+                                                        className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex justify-between items-center"
+                                                    >
+                                                        <div>
+                                                            <p className="font-medium text-white line-clamp-1">{food.name}</p>
+                                                            <p className="text-xs text-gray-400">
+                                                                {food.brand ? `${food.brand} • ` : ''}
+                                                                {food.servingSize}
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-right shrink-0 ml-2">
+                                                            <p className="text-sm font-bold text-blue-400">{Math.round(food.calories)}</p>
+                                                            <p className="text-[10px] text-gray-500 uppercase">kcal</p>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {!query.trim() && (recentFrequent?.frequent?.length ?? 0) > 0 && (
+                                        <div className="mb-6">
+                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-1.5 px-1"><Star className="w-3.5 h-3.5 text-yellow-500/80"/> Frequent Foods</h3>
+                                            <div className="space-y-2">
+                                                {recentFrequent?.frequent?.map((food: any, i: number) => (
+                                                    <button
+                                                        key={`freq-${food.id || i}`}
+                                                        onClick={() => handleSelectFood(food)}
+                                                        className="w-full text-left p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex justify-between items-center"
+                                                    >
+                                                        <div>
+                                                            <p className="font-medium text-white line-clamp-1">{food.name}</p>
+                                                            <p className="text-xs text-gray-400">
+                                                                {food.brand ? `${food.brand} • ` : ''}
+                                                                {food.servingSize}
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-right shrink-0 ml-2">
+                                                            <p className="text-sm font-bold text-blue-400">{Math.round(food.calories)}</p>
+                                                            <p className="text-[10px] text-gray-500 uppercase">kcal</p>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {searchResults.length === 0 && !isSearching && !isOffSearching && !isFsSearching && query.trim() && (
                                         <p className="text-center text-gray-400 mt-8 text-sm">No results found.</p>
                                     )}
                                     {searchResults.map((food, i) => (

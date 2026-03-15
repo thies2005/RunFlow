@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
-import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target, Sparkles, BookOpen, Bell, Droplets, Minus } from 'lucide-react';
+import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target, Sparkles, BookOpen, Bell, Droplets, Minus, Copy, Loader2 } from 'lucide-react';
 import { syncDailyHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult, isHealthConnectAvailable } from '@/lib/mobile/healthConnect';
 import { Capacitor } from '@capacitor/core';
 
@@ -23,6 +23,7 @@ import { AddStackModal } from './AddStackModal';
 import { SupplementStatsModal } from './SupplementStatsModal';
 import { SupplementItem } from '@/components/health/SupplementItem';
 import { ReminderSettingsModal } from './ReminderSettingsModal';
+import { AiMealSuggestionModal } from './AiMealSuggestionModal';
 const MacroRing = ({ value, target, color, label }: { value: number, target: number, color: string, label: string }) => {
     const safeTarget = target > 0 ? target : 1;
     const percentage = Math.min(value / safeTarget, 1);
@@ -100,6 +101,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isMealLibraryOpen, setIsMealLibraryOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isRemindersOpen, setIsRemindersOpen] = useState(false);
+    const [isMealSuggestionOpen, setIsMealSuggestionOpen] = useState(false);
     const [quickAddProps, setQuickAddProps] = useState<{tab?: 'search' | 'custom', mealType?: string}>({});
 
     const handleBarcodeScanned = useCallback(async (barcode: string) => {
@@ -257,6 +259,30 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
+        }
+    });
+
+    const copyYesterdayMutation = useMutation({
+        mutationFn: async ({ mealType }: { mealType: string }) => {
+            const res = await fetch('/api/health/nutrition/log/copy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetDate: todayStr,
+                    mealType,
+                })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Failed to copy');
+            }
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['daily-health'] });
+        },
+        onError: (err: any) => {
+            alert(err.message || 'Failed to copy yesterday\'s meals');
         }
     });
 
@@ -509,6 +535,24 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 </div>
                             </button>
                         )}
+                        
+                        <button
+                            onClick={() => setIsMealSuggestionOpen(true)}
+                            className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 hover:from-blue-600/20 hover:to-purple-600/20 border border-blue-500/20 rounded-2xl p-4 transition-all active:scale-[0.98] w-full flex items-center justify-between group"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-[0_0_15px_rgba(59,130,246,0.15)] border border-blue-500/20">
+                                    <Sparkles className="w-5 h-5 text-amber-400/90" />
+                                </div>
+                                <div className="text-left font-sans">
+                                    <h3 className="text-sm font-bold text-blue-100 flex items-center gap-2">What should I eat?</h3>
+                                    <p className="text-xs text-blue-200/50 mt-0.5">Perfect meals for your macros</p>
+                                </div>
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                                <ChevronRight className="w-4 h-4 text-blue-300" />
+                            </div>
+                        </button>
 
                         {/* Row 2: Quick Stats */}
                         <div className={`grid gap-4 ${showSteps ? 'grid-cols-2' : 'grid-cols-1'}`}>
@@ -641,16 +685,31 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                                 <h4 className="text-sm font-bold text-white capitalize">{mealName.toLowerCase()}</h4>
                                                 {totalCals > 0 && <span className="text-xs font-semibold text-pink-400">{Math.round(totalCals)} kcal</span>}
                                             </div>
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setQuickAddProps({ tab: 'search', mealType: mealName });
-                                                    setIsManualEntryOpen(true);
-                                                }}
-                                                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                                            >
-                                                <Plus className="w-4 h-4 text-white" />
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                {!isPopulated && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            copyYesterdayMutation.mutate({ mealType: mealName });
+                                                        }}
+                                                        disabled={copyYesterdayMutation.isPending}
+                                                        className="h-8 px-3 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors text-xs font-medium text-gray-400 hover:text-white"
+                                                    >
+                                                        {copyYesterdayMutation.isPending && copyYesterdayMutation.variables?.mealType === mealName ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
+                                                        Yesterday
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setQuickAddProps({ tab: 'search', mealType: mealName });
+                                                        setIsManualEntryOpen(true);
+                                                    }}
+                                                    className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors shrink-0"
+                                                >
+                                                    <Plus className="w-4 h-4 text-white" />
+                                                </button>
+                                            </div>
                                         </div>
                                         {isPopulated && (
                                             <div className="p-4 pt-1 space-y-3">
@@ -872,6 +931,22 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         isOpen={isRemindersOpen}
                         onClose={() => setIsRemindersOpen(false)}
                     />
+
+                    {isMealSuggestionOpen && targetData && (
+                        <AiMealSuggestionModal
+                            isOpen={isMealSuggestionOpen}
+                            onClose={() => setIsMealSuggestionOpen(false)}
+                            remainingMacros={{
+                                calories: Math.max(0, effectiveTarget - totalCalories),
+                                protein: Math.max(0, targetProtein - totalProtein),
+                                carbs: Math.max(0, targetCarbs - totalCarbs),
+                                fats: Math.max(0, targetFats - totalFats)
+                            }}
+                            onLogSuccess={() => {
+                                queryClient.invalidateQueries({ queryKey: ['daily-health'] });
+                            }}
+                        />
+                    )}
                 </>
             )}
         </div>

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Tab - Training Redesigns</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#09090b', // zinc-950
+                        glass: {
+                            border: 'rgba(255, 255, 255, 0.1)',
+                            bg: 'rgba(255, 255, 255, 0.05)',
+                            hover: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: white;
+            padding: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4rem;
+            justify-content: center;
+        }
+
+        .phone-frame {
+            width: 390px;
+            height: 844px;
+            background-color: #09090b;
+            border-radius: 40px;
+            border: 8px solid #27272a;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            /* Hide scrollbar */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .phone-frame::-webkit-scrollbar {
+            display: none;
+        }
+
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .design-label {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            color: #a1a1aa;
+        }
+
+        /* Custom graph styles */
+        .hr-graph {
+            background: linear-gradient(180deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0) 100%);
+            border-top: 2px solid #ef4444;
+        }
+
+        .pace-graph {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0) 100%);
+            border-top: 2px solid #3b82f6;
+        }
+    </style>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+
+    <!-- Variation 1: The "Hero Stats" Layout -->
+    <div class="relative">
+        <div class="design-label">1. Hero Stats Dashboard</div>
+        <div class="phone-frame p-4 pb-20">
+            <!-- Header -->
+            <div class="flex items-center gap-3 pt-8 mb-4">
+                <button class="p-2 bg-white/5 rounded-full"><i data-lucide="arrow-left" class="w-4 h-4"></i></button>
+                <div class="flex-1">
+                    <h1 class="text-xl font-bold">Morning Run</h1>
+                    <div class="flex items-center gap-2 text-[10px] text-gray-400">
+                        <i data-lucide="calendar" class="w-3 h-3"></i> Oct 24, 8:15 AM
+                        <span
+                            class="bg-purple-500/20 text-purple-400 px-1.5 rounded border border-purple-500/50">RUN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ultra Dense Hero Metrics -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="glass-card rounded-[24px] p-4 bg-gradient-to-br from-white/10 to-transparent">
+                    <div class="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1 mb-1"><i
+                            data-lucide="map-pin" class="w-3 h-3"></i> Distance</div>
+                    <div class="text-3xl font-bold">12.4 <span class="text-sm font-medium text-gray-500">km</span></div>
+                </div>
+                <div class="glass-card rounded-[24px] p-4 bg-gradient-to-br from-white/10 to-transparent">
+                    <div class="text-[10px] uppercase font-bold text-gray-400 flex items-center gap-1 mb-1"><i
+                            data-lucide="clock" class="w-3 h-3"></i> Duration</div>
+                    <div class="text-3xl font-bold">64 <span class="text-sm font-medium text-gray-500">min</span></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mb-6">
+                <div class="glass-card rounded-xl p-3 text-center">
+                    <div
+                        class="text-[9px] uppercase font-bold text-gray-500 mb-1 flex justify-center items-center gap-1">
+                        <i data-lucide="zap" class="w-2 h-2"></i> Pace</div>
+                    <div class="text-lg font-bold">5:12</div>
+                </div>
+                <div class="glass-card rounded-xl p-3 text-center">
+                    <div
+                        class="text-[9px] uppercase font-bold text-gray-500 mb-1 flex justify-center items-center gap-1">
+                        <i data-lucide="heart" class="w-2 h-2"></i> Avg HR</div>
+                    <div class="text-lg font-bold">155</div>
+                </div>
+                <div class="glass-card rounded-xl p-3 text-center">
+                    <div
+                        class="text-[9px] uppercase font-bold text-gray-500 mb-1 flex justify-center items-center gap-1">
+                        <i data-lucide="activity" class="w-2 h-2"></i> Cadence</div>
+                    <div class="text-lg font-bold">164</div>
+                </div>
+            </div>
+
+            <!-- Heart Rate Zones (Compact) -->
+            <div class="glass-card rounded-2xl p-4 mb-4">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1 mb-3">
+                    <i data-lucide="heart" class="w-3 h-3 text-red-500"></i> Zone Distribution</h3>
+
+                <div class="flex h-3 rounded-full w-full bg-white/5 mb-4 overflow-hidden shadow-inner">
+                    <div class="bg-green-400 h-full w-[10%]"></div>
+                    <div class="bg-lime-400 h-full w-[25%]"></div>
+                    <div class="bg-yellow-400 h-full w-[40%]"></div>
+                    <div class="bg-orange-400 h-full w-[20%] pt-1"></div>
+                    <div class="bg-red-500 h-full w-[5%]"></div>
+                </div>
+
+                <div class="grid grid-cols-5 gap-1 text-center">
+                    <div>
+                        <div class="text-[9px] font-bold text-green-400">Z1</div>
+                        <div class="text-[9px] text-gray-400">6m</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] font-bold text-lime-400">Z2</div>
+                        <div class="text-[9px] text-gray-400">16m</div>
+                    </div>
+                    <div class="bg-white/5 rounded">
+                        <div class="text-[9px] font-bold text-yellow-400">Z3</div>
+                        <div class="text-[9px] text-white font-bold">25m</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] font-bold text-orange-400">Z4</div>
+                        <div class="text-[9px] text-gray-400">12m</div>
+                    </div>
+                    <div>
+                        <div class="text-[9px] font-bold text-red-500">Z5</div>
+                        <div class="text-[9px] text-gray-400">3m</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Context -->
+            <div class="space-y-4">
+                <div class="glass-card rounded-2xl p-4 h-40 flex flex-col relative overflow-hidden">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 relative z-10">Heart
+                        Rate</h3>
+                    <div
+                        class="absolute bottom-0 left-0 w-full h-[60%] hr-graph graph-path text-[10px] text-red-400 p-2 text-right">
+                        MAX 182</div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-4 h-40 flex flex-col relative overflow-hidden">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 relative z-10">Pace
+                        (min/km)</h3>
+                    <div
+                        class="absolute bottom-0 left-0 w-full h-[80%] pace-graph p-2 text-[10px] text-blue-400 text-right">
+                        BEST 4:10</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Variation 2: The "Grid Module" Layout -->
+    <div class="relative">
+        <div class="design-label">2. Grid Module Density</div>
+        <div class="phone-frame p-2 pb-20">
+            <!-- Super tight header -->
+            <div class="flex justify-between items-center px-2 pt-10 pb-4">
+                <div>
+                    <h1 class="text-lg font-bold leading-tight">Evening Trail</h1>
+                    <div class="text-[10px] text-purple-400 font-bold uppercase tracking-wider">Trail Run · Oct 12</div>
+                </div>
+                <button class="w-8 h-8 glass-card rounded-full flex items-center justify-center"><i
+                        data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+
+            <!-- Mosaic Grid -->
+            <div class="grid grid-cols-4 gap-2 mb-4">
+                <div
+                    class="col-span-2 row-span-2 glass-card rounded-2xl p-3 flex flex-col justify-end relative overflow-hidden">
+                    <i data-lucide="map" class="w-24 h-24 absolute -right-4 -top-4 text-white/[0.03]"></i>
+                    <div class="text-[10px] uppercase font-bold text-gray-400 mb-1">Distance</div>
+                    <div class="text-3xl font-bold tracking-tighter">15.2<span
+                            class="text-sm font-normal text-gray-500">km</span></div>
+                </div>
+
+                <div class="col-span-2 glass-card rounded-xl p-3 bg-blue-500/10 border-blue-500/20">
+                    <div class="text-[9px] uppercase font-bold text-blue-400 mb-0.5">Duration</div>
+                    <div class="text-xl font-bold">1h 22m</div>
+                </div>
+
+                <div class="col-span-1 glass-card rounded-xl p-2 text-center">
+                    <div class="text-[9px] uppercase font-bold text-gray-500 mb-0.5">Pace</div>
+                    <div class="text-sm font-bold">5:24</div>
+                </div>
+
+                <div class="col-span-1 glass-card rounded-xl p-2 text-center">
+                    <div class="text-[9px] uppercase font-bold text-gray-500 mb-0.5">HR</div>
+                    <div class="text-sm font-bold text-red-400">162</div>
+                </div>
+
+                <div class="col-span-2 glass-card rounded-xl p-2 flex justify-between items-center">
+                    <div class="text-[9px] uppercase font-bold text-gray-500">Elevation</div>
+                    <div class="text-sm font-bold flex items-center gap-1"><i data-lucide="mountain"
+                            class="w-3 h-3 text-gray-400"></i> +320m</div>
+                </div>
+                <div class="col-span-2 glass-card rounded-xl p-2 flex justify-between items-center">
+                    <div class="text-[9px] uppercase font-bold text-gray-500">Cadence</div>
+                    <div class="text-sm font-bold flex items-center gap-1"><i data-lucide="activity"
+                            class="w-3 h-3 text-purple-400"></i> 168</div>
+                </div>
+            </div>
+
+            <!-- Zones Details -->
+            <div class="glass-card rounded-2xl p-3 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-[10px] uppercase font-bold text-gray-400">Time in Zones</h3>
+                    <div class="text-[10px] text-gray-500 font-mono">1h 22m Total</div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 text-[10px] font-bold text-red-500">Z5</div>
+                        <div class="flex-1 h-1.5 bg-white/5 rounded-full">
+                            <div class="h-full bg-red-500 rounded-full w-[15%] shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                            </div>
+                        </div>
+                        <div class="w-10 text-right text-[10px] font-mono">12:15</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 text-[10px] font-bold text-orange-400">Z4</div>
+                        <div class="flex-1 h-1.5 bg-white/5 rounded-full">
+                            <div class="h-full bg-orange-400 rounded-full w-[45%]"></div>
+                        </div>
+                        <div class="w-10 text-right text-[10px] font-mono">36:40</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 text-[10px] font-bold text-yellow-400">Z3</div>
+                        <div class="flex-1 h-1.5 bg-white/5 rounded-full">
+                            <div class="h-full bg-yellow-400 rounded-full w-[25%]"></div>
+                        </div>
+                        <div class="w-10 text-right text-[10px] font-mono">20:30</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 text-[10px] font-bold text-lime-400">Z2</div>
+                        <div class="flex-1 h-1.5 bg-white/5 rounded-full">
+                            <div class="h-full bg-lime-400 rounded-full w-[10%]"></div>
+                        </div>
+                        <div class="w-10 text-right text-[10px] font-mono">08:15</div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 text-[10px] font-bold text-green-400">Z1</div>
+                        <div class="flex-1 h-1.5 bg-white/5 rounded-full">
+                            <div class="h-full bg-green-400 rounded-full w-[5%]"></div>
+                        </div>
+                        <div class="w-10 text-right text-[10px] font-mono">04:20</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compact Mini Graphs -->
+            <div class="flex gap-2 h-24">
+                <div class="flex-1 glass-card rounded-xl p-2 relative overflow-hidden">
+                    <span class="text-[9px] uppercase font-bold text-gray-500 relative z-10">Heart Rate</span>
+                    <div class="absolute bottom-0 left-0 w-full h-[60%] hr-graph"></div>
+                </div>
+                <div class="flex-1 glass-card rounded-xl p-2 relative overflow-hidden">
+                    <span class="text-[9px] uppercase font-bold text-gray-500 relative z-10">Pace</span>
+                    <div class="absolute bottom-0 left-0 w-full h-[70%] pace-graph"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Variation 3: The "Swipeable Card" Layout (Focus on Charts) -->
+    <div class="relative">
+        <div class="design-label">3. Minimalist Charts First</div>
+        <div class="phone-frame p-0 pb-20 bg-[#050505]">
+            <div class="p-5 pt-12 pb-6 border-b border-white/5 backdrop-blur-md sticky top-0 z-20">
+                <h1 class="text-2xl font-bold mb-1">Track Interval</h1>
+                <div class="flex gap-4 text-xs text-gray-400">
+                    <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> 8.4 km</span>
+                    <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> 42:15</span>
+                    <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3"></i> 5:02 /km</span>
+                </div>
+            </div>
+
+            <div class="p-4 space-y-6">
+                <!-- Embedded Interactive Chart Concept -->
+                <div
+                    class="glass-card rounded-[2rem] p-5 h-64 flex flex-col justify-between relative shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                    <div class="flex justify-between items-start z-10">
+                        <div>
+                            <h3 class="text-sm font-bold">Interactive Analysis</h3>
+                            <p class="text-[10px] text-gray-400">Tap and drag to view details</p>
+                        </div>
+                        <button class="bg-white/10 rounded-full p-2"><i data-lucide="maximize"
+                                class="w-4 h-4 text-white"></i></button>
+                    </div>
+
+                    <!-- Fake combined chart -->
+                    <div class="absolute inset-0 top-16 bottom-10">
+                        <div class="w-full h-full hr-graph opacity-50 absolute bottom-0"></div>
+                        <div class="w-full h-[80%] pace-graph opacity-50 absolute bottom-0"
+                            style="background: linear-gradient(180deg, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0) 100%);">
+                        </div>
+                        <div class="w-full h-[30%] absolute bottom-0 border-t border-gray-500"
+                            style="background: linear-gradient(180deg, rgba(156, 163, 175, 0.2) 0%, rgba(156, 163, 175, 0) 100%);">
+                        </div>
+                        <!-- Scrubber line -->
+                        <div class="absolute left-1/3 top-0 bottom-0 w-[1px] bg-white z-10">
+                            <div
+                                class="w-2 h-2 rounded-full bg-white absolute top-1/2 -ml-[3.5px] shadow-[0_0_10px_white]">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center z-10 border-t border-white/10 pt-3">
+                        <div class="text-[10px]"><span class="text-red-400 font-bold">164</span> HR</div>
+                        <div class="text-[10px]"><span class="text-blue-400 font-bold">4:45</span> Pace</div>
+                        <div class="text-[10px]"><span class="text-gray-400 font-bold">110m</span> Elev</div>
+                    </div>
+                </div>
+
+                <!-- Horizontal zones -->
+                <div>
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-3 px-2">Heart Rate Zones
+                    </h3>
+                    <div class="flex gap-2 overflow-x-auto snap-x pb-2 hide-scrollbar">
+                        <div class="snap-start shrink-0 w-32 glass-card rounded-2xl p-4 border-l-2 border-l-red-500">
+                            <div class="text-[10px] font-bold text-red-500 uppercase mb-1">VO2Max Z5</div>
+                            <div class="text-xl font-bold font-mono text-white mb-1">08:42</div>
+                            <div class="text-[10px] text-gray-500">20% of workout</div>
+                        </div>
+                        <div
+                            class="snap-start shrink-0 w-32 glass-card rounded-2xl p-4 border-l-2 border-l-orange-400 bg-white/[0.08]">
+                            <div class="text-[10px] font-bold text-orange-400 uppercase mb-1">Threshold Z4</div>
+                            <div class="text-xl font-bold font-mono text-white mb-1">15:20</div>
+                            <div class="text-[10px] text-gray-500">36% of workout</div>
+                        </div>
+                        <div class="snap-start shrink-0 w-32 glass-card rounded-2xl p-4 border-l-2 border-l-yellow-400">
+                            <div class="text-[10px] font-bold text-yellow-400 uppercase mb-1">Tempo Z3</div>
+                            <div class="text-xl font-bold font-mono text-white mb-1">12:10</div>
+                            <div class="text-[10px] text-gray-500">28% of workout</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats summary grid bottom -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="glass-card rounded-xl p-3 flex justify-between items-center">
+                        <span class="text-[10px] uppercase text-gray-400 font-bold">Elevation</span>
+                        <span class="text-sm font-bold">24m</span>
+                    </div>
+                    <div class="glass-card rounded-xl p-3 flex justify-between items-center">
+                        <span class="text-[10px] uppercase text-gray-400 font-bold">Cadence</span>
+                        <span class="text-sm font-bold">172 spm</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Variation 4: The "List/Data Centric" View -->
+    <div class="relative">
+        <div class="design-label">4. Tabular & Metric Dense</div>
+        <div class="phone-frame p-4 pb-20">
+            <h1 class="text-2xl font-bold pt-8 mb-6">Activity Analysis</h1>
+
+            <!-- Key metrics as a dense horizontal list -->
+            <div class="glass-card rounded-[20px] overflow-hidden mb-6">
+                <div class="p-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i></div>
+                        <div>
+                            <div class="text-[10px] uppercase text-gray-500 font-bold">Distance</div>
+                            <div class="font-bold">21.1 km</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] uppercase text-gray-500 font-bold">Half Marathon</div>
+                        <div class="text-xs text-blue-400">Personal Best</div>
+                    </div>
+                </div>
+                <div class="p-3 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                            <i data-lucide="clock" class="w-4 h-4"></i></div>
+                        <div>
+                            <div class="text-[10px] uppercase text-gray-500 font-bold">Duration</div>
+                            <div class="font-bold">1:45:12</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 border-b border-white/5 flex items-center gap-3">
+                    <div class="flex-1 border-r border-white/10">
+                        <div class="text-[10px] uppercase text-gray-500 font-bold mb-1">Pace Avg</div>
+                        <div class="font-bold text-lg">4:58 <span class="text-xs font-normal text-gray-500">/km</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 pl-3">
+                        <div class="text-[10px] uppercase text-gray-500 font-bold mb-1">HR Avg</div>
+                        <div class="font-bold text-lg text-red-400">168 <span
+                                class="text-xs font-normal text-gray-500">bpm</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heart rate detailed table -->
+            <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3 px-1">Detailed HR Zones</h3>
+            <div class="glass-card rounded-[20px] overflow-hidden mb-6">
+                <!-- Header row -->
+                <div class="flex text-[9px] uppercase font-bold text-gray-500 p-2 border-b border-white/10 bg-black/40">
+                    <div class="w-12">Zone</div>
+                    <div class="flex-1">Range</div>
+                    <div class="w-20 text-right">Time</div>
+                    <div class="w-16 text-right">%</div>
+                </div>
+                <!-- Rows -->
+                <div class="flex items-center text-sm p-3 border-b border-white/5 bg-red-500/10">
+                    <div class="w-12 font-bold text-red-500">Z5</div>
+                    <div class="flex-1 text-xs text-gray-300">180+ bpm <span class="text-[9px] block text-gray-500">VO2
+                            Max</span></div>
+                    <div class="w-20 text-right font-mono">15:42</div>
+                    <div class="w-16 text-right font-bold text-red-500">15%</div>
+                </div>
+                <div class="flex items-center text-sm p-3 border-b border-white/5 bg-orange-500/5">
+                    <div class="w-12 font-bold text-orange-400">Z4</div>
+                    <div class="flex-1 text-xs text-gray-300">165-179 bpm <span
+                            class="text-[9px] block text-gray-500">Threshold</span></div>
+                    <div class="w-20 text-right font-mono">52:10</div>
+                    <div class="w-16 text-right font-bold text-orange-400">49%</div>
+                </div>
+                <div class="flex items-center text-sm p-3 border-b border-white/5">
+                    <div class="w-12 font-bold text-yellow-400">Z3</div>
+                    <div class="flex-1 text-xs text-gray-300">150-164 bpm <span
+                            class="text-[9px] block text-gray-500">Tempo</span></div>
+                    <div class="w-20 text-right font-mono">30:05</div>
+                    <div class="w-16 text-right font-bold">29%</div>
+                </div>
+                <div class="flex items-center text-sm p-3 border-b border-white/5 opacity-70">
+                    <div class="w-12 font-bold text-lime-400">Z2</div>
+                    <div class="flex-1 text-xs text-gray-300">135-149 bpm</div>
+                    <div class="w-20 text-right font-mono">05:15</div>
+                    <div class="w-16 text-right text-gray-400">5%</div>
+                </div>
+                <div class="flex items-center text-sm p-3 opacity-50">
+                    <div class="w-12 font-bold text-green-400">Z1</div>
+                    <div class="flex-1 text-xs text-gray-300">
+                        < 135 bpm</div>
+                            <div class="w-20 text-right font-mono">02:00</div>
+                            <div class="w-16 text-right text-gray-500">2%</div>
+                    </div>
+                </div>
+
+                <!-- Single large graph stacked at bottom -->
+                <div class="glass-card rounded-[20px] p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-[10px] uppercase font-bold text-gray-400">Pace / Elevation</h3>
+                        <div class="flex gap-2">
+                            <span class="w-2 h-2 rounded bg-blue-500 inline-block"></span>
+                            <span class="w-2 h-2 rounded bg-gray-500 inline-block"></span>
+                        </div>
+                    </div>
+                    <div class="h-24 w-full pace-graph relative">
+                        <div class="absolute bottom-0 w-full h-[50%] border-t border-gray-500 bg-gray-500/20"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Variation 5: The "Pro Telemetry" Data View (Max Density) -->
+        <div class="relative">
+            <div class="design-label">5. Pro Telemetry Dashboard</div>
+            <div class="phone-frame p-2 pb-20 bg-black border-[rgba(20,20,20,1)]">
+                <div class="flex justify-between items-end mb-3 pt-8 px-2">
+                    <div>
+                        <div class="text-[9px] text-gray-500 font-mono tracking-widest">ACTIVITY // RUN</div>
+                        <h1 class="text-lg font-bold tracking-tight text-white uppercase">Interval Session</h1>
+                    </div>
+                    <div
+                        class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        SYNCED</div>
+                </div>
+
+                <!-- Telemetry Strip -->
+                <div class="flex gap-1 mb-1">
+                    <div class="flex-1 bg-[#111] border border-white/5 p-2 rounded-lg flex flex-col items-center">
+                        <span class="text-[8px] font-mono text-gray-500 mb-1">DIST (KM)</span>
+                        <span class="font-mono font-bold text-sm text-white">10.05</span>
+                    </div>
+                    <div class="flex-1 bg-[#111] border border-white/5 p-2 rounded-lg flex flex-col items-center">
+                        <span class="text-[8px] font-mono text-gray-500 mb-1">TIME</span>
+                        <span class="font-mono font-bold text-sm text-white">45:12</span>
+                    </div>
+                    <div
+                        class="flex-1 bg-[#111] border border-white/5 p-2 rounded-lg flex flex-col items-center border-blue-500/30 bg-blue-500/5">
+                        <span class="text-[8px] font-mono text-blue-400 mb-1">PACE_AVG</span>
+                        <span class="font-mono font-bold text-sm text-blue-400">4:30</span>
+                    </div>
+                    <div class="flex-1 bg-[#111] border border-white/5 p-2 rounded-lg flex flex-col items-center">
+                        <span class="text-[8px] font-mono text-gray-500 mb-1">HR_AVG</span>
+                        <span class="font-mono font-bold text-sm text-red-400">168</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-1 mb-3">
+                    <div
+                        class="flex-1 bg-[#111] border border-white/5 p-1.5 rounded-lg flex justify-between items-center px-3">
+                        <span class="text-[8px] font-mono text-gray-500">SPM</span><span
+                            class="font-mono text-xs text-white">170</span>
+                    </div>
+                    <div
+                        class="flex-1 bg-[#111] border border-white/5 p-1.5 rounded-lg flex justify-between items-center px-3">
+                        <span class="text-[8px] font-mono text-gray-500">ELEV_GAIN</span><span
+                            class="font-mono text-xs text-white">85m</span>
+                    </div>
+                </div>
+
+                <!-- Dense Zone Bar -->
+                <div class="bg-[#111] border border-white/5 p-2 rounded-lg mb-3">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-[8px] font-mono text-gray-500">HEART_RATE_ZONES</span>
+                        <span class="text-[8px] font-mono text-red-500">MAX: 192 BPM</span>
+                    </div>
+                    <div class="flex h-4 w-full bg-black border border-white/10 rounded-sm mb-2">
+                        <div class="bg-gray-600 h-full w-[5%] border-r border-black"></div>
+                        <div class="bg-blue-500 h-full w-[10%] border-r border-black"></div>
+                        <div class="bg-green-500 h-full w-[25%] border-r border-black"></div>
+                        <div class="bg-yellow-500 h-full w-[40%] border-r border-black"></div>
+                        <div class="bg-red-500 h-full w-[20%]"></div>
+                    </div>
+                    <div class="flex justify-between text-[8px] font-mono text-gray-400">
+                        <div>Z1: 5%</div>
+                        <div>Z2: 10%</div>
+                        <div>Z3: 25%</div>
+                        <div class="text-yellow-500 font-bold">Z4: 40%</div>
+                        <div class="text-red-500 font-bold">Z5: 20%</div>
+                    </div>
+                </div>
+
+                <!-- Highly dense dual chart -->
+                <div class="bg-[#111] border border-white/5 p-2 rounded-lg h-[240px] flex flex-col">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-[8px] font-mono text-gray-500">DATA_STREAM</span>
+                        <div class="flex gap-3 text-[8px] font-mono">
+                            <span class="text-red-500">■ HR</span>
+                            <span class="text-blue-500">■ PACE</span>
+                            <span class="text-gray-500">■ ELEV</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative border border-white/10 bg-black flex grid gap-0.5">
+                        <!-- Layered charts representation (CSS only for mockup) -->
+                        <div class="absolute inset-x-0 bottom-0 top-[20%] hr-graph opacity-80 z-20"></div>
+                        <div class="absolute inset-x-0 bottom-0 top-[40%] pace-graph opacity-60 z-30 mix-blend-screen">
+                        </div>
+                        <div
+                            class="absolute inset-x-0 bottom-0 top-[70%] bg-gray-500/20 border-t border-gray-500/50 z-10">
+                        </div>
+
+                        <!-- Grid lines -->
+                        <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20 z-0">
+                            <div class="w-full border-t border-dashed border-white/30 h-0"></div>
+                            <div class="w-full border-t border-dashed border-white/30 h-0"></div>
+                            <div class="w-full border-t border-dashed border-white/30 h-0"></div>
+                            <div class="w-full border-t border-dashed border-white/30 h-0"></div>
+                        </div>
+
+                        <!-- Left Y Axis fake ticks -->
+                        <div
+                            class="absolute left-1 top-1 bottom-1 flex flex-col justify-between text-[7px] font-mono text-red-500 z-40">
+                            <span>200</span><span>150</span><span>100</span><span>50</span>
+                        </div>
+                        <!-- Right Y Axis fake ticks -->
+                        <div
+                            class="absolute right-1 top-1 bottom-1 flex flex-col justify-between text-[7px] font-mono text-blue-500 text-right z-40">
+                            <span>3:00</span><span>4:30</span><span>6:00</span><span>7:30</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-[7px] font-mono text-gray-500 mt-1">
+                        <span>0:00</span><span>15:00</span><span>30:00</span><span>45:00</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <script>
+            lucide.createIcons();
+        </script>
+</body>
+
+</html>

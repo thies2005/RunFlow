@@ -68,12 +68,14 @@ export async function GET(request: NextRequest) {
                 return NextResponse.json({ error: 'Not found' }, { status: 404 });
             }
 
-            const supplementIds = stack.supplements.map(s => s.id);
+            // Filter to only active supplements
+            const activeSupplements = stack.supplements.filter(s => s.isActive !== false);
+            const supplementIds = activeSupplements.map(s => s.id);
             if (supplementIds.length === 0) {
                 return NextResponse.json({ successRate: 0, logs: [] });
             }
 
-            // A stack is considered "taken" on a day if ALL of its supplements were taken
+            // A stack is considered "taken" on a day if ALL SCHEDULED supplements for that day were taken
             const rawLogs = await prisma.supplementLog.findMany({
                 where: {
                     supplementId: { in: supplementIds },
@@ -90,9 +92,15 @@ export async function GET(request: NextRequest) {
                 return acc;
             }, {} as Record<string, number>);
 
-            // Find dates where the count matches the number of supplements in the stack
+            // For each date with logs, check against only the supplements SCHEDULED for that day
             for (const [dateStr, count] of Object.entries(logsByDate)) {
-                if (count === supplementIds.length) {
+                const dayOfWeek = new Date(dateStr + 'T00:00:00Z').getUTCDay();
+                const scheduledCount = activeSupplements.filter(s => {
+                    const days = s.daysOfWeek as number[] | null;
+                    if (!days || (days as any[]).length === 0) return true;
+                    return (days as number[]).includes(dayOfWeek);
+                }).length;
+                if (scheduledCount > 0 && count >= scheduledCount) {
                     logs.push({ date: new Date(dateStr), taken: true });
                 }
             }

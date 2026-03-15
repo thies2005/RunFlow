@@ -32,6 +32,9 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
     const [fatPercent, setFatPercent] = useState<number>(30);
     const [carbPercent, setCarbPercent] = useState<number>(40);
     const [proteinPercent, setProteinPercent] = useState<number>(30);
+    const [exerciseCalorieFactor, setExerciseCalorieFactor] = useState<number>(0.5);
+    const [waterTrackingEnabled, setWaterTrackingEnabled] = useState<boolean>(false);
+    const [waterGoalMl, setWaterGoalMl] = useState<number>(2500);
 
     // BMR & TDEE calcs
     const [bmr, setBmr] = useState(0);
@@ -49,6 +52,9 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
             setProteinPercent(pPct);
             setCarbPercent(cPct);
             setFatPercent(fPct);
+            setExerciseCalorieFactor(targetData.exerciseCalorieFactor ?? 0.5);
+            setWaterTrackingEnabled(targetData.waterTrackingEnabled ?? false);
+            setWaterGoalMl(targetData.waterGoalMl ?? 2500);
 
             let w = 70;
             if (targetData.userProfile?.weight) {
@@ -143,7 +149,10 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                     dailyCalories: Math.round(targetCalories),
                     proteinPercent: proteinPercent,
                     carbsPercent: carbPercent,
-                    fatsPercent: fatPercent
+                    fatsPercent: fatPercent,
+                    exerciseCalorieFactor,
+                    waterTrackingEnabled,
+                    waterGoalMl
                 })
             });
             if (!res.ok) throw new Error('Failed to save');
@@ -299,6 +308,72 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                         </span>
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Additional Settings */}
+                            <div className="border-t border-white/10 pt-6">
+                                <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                                    <Activity className="w-4 h-4 text-blue-400" />
+                                    Tracking Preferences
+                                </h3>
+
+                                {/* Exercise Calorie Factor */}
+                                <div className="mb-6">
+                                    <div className="flex justify-between items-end mb-2">
+                                        <label className="text-sm font-semibold text-white">Exercise Calorie Factor</label>
+                                        <span className="text-lg font-bold text-pink-400">{exerciseCalorieFactor.toFixed(2)}x</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mb-3">
+                                        How heavily should tracked exercise calories impact your remaining budget? (0 = ignore exercise, 1 = full credit).
+                                    </p>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="1"
+                                        step="0.05"
+                                        value={exerciseCalorieFactor}
+                                        onChange={(e) => setExerciseCalorieFactor(parseFloat(e.target.value))}
+                                        className="w-full accent-pink-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                        <span>Ignore (0x)</span>
+                                        <span>Half (0.5x)</span>
+                                        <span>Full (1x)</span>
+                                    </div>
+                                </div>
+
+                                {/* Water Tracking */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <label className="text-sm font-semibold text-white">Water Tracker</label>
+                                            <p className="text-xs text-gray-500 mt-0.5">Enable the water logging card on your dashboard.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setWaterTrackingEnabled(!waterTrackingEnabled)}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${waterTrackingEnabled ? 'bg-blue-500' : 'bg-gray-600'}`}
+                                        >
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${waterTrackingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
+
+                                    {waterTrackingEnabled && (
+                                        <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                                            <label className="text-xs font-semibold text-gray-400 mb-1 block">Daily Water Goal (ml)</label>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    value={waterGoalMl}
+                                                    onChange={(e) => setWaterGoalMl(parseInt(e.target.value) || 0)}
+                                                    className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:outline-none focus:border-blue-500"
+                                                    min="500"
+                                                    step="100"
+                                                />
+                                                <span className="text-xs font-semibold text-gray-500 bg-white/5 py-2 px-3 rounded-lg">ml</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </>
                     )}

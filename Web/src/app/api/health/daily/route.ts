@@ -33,6 +33,22 @@ export async function GET(request: NextRequest) {
             }
         });
 
+        // Fetch today's activities for exercise calories using UTC date bounds for the selected day
+        const endOfDay = new Date(date);
+        endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+        
+        const todayActivities = await prisma.activity.findMany({
+            where: {
+                userId: session.user.id,
+                startDate: {
+                    gte: date,
+                    lt: endOfDay
+                }
+            },
+            select: { calories: true }
+        });
+        const exerciseCalories = todayActivities.reduce((sum, a) => sum + (a.calories || 0), 0);
+
         // Get the latest weight if not in dailyHealth
         let latestWeight = dailyHealth?.weight;
         if (!latestWeight) {
@@ -76,7 +92,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             dailyHealth: dailyHealth
                 ? { ...dailyHealth, weight: latestWeight }
-                : { steps: 0, weight: latestWeight, date },
+                : { steps: 0, weight: latestWeight, waterIntake: 0, date },
+            exerciseCalories,
             supplementLogs,
             foodLogs
         });
@@ -171,6 +188,33 @@ export async function POST(request: NextRequest) {
                     date,
                     steps,
                     weight
+                }
+            });
+            return NextResponse.json(health);
+        }
+
+        if (action === 'updateWater') {
+            const { amount } = body; // Can be + or -
+
+            const existing = await prisma.dailyHealthLog.findUnique({
+                where: {
+                    userId_date: { userId: session.user.id, date }
+                }
+            });
+
+            const newAmount = Math.max(0, (existing?.waterIntake || 0) + amount);
+
+            const health = await prisma.dailyHealthLog.upsert({
+                where: {
+                    userId_date: { userId: session.user.id, date }
+                },
+                update: {
+                    waterIntake: newAmount
+                },
+                create: {
+                    userId: session.user.id,
+                    date,
+                    waterIntake: newAmount
                 }
             });
             return NextResponse.json(health);

@@ -1,22 +1,32 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/strava/oauth';
 
 export async function GET(request: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get('userId');
 
-        if (!userId) {
-            return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+        // Only allow fetching own targets
+        if (userId && userId !== session.user.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
+        const effectiveUserId = userId || session.user.id;
+
         const target = await prisma.userNutritionTarget.findUnique({
-            where: { userId }
+            where: { userId: effectiveUserId }
         });
 
         // Fetch User profile to help calculate BMR
         const user = await prisma.user.findUnique({
-            where: { id: userId },
+            where: { id: effectiveUserId },
             select: {
                 weight: true,
                 height: true,
@@ -32,7 +42,7 @@ export async function GET(request: Request) {
         // Fetch activities from the last 30 days to get avg active calories
         const activities = await prisma.activity.findMany({
             where: {
-                userId,
+                userId: effectiveUserId,
                 startDate: { gte: thirtyDaysAgo }
             },
             select: { calories: true }
@@ -54,7 +64,10 @@ export async function GET(request: Request) {
             dailyCalories: 2000,
             proteinPercent: 30,
             carbsPercent: 40,
-            fatsPercent: 30
+            fatsPercent: 30,
+            exerciseCalorieFactor: 0.5,
+            waterTrackingEnabled: false,
+            waterGoalMl: 2500
         };
 
         return NextResponse.json({
@@ -71,27 +84,49 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { userId, dailyCalories, proteinPercent, carbsPercent, fatsPercent } = body;
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-        if (!userId) {
-            return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+        const body = await request.json();
+        const { 
+            userId, 
+            dailyCalories, 
+            proteinPercent, 
+            carbsPercent, 
+            fatsPercent,
+            exerciseCalorieFactor,
+            waterTrackingEnabled,
+            waterGoalMl
+        } = body;
+
+        // Use session userId, but allow body userId if it matches (backwards compat)
+        const effectiveUserId = session.user.id;
+        if (userId && userId !== effectiveUserId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
         const target = await prisma.userNutritionTarget.upsert({
-            where: { userId },
+            where: { userId: effectiveUserId },
             update: {
                 dailyCalories,
                 proteinPercent,
                 carbsPercent,
-                fatsPercent
+                fatsPercent,
+                ...(exerciseCalorieFactor !== undefined && { exerciseCalorieFactor }),
+                ...(waterTrackingEnabled !== undefined && { waterTrackingEnabled }),
+                ...(waterGoalMl !== undefined && { waterGoalMl })
             },
             create: {
-                userId,
+                userId: effectiveUserId,
                 dailyCalories,
                 proteinPercent,
                 carbsPercent,
-                fatsPercent
+                fatsPercent,
+                ...(exerciseCalorieFactor !== undefined && { exerciseCalorieFactor }),
+                ...(waterTrackingEnabled !== undefined && { waterTrackingEnabled }),
+                ...(waterGoalMl !== undefined && { waterGoalMl })
             }
         });
 

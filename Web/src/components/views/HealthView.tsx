@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
-import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target, Sparkles, BookOpen, Bell } from 'lucide-react';
+import { HeartPulse, Info, Plus, ChevronRight, Activity, Battery, ActivitySquare, Camera, Search, BarChart3, RefreshCw, Smartphone, Target, Sparkles, BookOpen, Bell, Droplets, Minus } from 'lucide-react';
 import { syncDailyHealth, isMobile, syncHistoricalHealthData, SyncHistoricalResult, isHealthConnectAvailable } from '@/lib/mobile/healthConnect';
 import { Capacitor } from '@capacitor/core';
 
@@ -23,6 +23,44 @@ import { AddStackModal } from './AddStackModal';
 import { SupplementStatsModal } from './SupplementStatsModal';
 import { SupplementItem } from '@/components/health/SupplementItem';
 import { ReminderSettingsModal } from './ReminderSettingsModal';
+import { PieChart, Pie, Cell } from 'recharts';
+
+const MacroRing = ({ value, target, color, label }: { value: number, target: number, color: string, label: string }) => {
+    const safeTarget = target > 0 ? target : 1;
+    const data = [
+        { value: Math.min(value, safeTarget) },
+        { value: Math.max(0, safeTarget - value) }
+    ];
+    return (
+        <div className="flex items-center gap-2">
+            <div className="relative w-8 h-8 flex items-center justify-center">
+                <PieChart width={32} height={32}>
+                    <Pie
+                        data={data}
+                        cx={16}
+                        cy={16}
+                        innerRadius={11}
+                        outerRadius={16}
+                        startAngle={90}
+                        endAngle={-270}
+                        dataKey="value"
+                        stroke="none"
+                    >
+                        <Cell fill={color} />
+                        <Cell fill="rgba(255,255,255,0.1)" />
+                    </Pie>
+                </PieChart>
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-white">{Math.round(value)}</span>
+                </div>
+            </div>
+            <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</span>
+                <span className="text-[9px] text-gray-500">{Math.round(target)}g</span>
+            </div>
+        </div>
+    );
+};
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -57,6 +95,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isMealLibraryOpen, setIsMealLibraryOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isRemindersOpen, setIsRemindersOpen] = useState(false);
+    const [quickAddProps, setQuickAddProps] = useState<{tab?: 'search' | 'custom', mealType?: string}>({});
 
     const handleBarcodeScanned = useCallback(async (barcode: string) => {
         setIsScannerOpen(false);
@@ -197,14 +236,44 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
         }
     });
 
+    const waterMutation = useMutation({
+        mutationFn: async (amount: number) => {
+            const res = await fetch('/api/health/daily', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    date: todayStr,
+                    action: 'updateWater',
+                    amount
+                })
+            });
+            if (!res.ok) throw new Error('Failed to update water');
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['daily-health'] });
+        }
+    });
+
     // Show steps if Health Connect is available on this device OR if backend has step data (synced from mobile earlier)
     const showSteps = hasHealthConnect || (dailyData?.dailyHealth?.steps && dailyData.dailyHealth.steps > 0);
+
+    // Exercise calorie budget
+    const exerciseCalories = dailyData?.exerciseCalories || 0;
+    const exerciseFactor = targetData?.exerciseCalorieFactor ?? 0.5;
+    const exerciseBudget = Math.round(exerciseCalories * exerciseFactor);
+    const baseTarget = targetData?.dailyCalories || 0;
+    const effectiveTarget = baseTarget + exerciseBudget;
 
     // Compute calorie/macro totals from today's food logs
     const totalCalories = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.calories || 0), 0) || 0;
     const totalProtein = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.protein || 0), 0) || 0;
     const totalCarbs = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.carbs || 0), 0) || 0;
     const totalFats = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.fats || 0), 0) || 0;
+
+    const targetProtein = targetData ? (targetData.dailyCalories * (targetData.proteinPercent / 100)) / 4 : 0;
+    const targetCarbs = targetData ? (targetData.dailyCalories * (targetData.carbsPercent / 100)) / 4 : 0;
+    const targetFats = targetData ? (targetData.dailyCalories * (targetData.fatsPercent / 100)) / 9 : 0;
 
     // Filtering standalone supplements
     const todayDayOfWeek = new Date().getDay();
@@ -404,12 +473,18 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 <div className="flex justify-between items-end mb-3">
                                     <div>
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
-                                            {((targetData?.dailyCalories || 0) - totalCalories) < 0 ? 'Calories Over' : 'Calories Remaining'}
+                                            {(effectiveTarget - totalCalories) < 0 ? 'Calories Over' : 'Calories Remaining'}
                                         </h3>
                                         <p className="text-3xl font-bold text-white">
-                                            {Math.abs(Math.round((targetData?.dailyCalories || 0) - totalCalories))}
+                                            {Math.abs(Math.round(effectiveTarget - totalCalories))}
                                             <span className="text-sm text-gray-400 font-normal ml-1">kcal</span>
                                         </p>
+                                        {exerciseBudget > 0 && (
+                                            <p className="text-xs text-green-400/80 mt-0.5">
+                                                +{exerciseBudget} from exercise ·{' '}
+                                                <span className="text-gray-500">{baseTarget} base</span>
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="text-right">
                                         <ChevronRight className="w-5 h-5 text-gray-400" />
@@ -417,14 +492,14 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 </div>
                                 <div className="h-2 w-full bg-white/10 rounded-full mb-3 overflow-hidden">
                                     <div
-                                        className={`h-full rounded-full transition-all duration-500 ${((targetData?.dailyCalories || 0) - totalCalories) < 0 ? 'bg-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-pink-500'}`}
-                                        style={{ width: `${Math.min(100, (totalCalories / (targetData?.dailyCalories || 1)) * 100)}%` }}
+                                        className={`h-full rounded-full transition-all duration-500 ${(effectiveTarget - totalCalories) < 0 ? 'bg-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-pink-500'}`}
+                                        style={{ width: `${Math.min(100, (totalCalories / (effectiveTarget || 1)) * 100)}%` }}
                                     />
                                 </div>
-                                <div className="flex justify-between text-xs text-gray-400 font-medium">
-                                    <span>P: {Math.round(totalProtein)}g</span>
-                                    <span>C: {Math.round(totalCarbs)}g</span>
-                                    <span>F: {Math.round(totalFats)}g</span>
+                                <div className="flex justify-between mt-4">
+                                    <MacroRing value={totalProtein} target={targetProtein} color="#ec4899" label="Protein" />
+                                    <MacroRing value={totalCarbs} target={targetCarbs} color="#3b82f6" label="Carbs" />
+                                    <MacroRing value={totalFats} target={targetFats} color="#f97316" label="Fats" />
                                 </div>
                             </button>
                         )}
@@ -458,6 +533,43 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             </button>
                         </div>
 
+                        {/* Water Tracker Card (conditional) */}
+                        {targetData?.waterTrackingEnabled && (
+                            <div className="glass-card border border-glass-border rounded-2xl p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+                                        <Droplets className="w-4 h-4 text-blue-400" />
+                                        Water
+                                    </h4>
+                                    <span className="text-xs text-blue-400 font-semibold">
+                                        {((dailyData?.dailyHealth?.waterIntake || 0) / 1000).toFixed(1)}L / {((targetData?.waterGoalMl || 2500) / 1000).toFixed(1)}L
+                                    </span>
+                                </div>
+                                <div className="h-2 w-full bg-white/10 rounded-full mb-3 overflow-hidden">
+                                    <div
+                                        className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                                        style={{ width: `${Math.min(100, ((dailyData?.dailyHealth?.waterIntake || 0) / (targetData?.waterGoalMl || 2500)) * 100)}%` }}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => waterMutation.mutate(-250)}
+                                        disabled={(dailyData?.dailyHealth?.waterIntake || 0) <= 0}
+                                        className="w-10 h-10 rounded-full border border-white/10 hover:bg-white/10 flex items-center justify-center disabled:opacity-30 transition-colors"
+                                    >
+                                        <Minus className="w-4 h-4 text-white" />
+                                    </button>
+                                    <button
+                                        onClick={() => waterMutation.mutate(250)}
+                                        className="flex-1 py-2 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-300 text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+                                    >
+                                        <Droplets className="w-4 h-4" />
+                                        +1 glass (250ml)
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Row 3: Quick Log Strip */}
                         <div className="grid grid-cols-4 gap-3">
                             <button
@@ -486,7 +598,10 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 <span className="text-[10px] font-bold uppercase text-white">Barcode</span>
                             </button>
                             <button
-                                onClick={() => setIsManualEntryOpen(true)}
+                                onClick={() => {
+                                    setQuickAddProps({ tab: 'search' });
+                                    setIsManualEntryOpen(true);
+                                }}
                                 className="glass-card border border-glass-border py-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all hover:bg-white/10 active:scale-[0.98]"
                             >
                                 <Search className="w-5 h-5 text-green-400" />
@@ -501,29 +616,55 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                             </button>
                         </div>
 
-                        {/* Row 4: Recent Logs Widget */}
-                        <div
-                            className="glass-card border border-glass-border rounded-2xl p-4 transition-all hover:bg-white/10 active:scale-[0.98] cursor-pointer"
-                            onClick={() => setIsHistoryOpen(true)}
-                        >
-                            <div className="flex items-center justify-between mb-3">
-                                <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500">Recent Logs</h4>
-                                <ChevronRight className="w-4 h-4 text-gray-500" />
-                            </div>
-                            <div className="space-y-3">
-                                {dailyData?.foodLogs && dailyData.foodLogs.length > 0 ? (
-                                    dailyData.foodLogs.slice(0, 2).map((log: any) => (
-                                        <div key={log.id} className="flex justify-between items-center">
-                                            <div className="flex-1 min-w-0 pr-4">
-                                                <p className="text-sm font-medium text-white truncate">{log.foodItem?.name || log.mealType || 'Unknown Food'}</p>
+                        {/* Row 4: Meal-Structured View */}
+                        <div className="space-y-3">
+                            {['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'].map(mealName => {
+                                const logsForMeal = dailyData?.foodLogs?.filter((l: any) => 
+                                    mealName === 'SNACK' ? (l.mealType === 'SNACK' || !l.mealType) : l.mealType === mealName
+                                ) || [];
+                                const totalCals = logsForMeal.reduce((sum: number, log: any) => sum + (log.calories || 0), 0);
+                                const isPopulated = logsForMeal.length > 0;
+                                
+                                return (
+                                    <div key={mealName} className="glass-card border border-glass-border rounded-2xl overflow-hidden transition-all">
+                                        <div 
+                                            className="px-4 py-3 flex items-center justify-between bg-white/5 cursor-pointer hover:bg-white/10"
+                                            onClick={() => setIsHistoryOpen(true)}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-sm font-bold text-white capitalize">{mealName.toLowerCase()}</h4>
+                                                {totalCals > 0 && <span className="text-xs font-semibold text-pink-400">{Math.round(totalCals)} kcal</span>}
                                             </div>
-                                            <p className="text-sm font-bold text-pink-400 whitespace-nowrap">{Math.round(log.calories)} kcal</p>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setQuickAddProps({ tab: 'search', mealType: mealName });
+                                                    setIsManualEntryOpen(true);
+                                                }}
+                                                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                                            >
+                                                <Plus className="w-4 h-4 text-white" />
+                                            </button>
                                         </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-gray-400 italic">No food logged today</p>
-                                )}
-                            </div>
+                                        {isPopulated && (
+                                            <div className="p-4 pt-1 space-y-3">
+                                                {logsForMeal.map((log: any) => (
+                                                    <div key={log.id} className="flex justify-between items-center group cursor-pointer" onClick={() => setIsHistoryOpen(true)}>
+                                                        <div className="flex-1 min-w-0 pr-4">
+                                                            <p className="text-sm font-medium text-gray-200 truncate group-hover:text-white transition-colors">{log.foodItem?.name || 'Unknown Food'}</p>
+                                                            <p className="text-xs text-gray-500">{log.quantity}x {log.foodItem?.servingSize ? ` (${log.foodItem.servingSize})` : ''}</p>
+                                                        </div>
+                                                        <div className="text-right shrink-0">
+                                                            <p className="text-sm font-bold text-pink-400/90">{Math.round(log.calories)}</p>
+                                                            <p className="text-[10px] text-gray-500">{Math.round(log.protein)}P · {Math.round(log.carbs)}C · {Math.round(log.fats)}F</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
 
                         {/* Row 5: Daily Supplements & Stacks */}
@@ -667,8 +808,11 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         onClose={() => {
                             setIsManualEntryOpen(false);
                             setScannedFood(null);
+                            setQuickAddProps({});
                         }}
                         initialFood={scannedFood}
+                        defaultTab={quickAddProps.tab}
+                        defaultMealType={quickAddProps.mealType}
                     />
 
                     <NutritionGoalsModal

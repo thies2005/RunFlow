@@ -24,9 +24,11 @@ interface Props {
     onClose: () => void;
     onLogSuccess?: () => void;
     initialFood?: FoodData | null;
+    defaultTab?: 'search' | 'custom';
+    defaultMealType?: string;
 }
 
-export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFood }: Props) {
+export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFood, defaultTab, defaultMealType }: Props) {
     const { data: session } = useSession();
     const userId = session?.user?.id;
     const queryClient = useQueryClient();
@@ -59,19 +61,23 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
 
     // When opened with initialFood (e.g. from barcode scan), jump straight to log view
     useEffect(() => {
-        if (isOpen && initialFood) {
-            setSelectedFood({
-                name: initialFood.name,
-                brand: initialFood.brand || '',
-                barcode: initialFood.barcode || null,
-                calories: initialFood.calories || 0,
-                protein: initialFood.protein || 0,
-                carbs: initialFood.carbs || 0,
-                fats: initialFood.fats || 0,
-                servingSize: initialFood.servingSize || '100g',
-            });
+        if (isOpen) {
+            if (initialFood) {
+                setSelectedFood({
+                    name: initialFood.name,
+                    brand: initialFood.brand || '',
+                    barcode: initialFood.barcode || null,
+                    calories: initialFood.calories || 0,
+                    protein: initialFood.protein || 0,
+                    carbs: initialFood.carbs || 0,
+                    fats: initialFood.fats || 0,
+                    servingSize: initialFood.servingSize || '100g',
+                });
+            }
+            if (defaultTab) setActiveTab(defaultTab);
+            if (defaultMealType) setMealType(defaultMealType);
         }
-    }, [isOpen, initialFood]);
+    }, [isOpen, initialFood, defaultTab, defaultMealType]);
 
     useEffect(() => {
         if (!isOpen) return;

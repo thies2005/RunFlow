@@ -155,7 +155,7 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                         <div className="flex flex-col gap-4 animate-in slide-in-from-bottom-4 fade-in">
                             <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                 <h3 className="text-xl font-bold text-white mb-2">{suggestion.suggestionName}</h3>
-                                <p className="text-sm text-gray-300 italic mb-4">"{suggestion.reasoning}"</p>
+                                <p className="text-sm text-gray-300 italic mb-4">&ldquo;{suggestion.reasoning}&rdquo;</p>
                                 
                                 <div className="grid grid-cols-4 gap-2 mb-4">
                                     <div className="bg-black/40 rounded-lg p-2 text-center">

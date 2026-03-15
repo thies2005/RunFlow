@@ -559,7 +559,8 @@ model DailyHealthLog {
   date   DateTime @db.Date // Midnight UTC for the logged day
   steps  Int?
   weight Float? // kg
-  waterIntake Int?  // ml consumed today
+  waterIntake    Int?   // ml consumed today
+  activeCalories Float? // kcal burned from exercise (Health Connect)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -920,7 +921,8 @@ model UserNutritionTarget {
   proteinPercent Float  @default(30) // 30%
   carbsPercent   Float  @default(40) // 40%
   fatsPercent    Float  @default(30) // 30%
-  exerciseCalorieFactor Float @default(0.5)  // 0.0-1.0 multiplier
+  exerciseCalorieFactor Float  @default(0.5)  // 0.0-1.0 multiplier
+  exerciseCalorieSource String @default("strava") // "strava" | "health_connect"
   waterTrackingEnabled  Boolean @default(false)
   waterGoalMl           Int @default(2500)   // daily goal in ml
 

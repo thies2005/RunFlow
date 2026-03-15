@@ -534,7 +534,24 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                         style={{ width: `${Math.min(100, (totalCalories / (effectiveTarget || 1)) * 100)}%` }}
                                     />
                                 </div>
-                                <div className="flex justify-between mt-4">
+                                {/* Calorie breakdown: show eaten, exercise credit, and budget */}
+                                {exerciseCalories > 0 ? (
+                                    <div className="flex items-center justify-between text-xs text-gray-400 mb-4 bg-white/5 rounded-lg px-3 py-2">
+                                        <div className="flex items-center gap-3">
+                                            <span>{Math.round(totalCalories)} eaten</span>
+                                            <span className="text-green-400">−{Math.round(exerciseCalories)} burned</span>
+                                            <span className="text-gray-500">×{exerciseFactor}</span>
+                                        </div>
+                                        <span className="text-white font-medium">
+                                            {Math.round(totalCalories - exerciseBudget)} net
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
+                                        <span>{Math.round(totalCalories)} / {Math.round(effectiveTarget)} kcal eaten</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between">
                                     <MacroRing value={totalProtein} target={targetProtein} color="#ec4899" label="Protein" />
                                     <MacroRing value={totalCarbs} target={targetCarbs} color="#3b82f6" label="Carbs" />
                                     <MacroRing value={totalFats} target={targetFats} color="#f97316" label="Fats" />

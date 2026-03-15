@@ -33,6 +33,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
     const [carbPercent, setCarbPercent] = useState<number>(40);
     const [proteinPercent, setProteinPercent] = useState<number>(30);
     const [exerciseCalorieFactor, setExerciseCalorieFactor] = useState<number>(0.5);
+    const [exerciseCalorieSource, setExerciseCalorieSource] = useState<'strava' | 'health_connect'>('strava');
     const [waterTrackingEnabled, setWaterTrackingEnabled] = useState<boolean>(false);
     const [waterGoalMl, setWaterGoalMl] = useState<number>(2500);
 
@@ -53,6 +54,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
             setCarbPercent(cPct);
             setFatPercent(fPct);
             setExerciseCalorieFactor(targetData.exerciseCalorieFactor ?? 0.5);
+            setExerciseCalorieSource(targetData.exerciseCalorieSource || 'strava');
             setWaterTrackingEnabled(targetData.waterTrackingEnabled ?? false);
             setWaterGoalMl(targetData.waterGoalMl ?? 2500);
 
@@ -151,6 +153,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                     carbsPercent: carbPercent,
                     fatsPercent: fatPercent,
                     exerciseCalorieFactor,
+                    exerciseCalorieSource,
                     waterTrackingEnabled,
                     waterGoalMl
                 })
@@ -316,6 +319,34 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                     <Activity className="w-4 h-4 text-blue-400" />
                                     Tracking Preferences
                                 </h3>
+
+                                {/* Exercise Calorie Source */}
+                                <div className="mb-6">
+                                    <label className="text-sm font-semibold text-white block mb-2">Exercise Calorie Source</label>
+                                    <p className="text-xs text-gray-500 mb-3">
+                                        Choose where your active calories are imported from.
+                                    </p>
+                                    <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
+                                        <button
+                                            onClick={() => setExerciseCalorieSource('strava')}
+                                            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors ${exerciseCalorieSource === 'strava' ? 'bg-[#fc4c02] text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            Strava
+                                        </button>
+                                        <button
+                                            onClick={() => setExerciseCalorieSource('health_connect')}
+                                            className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors ${exerciseCalorieSource === 'health_connect' ? 'bg-blue-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            Health Connect
+                                        </button>
+                                    </div>
+                                    {exerciseCalorieSource === 'health_connect' && (
+                                        <div className="mt-2 text-[10px] text-blue-400/80 bg-blue-500/10 px-2 py-1.5 rounded flex gap-1.5 items-start">
+                                            <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                            <p>Requires the mobile app with Health Connect permissions configured.</p>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Exercise Calorie Factor */}
                                 <div className="mb-6">

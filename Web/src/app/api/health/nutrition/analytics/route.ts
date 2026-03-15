@@ -74,17 +74,42 @@ export async function GET(request: Request) {
     const todayEnd = new Date(todayStart);
     todayEnd.setUTCDate(todayEnd.getUTCDate() + 1);
 
-    const todayActivities = await prisma.activity.findMany({
-      where: {
-        userId: session.user.id,
-        startDate: {
-          gte: todayStart,
-          lt: todayEnd
-        }
-      },
-      select: { calories: true }
-    });
-    const exerciseCalories = todayActivities.reduce((sum, a) => sum + (a.calories || 0), 0);
+    // Determine the exercise calorie source preference
+    const calorieSource = (userTarget as any)?.exerciseCalorieSource || 'strava';
+    let exerciseCalories = 0;
+
+    if (calorieSource === 'health_connect') {
+      // Fetch daily health log for today
+      const dailyHealth = await prisma.dailyHealthLog.findUnique({
+        where: {
+          userId_date: {
+            userId: session.user.id,
+            date: todayStart
+          }
+        },
+        select: { activeCalories: true }
+      });
+      exerciseCalories = dailyHealth?.activeCalories || 0;
+    } else {
+      const todayActivities = await prisma.activity.findMany({
+        where: {
+          userId: session.user.id,
+          startDate: {
+            gte: todayStart,
+            lt: todayEnd
+          }
+        },
+        select: { calories: true, movingTime: true }
+      });
+      // Sum calories, using a fallback estimation for activities without calorie data
+      exerciseCalories = todayActivities.reduce((sum, a) => {
+        if (a.calories && a.calories > 0) return sum + a.calories;
+        // Fallback: estimate ~7 kcal/min for moderate exercise
+        if (a.movingTime > 0) return sum + Math.round((a.movingTime / 60) * 7);
+        return sum;
+      }, 0);
+    }
+    
     const exerciseCalorieFactor = (userTarget as any)?.exerciseCalorieFactor ?? 0.5;
     const exerciseBudget = Math.round(exerciseCalories * exerciseCalorieFactor);
 

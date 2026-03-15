@@ -380,7 +380,7 @@ export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
     end.setUTCDate(start.getUTCDate() + 1);
 
     try {
-        const [stepsResult, weightResult] = await Promise.all([
+        const [stepsResult, weightResult, caloriesResult] = await Promise.all([
             Health.readSamples({
                 dataType: 'steps',
                 startDate: start.toISOString(),
@@ -392,7 +392,13 @@ export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
                 startDate: start.toISOString(),
                 endDate: end.toISOString(),
                 limit: 1, // Only care about latest weight for the day
-            })
+            }),
+            Health.readSamples({
+                dataType: 'calories',
+                startDate: start.toISOString(),
+                endDate: end.toISOString(),
+                limit: 1000,
+            }).catch(() => ({ samples: [] })) // Graceful fallback if calories permission not granted
         ]);
 
         let totalSteps = 0;
@@ -409,6 +415,11 @@ export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
             weightKg = sortedWeights[0].value;
         }
 
+        let activeCalories: number | undefined;
+        if (caloriesResult.samples && caloriesResult.samples.length > 0) {
+            activeCalories = Math.round(deduplicateSamples(caloriesResult.samples));
+        }
+
         // Post to backend
         await fetch('/api/health/daily', {
             method: 'POST',
@@ -417,7 +428,8 @@ export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
                 date: start.toISOString(),
                 action: 'updateHealth',
                 steps: totalSteps > 0 ? totalSteps : undefined,
-                weight: weightKg
+                weight: weightKg,
+                activeCalories: activeCalories
             }),
         });
     } catch (error) {

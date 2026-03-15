@@ -66,6 +66,7 @@ export async function GET(request: Request) {
             carbsPercent: 40,
             fatsPercent: 30,
             exerciseCalorieFactor: 0.5,
+            exerciseCalorieSource: 'strava',
             waterTrackingEnabled: false,
             waterGoalMl: 2500
         };
@@ -97,6 +98,7 @@ export async function POST(request: Request) {
             carbsPercent, 
             fatsPercent,
             exerciseCalorieFactor,
+            exerciseCalorieSource,
             waterTrackingEnabled,
             waterGoalMl
         } = body;
@@ -115,6 +117,7 @@ export async function POST(request: Request) {
                 carbsPercent,
                 fatsPercent,
                 ...(exerciseCalorieFactor !== undefined && { exerciseCalorieFactor }),
+                ...(exerciseCalorieSource !== undefined && { exerciseCalorieSource }),
                 ...(waterTrackingEnabled !== undefined && { waterTrackingEnabled }),
                 ...(waterGoalMl !== undefined && { waterGoalMl })
             },
@@ -125,6 +128,7 @@ export async function POST(request: Request) {
                 carbsPercent,
                 fatsPercent,
                 ...(exerciseCalorieFactor !== undefined && { exerciseCalorieFactor }),
+                ...(exerciseCalorieSource !== undefined && { exerciseCalorieSource }),
                 ...(waterTrackingEnabled !== undefined && { waterTrackingEnabled }),
                 ...(waterGoalMl !== undefined && { waterGoalMl })
             }

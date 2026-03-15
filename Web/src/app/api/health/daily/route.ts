@@ -33,21 +33,42 @@ export async function GET(request: NextRequest) {
             }
         });
 
-        // Fetch today's activities for exercise calories using UTC date bounds for the selected day
-        const endOfDay = new Date(date);
-        endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
-        
-        const todayActivities = await prisma.activity.findMany({
-            where: {
-                userId: session.user.id,
-                startDate: {
-                    gte: date,
-                    lt: endOfDay
-                }
-            },
-            select: { calories: true }
+        // Determine the exercise calorie source preference
+        const userTarget = await prisma.userNutritionTarget.findUnique({
+            where: { userId: session.user.id },
+            select: { exerciseCalorieSource: true }
         });
-        const exerciseCalories = todayActivities.reduce((sum, a) => sum + (a.calories || 0), 0);
+        const calorieSource = userTarget?.exerciseCalorieSource || 'strava';
+
+        let exerciseCalories = 0;
+
+        if (calorieSource === 'health_connect') {
+            // Use active calories from Health Connect (synced to DailyHealthLog)
+            exerciseCalories = dailyHealth?.activeCalories || 0;
+        } else {
+            // Use Strava activity calories (default)
+            const endOfDay = new Date(date);
+            endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+
+            const todayActivities = await prisma.activity.findMany({
+                where: {
+                    userId: session.user.id,
+                    startDate: {
+                        gte: date,
+                        lt: endOfDay
+                    }
+                },
+                select: { calories: true, movingTime: true, type: true }
+            });
+
+            // Sum calories, using a fallback estimation for activities without calorie data
+            exerciseCalories = todayActivities.reduce((sum, a) => {
+                if (a.calories && a.calories > 0) return sum + a.calories;
+                // Fallback: estimate ~7 kcal/min for moderate exercise if Strava didn't provide calories
+                if (a.movingTime > 0) return sum + Math.round((a.movingTime / 60) * 7);
+                return sum;
+            }, 0);
+        }
 
         // Get the latest weight if not in dailyHealth
         let latestWeight = dailyHealth?.weight;
@@ -173,7 +194,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (action === 'updateHealth') {
-            const { steps, weight } = body;
+            const { steps, weight, activeCalories } = body;
 
             const health = await prisma.dailyHealthLog.upsert({
                 where: {
@@ -181,13 +202,15 @@ export async function POST(request: NextRequest) {
                 },
                 update: {
                     ...(steps !== undefined && { steps }),
-                    ...(weight !== undefined && { weight })
+                    ...(weight !== undefined && { weight }),
+                    ...(activeCalories !== undefined && { activeCalories })
                 },
                 create: {
                     userId: session.user.id,
                     date,
                     steps,
-                    weight
+                    weight,
+                    ...(activeCalories !== undefined && { activeCalories })
                 }
             });
             return NextResponse.json(health);

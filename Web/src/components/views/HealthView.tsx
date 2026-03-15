@@ -23,40 +23,45 @@ import { AddStackModal } from './AddStackModal';
 import { SupplementStatsModal } from './SupplementStatsModal';
 import { SupplementItem } from '@/components/health/SupplementItem';
 import { ReminderSettingsModal } from './ReminderSettingsModal';
-import { PieChart, Pie, Cell } from 'recharts';
-
 const MacroRing = ({ value, target, color, label }: { value: number, target: number, color: string, label: string }) => {
     const safeTarget = target > 0 ? target : 1;
-    const data = [
-        { value: Math.min(value, safeTarget) },
-        { value: Math.max(0, safeTarget - value) }
-    ];
+    const percentage = Math.min(value / safeTarget, 1);
+    const radius = 14;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - percentage * circumference;
+
     return (
         <div className="flex items-center gap-2">
-            <div className="relative w-8 h-8 flex items-center justify-center">
-                <PieChart width={32} height={32}>
-                    <Pie
-                        data={data}
-                        cx={16}
-                        cy={16}
-                        innerRadius={11}
-                        outerRadius={16}
-                        startAngle={90}
-                        endAngle={-270}
-                        dataKey="value"
-                        stroke="none"
-                    >
-                        <Cell fill={color} />
-                        <Cell fill="rgba(255,255,255,0.1)" />
-                    </Pie>
-                </PieChart>
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-[9px] font-bold text-white">{Math.round(value)}</span>
+            <div className="relative w-8 h-8 flex items-center justify-center flex-shrink-0">
+                <svg className="transform -rotate-90 w-8 h-8">
+                    <circle
+                        cx="16"
+                        cy="16"
+                        r={radius}
+                        stroke="rgba(255,255,255,0.1)"
+                        strokeWidth="4"
+                        fill="transparent"
+                    />
+                    <circle
+                        cx="16"
+                        cy="16"
+                        r={radius}
+                        stroke={color}
+                        strokeWidth="4"
+                        fill="transparent"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        className="transition-all duration-500 ease-in-out"
+                        strokeLinecap="round"
+                    />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none mt-px">
+                    <span className="text-[9px] font-bold text-white leading-none">{Math.round(value)}</span>
                 </div>
             </div>
-            <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</span>
-                <span className="text-[9px] text-gray-500">{Math.round(target)}g</span>
+            <div className="flex flex-col justify-center">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-none mb-1">{label}</span>
+                <span className="text-[9px] text-gray-500 leading-none">{Math.round(target)}g</span>
             </div>
         </div>
     );
@@ -475,16 +480,17 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
                                             {(effectiveTarget - totalCalories) < 0 ? 'Calories Over' : 'Calories Remaining'}
                                         </h3>
-                                        <p className="text-3xl font-bold text-white">
-                                            {Math.abs(Math.round(effectiveTarget - totalCalories))}
-                                            <span className="text-sm text-gray-400 font-normal ml-1">kcal</span>
-                                        </p>
-                                        {exerciseBudget > 0 && (
-                                            <p className="text-xs text-green-400/80 mt-0.5">
-                                                +{exerciseBudget} from exercise ·{' '}
-                                                <span className="text-gray-500">{baseTarget} base</span>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-3xl font-bold text-white">
+                                                {Math.abs(Math.round(effectiveTarget - totalCalories))}
                                             </p>
-                                        )}
+                                            <span className="text-sm text-gray-400 font-normal">kcal</span>
+                                            {exerciseBudget > 0 && (
+                                                <span className="text-sm font-semibold text-green-400 ml-1 bg-green-500/10 px-2 py-0.5 rounded-md border border-green-500/20">
+                                                    +{exerciseBudget} active
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="text-right">
                                         <ChevronRight className="w-5 h-5 text-gray-400" />

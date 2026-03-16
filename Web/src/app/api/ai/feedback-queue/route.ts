@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
+import { processPendingFeedbackJobs } from '@/lib/ai/feedbackQueue';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,11 @@ export async function POST(request: NextRequest) {
                 }
             });
             return NextResponse.json({ message: 'Retrying all failed jobs' });
+        }
+
+        if (action === 'process-now') {
+            const result = await processPendingFeedbackJobs();
+            return NextResponse.json(result);
         }
 
         if (action === 'clear-done') {

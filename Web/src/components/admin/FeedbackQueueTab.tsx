@@ -49,7 +49,7 @@ export default function FeedbackQueueTab() {
         return () => clearInterval(interval);
     }, []);
 
-    const handleAction = async (action: 'retry-failed' | 'clear-done') => {
+    const handleAction = async (action: 'retry-failed' | 'clear-done' | 'process-now') => {
         try {
             setActionLoading(action);
             const res = await fetch('/api/ai/feedback-queue', {
@@ -102,6 +102,14 @@ export default function FeedbackQueueTab() {
                 </div>
 
                 <div className="flex gap-2">
+                    <button
+                        onClick={() => handleAction('process-now')}
+                        disabled={actionLoading === 'process-now'}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition disabled:opacity-60"
+                    >
+                        {actionLoading === 'process-now' ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                        Process Now
+                    </button>
                     <button
                         onClick={() => handleAction('retry-failed')}
                         disabled={actionLoading === 'retry-failed'}

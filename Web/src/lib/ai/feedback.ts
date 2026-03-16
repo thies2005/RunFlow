@@ -5,13 +5,93 @@ import {
     buildActivityContext,
     formatContextForAi,
     checkUsageLimit,
-    incrementUsage,
     ACTIVITY_FEEDBACK_PROMPTS,
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
-import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 import { AiConfig } from '@/lib/ai/providers';
+
+async function canAutoGenerateFeedback(userId: string): Promise<boolean> {
+    const aiSettings = await prisma.userAiSettings.findUnique({
+        where: { userId }
+    });
+
+    if (!aiSettings || !aiSettings.aiEnabled || !aiSettings.adminAllowed) {
+        return false;
+    }
+
+    return aiSettings.feedbackMode === 'auto' || aiSettings.feedbackMode === 'both';
+}
+
+export async function enqueueFeedbackJobsForActivities(userId: string, activityIds: string[], priority: number = 5): Promise<number> {
+    if (activityIds.length === 0) {
+        return 0;
+    }
+
+    if (!(await canAutoGenerateFeedback(userId))) {
+        return 0;
+    }
+
+    const activitiesWithoutFeedback = await prisma.activity.findMany({
+        where: {
+            id: { in: activityIds },
+            userId,
+            aiFeedback: { is: null }
+        },
+        select: {
+            id: true,
+            feedbackJob: {
+                select: {
+                    id: true,
+                    status: true
+                }
+            }
+        }
+    });
+
+    if (activitiesWithoutFeedback.length === 0) {
+        return 0;
+    }
+
+    let enqueuedCount = 0;
+
+    for (const activity of activitiesWithoutFeedback) {
+        if (!activity.feedbackJob) {
+            await prisma.feedbackJob.create({
+                data: {
+                    userId,
+                    activityId: activity.id,
+                    priority,
+                    status: 'PENDING'
+                }
+            });
+            enqueuedCount++;
+            continue;
+        }
+
+        if (activity.feedbackJob.status === 'FAILED' || activity.feedbackJob.status === 'DONE') {
+            await prisma.feedbackJob.update({
+                where: { id: activity.feedbackJob.id },
+                data: {
+                    status: 'PENDING',
+                    priority,
+                    retryCount: 0,
+                    nextRunAt: new Date(),
+                    startedAt: null,
+                    completedAt: null,
+                    errorLog: null
+                }
+            });
+            enqueuedCount++;
+        }
+    }
+
+    if (enqueuedCount > 0) {
+        logger.info(`Enqueued ${enqueuedCount} feedback jobs for user ${userId}`);
+    }
+
+    return enqueuedCount;
+}
 
 /**
  * Enqueue feedback jobs for a user's activities that don't have feedback yet.
@@ -21,22 +101,17 @@ import { AiConfig } from '@/lib/ai/providers';
  * @param afterDate - Optional date to filter activities updated/created after this time
  */
 export async function enqueueFeedbackJobsForUser(userId: string, afterDate?: Date): Promise<void> {
-    const aiSettings = await prisma.userAiSettings.findUnique({
-        where: { userId }
-    });
-
-    if (!aiSettings || !aiSettings.aiEnabled || !aiSettings.adminAllowed) {
+    if (!(await canAutoGenerateFeedback(userId))) {
         return;
     }
 
-    if (aiSettings.feedbackMode !== 'auto' && aiSettings.feedbackMode !== 'both') {
-        return;
-    }
-
-    const whereClause: any = {
+    const whereClause: {
+        userId: string;
+        aiFeedback: { is: null };
+        OR?: Array<{ createdAt: { gte: Date } } | { updatedAt: { gte: Date } }>;
+    } = {
         userId,
-        aiFeedback: { is: null },
-        feedbackJob: { is: null }
+        aiFeedback: { is: null }
     };
 
     if (afterDate) {
@@ -57,17 +132,10 @@ export async function enqueueFeedbackJobsForUser(userId: string, afterDate?: Dat
         return;
     }
 
-    const jobs = await prisma.feedbackJob.createMany({
-        data: activitiesWithoutFeedback.map(a => ({
-            userId,
-            activityId: a.id,
-            priority: 5,
-            status: 'PENDING'
-        })),
-        skipDuplicates: true
-    });
-
-    logger.info(`Enqueued ${jobs.count} feedback jobs for user ${userId}`);
+    await enqueueFeedbackJobsForActivities(
+        userId,
+        activitiesWithoutFeedback.map((activity) => activity.id)
+    );
 }
 
 /**

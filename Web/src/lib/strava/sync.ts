@@ -47,6 +47,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
     synced: number;
     skipped: number;
     errors: number;
+    syncedActivityIds: string[];
 }> {
     await updateSyncStatus(userId, { syncInProgress: true });
 
@@ -149,6 +150,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
         let synced = 0;
         let skipped = 0;
         let errors = 0;
+        const syncedActivityIds: string[] = [];
         let page = 1;
         let hasMore = true;
         const modifiedActivities: ModifiedActivity[] = [];
@@ -250,21 +252,23 @@ export async function syncUserActivities(userId: string, range?: string): Promis
                     activityData.streams = streams;
 
                     if (isNew) {
-                        await prisma.activity.create({
+                        const createdActivity = await prisma.activity.create({
                             data: {
                                 userId,
                                 stravaId: BigInt(activity.id),
                                 ...activityData
                             },
                         });
+                        syncedActivityIds.push(createdActivity.id);
                     } else if (needsUpdate) {
-                        await prisma.activity.update({
+                        const updatedActivity = await prisma.activity.update({
                             where: { id: existing.id },
                             data: {
                                 ...activityData,
                                 updatedAt: new Date()
                             }
                         });
+                        syncedActivityIds.push(updatedActivity.id);
                     }
 
                     if (isNew || needsUpdate) {
@@ -315,7 +319,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
             logger.info('Updated fitness cache', { userId, activityCount: modifiedActivities.length });
         }
 
-        return { synced, skipped, errors };
+        return { synced, skipped, errors, syncedActivityIds };
     } catch (err) {
         try {
             await updateSyncStatus(userId, { syncInProgress: false });

@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db';
 import { getUsageStats } from '@/lib/ai';
 import { encryptToken } from '@/lib/crypto';
 import { handleError } from '@/lib/errors/handler';
+import { enqueueFeedbackJobsForActivities } from '@/lib/ai/feedback';
 
 export const dynamic = 'force-dynamic';
 
@@ -140,8 +141,7 @@ export async function PUT(request: NextRequest) {
             const activitiesWithoutFeedback = await prisma.activity.findMany({
                 where: {
                     userId: session.user.id,
-                    aiFeedback: { is: null },
-                    feedbackJob: { is: null } // also skip if already queued
+                    aiFeedback: { is: null }
                 },
                 orderBy: { startDate: 'desc' },
                 take: 30, // Limit backfill to last 30 activities
@@ -149,16 +149,11 @@ export async function PUT(request: NextRequest) {
             });
 
             if (activitiesWithoutFeedback.length > 0) {
-                // Bulk insert jobs with lower priority (10)
-                await prisma.feedbackJob.createMany({
-                    data: activitiesWithoutFeedback.map(a => ({
-                        userId: session.user.id,
-                        activityId: a.id,
-                        priority: 10, // Backfill priority
-                        status: 'PENDING'
-                    })),
-                    skipDuplicates: true
-                });
+                await enqueueFeedbackJobsForActivities(
+                    session.user.id,
+                    activitiesWithoutFeedback.map((activity) => activity.id),
+                    10
+                );
             }
         }
 

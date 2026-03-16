@@ -6,7 +6,7 @@ import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders
 import { safeBigInt } from '@/lib/utils/bigint';
 import { runBackgroundTask } from '@/lib/utils/backgroundTask';
 import { logger } from '@/lib/logging/logger';
-import { generateAndSaveActivityFeedback } from '@/lib/ai/feedback';
+import { enqueueFeedbackJobsForActivities } from '@/lib/ai/feedback';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -198,40 +198,19 @@ export async function POST(req: NextRequest) {
                             await syncActivityById(userId, object_id);
                             logger.info(`[BackgroundTask] Synced activity ${object_id} for user ${userId}`);
 
-                            // Check if we should auto-generate AI feedback
-                            const aiSettings = await prisma.userAiSettings.findUnique({
-                                where: { userId }
+                            const activity = await prisma.activity.findFirst({
+                                where: { stravaId: stravaActivityId },
+                                select: { id: true }
                             });
 
-                            if (aiSettings && aiSettings.aiEnabled && aiSettings.adminAllowed && 
-                                (aiSettings.feedbackMode === 'auto' || aiSettings.feedbackMode === 'both')) {
-                                
-                                // Need to find our internal activity ID based on the Strava ID we just synced
-                                const activity = await prisma.activity.findFirst({
-                                    where: { stravaId: stravaActivityId }
-                                });
-
-                                if (activity) {
-                                    try {
-                                        // Enqueue job for background worker
-                                        await prisma.feedbackJob.upsert({
-                                            where: { activityId: activity.id },
-                                            create: {
-                                                userId,
-                                                activityId: activity.id,
-                                                priority: 5 // Normal priority
-                                            },
-                                            update: {
-                                                status: 'PENDING',
-                                                retryCount: 0,
-                                                nextRunAt: new Date(),
-                                                errorLog: null
-                                            }
-                                        });
+                            if (activity) {
+                                try {
+                                    const enqueued = await enqueueFeedbackJobsForActivities(userId, [activity.id]);
+                                    if (enqueued > 0) {
                                         logger.info(`[BackgroundTask] Enqueued AI feedback job for activity ${activity.id}`);
-                                    } catch (aiError) {
-                                        logger.error(`[BackgroundTask] Failed to enqueue AI feedback job for activity ${activity.id}:`, { error: aiError instanceof Error ? aiError.message : String(aiError) });
                                     }
+                                } catch (aiError) {
+                                    logger.error(`[BackgroundTask] Failed to enqueue AI feedback job for activity ${activity.id}:`, { error: aiError instanceof Error ? aiError.message : String(aiError) });
                                 }
                             }
 

@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
             if (error.message === 'Activity not found') {
                 return NextResponse.json({ error: error.message }, { status: 404 });
             }
-            if (error.message === 'AI features not enabled or no provider configured') {
+            if (error.message.includes('AI features not enabled or no provider configured')) {
                 return NextResponse.json({ error: error.message }, { status: 403 });
             }
             if (error.message.includes('Usage limit reached') || error.message.includes('No tokens remaining') || error.message.includes('Quota exhausted')) {

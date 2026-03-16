@@ -713,46 +713,152 @@ export async function generateCompletion(
     messages: ChatMessage[]
 ): Promise<string> {
     try {
-        let response: Response | undefined;
-        let activeKeyIndex = 0;
-
-        for (let i = 0; i < config.apiKeys.length; i++) {
-            activeKeyIndex = i;
-            const currentKey = config.apiKeys[i];
-
-            response = await safeFetch(`${config.baseUrl}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${currentKey}`,
-                },
-                body: JSON.stringify({
-                    model: config.model,
-                    messages,
-                    max_tokens: 1000,
-                    temperature: 0.7,
-                }),
-            });
-
-            if (response.ok) {
-                break;
-            }
-
-            if (response.status === 429 && i < config.apiKeys.length - 1) {
-                logger.warn('[GEN COMP] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
-                continue;
-            }
-
-            break;
+        if (config.provider === 'google') {
+            return await generateGoogleCompletion(config, messages);
+        } else if (config.provider === 'anthropic') {
+            return await generateAnthropicCompletion(config, messages);
+        } else {
+            return await generateOpenAICompletion(config, messages);
         }
-
-        if (!response || !response.ok) await handleError(response!);
-        const data = await response!.json();
-        return data.choices?.[0]?.message?.content || '';
     } catch (error: unknown) {
         handlePermissionError(error, config);
         throw error;
     }
+}
+
+async function generateOpenAICompletion(
+    config: AiConfig,
+    messages: ChatMessage[]
+): Promise<string> {
+    let response: Response | undefined;
+
+    for (let i = 0; i < config.apiKeys.length; i++) {
+        const currentKey = config.apiKeys[i];
+
+        response = await safeFetch(`${config.baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentKey}`,
+            },
+            body: JSON.stringify({
+                model: config.model,
+                messages,
+                max_tokens: 1000,
+                temperature: 0.7,
+            }),
+        });
+
+        if (response.ok) {
+            break;
+        }
+
+        if (response.status === 429 && i < config.apiKeys.length - 1) {
+            logger.warn('[GEN COMP] Rate limit hit (429), retrying with next API key', { model: config.model, keyIndex: i, totalKeys: config.apiKeys.length });
+            continue;
+        }
+
+        break;
+    }
+
+    if (!response || !response.ok) await handleError(response!);
+    
+    // Check if body is readable, text() could consume it so only json()
+    const data = await response!.json();
+    return data.choices?.[0]?.message?.content || '';
+}
+
+async function generateAnthropicCompletion(
+    config: AiConfig,
+    messages: ChatMessage[]
+): Promise<string> {
+    const systemMessage = messages.find(m => m.role === 'system');
+    const userMessages = messages.filter(m => m.role !== 'system');
+
+    let response: Response | undefined;
+
+    for (let i = 0; i < config.apiKeys.length; i++) {
+        const currentKey = config.apiKeys[i];
+
+        response = await safeFetch(`${config.baseUrl}/v1/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': currentKey,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: config.model,
+                system: systemMessage?.content,
+                messages: userMessages.map(m => ({ role: m.role, content: m.content })),
+                max_tokens: 1000,
+                temperature: 0.7,
+            }),
+        });
+
+        if (response.ok) break;
+
+        if (response.status === 429 && i < config.apiKeys.length - 1) {
+            logger.warn('[ANTHROPIC COMP] Rate limit hit (429), retrying', { model: config.model, keyIndex: i });
+            continue;
+        }
+
+        break;
+    }
+
+    if (!response || !response.ok) await handleError(response!);
+    const data = await response!.json();
+    return data.content?.[0]?.text || '';
+}
+
+async function generateGoogleCompletion(
+    config: AiConfig,
+    messages: ChatMessage[]
+): Promise<string> {
+    const systemMessage = messages.find(m => m.role === 'system');
+    const chatMessages = messages.filter(m => m.role !== 'system');
+
+    const geminiContent = chatMessages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+    })).filter(m => m.parts[0].text);
+
+    let response: Response | undefined;
+
+    for (let i = 0; i < config.apiKeys.length; i++) {
+        const currentKey = config.apiKeys[i];
+        const url = `${config.baseUrl}/v1beta/models/${config.model}:generateContent?key=${currentKey}`;
+
+        response = await safeFetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                system_instruction: systemMessage ? {
+                    parts: [{ text: systemMessage.content }]
+                } : undefined,
+                contents: geminiContent,
+                generationConfig: {
+                    maxOutputTokens: 1000,
+                    temperature: 0.7,
+                }
+            }),
+        });
+
+        if (response.ok) break;
+
+        if (response.status === 429 && i < config.apiKeys.length - 1) {
+            logger.warn('[GEMINI COMP] Rate limit hit (429), retrying', { model: config.model, keyIndex: i });
+            continue;
+        }
+
+        break;
+    }
+
+    if (!response || !response.ok) await handleError(response!);
+    const data = await response!.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 export async function testAiConfig(config: AiConfig): Promise<{ success: boolean; error?: string; model?: string }> {

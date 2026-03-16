@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import {
-    getAiConfig,
+    getAiConfigForModel,
     buildUserContext,
     buildActivityContext,
     formatContextForAi,
@@ -91,12 +91,6 @@ export async function generateAndSaveActivityFeedback(activityId: string, userId
         }
     }
 
-    // This config is used if the primary non-realtime provider is unavailable
-    const fallbackConfig = await getAiConfig(userId);
-    if (!fallbackConfig) {
-        throw new Error('AI features not enabled or no provider configured');
-    }
-
     const usageStatus = await checkUsageLimit(userId);
     if (!usageStatus.canUse) {
         throw new Error(usageStatus.reason || 'Usage limit reached');
@@ -137,8 +131,12 @@ export async function generateAndSaveActivityFeedback(activityId: string, userId
     const baseContext = formatContextForAi(userContext);
     const activityStr = formatActivityForAi(activityContext);
 
-    const activityFeedbackModel = globalSettings?.activityFeedbackModel || fallbackConfig.model;
-    const providerConfig = { ...fallbackConfig, model: activityFeedbackModel };
+    const activityFeedbackModel = globalSettings?.activityFeedbackModel || 'gemini-1.5-flash';
+    const providerConfig = await getAiConfigForModel(userId, activityFeedbackModel);
+
+    if (!providerConfig) {
+        throw new Error('AI features not enabled or no provider configured that supports the requested model');
+    }
 
     // Generate the 3 feedback components in parallel
     const [plannedComparison, progressAnalysis, goalTrajectory] = await Promise.all([

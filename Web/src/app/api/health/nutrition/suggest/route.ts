@@ -4,7 +4,7 @@ import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
-import { getAiConfig, generateCompletion } from '@/lib/ai/providers';
+import { getAiConfigForModel, generateCompletion } from '@/lib/ai/providers';
 import type { ChatMessage } from '@/lib/ai/providers';
 
 export async function POST(request: Request) {
@@ -100,18 +100,16 @@ export async function POST(request: Request) {
             `- "${meal.name}" (${Math.round(meal.totalCalories)} kcal, ${meal.totalProtein}P/${meal.totalCarbs}C/${meal.totalFats}F)`
         ).join('\n');
 
-        // Check for Google AI Provider
-        const fallbackConfig = await getAiConfig(userId);
+        // Resolve provider configuration based on the selected model
+        const model = globalSettings?.mealSuggestModel || 'gemini-1.5-flash';
+        const providerConfig = await getAiConfigForModel(userId, model);
 
-        if (!fallbackConfig) {
+        if (!providerConfig) {
             return NextResponse.json(
-                { error: 'No AI provider configured. Please set up a provider in admin settings or your user profile.' },
+                { error: 'No AI provider configured that supports the selected model.' },
                 { status: 503 }
             );
         }
-
-        const model = globalSettings?.mealSuggestModel || fallbackConfig.model;
-        const providerConfig = { ...fallbackConfig, model };
 
         const prompt = `You are an expert nutrition AI. The user is asking "What should I eat?" based on their remaining daily macros.
 

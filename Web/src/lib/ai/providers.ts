@@ -232,6 +232,54 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
 }
 
 /**
+ * Get AI config dynamically resolved by the requested model name.
+ * If the user's active provider supports the model, it returns that.
+ * Otherwise, it searches all configured providers for one that lists the model.
+ * Falls back to getAiConfig if no match is found.
+ */
+export async function getAiConfigForModel(userId: string, targetModel: string): Promise<AiConfig | null> {
+    const baseConfig = await getAiConfig(userId);
+
+    if (!baseConfig) return null;
+
+    // If BYOK is active, we just use the custom provider and hope it supports the model
+    const userSettings = await prisma.userAiSettings.findUnique({ where: { userId } });
+    if (userSettings?.customApiKey && userSettings?.usageTier === 'none') {
+        return { ...baseConfig, model: targetModel };
+    }
+
+    // Check if the current baseConfig (active provider) supports this model
+    const activeProvider = await prisma.aiProvider.findUnique({ where: { id: baseConfig.providerId! } });
+    if (activeProvider && activeProvider.models.includes(targetModel)) {
+        return { ...baseConfig, model: targetModel };
+    }
+
+    // Otherwise, search all active providers to find one that supports the model
+    const allProviders = await prisma.aiProvider.findMany({ where: { isActive: true } });
+    const matchingProvider = allProviders.find(p => p.models.includes(targetModel));
+
+    if (matchingProvider) {
+        const decryptedKey = decryptToken(matchingProvider.apiKey);
+        if (decryptedKey) {
+            const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
+            if (apiKeys.length > 0 && validateBaseUrl(matchingProvider.baseUrl)) {
+                return {
+                    provider: matchingProvider.type as 'openai' | 'anthropic' | 'google',
+                    baseUrl: matchingProvider.baseUrl,
+                    apiKey: apiKeys[0],
+                    apiKeys,
+                    model: targetModel,
+                    providerId: matchingProvider.id,
+                };
+            }
+        }
+    }
+
+    // Fall back to active provider with the model forced (might fail, but it's the best we can do)
+    return { ...baseConfig, model: targetModel };
+}
+
+/**
  * Check if a user has AI access (either via BYOK or admin-enabled)
  */
 export async function hasAiAccess(userId: string): Promise<boolean> {

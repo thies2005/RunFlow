@@ -112,7 +112,15 @@ export async function POST(request: Request) {
             );
         }
 
-        const prompt = `You are an expert nutrition AI. The user is asking "What should I eat?" based on their remaining daily macros.
+        const prompt = buildMealPrompt({
+            remainingCalories,
+            remainingProtein,
+            remainingCarbs,
+            remainingFats,
+            savedMealsText,
+            frequentFoodsText,
+            strictJson: false,
+        });
 
 USER'S REMAINING MACROS FOR TODAY:
 - Calories: ${remainingCalories} kcal
@@ -173,21 +181,42 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
 
         let parsed;
         try {
-            parsed = JSON.parse(textContent);
+            parsed = JSON.parse(normalizeAiOutput(textContent));
         } catch {
             try {
-                parsed = extractJsonObject(textContent);
+                parsed = extractJsonObject(normalizeAiOutput(textContent));
             } catch (parseError) {
-                logger.error('[AI Meal Suggester] Invalid JSON response', {
-                    error: parseError instanceof Error ? parseError.message : String(parseError),
-                    model,
-                    userId,
-                    preview: textContent.slice(0, 1000),
+                const strictPrompt = buildMealPrompt({
+                    remainingCalories,
+                    remainingProtein,
+                    remainingCarbs,
+                    remainingFats,
+                    savedMealsText,
+                    frequentFoodsText,
+                    strictJson: true,
                 });
-                return NextResponse.json(
-                    { error: 'AI returned an invalid response. Please try again.' },
-                    { status: 502 }
-                );
+                try {
+                    const strictMessages: ChatMessage[] = [
+                        {
+                            role: 'system',
+                            content: 'Return only valid JSON. No reasoning, no markdown, no extra text.'
+                        },
+                        { role: 'user', content: strictPrompt },
+                    ];
+                    const strictText = await generateCompletion(providerConfig, strictMessages);
+                    parsed = extractJsonObject(normalizeAiOutput(strictText));
+                } catch (strictError) {
+                    logger.error('[AI Meal Suggester] Invalid JSON response', {
+                        error: strictError instanceof Error ? strictError.message : String(strictError),
+                        model,
+                        userId,
+                        preview: textContent.slice(0, 1000),
+                    });
+                    return NextResponse.json(
+                        { error: 'AI returned an invalid response. Please try again.' },
+                        { status: 502 }
+                    );
+                }
             }
         }
 
@@ -218,6 +247,69 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
         });
         return NextResponse.json({ error: 'Failed to generate suggestion.' }, { status: 500 });
     }
+}
+
+function normalizeAiOutput(text: string) {
+    const withoutDetails = text.replace(/<details>[\s\S]*?<\/details>/gi, '').trim();
+    return withoutDetails;
+}
+
+function buildMealPrompt({
+    remainingCalories,
+    remainingProtein,
+    remainingCarbs,
+    remainingFats,
+    savedMealsText,
+    frequentFoodsText,
+    strictJson,
+}: {
+    remainingCalories: number;
+    remainingProtein: number;
+    remainingCarbs: number;
+    remainingFats: number;
+    savedMealsText: string;
+    frequentFoodsText: string;
+    strictJson: boolean;
+}) {
+    return `You are an expert nutrition AI. The user is asking "What should I eat?" based on their remaining daily macros.
+
+USER'S REMAINING MACROS FOR TODAY:
+- Calories: ${remainingCalories} kcal
+- Protein: ${remainingProtein}g
+- Carbs: ${remainingCarbs}g
+- Fats: ${remainingFats}g
+
+USER'S SAVED MEALS (RECIPES):
+${savedMealsText || '(None saved yet)'}
+
+USER'S FREQUENTLY EATEN FOODS:
+${frequentFoodsText || '(None logged yet)'}
+
+INSTRUCTIONS:
+Suggest exactly ONE meal or snack that perfectly fits the remaining macros (or gets as close as possible without going over calories too much).
+Prioritize suggesting one of their "Saved Meals". If none fit, try combining some of their "Frequently Eaten Foods".
+If neither works, suggest a common healthy meal and specify the ingredients.
+
+Return ONLY a valid JSON object in this exact format, with no markdown formatting around it:
+{
+  "suggestionName": "Name of the suggested meal",
+  "reasoning": "A short, encouraging 2-sentence explanation of why this fits their remaining macros perfectly.",
+  "items": [
+    {
+      "name": "Food item name",
+      "calories": 250,
+      "protein": 20,
+      "carbs": 15,
+      "fats": 10,
+      "servingSize": "100g"
+    }
+  ],
+  "totalCalories": 250,
+  "totalProtein": 20,
+  "totalCarbs": 15,
+  "totalFats": 10
+}
+${strictJson ? '\nOutput must be JSON only. Do not include reasoning or any extra text.' : ''}`;
 }
 
 function extractJsonObject(text: string) {

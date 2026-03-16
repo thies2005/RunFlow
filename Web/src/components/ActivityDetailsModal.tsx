@@ -7,6 +7,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ActivityListItem, WorkoutType, Activity } from '@/lib/types';
 import InteractiveStreamsChart from './InteractiveStreamsChart';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 interface ActivityDetailsModalProps {
     isOpen: boolean;
@@ -28,6 +30,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     const [aiFeedback, setAiFeedback] = useState<any>(null);
     const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
     const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+    const [feedbackError, setFeedbackError] = useState<string | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -35,10 +38,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         if (activity) {
             setTrainingType(activity.trainingType || 'EASY');
             setName(activity.name);
-            // Reset per-activity state so previous activity's data doesn't flash
             setAiFeedback(null);
             setIsLoadingFeedback(false);
             setIsGeneratingFeedback(false);
+            setFeedbackError(null);
             // Prevent body scroll when modal is open
             document.body.style.overflow = 'hidden';
 
@@ -60,6 +63,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             
             const fetchFeedback = async () => {
                 setIsLoadingFeedback(true);
+                setFeedbackError(null);
                 try {
                     const res = await fetch(`/api/ai/activity-feedback?activityId=${activity.id}`);
                     if (res.ok) {
@@ -130,6 +134,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     const handleGenerateFeedback = useCallback(async () => {
         if (!activity) return;
         setIsGeneratingFeedback(true);
+        setFeedbackError(null);
         try {
             const res = await fetch('/api/ai/activity-feedback', {
                 method: 'POST',
@@ -141,15 +146,19 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                 if (data.feedback) {
                     setAiFeedback(data.feedback);
                 } else if (data.error) {
-                    alert(data.error);
+                    setFeedbackError(data.error);
                 }
             } else {
                 const errorData = await res.json().catch(() => null);
-                alert(errorData?.error || 'Failed to generate AI feedback');
+                if (res.status === 429) {
+                    setFeedbackError("Quota exhausted. Please upgrade your plan or contact admin.");
+                } else {
+                    setFeedbackError(errorData?.error || 'Failed to generate AI feedback');
+                }
             }
         } catch (error) {
             console.error('Failed to generate AI feedback:', error);
-            alert('An error occurred while generating AI feedback.');
+            setFeedbackError('An error occurred while generating AI feedback.');
         } finally {
             setIsGeneratingFeedback(false);
         }
@@ -521,6 +530,13 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 </button>
                             </div>
                             
+                            {feedbackError && (
+                                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-sm rounded-lg flex items-center justify-between">
+                                    <span>{feedbackError}</span>
+                                    <button onClick={() => setFeedbackError(null)} className="hover:bg-red-500/20 p-1 rounded transition-colors"><X className="w-4 h-4"/></button>
+                                </div>
+                            )}
+                            
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {aiFeedback.plannedComparison && (
                                     <div className="bg-background-tertiary p-4 rounded-xl border border-glass-border">
@@ -528,7 +544,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             <Calendar className="w-3 h-3 text-accent-cyan" />
                                             Vs Planned Workout
                                         </h4>
-                                        <p className="text-sm text-foreground-muted whitespace-pre-wrap">{aiFeedback.plannedComparison}</p>
+                                        <div className="text-sm text-foreground-muted prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [&_details]:bg-black/20 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
+                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.plannedComparison}</ReactMarkdown>
+                                        </div>
                                     </div>
                                 )}
                                 
@@ -538,7 +556,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             <TrendingUp className="w-3 h-3 text-accent-pink" />
                                             Progress & Execution
                                         </h4>
-                                        <p className="text-sm text-foreground-muted whitespace-pre-wrap">{aiFeedback.progressAnalysis}</p>
+                                        <div className="text-sm text-foreground-muted prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [&_details]:bg-black/20 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
+                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.progressAnalysis}</ReactMarkdown>
+                                        </div>
                                     </div>
                                 )}
                                 
@@ -548,7 +568,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                             <Heart className="w-3 h-3 text-accent-purple" />
                                             Goal Trajectory
                                         </h4>
-                                        <p className="text-sm text-foreground-muted whitespace-pre-wrap">{aiFeedback.goalTrajectory}</p>
+                                        <div className="text-sm text-foreground-muted prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [&_details]:bg-black/20 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
+                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.goalTrajectory}</ReactMarkdown>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -559,18 +581,34 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 <Bot className="w-4 h-4 text-accent-purple" />
                                 AI Coach Feedback
                             </h3>
-                            <div className="bg-gradient-to-r from-accent-purple/5 to-accent-pink/5 border border-glass-border rounded-xl p-6 flex flex-col items-center justify-center text-center">
-                                <Bot className="w-10 h-10 text-foreground-muted mb-3 opacity-50" />
-                                <p className="text-sm text-foreground mb-4">Get personalized analysis comparing this run to your planned workout and goals.</p>
-                                <button
-                                    onClick={handleGenerateFeedback}
-                                    disabled={isGeneratingFeedback || isLoadingFeedback}
-                                    className="px-4 py-2 bg-background-secondary hover:bg-surface-hover border border-glass-border rounded-lg text-sm text-foreground font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
-                                >
-                                    {isGeneratingFeedback ? <Loader2 className="w-4 h-4 animate-spin"/> : <Sparkles className="w-4 h-4 text-accent-purple"/>}
-                                    {isGeneratingFeedback ? 'Generating Analysis...' : isLoadingFeedback ? 'Checking...' : 'Generate AI Analysis'}
-                                </button>
-                            </div>
+                            
+                            {feedbackError ? (
+                                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                                    <div className="text-red-500 mb-3"><X className="w-10 h-10 opacity-70" /></div>
+                                    <p className="text-sm text-foreground mb-4 font-medium">{feedbackError}</p>
+                                    <button
+                                        onClick={handleGenerateFeedback}
+                                        disabled={isGeneratingFeedback || isLoadingFeedback}
+                                        className="px-4 py-2 bg-background border border-glass-border hover:bg-surface-hover rounded-lg text-sm text-foreground font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        {isGeneratingFeedback ? <Loader2 className="w-4 h-4 animate-spin"/> : <Sparkles className="w-4 h-4 text-accent-purple"/>}
+                                        {isGeneratingFeedback ? 'Trying again...' : 'Try Again'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="bg-gradient-to-r from-accent-purple/5 to-accent-pink/5 border border-glass-border rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                                    <Bot className="w-10 h-10 text-foreground-muted mb-3 opacity-50" />
+                                    <p className="text-sm text-foreground mb-4">Get personalized analysis comparing this run to your planned workout and goals.</p>
+                                    <button
+                                        onClick={handleGenerateFeedback}
+                                        disabled={isGeneratingFeedback || isLoadingFeedback}
+                                        className="px-4 py-2 bg-background-secondary hover:bg-surface-hover border border-glass-border rounded-lg text-sm text-foreground font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        {isGeneratingFeedback ? <Loader2 className="w-4 h-4 animate-spin"/> : <Sparkles className="w-4 h-4 text-accent-purple"/>}
+                                        {isGeneratingFeedback ? 'Generating Analysis...' : isLoadingFeedback ? 'Checking...' : 'Generate AI Analysis'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

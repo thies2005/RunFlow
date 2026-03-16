@@ -425,7 +425,7 @@ function parseOpenAIStreamContent(
 
         if (delta.reasoning_content) {
             if (!newIsReasoning) {
-                tokens.push('<think>');
+                tokens.push('<details>\n<summary>Thinking Process</summary>\n\n');
                 newIsReasoning = true;
             }
             options?.onToken?.(delta.reasoning_content);
@@ -434,7 +434,7 @@ function parseOpenAIStreamContent(
 
         if (delta.content) {
             if (newIsReasoning) {
-                tokens.push('</think>');
+                tokens.push('\n</details>\n\n');
                 newIsReasoning = false;
             }
             options?.onToken?.(delta.content);
@@ -500,7 +500,7 @@ function createOpenAIAsyncIterator(
                 throw error;
             } finally {
                 if (isReasoning) {
-                    yield '</think>';
+                    yield '\n</details>\n\n';
                     yieldCount++;
                 }
                 logger.info('[OPENAI STREAM] Cleanup', { yieldCount, model: config.model });
@@ -857,7 +857,7 @@ async function generateOpenAICompletion(
 
     let output = '';
     if (message.reasoning_content) {
-        output += `<think>\n${message.reasoning_content}\n</think>\n\n`;
+        output += `<details>\n<summary>Thinking Process</summary>\n\n${message.reasoning_content}\n</details>\n\n`;
     }
     if (message.content) {
         output += message.content;

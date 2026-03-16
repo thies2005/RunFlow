@@ -212,7 +212,7 @@ services:
     entrypoint: /bin/sh
     command: >
       -c "while true; do
-        wget -q -O- --header='x-internal-secret:$${CRON_SECRET}' --post-data='{}' http://app:3000/api/internal/process-feedback-queue || true;
+        wget -q -O- --header=\"x-internal-secret:$$CRON_SECRET\" --post-data='{}' http://app:3000/api/internal/process-feedback-queue || true;
         sleep 60;
       done"
     environment:

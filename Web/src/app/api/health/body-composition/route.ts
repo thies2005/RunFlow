@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
+import { upsertDailyHealthLog } from '@/lib/health/dailyHealth';
+import { parseUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
 
 export async function GET(request: Request) {
     try {
@@ -20,7 +22,7 @@ export async function GET(request: Request) {
         // Use standard JS date formatting
         const formatted = measurements.map((m: any) => ({
             ...m,
-            dateStr: m.date.toISOString().split('T')[0]
+            dateStr: toUtcDayKey(m.date)
         }));
 
         return NextResponse.json({ measurements: formatted });
@@ -46,8 +48,7 @@ export async function POST(request: Request) {
         }
 
         // Compute midnight UTC date from "yyyy-mm-dd" safely
-        const dateParts = dateStr.split('-');
-        const date = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2])));
+        const date = parseUtcDayKey(toUtcDayKey(dateStr));
 
         const record = await prisma.bodyMeasurement.upsert({
             where: {
@@ -82,19 +83,12 @@ export async function POST(request: Request) {
 
         // Also sync weight back to DailyHealthLog if weight is provided, mapping exact date
         if (weight !== undefined && weight !== null) {
-            await prisma.dailyHealthLog.upsert({
-                 where: {
-                     userId_date: {
-                         userId,
-                         date
-                     }
-                 },
-                 update: { weight },
-                 create: {
-                     userId,
-                     date,
-                     weight
-                 }
+            await upsertDailyHealthLog({
+                db: prisma,
+                userId,
+                date,
+                weight,
+                source: 'manual',
             });
         }
 

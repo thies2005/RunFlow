@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
+import { formatUtcDayKey, getCurrentUtcDayKey, parseUtcDayKey, shiftUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
 
 export async function GET(request: NextRequest) {
     try {
@@ -13,28 +14,30 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
         const range = searchParams.get('range') || '1Y'; // 1W, 1M, 6M, 1Y, ALL
 
-        const now = new Date();
-        const cutoffDate = new Date();
+        const todayDayKey = getCurrentUtcDayKey();
+        let cutoffDayKey = todayDayKey;
 
         switch (range) {
             case '1W':
-                cutoffDate.setDate(now.getDate() - 7);
+                cutoffDayKey = shiftUtcDayKey(todayDayKey, -7);
                 break;
             case '1M':
-                cutoffDate.setMonth(now.getMonth() - 1);
+                cutoffDayKey = shiftUtcDayKey(todayDayKey, -30);
                 break;
             case '6M':
-                cutoffDate.setMonth(now.getMonth() - 6);
+                cutoffDayKey = shiftUtcDayKey(todayDayKey, -183);
                 break;
             case '1Y':
-                cutoffDate.setFullYear(now.getFullYear() - 1);
+                cutoffDayKey = shiftUtcDayKey(todayDayKey, -365);
                 break;
             case 'ALL':
-                cutoffDate.setFullYear(2000); // effectively no cutoff
+                cutoffDayKey = '2000-01-01';
                 break;
             default:
-                cutoffDate.setFullYear(now.getFullYear() - 1);
+                cutoffDayKey = shiftUtcDayKey(todayDayKey, -365);
         }
+
+        const cutoffDate = parseUtcDayKey(cutoffDayKey);
 
         const history = await prisma.dailyHealthLog.findMany({
             where: {
@@ -56,7 +59,8 @@ export async function GET(request: NextRequest) {
         // Format dates consistently for the frontend charts
         const formattedHistory = history.map((log: { date: Date; steps: number | null; weight: number | null }) => ({
             ...log,
-            dateStr: log.date.toISOString().split('T')[0]
+            dateStr: toUtcDayKey(log.date),
+            dateLabel: formatUtcDayKey(toUtcDayKey(log.date), { month: 'short', day: 'numeric' })
         }));
 
         return NextResponse.json({

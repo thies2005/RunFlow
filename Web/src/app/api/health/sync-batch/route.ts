@@ -5,6 +5,8 @@ import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
 import { getStravaAthleteWeight } from '@/lib/strava/fetch';
 import { logger } from '@/lib/logging/logger';
+import { upsertDailyHealthLog } from '@/lib/health/dailyHealth';
+import { parseUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
 
 /**
  * Request body for batch health data sync
@@ -27,12 +29,6 @@ interface BatchSyncResponse {
     synced: number;
     stravaFallbackUsed: boolean;
     message?: string;
-}
-
-// Helper to ensure dates are handled as midnight UTC
-function getMidnightUTCDate(dateStr: string): Date {
-    const d = new Date(dateStr);
-    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
 
 /**
@@ -107,33 +103,18 @@ export async function POST(request: NextRequest) {
 
                 if (!date) continue;
 
-                const dateObj = getMidnightUTCDate(date);
+                const dayKey = toUtcDayKey(date);
+                const dateObj = parseUtcDayKey(dayKey);
 
-                // Only update if we have actual data (not undefined/null)
-                const updateData: { steps?: number; weight?: number } = {};
-                if (steps !== undefined && steps !== null) {
-                    updateData.steps = steps;
-                }
-                if (weight !== undefined && weight !== null) {
-                    updateData.weight = weight;
-                }
+                if (steps == null && weight == null) continue;
 
-                // Skip if no actual data to update
-                if (Object.keys(updateData).length === 0) continue;
-
-                await tx.dailyHealthLog.upsert({
-                    where: {
-                        userId_date: {
-                            userId: session.user.id,
-                            date: dateObj
-                        }
-                    },
-                    update: updateData,
-                    create: {
-                        userId: session.user.id,
-                        date: dateObj,
-                        ...updateData
-                    }
+                await upsertDailyHealthLog({
+                    db: tx,
+                    userId: session.user.id,
+                    date: dateObj,
+                    source: weight != null && stravaFallbackUsed && dayKey === toUtcDayKey(new Date()) ? 'strava' : 'health_connect',
+                    steps: steps ?? undefined,
+                    weight,
                 });
 
                 syncedCount++;

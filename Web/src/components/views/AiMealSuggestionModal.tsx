@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { getCurrentUtcDayKey } from '@/lib/health/dates';
 
 interface Props {
     isOpen: boolean;
@@ -47,7 +48,7 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
             setSuggestion(data);
         },
         onError: (err: any) => {
-            alert(err.message || 'Error generating suggestion.');
+            toast.error(err.message || 'Error generating suggestion.');
         }
     });
 
@@ -60,7 +61,7 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userId,
-                    date: format(new Date(), 'yyyy-MM-dd'),
+                    date: getCurrentUtcDayKey(),
                     mealType: 'SNACK',
                     quantity: 1,
                     foodItem: {
@@ -79,14 +80,14 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
             return res.json();
         },
         onSuccess: () => {
-            alert('Meal logged successfully!');
+            toast.success('Meal logged successfully');
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
             onLogSuccess();
             onClose();
             setSuggestion(null);
         },
         onError: (err: any) => {
-            alert(err.message || 'Failed to log suggestion');
+            toast.error(err.message || 'Failed to log suggestion');
         }
     });
 

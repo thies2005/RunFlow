@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Save, Bookmark, Loader2, Minus, Plus, ChefHat, Flame, ArrowLeft } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { getCurrentUtcDayKey } from '@/lib/health/dates';
 
 interface FoodScanItem {
     name: string;
@@ -88,7 +89,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
         mutationFn: async () => {
             if (!userId) throw new Error('Not logged in');
 
-            const todayStr = format(new Date(), 'yyyy-MM-dd');
+            const todayStr = getCurrentUtcDayKey();
 
             // Log each item individually
             const promises = adjustedItems
@@ -125,10 +126,11 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
             if (onLogSuccess) onLogSuccess();
+            toast.success('Meal logged successfully');
             onClose();
         },
         onError: (err) => {
-            alert(`Failed to log meal: ${err instanceof Error ? err.message : 'Unknown error'}`);
+            toast.error(`Failed to log meal: ${err instanceof Error ? err.message : 'Unknown error'}`);
         },
     });
 
@@ -156,8 +158,9 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
             if (!res.ok) throw new Error('Failed to save');
             setSavedMessage('Saved to meal library!');
             queryClient.invalidateQueries({ queryKey: ['saved-meals'] });
+            toast.success('Saved to meal library');
         } catch {
-            alert('Failed to save meal');
+            toast.error('Failed to save meal');
         } finally {
             setIsSaving(false);
         }

@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, ActivitySquare, Activity, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import {
     LineChart, Line, BarChart, Bar,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { BodyCompositionTab } from './BodyCompositionTab';
+import { formatUtcDayKey, getCurrentUtcDayKey } from '@/lib/health/dates';
 
 type TimeRange = '1W' | '1M' | '6M' | '1Y' | 'ALL';
 
@@ -28,14 +30,15 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
 
     const logWeightMutation = useMutation({
         mutationFn: async (weight: number) => {
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = getCurrentUtcDayKey();
             const res = await fetch('/api/health/daily', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     date: todayStr,
                     action: 'updateHealth',
-                    weight
+                    weight,
+                    source: 'manual'
                 })
             });
             if (!res.ok) throw new Error('Failed to log weight');
@@ -46,8 +49,15 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
             setIsEnteringWeight(false);
             setManualWeight('');
+            toast.success('Weight logged');
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || 'Failed to log weight');
         }
     });
+
+    const formatChartDate = (dayKey: string, options: Intl.DateTimeFormatOptions) =>
+        formatUtcDayKey(dayKey, options);
 
     // Fetch historical data
     const { data: historyData, isLoading } = useQuery({
@@ -215,24 +225,23 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                                             dataKey="dateStr"
                                             stroke="var(--foreground-muted)"
                                             fontSize={11}
-                                            tickLine={false}
-                                            minTickGap={timeRange === '1M' ? 5 : 20}
-                                            tickFormatter={(val) => {
-                                                const date = new Date(val);
-                                                if (timeRange === '1W' || timeRange === '1M') {
-                                                    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                                                }
-                                                return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                                            }}
-                                        />
+                                             tickLine={false}
+                                             minTickGap={timeRange === '1M' ? 5 : 20}
+                                             tickFormatter={(val) => {
+                                                 if (timeRange === '1W' || timeRange === '1M') {
+                                                     return formatChartDate(val, { day: 'numeric', month: 'short' });
+                                                 }
+                                                 return formatChartDate(val, { month: 'short', year: '2-digit' });
+                                             }}
+                                         />
                                         <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} />
                                         <Tooltip
                                             contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
-                                            labelStyle={{ color: 'var(--foreground)' }}
-                                            itemStyle={{ color: 'var(--foreground)' }}
-                                            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                                            labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                                        />
+                                             labelStyle={{ color: 'var(--foreground)' }}
+                                             itemStyle={{ color: 'var(--foreground)' }}
+                                             cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                             labelFormatter={(val) => formatChartDate(val, { weekday: 'long', month: 'short', day: 'numeric' })}
+                                         />
                                         <Bar
                                             dataKey="steps"
                                             name="Steps"
@@ -248,23 +257,22 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                                             dataKey="dateStr"
                                             stroke="var(--foreground-muted)"
                                             fontSize={11}
-                                            tickLine={false}
-                                            minTickGap={timeRange === '1M' ? 5 : 20}
-                                            tickFormatter={(val) => {
-                                                const date = new Date(val);
-                                                if (timeRange === '1W' || timeRange === '1M') {
-                                                    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                                                }
-                                                return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                                            }}
-                                        />
+                                             tickLine={false}
+                                             minTickGap={timeRange === '1M' ? 5 : 20}
+                                             tickFormatter={(val) => {
+                                                 if (timeRange === '1W' || timeRange === '1M') {
+                                                     return formatChartDate(val, { day: 'numeric', month: 'short' });
+                                                 }
+                                                 return formatChartDate(val, { month: 'short', year: '2-digit' });
+                                             }}
+                                         />
                                         <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} domain={['dataMin - 1', 'auto']} />
                                         <Tooltip
-                                            contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
-                                            labelStyle={{ color: 'var(--foreground)' }}
-                                            itemStyle={{ color: 'var(--foreground)' }}
-                                            labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                                        />
+                                             contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
+                                             labelStyle={{ color: 'var(--foreground)' }}
+                                             itemStyle={{ color: 'var(--foreground)' }}
+                                             labelFormatter={(val) => formatChartDate(val, { weekday: 'long', month: 'short', day: 'numeric' })}
+                                         />
 
                                         {/* Raw daily data points */}
                                         <Line

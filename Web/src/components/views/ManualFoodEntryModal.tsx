@@ -4,9 +4,10 @@ import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Search, Loader2, Save, ArrowLeft, Bookmark, History, Star } from 'lucide-react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { getCurrentUtcDayKey } from '@/lib/health/dates';
 
 interface FoodData {
     name: string;
@@ -208,7 +209,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
         } catch (error: any) {
             if (error.name !== 'AbortError') {
                 console.error(error);
-                alert("Error searching database.");
+                toast.error('Error searching database.');
                 setIsSearching(false);
             }
         }
@@ -276,7 +277,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
             setSavedMessage('Saved to library!');
             queryClient.invalidateQueries({ queryKey: ['saved-meals'] });
         } catch {
-            alert('Failed to save to library');
+            toast.error('Failed to save to library');
         } finally {
             setIsSaving(false);
         }
@@ -290,7 +291,7 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userId,
-                    date: format(new Date(), 'yyyy-MM-dd'),
+                    date: getCurrentUtcDayKey(),
                     mealType,
                     quantity: parseFloat(quantity) || 1,
                     foodItem: selectedFood
@@ -300,14 +301,14 @@ export function ManualFoodEntryModal({ isOpen, onClose, onLogSuccess, initialFoo
             return res.json();
         },
         onSuccess: () => {
-            alert('Food logged successfully!');
+            toast.success('Food logged successfully');
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
             if (onLogSuccess) onLogSuccess();
             handleClose();
         },
         onError: (err) => {
             console.error(err);
-            alert('Failed to log food. Try again.');
+            toast.error('Failed to log food. Try again.');
         }
     });
 

@@ -3,12 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
-
-// Helper to ensure dates are handled as midnight UTC
-function getMidnightUTCDate(dateStr: string) {
-    const d = new Date(dateStr);
-    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-}
+import { upsertDailyHealthLog, type DailyHealthWeightSource } from '@/lib/health/dailyHealth';
+import { parseUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
 
 export async function GET(request: NextRequest) {
     try {
@@ -22,7 +18,8 @@ export async function GET(request: NextRequest) {
         const dateStr = searchParams.get('date');
         if (!dateStr) return NextResponse.json({ error: 'Missing date' }, { status: 400 });
 
-        const date = getMidnightUTCDate(dateStr);
+        const requestedDayKey = toUtcDayKey(dateStr);
+        const date = parseUtcDayKey(requestedDayKey);
 
         const dailyHealth = await prisma.dailyHealthLog.findUnique({
             where: {
@@ -71,9 +68,9 @@ export async function GET(request: NextRequest) {
         }
 
         // Get the latest weight if not in dailyHealth
-        let latestWeight = dailyHealth?.weight;
-        if (!latestWeight) {
-            const latestWeightLog = await prisma.dailyHealthLog.findFirst({
+        let effectiveWeightLog = dailyHealth?.weight != null ? dailyHealth : null;
+        if (effectiveWeightLog?.weight == null) {
+            effectiveWeightLog = await prisma.dailyHealthLog.findFirst({
                 where: {
                     userId: session.user.id,
                     weight: { not: null },
@@ -83,10 +80,17 @@ export async function GET(request: NextRequest) {
                     date: 'desc'
                 }
             });
-            if (latestWeightLog) {
-                latestWeight = latestWeightLog.weight;
-            }
         }
+
+        const weightMeasurementDate = effectiveWeightLog?.date ? toUtcDayKey(effectiveWeightLog.date) : null;
+
+        const hasStepHistory = !!(await prisma.dailyHealthLog.findFirst({
+            where: {
+                userId: session.user.id,
+                steps: { not: null }
+            },
+            select: { id: true }
+        }));
 
         // Get supplement logs for this date (for this user's supplements)
         const supplementLogs = await prisma.supplementLog.findMany({
@@ -100,7 +104,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Get nutrition logs for this date (using the string date formatted as yyyy-MM-dd)
-        const dStrForFood = date.toISOString().split('T')[0];
+        const dStrForFood = requestedDayKey;
         const foodLogs = await prisma.nutritionLog.findMany({
             where: {
                 userId: session.user.id,
@@ -112,11 +116,27 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             dailyHealth: dailyHealth
-                ? { ...dailyHealth, weight: latestWeight }
-                : { steps: 0, weight: latestWeight, waterIntake: 0, date },
+                ? {
+                    ...dailyHealth,
+                    weight: effectiveWeightLog?.weight ?? null,
+                    weightMeasurementDate,
+                    isWeightCarriedForward: !!weightMeasurementDate && weightMeasurementDate !== requestedDayKey,
+                }
+                : {
+                    steps: 0,
+                    weight: effectiveWeightLog?.weight ?? null,
+                    weightMeasurementDate,
+                    isWeightCarriedForward: !!weightMeasurementDate && weightMeasurementDate !== requestedDayKey,
+                    waterIntake: 0,
+                    date,
+                },
             exerciseCalories,
             supplementLogs,
-            foodLogs
+            foodLogs,
+            meta: {
+                hasStepHistory,
+                requestedDayKey,
+            }
         });
     } catch (error) {
         return handleError(error);
@@ -134,7 +154,7 @@ export async function POST(request: NextRequest) {
         const { date: dateStr, action } = body;
 
         if (!dateStr) return NextResponse.json({ error: 'Missing date' }, { status: 400 });
-        const date = getMidnightUTCDate(dateStr);
+        const date = parseUtcDayKey(toUtcDayKey(dateStr));
 
         // Action routing based on requested operation
         if (action === 'toggleSupplement') {
@@ -194,24 +214,21 @@ export async function POST(request: NextRequest) {
         }
 
         if (action === 'updateHealth') {
-            const { steps, weight, activeCalories } = body;
+            const { steps, weight, activeCalories, source } = body as {
+                steps?: number;
+                weight?: number;
+                activeCalories?: number;
+                source?: DailyHealthWeightSource;
+            };
 
-            const health = await prisma.dailyHealthLog.upsert({
-                where: {
-                    userId_date: { userId: session.user.id, date }
-                },
-                update: {
-                    ...(steps !== undefined && { steps }),
-                    ...(weight !== undefined && { weight }),
-                    ...(activeCalories !== undefined && { activeCalories })
-                },
-                create: {
-                    userId: session.user.id,
-                    date,
-                    steps,
-                    weight,
-                    ...(activeCalories !== undefined && { activeCalories })
-                }
+            const health = await upsertDailyHealthLog({
+                db: prisma,
+                userId: session.user.id,
+                date,
+                source: source || 'manual',
+                steps,
+                weight,
+                activeCalories,
             });
             return NextResponse.json(health);
         }

@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Target, Info, Flame, Save, Loader2, AlertTriangle, Activity } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface Props {
     isOpen: boolean;
@@ -211,9 +212,10 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['nutrition-analytics'] });
             queryClient.invalidateQueries({ queryKey: ['nutrition-target'] });
+            toast.success('Nutrition goals saved');
             onClose();
         },
-        onError: () => alert("Error saving nutrition goals")
+        onError: () => toast.error('Error saving nutrition goals')
     });
 
     if (!isOpen) return null;

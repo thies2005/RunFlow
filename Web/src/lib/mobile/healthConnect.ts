@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Health, HealthDataType, WorkoutType } from '@capgo/capacitor-health';
 import { logger } from '@/lib/logging/logger';
+import { getCurrentUtcDayKey, getUtcDayRange, parseUtcDayKey, shiftUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
 
 export const isMobile = () => Capacitor.isNativePlatform();
 
@@ -374,10 +375,7 @@ function deduplicateSamples(samples: any[]): number {
 export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
     if (!isMobile()) return;
 
-    // Use midnight to midnight (UTC) for the target date to align with backend
-    const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-    const end = new Date(start);
-    end.setUTCDate(start.getUTCDate() + 1);
+    const { start, end } = getUtcDayRange(date);
 
     try {
         const [stepsResult, weightResult, caloriesResult] = await Promise.all([
@@ -427,6 +425,7 @@ export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
             body: JSON.stringify({
                 date: start.toISOString(),
                 action: 'updateHealth',
+                source: 'health_connect',
                 steps: totalSteps > 0 ? totalSteps : undefined,
                 weight: weightKg,
                 activeCalories: activeCalories
@@ -457,6 +456,7 @@ export async function writeManualWeight(weightKg: number, date: Date = new Date(
     if (!isMobile()) return;
 
     try {
+        const { dayKey } = getUtcDayRange(date);
         await Health.saveSample({
             dataType: 'weight',
             value: weightKg,
@@ -465,7 +465,17 @@ export async function writeManualWeight(weightKg: number, date: Date = new Date(
             endDate: date.toISOString(),
         });
 
-        // Trigger a sync so the backend gets the new weight
+        await fetch('/api/health/daily', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                date: dayKey,
+                action: 'updateHealth',
+                weight: weightKg,
+                source: 'manual',
+            }),
+        });
+
         await syncDailyHealth(date);
     } catch (error) {
         logger.error('Failed to write weight to Health Connect', { error });
@@ -505,9 +515,10 @@ export async function syncHistoricalHealthData(
         return { synced: 0, stravaFallbackUsed: false, error: 'Not a mobile device' };
     }
 
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - daysToSync);
+    const endDayKey = getCurrentUtcDayKey();
+    const startDayKey = shiftUtcDayKey(endDayKey, -daysToSync);
+    const start = parseUtcDayKey(startDayKey);
+    const { end } = getUtcDayRange(endDayKey);
 
     try {
         // Request read permissions for Steps and Weight
@@ -529,8 +540,7 @@ export async function syncHistoricalHealthData(
                 const samplesByDay = new Map<string, any[]>();
 
                 for (const sample of stepsResult.samples) {
-                    const date = new Date(sample.startDate);
-                    const dateKey = date.toISOString().split('T')[0];
+                    const dateKey = toUtcDayKey(sample.startDate);
                     if (!samplesByDay.has(dateKey)) {
                         samplesByDay.set(dateKey, []);
                     }
@@ -562,8 +572,7 @@ export async function syncHistoricalHealthData(
                 const weightByDate = new Map<string, { value: number; timestamp: number }>();
 
                 for (const sample of weightResult.samples) {
-                    const date = new Date(sample.startDate);
-                    const dateKey = date.toISOString().split('T')[0];
+                    const dateKey = toUtcDayKey(sample.startDate);
                     const timestamp = new Date(sample.startDate).getTime();
 
                     const existing = weightByDate.get(dateKey);
@@ -584,9 +593,7 @@ export async function syncHistoricalHealthData(
         // Combine data into unified format
         const allDates = new Set<string>();
         for (let i = 0; i < daysToSync; i++) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            allDates.add(d.toISOString().split('T')[0]);
+            allDates.add(shiftUtcDayKey(endDayKey, -i));
         }
 
         const healthData: HealthDataEntry[] = [];

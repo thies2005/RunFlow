@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, BookOpen, Trash2, ChevronRight, Loader2, Search } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface MealItem {
     id: string;
@@ -29,7 +30,7 @@ interface SavedMeal {
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onSelectMeal: (meal: SavedMeal) => void;
+    onSelectMeal: (_meal: SavedMeal) => void;
 }
 
 export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
@@ -73,9 +74,10 @@ export function MealLibraryModal({ isOpen, onClose, onSelectMeal }: Props) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['saved-meals'] });
             setDeletingId(null);
+            toast.success('Meal deleted');
         },
         onError: () => {
-            alert('Failed to delete meal');
+            toast.error('Failed to delete meal');
             setDeletingId(null);
         },
     });

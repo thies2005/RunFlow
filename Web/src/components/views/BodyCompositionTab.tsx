@@ -3,16 +3,18 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Save, ArrowLeft, Ruler } from 'lucide-react';
+import { toast } from 'sonner';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { formatUtcDayKey, getCurrentUtcDayKey } from '@/lib/health/dates';
 
 export function BodyCompositionTab() {
     const queryClient = useQueryClient();
     const [isLogging, setIsLogging] = useState(false);
     
     // Form state
-    const [dateStr, setDateStr] = useState(new Date().toISOString().split('T')[0]);
+    const [dateStr, setDateStr] = useState(getCurrentUtcDayKey());
     const [bodyFat, setBodyFat] = useState('');
     const [muscleMass, setMuscleMass] = useState('');
     const [waist, setWaist] = useState('');
@@ -50,12 +52,17 @@ export function BodyCompositionTab() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['body-composition'] });
+            queryClient.invalidateQueries({ queryKey: ['daily-health'] });
             setIsLogging(false);
             setBodyFat('');
             setMuscleMass('');
             setWaist('');
             setChest('');
             setArms('');
+            toast.success('Measurements saved');
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || 'Failed to save measurements');
         }
     });
 
@@ -182,14 +189,14 @@ export function BodyCompositionTab() {
                                         stroke="var(--foreground-muted)"
                                         fontSize={10}
                                         tickLine={false}
-                                        tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        tickFormatter={(val) => formatUtcDayKey(val, { month: 'short', day: 'numeric' })}
                                     />
                                     <YAxis stroke="#9ca3af" fontSize={10} tickLine={false} domain={['dataMin - 1', 'auto']} />
                                     <Tooltip
                                         contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
                                         labelStyle={{ color: 'var(--foreground)' }}
                                         itemStyle={{ color: 'var(--foreground)' }}
-                                        labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                                        labelFormatter={(val) => formatUtcDayKey(val, { weekday: 'long', month: 'short', day: 'numeric' })}
                                     />
                                     <Line
                                         type="monotone"

@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { X, Calendar, Trash2, Edit2, Loader2, Save, Check, Bookmark } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
+import { toast } from 'sonner';
 
 interface NutritionLog {
     id: string;
@@ -79,9 +80,10 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
             queryClient.invalidateQueries({ queryKey: ['daily-health'] }); // update today's logs in background
             setDeletingId(null);
             setEditingId(null);
+            toast.success('Food log deleted');
         },
         onError: () => {
-            alert('Failed to delete food log');
+            toast.error('Failed to delete food log');
             setDeletingId(null);
         },
     });
@@ -101,9 +103,10 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
             setIsSavingEdit(false);
             setEditingId(null);
+            toast.success('Food log updated');
         },
         onError: () => {
-            alert('Failed to update food log');
+            toast.error('Failed to update food log');
             setIsSavingEdit(false);
         }
     });
@@ -141,9 +144,10 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
             queryClient.invalidateQueries({ queryKey: ['saved-meals'] });
             setSavingMealId(null);
             setSavedMealIds((prev) => new Set(prev).add(log.id));
+            toast.success('Saved to Meal Library');
         },
         onError: () => {
-            alert('Failed to save to Meal Library');
+            toast.error('Failed to save to Meal Library');
             setSavingMealId(null);
         }
     });

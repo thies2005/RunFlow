@@ -67,6 +67,9 @@ model User {
   feedbackJobs          FeedbackJob[]
   consents              UserConsent[]
   nutritionTarget       UserNutritionTarget?
+  bodyMeasurements      BodyMeasurement[]
+  fastingSessions       FastingSession[]
+  healthInsights        HealthInsight[]
 }
 
 model UserConsent {
@@ -688,9 +691,58 @@ model UserNutritionTarget {
   waterGoalMl           Int      @default(2500)
   waterTrackingEnabled  Boolean  @default(false)
   exerciseCalorieSource String   @default("strava")
+  fastingEnabled        Boolean  @default(false)
+  fastingGoalHours      Int      @default(16)
+  aiInsightProvider     String?  @default("gemini")
+  aiInsightApiKey       String?
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model BodyMeasurement {
+  id         String   @id @default(cuid())
+  userId     String
+  date       DateTime @db.Date
+  weight     Float?
+  bodyFat    Float?
+  muscleMass Float?
+  chest      Float?
+  waist      Float?
+  hips       Float?
+  arms       Float?
+  thighs     Float?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model FastingSession {
+  id        String   @id @default(cuid())
+  userId    String
+  startTime DateTime @default(now())
+  endTime   DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, endTime])
+}
+
+model HealthInsight {
+  id         String   @id @default(cuid())
+  userId     String
+  date       DateTime
+  rangeStart DateTime
+  rangeEnd   DateTime
+  content    String   @db.Text
+  metrics    Json
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model SavedMeal {

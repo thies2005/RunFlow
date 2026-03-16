@@ -825,7 +825,7 @@ async function generateOpenAICompletion(
             body: JSON.stringify({
                 model: config.model,
                 messages,
-                max_tokens: 1000,
+                max_tokens: 4096,
                 temperature: 0.7,
             }),
         });
@@ -894,7 +894,7 @@ async function generateAnthropicCompletion(
                 model: config.model,
                 system: systemMessage?.content,
                 messages: userMessages.map(m => ({ role: m.role, content: m.content })),
-                max_tokens: 1000,
+                max_tokens: 4096,
                 temperature: 0.7,
             }),
         });

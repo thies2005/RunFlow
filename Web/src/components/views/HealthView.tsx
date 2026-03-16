@@ -268,7 +268,10 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const showSteps = hasHealthConnect || !!dailyData?.meta?.hasStepHistory;
 
     // Exercise calorie budget
-    const exerciseCalories = dailyData?.exerciseCalories || 0;
+    const activeCalories = dailyData?.dailyHealth?.activeCalories ?? 0;
+    const exerciseCalories = targetData?.exerciseCalorieSource === 'health_connect'
+        ? (activeCalories || dailyData?.exerciseCalories || 0)
+        : (dailyData?.exerciseCalories || 0);
     const exerciseFactor = targetData?.exerciseCalorieFactor ?? 0.5;
     const exerciseBudget = Math.round(exerciseCalories * exerciseFactor);
     const baseTarget = targetData?.dailyCalories || 0;

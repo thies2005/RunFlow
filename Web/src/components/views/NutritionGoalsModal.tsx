@@ -38,8 +38,6 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
     const [waterTrackingEnabled, setWaterTrackingEnabled] = useState<boolean>(false);
     const [waterGoalMl, setWaterGoalMl] = useState<number>(2500);
 
-    const [aiInsightProvider, setAiInsightProvider] = useState<string>('gemini');
-    const [aiInsightApiKey, setAiInsightApiKey] = useState<string>('');
     const [fastingEnabled, setFastingEnabled] = useState<boolean>(false);
     const [fastingGoalHours, setFastingGoalHours] = useState<number>(16);
 
@@ -97,8 +95,6 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
             setWaterTrackingEnabled(targetData.waterTrackingEnabled ?? false);
             setWaterGoalMl(targetData.waterGoalMl ?? 2500);
 
-            setAiInsightProvider(targetData.aiInsightProvider || 'gemini');
-            setAiInsightApiKey(targetData.aiInsightApiKey || '');
             setFastingEnabled(targetData.fastingEnabled ?? false);
             setFastingGoalHours(targetData.fastingGoalHours ?? 16);
 
@@ -200,8 +196,6 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                     exerciseCalorieSource,
                     waterTrackingEnabled,
                     waterGoalMl,
-                    aiInsightProvider,
-                    aiInsightApiKey,
                     fastingEnabled,
                     fastingGoalHours
                 })
@@ -451,37 +445,6 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                                 />
                                                 <span className="text-xs font-semibold text-gray-500 bg-white/5 py-2 px-3 rounded-lg">ml</span>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Weekly Insights AI Provider */}
-                                <div className="space-y-4 pt-4 border-t border-white/5">
-                                    <div>
-                                        <label className="text-sm font-semibold text-white">Weekly Insights AI Provider</label>
-                                        <p className="text-xs text-gray-500 mt-0.5">Which model should generate your weekly nutrition summary?</p>
-                                    </div>
-                                    <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
-                                        {['gemini', 'openai', 'anthropic', 'deepseek'].map(p => (
-                                            <button
-                                                key={p}
-                                                onClick={() => setAiInsightProvider(p)}
-                                                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors capitalize ${aiInsightProvider === p ? 'bg-blue-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                                            >
-                                                {p}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    {aiInsightProvider !== 'gemini' && (
-                                        <div className="bg-white/5 rounded-xl p-3 border border-white/10">
-                                            <label className="text-xs font-semibold text-gray-400 mb-1 block">Custom API Key</label>
-                                            <input
-                                                type="password"
-                                                value={aiInsightApiKey}
-                                                onChange={(e) => setAiInsightApiKey(e.target.value)}
-                                                placeholder={`Enter your ${aiInsightProvider} API key...`}
-                                                className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:outline-none focus:border-blue-500"
-                                            />
                                         </div>
                                     )}
                                 </div>

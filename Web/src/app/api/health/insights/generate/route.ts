@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { decryptToken } from '@/lib/crypto';
+import { getAiConfigForModel, generateCompletion } from '@/lib/ai';
 import { logger } from '@/lib/logging/logger';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
@@ -96,109 +96,18 @@ Please provide a short, actionable weekly insight report (max 3 short paragraphs
 
 Write directly to me (e.g., "You did a great job..."). Use markdown formatting. Keep it encouraging but data-driven.`;
 
-        let insightContent = '';
+        const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
+        const insightModel = globalSettings?.activityFeedbackModel || 'gemini-1.5-flash';
+        const providerConfig = await getAiConfigForModel(userId, insightModel);
 
-        // Call Custom API Provider
-        const providerName = target.aiInsightProvider?.toLowerCase() || 'gemini';
-        let customKeyDecrypted = target.aiInsightApiKey ? decryptToken(target.aiInsightApiKey) : null;
-        if (!customKeyDecrypted && target.aiInsightApiKey) {
-           customKeyDecrypted = target.aiInsightApiKey; // Fallback if plain text for some reason
+        if (!providerConfig) {
+            return NextResponse.json(
+                { error: 'AI features not enabled or no provider configured that supports the requested model' },
+                { status: 503 }
+            );
         }
 
-        if (providerName === 'openai') {
-            const apiKey = customKeyDecrypted;
-            if (!apiKey) return NextResponse.json({ error: 'OpenAI API key missing in settings.' }, { status: 400 });
-            
-            const res = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: 'gpt-4o-mini',
-                    messages: [{ role: 'user', content: prompt }],
-                    temperature: 0.5
-                })
-            });
-            
-            if (!res.ok) throw new Error('OpenAI API request failed: ' + await res.text());
-            const data = await res.json();
-            insightContent = data.choices?.[0]?.message?.content || '';
-
-        } else if (providerName === 'anthropic') {
-            const apiKey = customKeyDecrypted;
-            if (!apiKey) return NextResponse.json({ error: 'Anthropic API key missing in settings.' }, { status: 400 });
-
-            const res = await fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': apiKey,
-                    'anthropic-version': '2023-06-01'
-                },
-                body: JSON.stringify({
-                    model: 'claude-3-haiku-20240307',
-                    max_tokens: 500,
-                    messages: [{ role: 'user', content: prompt }],
-                    temperature: 0.5
-                })
-            });
-            
-            if (!res.ok) throw new Error('Anthropic API request failed: ' + await res.text());
-            const data = await res.json();
-            insightContent = data.content?.[0]?.text || '';
-            
-        } else if (providerName === 'deepseek') {
-            const apiKey = customKeyDecrypted;
-            if (!apiKey) return NextResponse.json({ error: 'DeepSeek API key missing in settings.' }, { status: 400 });
-
-            const res = await fetch('https://api.deepseek.com/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    model: 'deepseek-chat',
-                    messages: [{ role: 'user', content: prompt }],
-                    temperature: 0.5
-                })
-            });
-            
-            if (!res.ok) throw new Error('DeepSeek API request failed: ' + await res.text());
-            const data = await res.json();
-            insightContent = data.choices?.[0]?.message?.content || '';
-
-        } else {
-            // Default to Gemini (using app-wide provider setting)
-            const googleProvider = await prisma.aiProvider.findFirst({ where: { type: 'google', isActive: true } });
-            if (!googleProvider) {
-                return NextResponse.json({ error: 'No Google AI provider configured globally.' }, { status: 503 });
-            }
-
-            const rawDecryptedKey = decryptToken(googleProvider.apiKey);
-            const geminiKey = customKeyDecrypted || (rawDecryptedKey ? rawDecryptedKey.split(/[,;\n]+/)[0].trim() : null);
-            
-            if (!geminiKey) return NextResponse.json({ error: 'Gemini API key missing.' }, { status: 500 });
-            
-            const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-            const model = globalSettings?.calorieSnapModel || 'gemini-1.5-flash';
-
-            const url = `${googleProvider.baseUrl}/v1beta/models/${model}:generateContent?key=${geminiKey}`;
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.5 },
-                }),
-            });
-
-            if (!res.ok) throw new Error('Gemini API request failed: ' + await res.text());
-            const data = await res.json();
-            insightContent = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        }
+        const insightContent = await generateCompletion(providerConfig, [{ role: 'user', content: prompt }]);
 
         if (!insightContent) {
             return NextResponse.json({ error: 'AI failed to return an insight.' }, { status: 500 });

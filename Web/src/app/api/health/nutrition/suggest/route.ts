@@ -174,18 +174,7 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
         try {
             parsed = JSON.parse(textContent);
         } catch {
-            const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)```/);
-            if (jsonMatch) {
-                parsed = JSON.parse(jsonMatch[1].trim());
-            } else {
-                const start = textContent.indexOf('{');
-                const end = textContent.lastIndexOf('}');
-                if (start !== -1 && end !== -1) {
-                    parsed = JSON.parse(textContent.substring(start, end + 1));
-                } else {
-                    throw new Error('Could not extract JSON');
-                }
-            }
+            parsed = extractJsonObject(textContent);
         }
 
         // Increment Counter
@@ -215,4 +204,56 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
         });
         return NextResponse.json({ error: 'Failed to generate suggestion.' }, { status: 500 });
     }
+}
+
+function extractJsonObject(text: string) {
+    const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fencedMatch) {
+        return JSON.parse(fencedMatch[1].trim());
+    }
+
+    const starts: number[] = [];
+    for (let i = 0; i < text.length; i += 1) {
+        if (text[i] === '{') starts.push(i);
+    }
+
+    for (const start of starts) {
+        let depth = 0;
+        let inString = false;
+        let escapeNext = false;
+
+        for (let i = start; i < text.length; i += 1) {
+            const char = text[i];
+
+            if (inString) {
+                if (escapeNext) {
+                    escapeNext = false;
+                } else if (char === '\\') {
+                    escapeNext = true;
+                } else if (char === '"') {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (char === '"') {
+                inString = true;
+                continue;
+            }
+
+            if (char === '{') depth += 1;
+            if (char === '}') depth -= 1;
+
+            if (depth === 0) {
+                const candidate = text.slice(start, i + 1);
+                try {
+                    return JSON.parse(candidate);
+                } catch {
+                    break;
+                }
+            }
+        }
+    }
+
+    throw new Error('Could not extract JSON');
 }

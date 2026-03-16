@@ -306,7 +306,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                        Used for post-activity AI coaching feedback. Any non-vision model works here.
+                        Used for post-activity AI coaching feedback and weekly nutrition insights. Any non-vision model works here.
                     </p>
                 </div>
 

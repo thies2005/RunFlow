@@ -14,8 +14,8 @@ interface AiSettingsTabProps {
     };
     onRefresh: () => void;
     processing: boolean;
-    setProcessing: (val: boolean) => void;
-    setActionMessage: (msg: { type: 'success' | 'error', text: string } | null) => void;
+    setProcessing: (_val: boolean) => void;
+    setActionMessage: (_msg: { type: 'success' | 'error', text: string } | null) => void;
 }
 
 export default function AiSettingsTab({ settings, stats, onRefresh, processing, setProcessing, setActionMessage }: AiSettingsTabProps) {
@@ -292,7 +292,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                        Used for the "What should I eat?" meal suggestions feature. Any non-vision Google or OpenAI model works here.
+                        Used for the &quot;What should I eat?&quot; meal suggestions feature. Any non-vision Google or OpenAI model works here.
                     </p>
                 </div>
 

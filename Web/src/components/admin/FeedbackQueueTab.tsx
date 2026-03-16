@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Play, Trash2, Clock, CheckCircle, AlertCircle, Loader2, User, Activity as ActivityIcon, ChevronRight } from 'lucide-react';
+import { RefreshCw, Trash2, Clock, CheckCircle, AlertCircle, Loader2, User, Activity as ActivityIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { csrfHeaders } from '@/lib/admin/csrfHelper';
 
 interface Job {
     id: string;
@@ -53,7 +54,7 @@ export default function FeedbackQueueTab() {
             setActionLoading(action);
             const res = await fetch('/api/ai/feedback-queue', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action })
             });
             if (res.ok) {
@@ -104,7 +105,7 @@ export default function FeedbackQueueTab() {
                     <button
                         onClick={() => handleAction('retry-failed')}
                         disabled={actionLoading === 'retry-failed'}
-                        className="btn-secondary h-10 px-4 flex items-center gap-2 text-sm"
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition disabled:opacity-60"
                     >
                         {actionLoading === 'retry-failed' ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                         Retry All Failed
@@ -112,7 +113,7 @@ export default function FeedbackQueueTab() {
                     <button
                         onClick={() => handleAction('clear-done')}
                         disabled={actionLoading === 'clear-done'}
-                        className="btn-secondary h-10 px-4 flex items-center gap-2 text-sm text-red-500 border-red-200 hover:bg-red-50"
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition disabled:opacity-60"
                     >
                         {actionLoading === 'clear-done' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                         Clear Completed

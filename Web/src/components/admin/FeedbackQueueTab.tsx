@@ -30,7 +30,12 @@ export default function FeedbackQueueTab() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const res = await fetch('/api/ai/feedback-queue');
+            const res = await fetch('/api/ai/feedback-queue', {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
             if (res.ok) {
                 const data = await res.json();
                 setJobs(data.recentJobs || []);
@@ -54,7 +59,12 @@ export default function FeedbackQueueTab() {
             setActionLoading(action);
             const res = await fetch('/api/ai/feedback-queue', {
                 method: 'POST',
-                headers: { ...csrfHeaders(), 'Content-Type': 'application/json' },
+                cache: 'no-store',
+                headers: {
+                    ...csrfHeaders(),
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'no-cache'
+                },
                 body: JSON.stringify({ action })
             });
             if (res.ok) {

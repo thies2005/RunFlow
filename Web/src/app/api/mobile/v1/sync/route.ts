@@ -13,6 +13,7 @@ import { syncUserActivities, getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { logger } from '@/lib/logging/logger';
+import { enqueueFeedbackJobsForUser } from '@/lib/ai/feedback';
 
 export async function POST(request: NextRequest) {
     try {
@@ -47,9 +48,20 @@ export async function POST(request: NextRequest) {
 
         // Start sync
         logger.info('Starting background sync', { userId: user.id, range, source: 'Mobile API' });
-        syncUserActivities(user.id, range).catch((err) => {
-            logger.error('Background sync failed', { userId: user.id, error: err, source: 'Mobile API' });
-        });
+        const syncStartTime = new Date();
+
+        syncUserActivities(user.id, range)
+            .then(async () => {
+                logger.info('Mobile sync completed, checking for feedback jobs to enqueue', { userId: user.id });
+                try {
+                    await enqueueFeedbackJobsForUser(user.id, syncStartTime);
+                } catch (err) {
+                    logger.error('Failed to enqueue feedback jobs after mobile sync', { userId: user.id, error: err instanceof Error ? err.message : String(err) });
+                }
+            })
+            .catch((err) => {
+                logger.error('Background sync failed', { userId: user.id, error: err, source: 'Mobile API' });
+            });
 
         // Get updated sync status for response
         const updatedStatus = await getSyncStatus(user.id);

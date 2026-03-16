@@ -5,6 +5,8 @@ import { syncUserActivities, getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
 import { logger } from '@/lib/logging/logger';
+import { prisma } from '@/lib/db';
+import { enqueueFeedbackJobsForUser } from '@/lib/ai/feedback';
 
 export async function POST(request: NextRequest) {
     try {
@@ -40,9 +42,20 @@ export async function POST(request: NextRequest) {
 
         // Start sync
         logger.info('Starting sync (background mode)', { userId: session.user.id, range });
-        syncUserActivities(session.user.id, range).catch((err) => {
-            logger.error('Background sync failed', { userId: session.user.id, error: err instanceof Error ? err.message : String(err) });
-        });
+        const syncStartTime = new Date();
+
+        syncUserActivities(session.user.id, range)
+            .then(async () => {
+                logger.info('Sync completed, checking for feedback jobs to enqueue', { userId: session.user.id });
+                try {
+                    await enqueueFeedbackJobsForUser(session.user.id, syncStartTime);
+                } catch (err) {
+                    logger.error('Failed to enqueue feedback jobs after sync', { userId: session.user.id, error: err instanceof Error ? err.message : String(err) });
+                }
+            })
+            .catch((err) => {
+                logger.error('Background sync failed', { userId: session.user.id, error: err instanceof Error ? err.message : String(err) });
+            });
 
         return NextResponse.json({
             success: true,

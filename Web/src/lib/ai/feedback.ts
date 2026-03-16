@@ -14,6 +14,63 @@ import { logger } from '@/lib/logging/logger';
 import { AiConfig } from '@/lib/ai/providers';
 
 /**
+ * Enqueue feedback jobs for a user's activities that don't have feedback yet.
+ * Only enqueues if user's feedbackMode is 'auto' or 'both'.
+ *
+ * @param userId - The user ID
+ * @param afterDate - Optional date to filter activities updated/created after this time
+ */
+export async function enqueueFeedbackJobsForUser(userId: string, afterDate?: Date): Promise<void> {
+    const aiSettings = await prisma.userAiSettings.findUnique({
+        where: { userId }
+    });
+
+    if (!aiSettings || !aiSettings.aiEnabled || !aiSettings.adminAllowed) {
+        return;
+    }
+
+    if (aiSettings.feedbackMode !== 'auto' && aiSettings.feedbackMode !== 'both') {
+        return;
+    }
+
+    const whereClause: any = {
+        userId,
+        aiFeedback: { is: null },
+        feedbackJob: { is: null }
+    };
+
+    if (afterDate) {
+        whereClause.OR = [
+            { createdAt: { gte: afterDate } },
+            { updatedAt: { gte: afterDate } }
+        ];
+    }
+
+    const activitiesWithoutFeedback = await prisma.activity.findMany({
+        where: whereClause,
+        select: { id: true },
+        orderBy: { startDate: 'desc' },
+        take: 50
+    });
+
+    if (activitiesWithoutFeedback.length === 0) {
+        return;
+    }
+
+    const jobs = await prisma.feedbackJob.createMany({
+        data: activitiesWithoutFeedback.map(a => ({
+            userId,
+            activityId: a.id,
+            priority: 5,
+            status: 'PENDING'
+        })),
+        skipDuplicates: true
+    });
+
+    logger.info(`Enqueued ${jobs.count} feedback jobs for user ${userId}`);
+}
+
+/**
  * Formats activity details into a string block for the AI prompt.
  */
 export function formatActivityForAi(ctx: NonNullable<Awaited<ReturnType<typeof buildActivityContext>>>): string {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { processPendingFeedbackJobs } from '@/lib/ai/feedbackQueue';
 
@@ -12,11 +11,15 @@ const NO_STORE_HEADERS = {
     Expires: '0'
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.isAdmin) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: NO_STORE_HEADERS });
+        const authResult = await requireAdmin(request);
+        if ('error' in authResult) {
+            const errorResponse = authResult.error;
+            Object.entries(NO_STORE_HEADERS).forEach(([key, value]) => {
+                errorResponse.headers.set(key, value);
+            });
+            return errorResponse;
         }
 
         const [stats, recentJobs] = await Promise.all([
@@ -43,9 +46,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.isAdmin) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: NO_STORE_HEADERS });
+        const authResult = await requireAdmin(request);
+        if ('error' in authResult) {
+            const errorResponse = authResult.error;
+            Object.entries(NO_STORE_HEADERS).forEach(([key, value]) => {
+                errorResponse.headers.set(key, value);
+            });
+            return errorResponse;
         }
 
         const body = await request.json();

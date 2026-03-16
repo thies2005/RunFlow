@@ -122,43 +122,6 @@ export async function POST(request: Request) {
             strictJson: false,
         });
 
-USER'S REMAINING MACROS FOR TODAY:
-- Calories: ${remainingCalories} kcal
-- Protein: ${remainingProtein}g
-- Carbs: ${remainingCarbs}g
-- Fats: ${remainingFats}g
-
-USER'S SAVED MEALS (RECIPES):
-${savedMealsText || '(None saved yet)'}
-
-USER'S FREQUENTLY EATEN FOODS:
-${frequentFoodsText || '(None logged yet)'}
-
-INSTRUCTIONS:
-Suggest exactly ONE meal or snack that perfectly fits the remaining macros (or gets as close as possible without going over calories too much).
-Prioritize suggesting one of their "Saved Meals". If none fit, try combining some of their "Frequently Eaten Foods".
-If neither works, suggest a common healthy meal and specify the ingredients.
-
-Return ONLY a valid JSON object in this exact format, with no markdown formatting around it:
-{
-  "suggestionName": "Name of the suggested meal",
-  "reasoning": "A short, encouraging 2-sentence explanation of why this fits their remaining macros perfectly.",
-  "items": [
-    {
-      "name": "Food item name",
-      "calories": 250,
-      "protein": 20,
-      "carbs": 15,
-      "fats": 10,
-      "servingSize": "100g"
-    }
-  ],
-  "totalCalories": 250,
-  "totalProtein": 20,
-  "totalCarbs": 15,
-  "totalFats": 10
-}`;
-
         const messages: ChatMessage[] = [
             { role: 'user', content: prompt }
         ];

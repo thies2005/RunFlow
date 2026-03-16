@@ -213,11 +213,24 @@ export async function POST(req: NextRequest) {
 
                                 if (activity) {
                                     try {
-                                        await generateAndSaveActivityFeedback(activity.id, userId, false);
-                                        logger.info(`[BackgroundTask] Generated AI feedback for activity ${activity.id}`);
+                                        // Enqueue job for background worker
+                                        await prisma.feedbackJob.upsert({
+                                            where: { activityId: activity.id },
+                                            create: {
+                                                userId,
+                                                activityId: activity.id,
+                                                priority: 5 // Normal priority
+                                            },
+                                            update: {
+                                                status: 'PENDING',
+                                                retryCount: 0,
+                                                nextRunAt: new Date(),
+                                                errorLog: null
+                                            }
+                                        });
+                                        logger.info(`[BackgroundTask] Enqueued AI feedback job for activity ${activity.id}`);
                                     } catch (aiError) {
-                                        logger.error(`[BackgroundTask] Auto-generated AI feedback failed for activity ${activity.id}:`, { error: aiError instanceof Error ? aiError.message : String(aiError) });
-                                        // Silently fail - we don't want to crash or retry the whole webhook just for AI failure
+                                        logger.error(`[BackgroundTask] Failed to enqueue AI feedback job for activity ${activity.id}:`, { error: aiError instanceof Error ? aiError.message : String(aiError) });
                                     }
                                 }
                             }

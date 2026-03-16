@@ -55,7 +55,8 @@ async function generateFeedback(
     promptStr: string,
     userContext: string,
     activityContext: string,
-    providerConfig: AiConfig
+    providerConfig: AiConfig,
+    signal?: AbortSignal
 ): Promise<string> {
     const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n${promptStr}\n\n--- Athlete Profile ---\n${userContext}`;
     const userMessage: string = `Here's the activity to analyze:\n\n${activityContext}`;
@@ -66,13 +67,18 @@ async function generateFeedback(
         { role: 'user', content: userMessage },
     ];
 
-    return generateCompletion(providerConfig, messages);
+    return generateCompletion(providerConfig, messages, signal);
 }
 
 /**
  * Main service function to generate, save, and return Activity AI Feedback.
  */
-export async function generateAndSaveActivityFeedback(activityId: string, userId: string, regenerate: boolean = false) {
+export async function generateAndSaveActivityFeedback(
+    activityId: string,
+    userId: string,
+    regenerate: boolean = false,
+    signal?: AbortSignal
+) {
     const activity = await prisma.activity.findFirst({
         where: { id: activityId, userId },
     });
@@ -140,9 +146,9 @@ export async function generateAndSaveActivityFeedback(activityId: string, userId
 
     // Generate the 3 feedback components in parallel
     const [plannedComparison, progressAnalysis, goalTrajectory] = await Promise.all([
-        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.plannedComparison, baseContext, activityStr, providerConfig),
-        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.progressAnalysis, baseContext, activityStr, providerConfig),
-        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.goalTrajectory, baseContext, activityStr, providerConfig),
+        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.plannedComparison, baseContext, activityStr, providerConfig, signal),
+        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.progressAnalysis, baseContext, activityStr, providerConfig, signal),
+        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.goalTrajectory, baseContext, activityStr, providerConfig, signal),
     ]);
 
     // Upsert into DB

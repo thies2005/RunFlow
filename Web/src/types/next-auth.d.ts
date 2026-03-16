@@ -14,6 +14,7 @@ declare module "next-auth" {
             image?: string | null;
             hasStrava: boolean;
             lastSyncAt: string | null;
+            isAdmin?: boolean;
         } & DefaultSession["user"]
     }
 }

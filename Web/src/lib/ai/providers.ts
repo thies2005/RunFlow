@@ -791,15 +791,16 @@ function handlePermissionError(error: unknown, config: AiConfig) {
 
 export async function generateCompletion(
     config: AiConfig,
-    messages: ChatMessage[]
+    messages: ChatMessage[],
+    signal?: AbortSignal
 ): Promise<string> {
     try {
         if (config.provider === 'google') {
-            return await generateGoogleCompletion(config, messages);
+            return await generateGoogleCompletion(config, messages, signal);
         } else if (config.provider === 'anthropic') {
-            return await generateAnthropicCompletion(config, messages);
+            return await generateAnthropicCompletion(config, messages, signal);
         } else {
-            return await generateOpenAICompletion(config, messages);
+            return await generateOpenAICompletion(config, messages, signal);
         }
     } catch (error: unknown) {
         handlePermissionError(error, config);
@@ -809,7 +810,8 @@ export async function generateCompletion(
 
 async function generateOpenAICompletion(
     config: AiConfig,
-    messages: ChatMessage[]
+    messages: ChatMessage[],
+    signal?: AbortSignal
 ): Promise<string> {
     let response: Response | undefined;
 
@@ -818,6 +820,7 @@ async function generateOpenAICompletion(
 
         response = await safeFetch(`${config.baseUrl}/chat/completions`, {
             method: 'POST',
+            signal,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${currentKey}`,
@@ -873,7 +876,8 @@ async function generateOpenAICompletion(
 
 async function generateAnthropicCompletion(
     config: AiConfig,
-    messages: ChatMessage[]
+    messages: ChatMessage[],
+    signal?: AbortSignal
 ): Promise<string> {
     const systemMessage = messages.find(m => m.role === 'system');
     const userMessages = messages.filter(m => m.role !== 'system');
@@ -885,6 +889,7 @@ async function generateAnthropicCompletion(
 
         response = await safeFetch(`${config.baseUrl}/v1/messages`, {
             method: 'POST',
+            signal,
             headers: {
                 'Content-Type': 'application/json',
                 'x-api-key': currentKey,
@@ -927,7 +932,8 @@ async function generateAnthropicCompletion(
 
 async function generateGoogleCompletion(
     config: AiConfig,
-    messages: ChatMessage[]
+    messages: ChatMessage[],
+    signal?: AbortSignal
 ): Promise<string> {
     const systemMessage = messages.find(m => m.role === 'system');
     const chatMessages = messages.filter(m => m.role !== 'system');
@@ -945,6 +951,7 @@ async function generateGoogleCompletion(
 
         response = await safeFetch(url, {
             method: 'POST',
+            signal,
             headers: {
                 'Content-Type': 'application/json',
             },

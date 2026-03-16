@@ -242,21 +242,41 @@ export async function getAiConfigForModel(userId: string, targetModel: string): 
 
     if (!baseConfig) return null;
 
-    // If BYOK is active, we just use the custom provider and hope it supports the model
+    // Check if BYOK is active
     const userSettings = await prisma.userAiSettings.findUnique({ where: { userId } });
     if (userSettings?.customApiKey && userSettings?.usageTier === 'none') {
         return { ...baseConfig, model: targetModel };
     }
 
+    // 1. Exact or loose match in provider's configured models array
+    const lowerTarget = targetModel.toLowerCase().trim();
+    
     // Check if the current baseConfig (active provider) supports this model
     const activeProvider = await prisma.aiProvider.findUnique({ where: { id: baseConfig.providerId! } });
-    if (activeProvider && activeProvider.models.includes(targetModel)) {
+    if (activeProvider && activeProvider.models.some(m => m.toLowerCase().trim() === lowerTarget)) {
         return { ...baseConfig, model: targetModel };
     }
 
-    // Otherwise, search all active providers to find one that supports the model
     const allProviders = await prisma.aiProvider.findMany({ where: { isActive: true } });
-    const matchingProvider = allProviders.find(p => p.models.includes(targetModel));
+    
+    // Try finding any provider that lists the model explicitly
+    let matchingProvider = allProviders.find(p => p.models.some(m => m.toLowerCase().trim() === lowerTarget));
+
+    // 2. Guess by prefix if no explicit match
+    if (!matchingProvider) {
+        let guessedType: 'openai' | 'anthropic' | 'google' | null = null;
+        if (lowerTarget.startsWith('gpt-') || lowerTarget.startsWith('o1-') || lowerTarget.startsWith('o3-') || lowerTarget.includes('openai')) {
+            guessedType = 'openai';
+        } else if (lowerTarget.startsWith('claude-') || lowerTarget.includes('anthropic')) {
+            guessedType = 'anthropic';
+        } else if (lowerTarget.startsWith('gemini-') || lowerTarget.includes('google')) {
+            guessedType = 'google';
+        }
+
+        if (guessedType) {
+            matchingProvider = allProviders.find(p => p.type === guessedType);
+        }
+    }
 
     if (matchingProvider) {
         const decryptedKey = decryptToken(matchingProvider.apiKey);

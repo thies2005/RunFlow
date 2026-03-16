@@ -38,10 +38,28 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
                     remainingFats: remainingMacros.fats,
                 }),
             });
+            const contentType = res.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || 'Failed to fetch suggestion');
+                const errorBody = await res.text();
+                let message = `Failed to fetch suggestion (${res.status})`;
+                if (isJson) {
+                    try {
+                        const err = JSON.parse(errorBody);
+                        if (err?.error) message = err.error;
+                    } catch {
+                        // Ignore JSON parse failure and use fallback message.
+                    }
+                }
+                throw new Error(message);
             }
+
+            if (!isJson) {
+                await res.text();
+                throw new Error('Unexpected response format from server.');
+            }
+
             return res.json();
         },
         onSuccess: (data) => {

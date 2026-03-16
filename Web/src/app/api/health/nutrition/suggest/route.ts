@@ -175,7 +175,20 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
         try {
             parsed = JSON.parse(textContent);
         } catch {
-            parsed = extractJsonObject(textContent);
+            try {
+                parsed = extractJsonObject(textContent);
+            } catch (parseError) {
+                logger.error('[AI Meal Suggester] Invalid JSON response', {
+                    error: parseError instanceof Error ? parseError.message : String(parseError),
+                    model,
+                    userId,
+                    preview: textContent.slice(0, 1000),
+                });
+                return NextResponse.json(
+                    { error: 'AI returned an invalid response. Please try again.' },
+                    { status: 502 }
+                );
+            }
         }
 
         // Increment Counter

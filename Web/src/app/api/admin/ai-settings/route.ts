@@ -74,6 +74,18 @@ export async function GET(request: NextRequest) {
                 tier2CalorieSnapLimit: globalSettings.tier2CalorieSnapLimit,
                 tier3CalorieSnapLimit: globalSettings.tier3CalorieSnapLimit,
 
+                tier1MealSuggestLimit: globalSettings.tier1MealSuggestLimit,
+                tier2MealSuggestLimit: globalSettings.tier2MealSuggestLimit,
+                tier3MealSuggestLimit: globalSettings.tier3MealSuggestLimit,
+
+                tier1ActivityFeedbackLimit: globalSettings.tier1ActivityFeedbackLimit,
+                tier2ActivityFeedbackLimit: globalSettings.tier2ActivityFeedbackLimit,
+                tier3ActivityFeedbackLimit: globalSettings.tier3ActivityFeedbackLimit,
+
+                // Non-realtime AI Feature Models
+                mealSuggestModel: globalSettings.mealSuggestModel,
+                activityFeedbackModel: globalSettings.activityFeedbackModel,
+
                 // Legacy (deprecated)
                 dailyMessageLimit: globalSettings.dailyMessageLimit,
                 monthlyMessageLimit: globalSettings.monthlyMessageLimit,
@@ -132,6 +144,14 @@ export async function PUT(request: NextRequest) {
             calorieSnapModel,
             tier1CalorieSnapLimit, tier2CalorieSnapLimit, tier3CalorieSnapLimit,
 
+            // Non-realtime AI Feature Models
+            mealSuggestModel,
+            tier1MealSuggestLimit, tier2MealSuggestLimit, tier3MealSuggestLimit,
+            activityFeedbackModel,
+            tier1ActivityFeedbackLimit, tier2ActivityFeedbackLimit, tier3ActivityFeedbackLimit,
+
+
+
             // Legacy
             dailyMessageLimit,
             monthlyMessageLimit,
@@ -178,6 +198,17 @@ export async function PUT(request: NextRequest) {
         if (tier1CalorieSnapLimit !== undefined) updateData.tier1CalorieSnapLimit = parseInt(tier1CalorieSnapLimit) || 0;
         if (tier2CalorieSnapLimit !== undefined) updateData.tier2CalorieSnapLimit = parseInt(tier2CalorieSnapLimit) || 0;
         if (tier3CalorieSnapLimit !== undefined) updateData.tier3CalorieSnapLimit = parseInt(tier3CalorieSnapLimit) || 0;
+
+        // Non-realtime AI Feature Models
+        if (mealSuggestModel !== undefined) updateData.mealSuggestModel = mealSuggestModel;
+        if (tier1MealSuggestLimit !== undefined) updateData.tier1MealSuggestLimit = parseInt(tier1MealSuggestLimit) || 0;
+        if (tier2MealSuggestLimit !== undefined) updateData.tier2MealSuggestLimit = parseInt(tier2MealSuggestLimit) || 0;
+        if (tier3MealSuggestLimit !== undefined) updateData.tier3MealSuggestLimit = parseInt(tier3MealSuggestLimit) || 0;
+        
+        if (activityFeedbackModel !== undefined) updateData.activityFeedbackModel = activityFeedbackModel;
+        if (tier1ActivityFeedbackLimit !== undefined) updateData.tier1ActivityFeedbackLimit = parseInt(tier1ActivityFeedbackLimit) || 0;
+        if (tier2ActivityFeedbackLimit !== undefined) updateData.tier2ActivityFeedbackLimit = parseInt(tier2ActivityFeedbackLimit) || 0;
+        if (tier3ActivityFeedbackLimit !== undefined) updateData.tier3ActivityFeedbackLimit = parseInt(tier3ActivityFeedbackLimit) || 0;
 
         // Legacy (deprecated)
         if (dailyMessageLimit !== undefined) updateData.dailyMessageLimit = parseInt(dailyMessageLimit) || 50;

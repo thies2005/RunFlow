@@ -132,6 +132,31 @@ export async function generateAndSaveActivityFeedback(activityId: string, userId
         throw new Error(usageStatus.reason || 'Usage limit reached');
     }
 
+    const userSettings = await prisma.userAiSettings.findUnique({ where: { userId } });
+    const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
+    const userTier = userSettings?.usageTier || 'none';
+
+    if (userTier !== 'none' && userSettings) {
+        const userLevelLimits = {
+            tier1: globalSettings?.tier1ActivityFeedbackLimit ?? 1,
+            tier2: globalSettings?.tier2ActivityFeedbackLimit ?? 3,
+            tier3: globalSettings?.tier3ActivityFeedbackLimit ?? 6,
+        };
+        const dailyLimit = userLevelLimits[userTier as keyof typeof userLevelLimits] || userLevelLimits.tier1;
+        
+        const now = new Date();
+        const lastReset = new Date(userSettings.lastUsageReset);
+        let usedToday = userSettings.activityFeedbackUsedToday;
+        
+        if (now.toDateString() !== lastReset.toDateString()) {
+            usedToday = 0;
+        }
+
+        if (usedToday >= dailyLimit) {
+            throw new Error(`Daily limit of ${dailyLimit} activity analyses reached for your tier.`);
+        }
+    }
+
     const userContext = await buildUserContext(userId);
     const activityContext = await buildActivityContext(activityId);
 
@@ -148,7 +173,7 @@ export async function generateAndSaveActivityFeedback(activityId: string, userId
         const googleProvider = await prisma.aiProvider.findFirst({ where: { type: 'google', isActive: true } });
         if (googleProvider) {
             const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-            const model = globalSettings?.calorieSnapModel || 'gemini-1.5-flash';
+            const model = globalSettings?.activityFeedbackModel || 'gemini-1.5-flash';
             const rawDecryptedKey = decryptToken(googleProvider.apiKey);
             const geminiKey = rawDecryptedKey ? rawDecryptedKey.split(/[,;\n]+/)[0].trim() : null;
             if (geminiKey) {
@@ -185,7 +210,26 @@ export async function generateAndSaveActivityFeedback(activityId: string, userId
         },
     });
 
-    await incrementUsage(userId);
+    if (userTier !== 'none') {
+        const updatedSettings = await prisma.userAiSettings.findUnique({ where: { userId } });
+        if (updatedSettings) {
+            const now = new Date();
+            const lastReset = new Date(updatedSettings.lastUsageReset);
+            let usedToday = updatedSettings.activityFeedbackUsedToday;
+            
+            if (now.toDateString() !== lastReset.toDateString()) {
+                usedToday = 0;
+            }
+            
+            await prisma.userAiSettings.update({
+                where: { userId },
+                data: {
+                    activityFeedbackUsedToday: usedToday + 1,
+                    lastUsageReset: now
+                }
+            });
+        }
+    }
 
     return { feedback, cached: false };
 }

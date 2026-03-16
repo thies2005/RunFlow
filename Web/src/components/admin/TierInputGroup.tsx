@@ -74,6 +74,26 @@ export default function TierInputGroup({ tier, formData, setFormData }: TierInpu
                         />
                     </div>
                 </div>
+                <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-100 pt-2">
+                    <div>
+                        <label className="text-gray-500 text-xs block mb-1">🍽️ Meal Suggest / Day</label>
+                        <input
+                            type="number"
+                            value={formData[`${t}MealSuggestLimit`]}
+                            onChange={(e) => handleChange(`${t}MealSuggestLimit`, parseInt(e.target.value) || 0)}
+                            className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-gray-500 text-xs block mb-1">🏃‍♂️ Act. Feedback / Day</label>
+                        <input
+                            type="number"
+                            value={formData[`${t}ActivityFeedbackLimit`]}
+                            onChange={(e) => handleChange(`${t}ActivityFeedbackLimit`, parseInt(e.target.value) || 0)}
+                            className="w-full px-2 py-1 bg-gray-50 text-gray-900 border border-gray-200 rounded text-sm"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );

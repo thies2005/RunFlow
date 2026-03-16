@@ -76,6 +76,16 @@ export interface AdminAiSettingsData {
     tier2CalorieSnapLimit: number;
     tier3CalorieSnapLimit: number;
 
+    mealSuggestModel: string | null;
+    tier1MealSuggestLimit: number;
+    tier2MealSuggestLimit: number;
+    tier3MealSuggestLimit: number;
+
+    activityFeedbackModel: string | null;
+    tier1ActivityFeedbackLimit: number;
+    tier2ActivityFeedbackLimit: number;
+    tier3ActivityFeedbackLimit: number;
+
     dailyMessageLimit: number;
     monthlyMessageLimit: number;
     systemPrompt: string | null;

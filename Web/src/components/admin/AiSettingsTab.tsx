@@ -50,7 +50,17 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
         tier2CalorieSnapLimit: settings?.tier2CalorieSnapLimit ?? 3,
         tier3CalorieSnapLimit: settings?.tier3CalorieSnapLimit ?? 6,
 
+        tier1MealSuggestLimit: settings?.tier1MealSuggestLimit ?? 1,
+        tier2MealSuggestLimit: settings?.tier2MealSuggestLimit ?? 3,
+        tier3MealSuggestLimit: settings?.tier3MealSuggestLimit ?? 6,
+
+        tier1ActivityFeedbackLimit: settings?.tier1ActivityFeedbackLimit ?? 1,
+        tier2ActivityFeedbackLimit: settings?.tier2ActivityFeedbackLimit ?? 3,
+        tier3ActivityFeedbackLimit: settings?.tier3ActivityFeedbackLimit ?? 6,
+
         calorieSnapModel: settings?.calorieSnapModel || 'gemini-1.5-flash',
+        mealSuggestModel: settings?.mealSuggestModel || 'gemini-1.5-flash',
+        activityFeedbackModel: settings?.activityFeedbackModel || 'gemini-1.5-flash',
 
         systemPrompt: settings?.systemPrompt || '',
     });
@@ -87,7 +97,17 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 tier2CalorieSnapLimit: settings.tier2CalorieSnapLimit ?? prev.tier2CalorieSnapLimit,
                 tier3CalorieSnapLimit: settings.tier3CalorieSnapLimit ?? prev.tier3CalorieSnapLimit,
 
+                tier1MealSuggestLimit: settings.tier1MealSuggestLimit ?? prev.tier1MealSuggestLimit,
+                tier2MealSuggestLimit: settings.tier2MealSuggestLimit ?? prev.tier2MealSuggestLimit,
+                tier3MealSuggestLimit: settings.tier3MealSuggestLimit ?? prev.tier3MealSuggestLimit,
+
+                tier1ActivityFeedbackLimit: settings.tier1ActivityFeedbackLimit ?? prev.tier1ActivityFeedbackLimit,
+                tier2ActivityFeedbackLimit: settings.tier2ActivityFeedbackLimit ?? prev.tier2ActivityFeedbackLimit,
+                tier3ActivityFeedbackLimit: settings.tier3ActivityFeedbackLimit ?? prev.tier3ActivityFeedbackLimit,
+
                 calorieSnapModel: settings.calorieSnapModel || prev.calorieSnapModel,
+                mealSuggestModel: settings.mealSuggestModel || prev.mealSuggestModel,
+                activityFeedbackModel: settings.activityFeedbackModel || prev.activityFeedbackModel,
 
                 systemPrompt: settings.systemPrompt || prev.systemPrompt,
             }));
@@ -259,6 +279,34 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     />
                     <p className="text-xs text-gray-500 mt-1">
                         Must be a valid vision model from Google (e.g., `gemini-1.5-flash` or `gemini-1.5-pro`).
+                    </p>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Meal Suggestions Model ID</label>
+                    <input
+                        type="text"
+                        value={formData.mealSuggestModel}
+                        onChange={(e) => setFormData({ ...formData, mealSuggestModel: e.target.value })}
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="e.g. gemini-1.5-flash"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                        Used for the "What should I eat?" meal suggestions feature. Any non-vision Google or OpenAI model works here.
+                    </p>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Activity Feedback Model ID</label>
+                    <input
+                        type="text"
+                        value={formData.activityFeedbackModel}
+                        onChange={(e) => setFormData({ ...formData, activityFeedbackModel: e.target.value })}
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="e.g. gemini-1.5-flash"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                        Used for post-activity AI coaching feedback. Any non-vision Google model works here (e.g., `gemini-1.5-pro`).
                     </p>
                 </div>
 

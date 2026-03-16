@@ -37,9 +37,36 @@ export function Modal({
         document.body.style.overflow = 'hidden';
         document.addEventListener('keydown', handleKeyDown);
 
+        // Capacitor back button handler
+        let isCancelled = false;
+        let backListener: any = null;
+        const setupCapacitor = async () => {
+            try {
+                const { Capacitor } = await import('@capacitor/core');
+                if (Capacitor.isNativePlatform()) {
+                    const { App } = await import('@capacitor/app');
+                    const listener = await App.addListener('backButton', () => {
+                        onClose();
+                    });
+                    if (isCancelled) {
+                        listener.remove();
+                    } else {
+                        backListener = listener;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to setup capacitor back button', e);
+            }
+        };
+        setupCapacitor();
+
         return () => {
+            isCancelled = true;
             document.body.style.overflow = '';
             document.removeEventListener('keydown', handleKeyDown);
+            if (backListener) {
+                backListener.remove();
+            }
         };
     }, [isOpen, onClose]);
 
@@ -56,7 +83,7 @@ export function Modal({
 
     const modalContent = (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.5)] backdrop-blur-sm animate-fade-in sm:p-4 overflow-y-auto"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/[var(--modal-backdrop-opacity,0.5)] backdrop-blur-sm animate-fade-in p-4 sm:p-4 pt-safe pb-safe overflow-y-auto"
             role="dialog"
             aria-modal="true"
         >

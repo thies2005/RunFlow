@@ -31,6 +31,42 @@ export async function POST(request: Request) {
             );
         }
 
+        const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
+        const userTier = userSettings.usageTier || 'none';
+
+        if (userTier === 'none' && !userSettings.customApiKey) {
+            return NextResponse.json(
+                { error: 'Please set up an API key or upgrade your tier to use this feature.' },
+                { status: 403 }
+            );
+        }
+
+        // Daily limit check
+        if (userTier !== 'none') {
+            const userLevelLimits = {
+                tier1: globalSettings?.tier1MealSuggestLimit ?? 1,
+                tier2: globalSettings?.tier2MealSuggestLimit ?? 3,
+                tier3: globalSettings?.tier3MealSuggestLimit ?? 6,
+            };
+            const dailyLimit = userLevelLimits[userTier as keyof typeof userLevelLimits] || userLevelLimits.tier1;
+            
+            // Check if counter needs reset for today
+            const now = new Date();
+            const lastReset = new Date(userSettings.lastUsageReset);
+            let usedToday = userSettings.mealSuggestsUsedToday;
+            
+            if (now.toDateString() !== lastReset.toDateString()) {
+                usedToday = 0;
+            }
+
+            if (usedToday >= dailyLimit) {
+                return NextResponse.json(
+                    { error: `Daily limit of ${dailyLimit} meal suggestions reached for your tier.` },
+                    { status: 429 }
+                );
+            }
+        }
+
         // Fetch User's Saved Meals (Recipes)
         const savedMeals = await prisma.savedMeal.findMany({
             where: { userId },
@@ -84,8 +120,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No valid API keys found' }, { status: 500 });
         }
 
-        const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-        const model = globalSettings?.calorieSnapModel || 'gemini-1.5-flash';
+        const model = globalSettings?.mealSuggestModel || 'gemini-1.5-flash';
 
         const prompt = `You are an expert nutrition AI. The user is asking "What should I eat?" based on their remaining daily macros.
 
@@ -186,6 +221,25 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
                     throw new Error('Could not extract JSON');
                 }
             }
+        }
+
+        // Increment Counter
+        if (userTier !== 'none') {
+            const now = new Date();
+            const lastReset = new Date(userSettings.lastUsageReset);
+            let usedToday = userSettings.mealSuggestsUsedToday;
+            
+            if (now.toDateString() !== lastReset.toDateString()) {
+                usedToday = 0;
+            }
+            
+            await prisma.userAiSettings.update({
+                where: { userId },
+                data: {
+                    mealSuggestsUsedToday: usedToday + 1,
+                    lastUsageReset: now
+                }
+            });
         }
 
         return NextResponse.json(parsed);

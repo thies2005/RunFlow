@@ -37,10 +37,48 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
     const [waterTrackingEnabled, setWaterTrackingEnabled] = useState<boolean>(false);
     const [waterGoalMl, setWaterGoalMl] = useState<number>(2500);
 
+    const [aiInsightProvider, setAiInsightProvider] = useState<string>('gemini');
+    const [aiInsightApiKey, setAiInsightApiKey] = useState<string>('');
+    const [fastingEnabled, setFastingEnabled] = useState<boolean>(false);
+    const [fastingGoalHours, setFastingGoalHours] = useState<number>(16);
+
     // BMR & TDEE calcs
     const [bmr, setBmr] = useState(0);
     const [tdee, setTdee] = useState(0);
     const [weight, setWeight] = useState(70);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        let isCancelled = false;
+        let backListener: any = null;
+        const setupCapacitor = async () => {
+            try {
+                const { Capacitor } = await import('@capacitor/core');
+                if (Capacitor.isNativePlatform()) {
+                    const { App } = await import('@capacitor/app');
+                    const listener = await App.addListener('backButton', () => {
+                        onClose();
+                    });
+                    if (isCancelled) {
+                        listener.remove();
+                    } else {
+                        backListener = listener;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to setup capacitor back button', e);
+            }
+        };
+        setupCapacitor();
+
+        return () => {
+            isCancelled = true;
+            if (backListener) {
+                backListener.remove();
+            }
+        };
+    }, [isOpen, onClose]);
 
     useEffect(() => {
         if (targetData) {
@@ -57,6 +95,11 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
             setExerciseCalorieSource(targetData.exerciseCalorieSource || 'strava');
             setWaterTrackingEnabled(targetData.waterTrackingEnabled ?? false);
             setWaterGoalMl(targetData.waterGoalMl ?? 2500);
+
+            setAiInsightProvider(targetData.aiInsightProvider || 'gemini');
+            setAiInsightApiKey(targetData.aiInsightApiKey || '');
+            setFastingEnabled(targetData.fastingEnabled ?? false);
+            setFastingGoalHours(targetData.fastingGoalHours ?? 16);
 
             let w = 70;
             if (targetData.userProfile?.weight) {
@@ -155,7 +198,11 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                     exerciseCalorieFactor,
                     exerciseCalorieSource,
                     waterTrackingEnabled,
-                    waterGoalMl
+                    waterGoalMl,
+                    aiInsightProvider,
+                    aiInsightApiKey,
+                    fastingEnabled,
+                    fastingGoalHours
                 })
             });
             if (!res.ok) throw new Error('Failed to save');
@@ -176,7 +223,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
             <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
+                <div className="flex items-center justify-between p-4 pt-safe border-b border-white/10 shrink-0">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                         <Target className="w-5 h-5 text-pink-500" />
                         Nutrition Targets
@@ -405,13 +452,77 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Weekly Insights AI Provider */}
+                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                    <div>
+                                        <label className="text-sm font-semibold text-white">Weekly Insights AI Provider</label>
+                                        <p className="text-xs text-gray-500 mt-0.5">Which model should generate your weekly nutrition summary?</p>
+                                    </div>
+                                    <div className="flex bg-white/5 rounded-lg p-1 border border-white/10">
+                                        {['gemini', 'openai', 'anthropic', 'deepseek'].map(p => (
+                                            <button
+                                                key={p}
+                                                onClick={() => setAiInsightProvider(p)}
+                                                className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors capitalize ${aiInsightProvider === p ? 'bg-blue-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                            >
+                                                {p}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {aiInsightProvider !== 'gemini' && (
+                                        <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                                            <label className="text-xs font-semibold text-gray-400 mb-1 block">Custom API Key</label>
+                                            <input
+                                                type="password"
+                                                value={aiInsightApiKey}
+                                                onChange={(e) => setAiInsightApiKey(e.target.value)}
+                                                placeholder={`Enter your ${aiInsightProvider} API key...`}
+                                                className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:outline-none focus:border-blue-500"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Intermittent Fasting */}
+                                <div className="space-y-4 pt-4 border-t border-white/5">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <label className="text-sm font-semibold text-white">Intermittent Fasting Timer</label>
+                                            <p className="text-xs text-gray-500 mt-0.5">Enable the fasting tracker on your dashboard.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setFastingEnabled(!fastingEnabled)}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${fastingEnabled ? 'bg-blue-500' : 'bg-gray-600'}`}
+                                        >
+                                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${fastingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                        </button>
+                                    </div>
+
+                                    {fastingEnabled && (
+                                        <div className="bg-white/5 rounded-xl p-3 border border-white/10">
+                                            <label className="text-xs font-semibold text-gray-400 mb-1 block">Daily Fasting Goal (Hours)</label>
+                                            <div className="flex gap-2">
+                                                {[12, 16, 18, 20].map(h => (
+                                                    <button
+                                                        key={h}
+                                                        onClick={() => setFastingGoalHours(h)}
+                                                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${fastingGoalHours === h ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' : 'bg-black/50 text-gray-400 border-white/10 hover:border-white/20'}`}
+                                                    >
+                                                        {h}h
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </>
                     )}
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 pb-8 sm:pb-4 border-t border-white/10 shrink-0">
+                <div className="p-4 pb-8 sm:pb-4 pb-safe border-t border-white/10 shrink-0">
                     <button
                         onClick={() => saveMutation.mutate()}
                         disabled={saveMutation.isPending || isLoading}

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
+import { encryptToken } from '@/lib/crypto';
 
 export async function GET(request: Request) {
     try {
@@ -68,7 +69,11 @@ export async function GET(request: Request) {
             exerciseCalorieFactor: 0.5,
             exerciseCalorieSource: 'strava',
             waterTrackingEnabled: false,
-            waterGoalMl: 2500
+            waterGoalMl: 2500,
+            aiInsightProvider: 'gemini',
+            aiInsightApiKey: null,
+            fastingEnabled: false,
+            fastingGoalHours: 16
         };
 
         return NextResponse.json({
@@ -100,8 +105,15 @@ export async function POST(request: Request) {
             exerciseCalorieFactor,
             exerciseCalorieSource,
             waterTrackingEnabled,
-            waterGoalMl
+            waterGoalMl,
+            aiInsightProvider,
+            aiInsightApiKey,
+            fastingEnabled,
+            fastingGoalHours
         } = body;
+
+        // Encrypt API key before storage if provided
+        const encryptedApiKey = aiInsightApiKey ? encryptToken(aiInsightApiKey) : undefined;
 
         // Use session userId, but allow body userId if it matches (backwards compat)
         const effectiveUserId = session.user.id;
@@ -119,7 +131,11 @@ export async function POST(request: Request) {
                 ...(exerciseCalorieFactor !== undefined && { exerciseCalorieFactor }),
                 ...(exerciseCalorieSource !== undefined && { exerciseCalorieSource }),
                 ...(waterTrackingEnabled !== undefined && { waterTrackingEnabled }),
-                ...(waterGoalMl !== undefined && { waterGoalMl })
+                ...(waterGoalMl !== undefined && { waterGoalMl }),
+                ...(aiInsightProvider !== undefined && { aiInsightProvider }),
+                ...(encryptedApiKey !== undefined && { aiInsightApiKey: encryptedApiKey }),
+                ...(fastingEnabled !== undefined && { fastingEnabled }),
+                ...(fastingGoalHours !== undefined && { fastingGoalHours })
             },
             create: {
                 userId: effectiveUserId,
@@ -130,7 +146,11 @@ export async function POST(request: Request) {
                 ...(exerciseCalorieFactor !== undefined && { exerciseCalorieFactor }),
                 ...(exerciseCalorieSource !== undefined && { exerciseCalorieSource }),
                 ...(waterTrackingEnabled !== undefined && { waterTrackingEnabled }),
-                ...(waterGoalMl !== undefined && { waterGoalMl })
+                ...(waterGoalMl !== undefined && { waterGoalMl }),
+                ...(aiInsightProvider !== undefined && { aiInsightProvider }),
+                ...(encryptedApiKey !== undefined && { aiInsightApiKey: encryptedApiKey }),
+                ...(fastingEnabled !== undefined && { fastingEnabled }),
+                ...(fastingGoalHours !== undefined && { fastingGoalHours })
             }
         });
 

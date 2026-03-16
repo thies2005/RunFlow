@@ -88,6 +88,9 @@ model User {
   // Health Tracking
   healthTrackingEnabled Boolean              @default(false)
   supplements           Supplement[]
+  healthInsights        HealthInsight[]
+  bodyMeasurements      BodyMeasurement[]
+  fastingSessions       FastingSession[]
   supplementStacks      SupplementStack[]
   dailyHealthLogs       DailyHealthLog[]
   nutritionLogs         NutritionLog[]
@@ -176,6 +179,18 @@ model GlobalAiSettings {
   tier1CalorieSnapLimit Int    @default(1) // Basic: 1 scan/day
   tier2CalorieSnapLimit Int    @default(3) // Standard: 3 scans/day
   tier3CalorieSnapLimit Int    @default(6) // Premium: 6 scans/day
+
+  // Non-realtime AI Feature Models
+  mealSuggestModel      String @default("gemini-1.5-flash") // "What should I eat?" suggestions
+  tier1MealSuggestLimit Int    @default(1)
+  tier2MealSuggestLimit Int    @default(3)
+  tier3MealSuggestLimit Int    @default(6)
+
+  activityFeedbackModel      String @default("gemini-1.5-flash") // Post-activity AI feedback
+  tier1ActivityFeedbackLimit Int    @default(1)
+  tier2ActivityFeedbackLimit Int    @default(3)
+  tier3ActivityFeedbackLimit Int    @default(6)
+
 
   // Legacy limits (deprecated, use tiers instead)
   dailyMessageLimit   Int @default(50)
@@ -270,6 +285,10 @@ model UserAiSettings {
 
   // CalorieSnap (AI Food Scan) usage tracking
   calorieSnapsUsedToday Int @default(0)
+
+  // Non-realtime usage tracking
+  mealSuggestsUsedToday Int @default(0)
+  activityFeedbackUsedToday Int @default(0)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -554,12 +573,12 @@ model SupplementLog {
 }
 
 model DailyHealthLog {
-  id     String   @id @default(cuid())
-  userId String
-  date   DateTime @db.Date // Midnight UTC for the logged day
-  steps  Int?
-  weight Float? // kg
-  waterIntake    Int?   // ml consumed today
+  id             String   @id @default(cuid())
+  userId         String
+  date           DateTime @db.Date // Midnight UTC for the logged day
+  steps          Int?
+  weight         Float? // kg
+  waterIntake    Int? // ml consumed today
   activeCalories Float? // kcal burned from exercise (Health Connect)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -915,16 +934,21 @@ model NutritionLog {
 }
 
 model UserNutritionTarget {
-  id             String @id @default(cuid())
-  userId         String @unique
-  dailyCalories  Int    @default(2000)
-  proteinPercent Float  @default(30) // 30%
-  carbsPercent   Float  @default(40) // 40%
-  fatsPercent    Float  @default(30) // 30%
-  exerciseCalorieFactor Float  @default(0.5)  // 0.0-1.0 multiplier
-  exerciseCalorieSource String @default("strava") // "strava" | "health_connect"
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  dailyCalories         Int     @default(2000)
+  proteinPercent        Float   @default(30) // 30%
+  carbsPercent          Float   @default(40) // 40%
+  fatsPercent           Float   @default(30) // 30%
+  exerciseCalorieFactor Float   @default(0.5) // 0.0-1.0 multiplier
+  exerciseCalorieSource String  @default("strava") // "strava" | "health_connect"
   waterTrackingEnabled  Boolean @default(false)
-  waterGoalMl           Int @default(2500)   // daily goal in ml
+  waterGoalMl           Int     @default(2500) // daily goal in ml
+
+  aiInsightProvider String  @default("gemini") // "gemini" | "openai" | "anthropic" | "deepseek"
+  aiInsightApiKey   String? // Optionally store a custom API key for this provider
+  fastingEnabled    Boolean @default(false)
+  fastingGoalHours  Int     @default(16) // e.g. 16 for 16:8
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -997,4 +1021,63 @@ model FatSecretFoodCache {
 
   @@index([query])
   @@index([updatedAt]) // For cleanup queries
+}
+
+// ============================================
+// Health Insights (Weekly AI Summaries)
+// ============================================
+
+model HealthInsight {
+  id         String   @id @default(cuid())
+  userId     String
+  date       DateTime @db.Date // The date the insight was generated
+  rangeStart DateTime
+  rangeEnd   DateTime
+  content    String   @db.Text // AI generated markdown
+  metrics    Json // Store raw averages for context
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+}
+
+// ============================================
+// Body Composition Measurements
+// ============================================
+
+model BodyMeasurement {
+  id         String   @id @default(cuid())
+  userId     String
+  date       DateTime @db.Date
+  weight     Float? // Syncs with DailyHealthLog or independent
+  bodyFat    Float? // Percentage
+  muscleMass Float? // kg/lbs
+  chest      Float? // cm
+  waist      Float? // cm
+  hips       Float? // cm
+  arms       Float? // cm
+  thighs     Float? // cm
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+// ============================================
+// Intermittent Fasting
+// ============================================
+
+model FastingSession {
+  id          String    @id @default(cuid())
+  userId      String
+  startTime   DateTime
+  endTime     DateTime? // Null means currently fasting
+  targetHours Int       @default(16)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startTime])
 }

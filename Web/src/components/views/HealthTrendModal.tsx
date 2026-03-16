@@ -7,6 +7,7 @@ import {
     LineChart, Line, BarChart, Bar,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { BodyCompositionTab } from './BodyCompositionTab';
 
 type TimeRange = '1W' | '1M' | '6M' | '1Y' | 'ALL';
 
@@ -21,6 +22,7 @@ const RANGES: TimeRange[] = ['1W', '1M', '6M', '1Y', 'ALL'];
 export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalProps) {
     const queryClient = useQueryClient();
     const [timeRange, setTimeRange] = useState<TimeRange>('1M');
+    const [activeTab, setActiveTab] = useState<'weight' | 'composition'>('weight');
     const [isEnteringWeight, setIsEnteringWeight] = useState(false);
     const [manualWeight, setManualWeight] = useState('');
 
@@ -98,28 +100,47 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                 className="bg-[#1c1c1e] w-full max-w-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
-                    <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                        <MetricIcon className="w-5 h-5" style={{ color: metricColor }} />
-                        {title}
-                    </h2>
-                    <div className="flex items-center gap-2">
-                        {metric === 'weight' && (
+                <div className="flex flex-col border-b border-white/10 shrink-0">
+                    <div className="flex items-center justify-between p-4 pb-2">
+                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                            <MetricIcon className="w-5 h-5" style={{ color: metricColor }} />
+                            {metric === 'weight' ? 'Body Metrics' : title}
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            {metric === 'weight' && activeTab === 'weight' && (
+                                <button
+                                    onClick={() => setIsEnteringWeight(true)}
+                                    className="p-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors text-xs font-semibold flex items-center gap-1"
+                                >
+                                    <Plus className="w-4 h-4" /> Log
+                                </button>
+                            )}
                             <button
-                                onClick={() => setIsEnteringWeight(true)}
-                                className="p-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg transition-colors text-xs font-semibold flex items-center gap-1"
+                                onClick={onClose}
+                                className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
+                                type="button"
                             >
-                                <Plus className="w-4 h-4" /> Log
+                                <X className="w-5 h-5" />
                             </button>
-                        )}
-                        <button
-                            onClick={onClose}
-                            className="p-2 -mr-2 text-gray-400 hover:text-white transition-colors"
-                            type="button"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
+                        </div>
                     </div>
+                    
+                    {metric === 'weight' && (
+                        <div className="flex gap-4 px-4">
+                            <button 
+                                onClick={() => setActiveTab('weight')}
+                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'weight' ? 'text-white border-blue-500' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                            >
+                                Weight History
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('composition')}
+                                className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'composition' ? 'text-white border-orange-500' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                            >
+                                Body Composition
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Manual Weight Entry */}
@@ -155,8 +176,12 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
 
                 {/* Body */}
                 <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col min-h-[400px]">
-                    {/* Time Range Selector */}
-                    <div className="flex bg-white/5 p-1 rounded-lg border border-white/10 mb-6 shrink-0 w-full sm:w-auto self-start sm:self-end">
+                    {metric === 'weight' && activeTab === 'composition' ? (
+                        <BodyCompositionTab />
+                    ) : (
+                        <>
+                            {/* Time Range Selector */}
+                            <div className="flex bg-white/5 p-1 rounded-lg border border-white/10 mb-6 shrink-0 w-full sm:w-auto self-start sm:self-end">
                         {RANGES.map(range => (
                             <button
                                 key={range}
@@ -267,6 +292,8 @@ export function HealthTrendModal({ isOpen, onClose, metric }: HealthTrendModalPr
                             </ResponsiveContainer>
                         )}
                     </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

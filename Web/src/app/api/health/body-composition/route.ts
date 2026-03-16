@@ -1,0 +1,106 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/strava/oauth';
+
+export async function GET(request: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        const userId = session.user.id;
+
+        const measurements = await prisma.bodyMeasurement.findMany({
+            where: { userId },
+            orderBy: { date: 'asc' }
+        });
+
+        // Use standard JS date formatting
+        const formatted = measurements.map((m: any) => ({
+            ...m,
+            dateStr: m.date.toISOString().split('T')[0]
+        }));
+
+        return NextResponse.json({ measurements: formatted });
+
+    } catch (error) {
+        return NextResponse.json({ error: 'Failed to fetch body composition data' }, { status: 500 });
+    }
+}
+
+export async function POST(request: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        const userId = session.user.id;
+        const body = await request.json();
+        const { dateStr, weight, bodyFat, muscleMass, chest, waist, hips, arms, thighs } = body;
+
+        if (!dateStr) {
+            return NextResponse.json({ error: 'Missing date (yyyy-mm-dd)' }, { status: 400 });
+        }
+
+        // Compute midnight UTC date from "yyyy-mm-dd" safely
+        const dateParts = dateStr.split('-');
+        const date = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2])));
+
+        const record = await prisma.bodyMeasurement.upsert({
+            where: {
+                userId_date: {
+                    userId,
+                    date
+                }
+            },
+            update: {
+                weight: weight !== undefined ? weight : undefined,
+                bodyFat: bodyFat !== undefined ? bodyFat : undefined,
+                muscleMass: muscleMass !== undefined ? muscleMass : undefined,
+                chest: chest !== undefined ? chest : undefined,
+                waist: waist !== undefined ? waist : undefined,
+                hips: hips !== undefined ? hips : undefined,
+                arms: arms !== undefined ? arms : undefined,
+                thighs: thighs !== undefined ? thighs : undefined,
+            },
+            create: {
+                userId,
+                date,
+                weight,
+                bodyFat,
+                muscleMass,
+                chest,
+                waist,
+                hips,
+                arms,
+                thighs
+            }
+        });
+
+        // Also sync weight back to DailyHealthLog if weight is provided, mapping exact date
+        if (weight !== undefined && weight !== null) {
+            await prisma.dailyHealthLog.upsert({
+                 where: {
+                     userId_date: {
+                         userId,
+                         date
+                     }
+                 },
+                 update: { weight },
+                 create: {
+                     userId,
+                     date,
+                     weight
+                 }
+            });
+        }
+
+        return NextResponse.json({ success: true, record });
+
+    } catch (error) {
+        return NextResponse.json({ error: 'Failed to save body composition data' }, { status: 500 });
+    }
+}

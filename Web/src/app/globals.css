@@ -137,7 +137,10 @@ body {
   background: rgba(107, 114, 128, 0.2);
 }
 
-/* Safe Area support for mobile keyboards */
+/* Safe Area support for mobile keyboards and notches */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 1rem);
+}
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 1rem);
 }

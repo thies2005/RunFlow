@@ -25,6 +25,8 @@ import { SupplementItem } from '@/components/health/SupplementItem';
 import { ReminderSettingsModal } from './ReminderSettingsModal';
 import { AiMealSuggestionModal } from './AiMealSuggestionModal';
 import SupplementAnalyticsView from './SupplementAnalyticsView';
+import { FastingWidget } from './FastingWidget';
+
 const MacroRing = ({ value, target, color, label }: { value: number, target: number, color: string, label: string }) => {
     const safeTarget = target > 0 ? target : 1;
     const percentage = Math.min(value / safeTarget, 1);
@@ -576,6 +578,8 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 <ChevronRight className="w-4 h-4 text-blue-300" />
                             </div>
                         </button>
+
+                        <FastingWidget />
 
                         {/* Row 2: Quick Stats */}
                         <div className={`grid gap-4 ${showSteps ? 'grid-cols-2' : 'grid-cols-1'}`}>

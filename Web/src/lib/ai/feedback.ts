@@ -50,53 +50,23 @@ export function formatActivityForAi(ctx: NonNullable<Awaited<ReturnType<typeof b
 
 /**
  * Generates feedback using the appropriate AI provider.
- * Accepts pre-resolved provider config to avoid redundant DB queries.
  */
 async function generateFeedback(
     promptStr: string,
     userContext: string,
     activityContext: string,
-    geminiConfig: { url: string } | null,
-    fallbackConfig: AiConfig
+    providerConfig: AiConfig
 ): Promise<string> {
-    const systemPromptMessage = `You are a running coach analyzing an athlete's activity.\n\n${promptStr}\n\n--- Athlete Profile ---\n${userContext}`;
-    const userMessage = `Here's the activity to analyze:\n\n${activityContext}`;
+    const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n${promptStr}\n\n--- Athlete Profile ---\n${userContext}`;
+    const userMessage: string = `Here's the activity to analyze:\n\n${activityContext}`;
 
-    // 1. Try to use the non-realtime Google Provider (calorieSnapModel)
-    if (geminiConfig) {
-        try {
-            const fullPrompt = `${systemPromptMessage}\n\n${userMessage}`;
-            const res = await fetch(geminiConfig.url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: fullPrompt }] }],
-                    generationConfig: { temperature: 0.5 },
-                }),
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (content) return content;
-            } else {
-                logger.warn('[Activity Feedback] Google non-realtime provider failed, falling back', {
-                    status: res.status,
-                });
-            }
-        } catch (e) {
-            logger.warn('[Activity Feedback] Error using non-realtime provider, falling back', { error: String(e) });
-        }
-    }
-
-    // 2. Fall back to the active realtime provider (via generateCompletion)
     const { generateCompletion } = await import('@/lib/ai/providers');
     const messages: ChatMessage[] = [
         { role: 'system', content: systemPromptMessage },
         { role: 'user', content: userMessage },
     ];
 
-    return generateCompletion(fallbackConfig, messages);
+    return generateCompletion(providerConfig, messages);
 }
 
 /**
@@ -167,30 +137,14 @@ export async function generateAndSaveActivityFeedback(activityId: string, userId
     const baseContext = formatContextForAi(userContext);
     const activityStr = formatActivityForAi(activityContext);
 
-    // Resolve Google provider once so generateFeedback doesn't repeat 3x DB queries
-    let geminiConfig: { url: string } | null = null;
-    try {
-        const googleProvider = await prisma.aiProvider.findFirst({ where: { type: 'google', isActive: true } });
-        if (googleProvider) {
-            const globalSettings = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-            const model = globalSettings?.activityFeedbackModel || 'gemini-1.5-flash';
-            const rawDecryptedKey = decryptToken(googleProvider.apiKey);
-            const geminiKey = rawDecryptedKey ? rawDecryptedKey.split(/[,;\n]+/)[0].trim() : null;
-            if (geminiKey) {
-                geminiConfig = {
-                    url: `${googleProvider.baseUrl}/v1beta/models/${model}:generateContent?key=${geminiKey}`,
-                };
-            }
-        }
-    } catch (e) {
-        logger.warn('[Activity Feedback] Could not resolve non-realtime provider, will use fallback', { error: String(e) });
-    }
+    const activityFeedbackModel = globalSettings?.activityFeedbackModel || fallbackConfig.model;
+    const providerConfig = { ...fallbackConfig, model: activityFeedbackModel };
 
     // Generate the 3 feedback components in parallel
     const [plannedComparison, progressAnalysis, goalTrajectory] = await Promise.all([
-        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.plannedComparison, baseContext, activityStr, geminiConfig, fallbackConfig),
-        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.progressAnalysis, baseContext, activityStr, geminiConfig, fallbackConfig),
-        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.goalTrajectory, baseContext, activityStr, geminiConfig, fallbackConfig),
+        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.plannedComparison, baseContext, activityStr, providerConfig),
+        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.progressAnalysis, baseContext, activityStr, providerConfig),
+        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.goalTrajectory, baseContext, activityStr, providerConfig),
     ]);
 
     // Upsert into DB

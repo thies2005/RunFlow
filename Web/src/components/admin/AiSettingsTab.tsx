@@ -292,7 +292,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                        Used for the &quot;What should I eat?&quot; meal suggestions feature. Any non-vision Google or OpenAI model works here.
+                        Used for the &quot;What should I eat?&quot; meal suggestions feature. Any non-vision model works here.
                     </p>
                 </div>
 
@@ -306,7 +306,7 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                         placeholder="e.g. gemini-1.5-flash"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                        Used for post-activity AI coaching feedback. Any non-vision Google model works here (e.g., `gemini-1.5-pro`).
+                        Used for post-activity AI coaching feedback. Any non-vision model works here.
                     </p>
                 </div>
 

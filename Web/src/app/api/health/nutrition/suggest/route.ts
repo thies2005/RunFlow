@@ -4,6 +4,8 @@ import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
+import { getAiConfig, generateCompletion } from '@/lib/ai/providers';
+import type { ChatMessage } from '@/lib/ai/providers';
 
 export async function POST(request: Request) {
     try {
@@ -99,28 +101,17 @@ export async function POST(request: Request) {
         ).join('\n');
 
         // Check for Google AI Provider
-        const googleProvider = await prisma.aiProvider.findFirst({
-            where: { type: 'google', isActive: true },
-        });
+        const fallbackConfig = await getAiConfig(userId);
 
-        if (!googleProvider) {
+        if (!fallbackConfig) {
             return NextResponse.json(
-                { error: 'No Google AI provider configured. Please set up a Google/Gemini provider in admin settings.' },
+                { error: 'No AI provider configured. Please set up a provider in admin settings or your user profile.' },
                 { status: 503 }
             );
         }
 
-        const rawDecryptedKey = decryptToken(googleProvider.apiKey);
-        if (!rawDecryptedKey) {
-            return NextResponse.json({ error: 'Failed to decrypt Google AI provider API key' }, { status: 500 });
-        }
-
-        const apiKeys = rawDecryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
-        if (apiKeys.length === 0) {
-            return NextResponse.json({ error: 'No valid API keys found' }, { status: 500 });
-        }
-
-        const model = globalSettings?.mealSuggestModel || 'gemini-1.5-flash';
+        const model = globalSettings?.mealSuggestModel || fallbackConfig.model;
+        const providerConfig = { ...fallbackConfig, model };
 
         const prompt = `You are an expert nutrition AI. The user is asking "What should I eat?" based on their remaining daily macros.
 
@@ -161,46 +152,22 @@ Return ONLY a valid JSON object in this exact format, with no markdown formattin
   "totalFats": 10
 }`;
 
-        let response: Response | undefined;
-        for (let i = 0; i < apiKeys.length; i++) {
-            const currentKey = apiKeys[i];
-            const url = `${googleProvider.baseUrl}/v1beta/models/${model}:generateContent?key=${currentKey}`;
+        const messages: ChatMessage[] = [
+            { role: 'user', content: prompt }
+        ];
 
-            response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.4,
-                    },
-                }),
-            });
-
-            if (response.ok) break;
-
-            if (response.status === 429 && i < apiKeys.length - 1) {
-                logger.warn('[AI Meal Suggester] Rate limit hit (429), retrying with next API key', { model, keyIndex: i, totalKeys: apiKeys.length });
-                continue;
-            }
-
-            break; // Other error, or last key
-        }
-
-        if (!response || !response.ok) {
-            const errorText = response ? await response.text() : 'Network error';
-            logger.error('[AI Meal Suggester] Gemini API request failed', {
-                status: response?.status,
+        let textContent: string = '';
+        try {
+            textContent = await generateCompletion(providerConfig, messages);
+        } catch (error) {
+            logger.error('[AI Meal Suggester] Provider API request failed', {
+                error: error instanceof Error ? error.message : String(error),
                 model,
                 userId,
-                errorText: errorText.substring(0, 300),
             });
             return NextResponse.json({ error: 'AI analysis failed. Please try again.' }, { status: 502 });
         }
 
-        const data = await response.json();
-        const textContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        
         if (!textContent) {
             return NextResponse.json({ error: 'No valid response from AI.' }, { status: 422 });
         }

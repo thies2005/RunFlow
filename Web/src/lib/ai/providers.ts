@@ -23,12 +23,16 @@ export interface AiConfig {
     fallback?: AiConfig;
 }
 
-const DEFAULT_ALLOWED_BASE_URLS = [
+// Well-known provider base URLs (used as defaults/hints, not as a strict allowlist)
+const WELL_KNOWN_BASE_URLS = [
     'https://api.openai.com/v1',
     'https://api.anthropic.com',
     'https://generativelanguage.googleapis.com',
     'https://openrouter.ai/api/v1',
 ];
+
+// Keep for backward compatibility
+const DEFAULT_ALLOWED_BASE_URLS = WELL_KNOWN_BASE_URLS;
 
 function isPrivateIP(hostname: string): boolean {
     const privatePatterns = [
@@ -42,12 +46,16 @@ function isPrivateIP(hostname: string): boolean {
         /^::$/,
         /^fc00:/i,
         /^fe80:/i,
+        /^169\.254\./,       // Link-local / AWS metadata service
+        /^100\.64\./,        // Shared Address Space (RFC 6598)
+        /^198\.51\.100\./,   // TEST-NET-2
+        /^203\.0\.113\./,    // TEST-NET-3
     ];
 
     return privatePatterns.some(pattern => pattern.test(hostname));
 }
 
-export function validateUrl(url: string, allowedBaseUrls: readonly string[] = DEFAULT_ALLOWED_BASE_URLS): boolean {
+export function validateUrl(url: string, _allowedBaseUrls: readonly string[] = DEFAULT_ALLOWED_BASE_URLS): boolean {
     try {
         const parsed = new URL(url);
 
@@ -63,8 +71,12 @@ export function validateUrl(url: string, allowedBaseUrls: readonly string[] = DE
             return false;
         }
 
-        const isAllowedBase = allowedBaseUrls.some(allowed => url.startsWith(allowed));
-        return isAllowedBase;
+        // Hostname must have at least one dot (e.g. api.example.com), not bare hostname
+        if (!parsed.hostname.includes('.')) {
+            return false;
+        }
+
+        return true;
     } catch {
         return false;
     }
@@ -93,22 +105,23 @@ export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & {
     return response;
 }
 
-export function validateBaseUrl(baseUrl: string, extraAllowedUrls: string[] = []): boolean {
+export function validateBaseUrl(baseUrl: string, _extraAllowedUrls: string[] = []): boolean {
     try {
         const url = new URL(baseUrl);
-        const allAllowed = [...DEFAULT_ALLOWED_BASE_URLS, ...extraAllowedUrls];
 
-        // Verify exact hostname match to prevent SSRF bypasses
-        const allowedHostname = allAllowed
-            .map(allowed => new URL(allowed).hostname)
-            .some(host => url.hostname === host);
-
-        if (!allowedHostname) {
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') {
             return false;
         }
 
-        // Ensure it starts with the allowed prefix
-        return allAllowed.some(allowed => baseUrl.startsWith(allowed));
+        if (isPrivateIP(url.hostname)) {
+            return false;
+        }
+
+        if (url.hostname === '0.0.0.0' || url.hostname === '[::]' || url.hostname === 'localhost' || !url.hostname.includes('.')) {
+            return false;
+        }
+
+        return true;
     } catch {
         return false;
     }

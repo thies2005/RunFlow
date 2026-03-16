@@ -846,7 +846,29 @@ async function generateOpenAICompletion(
     
     // Check if body is readable, text() could consume it so only json()
     const data = await response!.json();
-    return data.choices?.[0]?.message?.content || '';
+    
+    if (data.error) {
+        logger.error('[GEN COMP] Provider returned 200 OK but with error payload', { error: data.error, model: config.model });
+        throw new Error(data.error.message || JSON.stringify(data.error));
+    }
+
+    const message = data.choices?.[0]?.message;
+    if (!message) return '';
+
+    let output = '';
+    if (message.reasoning_content) {
+        output += `<think>\n${message.reasoning_content}\n</think>\n\n`;
+    }
+    if (message.content) {
+        output += message.content;
+    }
+    
+    // If somehow both were empty, fallback to logging
+    if (!output) {
+        logger.warn('[GEN COMP] Empty message content in response', { data: JSON.stringify(data).substring(0, 300) });
+    }
+
+    return output.trim();
 }
 
 async function generateAnthropicCompletion(
@@ -889,7 +911,18 @@ async function generateAnthropicCompletion(
 
     if (!response || !response.ok) await handleError(response!);
     const data = await response!.json();
-    return data.content?.[0]?.text || '';
+
+    if (data.error || data.type === 'error') {
+        logger.error('[ANTHROPIC COMP] Provider returned error payload', { error: data.error || data, model: config.model });
+        throw new Error(data.error?.message || data.message || JSON.stringify(data));
+    }
+
+    if (!data.content || data.content.length === 0) {
+        logger.warn('[ANTHROPIC COMP] Empty content in response', { data: JSON.stringify(data).substring(0, 300) });
+        return '';
+    }
+
+    return data.content[0]?.text || '';
 }
 
 async function generateGoogleCompletion(

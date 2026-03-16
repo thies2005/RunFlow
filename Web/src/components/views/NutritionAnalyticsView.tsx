@@ -209,8 +209,6 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
 
     return (
       <div className="p-4 space-y-4 max-w-2xl mx-auto">
-        <WeeklyInsightsCard />
-        
         {/* Date Range Selector */}
         <div className="flex gap-2 overflow-x-auto pb-2">
           {[
@@ -404,6 +402,8 @@ export default function NutritionAnalyticsView({ onClose, onOpenGoals }: Nutriti
             </ResponsiveContainer>
           </div>
         </div>
+
+        <WeeklyInsightsCard />
 
         {/* Micronutrient Details */}
         <div className="glass-card p-4">

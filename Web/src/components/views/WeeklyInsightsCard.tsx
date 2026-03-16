@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Sparkles, RefreshCw, Calendar, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 export function WeeklyInsightsCard() {
     const queryClient = useQueryClient();
@@ -89,8 +91,8 @@ export function WeeklyInsightsCard() {
                         <div className="flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> {insight.metrics?.daysLogged || 7} days logged</div>
                     </div>
                     
-                    <div className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap prose prose-invert prose-p:my-2 prose-ul:my-2 max-w-none">
-                        {insight.content}
+                    <div className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap prose prose-invert prose-p:my-2 prose-ul:my-2 max-w-none [&_details]:bg-black/20 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-blue-300">
+                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>{insight.content}</ReactMarkdown>
                     </div>
                 </div>
             ) : null}

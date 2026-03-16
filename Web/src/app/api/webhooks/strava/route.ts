@@ -6,6 +6,7 @@ import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders
 import { safeBigInt } from '@/lib/utils/bigint';
 import { runBackgroundTask } from '@/lib/utils/backgroundTask';
 import { logger } from '@/lib/logging/logger';
+import { generateAndSaveActivityFeedback } from '@/lib/ai/feedback';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -190,13 +191,39 @@ export async function POST(req: NextRequest) {
                     // This ensures the sync survives the response lifecycle on Vercel
                     // NOTE: For guaranteed execution, upgrade to Next.js 15+ and use after() API
                     const userId = account.userId;
-                    const activityId = object_id;
+                    const stravaActivityId = safeBigInt(object_id);
                     runBackgroundTask(async () => {
                         try {
-                            await syncActivityById(userId, activityId);
-                            logger.info(`[BackgroundTask] Synced activity ${activityId} for user ${userId}`);
+                            // The syncActivityById function takes strava userId and activityId (both standard numbers from strava API payload)
+                            await syncActivityById(userId, object_id);
+                            logger.info(`[BackgroundTask] Synced activity ${object_id} for user ${userId}`);
+
+                            // Check if we should auto-generate AI feedback
+                            const aiSettings = await prisma.userAiSettings.findUnique({
+                                where: { userId }
+                            });
+
+                            if (aiSettings && aiSettings.aiEnabled && aiSettings.adminAllowed && 
+                                (aiSettings.feedbackMode === 'auto' || aiSettings.feedbackMode === 'both')) {
+                                
+                                // Need to find our internal activity ID based on the Strava ID we just synced
+                                const activity = await prisma.activity.findFirst({
+                                    where: { stravaId: stravaActivityId }
+                                });
+
+                                if (activity) {
+                                    try {
+                                        await generateAndSaveActivityFeedback(activity.id, userId, false);
+                                        logger.info(`[BackgroundTask] Generated AI feedback for activity ${activity.id}`);
+                                    } catch (aiError) {
+                                        logger.error(`[BackgroundTask] Auto-generated AI feedback failed for activity ${activity.id}:`, { error: aiError instanceof Error ? aiError.message : String(aiError) });
+                                        // Silently fail - we don't want to crash or retry the whole webhook just for AI failure
+                                    }
+                                }
+                            }
+
                         } catch (error) {
-                            logger.error(`[BackgroundTask] Failed to sync activity ${activityId}:`, { error: error instanceof Error ? error.message : String(error) });
+                            logger.error(`[BackgroundTask] Failed to sync activity ${object_id}:`, { error: error instanceof Error ? error.message : String(error) });
                         }
                     });
                 } else if (aspect_type === 'delete') {

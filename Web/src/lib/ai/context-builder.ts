@@ -387,8 +387,8 @@ export async function buildActivityContext(activityId: string): Promise<Activity
         where: {
             goal: { userId: activity.userId },
             scheduledDate: {
-                gte: new Date(activityDate.setHours(0, 0, 0, 0)),
-                lt: new Date(activityDate.setHours(23, 59, 59, 999)),
+                gte: new Date(new Date(activityDate).setHours(0, 0, 0, 0)),
+                lt: new Date(new Date(activityDate).setHours(23, 59, 59, 999)),
             },
         },
     });

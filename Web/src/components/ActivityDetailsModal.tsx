@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Zap, BarChart2, Tag, Edit2, Check } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart, Zap, BarChart2, Tag, Edit2, Check, Bot, Loader2, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
@@ -25,6 +25,9 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     const [isSavingName, setIsSavingName] = useState(false);
     const [detailedActivity, setDetailedActivity] = useState<Activity | null>(null);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const [aiFeedback, setAiFeedback] = useState<any>(null);
+    const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
+    const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -32,6 +35,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         if (activity) {
             setTrainingType(activity.trainingType || 'EASY');
             setName(activity.name);
+            // Reset per-activity state so previous activity's data doesn't flash
+            setAiFeedback(null);
+            setIsLoadingFeedback(false);
+            setIsGeneratingFeedback(false);
             // Prevent body scroll when modal is open
             document.body.style.overflow = 'hidden';
 
@@ -50,7 +57,26 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                     setIsLoadingDetails(false);
                 }
             };
+            
+            const fetchFeedback = async () => {
+                setIsLoadingFeedback(true);
+                try {
+                    const res = await fetch(`/api/ai/activity-feedback?activityId=${activity.id}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.feedback) {
+                            setAiFeedback(data.feedback);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch AI feedback:', error);
+                } finally {
+                    setIsLoadingFeedback(false);
+                }
+            };
+            
             fetchDetails();
+            fetchFeedback();
         }
         return () => {
             document.body.style.overflow = 'unset';
@@ -100,6 +126,34 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             setIsSavingName(false);
         }
     }, [activity, name, router]);
+
+    const handleGenerateFeedback = useCallback(async () => {
+        if (!activity) return;
+        setIsGeneratingFeedback(true);
+        try {
+            const res = await fetch('/api/ai/activity-feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ activityId: activity.id, regenerate: true }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.feedback) {
+                    setAiFeedback(data.feedback);
+                } else if (data.error) {
+                    alert(data.error);
+                }
+            } else {
+                const errorData = await res.json().catch(() => null);
+                alert(errorData?.error || 'Failed to generate AI feedback');
+            }
+        } catch (error) {
+            console.error('Failed to generate AI feedback:', error);
+            alert('An error occurred while generating AI feedback.');
+        } finally {
+            setIsGeneratingFeedback(false);
+        }
+    }, [activity]);
 
     // Early return AFTER all hooks have been called
     if (!isOpen || !activity || !mounted) return null;
@@ -448,6 +502,77 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             </div>
                         )}
                     </div>
+
+                    {/* AI Coach Feedback Section */}
+                    {aiFeedback ? (
+                        <div className="mb-8">
+                            <div className="flex items-center justify-between border-b border-glass-border pb-2 mb-4">
+                                <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest flex items-center gap-2">
+                                    <Bot className="w-4 h-4 text-accent-purple" />
+                                    AI Coach Feedback
+                                </h3>
+                                <button
+                                    onClick={handleGenerateFeedback}
+                                    disabled={isGeneratingFeedback}
+                                    className="text-xs text-accent-purple hover:text-accent-pink flex items-center gap-1 transition-colors disabled:opacity-50"
+                                >
+                                    {isGeneratingFeedback ? <Loader2 className="w-3 h-3 animate-spin"/> : <Sparkles className="w-3 h-3"/>}
+                                    {isGeneratingFeedback ? 'Regenerating...' : 'Regenerate'}
+                                </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {aiFeedback.plannedComparison && (
+                                    <div className="bg-background-tertiary p-4 rounded-xl border border-glass-border">
+                                        <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
+                                            <Calendar className="w-3 h-3 text-accent-cyan" />
+                                            Vs Planned Workout
+                                        </h4>
+                                        <p className="text-sm text-foreground-muted whitespace-pre-wrap">{aiFeedback.plannedComparison}</p>
+                                    </div>
+                                )}
+                                
+                                {aiFeedback.progressAnalysis && (
+                                    <div className="bg-background-tertiary p-4 rounded-xl border border-glass-border">
+                                        <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
+                                            <TrendingUp className="w-3 h-3 text-accent-pink" />
+                                            Progress & Execution
+                                        </h4>
+                                        <p className="text-sm text-foreground-muted whitespace-pre-wrap">{aiFeedback.progressAnalysis}</p>
+                                    </div>
+                                )}
+                                
+                                {aiFeedback.goalTrajectory && (
+                                    <div className="bg-background-tertiary p-4 rounded-xl border border-glass-border md:col-span-2">
+                                        <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
+                                            <Heart className="w-3 h-3 text-accent-purple" />
+                                            Goal Trajectory
+                                        </h4>
+                                        <p className="text-sm text-foreground-muted whitespace-pre-wrap">{aiFeedback.goalTrajectory}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="mb-8">
+                            <h3 className="text-sm font-semibold text-foreground-muted uppercase tracking-widest flex items-center gap-2 border-b border-glass-border pb-2 mb-4">
+                                <Bot className="w-4 h-4 text-accent-purple" />
+                                AI Coach Feedback
+                            </h3>
+                            <div className="bg-gradient-to-r from-accent-purple/5 to-accent-pink/5 border border-glass-border rounded-xl p-6 flex flex-col items-center justify-center text-center">
+                                <Bot className="w-10 h-10 text-foreground-muted mb-3 opacity-50" />
+                                <p className="text-sm text-foreground mb-4">Get personalized analysis comparing this run to your planned workout and goals.</p>
+                                <button
+                                    onClick={handleGenerateFeedback}
+                                    disabled={isGeneratingFeedback || isLoadingFeedback}
+                                    className="px-4 py-2 bg-background-secondary hover:bg-surface-hover border border-glass-border rounded-lg text-sm text-foreground font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    {isGeneratingFeedback ? <Loader2 className="w-4 h-4 animate-spin"/> : <Sparkles className="w-4 h-4 text-accent-purple"/>}
+                                    {isGeneratingFeedback ? 'Generating Analysis...' : isLoadingFeedback ? 'Checking...' : 'Generate AI Analysis'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>,

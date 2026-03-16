@@ -7,3 +7,4 @@ export * from './context-builder';
 export * from './prompts';
 export * from './usage';
 export * from './tokenCounter';
+export * from './feedback';

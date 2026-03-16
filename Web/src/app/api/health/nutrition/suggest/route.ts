@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
@@ -101,7 +100,9 @@ export async function POST(request: Request) {
         ).join('\n');
 
         // Resolve provider configuration based on the selected model
-        const model = globalSettings?.mealSuggestModel || 'gemini-1.5-flash';
+        const model = (userSettings.customApiKey && userSettings.usageTier === 'none')
+            ? (userSettings.customModel || 'gpt-4o-mini')
+            : (globalSettings?.mealSuggestModel || 'gemini-1.5-flash');
         const providerConfig = await getAiConfigForModel(userId, model);
 
         if (!providerConfig) {

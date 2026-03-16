@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Users, Activity, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList, LucideIcon } from 'lucide-react';
+import { Users, Activity as ActivityIcon, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList, LucideIcon } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
@@ -11,6 +11,7 @@ import AiSettingsTab from '@/components/admin/AiSettingsTab';
 import UsersTab from '@/components/admin/UsersTab';
 import BackupsTab from '@/components/admin/BackupsTab';
 import AuditLogsTab from '@/components/admin/AuditLogsTab';
+import FeedbackQueueTab from '@/components/admin/FeedbackQueueTab';
 import { AdminStats, AdminUser, AdminBackup, AdminAiSettings } from './types';
 
 
@@ -49,7 +50,12 @@ function DashboardContent() {
 
     // Tab state controlled by URL
     const tabParam = searchParams.get('tab');
-    const activeTab = tabParam === 'backups' ? 'backups' : tabParam === 'ai' ? 'ai' : tabParam === 'analytics' ? 'analytics' : tabParam === 'audit' ? 'audit' : 'users';
+    const activeTab = tabParam === 'backups' ? 'backups' : 
+                      tabParam === 'ai' ? 'ai' : 
+                      tabParam === 'analytics' ? 'analytics' : 
+                      tabParam === 'audit' ? 'audit' : 
+                      tabParam === 'feedback-queue' ? 'feedback-queue' :
+                      'users';
 
     const [processing, setProcessing] = useState(false);
     const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -150,7 +156,7 @@ function DashboardContent() {
                     title="Activities"
                     value={stats?.activities?.total || 0}
                     subtext={`${stats?.activities?.last7Days || 0} this week`}
-                    icon={Activity}
+                    icon={ActivityIcon}
                     color="bg-orange-500"
                 />
                 <StatCard
@@ -197,6 +203,13 @@ function DashboardContent() {
                     >
                         <ClipboardList className="w-4 h-4 inline mr-1" />
                         Audit Trail
+                    </button>
+                    <button
+                        onClick={() => router.push('/admin?tab=feedback-queue')}
+                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'feedback-queue' ? 'border-b-2 border-emerald-500 text-emerald-600' : 'text-gray-500 hover:text-gray-800'}`}
+                    >
+                        <ActivityIcon className="w-4 h-4 inline mr-1" />
+                        Feedback Queue
                     </button>
                 </div>
 
@@ -245,6 +258,11 @@ function DashboardContent() {
                     {/* Audit Logs Tab */}
                     {activeTab === 'audit' && (
                         <AuditLogsTab />
+                    )}
+
+                    {/* Feedback Queue Tab */}
+                    {activeTab === 'feedback-queue' && (
+                        <FeedbackQueueTab />
                     )}
                 </div>
             </div>

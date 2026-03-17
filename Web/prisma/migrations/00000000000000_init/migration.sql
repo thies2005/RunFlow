@@ -1,20 +1,20 @@
 -- =============================================================
 -- Baseline migration: full initial schema
 -- Creates all tables that existed before the tracked migrations.
--- Later migrations use ALTER TABLE ... ADD COLUMN IF NOT EXISTS
--- so they are safe to run on top of this baseline.
+-- Fully idempotent: uses DO blocks for enums, CREATE TABLE IF NOT EXISTS,
+-- and CREATE INDEX IF NOT EXISTS so it is safe to re-run on an existing DB.
 -- =============================================================
 
--- Enums
-CREATE TYPE "Sex" AS ENUM ('MALE', 'FEMALE', 'OTHER');
-CREATE TYPE "AuthCodeType" AS ENUM ('VERIFY_EMAIL', 'PASSWORD_RESET');
-CREATE TYPE "ActivityType" AS ENUM ('RUN', 'VIRTUAL_RIDE', 'RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER');
-CREATE TYPE "RaceType" AS ENUM ('FIVE_K', 'TEN_K', 'HALF_MARATHON', 'MARATHON');
-CREATE TYPE "WorkoutType" AS ENUM ('EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'REPETITIONS', 'RECOVERY', 'RACE', 'REST', 'CROSS_TRAIN', 'RIDE', 'SWIM', 'STRENGTH', 'OTHER');
-CREATE TYPE "PlanPhase" AS ENUM ('BASE', 'BUILD', 'PEAK', 'TAPER', 'RACE_WEEK', 'RECOVERY');
+-- Enums (idempotent)
+DO $$ BEGIN CREATE TYPE "Sex" AS ENUM ('MALE', 'FEMALE', 'OTHER'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE "AuthCodeType" AS ENUM ('VERIFY_EMAIL', 'PASSWORD_RESET'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE "ActivityType" AS ENUM ('RUN', 'VIRTUAL_RIDE', 'RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE "RaceType" AS ENUM ('FIVE_K', 'TEN_K', 'HALF_MARATHON', 'MARATHON'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE "WorkoutType" AS ENUM ('EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'REPETITIONS', 'RECOVERY', 'RACE', 'REST', 'CROSS_TRAIN', 'RIDE', 'SWIM', 'STRENGTH', 'OTHER'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE "PlanPhase" AS ENUM ('BASE', 'BUILD', 'PEAK', 'TAPER', 'RACE_WEEK', 'RECOVERY'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- User
-CREATE TABLE "User" (
+CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL,
     "email" TEXT,
     "name" TEXT,
@@ -53,11 +53,11 @@ CREATE TABLE "User" (
     "healthTrackingEnabled" BOOLEAN NOT NULL DEFAULT false,
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
-CREATE UNIQUE INDEX "User_stravaId_key" ON "User"("stravaId");
+CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "User_stravaId_key" ON "User"("stravaId");
 
 -- Account (NextAuth)
-CREATE TABLE "Account" (
+CREATE TABLE IF NOT EXISTS "Account" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
@@ -72,31 +72,31 @@ CREATE TABLE "Account" (
     "session_state" TEXT,
     CONSTRAINT "Account_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");
-ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");
+DO $$ BEGIN ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Session (NextAuth)
-CREATE TABLE "Session" (
+CREATE TABLE IF NOT EXISTS "Session" (
     "id" TEXT NOT NULL,
     "sessionToken" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "expires" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
-ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "Session_sessionToken_key" ON "Session"("sessionToken");
+DO $$ BEGIN ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- VerificationToken (NextAuth)
-CREATE TABLE "VerificationToken" (
+CREATE TABLE IF NOT EXISTS "VerificationToken" (
     "identifier" TEXT NOT NULL,
     "token" TEXT NOT NULL,
     "expires" TIMESTAMP(3) NOT NULL
 );
-CREATE UNIQUE INDEX "VerificationToken_token_key" ON "VerificationToken"("token");
-CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
+CREATE UNIQUE INDEX IF NOT EXISTS "VerificationToken_token_key" ON "VerificationToken"("token");
+CREATE UNIQUE INDEX IF NOT EXISTS "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
 
 -- AuthCode
-CREATE TABLE "AuthCode" (
+CREATE TABLE IF NOT EXISTS "AuthCode" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "code" TEXT NOT NULL,
@@ -105,10 +105,10 @@ CREATE TABLE "AuthCode" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "AuthCode_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "AuthCode_email_type_idx" ON "AuthCode"("email", "type");
+CREATE INDEX IF NOT EXISTS "AuthCode_email_type_idx" ON "AuthCode"("email", "type");
 
 -- Activity
-CREATE TABLE "Activity" (
+CREATE TABLE IF NOT EXISTS "Activity" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "stravaId" BIGINT NOT NULL,
@@ -149,17 +149,17 @@ CREATE TABLE "Activity" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "Activity_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "Activity_stravaId_key" ON "Activity"("stravaId");
-CREATE INDEX "Activity_userId_startDate_idx" ON "Activity"("userId", "startDate");
-CREATE INDEX "Activity_type_idx" ON "Activity"("type");
-CREATE INDEX "Activity_userId_type_startDate_idx" ON "Activity"("userId", "type", "startDate");
-CREATE INDEX "Activity_userId_hasHeartrate_idx" ON "Activity"("userId", "hasHeartrate");
-CREATE INDEX "Activity_userId_estimatedVdot_idx" ON "Activity"("userId", "estimatedVdot");
-CREATE INDEX "Activity_stravaId_idx" ON "Activity"("stravaId");
-ALTER TABLE "Activity" ADD CONSTRAINT "Activity_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "Activity_stravaId_key" ON "Activity"("stravaId");
+CREATE INDEX IF NOT EXISTS "Activity_userId_startDate_idx" ON "Activity"("userId", "startDate");
+CREATE INDEX IF NOT EXISTS "Activity_type_idx" ON "Activity"("type");
+CREATE INDEX IF NOT EXISTS "Activity_userId_type_startDate_idx" ON "Activity"("userId", "type", "startDate");
+CREATE INDEX IF NOT EXISTS "Activity_userId_hasHeartrate_idx" ON "Activity"("userId", "hasHeartrate");
+CREATE INDEX IF NOT EXISTS "Activity_userId_estimatedVdot_idx" ON "Activity"("userId", "estimatedVdot");
+CREATE INDEX IF NOT EXISTS "Activity_stravaId_idx" ON "Activity"("stravaId");
+DO $$ BEGIN ALTER TABLE "Activity" ADD CONSTRAINT "Activity_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- DailyFitness
-CREATE TABLE "DailyFitness" (
+CREATE TABLE IF NOT EXISTS "DailyFitness" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
@@ -171,12 +171,12 @@ CREATE TABLE "DailyFitness" (
     "runningTss" DOUBLE PRECISION NOT NULL DEFAULT 0,
     CONSTRAINT "DailyFitness_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "DailyFitness_userId_date_key" ON "DailyFitness"("userId", "date");
-CREATE INDEX "DailyFitness_userId_date_idx" ON "DailyFitness"("userId", "date");
-ALTER TABLE "DailyFitness" ADD CONSTRAINT "DailyFitness_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "DailyFitness_userId_date_key" ON "DailyFitness"("userId", "date");
+CREATE INDEX IF NOT EXISTS "DailyFitness_userId_date_idx" ON "DailyFitness"("userId", "date");
+DO $$ BEGIN ALTER TABLE "DailyFitness" ADD CONSTRAINT "DailyFitness_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Goal
-CREATE TABLE "Goal" (
+CREATE TABLE IF NOT EXISTS "Goal" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -204,11 +204,11 @@ CREATE TABLE "Goal" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "Goal_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "Goal_userId_isActive_idx" ON "Goal"("userId", "isActive");
-ALTER TABLE "Goal" ADD CONSTRAINT "Goal_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "Goal_userId_isActive_idx" ON "Goal"("userId", "isActive");
+DO $$ BEGIN ALTER TABLE "Goal" ADD CONSTRAINT "Goal_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Workout
-CREATE TABLE "Workout" (
+CREATE TABLE IF NOT EXISTS "Workout" (
     "id" TEXT NOT NULL,
     "goalId" TEXT NOT NULL,
     "scheduledDate" TIMESTAMP(3) NOT NULL,
@@ -228,14 +228,14 @@ CREATE TABLE "Workout" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "Workout_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "Workout_goalId_scheduledDate_idx" ON "Workout"("goalId", "scheduledDate");
-CREATE INDEX "Workout_goalId_isCompleted_idx" ON "Workout"("goalId", "isCompleted");
-CREATE INDEX "Workout_linkedActivityId_idx" ON "Workout"("linkedActivityId");
-ALTER TABLE "Workout" ADD CONSTRAINT "Workout_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "Workout" ADD CONSTRAINT "Workout_linkedActivityId_fkey" FOREIGN KEY ("linkedActivityId") REFERENCES "Activity"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "Workout_goalId_scheduledDate_idx" ON "Workout"("goalId", "scheduledDate");
+CREATE INDEX IF NOT EXISTS "Workout_goalId_isCompleted_idx" ON "Workout"("goalId", "isCompleted");
+CREATE INDEX IF NOT EXISTS "Workout_linkedActivityId_idx" ON "Workout"("linkedActivityId");
+DO $$ BEGIN ALTER TABLE "Workout" ADD CONSTRAINT "Workout_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "Workout" ADD CONSTRAINT "Workout_linkedActivityId_fkey" FOREIGN KEY ("linkedActivityId") REFERENCES "Activity"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Notification
-CREATE TABLE "Notification" (
+CREATE TABLE IF NOT EXISTS "Notification" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "message" TEXT NOT NULL,
@@ -243,11 +243,11 @@ CREATE TABLE "Notification" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "Notification_userId_read_idx" ON "Notification"("userId", "read");
-ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "Notification_userId_read_idx" ON "Notification"("userId", "read");
+DO $$ BEGIN ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ApiKey
-CREATE TABLE "ApiKey" (
+CREATE TABLE IF NOT EXISTS "ApiKey" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "keyHash" TEXT NOT NULL,
@@ -258,12 +258,12 @@ CREATE TABLE "ApiKey" (
     "expiresAt" TIMESTAMP(3),
     CONSTRAINT "ApiKey_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "ApiKey_userId_key" ON "ApiKey"("userId");
-CREATE INDEX "ApiKey_keyHash_idx" ON "ApiKey"("keyHash");
-ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "ApiKey_userId_key" ON "ApiKey"("userId");
+CREATE INDEX IF NOT EXISTS "ApiKey_keyHash_idx" ON "ApiKey"("keyHash");
+DO $$ BEGIN ALTER TABLE "ApiKey" ADD CONSTRAINT "ApiKey_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ChatSession
-CREATE TABLE "ChatSession" (
+CREATE TABLE IF NOT EXISTS "ChatSession" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "title" TEXT NOT NULL DEFAULT 'New Chat',
@@ -271,11 +271,11 @@ CREATE TABLE "ChatSession" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "ChatSession_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "ChatSession_userId_updatedAt_idx" ON "ChatSession"("userId", "updatedAt");
-ALTER TABLE "ChatSession" ADD CONSTRAINT "ChatSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "ChatSession_userId_updatedAt_idx" ON "ChatSession"("userId", "updatedAt");
+DO $$ BEGIN ALTER TABLE "ChatSession" ADD CONSTRAINT "ChatSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ChatMessage
-CREATE TABLE "ChatMessage" (
+CREATE TABLE IF NOT EXISTS "ChatMessage" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "role" TEXT NOT NULL,
@@ -285,14 +285,14 @@ CREATE TABLE "ChatMessage" (
     "sessionId" TEXT,
     CONSTRAINT "ChatMessage_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "ChatMessage_userId_createdAt_idx" ON "ChatMessage"("userId", "createdAt");
-CREATE INDEX "ChatMessage_sessionId_idx" ON "ChatMessage"("sessionId");
-ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_activityId_fkey" FOREIGN KEY ("activityId") REFERENCES "Activity"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "ChatSession"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "ChatMessage_userId_createdAt_idx" ON "ChatMessage"("userId", "createdAt");
+CREATE INDEX IF NOT EXISTS "ChatMessage_sessionId_idx" ON "ChatMessage"("sessionId");
+DO $$ BEGIN ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_activityId_fkey" FOREIGN KEY ("activityId") REFERENCES "Activity"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "ChatSession"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- AiProvider
-CREATE TABLE "AiProvider" (
+CREATE TABLE IF NOT EXISTS "AiProvider" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -309,10 +309,10 @@ CREATE TABLE "AiProvider" (
     "monthlyTokenLimit" BIGINT,
     CONSTRAINT "AiProvider_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "AiProvider_slug_key" ON "AiProvider"("slug");
+CREATE UNIQUE INDEX IF NOT EXISTS "AiProvider_slug_key" ON "AiProvider"("slug");
 
--- GlobalAiSettings (singleton row, no FK constraints to AiProvider at CREATE time to avoid circular dep)
-CREATE TABLE "GlobalAiSettings" (
+-- GlobalAiSettings
+CREATE TABLE IF NOT EXISTS "GlobalAiSettings" (
     "id" TEXT NOT NULL DEFAULT 'singleton',
     "defaultBaseUrl" TEXT NOT NULL DEFAULT 'https://api.openai.com/v1',
     "defaultApiKey" TEXT,
@@ -340,11 +340,11 @@ CREATE TABLE "GlobalAiSettings" (
     "fallbackProviderId" TEXT,
     CONSTRAINT "GlobalAiSettings_pkey" PRIMARY KEY ("id")
 );
-ALTER TABLE "GlobalAiSettings" ADD CONSTRAINT "GlobalAiSettings_activeProviderId_fkey" FOREIGN KEY ("activeProviderId") REFERENCES "AiProvider"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-ALTER TABLE "GlobalAiSettings" ADD CONSTRAINT "GlobalAiSettings_fallbackProviderId_fkey" FOREIGN KEY ("fallbackProviderId") REFERENCES "AiProvider"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN ALTER TABLE "GlobalAiSettings" ADD CONSTRAINT "GlobalAiSettings_activeProviderId_fkey" FOREIGN KEY ("activeProviderId") REFERENCES "AiProvider"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "GlobalAiSettings" ADD CONSTRAINT "GlobalAiSettings_fallbackProviderId_fkey" FOREIGN KEY ("fallbackProviderId") REFERENCES "AiProvider"("id") ON DELETE SET NULL ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- UserAiSettings
-CREATE TABLE "UserAiSettings" (
+CREATE TABLE IF NOT EXISTS "UserAiSettings" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "adminAllowed" BOOLEAN NOT NULL DEFAULT false,
@@ -374,12 +374,12 @@ CREATE TABLE "UserAiSettings" (
     "accessNutritionLogs" BOOLEAN NOT NULL DEFAULT false,
     CONSTRAINT "UserAiSettings_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "UserAiSettings_userId_key" ON "UserAiSettings"("userId");
-CREATE INDEX "UserAiSettings_userId_idx" ON "UserAiSettings"("userId");
-ALTER TABLE "UserAiSettings" ADD CONSTRAINT "UserAiSettings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "UserAiSettings_userId_key" ON "UserAiSettings"("userId");
+CREATE INDEX IF NOT EXISTS "UserAiSettings_userId_idx" ON "UserAiSettings"("userId");
+DO $$ BEGIN ALTER TABLE "UserAiSettings" ADD CONSTRAINT "UserAiSettings_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- AiDailyTokenUsage
-CREATE TABLE "AiDailyTokenUsage" (
+CREATE TABLE IF NOT EXISTS "AiDailyTokenUsage" (
     "id" TEXT NOT NULL,
     "date" DATE NOT NULL,
     "inputTokens" INTEGER NOT NULL DEFAULT 0,
@@ -387,12 +387,12 @@ CREATE TABLE "AiDailyTokenUsage" (
     "providerId" TEXT NOT NULL,
     CONSTRAINT "AiDailyTokenUsage_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "AiDailyTokenUsage_date_providerId_key" ON "AiDailyTokenUsage"("date", "providerId");
-CREATE INDEX "AiDailyTokenUsage_date_idx" ON "AiDailyTokenUsage"("date");
-ALTER TABLE "AiDailyTokenUsage" ADD CONSTRAINT "AiDailyTokenUsage_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "AiProvider"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "AiDailyTokenUsage_date_providerId_key" ON "AiDailyTokenUsage"("date", "providerId");
+CREATE INDEX IF NOT EXISTS "AiDailyTokenUsage_date_idx" ON "AiDailyTokenUsage"("date");
+DO $$ BEGIN ALTER TABLE "AiDailyTokenUsage" ADD CONSTRAINT "AiDailyTokenUsage_providerId_fkey" FOREIGN KEY ("providerId") REFERENCES "AiProvider"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- AiUsageHistory
-CREATE TABLE "AiUsageHistory" (
+CREATE TABLE IF NOT EXISTS "AiUsageHistory" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "providerId" TEXT,
@@ -402,12 +402,12 @@ CREATE TABLE "AiUsageHistory" (
     "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "AiUsageHistory_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "AiUsageHistory_userId_idx" ON "AiUsageHistory"("userId");
-CREATE INDEX "AiUsageHistory_timestamp_idx" ON "AiUsageHistory"("timestamp");
-ALTER TABLE "AiUsageHistory" ADD CONSTRAINT "AiUsageHistory_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "AiUsageHistory_userId_idx" ON "AiUsageHistory"("userId");
+CREATE INDEX IF NOT EXISTS "AiUsageHistory_timestamp_idx" ON "AiUsageHistory"("timestamp");
+DO $$ BEGIN ALTER TABLE "AiUsageHistory" ADD CONSTRAINT "AiUsageHistory_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ActivityAiFeedback
-CREATE TABLE "ActivityAiFeedback" (
+CREATE TABLE IF NOT EXISTS "ActivityAiFeedback" (
     "id" TEXT NOT NULL,
     "activityId" TEXT NOT NULL,
     "plannedComparison" TEXT,
@@ -416,12 +416,12 @@ CREATE TABLE "ActivityAiFeedback" (
     "generatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "ActivityAiFeedback_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "ActivityAiFeedback_activityId_key" ON "ActivityAiFeedback"("activityId");
-CREATE INDEX "ActivityAiFeedback_activityId_idx" ON "ActivityAiFeedback"("activityId");
-ALTER TABLE "ActivityAiFeedback" ADD CONSTRAINT "ActivityAiFeedback_activityId_fkey" FOREIGN KEY ("activityId") REFERENCES "Activity"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "ActivityAiFeedback_activityId_key" ON "ActivityAiFeedback"("activityId");
+CREATE INDEX IF NOT EXISTS "ActivityAiFeedback_activityId_idx" ON "ActivityAiFeedback"("activityId");
+DO $$ BEGIN ALTER TABLE "ActivityAiFeedback" ADD CONSTRAINT "ActivityAiFeedback_activityId_fkey" FOREIGN KEY ("activityId") REFERENCES "Activity"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- FoodItem
-CREATE TABLE "FoodItem" (
+CREATE TABLE IF NOT EXISTS "FoodItem" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "brand" TEXT,
@@ -441,10 +441,10 @@ CREATE TABLE "FoodItem" (
     "iron" DOUBLE PRECISION,
     CONSTRAINT "FoodItem_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "FoodItem_barcode_key" ON "FoodItem"("barcode");
+CREATE UNIQUE INDEX IF NOT EXISTS "FoodItem_barcode_key" ON "FoodItem"("barcode");
 
 -- NutritionLog
-CREATE TABLE "NutritionLog" (
+CREATE TABLE IF NOT EXISTS "NutritionLog" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "date" TEXT NOT NULL,
@@ -466,12 +466,12 @@ CREATE TABLE "NutritionLog" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "NutritionLog_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "NutritionLog_userId_foodItemId_idx" ON "NutritionLog"("userId", "foodItemId");
-ALTER TABLE "NutritionLog" ADD CONSTRAINT "NutritionLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER TABLE "NutritionLog" ADD CONSTRAINT "NutritionLog_foodItemId_fkey" FOREIGN KEY ("foodItemId") REFERENCES "FoodItem"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "NutritionLog_userId_foodItemId_idx" ON "NutritionLog"("userId", "foodItemId");
+DO $$ BEGIN ALTER TABLE "NutritionLog" ADD CONSTRAINT "NutritionLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "NutritionLog" ADD CONSTRAINT "NutritionLog_foodItemId_fkey" FOREIGN KEY ("foodItemId") REFERENCES "FoodItem"("id") ON DELETE RESTRICT ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- UserNutritionTarget (base columns only; later migrations add columns with IF NOT EXISTS)
-CREATE TABLE "UserNutritionTarget" (
+-- UserNutritionTarget
+CREATE TABLE IF NOT EXISTS "UserNutritionTarget" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "dailyCalories" INTEGER NOT NULL DEFAULT 2000,
@@ -482,12 +482,12 @@ CREATE TABLE "UserNutritionTarget" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "UserNutritionTarget_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "UserNutritionTarget_userId_key" ON "UserNutritionTarget"("userId");
-CREATE INDEX "UserNutritionTarget_userId_idx" ON "UserNutritionTarget"("userId");
-ALTER TABLE "UserNutritionTarget" ADD CONSTRAINT "UserNutritionTarget_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "UserNutritionTarget_userId_key" ON "UserNutritionTarget"("userId");
+CREATE INDEX IF NOT EXISTS "UserNutritionTarget_userId_idx" ON "UserNutritionTarget"("userId");
+DO $$ BEGIN ALTER TABLE "UserNutritionTarget" ADD CONSTRAINT "UserNutritionTarget_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- SavedMeal
-CREATE TABLE "SavedMeal" (
+CREATE TABLE IF NOT EXISTS "SavedMeal" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -499,11 +499,11 @@ CREATE TABLE "SavedMeal" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "SavedMeal_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "SavedMeal_userId_idx" ON "SavedMeal"("userId");
-ALTER TABLE "SavedMeal" ADD CONSTRAINT "SavedMeal_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "SavedMeal_userId_idx" ON "SavedMeal"("userId");
+DO $$ BEGIN ALTER TABLE "SavedMeal" ADD CONSTRAINT "SavedMeal_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- SavedMealItem
-CREATE TABLE "SavedMealItem" (
+CREATE TABLE IF NOT EXISTS "SavedMealItem" (
     "id" TEXT NOT NULL,
     "savedMealId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -514,10 +514,10 @@ CREATE TABLE "SavedMealItem" (
     "fats" DOUBLE PRECISION NOT NULL,
     CONSTRAINT "SavedMealItem_pkey" PRIMARY KEY ("id")
 );
-ALTER TABLE "SavedMealItem" ADD CONSTRAINT "SavedMealItem_savedMealId_fkey" FOREIGN KEY ("savedMealId") REFERENCES "SavedMeal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN ALTER TABLE "SavedMealItem" ADD CONSTRAINT "SavedMealItem_savedMealId_fkey" FOREIGN KEY ("savedMealId") REFERENCES "SavedMeal"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- DailyHealthLog (base columns; waterIntake + activeCalories added by later migrations with IF NOT EXISTS style)
-CREATE TABLE "DailyHealthLog" (
+-- DailyHealthLog
+CREATE TABLE IF NOT EXISTS "DailyHealthLog" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "date" DATE NOT NULL,
@@ -527,12 +527,12 @@ CREATE TABLE "DailyHealthLog" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "DailyHealthLog_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "DailyHealthLog_userId_date_key" ON "DailyHealthLog"("userId", "date");
-CREATE INDEX "DailyHealthLog_userId_date_idx" ON "DailyHealthLog"("userId", "date");
-ALTER TABLE "DailyHealthLog" ADD CONSTRAINT "DailyHealthLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "DailyHealthLog_userId_date_key" ON "DailyHealthLog"("userId", "date");
+CREATE INDEX IF NOT EXISTS "DailyHealthLog_userId_date_idx" ON "DailyHealthLog"("userId", "date");
+DO $$ BEGIN ALTER TABLE "DailyHealthLog" ADD CONSTRAINT "DailyHealthLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
--- Supplement (base columns; stackId added by 20260224153000 migration)
-CREATE TABLE "Supplement" (
+-- Supplement
+CREATE TABLE IF NOT EXISTS "Supplement" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -546,11 +546,11 @@ CREATE TABLE "Supplement" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "Supplement_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "Supplement_userId_timeOfDay_idx" ON "Supplement"("userId", "timeOfDay");
-ALTER TABLE "Supplement" ADD CONSTRAINT "Supplement_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "Supplement_userId_timeOfDay_idx" ON "Supplement"("userId", "timeOfDay");
+DO $$ BEGIN ALTER TABLE "Supplement" ADD CONSTRAINT "Supplement_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- SupplementLog
-CREATE TABLE "SupplementLog" (
+CREATE TABLE IF NOT EXISTS "SupplementLog" (
     "id" TEXT NOT NULL,
     "supplementId" TEXT NOT NULL,
     "date" DATE NOT NULL,
@@ -559,11 +559,11 @@ CREATE TABLE "SupplementLog" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "SupplementLog_pkey" PRIMARY KEY ("id")
 );
-CREATE UNIQUE INDEX "SupplementLog_supplementId_date_key" ON "SupplementLog"("supplementId", "date");
-ALTER TABLE "SupplementLog" ADD CONSTRAINT "SupplementLog_supplementId_fkey" FOREIGN KEY ("supplementId") REFERENCES "Supplement"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE UNIQUE INDEX IF NOT EXISTS "SupplementLog_supplementId_date_key" ON "SupplementLog"("supplementId", "date");
+DO $$ BEGIN ALTER TABLE "SupplementLog" ADD CONSTRAINT "SupplementLog_supplementId_fkey" FOREIGN KEY ("supplementId") REFERENCES "Supplement"("id") ON DELETE CASCADE ON UPDATE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- AdminAuditLog
-CREATE TABLE "AdminAuditLog" (
+CREATE TABLE IF NOT EXISTS "AdminAuditLog" (
     "id" TEXT NOT NULL,
     "adminUser" TEXT NOT NULL,
     "action" TEXT NOT NULL,
@@ -575,6 +575,6 @@ CREATE TABLE "AdminAuditLog" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "AdminAuditLog_pkey" PRIMARY KEY ("id")
 );
-CREATE INDEX "AdminAuditLog_adminUser_idx" ON "AdminAuditLog"("adminUser");
-CREATE INDEX "AdminAuditLog_createdAt_idx" ON "AdminAuditLog"("createdAt");
-CREATE INDEX "AdminAuditLog_action_idx" ON "AdminAuditLog"("action");
+CREATE INDEX IF NOT EXISTS "AdminAuditLog_adminUser_idx" ON "AdminAuditLog"("adminUser");
+CREATE INDEX IF NOT EXISTS "AdminAuditLog_createdAt_idx" ON "AdminAuditLog"("createdAt");
+CREATE INDEX IF NOT EXISTS "AdminAuditLog_action_idx" ON "AdminAuditLog"("action");

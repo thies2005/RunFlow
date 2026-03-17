@@ -16,7 +16,9 @@ type AdminAction =
     | 'DELETE_BACKUP'
     | 'RECALCULATE_FITNESS'
     | 'VIEW_SYSTEM_STATS'
-    | 'VIEW_ANALYTICS';
+    | 'VIEW_ANALYTICS'
+    | 'EXPORT_MIGRATION_BUNDLE'
+    | 'IMPORT_MIGRATION_BUNDLE';
 
 interface AuditLogTarget {
     type: 'USER' | 'BACKUP' | 'SETTINGS' | 'SYSTEM' | 'PROVIDER';

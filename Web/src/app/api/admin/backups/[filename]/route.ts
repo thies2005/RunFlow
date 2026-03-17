@@ -5,7 +5,7 @@ import { logAdminAction } from '@/lib/admin/auditLog';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const BACKUPS_DIR = path.join(process.cwd(), 'backups');
+const BACKUPS_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), 'backups');
 
 export async function GET(
     request: NextRequest,

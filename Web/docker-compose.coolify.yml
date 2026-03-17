@@ -55,7 +55,7 @@ services:
       - runflow-network
       - coolify
     volumes:
-      - backups:/app/backups
+      - ./backups:/app/backups
     healthcheck:
       test:
         [
@@ -83,7 +83,7 @@ services:
     command: sh -c "mkdir -p /backups && chown -R 1001:1001 /backups && chmod -R 775 /backups"
     restart: "no"
     volumes:
-      - backups:/backups
+      - ./backups:/backups
     networks:
       - runflow-network
     logging:
@@ -163,7 +163,7 @@ services:
       - BACKUP_KEEP_MONTHS=6
       - HEALTHCHECK_PORT=8080
     volumes:
-      - backups:/backups
+      - ./backups:/backups
     depends_on:
       db:
         condition: service_healthy
@@ -227,4 +227,3 @@ networks:
 
 volumes:
   postgres_data:
-  backups:

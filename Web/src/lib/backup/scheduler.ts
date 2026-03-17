@@ -125,7 +125,7 @@ export async function createBackup(name?: string): Promise<BackupMetadata> {
   try {
     await spawnAsync(
       'pg_dump',
-      ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '-F', 'p', '-f', backupPath],
+      ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '-F', 'p', '--clean', '--if-exists', '-f', backupPath],
       {
         ...process.env,
         PGPASSWORD: pass
@@ -184,7 +184,7 @@ export async function restoreBackup(backupPath: string): Promise<void> {
   try {
     await spawnAsync(
       'psql',
-      ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '-f', fullPath],
+      ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '--single-transaction', '-f', fullPath],
       {
         ...process.env,
         PGPASSWORD: pass

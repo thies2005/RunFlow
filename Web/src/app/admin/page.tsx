@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Users, Activity as ActivityIcon, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList, LucideIcon } from 'lucide-react';
+import { Users, Activity as ActivityIcon, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList, ArrowRightLeft, LucideIcon } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
@@ -12,6 +12,7 @@ import UsersTab from '@/components/admin/UsersTab';
 import BackupsTab from '@/components/admin/BackupsTab';
 import AuditLogsTab from '@/components/admin/AuditLogsTab';
 import FeedbackQueueTab from '@/components/admin/FeedbackQueueTab';
+import MigrationTab from '@/components/admin/MigrationTab';
 import { AdminStats, AdminUser, AdminBackup, AdminAiSettings } from './types';
 
 
@@ -55,6 +56,7 @@ function DashboardContent() {
                       tabParam === 'analytics' ? 'analytics' : 
                       tabParam === 'audit' ? 'audit' : 
                       tabParam === 'feedback-queue' ? 'feedback-queue' :
+                      tabParam === 'migration' ? 'migration' :
                       'users';
 
     const [processing, setProcessing] = useState(false);
@@ -211,6 +213,13 @@ function DashboardContent() {
                         <ActivityIcon className="w-4 h-4 inline mr-1" />
                         Feedback Queue
                     </button>
+                    <button
+                        onClick={() => router.push('/admin?tab=migration')}
+                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'migration' ? 'border-b-2 border-teal-500 text-teal-600' : 'text-gray-500 hover:text-gray-800'}`}
+                    >
+                        <ArrowRightLeft className="w-4 h-4 inline mr-1" />
+                        Migration
+                    </button>
                 </div>
 
                 <div className="p-6">
@@ -263,6 +272,11 @@ function DashboardContent() {
                     {/* Feedback Queue Tab */}
                     {activeTab === 'feedback-queue' && (
                         <FeedbackQueueTab />
+                    )}
+
+                    {/* Migration Tab */}
+                    {activeTab === 'migration' && (
+                        <MigrationTab />
                     )}
                 </div>
             </div>

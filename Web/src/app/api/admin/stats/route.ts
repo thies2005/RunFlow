@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         // Get backup info
         let backupCount = 0;
         let lastBackupAt: string | null = null;
-        const backupsDir = path.join(process.cwd(), 'backups');
+        const backupsDir = process.env.BACKUP_DIR || path.join(process.cwd(), 'backups');
 
         if (fs.existsSync(backupsDir)) {
             const files = fs.readdirSync(backupsDir)

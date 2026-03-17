@@ -99,3 +99,11 @@ export interface AdminAiSettings {
         usersWithCustomKey: number;
     };
 }
+
+export interface MigrationResult {
+    globalAiSettings: 'skipped' | 'created' | 'updated';
+    providersCreated: number;
+    providersUpdated: number;
+    providersSkipped: number;
+    warnings: string[];
+}

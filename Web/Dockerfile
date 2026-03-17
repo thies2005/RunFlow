@@ -41,7 +41,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # Stage 3: Runner
 # ==================================
 FROM node:20.11.1-alpine3.19 AS runner
-RUN apk add --no-cache openssl libc6-compat wget
+RUN apk add --no-cache openssl libc6-compat wget postgresql16-client
 WORKDIR /app
 
 ENV NODE_ENV=production

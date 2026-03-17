@@ -4,9 +4,10 @@ import { verifyAdminToken } from '@/lib/admin/auth';
 
 export const dynamic = 'force-dynamic';
 
-async function getPublicHealthStatusCode() {
-    await getHealthStatus();
-    return 200;
+async function getPublicHealthStatus() {
+    const { status: databaseStatus } = await getHealthStatus().then(result => result.checks.database);
+    const status = databaseStatus === 'unhealthy' ? 'unhealthy' : 'healthy';
+    return { status, statusCode: status === 'unhealthy' ? 503 : 200 };
 }
 
 export async function GET(request: NextRequest) {
@@ -20,7 +21,8 @@ export async function GET(request: NextRequest) {
 
         // For unauthenticated requests, return minimal info (for Docker/load balancer)
         if (!isAdmin) {
-            return NextResponse.json({ status: health.status }, { status: 200 });
+            const publicHealth = await getPublicHealthStatus();
+            return NextResponse.json({ status: publicHealth.status }, { status: publicHealth.statusCode });
         }
 
         // For admin, return full details
@@ -43,8 +45,8 @@ export async function GET(request: NextRequest) {
 
 export async function HEAD() {
     try {
-        const status = await getPublicHealthStatusCode();
-        return new NextResponse(null, { status });
+        const publicHealth = await getPublicHealthStatus();
+        return new NextResponse(null, { status: publicHealth.statusCode });
     } catch (error) {
         return new NextResponse(null, { status: 503 });
     }

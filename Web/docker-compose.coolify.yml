@@ -90,7 +90,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: builder
-    command: sh -c "node_modules/.bin/prisma migrate deploy"
+    command: >
+      sh -c "
+        node_modules/.bin/prisma migrate resolve --applied 00000000000000_init 2>/dev/null || true;
+        node_modules/.bin/prisma migrate resolve --rolled-back 20250212120000_optimize_activity_indexes 2>/dev/null || true;
+        node_modules/.bin/prisma migrate deploy
+      "
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-runflow}?schema=public
     depends_on:

@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
             .replace(/\.\./g, ''); // Remove directory traversal attempts
 
         // Validate file extension
-        const allowedExtensions = ['.sql', '.gz', '.sql.gz'];
+        const allowedExtensions = ['.sql', '.sql.gz'];
         const isAllowed = allowedExtensions.some(ext => sanitizedFilename.toLowerCase().endsWith(ext));
 
         if (!isAllowed) {

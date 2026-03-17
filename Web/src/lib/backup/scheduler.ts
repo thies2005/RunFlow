@@ -1,6 +1,8 @@
 import { spawn } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
+import { pipeline } from 'stream/promises'
+import { createGunzip } from 'zlib'
 import { DAY_MS, RETENTION } from '@/lib/constants'
 import { recordBackupSuccess, recordBackupFailure, setSchedulerRunning } from './status'
 import { logger } from '@/lib/logging/logger'
@@ -99,6 +101,21 @@ function spawnAsync(command: string, args: string[], env: NodeJS.ProcessEnv): Pr
   })
 }
 
+async function prepareRestoreFile(fullPath: string): Promise<{ restorePath: string; cleanupPath: string | null }> {
+  if (!fullPath.endsWith('.gz')) {
+    return { restorePath: fullPath, cleanupPath: null }
+  }
+
+  const tempPath = path.join(BACKUP_DIR, `${path.basename(fullPath, '.gz')}.restore-${Date.now()}.sql`)
+  await pipeline(
+    fs.createReadStream(fullPath),
+    createGunzip(),
+    fs.createWriteStream(tempPath)
+  )
+
+  return { restorePath: tempPath, cleanupPath: tempPath }
+}
+
 export async function createBackup(name?: string): Promise<BackupMetadata> {
   const startTime = Date.now()
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -163,6 +180,7 @@ export async function restoreBackup(backupPath: string): Promise<void> {
   const startTime = Date.now()
   const safePath = path.basename(backupPath)
   const fullPath = path.join(BACKUP_DIR, safePath)
+  let cleanupPath: string | null = null
 
   if (!fs.existsSync(fullPath)) {
     throw new Error(`Backup file not found: ${backupPath}`)
@@ -182,20 +200,38 @@ export async function restoreBackup(backupPath: string): Promise<void> {
   logger.info('[Backup] Restoring backup', { backupPath: fullPath, db: safeDbName })
 
   try {
-    await spawnAsync(
-      'psql',
-      ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '--single-transaction', '-f', fullPath],
-      {
-        ...process.env,
-        PGPASSWORD: pass
-      }
-    )
+    if (fullPath.endsWith('.dump')) {
+      await spawnAsync(
+        'pg_restore',
+        ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '--clean', '--if-exists', '--single-transaction', fullPath],
+        {
+          ...process.env,
+          PGPASSWORD: pass
+        }
+      )
+    } else {
+      const prepared = await prepareRestoreFile(fullPath)
+      cleanupPath = prepared.cleanupPath
+
+      await spawnAsync(
+        'psql',
+        ['-h', safeHost, '-p', safePort, '-U', safeUser, '-d', safeDbName, '--single-transaction', '-f', prepared.restorePath],
+        {
+          ...process.env,
+          PGPASSWORD: pass
+        }
+      )
+    }
 
     const duration = Date.now() - startTime
     logger.info('[Backup] Backup restored successfully', { backupPath: fullPath, duration })
   } catch (error) {
     logger.error('[Backup] Backup restore failed', { backupPath: fullPath, error: error instanceof Error ? error.message : String(error) })
     throw error
+  } finally {
+    if (cleanupPath && fs.existsSync(cleanupPath)) {
+      fs.unlinkSync(cleanupPath)
+    }
   }
 }
 

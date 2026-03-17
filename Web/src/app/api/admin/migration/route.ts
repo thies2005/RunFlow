@@ -29,6 +29,211 @@ import { createHash } from 'crypto';
 
 const BUNDLE_VERSION = '1';
 
+interface MigrationProviderBundle {
+  name: string;
+  slug: string;
+  type: string;
+  baseUrl: string;
+  apiKey: string;
+  models: string[];
+  isActive: boolean;
+  monthlyTokenLimit: string | null;
+}
+
+interface MigrationGlobalSettingsBundle {
+  defaultBaseUrl: string;
+  defaultApiKey: string | null;
+  defaultModel: string;
+  tier1Name: string;
+  tier1DailyLimit: number;
+  tier1MonthlyLimit: number;
+  tier1DailyTokenLimit: number;
+  tier1MonthlyTokenLimit: number;
+  tier2Name: string;
+  tier2DailyLimit: number;
+  tier2MonthlyLimit: number;
+  tier2DailyTokenLimit: number;
+  tier2MonthlyTokenLimit: number;
+  tier3Name: string;
+  tier3DailyLimit: number;
+  tier3MonthlyLimit: number;
+  tier3DailyTokenLimit: number;
+  tier3MonthlyTokenLimit: number;
+  calorieSnapModel: string;
+  tier1CalorieSnapLimit: number;
+  tier2CalorieSnapLimit: number;
+  tier3CalorieSnapLimit: number;
+  mealSuggestModel: string;
+  tier1MealSuggestLimit: number;
+  tier2MealSuggestLimit: number;
+  tier3MealSuggestLimit: number;
+  activityFeedbackModel: string;
+  tier1ActivityFeedbackLimit: number;
+  tier2ActivityFeedbackLimit: number;
+  tier3ActivityFeedbackLimit: number;
+  dailyMessageLimit: number;
+  monthlyMessageLimit: number;
+  systemPrompt: string;
+  _activeProviderSlug: string | null;
+  _fallbackProviderSlug: string | null;
+}
+
+interface MigrationBundle {
+  bundleVersion: string;
+  exportedAt: string;
+  encryptionKeyFingerprint?: string;
+  globalAiSettings: MigrationGlobalSettingsBundle | null;
+  aiProviders: MigrationProviderBundle[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function parseGlobalAiSettings(value: unknown): MigrationGlobalSettingsBundle | null {
+  if (value == null) return null;
+  if (!isRecord(value)) {
+    throw new Error('Invalid globalAiSettings: expected object or null');
+  }
+
+  const getString = (key: keyof MigrationGlobalSettingsBundle): string => {
+    const fieldValue = value[key];
+    if (typeof fieldValue !== 'string') {
+      throw new Error(`Invalid globalAiSettings.${String(key)}: expected string`);
+    }
+    return fieldValue;
+  };
+
+  const getNullableString = (key: keyof MigrationGlobalSettingsBundle): string | null => {
+    const fieldValue = value[key];
+    if (fieldValue !== null && typeof fieldValue !== 'string') {
+      throw new Error(`Invalid globalAiSettings.${String(key)}: expected string or null`);
+    }
+    return fieldValue;
+  };
+
+  const getNumber = (key: keyof MigrationGlobalSettingsBundle): number => {
+    const fieldValue = value[key];
+    if (typeof fieldValue !== 'number' || !Number.isFinite(fieldValue)) {
+      throw new Error(`Invalid globalAiSettings.${String(key)}: expected number`);
+    }
+    return fieldValue;
+  };
+
+  return {
+    defaultBaseUrl: getString('defaultBaseUrl'),
+    defaultApiKey: getNullableString('defaultApiKey'),
+    defaultModel: getString('defaultModel'),
+    tier1Name: getString('tier1Name'),
+    tier1DailyLimit: getNumber('tier1DailyLimit'),
+    tier1MonthlyLimit: getNumber('tier1MonthlyLimit'),
+    tier1DailyTokenLimit: getNumber('tier1DailyTokenLimit'),
+    tier1MonthlyTokenLimit: getNumber('tier1MonthlyTokenLimit'),
+    tier2Name: getString('tier2Name'),
+    tier2DailyLimit: getNumber('tier2DailyLimit'),
+    tier2MonthlyLimit: getNumber('tier2MonthlyLimit'),
+    tier2DailyTokenLimit: getNumber('tier2DailyTokenLimit'),
+    tier2MonthlyTokenLimit: getNumber('tier2MonthlyTokenLimit'),
+    tier3Name: getString('tier3Name'),
+    tier3DailyLimit: getNumber('tier3DailyLimit'),
+    tier3MonthlyLimit: getNumber('tier3MonthlyLimit'),
+    tier3DailyTokenLimit: getNumber('tier3DailyTokenLimit'),
+    tier3MonthlyTokenLimit: getNumber('tier3MonthlyTokenLimit'),
+    calorieSnapModel: getString('calorieSnapModel'),
+    tier1CalorieSnapLimit: getNumber('tier1CalorieSnapLimit'),
+    tier2CalorieSnapLimit: getNumber('tier2CalorieSnapLimit'),
+    tier3CalorieSnapLimit: getNumber('tier3CalorieSnapLimit'),
+    mealSuggestModel: getString('mealSuggestModel'),
+    tier1MealSuggestLimit: getNumber('tier1MealSuggestLimit'),
+    tier2MealSuggestLimit: getNumber('tier2MealSuggestLimit'),
+    tier3MealSuggestLimit: getNumber('tier3MealSuggestLimit'),
+    activityFeedbackModel: getString('activityFeedbackModel'),
+    tier1ActivityFeedbackLimit: getNumber('tier1ActivityFeedbackLimit'),
+    tier2ActivityFeedbackLimit: getNumber('tier2ActivityFeedbackLimit'),
+    tier3ActivityFeedbackLimit: getNumber('tier3ActivityFeedbackLimit'),
+    dailyMessageLimit: getNumber('dailyMessageLimit'),
+    monthlyMessageLimit: getNumber('monthlyMessageLimit'),
+    systemPrompt: getString('systemPrompt'),
+    _activeProviderSlug: getNullableString('_activeProviderSlug'),
+    _fallbackProviderSlug: getNullableString('_fallbackProviderSlug'),
+  };
+}
+
+function parseProvider(provider: unknown): MigrationProviderBundle {
+  if (!isRecord(provider)) {
+    throw new Error('Invalid aiProviders entry: expected object');
+  }
+
+  const { name, slug, type, baseUrl, apiKey, models, isActive, monthlyTokenLimit } = provider;
+
+  if (typeof name !== 'string') throw new Error('Invalid aiProviders entry: name must be a string');
+  if (typeof slug !== 'string') throw new Error('Invalid aiProviders entry: slug must be a string');
+  if (typeof type !== 'string') throw new Error('Invalid aiProviders entry: type must be a string');
+  if (typeof baseUrl !== 'string') throw new Error('Invalid aiProviders entry: baseUrl must be a string');
+  if (typeof apiKey !== 'string') throw new Error(`Invalid aiProviders.${slug || 'unknown'}.apiKey: expected string`);
+  if (!Array.isArray(models) || models.some((model) => typeof model !== 'string')) {
+    throw new Error(`Invalid aiProviders.${slug || 'unknown'}.models: expected string[]`);
+  }
+  if (typeof isActive !== 'boolean') {
+    throw new Error(`Invalid aiProviders.${slug || 'unknown'}.isActive: expected boolean`);
+  }
+  if (monthlyTokenLimit !== null && typeof monthlyTokenLimit !== 'string') {
+    throw new Error(`Invalid aiProviders.${slug || 'unknown'}.monthlyTokenLimit: expected string or null`);
+  }
+
+  return {
+    name,
+    slug,
+    type,
+    baseUrl,
+    apiKey,
+    models,
+    isActive,
+    monthlyTokenLimit: monthlyTokenLimit ?? null,
+  };
+}
+
+function parseMigrationBundle(value: unknown): MigrationBundle {
+  if (!isRecord(value)) {
+    throw new Error('Invalid migration bundle: expected JSON object');
+  }
+
+  if (value.bundleVersion !== BUNDLE_VERSION) {
+    throw new Error(`Invalid or unsupported migration bundle. Expected bundleVersion "${BUNDLE_VERSION}".`);
+  }
+
+  if (typeof value.exportedAt !== 'string') {
+    throw new Error('Invalid migration bundle: exportedAt must be a string');
+  }
+
+  if (value.encryptionKeyFingerprint != null && typeof value.encryptionKeyFingerprint !== 'string') {
+    throw new Error('Invalid migration bundle: encryptionKeyFingerprint must be a string');
+  }
+
+  if (!Array.isArray(value.aiProviders)) {
+    throw new Error('Invalid migration bundle: aiProviders must be an array');
+  }
+
+  return {
+    bundleVersion: value.bundleVersion,
+    exportedAt: value.exportedAt,
+    encryptionKeyFingerprint:
+      typeof value.encryptionKeyFingerprint === 'string' ? value.encryptionKeyFingerprint : undefined,
+    globalAiSettings: parseGlobalAiSettings(value.globalAiSettings),
+    aiProviders: value.aiProviders.map(parseProvider),
+  };
+}
+
+function decryptForExport(value: string | null | undefined, label: string): string | null {
+  if (value == null) return null;
+
+  try {
+    return decryptToken(value);
+  } catch (error) {
+    throw new Error(`${label} could not be decrypted for export: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 /** Fingerprint the encryption key so the import side can detect a mismatch. */
 function encryptionKeyFingerprint(): string {
   const key = process.env.ENCRYPTION_KEY ?? '';
@@ -47,38 +252,67 @@ export async function GET(request: NextRequest) {
 
   try {
     const [globalSettings, providers] = await Promise.all([
-      prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } }),
+      prisma.globalAiSettings.findUnique({
+        where: { id: 'singleton' },
+        include: {
+          activeProvider: { select: { slug: true } },
+          fallbackProvider: { select: { slug: true } },
+        },
+      }),
       prisma.aiProvider.findMany({ orderBy: { createdAt: 'asc' } }),
     ]);
 
-    // Decrypt provider API keys so they can be re-encrypted on the target instance.
     const exportedProviders = providers.map((p) => {
-      let plainApiKey: string | null = null;
-      if (p.apiKey) {
-        try {
-          plainApiKey = decryptToken(p.apiKey);
-        } catch {
-          // If decryption fails we export the raw encrypted value; import will
-          // attempt to store it as-is and warn.
-          plainApiKey = p.apiKey;
-        }
-      }
       return {
-        id: p.id,
         name: p.name,
         slug: p.slug,
         type: p.type,
         baseUrl: p.baseUrl,
-        apiKey: plainApiKey,
+        apiKey: decryptForExport(p.apiKey, `Provider "${p.slug}" API key` ) ?? '',
         models: p.models,
         isActive: p.isActive,
         monthlyTokenLimit: p.monthlyTokenLimit ? p.monthlyTokenLimit.toString() : null,
       };
     });
 
-    // Strip the singleton id — it will be recreated on import.
     const settingsExport = globalSettings
-      ? (({ id: _id, updatedAt: _u, ...rest }) => rest)(globalSettings as any)
+      ? {
+          defaultBaseUrl: globalSettings.defaultBaseUrl,
+          defaultApiKey: decryptForExport(globalSettings.defaultApiKey, 'Global AI defaultApiKey'),
+          defaultModel: globalSettings.defaultModel,
+          tier1Name: globalSettings.tier1Name,
+          tier1DailyLimit: globalSettings.tier1DailyLimit,
+          tier1MonthlyLimit: globalSettings.tier1MonthlyLimit,
+          tier1DailyTokenLimit: globalSettings.tier1DailyTokenLimit,
+          tier1MonthlyTokenLimit: globalSettings.tier1MonthlyTokenLimit,
+          tier2Name: globalSettings.tier2Name,
+          tier2DailyLimit: globalSettings.tier2DailyLimit,
+          tier2MonthlyLimit: globalSettings.tier2MonthlyLimit,
+          tier2DailyTokenLimit: globalSettings.tier2DailyTokenLimit,
+          tier2MonthlyTokenLimit: globalSettings.tier2MonthlyTokenLimit,
+          tier3Name: globalSettings.tier3Name,
+          tier3DailyLimit: globalSettings.tier3DailyLimit,
+          tier3MonthlyLimit: globalSettings.tier3MonthlyLimit,
+          tier3DailyTokenLimit: globalSettings.tier3DailyTokenLimit,
+          tier3MonthlyTokenLimit: globalSettings.tier3MonthlyTokenLimit,
+          calorieSnapModel: globalSettings.calorieSnapModel,
+          tier1CalorieSnapLimit: globalSettings.tier1CalorieSnapLimit,
+          tier2CalorieSnapLimit: globalSettings.tier2CalorieSnapLimit,
+          tier3CalorieSnapLimit: globalSettings.tier3CalorieSnapLimit,
+          mealSuggestModel: globalSettings.mealSuggestModel,
+          tier1MealSuggestLimit: globalSettings.tier1MealSuggestLimit,
+          tier2MealSuggestLimit: globalSettings.tier2MealSuggestLimit,
+          tier3MealSuggestLimit: globalSettings.tier3MealSuggestLimit,
+          activityFeedbackModel: globalSettings.activityFeedbackModel,
+          tier1ActivityFeedbackLimit: globalSettings.tier1ActivityFeedbackLimit,
+          tier2ActivityFeedbackLimit: globalSettings.tier2ActivityFeedbackLimit,
+          tier3ActivityFeedbackLimit: globalSettings.tier3ActivityFeedbackLimit,
+          dailyMessageLimit: globalSettings.dailyMessageLimit,
+          monthlyMessageLimit: globalSettings.monthlyMessageLimit,
+          systemPrompt: globalSettings.systemPrompt,
+          _activeProviderSlug: globalSettings.activeProvider?.slug ?? null,
+          _fallbackProviderSlug: globalSettings.fallbackProvider?.slug ?? null,
+        }
       : null;
 
     const bundle = {
@@ -123,20 +357,11 @@ export async function POST(request: NextRequest) {
   if ('error' in authResult) return authResult.error;
 
   try {
-    const body = await request.json();
-
-    // Basic validation
-    if (!body || body.bundleVersion !== BUNDLE_VERSION) {
-      return NextResponse.json(
-        { error: 'Invalid or unsupported migration bundle. Expected bundleVersion "1".' },
-        { status: 400 },
-      );
-    }
+    const bundle = parseMigrationBundle(await request.json());
 
     const warnings: string[] = [];
 
-    // Warn on encryption key mismatch (keys are re-encrypted with the current key during import)
-    const importFingerprint: string | undefined = body.encryptionKeyFingerprint;
+    const importFingerprint = bundle.encryptionKeyFingerprint;
     const localFingerprint = encryptionKeyFingerprint();
     if (importFingerprint && importFingerprint !== localFingerprint) {
       warnings.push(
@@ -152,121 +377,69 @@ export async function POST(request: NextRequest) {
       warnings,
     };
 
-    // --- Global AI Settings ---
-    if (body.globalAiSettings) {
-      const data = body.globalAiSettings as Record<string, unknown>;
-
-      // Re-encrypt defaultApiKey if present
-      if (data.defaultApiKey && typeof data.defaultApiKey === 'string') {
-        data.defaultApiKey = encryptToken(data.defaultApiKey);
-      }
-
-      // Strip provider ID references; we will re-link by slug after providers are upserted
-      const activeProviderSlug: string | null =
-        typeof data._activeProviderSlug === 'string' ? data._activeProviderSlug : null;
-      const fallbackProviderSlug: string | null =
-        typeof data._fallbackProviderSlug === 'string' ? data._fallbackProviderSlug : null;
-
-      // Remove relational IDs that will be resolved after provider upsert
-      delete data.activeProviderId;
-      delete data.fallbackProviderId;
-      delete data._activeProviderSlug;
-      delete data._fallbackProviderSlug;
-
-      // Coerce BigInt-serialised numbers back
-      const safeData: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(data)) {
-        safeData[k] = v;
-      }
-
-      const existing = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-
-      if (existing) {
-        await prisma.globalAiSettings.update({ where: { id: 'singleton' }, data: safeData as any });
-        results.globalAiSettings = 'updated';
-      } else {
-        await prisma.globalAiSettings.create({ data: { id: 'singleton', ...(safeData as any) } });
-        results.globalAiSettings = 'created';
-      }
-
-      // Re-link providers by slug if the export contained slug hints
-      if (activeProviderSlug || fallbackProviderSlug) {
-        const linkUpdate: Record<string, string | null> = {};
-        if (activeProviderSlug) {
-          const p = await prisma.aiProvider.findUnique({ where: { slug: activeProviderSlug } });
-          if (p) linkUpdate.activeProviderId = p.id;
-        }
-        if (fallbackProviderSlug) {
-          const p = await prisma.aiProvider.findUnique({ where: { slug: fallbackProviderSlug } });
-          if (p) linkUpdate.fallbackProviderId = p.id;
-        }
-        if (Object.keys(linkUpdate).length) {
-          await prisma.globalAiSettings.update({ where: { id: 'singleton' }, data: linkUpdate as any });
-        }
-      }
-    }
-
-    // --- AI Providers ---
-    if (Array.isArray(body.aiProviders)) {
-      for (const p of body.aiProviders as Array<Record<string, unknown>>) {
-        if (!p.slug || typeof p.slug !== 'string') {
-          results.providersSkipped++;
-          continue;
-        }
-
-        let encryptedKey: string | null = null;
-        if (p.apiKey && typeof p.apiKey === 'string') {
-          try {
-            encryptedKey = encryptToken(p.apiKey);
-          } catch {
-            warnings.push(`Provider "${p.slug}": could not encrypt API key — stored as-is.`);
-            encryptedKey = p.apiKey;
-          }
-        }
-
+    await prisma.$transaction(async (tx) => {
+      for (const provider of bundle.aiProviders) {
         const upsertData = {
-          name: String(p.name ?? p.slug),
-          slug: String(p.slug),
-          type: String(p.type ?? 'openai'),
-          baseUrl: String(p.baseUrl ?? 'https://api.openai.com/v1'),
-          apiKey: encryptedKey ?? '',
-          models: Array.isArray(p.models) ? (p.models as string[]) : [],
-          isActive: typeof p.isActive === 'boolean' ? p.isActive : true,
+          name: provider.name,
+          slug: provider.slug,
+          type: provider.type,
+          baseUrl: provider.baseUrl,
+          apiKey: provider.apiKey === '' ? '' : encryptToken(provider.apiKey),
+          models: provider.models,
+          isActive: provider.isActive,
           monthlyTokenLimit:
-            p.monthlyTokenLimit != null ? BigInt(String(p.monthlyTokenLimit)) : null,
+            provider.monthlyTokenLimit != null ? BigInt(provider.monthlyTokenLimit) : null,
         };
 
-        const existing = await prisma.aiProvider.findUnique({ where: { slug: upsertData.slug } });
+        const existing = await tx.aiProvider.findUnique({ where: { slug: upsertData.slug } });
         if (existing) {
-          await prisma.aiProvider.update({ where: { slug: upsertData.slug }, data: upsertData });
+          await tx.aiProvider.update({ where: { slug: upsertData.slug }, data: upsertData });
           results.providersUpdated++;
         } else {
-          await prisma.aiProvider.create({ data: upsertData });
+          await tx.aiProvider.create({ data: upsertData });
           results.providersCreated++;
         }
       }
 
-      // Re-link active/fallback provider IDs in GlobalAiSettings after all providers exist
-      if (body.globalAiSettings) {
-        const gs = await prisma.globalAiSettings.findUnique({ where: { id: 'singleton' } });
-        if (gs) {
-          // If the exported bundle had activeProviderId, try to match by slug
-          // (already handled above via _activeProviderSlug; this is a fallback for
-          //  direct ID references)
-          if (!gs.activeProviderId && body.globalAiSettings._activeProviderSlug) {
-            const p = await prisma.aiProvider.findUnique({
-              where: { slug: body.globalAiSettings._activeProviderSlug },
-            });
-            if (p) {
-              await prisma.globalAiSettings.update({
-                where: { id: 'singleton' },
-                data: { activeProviderId: p.id },
-              });
-            }
-          }
+      if (bundle.globalAiSettings) {
+        const {
+          _activeProviderSlug,
+          _fallbackProviderSlug,
+          defaultApiKey,
+          ...rest
+        } = bundle.globalAiSettings;
+
+        const activeProvider = _activeProviderSlug
+          ? await tx.aiProvider.findUnique({ where: { slug: _activeProviderSlug } })
+          : null;
+        const fallbackProvider = _fallbackProviderSlug
+          ? await tx.aiProvider.findUnique({ where: { slug: _fallbackProviderSlug } })
+          : null;
+
+        if (_activeProviderSlug && !activeProvider) {
+          warnings.push(`Active provider "${_activeProviderSlug}" was not found during import.`);
+        }
+        if (_fallbackProviderSlug && !fallbackProvider) {
+          warnings.push(`Fallback provider "${_fallbackProviderSlug}" was not found during import.`);
+        }
+
+        const settingsData = {
+          ...rest,
+          defaultApiKey: defaultApiKey == null ? null : defaultApiKey === '' ? '' : encryptToken(defaultApiKey),
+          activeProviderId: activeProvider?.id ?? null,
+          fallbackProviderId: fallbackProvider?.id ?? null,
+        };
+
+        const existing = await tx.globalAiSettings.findUnique({ where: { id: 'singleton' } });
+        if (existing) {
+          await tx.globalAiSettings.update({ where: { id: 'singleton' }, data: settingsData });
+          results.globalAiSettings = 'updated';
+        } else {
+          await tx.globalAiSettings.create({ data: { id: 'singleton', ...settingsData } });
+          results.globalAiSettings = 'created';
         }
       }
-    }
+    });
 
     await logAdminAction(
       request,

@@ -131,7 +131,7 @@ export default function MigrationTab() {
                     <h3 className="font-semibold text-gray-800">Import Config Bundle</h3>
                     <p className="text-sm text-gray-500">
                         Upload a previously exported bundle. Providers will be created or updated;
-                        API keys will be re-encrypted with this instance's key.
+                        API keys will be re-encrypted with this instance&apos;s key.
                     </p>
                     <input
                         ref={fileInputRef}

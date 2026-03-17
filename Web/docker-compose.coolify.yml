@@ -96,12 +96,13 @@ services:
       context: .
       dockerfile: Dockerfile
       target: builder
-    command: >
-      sh -c "
-        apk add --no-cache postgresql-client 2>/dev/null || apk add --no-cache postgresql-client;
-        PGPASSWORD=\${POSTGRES_PASSWORD} psql -h db -U \${POSTGRES_USER:-runflow} -d \${POSTGRES_DB:-runflow} -c 'DELETE FROM public._prisma_migrations WHERE migration_name IN (\\'00000000000000_init\\', \\'20250212120000_optimize_activity_indexes\\');' 2>/dev/null || true;
-        node_modules/.bin/prisma migrate deploy
-      "
+    command:
+      - sh
+      - -c
+      - |
+          apk add --no-cache postgresql-client 2>/dev/null || apk add --no-cache postgresql-client
+          PGPASSWORD="${POSTGRES_PASSWORD}" psql -h db -U ${POSTGRES_USER:-runflow} -d ${POSTGRES_DB:-runflow} -c "DELETE FROM public._prisma_migrations WHERE migration_name IN ('00000000000000_init', '20250212120000_optimize_activity_indexes');" 2>/dev/null || true
+          node_modules/.bin/prisma migrate deploy
     restart: "no"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-runflow}?schema=public

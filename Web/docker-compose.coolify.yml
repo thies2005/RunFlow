@@ -80,10 +80,16 @@ services:
   permissions-fixer:
     image: alpine:3.19
     command: sh -c "mkdir -p /backups && chown -R 1001:1001 /backups && chmod -R 775 /backups"
+    restart: "no"
     volumes:
       - backups:/backups
     networks:
       - runflow-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   migrator:
     build:
@@ -92,10 +98,11 @@ services:
       target: builder
     command: >
       sh -c "
-        node_modules/.bin/prisma migrate resolve --applied 00000000000000_init 2>/dev/null || true;
-        node_modules/.bin/prisma migrate resolve --rolled-back 20250212120000_optimize_activity_indexes 2>/dev/null || true;
+        apk add --no-cache postgresql-client 2>/dev/null || apk add --no-cache postgresql-client;
+        PGPASSWORD=\${POSTGRES_PASSWORD} psql -h db -U \${POSTGRES_USER:-runflow} -d \${POSTGRES_DB:-runflow} -c 'DELETE FROM public._prisma_migrations WHERE migration_name IN (\\'00000000000000_init\\', \\'20250212120000_optimize_activity_indexes\\');' 2>/dev/null || true;
         node_modules/.bin/prisma migrate deploy
       "
+    restart: "no"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-runflow}?schema=public
     depends_on:

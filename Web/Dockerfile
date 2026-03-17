@@ -41,8 +41,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # Stage 3: Runner
 # ==================================
 FROM node:20.11.1-alpine3.19 AS runner
-# M-22 fix: Remove postgresql-client (unused - Prisma has its own driver)
-RUN apk add --no-cache openssl libc6-compat
+RUN apk add --no-cache openssl libc6-compat wget
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -74,7 +73,7 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Health check - verify app is responding
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=5 \
+HEALTHCHECK --interval=15s --timeout=10s --start-period=120s --retries=5 \
     CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1
 
 CMD ["node", "server.js"]

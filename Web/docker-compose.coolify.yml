@@ -61,9 +61,9 @@ services:
           "CMD-SHELL",
           "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1",
         ]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      start_period: 60s
+      start_period: 120s
       retries: 5
     restart: unless-stopped
     deploy:

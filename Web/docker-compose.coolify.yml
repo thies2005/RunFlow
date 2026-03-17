@@ -1,0 +1,214 @@
+# =============================================================
+# RunFlow - Coolify Deployment Compose File
+# =============================================================
+# Use this file when deploying via Coolify (Docker Compose resource).
+# Set Build Pack to "Docker Compose" and point to this file.
+#
+# Key differences from docker-compose.yml:
+#  - No tunnel service (Coolify's built-in proxy handles HTTPS)
+#  - No host port mappings (Coolify routes traffic internally)
+#  - SERVICE_FQDN_APP tells Coolify which container to expose
+#  - DATABASE_URL uses internal service name "db"
+# =============================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Coolify reads SERVICE_FQDN_APP to route external traffic here
+    environment:
+      - SERVICE_FQDN_APP=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-runflow}?schema=public
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}
+      - STRAVA_CLIENT_SECRET=${STRAVA_CLIENT_SECRET}
+      - STRAVA_VERIFY_TOKEN=${STRAVA_VERIFY_TOKEN}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY:-24h}
+      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY:-30d}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SECURE=${SMTP_SECURE}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
+      - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - CRON_SECRET=${CRON_SECRET}
+      - FATSECRET_CLIENT_ID=${FATSECRET_CLIENT_ID}
+      - FATSECRET_CLIENT_SECRET=${FATSECRET_CLIENT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
+      permissions-fixer:
+        condition: service_completed_successfully
+    networks:
+      - runflow-network
+    volumes:
+      - backups:/app/backups
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  permissions-fixer:
+    image: alpine:3.19
+    command: sh -c "mkdir -p /backups && chown -R 1001:1001 /backups && chmod -R 775 /backups"
+    volumes:
+      - backups:/backups
+    networks:
+      - runflow-network
+
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    command: sh -c "node_modules/.bin/prisma migrate deploy"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-runflow}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - runflow-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-runflow}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-runflow}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-runflow} -d ${POSTGRES_DB:-runflow}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - runflow-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backup:
+    image: prodrigestivill/postgres-backup-local:16
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=${POSTGRES_DB:-runflow}
+      - POSTGRES_USER=${POSTGRES_USER:-runflow}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SCHEDULE=@every 6h
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+      - HEALTHCHECK_PORT=8080
+    volumes:
+      - backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - runflow-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  reminder-cron:
+    image: alpine:3.19
+    restart: unless-stopped
+    entrypoint: /bin/sh
+    command: >
+      -c "while true; do
+        wget -q -O- http://app:3000/api/cron/reminders?secret=$${CRON_SECRET} || true;
+        sleep 300;
+      done"
+    environment:
+      - CRON_SECRET=${CRON_SECRET}
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - runflow-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  feedback-queue-cron:
+    image: alpine:3.19
+    restart: unless-stopped
+    entrypoint: /bin/sh
+    command: >
+      -c "while true; do
+        wget -q -O- --header=\"x-internal-secret:$$CRON_SECRET\" --post-data='{}' http://app:3000/api/internal/process-feedback-queue || true;
+        sleep 60;
+      done"
+    environment:
+      - CRON_SECRET=${CRON_SECRET}
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - runflow-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  runflow-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  backups:

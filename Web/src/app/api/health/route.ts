@@ -4,6 +4,11 @@ import { verifyAdminToken } from '@/lib/admin/auth';
 
 export const dynamic = 'force-dynamic';
 
+async function getPublicHealthStatusCode() {
+    const health = await getHealthStatus();
+    return health.status === 'unhealthy' ? 503 : 200;
+}
+
 export async function GET(request: NextRequest) {
     try {
         const health = await getHealthStatus();
@@ -34,5 +39,14 @@ export async function GET(request: NextRequest) {
             },
             { status: 503 }
         );
+    }
+}
+
+export async function HEAD() {
+    try {
+        const status = await getPublicHealthStatusCode();
+        return new NextResponse(null, { status });
+    } catch (error) {
+        return new NextResponse(null, { status: 503 });
     }
 }

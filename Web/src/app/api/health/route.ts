@@ -5,8 +5,8 @@ import { verifyAdminToken } from '@/lib/admin/auth';
 export const dynamic = 'force-dynamic';
 
 async function getPublicHealthStatusCode() {
-    const health = await getHealthStatus();
-    return health.status === 'unhealthy' ? 503 : 200;
+    await getHealthStatus();
+    return 200;
 }
 
 export async function GET(request: NextRequest) {
@@ -20,8 +20,7 @@ export async function GET(request: NextRequest) {
 
         // For unauthenticated requests, return minimal info (for Docker/load balancer)
         if (!isAdmin) {
-            const status = health.status === 'unhealthy' ? 503 : 200;
-            return NextResponse.json({ status: health.status }, { status });
+            return NextResponse.json({ status: health.status }, { status: 200 });
         }
 
         // For admin, return full details

@@ -49,15 +49,17 @@ const getAllowedOrigins = (): string[] => {
 function handleCors(request: NextRequest): NextResponse | null {
     const origin = request.headers.get('origin');
     const allowedOrigins = getAllowedOrigins();
+    const requestOrigin = request.nextUrl.origin;
+    const isSameOrigin = origin === requestOrigin;
 
     // Handle preflight OPTIONS requests
     if (request.method === 'OPTIONS') {
         const response = new NextResponse(null, { status: 204 });
 
-        if (origin && allowedOrigins.includes(origin)) {
+        if (origin && (allowedOrigins.includes(origin) || isSameOrigin)) {
             response.headers.set('Access-Control-Allow-Origin', origin);
             response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
             response.headers.set('Access-Control-Allow-Credentials', 'true');
             response.headers.set('Access-Control-Max-Age', '86400');
         }
@@ -67,7 +69,7 @@ function handleCors(request: NextRequest): NextResponse | null {
 
     // For actual requests from allowed origins, we'll add headers in the response
     // For disallowed origins on API routes, block the request
-    if (origin && !allowedOrigins.includes(origin) && request.nextUrl.pathname.startsWith('/api/')) {
+    if (origin && !allowedOrigins.includes(origin) && !isSameOrigin && request.nextUrl.pathname.startsWith('/api/')) {
         // Allow webhooks and auth endpoints without origin check (they validate differently)
         if (!request.nextUrl.pathname.startsWith('/api/webhooks') &&
             !request.nextUrl.pathname.startsWith('/api/auth')) {
@@ -85,8 +87,9 @@ function handleCors(request: NextRequest): NextResponse | null {
 function addCorsHeaders(response: NextResponse, request: NextRequest): NextResponse {
     const origin = request.headers.get('origin');
     const allowedOrigins = getAllowedOrigins();
+    const requestOrigin = request.nextUrl.origin;
 
-    if (origin && allowedOrigins.includes(origin)) {
+    if (origin && (allowedOrigins.includes(origin) || origin === requestOrigin)) {
         response.headers.set('Access-Control-Allow-Origin', origin);
         response.headers.set('Access-Control-Allow-Credentials', 'true');
     }

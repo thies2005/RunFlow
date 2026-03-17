@@ -53,6 +53,7 @@ services:
         condition: service_completed_successfully
     networks:
       - runflow-network
+      - coolify
     volumes:
       - backups:/app/backups
     healthcheck:
@@ -221,6 +222,8 @@ services:
 networks:
   runflow-network:
     driver: bridge
+  coolify:
+    external: true
 
 volumes:
   postgres_data:

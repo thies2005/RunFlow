@@ -25,6 +25,7 @@ import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logAdminAction } from '@/lib/admin/auditLog';
 import { handleError } from '@/lib/errors/handler';
 import { encryptToken, decryptToken } from '@/lib/crypto';
+import { logger } from '@/lib/logging/logger';
 import { createHash } from 'crypto';
 
 const BUNDLE_VERSION = '1';
@@ -224,13 +225,17 @@ function parseMigrationBundle(value: unknown): MigrationBundle {
   };
 }
 
-function decryptForExport(value: string | null | undefined, label: string): string | null {
-  if (value == null) return null;
+function decryptForExport(value: string | null | undefined, label: string): { value: string | null; failed: boolean } {
+  if (value == null) return { value: null, failed: false };
 
   try {
-    return decryptToken(value);
+    return { value: decryptToken(value), failed: false };
   } catch (error) {
-    throw new Error(`${label} could not be decrypted for export: ${error instanceof Error ? error.message : String(error)}`);
+    logger.error('Migration export failed to decrypt value', {
+      label,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return { value, failed: true };
   }
 }
 
@@ -262,23 +267,44 @@ export async function GET(request: NextRequest) {
       prisma.aiProvider.findMany({ orderBy: { createdAt: 'asc' } }),
     ]);
 
+    const decryptFailures: string[] = [];
+
     const exportedProviders = providers.map((p) => {
+      const providerKey = decryptForExport(p.apiKey, `Provider "${p.slug}" API key`);
+      if (providerKey.failed) {
+        decryptFailures.push(`Provider "${p.slug}" API key`);
+      }
       return {
         name: p.name,
         slug: p.slug,
         type: p.type,
         baseUrl: p.baseUrl,
-        apiKey: decryptForExport(p.apiKey, `Provider "${p.slug}" API key` ) ?? '',
+        apiKey: providerKey.value ?? '',
         models: p.models,
         isActive: p.isActive,
         monthlyTokenLimit: p.monthlyTokenLimit ? p.monthlyTokenLimit.toString() : null,
       };
     });
 
+    const defaultApiKey = decryptForExport(globalSettings?.defaultApiKey, 'Global AI defaultApiKey');
+    if (defaultApiKey.failed) {
+      decryptFailures.push('Global AI defaultApiKey');
+    }
+
+    if (decryptFailures.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Migration export failed because encryption keys could not be decrypted. Ensure the current ENCRYPTION_KEY matches the key used to encrypt stored tokens, then retry.',
+          details: decryptFailures,
+        },
+        { status: 400 }
+      );
+    }
+
     const settingsExport = globalSettings
       ? {
           defaultBaseUrl: globalSettings.defaultBaseUrl,
-          defaultApiKey: decryptForExport(globalSettings.defaultApiKey, 'Global AI defaultApiKey'),
+          defaultApiKey: defaultApiKey.value,
           defaultModel: globalSettings.defaultModel,
           tier1Name: globalSettings.tier1Name,
           tier1DailyLimit: globalSettings.tier1DailyLimit,

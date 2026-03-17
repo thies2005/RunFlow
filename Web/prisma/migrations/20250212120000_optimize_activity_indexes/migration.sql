@@ -1,5 +1,5 @@
--- CreateTable
-CREATE TABLE "Lap" (
+-- CreateTable (idempotent)
+CREATE TABLE IF NOT EXISTS "Lap" (
     "id" TEXT NOT NULL,
     "activityId" TEXT NOT NULL,
     "index" INTEGER NOT NULL,
@@ -12,8 +12,8 @@ CREATE TABLE "Lap" (
     CONSTRAINT "Lap_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Split" (
+-- CreateTable (idempotent)
+CREATE TABLE IF NOT EXISTS "Split" (
     "id" TEXT NOT NULL,
     "activityId" TEXT NOT NULL,
     "index" INTEGER NOT NULL,
@@ -26,14 +26,20 @@ CREATE TABLE "Split" (
     CONSTRAINT "Split_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE INDEX "Lap_activityId_idx" ON "Lap"("activityId");
+-- CreateIndex (idempotent)
+CREATE INDEX IF NOT EXISTS "Lap_activityId_idx" ON "Lap"("activityId");
 
--- CreateIndex
-CREATE INDEX "Split_activityId_idx" ON "Split"("activityId");
+-- CreateIndex (idempotent)
+CREATE INDEX IF NOT EXISTS "Split_activityId_idx" ON "Split"("activityId");
 
--- AddForeignKey
-ALTER TABLE "Lap" ADD CONSTRAINT "Lap_activityId_fkey" FOREIGN KEY ("activityId") REFERENCES "Activity"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (idempotent)
+DO $$ BEGIN
+  ALTER TABLE "Lap" ADD CONSTRAINT "Lap_activityId_fkey" FOREIGN KEY ("activityId") REFERENCES "Activity"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
--- AddForeignKey
-ALTER TABLE "Split" ADD CONSTRAINT "Split_activityId_fkey" FOREIGN KEY ("activityId") REFERENCES "Activity"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (idempotent)
+DO $$ BEGIN
+  ALTER TABLE "Split" ADD CONSTRAINT "Split_activityId_fkey" FOREIGN KEY ("activityId") REFERENCES "Activity"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;

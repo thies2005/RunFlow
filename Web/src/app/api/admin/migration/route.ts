@@ -35,7 +35,8 @@ interface MigrationProviderBundle {
   slug: string;
   type: string;
   baseUrl: string;
-  apiKey: string;
+  apiKey: string | null;
+  apiKeyUnavailable?: boolean;
   models: string[];
   isActive: boolean;
   monthlyTokenLimit: string | null;
@@ -44,6 +45,7 @@ interface MigrationProviderBundle {
 interface MigrationGlobalSettingsBundle {
   defaultBaseUrl: string;
   defaultApiKey: string | null;
+  defaultApiKeyUnavailable?: boolean;
   defaultModel: string;
   tier1Name: string;
   tier1DailyLimit: number;
@@ -83,6 +85,7 @@ interface MigrationBundle {
   bundleVersion: string;
   exportedAt: string;
   encryptionKeyFingerprint?: string;
+  exportWarnings?: string[];
   globalAiSettings: MigrationGlobalSettingsBundle | null;
   aiProviders: MigrationProviderBundle[];
 }
@@ -113,6 +116,15 @@ function parseGlobalAiSettings(value: unknown): MigrationGlobalSettingsBundle | 
     return fieldValue;
   };
 
+  const getOptionalBoolean = (key: keyof MigrationGlobalSettingsBundle): boolean | undefined => {
+    const fieldValue = value[key];
+    if (fieldValue === undefined) return undefined;
+    if (typeof fieldValue !== 'boolean') {
+      throw new Error(`Invalid globalAiSettings.${String(key)}: expected boolean or undefined`);
+    }
+    return fieldValue;
+  };
+
   const getNumber = (key: keyof MigrationGlobalSettingsBundle): number => {
     const fieldValue = value[key];
     if (typeof fieldValue !== 'number' || !Number.isFinite(fieldValue)) {
@@ -124,6 +136,7 @@ function parseGlobalAiSettings(value: unknown): MigrationGlobalSettingsBundle | 
   return {
     defaultBaseUrl: getString('defaultBaseUrl'),
     defaultApiKey: getNullableString('defaultApiKey'),
+    defaultApiKeyUnavailable: getOptionalBoolean('defaultApiKeyUnavailable'),
     defaultModel: getString('defaultModel'),
     tier1Name: getString('tier1Name'),
     tier1DailyLimit: getNumber('tier1DailyLimit'),
@@ -165,13 +178,18 @@ function parseProvider(provider: unknown): MigrationProviderBundle {
     throw new Error('Invalid aiProviders entry: expected object');
   }
 
-  const { name, slug, type, baseUrl, apiKey, models, isActive, monthlyTokenLimit } = provider;
+  const { name, slug, type, baseUrl, apiKey, apiKeyUnavailable, models, isActive, monthlyTokenLimit } = provider;
 
   if (typeof name !== 'string') throw new Error('Invalid aiProviders entry: name must be a string');
   if (typeof slug !== 'string') throw new Error('Invalid aiProviders entry: slug must be a string');
   if (typeof type !== 'string') throw new Error('Invalid aiProviders entry: type must be a string');
   if (typeof baseUrl !== 'string') throw new Error('Invalid aiProviders entry: baseUrl must be a string');
-  if (typeof apiKey !== 'string') throw new Error(`Invalid aiProviders.${slug || 'unknown'}.apiKey: expected string`);
+  if (apiKey !== null && typeof apiKey !== 'string') {
+    throw new Error(`Invalid aiProviders.${slug || 'unknown'}.apiKey: expected string or null`);
+  }
+  if (apiKeyUnavailable !== undefined && typeof apiKeyUnavailable !== 'boolean') {
+    throw new Error(`Invalid aiProviders.${slug || 'unknown'}.apiKeyUnavailable: expected boolean or undefined`);
+  }
   if (!Array.isArray(models) || models.some((model) => typeof model !== 'string')) {
     throw new Error(`Invalid aiProviders.${slug || 'unknown'}.models: expected string[]`);
   }
@@ -188,6 +206,7 @@ function parseProvider(provider: unknown): MigrationProviderBundle {
     type,
     baseUrl,
     apiKey,
+    apiKeyUnavailable: apiKeyUnavailable === undefined ? undefined : apiKeyUnavailable,
     models,
     isActive,
     monthlyTokenLimit: monthlyTokenLimit ?? null,
@@ -211,6 +230,12 @@ function parseMigrationBundle(value: unknown): MigrationBundle {
     throw new Error('Invalid migration bundle: encryptionKeyFingerprint must be a string');
   }
 
+  if (value.exportWarnings != null) {
+    if (!Array.isArray(value.exportWarnings) || value.exportWarnings.some((entry: unknown) => typeof entry !== 'string')) {
+      throw new Error('Invalid migration bundle: exportWarnings must be an array of strings');
+    }
+  }
+
   if (!Array.isArray(value.aiProviders)) {
     throw new Error('Invalid migration bundle: aiProviders must be an array');
   }
@@ -220,22 +245,36 @@ function parseMigrationBundle(value: unknown): MigrationBundle {
     exportedAt: value.exportedAt,
     encryptionKeyFingerprint:
       typeof value.encryptionKeyFingerprint === 'string' ? value.encryptionKeyFingerprint : undefined,
+    exportWarnings: Array.isArray(value.exportWarnings)
+      ? value.exportWarnings.filter((entry: unknown): entry is string => typeof entry === 'string')
+      : undefined,
     globalAiSettings: parseGlobalAiSettings(value.globalAiSettings),
     aiProviders: value.aiProviders.map(parseProvider),
   };
 }
 
-function decryptForExport(value: string | null | undefined, label: string): { value: string | null; failed: boolean } {
-  if (value == null) return { value: null, failed: false };
+function looksLikeBase64(value: string): boolean {
+  if (!/^[A-Za-z0-9+/=]+$/.test(value)) return false;
+  return value.length % 4 === 0;
+}
+
+function decryptForExport(value: string | null | undefined, label: string): { value: string | null; failed: boolean; unavailable: boolean } {
+  if (value == null) return { value: null, failed: false, unavailable: false };
 
   try {
-    return { value: decryptToken(value), failed: false };
+    return { value: decryptToken(value), failed: false, unavailable: false };
   } catch (error) {
+    const base64Like = looksLikeBase64(value);
     logger.error('Migration export failed to decrypt value', {
       label,
       error: error instanceof Error ? error.message : String(error)
     });
-    return { value, failed: true };
+
+    if (!base64Like) {
+      return { value, failed: true, unavailable: false };
+    }
+
+    return { value: null, failed: true, unavailable: true };
   }
 }
 
@@ -268,18 +307,23 @@ export async function GET(request: NextRequest) {
     ]);
 
     const decryptFailures: string[] = [];
+    const unavailableSecrets: string[] = [];
 
     const exportedProviders = providers.map((p) => {
       const providerKey = decryptForExport(p.apiKey, `Provider "${p.slug}" API key`);
       if (providerKey.failed) {
         decryptFailures.push(`Provider "${p.slug}" API key`);
       }
+      if (providerKey.unavailable) {
+        unavailableSecrets.push(`Provider "${p.slug}" API key`);
+      }
       return {
         name: p.name,
         slug: p.slug,
         type: p.type,
         baseUrl: p.baseUrl,
-        apiKey: providerKey.value ?? '',
+        apiKey: providerKey.value,
+        apiKeyUnavailable: providerKey.unavailable || undefined,
         models: p.models,
         isActive: p.isActive,
         monthlyTokenLimit: p.monthlyTokenLimit ? p.monthlyTokenLimit.toString() : null,
@@ -290,21 +334,25 @@ export async function GET(request: NextRequest) {
     if (defaultApiKey.failed) {
       decryptFailures.push('Global AI defaultApiKey');
     }
+    if (defaultApiKey.unavailable) {
+      unavailableSecrets.push('Global AI defaultApiKey');
+    }
 
+    const exportWarnings: string[] = [];
     if (decryptFailures.length > 0) {
-      return NextResponse.json(
-        {
-          error: 'Migration export failed because encryption keys could not be decrypted. Ensure the current ENCRYPTION_KEY matches the key used to encrypt stored tokens, then retry.',
-          details: decryptFailures,
-        },
-        { status: 400 }
+      exportWarnings.push(
+        'Some stored secrets could not be decrypted. Plaintext values were preserved when possible; encrypted values that could not be decrypted were exported as empty and must be re-entered after import.'
       );
+    }
+    if (unavailableSecrets.length > 0) {
+      exportWarnings.push(`Missing decryptable secrets: ${unavailableSecrets.join(', ')}`);
     }
 
     const settingsExport = globalSettings
       ? {
           defaultBaseUrl: globalSettings.defaultBaseUrl,
           defaultApiKey: defaultApiKey.value,
+          defaultApiKeyUnavailable: defaultApiKey.unavailable || undefined,
           defaultModel: globalSettings.defaultModel,
           tier1Name: globalSettings.tier1Name,
           tier1DailyLimit: globalSettings.tier1DailyLimit,
@@ -345,6 +393,7 @@ export async function GET(request: NextRequest) {
       bundleVersion: BUNDLE_VERSION,
       exportedAt: new Date().toISOString(),
       encryptionKeyFingerprint: encryptionKeyFingerprint(),
+      exportWarnings,
       globalAiSettings: settingsExport,
       aiProviders: exportedProviders,
     };
@@ -386,6 +435,9 @@ export async function POST(request: NextRequest) {
     const bundle = parseMigrationBundle(await request.json());
 
     const warnings: string[] = [];
+    if (bundle.exportWarnings?.length) {
+      warnings.push(...bundle.exportWarnings);
+    }
 
     const importFingerprint = bundle.encryptionKeyFingerprint;
     const localFingerprint = encryptionKeyFingerprint();
@@ -405,24 +457,35 @@ export async function POST(request: NextRequest) {
 
     await prisma.$transaction(async (tx) => {
       for (const provider of bundle.aiProviders) {
-        const upsertData = {
+        const baseData = {
           name: provider.name,
           slug: provider.slug,
           type: provider.type,
           baseUrl: provider.baseUrl,
-          apiKey: provider.apiKey === '' ? '' : encryptToken(provider.apiKey),
           models: provider.models,
           isActive: provider.isActive,
           monthlyTokenLimit:
             provider.monthlyTokenLimit != null ? BigInt(provider.monthlyTokenLimit) : null,
         };
 
-        const existing = await tx.aiProvider.findUnique({ where: { slug: upsertData.slug } });
+        const createApiKeyValue = provider.apiKey == null
+          ? ''
+          : provider.apiKey === ''
+            ? ''
+            : encryptToken(provider.apiKey);
+
+        const updateData = provider.apiKey == null
+          ? baseData
+          : { ...baseData, apiKey: provider.apiKey === '' ? '' : encryptToken(provider.apiKey) };
+
+        const createData = { ...baseData, apiKey: createApiKeyValue };
+
+        const existing = await tx.aiProvider.findUnique({ where: { slug: baseData.slug } });
         if (existing) {
-          await tx.aiProvider.update({ where: { slug: upsertData.slug }, data: upsertData });
+          await tx.aiProvider.update({ where: { slug: baseData.slug }, data: updateData });
           results.providersUpdated++;
         } else {
-          await tx.aiProvider.create({ data: upsertData });
+          await tx.aiProvider.create({ data: createData });
           results.providersCreated++;
         }
       }
@@ -432,6 +495,7 @@ export async function POST(request: NextRequest) {
           _activeProviderSlug,
           _fallbackProviderSlug,
           defaultApiKey,
+          defaultApiKeyUnavailable,
           ...rest
         } = bundle.globalAiSettings;
 
@@ -449,19 +513,27 @@ export async function POST(request: NextRequest) {
           warnings.push(`Fallback provider "${_fallbackProviderSlug}" was not found during import.`);
         }
 
-        const settingsData = {
+        const baseSettingsData = {
           ...rest,
-          defaultApiKey: defaultApiKey == null ? null : defaultApiKey === '' ? '' : encryptToken(defaultApiKey),
           activeProviderId: activeProvider?.id ?? null,
           fallbackProviderId: fallbackProvider?.id ?? null,
         };
 
+        const defaultKeyValue = defaultApiKey == null ? null : defaultApiKey === '' ? '' : encryptToken(defaultApiKey);
+        const updateSettingsData = defaultApiKeyUnavailable
+          ? baseSettingsData
+          : { ...baseSettingsData, defaultApiKey: defaultKeyValue };
+        const createSettingsData = {
+          ...baseSettingsData,
+          defaultApiKey: defaultApiKeyUnavailable ? null : defaultKeyValue,
+        };
+
         const existing = await tx.globalAiSettings.findUnique({ where: { id: 'singleton' } });
         if (existing) {
-          await tx.globalAiSettings.update({ where: { id: 'singleton' }, data: settingsData });
+          await tx.globalAiSettings.update({ where: { id: 'singleton' }, data: updateSettingsData });
           results.globalAiSettings = 'updated';
         } else {
-          await tx.globalAiSettings.create({ data: { id: 'singleton', ...settingsData } });
+          await tx.globalAiSettings.create({ data: { id: 'singleton', ...createSettingsData } });
           results.globalAiSettings = 'created';
         }
       }

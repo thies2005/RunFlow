@@ -1,12 +1,25 @@
+# =============================================================
+# RunFlow - Coolify Deployment Compose File
+# =============================================================
+# Use this file when deploying via Coolify (Docker Compose resource).
+# Set Build Pack to "Docker Compose" and point to this file.
+#
+# Key differences from docker-compose.yml:
+#  - No tunnel service (Coolify's built-in proxy handles HTTPS)
+#  - No host port mappings (Coolify routes traffic internally)
+#  - SERVICE_FQDN_APP tells Coolify which container to expose
+#  - DATABASE_URL uses internal service name "db"
+# =============================================================
+
 services:
   app:
-    build: .
-    container_name: runflow-app
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Coolify reads SERVICE_FQDN_APP to route external traffic here
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-runflow}?schema=public
+      - SERVICE_FQDN_APP=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-runflow}?schema=public
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}
@@ -16,19 +29,19 @@ services:
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY:-24h}
+      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY:-30d}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_SECURE=${SMTP_SECURE}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
-      # M-10 fix: Add Sentry environment variables for error tracking
       - SENTRY_DSN=${SENTRY_DSN}
       - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
       - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - CRON_SECRET=${CRON_SECRET}
-      # FatSecret API
       - FATSECRET_CLIENT_ID=${FATSECRET_CLIENT_ID}
       - FATSECRET_CLIENT_SECRET=${FATSECRET_CLIENT_SECRET}
     depends_on:
@@ -41,7 +54,7 @@ services:
     networks:
       - runflow-network
     volumes:
-      - ./backups:/app/backups
+      - backups:/app/backups
     healthcheck:
       test:
         [
@@ -50,15 +63,14 @@ services:
         ]
       interval: 30s
       timeout: 10s
-      start_period: 40s
+      start_period: 60s
       retries: 5
-    # M-08 fix: Add resource limits for app container
+    restart: unless-stopped
     deploy:
       resources:
         limits:
           memory: 2G
           cpus: "2.0"
-    # M-09 fix: Add log rotation to prevent disk filling
     logging:
       driver: json-file
       options:
@@ -66,26 +78,18 @@ services:
         max-file: "3"
 
   permissions-fixer:
-    # M-11 fix: Pin alpine version for reproducible builds
     image: alpine:3.19
-    container_name: runflow-permissions-fixer
     command: sh -c "mkdir -p /backups && chown -R 1001:1001 /backups && chmod -R 775 /backups"
     volumes:
-      - ./backups:/backups
+      - backups:/backups
     networks:
       - runflow-network
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   migrator:
     build:
       context: .
       dockerfile: Dockerfile
       target: builder
-    container_name: runflow-migrator
     command: >
       sh -c "
         node_modules/.bin/prisma migrate resolve --applied 00000000000000_init 2>/dev/null || true;
@@ -93,7 +97,7 @@ services:
         node_modules/.bin/prisma migrate deploy
       "
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-runflow}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-runflow}?schema=public
     depends_on:
       db:
         condition: service_healthy
@@ -107,13 +111,10 @@ services:
 
   db:
     image: postgres:16-alpine
-    container_name: runflow-db
     restart: unless-stopped
-    ports:
-      - "5434:5432"
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-runflow}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB:-runflow}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -128,7 +129,6 @@ services:
       retries: 5
     networks:
       - runflow-network
-    # M-08 fix: Add resource limits for database container
     deploy:
       resources:
         limits:
@@ -141,22 +141,20 @@ services:
         max-file: "3"
 
   backup:
-    # M-12 fix: Pin backup image version for security
     image: prodrigestivill/postgres-backup-local:16
-    container_name: runflow-backup
     restart: unless-stopped
     environment:
       - POSTGRES_HOST=db
       - POSTGRES_DB=${POSTGRES_DB:-runflow}
       - POSTGRES_USER=${POSTGRES_USER:-runflow}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - SCHEDULE=@every 6h
       - BACKUP_KEEP_DAYS=7
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6
       - HEALTHCHECK_PORT=8080
     volumes:
-      - ./backups:/backups
+      - backups:/backups
     depends_on:
       db:
         condition: service_healthy
@@ -168,28 +166,8 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  tunnel:
-    # M-11 fix: Pin cloudflared version for reproducible builds
-    image: cloudflare/cloudflared:2024.12.2
-    container_name: runflow-tunnel
-    restart: unless-stopped
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    depends_on:
-      app:
-        condition: service_healthy
-    networks:
-      - runflow-network
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   reminder-cron:
     image: alpine:3.19
-    container_name: runflow-reminder-cron
     restart: unless-stopped
     entrypoint: /bin/sh
     command: >
@@ -212,7 +190,6 @@ services:
 
   feedback-queue-cron:
     image: alpine:3.19
-    container_name: runflow-feedback-queue-cron
     restart: unless-stopped
     entrypoint: /bin/sh
     command: >
@@ -239,3 +216,4 @@ networks:
 
 volumes:
   postgres_data:
+  backups:

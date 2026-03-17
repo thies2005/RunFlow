@@ -1,8 +1,8 @@
 -- AlterTable
-ALTER TABLE "GlobalAiSettings" ADD COLUMN     "calorieSnapModel" TEXT NOT NULL DEFAULT 'gemini-1.5-flash',
-ADD COLUMN     "tier1CalorieSnapLimit" INTEGER NOT NULL DEFAULT 1,
-ADD COLUMN     "tier2CalorieSnapLimit" INTEGER NOT NULL DEFAULT 3,
-ADD COLUMN     "tier3CalorieSnapLimit" INTEGER NOT NULL DEFAULT 6;
+ALTER TABLE "GlobalAiSettings" ADD COLUMN IF NOT EXISTS "calorieSnapModel" TEXT NOT NULL DEFAULT 'gemini-1.5-flash';
+ALTER TABLE "GlobalAiSettings" ADD COLUMN IF NOT EXISTS "tier1CalorieSnapLimit" INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE "GlobalAiSettings" ADD COLUMN IF NOT EXISTS "tier2CalorieSnapLimit" INTEGER NOT NULL DEFAULT 3;
+ALTER TABLE "GlobalAiSettings" ADD COLUMN IF NOT EXISTS "tier3CalorieSnapLimit" INTEGER NOT NULL DEFAULT 6;
 
 -- AlterTable
-ALTER TABLE "UserAiSettings" ADD COLUMN     "calorieSnapsUsedToday" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "UserAiSettings" ADD COLUMN IF NOT EXISTS "calorieSnapsUsedToday" INTEGER NOT NULL DEFAULT 0;

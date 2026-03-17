@@ -18,7 +18,9 @@ services:
       dockerfile: Dockerfile
     # Coolify reads SERVICE_FQDN_APP to route external traffic here
     environment:
-      - SERVICE_FQDN_APP=3000
+      - SERVICE_FQDN_APP=${SERVICE_FQDN_APP}
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
       - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-runflow}?schema=public
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
@@ -181,11 +183,12 @@ services:
     entrypoint: /bin/sh
     command: >
       -c "while true; do
-        wget -q -O- http://app:3000/api/cron/reminders?secret=$${CRON_SECRET} || true;
+        wget -q -O- $${APP_BASE_URL}/api/cron/reminders?secret=$${CRON_SECRET} || true;
         sleep 300;
       done"
     environment:
       - CRON_SECRET=${CRON_SECRET}
+      - APP_BASE_URL=${APP_BASE_URL:-${NEXTAUTH_URL}}
     depends_on:
       app:
         condition: service_healthy
@@ -203,11 +206,12 @@ services:
     entrypoint: /bin/sh
     command: >
       -c "while true; do
-        wget -q -O- --header=\"x-internal-secret:$$CRON_SECRET\" --post-data='{}' http://app:3000/api/internal/process-feedback-queue || true;
+        wget -q -O- --header=\"x-internal-secret:$$CRON_SECRET\" --post-data='{}' $${APP_BASE_URL}/api/internal/process-feedback-queue || true;
         sleep 60;
       done"
     environment:
       - CRON_SECRET=${CRON_SECRET}
+      - APP_BASE_URL=${APP_BASE_URL:-${NEXTAUTH_URL}}
     depends_on:
       app:
         condition: service_healthy

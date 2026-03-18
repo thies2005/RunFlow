@@ -176,7 +176,7 @@ const nextConfig = {
     compress: true,
     experimental: {
         workerThreads: false,
-        cpus: 1,
+        cpus: 3,
         optimizePackageImports: ['lucide-react', 'date-fns', '@tanstack/react-query']
     },
     images: {

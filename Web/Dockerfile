@@ -41,7 +41,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # Stage 3: Runner
 # ==================================
 FROM node:22.12.0-alpine3.19 AS runner
-RUN apk add --no-cache openssl libc6-compat wget postgresql16-client
+RUN apk add --no-cache openssl libc6-compat wget curl postgresql16-client
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -73,7 +73,7 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Health check - verify app is responding
-HEALTHCHECK --interval=15s --timeout=10s --start-period=120s --retries=5 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --start-interval=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1
 
 CMD ["node", "server.js"]

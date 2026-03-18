@@ -56,8 +56,11 @@ services:
     deploy:
       resources:
         limits:
+          memory: 4G
+          cpus: "4.0"
+        reservations:
           memory: 2G
-          cpus: "2.0"
+          cpus: "1.0"
     # M-09 fix: Add log rotation to prevent disk filling
     logging:
       driver: json-file
@@ -135,7 +138,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
           cpus: "1.0"
     logging:
       driver: json-file

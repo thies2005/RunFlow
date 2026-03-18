@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Users, Activity as ActivityIcon, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList, ArrowRightLeft, LucideIcon } from 'lucide-react';
+import { Users, Activity as ActivityIcon, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList, ArrowRightLeft, Cpu, LucideIcon } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
@@ -13,6 +13,7 @@ import BackupsTab from '@/components/admin/BackupsTab';
 import AuditLogsTab from '@/components/admin/AuditLogsTab';
 import FeedbackQueueTab from '@/components/admin/FeedbackQueueTab';
 import MigrationTab from '@/components/admin/MigrationTab';
+import PerformanceTab from '@/components/admin/PerformanceTab';
 import { AdminStats, AdminUser, AdminBackup, AdminAiSettings } from './types';
 
 
@@ -51,12 +52,13 @@ function DashboardContent() {
 
     // Tab state controlled by URL
     const tabParam = searchParams.get('tab');
-    const activeTab = tabParam === 'backups' ? 'backups' : 
-                      tabParam === 'ai' ? 'ai' : 
-                      tabParam === 'analytics' ? 'analytics' : 
-                      tabParam === 'audit' ? 'audit' : 
+    const activeTab = tabParam === 'backups' ? 'backups' :
+                      tabParam === 'ai' ? 'ai' :
+                      tabParam === 'analytics' ? 'analytics' :
+                      tabParam === 'audit' ? 'audit' :
                       tabParam === 'feedback-queue' ? 'feedback-queue' :
                       tabParam === 'migration' ? 'migration' :
+                      tabParam === 'performance' ? 'performance' :
                       'users';
 
     const [processing, setProcessing] = useState(false);
@@ -220,6 +222,13 @@ function DashboardContent() {
                         <ArrowRightLeft className="w-4 h-4 inline mr-1" />
                         Migration
                     </button>
+                    <button
+                        onClick={() => router.push('/admin?tab=performance')}
+                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'performance' ? 'border-b-2 border-orange-500 text-orange-600' : 'text-gray-500 hover:text-gray-800'}`}
+                    >
+                        <Cpu className="w-4 h-4 inline mr-1" />
+                        Performance
+                    </button>
                 </div>
 
                 <div className="p-6">
@@ -277,6 +286,11 @@ function DashboardContent() {
                     {/* Migration Tab */}
                     {activeTab === 'migration' && (
                         <MigrationTab />
+                    )}
+
+                    {/* Performance Tab */}
+                    {activeTab === 'performance' && (
+                        <PerformanceTab />
                     )}
                 </div>
             </div>

@@ -6,21 +6,21 @@
  */
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Shield, LayoutDashboard, Database, LogOut, Menu, X, Users, Bot, BarChart3, ClipboardList, ArrowRightLeft, Cpu, Activity } from 'lucide-react';
 
-export default function AdminLayout({
+function AdminLayoutContent({
     children,
+    pathname,
 }: {
     children: React.ReactNode;
+    pathname: string;
 }) {
     const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const searchParams = useSearchParams();
     const currentTab = searchParams.get('tab');
-    
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const getActiveState = (href: string, tab: string | null) => {
@@ -39,11 +39,6 @@ export default function AdminLayout({
         { href: '/admin?tab=migration', label: 'Migration', icon: ArrowRightLeft, tab: 'migration' },
         { href: '/admin?tab=backups', label: 'Backups', icon: Database, tab: 'backups' },
     ];
-
-    const handleLogout = async () => {
-        document.cookie = 'runflow_admin_token=; Max-Age=0; path=/;';
-        router.push('/admin/login');
-    };
 
     const closeMobileMenu = () => setMobileMenuOpen(false);
 
@@ -98,7 +93,10 @@ export default function AdminLayout({
 
                 <div className="p-4 border-t border-slate-700">
                     <button
-                        onClick={handleLogout}
+                        onClick={() => {
+                            document.cookie = 'runflow_admin_token=; Max-Age=0; path=/;';
+                            router.push('/admin/login');
+                        }}
                         className="flex items-center space-x-3 px-4 py-3 w-full text-slate-300 hover:bg-slate-800 rounded-lg transition-colors"
                     >
                         <LogOut className="w-5 h-5" />
@@ -135,5 +133,21 @@ export default function AdminLayout({
                 </main>
             </div>
         </div>
+    );
+}
+
+export default function AdminLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const pathname = usePathname();
+
+    return (
+        <Suspense fallback={children}>
+            <AdminLayoutContent pathname={pathname}>
+                {children}
+            </AdminLayoutContent>
+        </Suspense>
     );
 }

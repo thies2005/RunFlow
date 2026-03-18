@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Users, Activity as ActivityIcon, Database, RefreshCw, AlertTriangle, CheckCircle, Bot, BarChart3, ClipboardList, ArrowRightLeft, Cpu, LucideIcon, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
+import { Users, Activity as ActivityIcon, Database, RefreshCw, AlertTriangle, CheckCircle, Bot, Cpu, LucideIcon, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import AiSettingsTab from '@/components/admin/AiSettingsTab';
@@ -20,10 +20,9 @@ interface StatCardProps {
     value: string | number;
     subtext?: string;
     icon: LucideIcon;
-    color: string;
 }
 
-const StatCard = ({ title, value, subtext, icon: Icon, color }: StatCardProps) => (
+const StatCard = ({ title, value, subtext, icon: Icon }: StatCardProps) => (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-start space-x-4">
         <div className="bg-blue-50 text-blue-600 rounded-lg p-3">
             <Icon className="w-6 h-6" />
@@ -217,11 +216,11 @@ function DashboardContent() {
                             color="bg-blue-50 text-blue-600"
                         />
                         <DashboardWidget
-                            title="AI Usage"
+                            title="AI Enabled Users"
                             icon={Bot}
-                            value={aiSettings?.stats?.totalRequests || 0}
+                            value={aiSettings?.stats?.enabledUsers || 0}
                             change={aiUsageChange}
-                            subtext="Today"
+                            subtext="Total active"
                             onClick={() => router.push('/admin?tab=analytics')}
                             color="bg-purple-50 text-purple-600"
                         />
@@ -250,28 +249,24 @@ function DashboardContent() {
                             value={stats?.users?.total || 0}
                             subtext={`${stats?.users?.newToday || 0} new today`}
                             icon={Users}
-                            color="bg-blue-500"
                         />
                         <StatCard
                             title="Active Sessions"
                             value={stats?.sessions?.active || 0}
                             subtext={`${stats?.sessions?.total || 0} total sessions`}
                             icon={ActivityIcon}
-                            color="bg-violet-500"
                         />
                         <StatCard
                             title="Activities"
                             value={stats?.activities?.total || 0}
                             subtext={`${stats?.activities?.last7Days || 0} this week`}
                             icon={ActivityIcon}
-                            color="bg-orange-500"
                         />
                         <StatCard
                             title="Backups"
                             value={stats?.backups?.count || 0}
                             subtext={`Last: ${stats?.backups?.lastBackupAt ? new Date(stats.backups.lastBackupAt).toLocaleDateString() : 'Never'}`}
                             icon={Database}
-                            color="bg-emerald-500"
                         />
                     </div>
                 </>

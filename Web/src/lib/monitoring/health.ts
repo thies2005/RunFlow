@@ -111,17 +111,26 @@ export function getRecentMetrics(): { errorRate: number; avgResponseTime: number
 
 export function getMemoryUsage(): { usedMB: number; totalMB: number; percentage: number; status: 'healthy' | 'unhealthy' } {
     const usage = process.memoryUsage();
-    const usedMB = Math.round(usage.heapUsed / 1024 / 1024);
-    const totalMB = Math.round(usage.heapTotal / 1024 / 1024);
-    const percentage = (usedMB / totalMB) * 100;
+    const rssMB = Math.round(usage.rss / 1024 / 1024);
+    
+    let containerLimitMB = 8192;
+    try {
+        if (process.env.NODE_OPTIONS) {
+            const match = process.env.NODE_OPTIONS.match(/--max-old-space-size=(\d+)/);
+            if (match) {
+                containerLimitMB = parseInt(match[1], 10);
+            }
+        }
+    } catch {}
 
+    const percentage = (rssMB / containerLimitMB) * 100;
     let status: 'healthy' | 'unhealthy' = 'healthy';
 
     if (percentage > 90) {
         status = 'unhealthy';
     }
 
-    return { usedMB, totalMB, percentage, status };
+    return { usedMB: rssMB, totalMB: containerLimitMB, percentage, status };
 }
 
 export async function getHealthStatus(): Promise<HealthCheckResult> {

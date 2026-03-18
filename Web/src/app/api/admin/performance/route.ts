@@ -4,6 +4,7 @@ import { getAllMetrics } from '@/lib/monitoring/metrics';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import * as os from 'os';
+import * as fs from 'fs';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,8 +59,26 @@ function getCpuUsage(): number {
     return ((total - idle) / total) * 100;
 }
 
+function getContainerMemoryLimit(): number {
+    try {
+        if (process.env.NODE_OPTIONS) {
+            const match = process.env.NODE_OPTIONS.match(/--max-old-space-size=(\d+)/);
+            if (match) {
+                return parseInt(match[1], 10);
+            }
+        }
+        const cgroupLimit = fs.readFileSync('/sys/fs/cgroup/memory/memory.limit_in_bytes', 'utf8');
+        return Math.round(parseInt(cgroupLimit, 10) / 1024 / 1024);
+    } catch {
+        return 8192;
+    }
+}
+
 function getSystemMetrics(): SystemMetrics {
     const memory = process.memoryUsage();
+    const containerLimit = getContainerMemoryLimit();
+    const heapTotalMB = Math.round((memory.heapTotal / 1024 / 1024));
+    const rssMB = Math.round((memory.rss / 1024 / 1024));
 
     return {
         uptime: process.uptime(),
@@ -67,10 +86,10 @@ function getSystemMetrics(): SystemMetrics {
         nodeVersion: process.version,
         memory: {
             used: Math.round((memory.heapUsed / 1024 / 1024)),
-            total: Math.round((memory.heapTotal / 1024 / 1024)),
-            percentage: ((memory.heapUsed / memory.heapTotal) * 100),
-            rss: Math.round((memory.rss / 1024 / 1024)),
-            heapTotal: Math.round((memory.heapTotal / 1024 / 1024)),
+            total: containerLimit,
+            percentage: (rssMB / containerLimit) * 100,
+            rss: rssMB,
+            heapTotal: heapTotalMB,
             heapUsed: Math.round((memory.heapUsed / 1024 / 1024)),
             external: Math.round((memory.external / 1024 / 1024)),
             arrayBuffers: Math.round((memory.arrayBuffers / 1024 / 1024)),

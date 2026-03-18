@@ -253,16 +253,16 @@ export default function PerformanceTab() {
                 </div>
                 <div className="space-y-4">
                     <MemoryBar 
-                        used={system.memory.heapUsed} 
-                        total={system.memory.heapTotal} 
+                        used={system.memory.rss} 
+                        total={system.memory.total} 
                         percentage={system.memory.percentage}
-                        label="Heap Memory"
+                        label="Memory Usage (RSS / Container Limit)"
                     />
                     <MemoryBar 
-                        used={system.memory.rss} 
-                        total={system.memory.heapTotal * 2} 
-                        percentage={(system.memory.rss / (system.memory.heapTotal * 2)) * 100}
-                        label="RSS (Resident Set Size)"
+                        used={system.memory.heapUsed} 
+                        total={system.memory.heapTotal} 
+                        percentage={(system.memory.heapUsed / system.memory.heapTotal) * 100}
+                        label="Heap Memory (Used / Max Heap)"
                     />
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                         <div className="p-4 bg-gray-50 rounded-lg">
@@ -313,7 +313,7 @@ export default function PerformanceTab() {
                     <Server className="w-5 h-5 text-gray-600" />
                     <h3 className="font-semibold text-gray-800">System Information</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="p-4 bg-gray-50 rounded-lg">
                         <p className="text-xs text-gray-500 mb-1">Node.js Version</p>
                         <p className="text-sm font-semibold text-gray-800">{system.nodeVersion}</p>
@@ -321,6 +321,10 @@ export default function PerformanceTab() {
                     <div className="p-4 bg-gray-50 rounded-lg">
                         <p className="text-xs text-gray-500 mb-1">Platform</p>
                         <p className="text-sm font-semibold text-gray-800">{system.platform}</p>
+                    </div>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-500 mb-1">Container Limit</p>
+                        <p className="text-sm font-semibold text-gray-800">{system.memory.total}MB</p>
                     </div>
                     <div className="p-4 bg-gray-50 rounded-lg">
                         <p className="text-xs text-gray-500 mb-1">Last Updated</p>

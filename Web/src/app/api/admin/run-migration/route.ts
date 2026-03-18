@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/auth';
+import { prisma } from '@/lib/db';
+import fs from 'fs';
+import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +12,43 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if ('error' in authResult) {
     return authResult.error;
   }
+
+  try {
+    const migrationSQL = fs.readFileSync(
+      path.join(process.cwd(), 'prisma/migrations/20260318_add_monitoring_tables/migration.sql'),
+      'utf8'
+    );
+
+    await prisma.$executeRawUnsafe(migrationSQL);
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Monitoring tables created successfully!',
+      tablesCreated: [
+        'ApiRouteMetric - API request tracking',
+        'ErrorLog - Error logging with fingerprinting',
+        'PerformanceSummary - Time-based aggregated metrics',
+        'SessionReplay - User session replay data',
+        'Release - Deployment and release tracking'
+      ],
+    });
+  } catch (error) {
+    console.error('Migration error:', error);
+    
+    return NextResponse.json(
+      {
+        error: 'Failed to create monitoring tables',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
+}
 
   try {
     const { execSync } = require('child_process');

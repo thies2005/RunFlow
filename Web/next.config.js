@@ -172,6 +172,13 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: "standalone",
+    swcMinify: true,
+    compress: true,
+    experimental: {
+        workerThreads: false,
+        cpus: 1,
+        optimizePackageImports: ['lucide-react', 'date-fns', '@tanstack/react-query']
+    },
     images: {
         remotePatterns: [
             {

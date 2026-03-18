@@ -23,6 +23,7 @@ services:
       - SERVICE_FQDN_APP=${SERVICE_FQDN_APP}
       - HOSTNAME=0.0.0.0
       - PORT=3000
+      - NODE_OPTIONS=--max-old-space-size=8192
       - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-runflow}?schema=public
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
@@ -75,10 +76,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 10G
           cpus: "4.0"
         reservations:
-          memory: 2G
+          memory: 512M
           cpus: "1.0"
     logging:
       driver: json-file

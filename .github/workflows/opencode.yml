@@ -1,0 +1,15 @@
+name: OpenCode Agent
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened]
+
+jobs:
+  opencode:
+    if: contains(github.event.comment.body, '/opencode') || contains(github.event.comment.body, '/oc')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: opencode-ai/github-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

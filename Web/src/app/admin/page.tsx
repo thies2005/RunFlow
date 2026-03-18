@@ -2,9 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import { Users, Activity as ActivityIcon, LogIn, Database, RefreshCw, Trash2, Download, AlertTriangle, CheckCircle, Upload, Plus, Mail, Bot, Eye, Save, Loader2, Zap, BarChart3, ClipboardList, ArrowRightLeft, Cpu, LucideIcon } from 'lucide-react';
-import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
+import { Users, Activity as ActivityIcon, LogIn, Database, RefreshCw, AlertTriangle, CheckCircle, Bot, BarChart3, ClipboardList, ArrowRightLeft, Cpu, LucideIcon } from 'lucide-react';
 
 import AnalyticsTab from '@/components/admin/AnalyticsTab';
 import AiSettingsTab from '@/components/admin/AiSettingsTab';
@@ -17,7 +15,6 @@ import PerformanceTab from '@/components/admin/PerformanceTab';
 import { AdminStats, AdminUser, AdminBackup, AdminAiSettings } from './types';
 
 
-// Components
 interface StatCardProps {
     title: string;
     value: string | number;
@@ -27,10 +24,9 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, subtext, icon: Icon, color }: StatCardProps) => (
-
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-start space-x-4">
-        <div className={`p-3 rounded-lg ${color}`}>
-            <Icon className="w-6 h-6 text-white" />
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-start space-x-4">
+        <div className="bg-blue-50 text-blue-600 rounded-lg p-3">
+            <Icon className="w-6 h-6" />
         </div>
         <div>
             <p className="text-gray-500 text-sm">{title}</p>
@@ -50,7 +46,6 @@ function DashboardContent() {
     const [aiSettings, setAiSettings] = useState<AdminAiSettings | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Tab state controlled by URL
     const tabParam = searchParams.get('tab');
     const activeTab = tabParam === 'backups' ? 'backups' :
                       tabParam === 'ai' ? 'ai' :
@@ -64,7 +59,6 @@ function DashboardContent() {
     const [processing, setProcessing] = useState(false);
     const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
-    // Fetch data
     const fetchAllData = React.useCallback(async () => {
         try {
             setLoading(true);
@@ -112,9 +106,9 @@ function DashboardContent() {
 
     return (
         <div className="space-y-8">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
-                <div className="flex space-x-2">
+                <div className="flex items-center space-x-2 w-full sm:w-auto">
                     <button
                         onClick={fetchAllData}
                         className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition"
@@ -140,7 +134,6 @@ function DashboardContent() {
                 </div>
             )}
 
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     title="Total Users"
@@ -172,67 +165,67 @@ function DashboardContent() {
                 />
             </div>
 
-            {/* Main Content Tabs */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="border-b border-gray-100 flex">
-                    <button
-                        onClick={() => router.push('/admin')}
-                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'users' ? 'border-b-2 border-emerald-500 text-emerald-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        User Management
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin?tab=backups')}
-                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'backups' ? 'border-b-2 border-emerald-500 text-emerald-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        Backup & Restore
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin?tab=ai')}
-                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'ai' ? 'border-b-2 border-purple-500 text-purple-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        <Bot className="w-4 h-4 inline mr-1" />
-                        AI Settings
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin?tab=analytics')}
-                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'analytics' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        <BarChart3 className="w-4 h-4 inline mr-1" />
-                        Analytics
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin?tab=audit')}
-                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'audit' ? 'border-b-2 border-amber-500 text-amber-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        <ClipboardList className="w-4 h-4 inline mr-1" />
-                        Audit Trail
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin?tab=feedback-queue')}
-                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'feedback-queue' ? 'border-b-2 border-emerald-500 text-emerald-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        <ActivityIcon className="w-4 h-4 inline mr-1" />
-                        Feedback Queue
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin?tab=migration')}
-                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'migration' ? 'border-b-2 border-teal-500 text-teal-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        <ArrowRightLeft className="w-4 h-4 inline mr-1" />
-                        Migration
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin?tab=performance')}
-                        className={`px-6 py-4 text-sm font-medium transition ${activeTab === 'performance' ? 'border-b-2 border-orange-500 text-orange-600' : 'text-gray-500 hover:text-gray-800'}`}
-                    >
-                        <Cpu className="w-4 h-4 inline mr-1" />
-                        Performance
-                    </button>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="border-b border-gray-200 overflow-x-auto no-scrollbar">
+                    <div className="flex whitespace-nowrap">
+                        <button
+                            onClick={() => router.push('/admin')}
+                            className={`px-4 sm:px-6 py-4 text-sm font-medium transition whitespace-nowrap ${activeTab === 'users' ? 'border-b-2 border-emerald-500 text-emerald-600 bg-emerald-50/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                        >
+                            User Management
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin?tab=backups')}
+                            className={`px-4 sm:px-6 py-4 text-sm font-medium transition whitespace-nowrap ${activeTab === 'backups' ? 'border-b-2 border-emerald-500 text-emerald-600 bg-emerald-50/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                        >
+                            Backup & Restore
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin?tab=ai')}
+                            className={`px-4 sm:px-6 py-4 text-sm font-medium transition whitespace-nowrap ${activeTab === 'ai' ? 'border-b-2 border-purple-500 text-purple-600 bg-purple-50/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                        >
+                            <Bot className="w-4 h-4 inline mr-1" />
+                            AI Settings
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin?tab=analytics')}
+                            className={`px-4 sm:px-6 py-4 text-sm font-medium transition whitespace-nowrap ${activeTab === 'analytics' ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                        >
+                            <BarChart3 className="w-4 h-4 inline mr-1" />
+                            Analytics
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin?tab=audit')}
+                            className={`px-4 sm:px-6 py-4 text-sm font-medium transition whitespace-nowrap ${activeTab === 'audit' ? 'border-b-2 border-amber-500 text-amber-600 bg-amber-50/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                        >
+                            <ClipboardList className="w-4 h-4 inline mr-1" />
+                            Audit Trail
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin?tab=feedback-queue')}
+                            className={`px-4 sm:px-6 py-4 text-sm font-medium transition whitespace-nowrap ${activeTab === 'feedback-queue' ? 'border-b-2 border-emerald-500 text-emerald-600 bg-emerald-50/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                        >
+                            <ActivityIcon className="w-4 h-4 inline mr-1" />
+                            Feedback Queue
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin?tab=migration')}
+                            className={`px-4 sm:px-6 py-4 text-sm font-medium transition whitespace-nowrap ${activeTab === 'migration' ? 'border-b-2 border-teal-500 text-teal-600 bg-teal-50/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                        >
+                            <ArrowRightLeft className="w-4 h-4 inline mr-1" />
+                            Migration
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin?tab=performance')}
+                            className={`px-4 sm:px-6 py-4 text-sm font-medium transition whitespace-nowrap ${activeTab === 'performance' ? 'border-b-2 border-orange-500 text-orange-600 bg-orange-50/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                        >
+                            <Cpu className="w-4 h-4 inline mr-1" />
+                            Performance
+                        </button>
+                    </div>
                 </div>
 
-                <div className="p-6">
-                    {/* Users Tab */}
+                <div className="p-4 sm:p-6">
                     {activeTab === 'users' && (
                         <UsersTab
                             users={users}
@@ -245,7 +238,6 @@ function DashboardContent() {
                         />
                     )}
 
-                    {/* Backups Tab */}
                     {activeTab === 'backups' && (
                         <BackupsTab
                             backups={backups}
@@ -256,7 +248,6 @@ function DashboardContent() {
                         />
                     )}
 
-                    {/* AI Settings Tab */}
                     {activeTab === 'ai' && (
                         <AiSettingsTab
                             settings={aiSettings?.settings}
@@ -268,27 +259,22 @@ function DashboardContent() {
                         />
                     )}
 
-                    {/* Analytics Tab */}
                     {activeTab === 'analytics' && (
                         <AnalyticsTab />
                     )}
 
-                    {/* Audit Logs Tab */}
                     {activeTab === 'audit' && (
                         <AuditLogsTab />
                     )}
 
-                    {/* Feedback Queue Tab */}
                     {activeTab === 'feedback-queue' && (
                         <FeedbackQueueTab />
                     )}
 
-                    {/* Migration Tab */}
                     {activeTab === 'migration' && (
                         <MigrationTab />
                     )}
 
-                    {/* Performance Tab */}
                     {activeTab === 'performance' && (
                         <PerformanceTab />
                     )}
@@ -309,4 +295,3 @@ export default function AdminDashboard() {
         </Suspense>
     );
 }
-

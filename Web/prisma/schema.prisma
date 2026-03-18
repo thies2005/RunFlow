@@ -848,3 +848,89 @@ enum PlanPhase {
   RACE_WEEK
   RECOVERY
 }
+
+model ApiRouteMetric {
+  id            String   @id @default(cuid())
+  routePath     String
+  method        String
+  statusCode    Int
+  responseTime  Int
+  cpuUsage      Float?
+  memoryUsage   Float?
+  requestSize   Int?
+  responseSize  Int?
+  timestamp     DateTime @default(now())
+  userId        String?
+  userAgent     String?
+  ipAddress     String?
+
+  @@index([routePath, timestamp])
+  @@index([timestamp])
+  @@index([userId])
+}
+
+model ErrorLog {
+  id          String   @id @default(cuid())
+  routePath   String
+  method      String
+  errorMessage String
+  stackTrace  String?
+  userId      String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+  resolved    Boolean  @default(false)
+  count       Int      @default(1)
+  fingerprint String?
+
+  @@index([timestamp])
+  @@index([routePath])
+  @@index([errorMessage])
+  @@index([fingerprint])
+  @@index([resolved])
+}
+
+model PerformanceSummary {
+  id              String   @id @default(cuid())
+  routePath       String
+  method          String
+  timeRange       String
+  timestamp       DateTime @default(now())
+
+  requestCount    Int
+  errorCount      Int
+  avgResponseTime Float
+  p50ResponseTime Float
+  p95ResponseTime Float
+  p99ResponseTime Float
+  avgCpuUsage     Float
+  avgMemoryUsage  Float
+
+  @@unique([routePath, method, timeRange, timestamp])
+  @@index([routePath, timeRange])
+  @@index([timestamp])
+}
+
+model SessionReplay {
+  id          String   @id @default(cuid())
+  userId      String?
+  sessionId   String
+  events      Json
+  routePath   String?
+  timestamp   DateTime @default(now())
+  duration    Int
+
+  @@index([userId, timestamp])
+  @@index([timestamp])
+  @@index([sessionId])
+}
+
+model Release {
+  id          String   @id @default(cuid())
+  version     String   @unique
+  deployedAt  DateTime @default(now())
+  deployedBy  String?
+  commitHash  String?
+  notes       String?
+
+  @@index([deployedAt])
+}

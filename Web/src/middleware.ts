@@ -116,13 +116,18 @@ export async function middleware(request: NextRequest) {
     const requestId = generateRequestId();
     const startTime = Date.now();
 
-    // Log incoming request
-    logger.info('Incoming request', {
-        requestId,
-        method: request.method,
-        path: request.nextUrl.pathname,
-        userAgent: request.headers.get('user-agent'),
-    });
+    // Log incoming request - only in development or for API routes
+    const shouldLogIncoming = process.env.NODE_ENV === 'development' ||
+                             url.pathname.startsWith('/api/');
+
+    if (shouldLogIncoming) {
+        logger.info('Incoming request', {
+            requestId,
+            method: request.method,
+            path: request.nextUrl.pathname,
+            userAgent: request.headers.get('user-agent'),
+        });
+    }
 
     const requestHeaders = new Headers(request.headers)
 
@@ -161,15 +166,22 @@ export async function middleware(request: NextRequest) {
     // Add request ID header for tracing
     response.headers.set('x-request-id', requestId)
 
-    // Log response with duration
+    // Log response with duration - only for slow requests, errors, or in development
     const duration = Date.now() - startTime;
-    logger.info('Request completed', {
-        requestId,
-        method: request.method,
-        path: request.nextUrl.pathname,
-        status: response.status,
-        duration,
-    });
+    const shouldLog = process.env.NODE_ENV === 'development' ||
+                      request.nextUrl.pathname.startsWith('/api/') ||
+                      duration > 100 ||
+                      response.status >= 400;
+
+    if (shouldLog) {
+        logger.info('Request completed', {
+            requestId,
+            method: request.method,
+            path: request.nextUrl.pathname,
+            status: response.status,
+            duration,
+        });
+    }
 
     return addCorsHeaders(response, request);
 }

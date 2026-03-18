@@ -5,9 +5,14 @@ import { verifyAdminToken } from '@/lib/admin/auth';
 export const dynamic = 'force-dynamic';
 
 async function getPublicHealthStatus() {
-    const { status: databaseStatus } = await getHealthStatus().then(result => result.checks.database);
-    const status = databaseStatus === 'unhealthy' ? 'unhealthy' : 'healthy';
-    return { status, statusCode: status === 'unhealthy' ? 503 : 200 };
+    try {
+        const { status: databaseStatus } = await getHealthStatus().then(result => result.checks.database);
+
+        const status = databaseStatus === 'unhealthy' ? 'unhealthy' : 'healthy';
+        return { status, statusCode: status === 'unhealthy' ? 503 : 200 };
+    } catch (error) {
+        return { status: 'unhealthy', statusCode: 503 };
+    }
 }
 
 export async function GET(request: NextRequest) {

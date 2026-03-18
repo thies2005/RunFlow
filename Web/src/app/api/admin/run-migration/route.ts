@@ -21,7 +21,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     await prisma.$executeRawUnsafe(migrationSQL);
     
-    const result: { success: true, message: 'Monitoring tables created successfully!' };
+    const result = { success: true, message: 'Monitoring tables created successfully!' };
     
     return NextResponse.json(result);
   } catch (error) {

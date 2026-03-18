@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
   try {
     const { exec } = require('child_process');
     
-    return new Promise((resolve) => {
-      const process = exec(
+    return new Promise<NextResponse>((resolve) => {
+      exec(
         'npx prisma migrate deploy',
         {
           cwd: process.cwd(),
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
             DATABASE_URL: process.env.DATABASE_URL,
           },
         },
-        (error, stdout, stderr) => {
+        (error: any, stdout: string, stderr: string) => {
           if (error) {
             console.error('Migration error:', error);
             resolve(NextResponse.json(

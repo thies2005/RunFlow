@@ -396,7 +396,7 @@ export async function syncDailyHealth(date: Date = new Date()): Promise<void> {
                 startDate: start.toISOString(),
                 endDate: end.toISOString(),
                 limit: 1000,
-            }).catch(() => ({ samples: [] })) // Graceful fallback if calories permission not granted
+            }).catch(() => Promise.resolve({ samples: [] })) // Graceful fallback if calories permission not granted
         ]);
 
         let totalSteps = 0;

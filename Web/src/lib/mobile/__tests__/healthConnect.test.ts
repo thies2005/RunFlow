@@ -70,6 +70,7 @@ describe('Health Connect Deduplication', () => {
 
         (Health.readSamples as jest.Mock).mockResolvedValueOnce({ samples: mockSamples });
         (Health.readSamples as jest.Mock).mockResolvedValueOnce({ samples: [] }); // Weight
+        (Health.readSamples as jest.Mock).mockResolvedValueOnce({ samples: [] }); // Calories
 
         await syncDailyHealth(new Date('2023-10-01'));
 

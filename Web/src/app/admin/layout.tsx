@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Shield, LayoutDashboard, Database, LogOut, Menu, X } from 'lucide-react';
+import { Shield, LayoutDashboard, Database, LogOut, Menu, X, Users, Bot, BarChart3, ClipboardList, ArrowRightLeft, Cpu, Activity } from 'lucide-react';
 
 export default function AdminLayout({
     children,
@@ -18,11 +18,26 @@ export default function AdminLayout({
 }) {
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const currentTab = searchParams.get('tab');
+    
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    const getActiveState = (href: string, tab: string | null) => {
+        if (tab === null) return href === '/admin';
+        return href.includes(`tab=${tab}`);
+    };
+
     const navItems = [
-        { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin?tab=backups', label: 'Backups', icon: Database },
+        { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, tab: null },
+        { href: '/admin?tab=users', label: 'Users', icon: Users, tab: 'users' },
+        { href: '/admin?tab=analytics', label: 'Analytics', icon: BarChart3, tab: 'analytics' },
+        { href: '/admin?tab=ai', label: 'AI Settings', icon: Bot, tab: 'ai' },
+        { href: '/admin?tab=feedback-queue', label: 'Feedback Queue', icon: Activity, tab: 'feedback-queue' },
+        { href: '/admin?tab=performance', label: 'Performance', icon: Cpu, tab: 'performance' },
+        { href: '/admin?tab=audit', label: 'Audit Trail', icon: ClipboardList, tab: 'audit' },
+        { href: '/admin?tab=migration', label: 'Migration', icon: ArrowRightLeft, tab: 'migration' },
+        { href: '/admin?tab=backups', label: 'Backups', icon: Database, tab: 'backups' },
     ];
 
     const handleLogout = async () => {
@@ -32,14 +47,12 @@ export default function AdminLayout({
 
     const closeMobileMenu = () => setMobileMenuOpen(false);
 
-    // Skip layout for login page
     if (pathname === '/admin/login') {
         return <>{children}</>;
     }
 
     return (
         <div className="h-screen w-full flex overflow-hidden bg-gray-50 text-gray-900">
-            {/* Mobile Sidebar Overlay */}
             {mobileMenuOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -47,7 +60,6 @@ export default function AdminLayout({
                 />
             )}
 
-            {/* Sidebar - Hidden on mobile, visible on desktop */}
             <aside className={`
                 fixed inset-y-0 left-0 z-50
                 w-64 bg-slate-900 text-slate-300 flex flex-col
@@ -60,10 +72,10 @@ export default function AdminLayout({
                     <span className="text-xl font-bold text-white">Admin</span>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                     {navItems.map((item) => {
                         const Icon = item.icon;
-                        const isActive = pathname === item.href;
+                        const isActive = getActiveState(item.href, currentTab);
                         return (
                             <Link
                                 key={item.href}
@@ -78,7 +90,7 @@ export default function AdminLayout({
                                 `}
                             >
                                 <Icon className="w-5 h-5" />
-                                <span>{item.label}</span>
+                                <span className="text-sm font-medium">{item.label}</span>
                             </Link>
                         );
                     })}
@@ -98,9 +110,7 @@ export default function AdminLayout({
                 </div>
             </aside>
 
-            {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
-                {/* Top Header */}
                 <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shrink-0 z-10">
                     <div className="flex items-center space-x-4">
                         <button
@@ -120,7 +130,6 @@ export default function AdminLayout({
                     </div>
                 </header>
 
-                {/* Scrollable Content Area */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-6">
                     {children}
                 </main>

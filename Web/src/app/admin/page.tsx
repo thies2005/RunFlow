@@ -92,6 +92,31 @@ function DashboardContent() {
     const [loading, setLoading] = useState(true);
 
     const tabParam = searchParams.get('tab');
+
+    const runMigration = async () => {
+        try {
+            setProcessing(true);
+            const res = await fetch('/api/admin/run-migration', {
+                method: 'POST',
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setActionMessage({ type: 'success', text: 'Migration completed successfully!' });
+                setTimeout(() => setActionMessage(null), 5000);
+            } else {
+                const error = await res.json();
+                setActionMessage({ type: 'error', text: error.details || 'Migration failed' });
+                setTimeout(() => setActionMessage(null), 10000);
+            }
+        } catch (error) {
+            console.error('Migration error:', error);
+            setActionMessage({ type: 'error', text: 'Failed to run migration' });
+            setTimeout(() => setActionMessage(null), 10000);
+        } finally {
+            setProcessing(false);
+        }
+    };
     const activeTab = tabParam === 'backups' ? 'backups' :
                       tabParam === 'ai' ? 'ai' :
                       tabParam === 'analytics' ? 'analytics' :
@@ -178,6 +203,14 @@ function DashboardContent() {
                     )}
                 </div>
                 <div className="flex items-center space-x-2 w-full sm:w-auto">
+                    <button
+                        onClick={runMigration}
+                        disabled={processing}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Run Database Migration"
+                    >
+                        <Database className="w-5 h-5" />
+                    </button>
                     <button
                         onClick={fetchAllData}
                         className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition"

@@ -149,3 +149,34 @@ Request → API Route (auth + validation) → Service Layer → Prisma → Respo
 | **TRIMP** | Training Impulse — HR × duration load metric |
 | **rTSS** | Running Training Stress Score — pace + HR stress metric |
 | **Phases** | Base → Build → Peak → Taper (5K / 10K / Half / Full Marathon plans) |
+
+---
+
+## 12. Workflow Requirements
+
+### Session Start — Pull Latest Changes
+Before starting any work in a new session, you must always pull the latest changes from the repository:
+```bash
+git pull origin main
+```
+
+### Pre-Push — Build & Test Requirements
+Before pushing changes to GitHub, you must complete the following validation steps:
+
+1. **Lint check** (zero warnings required):
+   ```bash
+   cd Web
+   npm run lint
+   ```
+
+2. **Build test** (must succeed):
+   ```bash
+   npm run build
+   ```
+
+3. **Run tests** (all tests must pass):
+   ```bash
+   npm run test
+   ```
+
+No push should be made unless all three checks pass. CI will enforce these requirements.

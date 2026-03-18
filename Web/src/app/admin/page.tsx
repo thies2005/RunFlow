@@ -100,13 +100,13 @@ function DashboardContent() {
                 method: 'POST',
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                setActionMessage({ type: 'success', text: 'Migration completed successfully!' });
-                setTimeout(() => setActionMessage(null), 5000);
+            const data = await res.json();
+            
+            if (res.ok && data.success) {
+                setActionMessage({ type: 'success', text: `Migration complete! Created tables: ${data.tablesCreated?.length || 5}` });
+                setTimeout(() => setActionMessage(null), 10000);
             } else {
-                const error = await res.json();
-                setActionMessage({ type: 'error', text: error.details || 'Migration failed' });
+                setActionMessage({ type: 'error', text: data.details || 'Migration failed' });
                 setTimeout(() => setActionMessage(null), 10000);
             }
         } catch (error) {

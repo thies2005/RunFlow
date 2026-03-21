@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Mobile Goal Detail Endpoint
  * 

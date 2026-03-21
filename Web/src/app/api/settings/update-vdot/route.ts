@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/db';
 import { calculateVdot, RaceDistance } from '@/lib/metrics/vdot';

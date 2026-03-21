@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Strava OAuth Callback Handler - Multi-Platform Support
  * 

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * External API - Stats Endpoint
  * 

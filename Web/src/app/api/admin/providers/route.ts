@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * Admin AI Providers API
  * GET /api/admin/providers - List all providers

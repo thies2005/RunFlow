@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
@@ -247,4 +248,3 @@ export async function POST(request: NextRequest) {
         recordMetric('api.activities.post.error', isError ? 1 : 0);
     }
 }
-

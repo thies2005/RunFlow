@@ -130,9 +130,10 @@ if (!CRON_SECRET || request.headers.get('authorization') !== `Bearer ${CRON_SECR
 
 ---
 
-## Step 2 — High Severity Fixes (Complete Second)
+## Step 2 — High Severity Fixes (Complete Second) — DONE
 
 > **10 findings. Estimated effort: 2-3 days. Address auth bypasses and data risks.**
+> **Completed:** 2026-03-27. PR: (pending)
 
 | # | Finding | File | Fix |
 |---|---------|------|-----|
@@ -562,16 +563,16 @@ Replace each occurrence:
 | 1.8 | CRITICAL | SSRF protection broken | **done** |
 | 1.9 | CRITICAL | `/api/scan-image` IDOR | **done** |
 | 1.10 | CRITICAL | `/api/cron/aggregate-metrics` auth bypass | **done** |
-| 2.1 | HIGH | Prompt injection via customPromptAddition | pending |
-| 2.2 | HIGH | Email case inconsistency | pending |
-| 2.3 | HIGH | External API CORS wildcard | pending |
-| 2.4 | HIGH | Session replay uses isAdmin not requireAdmin | pending |
-| 2.5 | HIGH | Missing DB indexes Account/Session | pending |
-| 2.6 | HIGH | No connection pool config | pending |
-| 2.7 | HIGH | Unbounded queries | pending |
-| 2.8 | HIGH | CRON_SECRET in query string | pending |
-| 2.9 | HIGH | Timing-unsafe comparisons | pending |
-| 2.10 | HIGH | No CI pipeline | pending |
+| 2.1 | HIGH | Prompt injection via customPromptAddition | **done** |
+| 2.2 | HIGH | Email case inconsistency | **done** |
+| 2.3 | HIGH | External API CORS wildcard | **done** |
+| 2.4 | HIGH | Session replay uses isAdmin not requireAdmin | **done** |
+| 2.5 | HIGH | Missing DB indexes Account/Session | **done** |
+| 2.6 | HIGH | No connection pool config | **done** |
+| 2.7 | HIGH | Unbounded queries | **done** |
+| 2.8 | HIGH | CRON_SECRET in query string | **done** |
+| 2.9 | HIGH | Timing-unsafe comparisons | **done** |
+| 2.10 | HIGH | No CI pipeline | **done** |
 | 3.1 | MEDIUM | CSP unsafe-inline + https: | pending |
 | 3.2 | MEDIUM | Sentry DSN fallback | pending |
 | 3.3 | MEDIUM | Decryption fallback returns raw | pending |

@@ -1,18 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { sendPushToUser, PushPayload } from '@/lib/push';
+import crypto from 'crypto';
 
 const CRON_SECRET = process.env.CRON_SECRET || '';
+
+function verifyCronSecret(request: NextRequest): boolean {
+    if (!CRON_SECRET) return false;
+
+    const headerSecret = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (headerSecret) {
+        try {
+            const a = Buffer.from(headerSecret);
+            const b = Buffer.from(CRON_SECRET);
+            return a.length === b.length && crypto.timingSafeEqual(a, b);
+        } catch {
+            return false;
+        }
+    }
+
+    const querySecret = request.nextUrl.searchParams.get('secret');
+    if (querySecret) {
+        try {
+            const a = Buffer.from(querySecret);
+            const b = Buffer.from(CRON_SECRET);
+            return a.length === b.length && crypto.timingSafeEqual(a, b);
+        } catch {
+            return false;
+        }
+    }
+
+    return false;
+}
 
 /**
  * Cron endpoint to process and send due reminders.
  * Called every 5 minutes by the cron container.
- * Protected by CRON_SECRET query parameter.
+ * Protected by CRON_SECRET via Authorization header (preferred) or query parameter (legacy).
  */
 export async function GET(request: NextRequest) {
-    // Verify cron secret
-    const secret = request.nextUrl.searchParams.get('secret');
-    if (!CRON_SECRET || secret !== CRON_SECRET) {
+    if (!verifyCronSecret(request)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

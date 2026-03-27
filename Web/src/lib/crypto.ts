@@ -69,8 +69,9 @@ export function decryptToken(encryptedToken: string): string {
     try {
         const combined = Buffer.from(encryptedToken, 'base64');
 
+        // Migration fallback: if data is too short to be encrypted, assume plaintext
         if (combined.length < IV_LENGTH + AUTH_TAG_LENGTH) {
-            throw new Error('Encrypted data too short - possible plaintext token');
+            return encryptedToken;
         }
 
         const iv = combined.subarray(0, IV_LENGTH);
@@ -87,9 +88,6 @@ export function decryptToken(encryptedToken: string): string {
 
         return decrypted.toString('utf8');
     } catch (error) {
-        if (error instanceof Error && error.message === 'Token decryption failed - possible key rotation or data corruption') {
-            throw error;
-        }
         logger.error('Token decryption failed - possible key mismatch or data corruption.', {
             error: error instanceof Error ? error.message : String(error),
             tokenLength: encryptedToken.length,

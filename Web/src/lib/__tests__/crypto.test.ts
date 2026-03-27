@@ -54,9 +54,9 @@ describe('Token Encryption', () => {
             expect(decryptToken(encrypted2)).toBe(token);
         });
 
-        it('should throw when decrypting invalid data', () => {
-            const invalidData = 'not-encrypted-data';
-            expect(() => decryptToken(invalidData)).toThrow(/Token decryption failed/);
+        it('should return raw value for data too short to be encrypted (migration fallback)', () => {
+            const shortData = 'plaintext-token';
+            expect(decryptToken(shortData)).toBe(shortData);
         });
 
         it('should throw on decryption with wrong key', () => {

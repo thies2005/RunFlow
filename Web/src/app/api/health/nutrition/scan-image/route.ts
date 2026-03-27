@@ -2,16 +2,24 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/strava/oauth';
 
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { imageBase64, caption, userId } = body;
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
 
-        if ((!imageBase64 && !caption?.trim()) || !userId) {
+        const body = await request.json();
+        const { imageBase64, caption } = body;
+
+        if (!imageBase64 && !caption?.trim()) {
             return NextResponse.json(
-                { error: 'Image or description and userId are required' },
+                { error: 'Image or description is required' },
                 { status: 400 }
             );
         }

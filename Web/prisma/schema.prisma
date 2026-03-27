@@ -598,6 +598,8 @@ model ChatMessage {
   @@index([sessionId])
   @@index([activityId])
 }
+
+model ChatSession {
   id        String        @id @default(cuid())
   userId    String
   title     String        @default("New Chat")
@@ -681,6 +683,8 @@ model NutritionLog {
 
   @@index([userId, date])
 }
+
+model UserNutritionTarget {
   id                    String   @id @default(cuid())
   userId                String   @unique
   dailyCalories         Int      @default(2000)

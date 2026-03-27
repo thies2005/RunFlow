@@ -89,4 +89,18 @@ describe('SSRF Protection - URL Allowlist Validation', () => {
       expect(validateBaseUrl('api.openai.com')).toBe(false);
     });
   });
+
+  describe('extra allowed URLs', () => {
+    it('should allow admin-configured URLs when passed as extras', () => {
+      expect(validateBaseUrl('https://my-custom-llm.example.com/v1', ['https://my-custom-llm.example.com/v1'])).toBe(true);
+    });
+
+    it('should reject admin-configured URLs pointing to private IPs even with extras', () => {
+      expect(validateBaseUrl('http://192.168.1.1:8080/v1', ['http://192.168.1.1:8080/v1'])).toBe(false);
+    });
+
+    it('should allow subdomain of extra allowed URL', () => {
+      expect(validateBaseUrl('https://api.my-custom-llm.example.com/v1', ['https://my-custom-llm.example.com/v1'])).toBe(true);
+    });
+  });
 });

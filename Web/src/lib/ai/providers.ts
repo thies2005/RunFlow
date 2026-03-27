@@ -23,7 +23,6 @@ export interface AiConfig {
     fallback?: AiConfig;
 }
 
-// Well-known provider base URLs (used as defaults/hints, not as a strict allowlist)
 const WELL_KNOWN_BASE_URLS = [
     'https://api.openai.com/v1',
     'https://api.anthropic.com',
@@ -31,8 +30,28 @@ const WELL_KNOWN_BASE_URLS = [
     'https://openrouter.ai/api/v1',
 ];
 
-// Keep for backward compatibility
 const DEFAULT_ALLOWED_BASE_URLS = WELL_KNOWN_BASE_URLS;
+
+function getAllowedHostnames(allowedUrls: readonly string[]): Set<string> {
+    const hostnames = new Set<string>();
+    for (const urlStr of allowedUrls) {
+        try {
+            const parsed = new URL(urlStr);
+            hostnames.add(parsed.hostname.toLowerCase());
+        } catch { /* skip invalid URLs */ }
+    }
+    return hostnames;
+}
+
+function isHostnameAllowed(hostname: string, allowedHostnames: Set<string>): boolean {
+    const lower = hostname.toLowerCase();
+    if (allowedHostnames.has(lower)) return true;
+    const parts = lower.split('.');
+    for (let i = 1; i < parts.length; i++) {
+        if (allowedHostnames.has(parts.slice(i).join('.'))) return true;
+    }
+    return false;
+}
 
 function isPrivateIP(hostname: string): boolean {
     const privatePatterns = [
@@ -55,7 +74,7 @@ function isPrivateIP(hostname: string): boolean {
     return privatePatterns.some(pattern => pattern.test(hostname));
 }
 
-export function validateUrl(url: string, _allowedBaseUrls: readonly string[] = DEFAULT_ALLOWED_BASE_URLS): boolean {
+export function validateUrl(url: string, allowedUrls: readonly string[] = DEFAULT_ALLOWED_BASE_URLS): boolean {
     try {
         const parsed = new URL(url);
 
@@ -71,8 +90,12 @@ export function validateUrl(url: string, _allowedBaseUrls: readonly string[] = D
             return false;
         }
 
-        // Hostname must have at least one dot (e.g. api.example.com), not bare hostname
         if (!parsed.hostname.includes('.')) {
+            return false;
+        }
+
+        const allowedHostnames = getAllowedHostnames(allowedUrls);
+        if (!isHostnameAllowed(parsed.hostname, allowedHostnames)) {
             return false;
         }
 
@@ -105,11 +128,11 @@ export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & {
     return response;
 }
 
-export function validateBaseUrl(baseUrl: string, _extraAllowedUrls: string[] = []): boolean {
+export function validateBaseUrl(baseUrl: string, extraAllowedUrls: string[] = []): boolean {
     try {
         const url = new URL(baseUrl);
 
-        if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+        if (url.protocol !== 'https:') {
             return false;
         }
 
@@ -118,6 +141,12 @@ export function validateBaseUrl(baseUrl: string, _extraAllowedUrls: string[] = [
         }
 
         if (url.hostname === '0.0.0.0' || url.hostname === '[::]' || url.hostname === 'localhost' || !url.hostname.includes('.')) {
+            return false;
+        }
+
+        const allAllowed = [...WELL_KNOWN_BASE_URLS, ...extraAllowedUrls];
+        const allowedHostnames = getAllowedHostnames(allAllowed);
+        if (!isHostnameAllowed(url.hostname, allowedHostnames)) {
             return false;
         }
 
@@ -185,7 +214,7 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
         if (decryptedKey) {
             const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
             const baseUrl = globalSettings.activeProvider.baseUrl;
-            if (!validateBaseUrl(baseUrl) || apiKeys.length === 0) {
+            if (!validateBaseUrl(baseUrl, [baseUrl]) || apiKeys.length === 0) {
                 logger.warn('[AI Config] Invalid activeProvider config detected', { baseUrl, providerId: globalSettings.activeProvider.id });
                 return null;
             }
@@ -195,7 +224,7 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
                 const fbDecryptedKey = decryptToken(globalSettings.fallbackProvider.apiKey);
                 if (fbDecryptedKey) {
                     const fbApiKeys = fbDecryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
-                    if (fbApiKeys.length > 0 && validateBaseUrl(globalSettings.fallbackProvider.baseUrl)) {
+                    if (fbApiKeys.length > 0 && validateBaseUrl(globalSettings.fallbackProvider.baseUrl, [globalSettings.fallbackProvider.baseUrl])) {
                         fallbackAiConfig = {
                             provider: globalSettings.fallbackProvider.type as 'openai' | 'anthropic' | 'google',
                             baseUrl: globalSettings.fallbackProvider.baseUrl,
@@ -227,7 +256,7 @@ export async function getAiConfig(userId: string): Promise<AiConfig | null> {
         if (decryptedKey) {
             const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
             const baseUrl = globalSettings.defaultBaseUrl;
-            if (!validateBaseUrl(baseUrl) || apiKeys.length === 0) {
+            if (!validateBaseUrl(baseUrl, [baseUrl]) || apiKeys.length === 0) {
                 logger.warn('[AI Config] Invalid default config detected', { baseUrl });
                 return null;
             }
@@ -295,7 +324,7 @@ export async function getAiConfigForModel(userId: string, targetModel: string): 
         const decryptedKey = decryptToken(matchingProvider.apiKey);
         if (decryptedKey) {
             const apiKeys = decryptedKey.split(/[,;\n]+/).map(k => k.trim()).filter(Boolean);
-            if (apiKeys.length > 0 && validateBaseUrl(matchingProvider.baseUrl)) {
+            if (apiKeys.length > 0 && validateBaseUrl(matchingProvider.baseUrl, [matchingProvider.baseUrl])) {
                 return {
                     provider: matchingProvider.type as 'openai' | 'anthropic' | 'google',
                     baseUrl: matchingProvider.baseUrl,

@@ -303,9 +303,10 @@ jobs:
 
 ---
 
-## Step 3 — Medium Severity Fixes (Complete Third)
+## Step 3 — Medium Severity Fixes (Complete Third) — DONE
 
 > **16 findings. Estimated effort: 3-5 days. Address security hardening and data integrity.**
+> **Completed:** 2026-03-27. PR: https://github.com/thies2005/RunFlow/pull/148
 
 | # | Finding | File | Fix |
 |---|---------|------|-----|
@@ -573,22 +574,22 @@ Replace each occurrence:
 | 2.8 | HIGH | CRON_SECRET in query string | **done** |
 | 2.9 | HIGH | Timing-unsafe comparisons | **done** |
 | 2.10 | HIGH | No CI pipeline | **done** |
-| 3.1 | MEDIUM | CSP unsafe-inline + https: | pending |
-| 3.2 | MEDIUM | Sentry DSN fallback | pending |
-| 3.3 | MEDIUM | Decryption fallback returns raw | pending |
-| 3.4 | MEDIUM | In-memory rate limiting serverless | pending |
-| 3.5 | MEDIUM | Admin rate limiter no Redis | pending |
-| 3.6 | MEDIUM | Audit log hardcodes SYSTEM_ADMIN | pending |
-| 3.7 | MEDIUM | Admin password plaintext compare | pending |
-| 3.8 | MEDIUM | No PII scrubbing in Sentry | pending |
-| 3.9 | MEDIUM | API key in Gemini URL | pending |
-| 3.10 | MEDIUM | Missing NutritionLog/ChatMessage indexes | pending |
-| 3.11 | MEDIUM | Over-fetching rawJson/streams | pending |
-| 3.12 | MEDIUM | N+1 patterns | pending |
-| 3.13 | MEDIUM | Duplicate PrismaClient | pending |
-| 3.14 | MEDIUM | Missing loading.tsx | pending |
-| 3.15 | MEDIUM | Incomplete .env.example | pending |
-| 3.16 | MEDIUM | Rate limit IP spoofing | pending |
+| 3.1 | MEDIUM | CSP unsafe-inline + https: | **done** |
+| 3.2 | MEDIUM | Sentry DSN fallback | **done** |
+| 3.3 | MEDIUM | Decryption fallback returns raw | **done** |
+| 3.4 | MEDIUM | In-memory rate limiting serverless | **done** |
+| 3.5 | MEDIUM | Admin rate limiter no Redis | **done** |
+| 3.6 | MEDIUM | Audit log hardcodes SYSTEM_ADMIN | **done** |
+| 3.7 | MEDIUM | Admin password plaintext compare | **done** |
+| 3.8 | MEDIUM | No PII scrubbing in Sentry | **done** |
+| 3.9 | MEDIUM | API key in Gemini URL | **done** |
+| 3.10 | MEDIUM | Missing NutritionLog/ChatMessage indexes | **done** |
+| 3.11 | MEDIUM | Over-fetching rawJson/streams | **done** |
+| 3.12 | MEDIUM | N+1 patterns | **done** |
+| 3.13 | MEDIUM | Duplicate PrismaClient | **done** |
+| 3.14 | MEDIUM | Missing loading.tsx | **done** |
+| 3.15 | MEDIUM | Incomplete .env.example | **done** |
+| 3.16 | MEDIUM | Rate limit IP spoofing | **done** |
 | 4.1 | CODE-Q | 191 `: any` annotations | pending |
 | 4.2 | CODE-Q | 59 `as any` casts | pending |
 | 4.3 | CODE-Q | 106 non-null assertions | pending |

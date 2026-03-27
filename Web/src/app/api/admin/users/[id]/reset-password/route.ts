@@ -68,7 +68,7 @@ export async function POST(
 
             await logAdminAction(request, 'RESET_PASSWORD', { type: 'USER', id: userId }, {
                 email: user.email
-            });
+            }, authResult.admin.username);
 
             const response = NextResponse.json({
                 success: true,

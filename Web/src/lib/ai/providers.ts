@@ -670,12 +670,13 @@ async function streamGoogle(
         for (let i = 0; i < config.apiKeys.length; i++) {
             activeKeyIndex = i;
             const currentKey = config.apiKeys[i];
-            const url = `${config.baseUrl}/v1beta/models/${config.model}:streamGenerateContent?key=${currentKey}`;
+            const url = `${config.baseUrl}/v1beta/models/${config.model}:streamGenerateContent`;
 
             response = await safeFetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'x-goog-api-key': currentKey,
                 },
                 body: JSON.stringify({
                     system_instruction: systemMessage ? {
@@ -976,13 +977,14 @@ async function generateGoogleCompletion(
 
     for (let i = 0; i < config.apiKeys.length; i++) {
         const currentKey = config.apiKeys[i];
-        const url = `${config.baseUrl}/v1beta/models/${config.model}:generateContent?key=${currentKey}`;
+        const url = `${config.baseUrl}/v1beta/models/${config.model}:generateContent`;
 
         response = await safeFetch(url, {
             method: 'POST',
             signal,
             headers: {
                 'Content-Type': 'application/json',
+                'x-goog-api-key': currentKey,
             },
             body: JSON.stringify({
                 system_instruction: systemMessage ? {
@@ -1014,8 +1016,11 @@ async function generateGoogleCompletion(
 export async function testAiConfig(config: AiConfig): Promise<{ success: boolean; error?: string; model?: string }> {
     try {
         if (config.provider === 'google') {
-            const url = `${config.baseUrl}/v1beta/models/${config.model}?key=${config.apiKey}`;
-            const res = await safeFetch(url, { allowedUrls: [config.baseUrl] });
+            const url = `${config.baseUrl}/v1beta/models/${config.model}`;
+            const res = await safeFetch(url, {
+                headers: { 'x-goog-api-key': config.apiKey },
+                allowedUrls: [config.baseUrl],
+            });
             if (res.ok) return { success: true, model: config.model };
             const data = await res.json();
             return { success: false, error: data.error?.message || 'Google API Error' };

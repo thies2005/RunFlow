@@ -197,17 +197,31 @@ export async function POST(request: NextRequest) {
                 return days.includes(dayOfWeek);
             });
 
-            // Upsert logs for all active supplements in the stack
+            // Batch upsert logs for all active supplements in the stack
+            const supplementIds = activeSupplements.map(s => s.id);
+            const existingLogs = await prisma.supplementLog.findMany({
+                where: {
+                    supplementId: { in: supplementIds },
+                    date,
+                }
+            });
+            const existingLogMap = new Map(existingLogs.map(l => [l.supplementId, l]));
+
             const results = [];
             for (const supp of activeSupplements) {
-                const log = await prisma.supplementLog.upsert({
-                    where: {
-                        supplementId_date: { supplementId: supp.id, date }
-                    },
-                    update: { taken },
-                    create: { supplementId: supp.id, date, taken }
-                });
-                results.push(log);
+                const existingLog = existingLogMap.get(supp.id);
+                if (existingLog) {
+                    const log = await prisma.supplementLog.update({
+                        where: { id: existingLog.id },
+                        data: { taken }
+                    });
+                    results.push(log);
+                } else {
+                    const log = await prisma.supplementLog.create({
+                        data: { supplementId: supp.id, date, taken }
+                    });
+                    results.push(log);
+                }
             }
 
             return NextResponse.json(results);

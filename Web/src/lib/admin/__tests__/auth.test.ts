@@ -22,8 +22,16 @@ jest.mock('@/lib/db', () => ({
     },
 }));
 
+jest.mock('bcryptjs', () => ({
+    compare: jest.fn(),
+}));
+
 jest.mock('@/lib/auth/auth-email', () => ({
     verifyPassword: jest.fn(),
+}));
+
+jest.mock('bcryptjs', () => ({
+    compare: jest.fn(),
 }));
 
 import { jwtVerify } from 'jose';

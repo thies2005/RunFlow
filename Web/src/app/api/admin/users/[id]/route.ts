@@ -60,7 +60,7 @@ export async function DELETE(
         await logAdminAction(request, 'DELETE_USER', { type: 'USER', id: userId }, {
             deletedEmail: user.email,
             deletedName: user.name
-        });
+        }, authResult.admin.username);
 
         const response = NextResponse.json({
             success: true,

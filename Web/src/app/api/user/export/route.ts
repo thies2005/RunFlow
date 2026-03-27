@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/db';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
-
-const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
     try {

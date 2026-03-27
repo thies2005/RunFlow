@@ -188,6 +188,17 @@ export async function buildUserContext(userId: string): Promise<UserContext> {
             where: { userId },
             orderBy: { startDate: 'desc' },
             take: 20,
+            select: {
+                startDate: true,
+                type: true,
+                distance: true,
+                movingTime: true,
+                averageHr: true,
+                totalElevation: true,
+                averageCadence: true,
+                runningTss: true,
+                trimp: true,
+            },
         });
 
         context.recentActivities = activities.map((a) => ({

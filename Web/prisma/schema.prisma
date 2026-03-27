@@ -596,6 +596,7 @@ model ChatMessage {
 
   @@index([userId, createdAt])
   @@index([sessionId])
+  @@index([activityId])
 }
 
 model ChatSession {
@@ -679,6 +680,8 @@ model NutritionLog {
   createdAt    DateTime @default(now())
   foodItem     FoodItem @relation(fields: [foodItemId], references: [id])
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
 }
 
 model UserNutritionTarget {

@@ -37,7 +37,7 @@ import { updateFitnessCache } from '@/lib/metrics/fitnessCache';
 describe('POST /api/admin/recalculate-fitness', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (requireAdmin as jest.Mock).mockResolvedValue({ success: true });
+        (requireAdmin as jest.Mock).mockResolvedValue({ admin: { username: 'test-admin', type: 'admin' } });
         (adminRateLimit as jest.Mock).mockResolvedValue({
             success: true,
             result: { remaining: 10, reset: Date.now() + 60000 },

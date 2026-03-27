@@ -207,13 +207,21 @@ export const RATE_LIMITS = {
 export function getClientIdentifier(request: Request): string {
     const headers = request.headers;
 
+    // Prefer x-vercel-forwarded-for (set by Vercel's proxy, harder to spoof)
+    const vercelForwardedFor = headers.get('x-vercel-forwarded-for');
     const forwardedFor = headers.get('x-forwarded-for');
     const realIp = headers.get('x-real-ip');
     const userAgent = headers.get('user-agent') || 'unknown';
 
     let ipAddress: string | null = null;
 
-    if (forwardedFor) {
+    if (vercelForwardedFor) {
+        // Vercel header is more trustworthy than generic x-forwarded-for
+        ipAddress = vercelForwardedFor.split(',')[0].trim();
+    } else if (forwardedFor) {
+        // NOTE: In production behind a reverse proxy, ensure your proxy is configured
+        // to overwrite (not append to) X-Forwarded-For from untrusted sources.
+        // Otherwise, clients can spoof this header to bypass rate limiting.
         ipAddress = forwardedFor.split(',')[0].trim();
     } else if (realIp) {
         ipAddress = realIp.trim();

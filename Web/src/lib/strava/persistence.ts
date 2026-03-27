@@ -28,23 +28,35 @@ export async function saveActivitiesToDatabase(
     let updated = 0;
 
     await prisma.$transaction(async (tx) => {
+        // Batch fetch all existing activities by stravaId to avoid N+1
+        const stravaIds = activities.map(a => safeBigInt(a.activityId));
+        const existingActivities = await tx.activity.findMany({
+            where: { stravaId: { in: stravaIds } },
+            select: { id: true, stravaId: true }
+        });
+        const existingMap = new Map(existingActivities.map(a => [a.stravaId.toString(), a]));
+
+        // Batch fetch potential duplicates for new activities
+        const newActivities = activities.filter(a => a.isNew);
+        const fiveMinutes = 5 * 60 * 1000;
+        const duplicateCandidates = newActivities.length > 0 ? await tx.activity.findMany({
+            where: {
+                userId,
+                stravaId: { lt: BigInt(0) },
+                startDate: {
+                    gte: new Date(Math.min(...newActivities.map(a => a.data.startDate.getTime())) - fiveMinutes),
+                    lte: new Date(Math.max(...newActivities.map(a => a.data.startDate.getTime())) + fiveMinutes),
+                }
+            },
+            select: { id: true, type: true, startDate: true }
+        }) : [];
+
         for (const { activityId, data, isNew } of activities) {
             if (isNew) {
-                // Deduplicate against manual/Health Connect activities (stravaId < 0)
-                const fiveMinutes = 5 * 60 * 1000;
-                const activityTimestamp = data.startDate.getTime();
-
-                const duplicate = await tx.activity.findFirst({
-                    where: {
-                        userId,
-                        stravaId: { lt: BigInt(0) },
-                        type: validateActivityType(data.type),
-                        startDate: {
-                            gte: new Date(activityTimestamp - fiveMinutes),
-                            lte: new Date(activityTimestamp + fiveMinutes),
-                        }
-                    },
-                    select: { id: true }
+                const duplicate = duplicateCandidates.find(d => {
+                    const activityTimestamp = data.startDate.getTime();
+                    return d.type === validateActivityType(data.type) &&
+                        Math.abs(d.startDate.getTime() - activityTimestamp) <= fiveMinutes;
                 });
 
                 if (duplicate) {
@@ -70,10 +82,7 @@ export async function saveActivitiesToDatabase(
                     created++;
                 }
             } else {
-                const existing = await tx.activity.findFirst({
-                    where: { stravaId: safeBigInt(activityId) },
-                    select: { id: true }
-                });
+                const existing = existingMap.get(activityId.toString());
 
                 if (existing) {
                     await tx.activity.update({

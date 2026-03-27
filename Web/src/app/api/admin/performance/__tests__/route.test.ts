@@ -29,7 +29,7 @@ describe('/api/admin/performance', () => {
     });
 
     it('should return performance data for authenticated admin', async () => {
-        requireAdmin.mockResolvedValue({ success: true });
+        requireAdmin.mockResolvedValue({ admin: { username: 'test-admin', type: 'admin' } });
 
         getHealthStatus.mockResolvedValue({
             status: 'healthy',
@@ -82,7 +82,7 @@ describe('/api/admin/performance', () => {
     });
 
     it('should handle errors gracefully', async () => {
-        requireAdmin.mockResolvedValue({ success: true });
+        requireAdmin.mockResolvedValue({ admin: { username: 'test-admin', type: 'admin' } });
         getHealthStatus.mockRejectedValue(new Error('Health check failed'));
 
         const request = new NextRequest('http://localhost/api/admin/performance');

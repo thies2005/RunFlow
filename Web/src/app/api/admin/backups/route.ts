@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
             }))
         });
 
-        await logAdminAction(request, 'VIEW_BACKUPS', { type: 'SYSTEM' }, { count: backups.length });
+        await logAdminAction(request, 'VIEW_BACKUPS', { type: 'SYSTEM' }, { count: backups.length }, authResult.admin.username);
 
         return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
                 }
             });
 
-            await logAdminAction(request, 'UPLOAD_BACKUP', { type: 'BACKUP', id: backup.name }, { size: formatBytes(backup.size) });
+            await logAdminAction(request, 'UPLOAD_BACKUP', { type: 'BACKUP', id: backup.name }, { size: formatBytes(backup.size) }, authResult.admin.username);
 
             return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
         }
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
                 message: `Database restored from ${backupName}`
             });
 
-            await logAdminAction(request, 'UPLOAD_BACKUP', { type: 'BACKUP', id: backupName }, { action: 'restore' });
+            await logAdminAction(request, 'UPLOAD_BACKUP', { type: 'BACKUP', id: backupName }, { action: 'restore' }, authResult.admin.username);
 
             return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
         }
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
                 cleanup: result
             });
 
-            await logAdminAction(request, 'DELETE_BACKUP', { type: 'SYSTEM' }, { deletedCount: result.deleted });
+            await logAdminAction(request, 'DELETE_BACKUP', { type: 'SYSTEM' }, { deletedCount: result.deleted }, authResult.admin.username);
 
             return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
         }

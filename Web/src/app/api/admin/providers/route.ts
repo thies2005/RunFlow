@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
             action: 'CREATE',
             name: provider.name,
             slug: provider.slug
-        });
+        }, authResult.admin.username);
 
         const response = NextResponse.json({
             success: true,
@@ -174,7 +174,7 @@ export async function PUT(request: NextRequest) {
             action: 'UPDATE',
             name: provider.name,
             updatedFields: Object.keys(updateData)
-        });
+        }, authResult.admin.username);
 
         const response = NextResponse.json({
             success: true,
@@ -231,7 +231,7 @@ export async function DELETE(request: NextRequest) {
 
         await logAdminAction(request, 'MODIFY_PROVIDERS', { type: 'PROVIDER', id }, {
             action: 'DELETE'
-        });
+        }, authResult.admin.username);
 
         const response = NextResponse.json({ success: true });
         return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);

@@ -8,6 +8,7 @@
 import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { verifyPassword } from '@/lib/auth/auth-email';
 
@@ -55,6 +56,7 @@ export interface AdminJWTPayload extends JWTPayload {
 export async function verifyAdminCredentials(username: string, password: string): Promise<boolean> {
     const adminUsername = process.env.ADMIN_USERNAME;
     const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
     const safeCompare = (a: string, b: string) => {
         const bufA = Buffer.from(a);
@@ -62,11 +64,25 @@ export async function verifyAdminCredentials(username: string, password: string)
         return bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);
     };
 
-    if (adminUsername && adminPassword) {
+    if (adminUsername) {
         const usernameValid = safeCompare(username, adminUsername);
-        const passwordValid = safeCompare(password, adminPassword);
 
-        if (usernameValid && passwordValid) {
+        if (usernameValid) {
+            if (adminPasswordHash) {
+                if (await bcrypt.compare(password, adminPasswordHash)) {
+                    return true;
+                }
+            }
+
+            if (adminPassword) {
+                const passwordValid = safeCompare(password, adminPassword);
+                if (passwordValid) return true;
+            }
+        }
+    }
+
+    if (adminPasswordHash && !adminUsername) {
+        if (await bcrypt.compare(password, adminPasswordHash)) {
             return true;
         }
     }

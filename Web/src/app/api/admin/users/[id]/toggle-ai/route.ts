@@ -78,7 +78,7 @@ export async function POST(
         await logAdminAction(request, 'TOGGLE_AI_ACCESS', { type: 'USER', id: userId }, {
             newTier: tier,
             adminAllowed
-        });
+        }, authResult.admin.username);
 
         const response = NextResponse.json({
             success: true,

@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
             sizeBytes: buffer.length,
         });
 
-        await logAdminAction(request, 'UPLOAD_BACKUP', { type: 'BACKUP', id: sanitizedFilename }, { size: buffer.length });
+        await logAdminAction(request, 'UPLOAD_BACKUP', { type: 'BACKUP', id: sanitizedFilename }, { size: buffer.length }, authResult.admin.username);
 
         const response = NextResponse.json({
             success: true,

@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
 
         await logAdminAction(request, 'VIEW_USERS', undefined, {
             page, limit, searchHasValue: !!search, returnedCount: transformedUsers.length
-        });
+        }, authResult.admin.username);
 
         return applyRateLimitHeaders(response, 'read', rateLimit.result!.remaining, rateLimit.result!.reset);
 

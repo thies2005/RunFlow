@@ -33,12 +33,11 @@ export async function logAdminAction(
     req: NextRequest,
     action: AdminAction,
     target?: AuditLogTarget,
-    details?: Record<string, any>
+    details?: Record<string, any>,
+    adminUser?: string
 ) {
     try {
-        // Since admin auth is handled via a shared global password in this system,
-        // we use a generic identifier. In a multi-admin setup, this would be the admin's User ID.
-        const adminUser = 'SYSTEM_ADMIN';
+        const resolvedAdminUser = adminUser || 'SYSTEM_ADMIN';
 
         // Safely extract client IP from headers
         const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
@@ -49,7 +48,7 @@ export async function logAdminAction(
 
         await prisma.adminAuditLog.create({
             data: {
-                adminUser,
+                adminUser: resolvedAdminUser,
                 action,
                 targetType: target?.type,
                 targetId: target?.id,

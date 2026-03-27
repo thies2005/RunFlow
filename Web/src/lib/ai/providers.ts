@@ -55,7 +55,7 @@ function isPrivateIP(hostname: string): boolean {
     return privatePatterns.some(pattern => pattern.test(hostname));
 }
 
-export function validateUrl(url: string, _allowedBaseUrls: readonly string[] = DEFAULT_ALLOWED_BASE_URLS): boolean {
+export function validateUrl(url: string, allowedBaseUrls: readonly string[] = DEFAULT_ALLOWED_BASE_URLS): boolean {
     try {
         const parsed = new URL(url);
 
@@ -73,6 +73,14 @@ export function validateUrl(url: string, _allowedBaseUrls: readonly string[] = D
 
         // Hostname must have at least one dot (e.g. api.example.com), not bare hostname
         if (!parsed.hostname.includes('.')) {
+            return false;
+        }
+
+        const allowedHostnames = allowedBaseUrls.map(u => {
+            try { return new URL(u).hostname; } catch { return ''; }
+        }).filter(Boolean);
+
+        if (allowedHostnames.length > 0 && !allowedHostnames.some(allowed => parsed.hostname === allowed || parsed.hostname.endsWith('.' + allowed))) {
             return false;
         }
 
@@ -105,7 +113,7 @@ export async function safeFetch(input: RequestInfo | URL, init?: RequestInit & {
     return response;
 }
 
-export function validateBaseUrl(baseUrl: string, _extraAllowedUrls: string[] = []): boolean {
+export function validateBaseUrl(baseUrl: string, extraAllowedUrls: string[] = []): boolean {
     try {
         const url = new URL(baseUrl);
 
@@ -118,6 +126,15 @@ export function validateBaseUrl(baseUrl: string, _extraAllowedUrls: string[] = [
         }
 
         if (url.hostname === '0.0.0.0' || url.hostname === '[::]' || url.hostname === 'localhost' || !url.hostname.includes('.')) {
+            return false;
+        }
+
+        const allAllowed = [...WELL_KNOWN_BASE_URLS, ...extraAllowedUrls];
+        const allowedHostnames = allAllowed.map(u => {
+            try { return new URL(u).hostname; } catch { return ''; }
+        }).filter(Boolean);
+
+        if (allowedHostnames.length > 0 && !allowedHostnames.some(allowed => url.hostname === allowed || url.hostname.endsWith('.' + allowed))) {
             return false;
         }
 

@@ -7,6 +7,7 @@ import { AuthOptions } from 'next-auth';
 import StravaProvider from 'next-auth/providers/strava';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import type { Adapter } from 'next-auth/adapters';
 import { prisma } from '@/lib/db';
 import { encryptToken, decryptToken } from '@/lib/crypto';
 import { verifyPassword } from '@/lib/auth/auth-email';
@@ -14,8 +15,65 @@ import { TIME_RANGES } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
 
+function createEncryptedAdapter(): Adapter {
+    const baseAdapter = PrismaAdapter(prisma) as Adapter;
+
+    return {
+        ...baseAdapter,
+        async linkAccount(account) {
+            return baseAdapter.linkAccount!({
+                ...account,
+                access_token: account.access_token ? encryptToken(account.access_token) : null,
+                refresh_token: account.refresh_token ? encryptToken(account.refresh_token) : null,
+                id_token: account.id_token ? encryptToken(account.id_token) : null,
+            });
+        },
+        async createUser(user) {
+            return baseAdapter.createUser!(user);
+        },
+        async getUser(id) {
+            return baseAdapter.getUser!(id);
+        },
+        async getUserByEmail(email) {
+            return baseAdapter.getUserByEmail!(email);
+        },
+        async getSessionAndUser(sessionToken) {
+            return baseAdapter.getSessionAndUser!(sessionToken);
+        },
+        async createSession(session) {
+            return baseAdapter.createSession!(session);
+        },
+        async updateSession(session) {
+            return baseAdapter.updateSession!(session);
+        },
+        async deleteSession(sessionToken) {
+            return baseAdapter.deleteSession!(sessionToken);
+        },
+        async updateUser(user) {
+            return baseAdapter.updateUser!(user);
+        },
+        async getAccount(providerAccountId) {
+            return baseAdapter.getAccount!(providerAccountId);
+        },
+        async updateAccount(account) {
+            return baseAdapter.updateAccount!({
+                ...account,
+                access_token: account.access_token ? encryptToken(account.access_token) : null,
+                refresh_token: account.refresh_token ? encryptToken(account.refresh_token) : null,
+                id_token: account.id_token ? encryptToken(account.id_token) : null,
+            });
+        },
+        async deleteUser(id) {
+            return baseAdapter.deleteUser!(id);
+        },
+        async unlinkAccount(providerAccountId) {
+            return baseAdapter.unlinkAccount!(providerAccountId);
+        },
+    };
+}
+
 export const authOptions: AuthOptions = {
-    adapter: PrismaAdapter(prisma) as any,
+    adapter: createEncryptedAdapter() as any,
     providers: [
         StravaProvider({
             clientId: process.env.STRAVA_CLIENT_ID!,
@@ -87,6 +145,7 @@ export const authOptions: AuthOptions = {
             // Encrypt tokens before storing
             const encryptedAccess = account?.access_token ? encryptToken(account.access_token) : null;
             const encryptedRefresh = account?.refresh_token ? encryptToken(account.refresh_token) : null;
+            const encryptedIdToken = account?.id_token ? encryptToken(account.id_token) : null;
 
             // CRITICAL FIX: Force-update account tokens on re-authentication
             // PrismaAdapter may skip updating existing accounts, so we explicitly update
@@ -108,6 +167,7 @@ export const authOptions: AuthOptions = {
                             data: {
                                 access_token: encryptedAccess,
                                 refresh_token: encryptedRefresh,
+                                id_token: encryptedIdToken,
                                 expires_at: account.expires_at,
                                 token_type: account.token_type,
                                 scope: account.scope,
@@ -126,6 +186,9 @@ export const authOptions: AuthOptions = {
             }
             if (account?.refresh_token) {
                 account.refresh_token = encryptedRefresh;
+            }
+            if (account?.id_token) {
+                account.id_token = encryptedIdToken;
             }
 
             return true;

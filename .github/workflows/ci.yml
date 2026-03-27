@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: Web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+        working-directory: Web
+
+      - name: Lint
+        run: npm run lint
+        working-directory: Web
+
+      - name: Type check
+        run: npx tsc --noEmit
+        working-directory: Web
+
+      - name: Test
+        run: npm test
+        working-directory: Web
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+        working-directory: Web
+        continue-on-error: true
+
+      - name: Build
+        run: npm run build
+        working-directory: Web

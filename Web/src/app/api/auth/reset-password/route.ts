@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
         }
 
-        const { email, code, password } = await request.json();
+        const { email: rawEmail, code, password } = await request.json();
+        const email = typeof rawEmail === 'string' ? rawEmail.toLowerCase() : rawEmail;
 
         if (!email || !code || !password) {
             return NextResponse.json(

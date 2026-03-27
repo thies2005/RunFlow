@@ -198,7 +198,7 @@ services:
     entrypoint: /bin/sh
     command: >
       -c "while true; do
-        wget -q -O- $${APP_BASE_URL}/api/cron/reminders?secret=$${CRON_SECRET} || true;
+        wget -q -O- --header=\"Authorization: Bearer $${CRON_SECRET}\" $${APP_BASE_URL}/api/cron/reminders || true;
         sleep 300;
       done"
     environment:

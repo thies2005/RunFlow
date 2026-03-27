@@ -13,41 +13,52 @@ import { getExternalApiUser } from '@/lib/api/externalAuth';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
+import { validateOrigin, setCorsHeaders } from '@/lib/security/cors';
 
 // Rate limit for external API
 const EXTERNAL_API_RATE_LIMIT = { limit: 100, windowSeconds: 60, prefix: 'external-stats' };
 
-// CORS headers
-const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-};
+export async function OPTIONS(request: NextRequest) {
+    if (!validateOrigin(request)) {
+        return new NextResponse('Forbidden', { status: 403 });
+    }
 
-export async function OPTIONS() {
-    return new NextResponse(null, { status: 204, headers: corsHeaders });
+    const response = new NextResponse(null, { status: 204 });
+    setCorsHeaders(request, response.headers);
+    return response;
 }
 
 export async function GET(request: NextRequest) {
     try {
+        if (!validateOrigin(request)) {
+            return new NextResponse('Forbidden', { status: 403 });
+        }
+
         // Rate limiting
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, EXTERNAL_API_RATE_LIMIT);
 
         if (!rateLimitResult.allowed) {
-            return NextResponse.json(
+            const response = NextResponse.json(
                 { error: 'Too many requests', code: 'RATE_LIMITED' },
-                { status: 429, headers: { ...corsHeaders, ...rateLimitHeaders(rateLimitResult) } }
+                { status: 429 }
             );
+            setCorsHeaders(request, response.headers);
+            Object.entries(rateLimitHeaders(rateLimitResult)).forEach(([key, value]) => {
+                response.headers.set(key, value);
+            });
+            return response;
         }
 
         // Authenticate via API key
         const authResult = await getExternalApiUser(request);
         if (!authResult) {
-            return NextResponse.json(
+            const response = NextResponse.json(
                 { error: 'Invalid or missing API key', code: 'UNAUTHORIZED' },
-                { status: 401, headers: corsHeaders }
+                { status: 401 }
             );
+            setCorsHeaders(request, response.headers);
+            return response;
         }
 
         const { userId, user } = authResult;
@@ -139,7 +150,7 @@ export async function GET(request: NextRequest) {
             ? parseFloat((currentFitness.atl / currentFitness.ctl).toFixed(2))
             : 0;
 
-        return NextResponse.json(
+        const response = NextResponse.json(
             {
                 user: {
                     name: user.name,
@@ -173,9 +184,9 @@ export async function GET(request: NextRequest) {
                         longRunScore: marathonShape?.longRunScore || 0,
                     },
                     fitness: {
-                        ctl, // Chronic Training Load (fitness)
-                        atl, // Acute Training Load (fatigue)
-                        tsb, // Training Stress Balance (form)
+                        ctl,
+                        atl,
+                        tsb,
                         workloadRatio,
                         maxCtl: Math.round(maxFitnessValues._max.ctl || 0),
                         maxAtl: Math.round(maxFitnessValues._max.atl || 0),
@@ -185,14 +196,20 @@ export async function GET(request: NextRequest) {
                     hrMax: maxHR,
                 },
                 generatedAt: new Date().toISOString(),
-            },
-            { headers: { ...corsHeaders, ...rateLimitHeaders(rateLimitResult) } }
+            }
         );
+        setCorsHeaders(request, response.headers);
+        Object.entries(rateLimitHeaders(rateLimitResult)).forEach(([key, value]) => {
+            response.headers.set(key, value);
+        });
+        return response;
     } catch (error) {
         console.error('External API stats error:', error);
-        return NextResponse.json(
+        const response = NextResponse.json(
             { error: 'Internal server error', code: 'INTERNAL_ERROR' },
-            { status: 500, headers: corsHeaders }
+            { status: 500 }
         );
+        setCorsHeaders(request, response.headers);
+        return response;
     }
 }

@@ -303,9 +303,10 @@ jobs:
 
 ---
 
-## Step 3 — Medium Severity Fixes (Complete Third)
+## Step 3 — Medium Severity Fixes (Complete Third) — DONE
 
 > **16 findings. Estimated effort: 3-5 days. Address security hardening and data integrity.**
+> **Completed:** 2026-03-27. PR: https://github.com/thies2005/RunFlow/pull/148
 
 | # | Finding | File | Fix |
 |---|---------|------|-----|

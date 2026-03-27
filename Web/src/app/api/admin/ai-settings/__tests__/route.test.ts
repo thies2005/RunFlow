@@ -64,7 +64,7 @@ describe('/api/admin/ai-settings', () => {
             result: { remaining: 10, reset: Date.now() + 60000 },
         });
         (applyRateLimitHeaders as jest.Mock).mockImplementation((response) => response);
-        (requireAdmin as jest.Mock).mockResolvedValue({ success: true });
+        (requireAdmin as jest.Mock).mockResolvedValue({ admin: { username: 'test-admin', type: 'admin' } });
         (validateCsrfToken as jest.Mock).mockReturnValue(true);
     });
 

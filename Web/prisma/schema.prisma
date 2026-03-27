@@ -596,9 +596,8 @@ model ChatMessage {
 
   @@index([userId, createdAt])
   @@index([sessionId])
+  @@index([activityId])
 }
-
-model ChatSession {
   id        String        @id @default(cuid())
   userId    String
   title     String        @default("New Chat")
@@ -679,9 +678,9 @@ model NutritionLog {
   createdAt    DateTime @default(now())
   foodItem     FoodItem @relation(fields: [foodItemId], references: [id])
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
 
-model UserNutritionTarget {
+  @@index([userId, date])
+}
   id                    String   @id @default(cuid())
   userId                String   @unique
   dailyCalories         Int      @default(2000)

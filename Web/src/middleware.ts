@@ -134,11 +134,11 @@ export async function middleware(request: NextRequest) {
     // Override CSP (allow inline scripts to avoid blank page with Next.js inline chunks)
     const csp = [
         `default-src 'self'`,
-        `script-src 'self' 'unsafe-inline' https:`,
+        `script-src 'self' 'unsafe-inline' https://cdn.sentry.io https://*.sentry.io`,
         `style-src 'self' 'unsafe-inline'`,
         `img-src 'self' data: https://*.strava.com https://*.googleusercontent.com https://dgalywyr863hv.cloudfront.net https://avatars.githubusercontent.com`,
         `font-src 'self' data:`,
-        `connect-src 'self' https://www.strava.com https://api.openai.com`,
+        `connect-src 'self' https://www.strava.com https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://openrouter.ai https://*.sentry.io https://o*.ingest.sentry.io`,
         `frame-src 'none'`,
         `object-src 'none'`,
         `base-uri 'self'`,

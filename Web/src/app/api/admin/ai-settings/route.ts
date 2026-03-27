@@ -247,7 +247,7 @@ export async function PUT(request: NextRequest) {
 
         await logAdminAction(request, 'MODIFY_AI_SETTINGS', { type: 'SETTINGS' }, {
             updatedFields: Object.keys(updateData)
-        });
+        }, authResult.admin.username);
 
         return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
     } catch (error) {

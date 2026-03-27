@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         await logAdminAction(request, 'RECALCULATE_FITNESS', targetUserId ? { type: 'USER', id: targetUserId } : { type: 'SYSTEM' }, {
             totalUsersProcessed: users.length,
             targetUserId: targetUserId || 'ALL',
-        });
+        }, authResult.admin.username);
 
         const response = NextResponse.json({
             message: 'Recalculation complete',

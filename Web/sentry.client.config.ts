@@ -51,6 +51,30 @@ Sentry.init({
             return null;
         }
 
+        // Scrub PII from request headers
+        if (event.request?.headers) {
+            const sensitiveHeaders = ['authorization', 'cookie', 'set-cookie', 'x-csrf-token', 'x-api-key'];
+            for (const header of sensitiveHeaders) {
+                if (event.request.headers[header]) {
+                    event.request.headers[header] = '[Filtered]';
+                }
+            }
+        }
+
+        // Scrub PII from request cookies
+        if (event.request?.cookies) {
+            for (const key of Object.keys(event.request.cookies)) {
+                event.request.cookies[key] = '[Filtered]';
+            }
+        }
+
+        // Remove user-identifying info if present
+        if (event.user) {
+            delete event.user.email;
+            delete event.user.ip_address;
+            delete event.user.username;
+        }
+
         return event;
     },
 });

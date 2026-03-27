@@ -1,10 +1,38 @@
 import { LRUCache } from 'lru-cache';
 import { NextResponse } from 'next/server';
 import { MINUTE_MS } from '@/lib/constants';
+import { logger } from '@/lib/logging/logger';
 
 interface AdminRateLimitRecord {
     timestamps: number[];
     violations: number[];
+}
+
+interface RedisClient {
+    incr(_key: string): Promise<number>;
+    expire(_key: string, _seconds: number): Promise<number>;
+    ttl(_key: string): Promise<number>;
+    get(_key: string): Promise<string | null>;
+    set(_key: string, _value: string, ..._args: unknown[]): Promise<unknown>;
+}
+
+let redisClient: RedisClient | null = null;
+let redisInitialized = false;
+
+async function initRedis(): Promise<boolean> {
+    if (redisInitialized) return !!redisClient;
+    redisInitialized = true;
+
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) return false;
+
+    try {
+        const { Redis } = await import('@upstash/redis') as { Redis: new (_options: { url: string; token: string }) => RedisClient };
+        redisClient = new Redis({ url: redisUrl, token: process.env.REDIS_TOKEN || '' });
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 const adminCache = new LRUCache<string, AdminRateLimitRecord>({
@@ -91,6 +119,22 @@ function isIPBlocked(ip: string): boolean {
     return cleanViolations.length >= VIOLATION_THRESHOLD;
 }
 
+async function isIPBlockedRedis(ip: string): Promise<boolean> {
+    if (!redisClient) return false;
+    try {
+        const key = getViolationKey(ip);
+        const count = await redisClient.incr(key);
+        if (count === 1) {
+            await redisClient.expire(key, Math.ceil(BLOCK_DURATION / 1000));
+        }
+        const ttl = await redisClient.ttl(key);
+        if (ttl <= 0) return false;
+        return count >= VIOLATION_THRESHOLD;
+    } catch {
+        return false;
+    }
+}
+
 function recordViolation(ip: string): void {
     const key = getViolationKey(ip);
     const now = Date.now();
@@ -103,6 +147,17 @@ function recordViolation(ip: string): void {
         timestamps: record.timestamps,
         violations: cleanViolations,
     });
+}
+
+async function recordViolationRedis(ip: string): Promise<void> {
+    if (!redisClient) return;
+    try {
+        const key = getViolationKey(ip);
+        await redisClient.incr(key);
+        await redisClient.expire(key, Math.ceil(BLOCK_DURATION / 1000));
+    } catch {
+        // Silently fail - in-memory will handle it
+    }
 }
 
 export interface AdminRateLimitResult {
@@ -118,7 +173,96 @@ export async function adminRateLimit(
     operation: AdminOperation
 ): Promise<{ success: boolean; result?: AdminRateLimitResult; error?: NextResponse }> {
     const ip = getClientIP(request);
+    const hasRedis = await initRedis();
 
+    if (hasRedis && redisClient) {
+        return adminRateLimitRedis(ip, operation);
+    }
+
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+        logger.warn('Admin rate limiter: Redis not available in production. Falling back to in-memory.');
+    }
+
+    return adminRateLimitInMemory(ip, operation);
+}
+
+async function adminRateLimitRedis(
+    ip: string,
+    operation: AdminOperation
+): Promise<{ success: boolean; result?: AdminRateLimitResult; error?: NextResponse }> {
+    try {
+        const blocked = await isIPBlockedRedis(ip);
+        if (blocked) {
+            const now = Date.now();
+            const retryAfter = Math.ceil(BLOCK_DURATION / 1000);
+            return {
+                success: false,
+                error: new NextResponse(
+                    JSON.stringify({ error: 'Too many violations - IP temporarily blocked' }),
+                    {
+                        status: 429,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Retry-After': String(retryAfter),
+                            'X-RateLimit-Limit': '0',
+                            'X-RateLimit-Remaining': '0',
+                            'X-RateLimit-Reset': String(Math.floor((now + BLOCK_DURATION) / 1000)),
+                        },
+                    }
+                ),
+            };
+        }
+
+        const config = ADMIN_RATE_LIMITS[operation];
+        const key = getCacheKey(ip, operation);
+        const count = await redisClient!.incr(key);
+        if (count === 1) {
+            await redisClient!.expire(key, Math.ceil(config.window / 1000));
+        }
+
+        const ttl = await redisClient!.ttl(key);
+        const resetAt = Date.now() + (ttl > 0 ? ttl * 1000 : config.window);
+
+        if (count > config.limit) {
+            await recordViolationRedis(ip);
+            const retryAfter = Math.max(0, Math.ceil((resetAt - Date.now()) / 1000));
+            return {
+                success: false,
+                error: new NextResponse(
+                    JSON.stringify({ error: 'Too many requests' }),
+                    {
+                        status: 429,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Retry-After': String(retryAfter),
+                            'X-RateLimit-Limit': String(config.limit),
+                            'X-RateLimit-Remaining': '0',
+                            'X-RateLimit-Reset': String(Math.floor(resetAt / 1000)),
+                        },
+                    }
+                ),
+            };
+        }
+
+        return {
+            success: true,
+            result: {
+                success: true,
+                remaining: config.limit - count,
+                reset: Math.floor(resetAt / 1000),
+                limit: config.limit,
+            },
+        };
+    } catch (error) {
+        logger.error('Redis admin rate limit error', { error });
+        return adminRateLimitInMemory(ip, operation);
+    }
+}
+
+function adminRateLimitInMemory(
+    ip: string,
+    operation: AdminOperation
+): { success: boolean; result?: AdminRateLimitResult; error?: NextResponse } {
     if (isIPBlocked(ip)) {
         const now = Date.now();
         const record = adminCache.get(getViolationKey(ip));

@@ -41,13 +41,6 @@ function getEncryptionKey(): Buffer {
  */
 export function encryptToken(plaintext: string): string {
     const key = getEncryptionKey();
-    if (!key) {
-        // Encryption not configured
-        if (process.env.NODE_ENV === 'production') {
-            throw new Error('CRITICAL SECURITY ERROR: ENCRYPTION_KEY not set in production! Cannot encrypt tokens safely.');
-        }
-        return plaintext;
-    }
 
     const iv = randomBytes(IV_LENGTH);
     const cipher = createCipheriv(ALGORITHM, key, iv);
@@ -59,7 +52,6 @@ export function encryptToken(plaintext: string): string {
 
     const authTag = cipher.getAuthTag();
 
-    // Combine IV + authTag + ciphertext
     const combined = Buffer.concat([iv, authTag, encrypted]);
     return combined.toString('base64');
 }
@@ -73,18 +65,12 @@ export function encryptToken(plaintext: string): string {
  */
 export function decryptToken(encryptedToken: string): string {
     const key = getEncryptionKey();
-    if (!key) {
-        // Encryption not configured - assume plaintext
-        return encryptedToken;
-    }
 
     try {
         const combined = Buffer.from(encryptedToken, 'base64');
 
-        // Check minimum length (IV + authTag)
         if (combined.length < IV_LENGTH + AUTH_TAG_LENGTH) {
-            // Too short to be encrypted - might be plaintext (migration scenario)
-            return encryptedToken;
+            throw new Error('Encrypted data too short - possible plaintext token');
         }
 
         const iv = combined.subarray(0, IV_LENGTH);
@@ -101,18 +87,15 @@ export function decryptToken(encryptedToken: string): string {
 
         return decrypted.toString('utf8');
     } catch (error) {
-        // Decryption failed - key mismatch or corrupted data
-        logger.error('Token decryption failed - possible key mismatch or data corruption. Returning raw value as migration fallback.', {
+        if (error instanceof Error && error.message === 'Token decryption failed - possible key rotation or data corruption') {
+            throw error;
+        }
+        logger.error('Token decryption failed - possible key mismatch or data corruption.', {
             error: error instanceof Error ? error.message : String(error),
             tokenLength: encryptedToken.length,
         });
 
-        if (process.env.NODE_ENV === 'production') {
-            throw new Error('Token decryption failed - possible key rotation or data corruption');
-        }
-
-        // Fallback: return raw value (assuming plaintext migration) for dev only
-        return encryptedToken;
+        throw new Error('Token decryption failed - possible key rotation or data corruption');
     }
 }
 

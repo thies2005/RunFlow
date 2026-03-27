@@ -54,7 +54,7 @@ export async function GET(
             headers.set(key, value);
         });
 
-        await logAdminAction(request, 'DOWNLOAD_BACKUP', { type: 'BACKUP', id: safeFilename }, { size: stats.size });
+        await logAdminAction(request, 'DOWNLOAD_BACKUP', { type: 'BACKUP', id: safeFilename }, { size: stats.size }, authResult.admin.username);
 
         return new NextResponse(fileBuffer, {
             status: 200,

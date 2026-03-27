@@ -54,22 +54,27 @@ describe('Token Encryption', () => {
             expect(decryptToken(encrypted2)).toBe(token);
         });
 
-        it('should fail gracefully when decrypting invalid data', () => {
+        it('should throw when decrypting invalid data', () => {
             const invalidData = 'not-encrypted-data';
-            // decryptToken falls back to returning input on failure
-            expect(decryptToken(invalidData)).toBe(invalidData);
+            expect(() => decryptToken(invalidData)).toThrow(/Token decryption failed/);
         });
 
-        it('should handle decryption with wrong key by returning ciphertext (fallback)', () => {
+        it('should throw on decryption with wrong key', () => {
             const token = 'secret-data';
             const encrypted = encryptToken(token);
 
-            // Change key
             process.env.ENCRYPTION_KEY = randomBytes(32).toString('base64');
 
-            // Should return encrypted string as fallback
-            const result = decryptToken(encrypted);
-            expect(result).toBe(encrypted);
+            expect(() => decryptToken(encrypted)).toThrow(/Token decryption failed/);
+        });
+
+        it('should handle decryption with wrong key by throwing error', () => {
+            const token = 'secret-data';
+            const encrypted = encryptToken(token);
+
+            process.env.ENCRYPTION_KEY = randomBytes(32).toString('base64');
+
+            expect(() => decryptToken(encrypted)).toThrow(/Token decryption failed/);
         });
     });
 
@@ -82,12 +87,12 @@ describe('Token Encryption', () => {
             expect(isEncryptionEnabled()).toBe(false);
         });
 
-        it('should throw when encrypting', () => {
+        it('should throw when encrypting without key', () => {
             const token = 'plaintext-token';
             expect(() => encryptToken(token)).toThrow(/SECURITY ERROR/);
         });
 
-        it('should throw when decrypting', () => {
+        it('should throw when decrypting without key', () => {
             const token = 'plaintext-token';
             expect(() => decryptToken(token)).toThrow(/SECURITY ERROR/);
         });

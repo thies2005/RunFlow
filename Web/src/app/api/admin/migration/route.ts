@@ -403,6 +403,7 @@ export async function GET(request: NextRequest) {
       'EXPORT_MIGRATION_BUNDLE',
       { type: 'SYSTEM' },
       { providerCount: providers.length, hasGlobalSettings: !!globalSettings },
+      authResult.admin.username,
     );
 
     const response = new NextResponse(JSON.stringify(bundle, null, 2), {
@@ -549,6 +550,7 @@ export async function POST(request: NextRequest) {
         providersUpdated: results.providersUpdated,
         warnings: results.warnings,
       },
+      authResult.admin.username,
     );
 
     const response = NextResponse.json({ success: true, results });

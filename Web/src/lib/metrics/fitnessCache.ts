@@ -90,13 +90,28 @@ export async function updateFitnessCache(userId: string, modifiedActivities: Par
             }
         }
 
-        // 4. Fetch All Activities from Start Date onwards
         const activities = await prisma.activity.findMany({
             where: {
                 userId,
                 startDate: { gte: startDate }
             },
-            orderBy: { startDate: 'asc' }
+            orderBy: { startDate: 'asc' },
+            select: {
+                id: true,
+                type: true,
+                startDate: true,
+                distance: true,
+                movingTime: true,
+                trimp: true,
+                runningTss: true,
+                hrZone1Time: true,
+                hrZone2Time: true,
+                hrZone3Time: true,
+                hrZone4Time: true,
+                hrZone5Time: true,
+                hrZone6Time: true,
+                hrZone7Time: true,
+            }
         });
 
         // 5. Iterate Day by Day

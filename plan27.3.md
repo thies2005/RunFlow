@@ -6,9 +6,10 @@
 
 ---
 
-## Step 1 — Critical Fixes + Coolify Deployment (Complete First)
+## Step 1 — Critical Fixes + Coolify Deployment (Complete First) — DONE
 
 > **10 findings. Estimated effort: 1-2 days. Unblocks deployment and prevents data breach.**
+> **Completed:** 2026-03-27. PR: https://github.com/thies2005/RunFlow/pull/146
 
 | # | Finding | File | Fix |
 |---|---------|------|-----|
@@ -551,16 +552,16 @@ Replace each occurrence:
 
 | # | Severity | Finding | Status |
 |---|----------|---------|--------|
-| 1.1 | CRITICAL | Coolify app memory 512M→2G | pending |
-| 1.2 | CRITICAL | Coolify DB memory 1G→2G | pending |
-| 1.3 | CRITICAL | Coolify health check timeout 10s→30s | pending |
-| 1.4 | CRITICAL | Coolify POSTGRES_PASSWORD guard missing | pending |
-| 1.5 | CRITICAL | OAuth tokens in plaintext | pending |
-| 1.6 | CRITICAL | `/api/diagnostic` no auth | pending |
-| 1.7 | CRITICAL | `/api/test-db` no auth | pending |
-| 1.8 | CRITICAL | SSRF protection broken | pending |
-| 1.9 | CRITICAL | `/api/scan-image` IDOR | pending |
-| 1.10 | CRITICAL | `/api/cron/aggregate-metrics` auth bypass | pending |
+| 1.1 | CRITICAL | Coolify app memory 512M→2G | **done** |
+| 1.2 | CRITICAL | Coolify DB memory 1G→2G | **done** |
+| 1.3 | CRITICAL | Coolify health check timeout 10s→30s | **done** |
+| 1.4 | CRITICAL | Coolify POSTGRES_PASSWORD guard missing | **done** |
+| 1.5 | CRITICAL | OAuth tokens in plaintext | **done** (already encrypted) |
+| 1.6 | CRITICAL | `/api/diagnostic` no auth | **done** |
+| 1.7 | CRITICAL | `/api/test-db` no auth | **done** |
+| 1.8 | CRITICAL | SSRF protection broken | **done** |
+| 1.9 | CRITICAL | `/api/scan-image` IDOR | **done** |
+| 1.10 | CRITICAL | `/api/cron/aggregate-metrics` auth bypass | **done** |
 | 2.1 | HIGH | Prompt injection via customPromptAddition | pending |
 | 2.2 | HIGH | Email case inconsistency | pending |
 | 2.3 | HIGH | External API CORS wildcard | pending |

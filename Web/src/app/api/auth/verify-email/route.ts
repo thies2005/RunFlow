@@ -14,7 +14,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Too many verification attempts. Please try again later.' }, { status: 429 });
         }
 
-        const { email, code } = await request.json();
+        const { email: rawEmail, code } = await request.json();
+        const email = typeof rawEmail === 'string' ? rawEmail.toLowerCase() : rawEmail;
 
         if (!email || !code) {
             return NextResponse.json(

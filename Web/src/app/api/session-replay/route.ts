@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
+import { requireAdmin } from '@/lib/admin/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,13 +73,9 @@ function sanitizeEventData(data: any): any {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.isAdmin) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const authResult = await requireAdmin(request);
+    if ('error' in authResult) {
+      return authResult.error;
     }
 
     const { searchParams } = new URL(request.url);

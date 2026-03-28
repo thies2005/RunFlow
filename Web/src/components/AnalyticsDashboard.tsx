@@ -54,13 +54,14 @@ const ZoneTrendChart = memo(({ data }: { data: HistoryResponse['zoneTrend'] }) =
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => v >= 60 ? `${Math.round(v / 60)}h` : `${v}m`} />
-                    <Tooltip content={<ChartTooltip formatter={(value: number) => {
-                        if (value >= 60) {
-                            const hours = Math.floor(value / 60);
-                            const mins = Math.round(value % 60);
+                    <Tooltip content={<ChartTooltip formatter={(value: string | number) => {
+                        const numVal = typeof value === 'number' ? value : parseFloat(String(value));
+                        if (numVal >= 60) {
+                            const hours = Math.floor(numVal / 60);
+                            const mins = Math.round(numVal % 60);
                             return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
                         }
-                        return `${Math.round(value)}m`;
+                        return `${Math.round(numVal)}m`;
                     }} />} />
                     <Area type="monotone" dataKey="Z1" stackId="1" stroke="#10b981" fill="#10b981" name="Z1 Recovery" />
                     <Area type="monotone" dataKey="Z2" stackId="1" stroke="#84cc16" fill="#84cc16" name="Z2 Aerobic" />
@@ -149,7 +150,7 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
                                 ))}
                             </Pie>
                             <Tooltip
-                                content={<ChartTooltip formatter={(value: number) => formatZoneTime(value)} />}
+                                content={<ChartTooltip formatter={(value: string | number) => formatZoneTime(typeof value === 'number' ? value : parseFloat(String(value)))} />}
                             />
                         </PieChart>
                     </ResponsiveContainer>
@@ -193,7 +194,7 @@ const VDOTTrendChart = memo(({ data }: { data: HistoryResponse['vdotTrend'] }) =
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
-                    <Tooltip content={<ChartTooltip formatter={(value: number) => value.toFixed(1)} />} />
+                    <Tooltip content={<ChartTooltip formatter={(value: string | number) => (typeof value === 'number' ? value : parseFloat(String(value))).toFixed(1)} />} />
                     <Line type="monotone" dataKey="vdot" stroke="#f59e0b" strokeWidth={2} dot={{ fill: '#f59e0b' }} />
                 </LineChart>
             </ResponsiveContainer>
@@ -212,7 +213,7 @@ const FitnessTrendChart = memo(({ data }: { data: HistoryResponse['fitnessTrend'
                     <CartesianGrid strokeDasharray="3 3" stroke="#4B5563" vertical={false} />
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => Math.round(val).toString()} />
-                    <Tooltip content={<ChartTooltip formatter={(value: number) => value.toFixed(1)} />} />
+                    <Tooltip content={<ChartTooltip formatter={(value: string | number) => (typeof value === 'number' ? value : parseFloat(String(value))).toFixed(1)} />} />
                     <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} name="Fitness (CTL)" dot={false} />
                     <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} name="Fatigue (ATL)" dot={false} />
                     <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} name="Form (TSB)" dot={false} />

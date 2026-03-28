@@ -1,8 +1,9 @@
 import { Copy, Plus, Loader2 } from 'lucide-react';
+import { NutritionLog } from '@/lib/types/health';
 
 interface Props {
-    foodLogs: any[];
-    copyYesterdayMutation: any;
+    foodLogs: NutritionLog[];
+    copyYesterdayMutation: { mutate: (variables: { mealType: string }) => void; isPending: boolean; variables?: { mealType: string } };
     onOpenHistory: () => void;
     onQuickAddMeal: (_mealType: string) => void;
 }
@@ -11,10 +12,10 @@ export function MealSection({ foodLogs, copyYesterdayMutation, onOpenHistory, on
     return (
         <div className="space-y-3">
             {['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'].map(mealName => {
-                const logsForMeal = foodLogs.filter((l: any) =>
+                const logsForMeal = foodLogs.filter((l: NutritionLog) =>
                     mealName === 'SNACK' ? (l.mealType === 'SNACK' || !l.mealType) : l.mealType === mealName
                 );
-                const totalCals = logsForMeal.reduce((sum: number, log: any) => sum + (log.calories || 0), 0);
+                const totalCals = logsForMeal.reduce((sum: number, log: NutritionLog) => sum + (log.calories || 0), 0);
                 const isPopulated = logsForMeal.length > 0;
 
                 return (
@@ -54,7 +55,7 @@ export function MealSection({ foodLogs, copyYesterdayMutation, onOpenHistory, on
                         </div>
                         {isPopulated && (
                             <div className="p-4 pt-1 space-y-3">
-                                {logsForMeal.map((log: any) => (
+                                {logsForMeal.map((log: NutritionLog) => (
                                     <button
                                         key={log.id}
                                         type="button"

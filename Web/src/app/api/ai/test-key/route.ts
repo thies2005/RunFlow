@@ -47,11 +47,11 @@ export async function POST(request: NextRequest) {
             });
         }
 
-    } catch (error: any) {
-        console.error('API key test error:', error);
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Internal server error';
         return NextResponse.json({
             success: false,
-            error: error.message || 'Internal server error',
+            error: message,
         });
     }
 }

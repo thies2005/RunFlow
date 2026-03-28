@@ -106,9 +106,9 @@ export async function POST(request: NextRequest) {
                     logger.info('User has no activities, skipping', { userEmail: user.email });
                     return { userId: user.id, email: user.email, status: 'skipped', reason: 'no_activities' };
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 logger.error('Failed to recalculate for user', { userEmail: user.email, error: err });
-                return { userId: user.id, email: user.email, status: 'error', error: err.message };
+                return { userId: user.id, email: user.email, status: 'error', error: err instanceof Error ? err.message : String(err) };
             }
         }));
 
@@ -127,10 +127,11 @@ export async function POST(request: NextRequest) {
 
         return applyRateLimitHeaders(response, 'sensitive', rateLimit.result!.remaining, rateLimit.result!.reset);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.error('Global error during recalculation', { error });
+        const message = error instanceof Error ? error.message : String(error);
         return NextResponse.json(
-            { error: 'Internal server error during recalculation: ' + error.message },
+            { error: 'Internal server error during recalculation: ' + message },
             { status: 500 }
         );
     }

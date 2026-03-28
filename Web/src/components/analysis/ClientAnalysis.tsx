@@ -41,8 +41,9 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
     }, [streams, activity.trainingType]);
 
     // Memoize formatXAxis to avoid recreating on every render
-    const formatXAxis = useCallback((tickItem: number) => {
-        const mins = Math.floor(tickItem / 60);
+    const formatXAxis = useCallback((tickItem: string | number) => {
+        const numTick = typeof tickItem === 'number' ? tickItem : parseFloat(tickItem);
+        const mins = Math.floor(numTick / 60);
         return `${mins}m`;
     }, []);
 
@@ -239,9 +240,10 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                 <Tooltip
                                     content={<ChartTooltip
                                         labelFormatter={formatXAxis}
-                                        formatter={(value: number) => {
-                                            const mins = Math.floor(value);
-                                            const secs = Math.round((value % 1) * 60).toString().padStart(2, '0');
+                                        formatter={(value: string | number) => {
+                                            const numVal = typeof value === 'number' ? value : parseFloat(value);
+                                            const mins = Math.floor(numVal);
+                                            const secs = Math.round((numVal % 1) * 60).toString().padStart(2, '0');
                                             return [`${mins}:${secs}`, 'Pace'];
                                         }}
                                     />}

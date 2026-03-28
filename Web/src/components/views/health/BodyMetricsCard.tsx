@@ -3,8 +3,8 @@ import { formatUtcDayKey } from '@/lib/health/dates';
 
 interface Props {
     showSteps: boolean;
-    dailyHealth: any;
-    targetData: any;
+    dailyHealth: { steps?: number; weight?: number | null; activeCalories?: number | null; isWeightCarriedForward?: boolean; weightMeasurementDate?: string; waterIntake?: number } | null;
+    targetData: { dailyCalories: number; waterGoalMl?: number; waterTrackingEnabled?: boolean } | null;
     waterMutationPending: boolean;
     onOpenTrend: (_metric: 'steps' | 'weight') => void;
     onAdjustWater: (_amount: number) => void;

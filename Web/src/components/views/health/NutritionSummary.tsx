@@ -1,8 +1,9 @@
 import { ChevronRight, Sparkles, Target } from 'lucide-react';
 import { MacroRing } from './shared';
+import type { NutritionTarget } from '@/lib/types/health';
 
 interface Props {
-    targetData: any;
+    targetData: NutritionTarget;
     effectiveTarget: number;
     totalCalories: number;
     exerciseBudget: number;

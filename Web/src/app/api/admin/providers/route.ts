@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
         });
 
         return applyRateLimitHeaders(response, 'write', rateLimit.result!.remaining, rateLimit.result!.reset);
-    } catch (error: any) {
-        if (error.code === 'P2002') {
+    } catch (error: unknown) {
+        if (error instanceof Error && 'code' in error && error.code === 'P2002') {
             return NextResponse.json({ error: 'A provider with this slug already exists' }, { status: 400 });
         }
         console.error('Providers POST error:', error);
@@ -149,7 +149,7 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
         }
 
-        const updateData: any = {};
+        const updateData: Record<string, unknown> = {};
         if (name) updateData.name = name;
         if (type) updateData.type = type;
         if (baseUrl) {

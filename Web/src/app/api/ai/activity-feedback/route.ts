@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         try {
             const result = await generateAndSaveActivityFeedback(activityId, userId, regenerate, controller.signal);
             return NextResponse.json(result);
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (controller.signal.aborted) {
                 // Enqueue as fallback if it timed out but might still succeed in background
                 await prisma.feedbackJob.upsert({
@@ -86,14 +86,15 @@ export async function POST(request: NextRequest) {
                 });
             }
 
-            if (error.message === 'Activity not found') {
-                return NextResponse.json({ error: error.message }, { status: 404 });
+            const message = error instanceof Error ? error.message : String(error);
+            if (message === 'Activity not found') {
+                return NextResponse.json({ error: message }, { status: 404 });
             }
-            if (error.message.includes('AI features not enabled or no provider configured')) {
-                return NextResponse.json({ error: error.message }, { status: 403 });
+            if (message.includes('AI features not enabled or no provider configured')) {
+                return NextResponse.json({ error: message }, { status: 403 });
             }
-            if (error.message.includes('Usage limit reached') || error.message.includes('No tokens remaining') || error.message.includes('Quota exhausted')) {
-                return NextResponse.json({ error: error.message }, { status: 429 });
+            if (message.includes('Usage limit reached') || message.includes('No tokens remaining') || message.includes('Quota exhausted')) {
+                return NextResponse.json({ error: message }, { status: 429 });
             }
             throw error;
         } finally {

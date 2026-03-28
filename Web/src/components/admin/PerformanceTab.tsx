@@ -53,7 +53,7 @@ export default function PerformanceTab() {
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      console.error('Failed to export metrics:', error);
+      // silently fail export
     }
   };
 
@@ -140,7 +140,7 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
         setRoutes(data.routes || []);
       }
     } catch (error) {
-      console.error('Failed to fetch routes:', error);
+      // silently fail fetch
     } finally {
       setLoading(false);
     }
@@ -170,7 +170,7 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
         </div>
         <ApiRoutesTable
           routes={routes}
-          onRouteClick={(route) => console.log('Route clicked:', route)}
+          onRouteClick={(_route) => {}}
         />
       </div>
     </div>

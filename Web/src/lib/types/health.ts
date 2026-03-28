@@ -52,6 +52,7 @@ export type NutritionLog = {
         id: string;
         name: string;
         brand: string | null;
+        servingSize?: string;
     };
 };
 

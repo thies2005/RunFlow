@@ -168,63 +168,59 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     const accessNutritionLogs = settingsData?.settings?.accessNutritionLogs;
 
     // --- PROACTIVE WIDGET DATA FETCHING ---
-    const [recentActivity, setRecentActivity] = useState<RecentActivity | null>(null);
-    const [nutritionTargetData, setNutritionTargetData] = useState<{ dailyCalories: number; remainingCalories: number; proteinPercent: number; carbsPercent: number; fatsPercent: number } | null>(null);
-
-    useEffect(() => {
-        if (!accessActivityLogs) return;
-        async function fetchRecentActivity() {
-            try {
-                const res = await fetch('/api/activities?limit=5');
-                if (!res.ok) return;
-                const data = await res.json();
-                if (data.activities && data.activities.length > 0) {
-                    const mostRecent = data.activities[0];
-                    const activityDate = new Date(mostRecent.startDate);
-                    const today = new Date();
-                    if (
-                        activityDate.getDate() === today.getDate() &&
-                        activityDate.getMonth() === today.getMonth() &&
-                        activityDate.getFullYear() === today.getFullYear()
-                    ) {
-                        setRecentActivity(mostRecent);
-                    }
+    const { data: recentActivity } = useQuery({
+        queryKey: ['proactiveActivity', accessActivityLogs],
+        queryFn: async () => {
+            if (!accessActivityLogs) return null;
+            const res = await fetch('/api/activities?limit=5');
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (data.activities && data.activities.length > 0) {
+                const mostRecent = data.activities[0];
+                const activityDate = new Date(mostRecent.startDate);
+                const today = new Date();
+                if (
+                    activityDate.getDate() === today.getDate() &&
+                    activityDate.getMonth() === today.getMonth() &&
+                    activityDate.getFullYear() === today.getFullYear()
+                ) {
+                    return mostRecent;
                 }
-            } catch {
-                // Silently ignore — proactive widget data is non-critical
             }
-        }
-        fetchRecentActivity();
-    }, [accessActivityLogs]);
+            return null;
+        },
+        enabled: accessActivityLogs,
+        staleTime: 5 * 60 * 1000,
+        refetchInterval: 5 * 60 * 1000,
+    });
 
-    useEffect(() => {
-        if (!accessNutritionLogs) return;
-        async function fetchNutritionData() {
-            try {
-                const targetRes = await fetch('/api/health/nutrition/target');
-                if (targetRes.ok) {
-                    const target = await targetRes.json();
-                    const historyRes = await fetch('/api/health/nutrition/log/history');
-                    let consumed = 0;
-                    if (historyRes.ok) {
-                        const historyData = await historyRes.json();
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        const todayLogs = historyData.filter((log: { date: string }) => log.date === todayStr);
-                        consumed = todayLogs.reduce((acc: number, log: { calories?: number }) => acc + (log.calories || 0), 0);
-                    }
-                    if (target) {
-                        setNutritionTargetData({
-                            ...target,
-                            remainingCalories: Math.max(0, target.dailyCalories - consumed),
-                        });
-                    }
-                }
-            } catch {
-                // Silently ignore — proactive widget data is non-critical
+    const { data: nutritionTargetData } = useQuery({
+        queryKey: ['proactiveNutrition', accessNutritionLogs],
+        queryFn: async () => {
+            if (!accessNutritionLogs) return null;
+            const targetRes = await fetch('/api/health/nutrition/target');
+            if (!targetRes.ok) return null;
+            const target = await targetRes.json();
+            const historyRes = await fetch('/api/health/nutrition/log/history');
+            let consumed = 0;
+            if (historyRes.ok) {
+                const historyData = await historyRes.json();
+                const todayStr = new Date().toISOString().split('T')[0];
+                const todayLogs = historyData.filter((log: { date: string }) => log.date === todayStr);
+                consumed = todayLogs.reduce((acc: number, log: { calories?: number }) => acc + (log.calories || 0), 0);
             }
-        }
-        fetchNutritionData();
-    }, [accessNutritionLogs]);
+            if (target) {
+                return {
+                    ...target,
+                    remainingCalories: Math.max(0, target.dailyCalories - consumed),
+                };
+            }
+            return null;
+        },
+        enabled: accessNutritionLogs,
+        staleTime: 5 * 60 * 1000,
+        refetchInterval: 5 * 60 * 1000,
+    });
     // --------------------------------------
 
     // Scroll to bottom

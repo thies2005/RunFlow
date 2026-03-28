@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
 import DOMPurify from 'dompurify';
 import PromptLibrary from './PromptLibrary';
-import ProactiveRunWidget from './chat/ProactiveRunWidget';
+import ProactiveRunWidget, { type RecentActivity } from './chat/ProactiveRunWidget';
 import ProactiveCalorieSnapWidget from './chat/ProactiveCalorieSnapWidget';
 import MacroLoggedWidget from './chat/MacroLoggedWidget';
 import TimelineNode from './chat/TimelineNode';
@@ -168,59 +168,59 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
     const accessNutritionLogs = settingsData?.settings?.accessNutritionLogs;
 
     // --- PROACTIVE WIDGET DATA FETCHING ---
-    const [recentActivity, setRecentActivity] = useState<any>(null);
-    const [nutritionTargetData, setNutritionTargetData] = useState<any>(null);
-
-    useEffect(() => {
-        if (!accessActivityLogs) return;
-        async function fetchRecentActivity() {
-            try {
-                const res = await fetch('/api/activities?limit=5');
-                if (!res.ok) return;
-                const data = await res.json();
-                if (data.activities && data.activities.length > 0) {
-                    const mostRecent = data.activities[0];
-                    const activityDate = new Date(mostRecent.startDate);
-                    const today = new Date();
-                    if (
-                        activityDate.getDate() === today.getDate() &&
-                        activityDate.getMonth() === today.getMonth() &&
-                        activityDate.getFullYear() === today.getFullYear()
-                    ) {
-                        setRecentActivity(mostRecent);
-                    }
+    const { data: recentActivity } = useQuery({
+        queryKey: ['proactiveActivity', accessActivityLogs],
+        queryFn: async () => {
+            if (!accessActivityLogs) return null;
+            const res = await fetch('/api/activities?limit=5');
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (data.activities && data.activities.length > 0) {
+                const mostRecent = data.activities[0];
+                const activityDate = new Date(mostRecent.startDate);
+                const today = new Date();
+                if (
+                    activityDate.getDate() === today.getDate() &&
+                    activityDate.getMonth() === today.getMonth() &&
+                    activityDate.getFullYear() === today.getFullYear()
+                ) {
+                    return mostRecent;
                 }
-            } catch (err) { }
-        }
-        fetchRecentActivity();
-    }, [accessActivityLogs]);
+            }
+            return null;
+        },
+        enabled: accessActivityLogs,
+        staleTime: 5 * 60 * 1000,
+        refetchInterval: 5 * 60 * 1000,
+    });
 
-    useEffect(() => {
-        if (!accessNutritionLogs) return;
-        async function fetchNutritionData() {
-            try {
-                const targetRes = await fetch('/api/health/nutrition/target');
-                if (targetRes.ok) {
-                    const target = await targetRes.json();
-                    const historyRes = await fetch('/api/health/nutrition/log/history');
-                    let consumed = 0;
-                    if (historyRes.ok) {
-                        const historyData = await historyRes.json();
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        const todayLogs = historyData.filter((log: any) => log.date === todayStr);
-                        consumed = todayLogs.reduce((acc: number, log: any) => acc + (log.calories || 0), 0);
-                    }
-                    if (target) {
-                        setNutritionTargetData({
-                            ...target,
-                            remainingCalories: Math.max(0, target.dailyCalories - consumed),
-                        });
-                    }
-                }
-            } catch (err) { }
-        }
-        fetchNutritionData();
-    }, [accessNutritionLogs]);
+    const { data: nutritionTargetData } = useQuery({
+        queryKey: ['proactiveNutrition', accessNutritionLogs],
+        queryFn: async () => {
+            if (!accessNutritionLogs) return null;
+            const targetRes = await fetch('/api/health/nutrition/target');
+            if (!targetRes.ok) return null;
+            const target = await targetRes.json();
+            const historyRes = await fetch('/api/health/nutrition/log/history');
+            let consumed = 0;
+            if (historyRes.ok) {
+                const historyData = await historyRes.json();
+                const todayStr = new Date().toISOString().split('T')[0];
+                const todayLogs = historyData.filter((log: { date: string }) => log.date === todayStr);
+                consumed = todayLogs.reduce((acc: number, log: { calories?: number }) => acc + (log.calories || 0), 0);
+            }
+            if (target) {
+                return {
+                    ...target,
+                    remainingCalories: Math.max(0, target.dailyCalories - consumed),
+                };
+            }
+            return null;
+        },
+        enabled: accessNutritionLogs,
+        staleTime: 5 * 60 * 1000,
+        refetchInterval: 5 * 60 * 1000,
+    });
     // --------------------------------------
 
     // Scroll to bottom
@@ -511,7 +511,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                                 ul: ({ node: _node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
                                                                 ol: ({ node: _node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
                                                                 li: ({ node: _node, ...props }) => <li className="pl-1" {...props} />,
-                                                                code: ({ node: _node, inline, className, children, ...props }: any) => {
+                                                                code: ({ node: _node, inline, className, children, ...props }: React.HTMLAttributes<HTMLElement> & { node?: unknown; inline?: boolean }) => {
                                                                     const _match = /language-(\w+)/.exec(className || '');
                                                                     return !inline ? (
                                                                         <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">

@@ -81,7 +81,7 @@ export function validateEnvironmentVariables(): void {
 
   const validationResult = envVarSchema.safeParse(envConfig)
   if (!validationResult.success) {
-    (validationResult.error as any).issues.forEach((err: any) => {
+    (validationResult.error as { issues: Array<{ path: (string | number)[]; message: string }> }).issues.forEach((err) => {
       errors.push(`Validation error for ${err.path.join('.')}: ${err.message}`)
     })
   }

@@ -1,12 +1,13 @@
 import React from 'react';
 import { HeartPulse, BarChart3 } from 'lucide-react';
+import type { Supplement } from '@/lib/types/health';
 
 interface SupplementItemProps {
-    supplement: any;
+    supplement: Supplement;
     isTaken: boolean;
     isPending?: boolean;
     variant?: 'standalone' | 'stack-item';
-    onEdit: (_supplement: any) => void;
+    onEdit: (_supplement: Supplement) => void;
     onToggle: (_supplementId: string, _taken: boolean, _e?: React.MouseEvent) => void;
     onShowStats?: (_supplementId: string, _supplementName: string, _e?: React.MouseEvent) => void;
 }

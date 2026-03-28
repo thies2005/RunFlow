@@ -6,7 +6,7 @@ import { AnalyticsService } from '@/lib/services/analytics';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { cachedResponse } from '@/lib/apiResponse';
+import { cachedResponse } from '@/lib/api/apiResponse';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 import { setApiVersionHeaders } from '@/lib/api/version';
 

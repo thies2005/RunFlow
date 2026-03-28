@@ -11,9 +11,8 @@ import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { cachedResponse, errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { getRedisClient } from '@/lib/redis';
-import { cachedResponse } from '@/lib/apiResponse';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getHealthStatus, getRecentMetrics } from '@/lib/monitoring/health';
+import { getHealthStatus, getRecentMetrics, type HealthCheckResult } from '@/lib/monitoring/health';
 import { getAllMetrics } from '@/lib/monitoring/metrics';
 import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
@@ -29,7 +29,7 @@ interface SystemMetrics {
 }
 
 interface PerformanceData {
-    health: any;
+    health: HealthCheckResult;
     system: SystemMetrics;
     requests: {
         errorRate: number;

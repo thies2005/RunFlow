@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
             const response = NextResponse.json(result);
             setApiVersionHeaders(response.headers);
             return response;
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (controller.signal.aborted) {
                 await prisma.feedbackJob.upsert({
                     where: { activityId },
@@ -104,18 +104,19 @@ export async function POST(request: NextRequest) {
                 return response;
             }
 
-            if (error.message === 'Activity not found') {
-                const response = NextResponse.json({ error: error.message }, { status: 404 });
+            const message = error instanceof Error ? error.message : String(error);
+            if (message === 'Activity not found') {
+                const response = NextResponse.json({ error: message }, { status: 404 });
                 setApiVersionHeaders(response.headers);
                 return response;
             }
-            if (error.message.includes('AI features not enabled or no provider configured')) {
-                 const response = NextResponse.json({ error: error.message }, { status: 403 });
+            if (message.includes('AI features not enabled or no provider configured')) {
+                 const response = NextResponse.json({ error: message }, { status: 403 });
                  setApiVersionHeaders(response.headers);
                  return response;
             }
-            if (error.message.includes('Usage limit reached') || error.message.includes('No tokens remaining') || error.message.includes('Quota exhausted')) {
-                const response = NextResponse.json({ error: error.message }, { status: 429 });
+            if (message.includes('Usage limit reached') || message.includes('No tokens remaining') || message.includes('Quota exhausted')) {
+                const response = NextResponse.json({ error: message }, { status: 429 });
                 setApiVersionHeaders(response.headers);
                 return response;
             }

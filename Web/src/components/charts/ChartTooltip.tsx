@@ -1,11 +1,13 @@
 import React from 'react';
 
+type PayloadEntry = { name?: string; value?: number | string; color?: string; stroke?: string; fill?: string; dataKey?: string; unit?: string };
+
 export interface ChartTooltipProps {
     active?: boolean;
-    payload?: any[];
+    payload?: PayloadEntry[];
     label?: string | number;
-    labelFormatter?: (label: any) => React.ReactNode;
-    formatter?: (value: any, name: string) => React.ReactNode | [React.ReactNode, string];
+    labelFormatter?: (label: string | number) => React.ReactNode;
+    formatter?: (value: number | string, name: string) => React.ReactNode | [React.ReactNode, string];
 }
 
 export function ChartTooltip({ active, payload, label, labelFormatter, formatter }: ChartTooltipProps) {
@@ -18,12 +20,12 @@ export function ChartTooltip({ active, payload, label, labelFormatter, formatter
                     </p>
                 )}
                 <div className="space-y-1">
-                    {payload.map((entry: any, index: number) => {
-                        let val = entry.value;
-                        let name = entry.name;
+                    {payload.map((entry: PayloadEntry, index: number) => {
+                        let val: React.ReactNode = entry.value;
+                        let name: string | undefined = entry.name;
 
                         if (formatter) {
-                            const formatted = formatter(val, name);
+                            const formatted = formatter(entry.value ?? '', name ?? '');
                             if (Array.isArray(formatted)) {
                                 val = formatted[0];
                                 name = formatted[1] || name;

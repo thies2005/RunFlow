@@ -18,7 +18,7 @@ interface Props {
 type DateRange = '7days' | '30days' | '90days';
 type ViewTab = 'analytics' | 'calendar';
 
-const TIME_ICONS: Record<string, any> = { MORNING: Sun, NOON: Cloud, EVENING: Moon };
+const TIME_ICONS: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = { MORNING: Sun, NOON: Cloud, EVENING: Moon };
 const TIME_COLORS: Record<string, string> = { MORNING: '#f59e0b', NOON: '#3b82f6', EVENING: '#8b5cf6' };
 
 export default function SupplementAnalyticsView({ onClose }: Props) {
@@ -83,7 +83,7 @@ export default function SupplementAnalyticsView({ onClose }: Props) {
     // Chart data for analytics
     const chartData = useMemo(() => {
         if (!analytics?.dailyData) return [];
-        return analytics.dailyData.map((d: any) => ({
+        return analytics.dailyData.map((d: { date: string; taken: number; scheduled: number }) => ({
             date: format(new Date(d.date + 'T12:00:00'), 'MMM dd'),
             taken: d.taken,
             missed: d.scheduled - d.taken,
@@ -106,11 +106,11 @@ export default function SupplementAnalyticsView({ onClose }: Props) {
         if (!selectedDay || !calData) return [];
         const dayOfWeek = new Date(selectedDay + 'T00:00:00Z').getUTCDay();
         return calData.supplements
-            .filter((s: any) => {
+            .filter((s: { id: string; daysOfWeek: unknown }) => {
                 const days = s.daysOfWeek as number[] | null;
                 return !days || days.length === 0 || days.includes(dayOfWeek);
             })
-            .map((s: any) => ({
+            .map((s: Record<string, unknown>) => ({
                 ...s,
                 taken: !!calData.logMap[`${s.id}:${selectedDay}`]
             }));
@@ -222,7 +222,7 @@ export default function SupplementAnalyticsView({ onClose }: Props) {
                                             <Tooltip
                                                 contentStyle={{ backgroundColor: 'rgba(0,0,0,0.85)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
                                                 labelStyle={{ color: '#fff' }}
-                                                formatter={(value: any, name: string) => {
+                                                formatter={(value: number | string, name: string) => {
                                                     if (name === 'Taken') return [value, '✅ Taken'];
                                                     if (name === 'Missed') return [value, '❌ Missed'];
                                                     return [value, name];
@@ -243,7 +243,7 @@ export default function SupplementAnalyticsView({ onClose }: Props) {
                                     Time of Day
                                 </h3>
                                 <div className="space-y-3">
-                                    {analytics.timeOfDayBreakdown?.map((t: any) => {
+                                    {analytics.timeOfDayBreakdown?.map((t: { time: string; adherence: number }) => {
                                         const Icon = TIME_ICONS[t.time] || Sun;
                                         const color = TIME_COLORS[t.time] || '#888';
                                         return (
@@ -277,7 +277,7 @@ export default function SupplementAnalyticsView({ onClose }: Props) {
                                         Most Missed
                                     </h3>
                                     <div className="space-y-2">
-                                        {analytics.mostMissed.map((s: any) => (
+                                        {analytics.mostMissed.map((s: { id: string; name: string; amount: string; unit: string; stackName?: string; missed: number; adherence: number }) => (
                                             <div key={s.id} className="flex items-center justify-between p-2.5 rounded-lg bg-white/5">
                                                 <div>
                                                     <span className="text-sm text-white font-medium">{s.name}</span>
@@ -380,7 +380,7 @@ export default function SupplementAnalyticsView({ onClose }: Props) {
                                         <p className="text-sm text-gray-500">No supplements scheduled for this day.</p>
                                     ) : (
                                         <div className="space-y-2">
-                                            {selectedDaySupps.map((supp: any) => {
+                                            {selectedDaySupps.map((supp: { id: string; name: string; amount: string | number; unit: string; timeOfDay: string; stackName?: string; taken: boolean }) => {
                                                 const Icon = TIME_ICONS[supp.timeOfDay] || Sun;
                                                 const color = TIME_COLORS[supp.timeOfDay] || '#888';
                                                 const isPending = toggleMutation.isPending 

@@ -25,7 +25,7 @@ async function getRealTimeMetrics(): Promise<RealTimeMetrics> {
       const cached = await redisClient.get('api:metrics:recent');
       
       if (cached) {
-        const metrics = JSON.parse(cached) as any[];
+        const metrics: Array<{ timestamp: string; statusCode: number; responseTime: number }> = JSON.parse(cached);
         const now = Date.now();
         const lastMinute = metrics.filter(m => now - new Date(m.timestamp).getTime() < 60000);
         

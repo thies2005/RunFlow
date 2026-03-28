@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
 
             for (const supp of activeSupplements) {
                 const days = supp.daysOfWeek as number[] | null;
-                const isScheduled = !days || (days as any[]).length === 0 || (days as number[]).includes(dayOfWeek);
+                const isScheduled = !days || !Array.isArray(days) || days.length === 0 || (days as number[]).includes(dayOfWeek);
 
                 if (isScheduled) {
                     scheduledToday++;

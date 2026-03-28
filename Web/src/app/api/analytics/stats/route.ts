@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { getActivityContribution } from '@/lib/metrics/fitness';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { cachedResponse } from '@/lib/apiResponse';
+import { cachedResponse } from '@/lib/api/apiResponse';
 
 export const dynamic = 'force-dynamic';
 

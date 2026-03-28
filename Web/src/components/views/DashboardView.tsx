@@ -9,15 +9,15 @@ import { RaceCountdown, ActivityList, Footer, UserMenu, UserAvatar } from '@/com
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
-import type { Workout, Goal, ActivityListItem } from '@/lib/types';
+import type { Workout, Goal, ActivityListItem, AnalyticsStats } from '@/lib/types';
 
 interface DashboardViewProps {
     session: Session | null;
-    statsData: any;
+    statsData: AnalyticsStats | null;
     recentActivities: ActivityListItem[];
     activeGoal: Goal | undefined;
     weeklyWorkouts: Workout[];
-    syncStatus: any;
+    syncStatus: { totalActivities?: number; syncInProgress?: boolean } | null;
     syncMutation: UseMutationResult<any, Error, void, unknown>;
     isLoading: boolean;
     error: Error | null;

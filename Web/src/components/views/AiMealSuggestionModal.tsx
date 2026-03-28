@@ -115,8 +115,7 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
             setSuggestion(null);
             suggestMutation.reset();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen]);
+    }, [isOpen, suggestMutation]);
 
     if (!isOpen) return null;
 

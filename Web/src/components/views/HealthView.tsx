@@ -24,6 +24,8 @@ import { SupplementStatsModal } from './SupplementStatsModal';
 import { ReminderSettingsModal } from './ReminderSettingsModal';
 import { AiMealSuggestionModal } from './AiMealSuggestionModal';
 import SupplementAnalyticsView from './SupplementAnalyticsView';
+import type { Supplement, SupplementStack, SupplementLog, NutritionLog, FoodScanResult } from '@/lib/types/health';
+import type { Prisma } from '@prisma/client';
 import { getCurrentUtcDayKey, parseUtcDayKey } from '@/lib/health/dates';
 import { NutritionSummary } from './health/NutritionSummary';
 import { BodyMetricsCard } from './health/BodyMetricsCard';
@@ -42,8 +44,8 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [isMobileDevice, setIsMobileDevice] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isAddStackModalOpen, setIsAddStackModalOpen] = useState(false);
-    const [supplementToEdit, setSupplementToEdit] = useState<any | null>(null);
-    const [stackToEdit, setStackToEdit] = useState<any | null>(null);
+    const [supplementToEdit, setSupplementToEdit] = useState<Supplement | null>(null);
+    const [stackToEdit, setStackToEdit] = useState<SupplementStack | null>(null);
 
     // Stats Modal State
     const [statsConfig, setStatsConfig] = useState<{ isOpen: boolean, targetId: string | null, targetType: 'supplement' | 'stack' | null, targetName: string }>({
@@ -59,9 +61,9 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const [hasHealthConnect, setHasHealthConnect] = useState(false);
     const [bannerDismissed, setBannerDismissed] = useState(true);
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-    const [scannedFood, setScannedFood] = useState<any | null>(null);
+    const [scannedFood, setScannedFood] = useState<{ name: string; calories: number; protein: number; carbs: number; fats: number; brand?: string; barcode?: string | null; servingSize?: string } | null>(null);
     const [isFoodScannerOpen, setIsFoodScannerOpen] = useState(false);
-    const [scanResult, setScanResult] = useState<any | null>(null);
+    const [scanResult, setScanResult] = useState<FoodScanResult | null>(null);
     const [isMealLibraryOpen, setIsMealLibraryOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isRemindersOpen, setIsRemindersOpen] = useState(false);
@@ -260,7 +262,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
             toast.success('Copied yesterday\'s meal');
         },
-        onError: (err: any) => {
+        onError: (err: Error) => {
             toast.error(err.message || 'Failed to copy yesterday\'s meals');
         }
     });
@@ -278,30 +280,42 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
     const effectiveTarget = baseTarget + exerciseBudget;
 
     // Compute calorie/macro totals from today's food logs
-    const totalCalories = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.calories || 0), 0) || 0;
-    const totalProtein = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.protein || 0), 0) || 0;
-    const totalCarbs = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.carbs || 0), 0) || 0;
-    const totalFats = dailyData?.foodLogs?.reduce((sum: number, log: any) => sum + (log.fats || 0), 0) || 0;
+    const totalCalories = dailyData?.foodLogs?.reduce((sum: number, log: NutritionLog) => sum + (log.calories || 0), 0) || 0;
+    const totalProtein = dailyData?.foodLogs?.reduce((sum: number, log: NutritionLog) => sum + (log.protein || 0), 0) || 0;
+    const totalCarbs = dailyData?.foodLogs?.reduce((sum: number, log: NutritionLog) => sum + (log.carbs || 0), 0) || 0;
+    const totalFats = dailyData?.foodLogs?.reduce((sum: number, log: NutritionLog) => sum + (log.fats || 0), 0) || 0;
 
     const targetProtein = targetData ? (targetData.dailyCalories * (targetData.proteinPercent / 100)) / 4 : 0;
     const targetCarbs = targetData ? (targetData.dailyCalories * (targetData.carbsPercent / 100)) / 4 : 0;
     const targetFats = targetData ? (targetData.dailyCalories * (targetData.fatsPercent / 100)) / 9 : 0;
 
     // Filtering standalone supplements
-    const isSuppActiveToday = (supp: any) => {
+    type SupplementBase = {
+        id: string;
+        name: string;
+        amount: number;
+        unit: string;
+        timeOfDay: string;
+        daysOfWeek: unknown;
+        order: number;
+        isActive: boolean;
+        stackId: string | null;
+    };
+    const isSuppActiveToday = (supp: SupplementBase) => {
         if (supp.isActive === false) return false;
-        if (!supp.daysOfWeek || supp.daysOfWeek.length === 0) return true;
-        return supp.daysOfWeek.includes(todayDayOfWeek);
+        const days = Array.isArray(supp.daysOfWeek) ? supp.daysOfWeek : [];
+        if (!days || days.length === 0) return true;
+        return days.includes(todayDayOfWeek);
     };
 
-    const standaloneSupps = supplements?.filter((s: any) => !s.stackId && isSuppActiveToday(s)) || [];
+    const standaloneSupps = supplements?.filter((s: Supplement) => !s.stackId && isSuppActiveToday(s)) || [];
 
-    const morningStandalone = standaloneSupps.filter((s: any) => s.timeOfDay === 'MORNING');
-    const noonStandalone = standaloneSupps.filter((s: any) => s.timeOfDay === 'NOON');
-    const eveningStandalone = standaloneSupps.filter((s: any) => s.timeOfDay === 'EVENING');
+    const morningStandalone = standaloneSupps.filter((s: Supplement) => s.timeOfDay === 'MORNING');
+    const noonStandalone = standaloneSupps.filter((s: Supplement) => s.timeOfDay === 'NOON');
+    const eveningStandalone = standaloneSupps.filter((s: Supplement) => s.timeOfDay === 'EVENING');
 
     const getSupplementLog = (supplementId: string) => {
-        return dailyData?.supplementLogs?.find((log: any) => log.supplementId === supplementId);
+        return dailyData?.supplementLogs?.find((log: SupplementLog) => log.supplementId === supplementId);
     };
 
     const dailyHealth = dailyData?.dailyHealth;
@@ -455,7 +469,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                         ) : (
                             <SupplementsSection
                                 supplements={supplements || []}
-                                stacks={(stacks || []).map((stack: any) => ({
+                                stacks={(stacks || []).map((stack: SupplementStack) => ({
                                     ...stack,
                                     supplements: (stack.supplements || []).filter(isSuppActiveToday),
                                 }))}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -40,8 +41,8 @@ export async function GET(request: Request) {
                     // Save or update the cache entry
                     await prisma.offFoodCache.upsert({
                         where: { query: normalizedQuery },
-                        update: { results: offResults as any, updatedAt: new Date() },
-                        create: { query: normalizedQuery, results: offResults as any },
+                        update: { results: offResults as unknown as Prisma.InputJsonValue, updatedAt: new Date() },
+                        create: { query: normalizedQuery, results: offResults as unknown as Prisma.InputJsonValue },
                     });
 
                     // Manage cache size: Delete entries older than 90 days

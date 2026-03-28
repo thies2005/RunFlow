@@ -44,7 +44,7 @@ jest.mock('@/lib/rateLimit', () => ({
     rateLimitHeaders: jest.fn(() => ({})),
 }));
 
-jest.mock('@/lib/apiResponse', () => ({
+jest.mock('@/lib/api/apiResponse', () => ({
     cachedResponse: jest.fn((data) => new Response(JSON.stringify(data), { status: 200 })),
 }));
 
@@ -76,7 +76,7 @@ jest.mock('@/lib/plans', () => ({
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
-import { cachedResponse } from '@/lib/apiResponse';
+import { cachedResponse } from '@/lib/api/apiResponse';
 import { validateBody } from '@/lib/validation/validator';
 import { handleError } from '@/lib/errors/handler';
 

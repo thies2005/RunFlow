@@ -267,7 +267,8 @@ export default function PlanSetupForm({
                 setCalibrationFactor(1.0);
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // hours/minutes/seconds intentionally excluded — reading current form values
+        // to avoid overwriting user edits; adding them would cause infinite re-renders
     }, [calibrationDistance, effectiveVO2max, shapePercent, calibrationMode, selectedActivityId]);
 
     // Auto-fill time when activity is selected (Activity Mode)

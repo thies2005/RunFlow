@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { calculateTrimpFromZones, FALLBACK_TRIMP_PER_MINUTE } from '@/lib/metrics/trimp';
 import { calculateFitnessHistory, getActivityContribution, calculateRunningTss, type DailyLoad } from '@/lib/metrics/fitness';
 import { calculateMarathonShape, calculateWeightedEffectiveVO2max, type ActivityForShape } from '@/lib/metrics/runalyze';
-import { cachedResponse } from '@/lib/apiResponse';
+import { cachedResponse } from '@/lib/api/apiResponse';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 
 export const dynamic = 'force-dynamic';

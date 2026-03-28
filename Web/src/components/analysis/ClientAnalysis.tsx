@@ -15,7 +15,7 @@ interface ClientAnalysisProps {
 
 
 export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
-    const streams = activity.streams as any;
+    const streams = activity.streams;
 
     // Memoize chart data transformation to avoid recalculation on re-render
     const chartData = useMemo(() => {

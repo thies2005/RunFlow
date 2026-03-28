@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
+import { logger } from '@/lib/logging/logger';
 
 // Cache for the OAuth token so we don't request a new one on every request
 let fatsecretAccessToken: string | null = null;
@@ -93,7 +95,7 @@ async function fetchFatSecretWithTimeout(query: string, timeoutMs: number, token
         const root = fsData.foods_search || fsData.foods || fsData || {};
         const results = root.results?.food || root.food || [];
 
-        console.log(`FatSecret API returned ${Array.isArray(results) ? results.length : (results ? 1 : 0)} items for query: ${query}`);
+        logger.debug(`FatSecret API returned ${Array.isArray(results) ? results.length : (results ? 1 : 0)} items for query: ${query}`);
 
         // FatSecret returns a single object if there's only 1 item, otherwise an array.
         const items = Array.isArray(results) ? results : (results ? [results] : []);
@@ -193,8 +195,8 @@ export async function GET(request: Request) {
                 try {
                     await prisma.fatSecretFoodCache.upsert({
                         where: { query: normalizedQuery },
-                        update: { results: fsResults as any, updatedAt: new Date() },
-                        create: { query: normalizedQuery, results: fsResults as any },
+                        update: { results: fsResults as unknown as Prisma.InputJsonValue, updatedAt: new Date() },
+                        create: { query: normalizedQuery, results: fsResults as unknown as Prisma.InputJsonValue },
                     });
 
                     // Manage cache size

@@ -75,7 +75,7 @@ export async function GET(request: Request) {
     todayEnd.setUTCDate(todayEnd.getUTCDate() + 1);
 
     // Determine the exercise calorie source preference
-    const calorieSource = (userTarget as any)?.exerciseCalorieSource || 'strava';
+    const calorieSource = userTarget?.exerciseCalorieSource || 'strava';
     let exerciseCalories = 0;
 
     if (calorieSource === 'health_connect') {
@@ -110,7 +110,7 @@ export async function GET(request: Request) {
       }, 0);
     }
     
-    const exerciseCalorieFactor = (userTarget as any)?.exerciseCalorieFactor ?? 0.5;
+    const exerciseCalorieFactor = userTarget?.exerciseCalorieFactor ?? 0.5;
     const exerciseBudget = Math.round(exerciseCalories * exerciseCalorieFactor);
 
     // OPTIMIZATION: Use Prisma's groupBy for database-level aggregation

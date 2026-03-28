@@ -14,7 +14,71 @@ import { Footer } from '@/components';
 import LazyChartWrapper from '@/components/LazyChartWrapper';
 import { formatTime, formatPace } from '@/lib/metrics/vdot';
 
-const AnalyticsTooltip = ({ active, payload, label }: any) => {
+interface TooltipEntry {
+    name?: string;
+    value?: number;
+    color?: string;
+    stroke?: string;
+    dataKey?: string;
+}
+interface AnalyticsTooltipProps {
+    active?: boolean;
+    payload?: TooltipEntry[];
+    label?: string;
+}
+interface RunalyzeDetails {
+    avgWeeklyKm: number;
+    targetWeeklyKm: number;
+    longRunPoints: number;
+    targetPoints: number;
+    crossTrainingMinutes?: number;
+}
+interface DataPoint {
+    date: string;
+    vo2max?: number;
+    vo2maxRolling?: number;
+    ctl?: number;
+    atl?: number;
+    tsb?: number;
+    volume?: number;
+    volumeRolling?: number;
+    trainingTime?: number;
+    trainingTimeRolling?: number;
+}
+interface AnalyticsTooltipProps {
+    active?: boolean;
+    payload?: TooltipEntry[];
+    label?: string;
+}
+
+interface RunalyzeDetails {
+    avgWeeklyKm: number;
+    targetWeeklyKm: number;
+    longRunPoints: number;
+    targetPoints: number;
+    crossTrainingMinutes?: number;
+}
+
+interface VO2DataPoint {
+    date?: string;
+    week?: string;
+    vo2: number;
+    vo2Rolling?: number;
+}
+interface ShapeDataPoint {
+    week: string;
+    shape: number;
+}
+interface FitnessDataPoint { date: string; ctl: number; atl: number; tsb: number }
+interface TrainingPaces {
+    easy: { min: number; max: number };
+    marathon: number;
+    threshold: number;
+    interval: number;
+    repetition: number;
+}
+
+const AnalyticsTooltip = ({ active, payload, label }: AnalyticsTooltipProps) => {
     if (active && payload && payload.length) {
         return (
             <div className="glass-card p-4 border border-glass-border">
@@ -24,7 +88,7 @@ const AnalyticsTooltip = ({ active, payload, label }: any) => {
                     </p>
                 )}
                 <div className="space-y-1">
-                    {payload.map((entry: any, index: number) => (
+                    {payload.map((entry: TooltipEntry, index: number) => (
                         <div key={index} className="flex items-center gap-2 text-sm">
                             <div
                                 className="w-2 h-2 rounded-full"
@@ -52,18 +116,18 @@ interface AnalyticsViewProps {
         mileageScore: number;
         longRunScore: number;
         crossTrainingScore: number;
-        details: any;
+        details: RunalyzeDetails;
         optimalTime: number;
         predictedTime: number;
         calibrationFactor: number;
     };
-    vo2TrendData: any[];
-    shapeTrendData: any[];
-    fitnessData: any[];
-    combinedData: any[];
-    trainingPaces: any;
-    userData: any;
-    activitiesData: any;
+    vo2TrendData: VO2DataPoint[];
+    shapeTrendData: ShapeDataPoint[];
+    fitnessData: FitnessDataPoint[];
+    combinedData: DataPoint[];
+    trainingPaces: TrainingPaces | null;
+    userData: Record<string, unknown>;
+    activitiesData: Record<string, unknown>;
     timeRange: TimeRange;
     zonesTimeRange: '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL';
     setTimeRange: (_range: TimeRange) => void;

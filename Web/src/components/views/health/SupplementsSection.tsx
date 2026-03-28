@@ -1,19 +1,22 @@
 import { BarChart3, HeartPulse, Plus } from 'lucide-react';
 import { SupplementItem } from '@/components/health/SupplementItem';
+import type { Supplement, SupplementStack, SupplementLog } from '@/lib/types/health';
+
+type StackWithSupplements = SupplementStack & { supplements: Supplement[] };
 
 interface Props {
-    supplements: any[];
-    stacks: any[];
-    morningStandalone: any[];
-    noonStandalone: any[];
-    eveningStandalone: any[];
+    supplements: Supplement[];
+    stacks: StackWithSupplements[];
+    morningStandalone: Supplement[];
+    noonStandalone: Supplement[];
+    eveningStandalone: Supplement[];
     isLoading: boolean;
-    getSupplementLog: (_supplementId: string) => any;
+    getSupplementLog: (_supplementId: string) => SupplementLog | undefined;
     onOpenAnalytics: () => void;
     onAddStack: () => void;
     onAddSupplement: () => void;
-    onEditStack: (_stack: any) => void;
-    onEditSupplement: (_supplement: any) => void;
+    onEditStack: (_stack: StackWithSupplements) => void;
+    onEditSupplement: (_supplement: Supplement) => void;
     onToggleStack: (_stackId: string, _taken: boolean) => void;
     onToggleSupplement: (_supplementId: string, _taken: boolean) => void;
     onShowStats: (_config: { targetId: string; targetType: 'supplement' | 'stack'; targetName: string }) => void;
@@ -40,7 +43,7 @@ export function SupplementsSection({
     pendingSupplementId,
     pendingStackId,
 }: Props) {
-    const renderSupplementItem = (supp: any) => {
+    const renderSupplementItem = (supp: Supplement) => {
         const log = getSupplementLog(supp.id);
         const isTaken = log?.taken || false;
 
@@ -58,13 +61,13 @@ export function SupplementsSection({
         );
     };
 
-    const renderStack = (stack: any) => {
-        const activeSupplements = (stack.supplements || []).filter((supp: any) => {
+    const renderStack = (stack: StackWithSupplements) => {
+        const activeSupplements = (stack.supplements || []).filter((supp: Supplement) => {
             if (supp.isActive === false) return false;
             return true;
         });
         const hasSupplements = activeSupplements.length > 0;
-        const allTaken = hasSupplements && activeSupplements.every((supp: any) => getSupplementLog(supp.id)?.taken);
+        const allTaken = hasSupplements && activeSupplements.every((supp: Supplement) => getSupplementLog(supp.id)?.taken);
 
         return (
             <div key={stack.id} className="mb-4 bg-white/5 border border-white/10 rounded-xl overflow-hidden group">
@@ -101,7 +104,7 @@ export function SupplementsSection({
 
                 {hasSupplements && (
                     <div className="p-2 space-y-1">
-                        {activeSupplements.map((supp: any) => {
+                        {activeSupplements.map((supp: Supplement) => {
                             const log = getSupplementLog(supp.id);
                             const isTaken = log?.taken || false;
 
@@ -159,10 +162,10 @@ export function SupplementsSection({
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {stacks.slice().sort((a: any, b: any) => {
+                    {stacks.slice().sort((a: StackWithSupplements, b: StackWithSupplements) => {
                         const order: Record<string, number> = { MORNING: 1, NOON: 2, EVENING: 3 };
-                        const valA = order[a.timeOfDay] || 4;
-                        const valB = order[b.timeOfDay] || 4;
+                        const valA = order[a.timeOfDay ?? ''] || 4;
+                        const valB = order[b.timeOfDay ?? ''] || 4;
                         return valA - valB;
                     }).map(renderStack)}
 

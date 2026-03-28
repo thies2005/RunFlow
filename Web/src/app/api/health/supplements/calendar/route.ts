@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
             for (const supp of supplements) {
                 const daysArr = supp.daysOfWeek as number[] | null;
-                const isScheduled = !daysArr || (daysArr as any[]).length === 0 || (daysArr as number[]).includes(dayOfWeek);
+                const isScheduled = !daysArr || !Array.isArray(daysArr) || daysArr.length === 0 || (daysArr as number[]).includes(dayOfWeek);
 
                 if (isScheduled) {
                     scheduled++;

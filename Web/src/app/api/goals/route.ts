@@ -8,7 +8,7 @@ import { type ActivityForShape } from '@/lib/metrics/runalyze';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { cachedResponse } from '@/lib/apiResponse';
+import { cachedResponse } from '@/lib/api/apiResponse';
 import { validateBody } from '@/lib/validation/validator';
 import { goalSchema } from '@/lib/validation/schemas';
 import { handleError } from '@/lib/errors/handler';

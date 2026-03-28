@@ -11,6 +11,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
+import { logger } from '@/lib/logging/logger';
 
 // JWT configuration - uses lazy initialization to avoid build-time errors
 let _jwtSecret: Uint8Array | null = null;
@@ -301,7 +302,7 @@ export async function exchangeStravaCodeForTokens(
                     where: { id: user.id },
                     data: { stravaId }
                 });
-                console.log(`[Mobile Auth] Linked existing user ${user.id} with stravaId ${stravaId}`);
+                logger.info(`[Mobile Auth] Linked existing user ${user.id} with stravaId ${stravaId}`);
             }
         }
 

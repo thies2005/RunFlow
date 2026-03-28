@@ -15,6 +15,7 @@ import { AuthCodeType } from '@prisma/client';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logAdminAction } from '@/lib/admin/auditLog';
+import { logger } from '@/lib/logging/logger';
 
 export async function POST(
     request: NextRequest,
@@ -64,7 +65,7 @@ export async function POST(
         try {
             await sendPasswordResetEmail(user.email, code);
 
-            console.log(`[Admin] Password reset triggered for user: ${user.email} (ID: ${userId})`);
+            logger.info(`[Admin] Password reset triggered for user: ${user.email} (ID: ${userId})`);
 
             await logAdminAction(request, 'RESET_PASSWORD', { type: 'USER', id: userId }, {
                 email: user.email

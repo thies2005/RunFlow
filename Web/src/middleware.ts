@@ -202,8 +202,10 @@ export const config = {
          * - sw.js (Service Worker)
          * - swe-worker (Service Worker Workbox)
          * - workbox (Service Worker Libraries)
+         * - api/health (health check endpoints — must be lightweight)
+         * - api/monitoring (monitoring endpoints)
          * - .well-known (Android App Links / iOS Universal Links)
          */
-        '/((?!api/auth|api/webhooks|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker|workbox|.well-known).*)',
+        '/((?!api/auth|api/webhooks|api/health|api/monitoring|login|register|_next/static|_next/image|favicon.ico|icons|manifest.json|sw.js|swe-worker|workbox|.well-known).*)',
     ],
 }

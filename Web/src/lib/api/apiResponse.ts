@@ -202,3 +202,46 @@ export function handleApiError(
 
     return errorResponses.internal(context?.details);
 }
+
+export interface CacheOptions {
+    maxAge?: number;
+    staleWhileRevalidate?: number;
+    private?: boolean;
+}
+
+export function cachedResponse<T>(
+    data: T,
+    options: CacheOptions = {},
+    status: number = 200
+): NextResponse<T> {
+    const {
+        maxAge = 300,
+        staleWhileRevalidate = 60,
+        private: isPrivate = true,
+    } = options;
+
+    const visibility = isPrivate ? 'private' : 'public';
+    const jsonString = safeStringify(data);
+
+    return new NextResponse(jsonString, {
+        status,
+        headers: {
+            'Cache-Control': `${visibility}, s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`,
+            'Vary': 'Accept-Encoding, Authorization',
+            'Content-Type': 'application/json',
+        },
+    });
+}
+
+export function noCacheResponse<T>(data: T, status: number = 200): NextResponse<T> {
+    const jsonString = safeStringify(data);
+    return new NextResponse(jsonString, {
+        status,
+        headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Content-Type': 'application/json',
+        },
+    });
+}

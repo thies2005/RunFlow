@@ -91,6 +91,8 @@ describe('Backup Scheduler Security', () => {
         '-U', 'user',
         '-d', 'dbname',
         '-F', 'p',
+        '--clean',
+        '--if-exists',
         '-f', path.join(expectedBackupDir, backupName)
       ],
       expect.objectContaining({
@@ -131,6 +133,7 @@ describe('Backup Scheduler Security', () => {
         '-p', '5432',
         '-U', 'user',
         '-d', 'dbname',
+        '--single-transaction',
         '-f', path.join(expectedBackupDir, backupName)
       ],
       expect.objectContaining({

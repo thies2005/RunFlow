@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/strava/oauth';
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { cachedResponse } from '@/lib/apiResponse';
+import { cachedResponse } from '@/lib/api/apiResponse';
 import { setApiVersionHeaders } from '@/lib/api/version';
 import { UnlinkedActivity } from '@/lib/types';
 

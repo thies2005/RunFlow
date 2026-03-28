@@ -15,7 +15,7 @@ export default function OnboardingWizard() {
     const queryClient = useQueryClient();
     const searchParams = useSearchParams();
     const { data: session } = useSession();
-    const hasStrava = (session?.user as any)?.hasStrava || false;
+    const hasStrava = session?.user?.hasStrava || false;
 
     const [step, setStep] = useState(() => {
         const p = searchParams.get('step');

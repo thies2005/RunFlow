@@ -9,6 +9,7 @@ import { signIn, signOut } from 'next-auth/react';
 import { requestHealthPermissions, syncHealthData } from '@/lib/mobile/healthConnect';
 import AiSettingsModal from '@/components/AiSettingsModal';
 import { ReminderSettingsModal } from '@/components/views/ReminderSettingsModal';
+import PastRacesSection from '@/components/PastRacesSection';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 
@@ -495,6 +496,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 />
                             </button>
                         </div>
+                    </div>
+
+                    {/* Past Races & Training Plans */}
+                    <div className="pt-2 border-t border-white/10">
+                        <label className="block text-xs text-accent-orange mb-3 uppercase font-semibold">
+                            Past Races & Training Plans
+                        </label>
+                        <PastRacesSection />
                     </div>
 
                     {/* AI Features Section */}

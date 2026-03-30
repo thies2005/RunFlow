@@ -3,13 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/strava/oauth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, subDays } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 import { handleError } from '@/lib/errors/handler';
 import { getRedisClient } from '@/lib/redis';
+import { logger } from '@/lib/logging/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +56,24 @@ export async function GET(req: NextRequest) {
         }
 
         // --- PARALLEL DATA FETCHING ---
+
+        // Auto-archive goals where race date was 14+ days ago and no race result linked
+        prisma.goal.updateMany({
+            where: {
+                userId,
+                isActive: true,
+                raceDate: { lt: subDays(new Date(), 14) },
+                raceResult: { is: null },
+            },
+            data: { isActive: false, completedAt: new Date() },
+        }).then(result => {
+            if (result.count > 0) {
+                logger.info(`Auto-archived ${result.count} overdue goals for user ${userId}`);
+            }
+        }).catch(() => {
+            // Non-critical, don't block the dashboard response
+        });
+
         // 1. User Settings & Active Goals
         const userPromise = prisma.user.findUnique({
             where: { id: userId },

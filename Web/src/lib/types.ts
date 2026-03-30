@@ -153,9 +153,13 @@ export interface Goal {
     taperWeeks?: number;
     peakWeeks?: number;
     buildWeeks?: number;
+    longRunDay?: number;
+    workoutDay?: number;
+    restDays?: number[];
     isActive: boolean;
     completedAt: string | Date | null;
     workouts?: Workout[];
+    raceResult?: RaceResult | null;
     createdAt: string | Date;
     updatedAt: string | Date;
 }
@@ -321,4 +325,60 @@ export interface ActivitiesResponse {
     total: number;
     limit: number;
     offset: number;
+}
+
+// ============================================
+// Race Result Types
+// ============================================
+
+export interface RaceResult {
+    id: string;
+    goalId: string;
+    raceActivityId: string | null;
+    actualTime: number | null;
+    chipTime: number | null;
+    placementOverall: number | null;
+    placementGender: number | null;
+    placementAgeGroup: number | null;
+    ageGroup: string | null;
+    totalFinishers: number | null;
+    notes: string | null;
+    weatherConditions: string | null;
+    feltLike: number | null;
+    createdAt: string | Date;
+    updatedAt: string | Date;
+    raceActivity?: ActivityListItem | null;
+}
+
+export interface SuggestedRaceActivity {
+    id: string;
+    name: string;
+    startDate: string;
+    distance: number;
+    movingTime: number;
+    averageSpeed: number | null;
+    averageHr: number | null;
+    totalElevation: number | null;
+    distanceMatch: number;
+    dateMatch: number;
+    score: number;
+}
+
+export interface CompletedGoalSummary {
+    id: string;
+    name: string;
+    raceType: RaceType;
+    raceDate: string | Date;
+    targetTime: number | null;
+    planWeeks: number;
+    runsPerWeek: number;
+    weeklyMileageGoal: number | null;
+    raceResult: RaceResult | null;
+    workoutStats: {
+        total: number;
+        completed: number;
+        completionRate: number;
+    };
+    createdAt: string | Date;
+    completedAt: string | Date | null;
 }

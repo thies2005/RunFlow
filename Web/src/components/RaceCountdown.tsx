@@ -1,7 +1,8 @@
-import { Calendar, Target, Timer, Trophy } from 'lucide-react';
+import { Calendar, Target, Timer, Trophy, CheckCircle, Loader2 } from 'lucide-react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import type { Goal } from '@/lib/types';
+import { useQuery } from '@tanstack/react-query';
+import type { Goal, SuggestedRaceActivity } from '@/lib/types';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import type { RaceDistance } from '@/lib/metrics/vdot';
 import { useUserMetrics } from './providers/UserMetricsProvider';
@@ -9,7 +10,7 @@ import { useUserMetrics } from './providers/UserMetricsProvider';
 interface RaceCountdownProps {
     goal: Goal | null;
     className?: string;
-    // Removed props that now come from context
+    onSelectRace?: (goal: Goal, activity: SuggestedRaceActivity | null, mode: 'suggest' | 'review' | 'pick') => void;
 }
 
 const raceLabels: Record<string, string> = {
@@ -37,9 +38,18 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+function formatPace(distanceM: number, timeS: number): string {
+    if (!distanceM || !timeS) return '-';
+    const pace = timeS / (distanceM / 1000);
+    const mins = Math.floor(pace / 60);
+    const secs = Math.round(pace % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}/km`;
+}
+
 export function RaceCountdown({
     goal,
     className = '',
+    onSelectRace,
 }: RaceCountdownProps) {
     const router = useRouter();
     const {
@@ -74,18 +84,25 @@ export function RaceCountdown({
     const daysToRace = differenceInDays(raceDate, today);
     const weeksToRace = differenceInWeeks(raceDate, today);
 
-    // Calculate progress through training plan (assume 12-week plan)
-    const totalWeeks = 12;
+    // Auto-archive check: 14 days past race date with no race result
+    const isOverdue = daysToRace < -14 && !goal.raceResult;
+
+    // POST-RACE STATE: Race date passed, no race result linked
+    if (daysToRace <= 0 && !goal.raceResult && !isOverdue) {
+        return <PostRacePending goal={goal} daysToRace={daysToRace} onSelectRace={onSelectRace} className={className} />;
+    }
+
+    if (isOverdue) {
+        return <PostRaceOverdue goal={goal} className={className} />;
+    }
+
+    // ACTIVE STATE: Race is in the future
+    const totalWeeks = goal.planWeeks || 12;
     const weeksCompleted = Math.max(0, totalWeeks - weeksToRace);
     const progressPercent = Math.min(100, (weeksCompleted / totalWeeks) * 100);
 
-    // Dynamic Prediction Calculation
-    // NOTE: effectiveVO2max already includes the correctionFactor from the API
-    // Do NOT multiply again to avoid compounding
     const currentVdot = effectiveVO2max;
     const targetDistance = raceDistanceMap[goal.raceType] || 'MARATHON';
-
-    // Calculate weeks until race for the projection
     const weeksUntil = calculateWeeksUntilRace(raceDate);
 
     const planSettings: PlanSettings = {
@@ -98,12 +115,11 @@ export function RaceCountdown({
         buildWeeks: goal.buildWeeks,
     };
 
-    // Calculate dynamic projection based on CURRENT fitness + plan improvement
     const projection = calculateProjectedGoalTime(
         currentVdot,
         planSettings,
-        shapePercent, // Use current marathon shape
-        currentWeekMileage // Use current weekly mileage
+        shapePercent,
+        currentWeekMileage
     );
 
     const dynamicPredictedTime = projection.projectedTime;
@@ -117,13 +133,12 @@ export function RaceCountdown({
                         onClick={() => router.push('/plan')}
                         className="text-xs text-accent-orange hover:text-accent-pink transition-colors"
                     >
-                        View Full Plan →
+                        View Full Plan &rarr;
                     </button>
                     <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
                 </div>
             </div>
 
-            {/* Race name and date */}
             <div className="mb-6">
                 <h3 className="text-xl font-bold text-white mb-1">{goal.name}</h3>
                 <div className="flex items-center gap-2 text-gray-400">
@@ -132,7 +147,6 @@ export function RaceCountdown({
                 </div>
             </div>
 
-            {/* Countdown display */}
             <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="glass-card p-4 text-center">
                     <p className="stat-value-accent text-4xl font-bold">{daysToRace}</p>
@@ -144,7 +158,6 @@ export function RaceCountdown({
                 </div>
             </div>
 
-            {/* Training progress bar */}
             <div className="mb-6">
                 <div className="flex items-center justify-between text-sm mb-2">
                     <span className="text-gray-400">Training Progress</span>
@@ -158,7 +171,6 @@ export function RaceCountdown({
                 </div>
             </div>
 
-            {/* VDOT & Predicted Time */}
             <div className="grid grid-cols-2 gap-4 mb-6">
                 {goal.targetTime && (
                     <div className="flex items-center gap-3">
@@ -180,8 +192,8 @@ export function RaceCountdown({
                         <div>
                             <p className="text-xs text-gray-400 uppercase tracking-wide flex items-center gap-1">
                                 Projected Finish
-                                <span className="cursor-help" title="Estimated finish time on race day based on your training plan and expected fitness improvement">ⓘ</span>
-                                {correctionFactor !== 1.0 && <span className="ml-1 text-[10px] text-accent-cyan" title="Using calibrated VO2max">●</span>}
+                                <span className="cursor-help" title="Estimated finish time on race day based on your training plan and expected fitness improvement">&#8505;</span>
+                                {correctionFactor !== 1.0 && <span className="ml-1 text-[10px] text-accent-cyan" title="Using calibrated VO2max">&#9679;</span>}
                             </p>
                             <p className="text-xl font-bold text-white">{formatTime(dynamicPredictedTime)}</p>
                             <p className="text-[10px] text-gray-500">Target VO2max {projection.projectedVdot.toFixed(1)}</p>
@@ -190,18 +202,15 @@ export function RaceCountdown({
                 )}
             </div>
 
-            {/* Weekly mileage - calculated from this week's planned workouts */}
             {goal.workouts && goal.workouts.length > 0 && (() => {
-                // Calculate planned mileage from this week's workouts (running only)
                 const plannedWeekMileage = goal.workouts.reduce((acc, workout) => {
                     const isRun = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 'RACE'].includes(workout.workoutType);
                     if (isRun && workout.targetDistance) {
                         return acc + workout.targetDistance;
                     }
                     return acc;
-                }, 0) / 1000; // Convert to km
+                }, 0) / 1000;
 
-                // Only show if there's planned mileage
                 if (plannedWeekMileage <= 0) return null;
 
                 return (
@@ -222,6 +231,166 @@ export function RaceCountdown({
                 );
             })()
             }
-        </div >
+        </div>
+    );
+}
+
+function PostRacePending({ goal, daysToRace, onSelectRace, className }: {
+    goal: Goal;
+    daysToRace: number;
+    onSelectRace?: RaceCountdownProps['onSelectRace'];
+    className: string;
+}) {
+    const { data: suggestData, isLoading: suggestLoading } = useQuery({
+        queryKey: ['suggest-race', goal.id],
+        queryFn: async () => {
+            const res = await fetch(`/api/goals/${goal.id}/suggest-race`);
+            if (!res.ok) throw new Error('Failed to suggest race');
+            return res.json();
+        },
+        staleTime: 60000,
+        retry: false,
+    });
+
+    const suggestions: SuggestedRaceActivity[] = suggestData?.suggestions || [];
+    const topSuggestion = suggestions.length > 0 ? suggestions[0] : null;
+
+    const workoutStats = goal.workouts
+        ? {
+            total: goal.workouts.length,
+            completed: goal.workouts.filter(w => w.isCompleted).length,
+        }
+        : { total: 0, completed: 0 };
+    const completionRate = workoutStats.total > 0
+        ? Math.round((workoutStats.completed / workoutStats.total) * 100)
+        : 0;
+
+    return (
+        <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-300">Race Goal</h2>
+                <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
+            </div>
+
+            <div className="mb-4">
+                <h3 className="text-xl font-bold text-white mb-1">{goal.name}</h3>
+                <div className="flex items-center gap-2 text-gray-400">
+                    <Calendar className="w-4 h-4" />
+                    <span>{format(new Date(goal.raceDate), 'MMMM d, yyyy')}</span>
+                </div>
+            </div>
+
+            <div className="bg-accent-pink/10 border border-accent-pink/30 rounded-xl p-4 mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                    <Trophy className="w-5 h-5 text-accent-pink" />
+                    <p className="font-semibold text-accent-pink">Race Week!</p>
+                </div>
+                <p className="text-sm text-gray-300">
+                    {daysToRace === 0 ? "Today is race day!" : daysToRace >= -1 ? "The race has passed!" : `The race was ${Math.abs(daysToRace)} days ago.`}
+                </p>
+            </div>
+
+            {/* Training completion summary */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-4">
+                <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-400">Training Completion</span>
+                    <span className="text-sm font-medium text-white">{completionRate}%</span>
+                </div>
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div
+                        className={`h-full rounded-full ${completionRate >= 80 ? 'bg-green-500' : completionRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                        style={{ width: `${completionRate}%` }}
+                    />
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1">{workoutStats.completed}/{workoutStats.total} workouts completed</p>
+            </div>
+
+            {/* Auto-detect section */}
+            {suggestLoading ? (
+                <div className="flex items-center justify-center py-4 text-gray-400">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <span className="text-sm">Looking for your race...</span>
+                </div>
+            ) : topSuggestion ? (
+                <div className="space-y-3">
+                    <p className="text-sm text-gray-300">We found a run near your race date:</p>
+
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-accent-orange/20 flex items-center justify-center">
+                                <Trophy className="w-4 h-4 text-accent-orange" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-white truncate">{topSuggestion.name}</p>
+                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                    <span>{format(new Date(topSuggestion.startDate), 'MMM d')}</span>
+                                    <span>{(topSuggestion.distance / 1000).toFixed(1)} km</span>
+                                    <span>{formatTime(topSuggestion.movingTime)}</span>
+                                    {topSuggestion.averageSpeed && (
+                                        <span>{formatPace(1000, 3600 / topSuggestion.averageSpeed)}</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => onSelectRace?.(goal, topSuggestion, 'suggest')}
+                        className="w-full btn-primary py-3 flex items-center justify-center gap-2"
+                    >
+                        <CheckCircle className="w-4 h-4" />
+                        Yes, that&apos;s my race!
+                    </button>
+
+                    <button
+                        onClick={() => onSelectRace?.(goal, null, 'pick')}
+                        className="w-full py-2.5 border border-white/10 text-gray-300 rounded-lg hover:bg-white/5 transition-colors text-sm"
+                    >
+                        Pick a different run
+                    </button>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    <p className="text-sm text-gray-400">No matching run found near your race date.</p>
+                    <button
+                        onClick={() => onSelectRace?.(goal, null, 'pick')}
+                        className="w-full btn-primary py-3"
+                    >
+                        Select your race run
+                    </button>
+                </div>
+            )}
+
+            <button
+                onClick={() => onSelectRace?.(goal, null, 'suggest')}
+                className="w-full text-xs text-gray-500 hover:text-gray-300 transition-colors py-2"
+            >
+                I didn&apos;t race / Skip for now
+            </button>
+        </div>
+    );
+}
+
+function PostRaceOverdue({ goal, className }: { goal: Goal; className: string }) {
+    const router = useRouter();
+
+    return (
+        <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
+            <h2 className="text-lg font-semibold text-gray-400 mb-4">Race Goal</h2>
+            <div className="text-center py-6">
+                <Trophy className="w-16 h-16 mx-auto text-gray-500 mb-4 block" />
+                <h3 className="text-lg font-bold text-white mb-1">{goal.name}</h3>
+                <p className="text-gray-400 text-sm mb-4">
+                    {format(new Date(goal.raceDate), 'MMMM d, yyyy')} &middot; {raceLabels[goal.raceType]}
+                </p>
+                <p className="text-gray-500 text-sm mb-6">This training block has concluded.</p>
+                <button
+                    onClick={() => router.push('/onboarding?step=3')}
+                    className="btn-primary"
+                >
+                    Create Training Plan
+                </button>
+            </div>
+        </div>
     );
 }

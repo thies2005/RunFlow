@@ -12,10 +12,12 @@ import { format } from 'date-fns';
 import { RaceCountdown, ActivityList, SettingsModal, Footer, UserMenu, PullToRefresh } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
+import RaceResultModal from '@/components/RaceResultModal';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
 import type { Workout, Goal } from '@/lib/types';
+import type { SuggestedRaceActivity } from '@/lib/types';
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
@@ -25,6 +27,11 @@ export default function Dashboard() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
     const [initialComplete, setInitialComplete] = useState(false);
+    const [raceResultModal, setRaceResultModal] = useState<{
+        goal: Goal;
+        suggestedActivity: SuggestedRaceActivity | null;
+        mode: 'suggest' | 'review' | 'pick';
+    } | null>(null);
 
     // 1. Unified Dashboard Query
     const { data: dashboardData, isLoading, error } = useQuery({
@@ -217,6 +224,13 @@ export default function Dashboard() {
                                     <RaceCountdown
                                         goal={activeGoal}
                                         className="h-full"
+                                        onSelectRace={(goal, activity, mode) => {
+                                            setRaceResultModal({
+                                                goal,
+                                                suggestedActivity: activity,
+                                                mode,
+                                            });
+                                        }}
                                     />
                                 ) : (
                                     <div className="h-full flex flex-col items-center justify-center bg-surface/50 border border-glass-border rounded-xl p-8 text-center">
@@ -284,6 +298,16 @@ export default function Dashboard() {
                     isOpen={isProfileOpen}
                     onClose={() => setIsProfileOpen(false)}
                 />
+
+                {raceResultModal && (
+                    <RaceResultModal
+                        isOpen={!!raceResultModal}
+                        onClose={() => setRaceResultModal(null)}
+                        goal={raceResultModal.goal}
+                        suggestedActivity={raceResultModal.suggestedActivity}
+                        initialMode={raceResultModal.mode}
+                    />
+                )}
             </UserMetricsProvider>
         </div >
     );

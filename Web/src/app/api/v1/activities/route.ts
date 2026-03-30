@@ -13,7 +13,7 @@ type ActivityWhereClause = {
     userId: string;
     type?: ActivityType;
     distance?: { gte: number };
-    startDate?: { gte: Date };
+    startDate?: { gte?: Date; lte?: Date };
 };
 
 export async function GET(request: NextRequest) {
@@ -32,6 +32,8 @@ export async function GET(request: NextRequest) {
         const offset = parseInt(searchParams.get('offset') || '0');
         const type = searchParams.get('type');
         const raceEligible = searchParams.get('raceEligible') === 'true';
+        const fromDateParam = searchParams.get('fromDate');
+        const toDateParam = searchParams.get('toDate');
 
         const where: ActivityWhereClause = { userId: session.user.id };
         if (type) {
@@ -48,6 +50,19 @@ export async function GET(request: NextRequest) {
             where.type = 'RUN';
             where.distance = { gte: 4500 };
             where.startDate = { gte: sixMonthsAgo };
+        }
+
+        if (fromDateParam) {
+            const fromDate = new Date(fromDateParam);
+            if (!isNaN(fromDate.getTime())) {
+                where.startDate = { ...where.startDate, gte: fromDate };
+            }
+        }
+        if (toDateParam) {
+            const toDate = new Date(toDateParam);
+            if (!isNaN(toDate.getTime())) {
+                where.startDate = { ...where.startDate, lte: toDate };
+            }
         }
 
         const [activities, total] = await Promise.all([

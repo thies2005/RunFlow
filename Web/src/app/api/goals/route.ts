@@ -95,7 +95,11 @@ export async function POST(request: NextRequest) {
             planStartDate
         } = validation.data;
 
-        // Resolve plan weeks and clamp phases
+        await prisma.goal.updateMany({
+            where: { userId: session.user.id, isActive: true },
+            data: { isActive: false, completedAt: new Date() },
+        });
+
         const resolvedPlanWeeks = Math.max(4, planWeeks || calculateWeeksUntilRace(new Date(raceDate)));
 
         let safeTaper = taperWeeks ?? 2;

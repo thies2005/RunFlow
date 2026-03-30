@@ -30,6 +30,7 @@ export async function GET(req: Request) {
         const fromParam = url.searchParams.get('from');
         const toParam = url.searchParams.get('to');
         const includeUnlinked = url.searchParams.get('includeUnlinked') === 'true';
+        const goalIdParam = url.searchParams.get('goalId');
 
         // Build workout filter with optional date range
         const workoutWhere: { scheduledDate?: { gte?: Date; lte?: Date } } = {};
@@ -81,8 +82,15 @@ export async function GET(req: Request) {
             hrZone7Time: true,
         };
 
+        const goalWhere: { userId: string; isActive?: boolean; id?: string } = { userId: session.user.id };
+        if (goalIdParam) {
+            goalWhere.id = goalIdParam;
+        } else {
+            goalWhere.isActive = true;
+        }
+
         const activeGoal = await prisma.goal.findFirst({
-            where: { userId: session.user.id, isActive: true },
+            where: goalWhere,
             include: {
                 workouts: {
                     where: Object.keys(workoutWhere).length > 0 ? workoutWhere : undefined,

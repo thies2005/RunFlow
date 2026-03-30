@@ -336,6 +336,7 @@ model Activity {
   laps               Lap[]
   splits             Split[]
   linkedWorkouts     Workout[]
+  raceResults        RaceResult[] @relation("GoalRaceActivity")
   aiFeedback         ActivityAiFeedback?
   feedbackJob        FeedbackJob?
 
@@ -483,8 +484,31 @@ model Goal {
   updatedAt           DateTime  @updatedAt
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workouts            Workout[]
+  raceResult          RaceResult?
 
   @@index([userId, isActive])
+}
+
+model RaceResult {
+  id                 String    @id @default(cuid())
+  goalId             String    @unique
+  goal               Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  raceActivityId     String?   @unique
+  raceActivity       Activity? @relation("GoalRaceActivity", fields: [raceActivityId], references: [id])
+  actualTime         Int?
+  chipTime           Int?
+  placementOverall   Int?
+  placementGender    Int?
+  placementAgeGroup  Int?
+  ageGroup           String?
+  totalFinishers     Int?
+  notes              String?
+  weatherConditions  String?
+  feltLike           Int?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([goalId])
 }
 
 model Workout {

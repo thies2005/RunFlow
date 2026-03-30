@@ -36,6 +36,79 @@ function formatTimeDelta(goalTime: number, actualTime: number): { text: string; 
     return { text: `${sign}${t}`, beatGoal: delta <= 0 };
 }
 
+interface TimeParts {
+    hours: string;
+    minutes: string;
+    seconds: string;
+}
+
+function secondsToTimeParts(totalSeconds: number | null | undefined): TimeParts {
+    if (!totalSeconds || totalSeconds <= 0) {
+        return { hours: '', minutes: '', seconds: '' };
+    }
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
+    return {
+        hours: hours > 0 ? String(hours) : '',
+        minutes: String(minutes),
+        seconds: String(seconds),
+    };
+}
+
+function timePartsToSeconds({ hours, minutes, seconds }: TimeParts): number | null {
+    const hasValue = hours !== '' || minutes !== '' || seconds !== '';
+    if (!hasValue) return null;
+
+    const parsedHours = Number(hours || '0');
+    const parsedMinutes = Number(minutes || '0');
+    const parsedSeconds = Number(seconds || '0');
+
+    if ([parsedHours, parsedMinutes, parsedSeconds].some(value => Number.isNaN(value) || value < 0)) {
+        return null;
+    }
+
+    return (parsedHours * 3600) + (parsedMinutes * 60) + parsedSeconds;
+}
+
+function updateTimePart(parts: TimeParts, key: keyof TimeParts, value: string): TimeParts {
+    return { ...parts, [key]: value.replace(/\D/g, '') };
+}
+
+function SmallTimeInputGroup({
+    label,
+    value,
+    onChange,
+    inputClass,
+}: {
+    label: string;
+    value: TimeParts;
+    onChange: (next: TimeParts) => void;
+    inputClass: string;
+}) {
+    return (
+        <div>
+            <label className="block text-[10px] text-gray-400 mb-1">{label}</label>
+            <div className="grid grid-cols-3 gap-2">
+                <div>
+                    <input type="number" min="0" value={value.hours} onChange={e => onChange(updateTimePart(value, 'hours', e.target.value))} className={inputClass} placeholder="hh" />
+                    <p className="text-[10px] text-gray-500 mt-1 text-center">h</p>
+                </div>
+                <div>
+                    <input type="number" min="0" value={value.minutes} onChange={e => onChange(updateTimePart(value, 'minutes', e.target.value))} className={inputClass} placeholder="mm" />
+                    <p className="text-[10px] text-gray-500 mt-1 text-center">m</p>
+                </div>
+                <div>
+                    <input type="number" min="0" value={value.seconds} onChange={e => onChange(updateTimePart(value, 'seconds', e.target.value))} className={inputClass} placeholder="ss" />
+                    <p className="text-[10px] text-gray-500 mt-1 text-center">s</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function PastRacesSection() {
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [editGoalId, setEditGoalId] = useState<string | null>(null);
@@ -288,8 +361,8 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
 
 function EditRaceResult({ goal, onClose }: { goal: CompletedGoalSummary; onClose: () => void }) {
     const queryClient = useQueryClient();
-    const [actualTime, setActualTime] = useState(goal.raceResult?.actualTime?.toString() || '');
-    const [chipTime, setChipTime] = useState(goal.raceResult?.chipTime?.toString() || '');
+    const [actualTime, setActualTime] = useState<TimeParts>(secondsToTimeParts(goal.raceResult?.actualTime));
+    const [chipTime, setChipTime] = useState<TimeParts>(secondsToTimeParts(goal.raceResult?.chipTime));
     const [placementOverall, setPlacementOverall] = useState(goal.raceResult?.placementOverall?.toString() || '');
     const [placementGender, setPlacementGender] = useState(goal.raceResult?.placementGender?.toString() || '');
     const [placementAgeGroup, setPlacementAgeGroup] = useState(goal.raceResult?.placementAgeGroup?.toString() || '');
@@ -299,6 +372,8 @@ function EditRaceResult({ goal, onClose }: { goal: CompletedGoalSummary; onClose
     const [feltLike, setFeltLike] = useState(goal.raceResult?.feltLike?.toString() || '');
     const [notes, setNotes] = useState(goal.raceResult?.notes || '');
     const [message, setMessage] = useState('');
+    const actualTimeSeconds = timePartsToSeconds(actualTime);
+    const chipTimeSeconds = timePartsToSeconds(chipTime);
 
     const saveMutation = useMutation({
         mutationFn: async () => {
@@ -306,8 +381,8 @@ function EditRaceResult({ goal, onClose }: { goal: CompletedGoalSummary; onClose
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    actualTime: actualTime ? parseInt(actualTime) : null,
-                    chipTime: chipTime ? parseInt(chipTime) : null,
+                    actualTime: actualTimeSeconds,
+                    chipTime: chipTimeSeconds,
                     placementOverall: placementOverall ? parseInt(placementOverall) : null,
                     placementGender: placementGender ? parseInt(placementGender) : null,
                     placementAgeGroup: placementAgeGroup ? parseInt(placementAgeGroup) : null,
@@ -341,14 +416,8 @@ function EditRaceResult({ goal, onClose }: { goal: CompletedGoalSummary; onClose
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-                <div>
-                    <label className="block text-[10px] text-gray-400 mb-1">Actual Time (sec)</label>
-                    <input type="number" value={actualTime} onChange={e => setActualTime(e.target.value)} className={inputClass} placeholder="e.g. 7920" />
-                </div>
-                <div>
-                    <label className="block text-[10px] text-gray-400 mb-1">Chip Time (sec)</label>
-                    <input type="number" value={chipTime} onChange={e => setChipTime(e.target.value)} className={inputClass} placeholder="If different" />
-                </div>
+                <SmallTimeInputGroup label="Actual Time" value={actualTime} onChange={setActualTime} inputClass={inputClass} />
+                <SmallTimeInputGroup label="Chip Time" value={chipTime} onChange={setChipTime} inputClass={inputClass} />
             </div>
 
             <div className="grid grid-cols-2 gap-2">

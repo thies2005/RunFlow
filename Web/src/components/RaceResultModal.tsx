@@ -18,6 +18,12 @@ interface RaceResultModalProps {
     initialMode?: 'suggest' | 'review' | 'pick';
 }
 
+interface TimeParts {
+    hours: string;
+    minutes: string;
+    seconds: string;
+}
+
 function formatTime(seconds: number | null | undefined): string {
     if (!seconds || seconds <= 0) return '-';
     const hrs = Math.floor(seconds / 3600);
@@ -43,6 +49,103 @@ function formatTimeDelta(goalTime: number, actualTime: number): { text: string; 
     return { text: `${sign}${text}`, positive: delta > 0 };
 }
 
+function secondsToTimeParts(totalSeconds: number | null | undefined): TimeParts {
+    if (!totalSeconds || totalSeconds <= 0) {
+        return { hours: '', minutes: '', seconds: '' };
+    }
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
+    return {
+        hours: hours > 0 ? String(hours) : '',
+        minutes: String(minutes),
+        seconds: String(seconds),
+    };
+}
+
+function timePartsToSeconds({ hours, minutes, seconds }: TimeParts): number | null {
+    const hasValue = hours !== '' || minutes !== '' || seconds !== '';
+    if (!hasValue) return null;
+
+    const parsedHours = Number(hours || '0');
+    const parsedMinutes = Number(minutes || '0');
+    const parsedSeconds = Number(seconds || '0');
+
+    if ([parsedHours, parsedMinutes, parsedSeconds].some(value => Number.isNaN(value) || value < 0)) {
+        return null;
+    }
+
+    return (parsedHours * 3600) + (parsedMinutes * 60) + parsedSeconds;
+}
+
+function updateTimePart(parts: TimeParts, key: keyof TimeParts, value: string): TimeParts {
+    const normalized = value.replace(/\D/g, '');
+    return { ...parts, [key]: normalized };
+}
+
+function TimeInputGroup({
+    label,
+    idPrefix,
+    value,
+    onChange,
+    placeholder,
+}: {
+    label: string;
+    idPrefix: string;
+    value: TimeParts;
+    onChange: (next: TimeParts) => void;
+    placeholder?: string;
+}) {
+    const inputClass = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 outline-none focus:ring-2 focus:ring-accent-orange transition-all';
+
+    return (
+        <div>
+            <label className="block text-xs text-foreground-muted mb-1.5">{label}</label>
+            <div className="grid grid-cols-3 gap-2">
+                <div>
+                    <input
+                        id={`${idPrefix}-hours`}
+                        type="number"
+                        min="0"
+                        value={value.hours}
+                        onChange={e => onChange(updateTimePart(value, 'hours', e.target.value))}
+                        placeholder="hh"
+                        className={inputClass}
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1 text-center">hours</p>
+                </div>
+                <div>
+                    <input
+                        id={`${idPrefix}-minutes`}
+                        type="number"
+                        min="0"
+                        value={value.minutes}
+                        onChange={e => onChange(updateTimePart(value, 'minutes', e.target.value))}
+                        placeholder="mm"
+                        className={inputClass}
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1 text-center">minutes</p>
+                </div>
+                <div>
+                    <input
+                        id={`${idPrefix}-seconds`}
+                        type="number"
+                        min="0"
+                        value={value.seconds}
+                        onChange={e => onChange(updateTimePart(value, 'seconds', e.target.value))}
+                        placeholder="ss"
+                        className={inputClass}
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1 text-center">seconds</p>
+                </div>
+            </div>
+            {placeholder && <p className="text-[10px] text-gray-500 mt-1">{placeholder}</p>}
+        </div>
+    );
+}
+
 export default function RaceResultModal({
     isOpen,
     onClose,
@@ -56,8 +159,8 @@ export default function RaceResultModal({
     const [showDetails, setShowDetails] = useState(false);
 
     const [raceActivityId, setRaceActivityId] = useState<string | null>(null);
-    const [actualTime, setActualTime] = useState<string>('');
-    const [chipTime, setChipTime] = useState<string>('');
+    const [actualTime, setActualTime] = useState<TimeParts>({ hours: '', minutes: '', seconds: '' });
+    const [chipTime, setChipTime] = useState<TimeParts>({ hours: '', minutes: '', seconds: '' });
     const [placementOverall, setPlacementOverall] = useState('');
     const [placementGender, setPlacementGender] = useState('');
     const [placementAgeGroup, setPlacementAgeGroup] = useState('');
@@ -71,8 +174,12 @@ export default function RaceResultModal({
         if (!isOpen) return;
         if (initialMode === 'suggest' && suggestedActivity) {
             setRaceActivityId(suggestedActivity.id);
-            setActualTime(suggestedActivity.movingTime.toString());
+            setActualTime(secondsToTimeParts(suggestedActivity.movingTime));
         }
+        if (!suggestedActivity) {
+            setActualTime({ hours: '', minutes: '', seconds: '' });
+        }
+        setChipTime({ hours: '', minutes: '', seconds: '' });
         setMode(initialMode);
         setShowDetails(false);
     }, [isOpen, initialMode, suggestedActivity]);
@@ -98,12 +205,14 @@ export default function RaceResultModal({
     const completionRate = workoutStats.total > 0
         ? Math.round((workoutStats.completed / workoutStats.total) * 100)
         : 0;
+    const actualTimeSeconds = timePartsToSeconds(actualTime);
+    const chipTimeSeconds = timePartsToSeconds(chipTime);
 
     const completeMutation = useMutation({
         mutationFn: async () => {
             const payload: Record<string, unknown> = {
                 raceActivityId,
-                chipTime: chipTime ? parseInt(chipTime) : null,
+                chipTime: chipTimeSeconds,
                 placementOverall: placementOverall ? parseInt(placementOverall) : null,
                 placementGender: placementGender ? parseInt(placementGender) : null,
                 placementAgeGroup: placementAgeGroup ? parseInt(placementAgeGroup) : null,
@@ -113,7 +222,7 @@ export default function RaceResultModal({
                 feltLike: feltLike ? parseInt(feltLike) : null,
                 notes: notes || null,
             };
-            if (actualTime) payload.actualTime = parseInt(actualTime);
+            if (actualTimeSeconds !== null) payload.actualTime = actualTimeSeconds;
 
             const res = await fetch(`/api/goals/${goal.id}/complete`, {
                 method: 'PATCH',
@@ -271,7 +380,7 @@ export default function RaceResultModal({
                 {mode === 'review' && (
                     <div className="space-y-4">
                         {/* Time Comparison */}
-                        {goal.targetTime && actualTime && (
+                        {goal.targetTime && actualTimeSeconds !== null && (
                             <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                 <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 text-center">Race Result</p>
                                 <div className="grid grid-cols-3 gap-3">
@@ -287,48 +396,46 @@ export default function RaceResultModal({
                                             <Trophy className="w-5 h-5 text-white" />
                                         </div>
                                         <p className="text-[10px] text-gray-400 uppercase">Actual Time</p>
-                                        <p className="text-xl font-bold text-white">{formatTime(parseInt(actualTime))}</p>
+                                        <p className="text-xl font-bold text-white">{formatTime(actualTimeSeconds)}</p>
                                     </div>
                                     <div className="text-center">
-                                        <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${!formatTimeDelta(goal.targetTime, parseInt(actualTime)).positive
+                                        <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
                                                 ? 'bg-green-500/20'
                                                 : 'bg-red-500/20'
                                             }`}>
-                                            <span className={`text-lg font-bold ${!formatTimeDelta(goal.targetTime, parseInt(actualTime)).positive
+                                            <span className={`text-lg font-bold ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
                                                     ? 'text-green-400'
                                                     : 'text-red-400'
                                                 }`}>
-                                                {!formatTimeDelta(goal.targetTime, parseInt(actualTime)).positive ? '-' : '+'}
+                                                {!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive ? '-' : '+'}
                                             </span>
                                         </div>
                                         <p className="text-[10px] text-gray-400 uppercase">Difference</p>
-                                        <p className={`text-xl font-bold ${!formatTimeDelta(goal.targetTime, parseInt(actualTime)).positive
+                                        <p className={`text-xl font-bold ${!formatTimeDelta(goal.targetTime, actualTimeSeconds).positive
                                                 ? 'text-green-400'
                                                 : 'text-red-400'
                                             }`}>
-                                            {formatTimeDelta(goal.targetTime, parseInt(actualTime)).text}
+                                            {formatTimeDelta(goal.targetTime, actualTimeSeconds).text}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Actual Time Input (if no target time or for editing) */}
+                        {/* Actual Time Input */}
                         <div className="grid grid-cols-2 gap-3">
-                            <Input
-                                label="Actual Time (seconds)"
-                                id="actual-time"
-                                type="number"
+                            <TimeInputGroup
+                                label="Actual Time"
+                                idPrefix="actual-time"
                                 value={actualTime}
-                                onChange={e => setActualTime(e.target.value)}
-                                placeholder={goal.targetTime?.toString() || 'e.g. 7920'}
+                                onChange={setActualTime}
+                                placeholder={goal.targetTime ? `Goal: ${formatTime(goal.targetTime)}` : undefined}
                             />
-                            <Input
-                                label="Chip Time (seconds)"
-                                id="chip-time"
-                                type="number"
+                            <TimeInputGroup
+                                label="Chip Time"
+                                idPrefix="chip-time"
                                 value={chipTime}
-                                onChange={e => setChipTime(e.target.value)}
+                                onChange={setChipTime}
                                 placeholder="If different from gun time"
                             />
                         </div>
@@ -487,7 +594,7 @@ export default function RaceResultModal({
                             </button>
                             <button
                                 onClick={() => completeMutation.mutate()}
-                                disabled={isSaving || !actualTime}
+                                disabled={isSaving || actualTimeSeconds === null}
                                 className="flex-1 btn-primary py-3 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSaving ? (

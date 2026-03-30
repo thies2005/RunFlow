@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Calendar, Eye, EyeOff, Download } from 'lucide-react';
 import { format, startOfWeek, addDays, isToday, isSameDay, differenceInWeeks, isBefore } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { EditWorkoutModal, ErrorBoundary, Footer } from '@/components';
@@ -214,17 +214,44 @@ export default function PlanPage() {
                                 </p>
                             </div>
                         </div>
-                        {/* Show Unlinked Toggle */}
-                        <button
-                            onClick={() => setShowUnlinked(!showUnlinked)}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${showUnlinked
-                                ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
-                                : 'bg-surface text-foreground-muted hover:text-foreground border border-glass-border'
-                                }`}
-                        >
-                            {showUnlinked ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                            {showUnlinked ? 'Unlinked On' : 'Show Unlinked'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    const printStyles = document.createElement('style');
+                                    printStyles.id = 'runflow-print-styles';
+                                    printStyles.textContent = `
+                                        @media print {
+                                            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                                            header, footer, .no-print { display: none !important; }
+                                            .glass-card { background: white !important; border: 1px solid #e5e7eb !important; break-inside: avoid; }
+                                            .bg-background { background: white !important; }
+                                            button { display: none !important; }
+                                            .text-foreground, .text-white { color: black !important; }
+                                            .text-foreground-muted, .text-gray-400, .text-gray-500 { color: #6b7280 !important; }
+                                            [draggable="true"] { cursor: default !important; }
+                                        }
+                                    `;
+                                    document.head.appendChild(printStyles);
+                                    window.print();
+                                    document.getElementById('runflow-print-styles')?.remove();
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-surface text-foreground-muted hover:text-foreground border border-glass-border"
+                            >
+                                <Download className="w-4 h-4" />
+                                Export PDF
+                            </button>
+                            {/* Show Unlinked Toggle */}
+                            <button
+                                onClick={() => setShowUnlinked(!showUnlinked)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${showUnlinked
+                                    ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
+                                    : 'bg-surface text-foreground-muted hover:text-foreground border border-glass-border'
+                                    }`}
+                            >
+                                {showUnlinked ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                {showUnlinked ? 'Unlinked On' : 'Show Unlinked'}
+                            </button>
+                        </div>
                     </div>
 
                     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>

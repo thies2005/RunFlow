@@ -303,8 +303,11 @@ export function MobileLayout() {
     }
 
     if (status === 'authenticated' && !isDashboardLoading && !activeGoal) {
-        router.push('/onboarding');
-        return null;
+        const dismissed = typeof window !== 'undefined' && localStorage.getItem('runflow_onboarding_dismissed') === 'true';
+        if (!dismissed) {
+            router.push('/onboarding');
+            return null;
+        }
     }
 
     // === RENDER ===

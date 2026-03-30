@@ -408,6 +408,9 @@ export default function PlanSetupForm({
             return res.json();
         },
         onSuccess: () => {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('runflow_onboarding_dismissed');
+            }
             queryClient.invalidateQueries({ queryKey: ['goals'] });
             queryClient.invalidateQueries({ queryKey: ['plan'] });
             onSuccess?.();
@@ -649,6 +652,9 @@ export default function PlanSetupForm({
                 mode === 'onboarding' && (
                     <button
                         onClick={() => {
+                            if (typeof window !== 'undefined') {
+                                localStorage.setItem('runflow_onboarding_dismissed', 'true');
+                            }
                             onSuccess?.();
                         }}
                         className="btn-secondary w-full flex items-center justify-center gap-2 py-3 font-medium"

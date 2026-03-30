@@ -7,12 +7,15 @@ import {
     AreaChart, Area, LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
 import { predictRaceTime, formatTime, formatPace } from '@/lib/metrics/vdot';
+import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import LazyChartWrapper from '@/components/LazyChartWrapper';
 import { ChartTooltip } from '@/components/charts/ChartTooltip';
 
 
 type AnalyticsDashboardProps = {
     currentVdot: number | null;
+    effectiveVO2max?: number;
+    shapePercent?: number;
 };
 
 const RANGES = [
@@ -251,9 +254,21 @@ const StatsGrid = memo(({ currentVdot, totals }: { currentVdot: number | null; t
 ));
 StatsGrid.displayName = 'StatsGrid';
 
-// Race Predictions Section
-const RacePredictions = memo(({ currentVdot }: { currentVdot: number | null }) => {
+const RacePredictions = memo(({ currentVdot, effectiveVO2max, shapePercent }: {
+    currentVdot: number | null;
+    effectiveVO2max?: number;
+    shapePercent?: number;
+}) => {
     const racePredictions = useMemo(() => {
+        if (effectiveVO2max && effectiveVO2max > 0) {
+            const shape = shapePercent ?? 0;
+            const predictions = calculateAllRacePredictions(effectiveVO2max, shape);
+            if (predictions.length === 0) return [];
+            return predictions.map(p => ({
+                race: p.distance,
+                time: formatTime(p.predicted),
+            }));
+        }
         if (!currentVdot || currentVdot <= 0) return [];
         return [
             { race: '5K', time: formatTime(predictRaceTime(currentVdot, '5K')) },
@@ -261,13 +276,17 @@ const RacePredictions = memo(({ currentVdot }: { currentVdot: number | null }) =
             { race: 'Half', time: formatTime(predictRaceTime(currentVdot, 'HALF')) },
             { race: 'Marathon', time: formatTime(predictRaceTime(currentVdot, 'MARATHON')) },
         ];
-    }, [currentVdot]);
+    }, [currentVdot, effectiveVO2max, shapePercent]);
 
     if (racePredictions.length === 0) return null;
 
+    const label = effectiveVO2max && effectiveVO2max > 0
+        ? `VO2max ${effectiveVO2max.toFixed(1)} · Shape ${shapePercent ?? 0}%`
+        : `VDOT ${currentVdot?.toFixed(1)}`;
+
     return (
         <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Race Predictions (VDOT {currentVdot?.toFixed(1)})</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Race Predictions ({label})</h3>
             <div className="grid grid-cols-4 gap-4">
                 {racePredictions.map(p => (
                     <div key={p.race} className="text-center">
@@ -287,7 +306,7 @@ RacePredictions.displayName = 'RacePredictions';
 
 import { ChartErrorBoundary } from '@/components/ErrorBoundary';
 
-function AnalyticsDashboardInner({ currentVdot }: AnalyticsDashboardProps) {
+function AnalyticsDashboardInner({ currentVdot, effectiveVO2max, shapePercent }: AnalyticsDashboardProps) {
     const [timeRange, setTimeRange] = useState('12_WEEKS');
 
     // Fetch Aggregated History
@@ -340,7 +359,7 @@ function AnalyticsDashboardInner({ currentVdot }: AnalyticsDashboardProps) {
             )}
 
             <LazyChartWrapper height="16rem">
-                <RacePredictions currentVdot={currentVdot} />
+                <RacePredictions currentVdot={currentVdot} effectiveVO2max={effectiveVO2max} shapePercent={shapePercent} />
             </LazyChartWrapper>
 
             {fitnessTrend.length > 0 && (

@@ -204,6 +204,8 @@ export default function OnboardingWizard() {
 
                         <AnalyticsDashboard
                             currentVdot={currentVdot}
+                            effectiveVO2max={effectiveVO2max || undefined}
+                            shapePercent={shapePercent || undefined}
                         />
 
                         <div className="flex justify-center mt-8">

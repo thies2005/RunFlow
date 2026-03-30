@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trophy, Clock, Edit3, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import RaceActivityPicker from './RaceActivityPicker';
 import type { Goal, SuggestedRaceActivity } from '@/lib/types';
+import { formatDistanceWithUnit, formatPace as formatPaceWithUnits, useUnits } from '@/lib/units';
 
 interface RaceResultModalProps {
     isOpen: boolean;
@@ -42,14 +43,6 @@ function formatTimeDelta(goalTime: number, actualTime: number): { text: string; 
     return { text: `${sign}${text}`, positive: delta > 0 };
 }
 
-function formatPace(distanceM: number, timeS: number): string {
-    if (!distanceM || !timeS) return '-';
-    const pace = timeS / (distanceM / 1000);
-    const mins = Math.floor(pace / 60);
-    const secs = Math.round(pace % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}/km`;
-}
-
 export default function RaceResultModal({
     isOpen,
     onClose,
@@ -58,6 +51,7 @@ export default function RaceResultModal({
     initialMode = 'suggest',
 }: RaceResultModalProps) {
     const queryClient = useQueryClient();
+    const { useImperial } = useUnits();
     const [mode, setMode] = useState<'suggest' | 'review' | 'pick'>(initialMode);
     const [showDetails, setShowDetails] = useState(false);
 
@@ -83,10 +77,22 @@ export default function RaceResultModal({
         setShowDetails(false);
     }, [isOpen, initialMode, suggestedActivity]);
 
-    const workoutStats = goal.workouts
+    const { data: planData } = useQuery({
+        queryKey: ['plan', goal.id, 'full'],
+        queryFn: async () => {
+            const res = await fetch(`/api/plan?goalId=${goal.id}`);
+            if (!res.ok) throw new Error('Failed to fetch plan');
+            return res.json();
+        },
+        staleTime: 60000,
+        enabled: isOpen,
+    });
+
+    const workouts = planData?.goal?.workouts || goal.workouts || [];
+    const workoutStats = workouts
         ? {
-            total: goal.workouts.length,
-            completed: goal.workouts.filter(w => w.isCompleted).length,
+            total: workouts.length,
+            completed: workouts.filter((w: NonNullable<Goal['workouts']>[number]) => w.isCompleted).length,
         }
         : { total: 0, completed: 0 };
     const completionRate = workoutStats.total > 0
@@ -164,8 +170,8 @@ export default function RaceResultModal({
                             </div>
                             <div className="grid grid-cols-3 gap-3 text-center">
                                 <div className="bg-white/5 rounded-lg p-2">
-                                    <p className="text-lg font-bold text-white">{(suggestedActivity.distance / 1000).toFixed(1)}</p>
-                                    <p className="text-[10px] text-gray-400">km</p>
+                                    <p className="text-lg font-bold text-white">{formatDistanceWithUnit(suggestedActivity.distance, useImperial, 1)}</p>
+                                    <p className="text-[10px] text-gray-400">distance</p>
                                 </div>
                                 <div className="bg-white/5 rounded-lg p-2">
                                     <p className="text-lg font-bold text-white">{formatTime(suggestedActivity.movingTime)}</p>
@@ -174,7 +180,7 @@ export default function RaceResultModal({
                                 <div className="bg-white/5 rounded-lg p-2">
                                     <p className="text-lg font-bold text-white">
                                         {suggestedActivity.averageSpeed
-                                            ? formatPace(1000, 3600 / suggestedActivity.averageSpeed)
+                                            ? formatPaceWithUnits(1000 / suggestedActivity.averageSpeed, useImperial)
                                             : '-'}
                                     </p>
                                     <p className="text-[10px] text-gray-400">pace</p>
@@ -241,9 +247,6 @@ export default function RaceResultModal({
                             selectedId={raceActivityId}
                             onSelect={(id) => {
                                 setRaceActivityId(id);
-                                if (id) {
-                                    const res = completeMutation;
-                                }
                             }}
                         />
                         <div className="flex gap-2">

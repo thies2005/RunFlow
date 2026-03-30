@@ -4,11 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { format, subDays, addDays } from 'date-fns';
 import { Activity, Check, Loader2, Search } from 'lucide-react';
 import { useState } from 'react';
+import { formatDistanceWithUnit, formatElevationWithUnit, formatPace, useUnits } from '@/lib/units';
 
 interface RaceActivityPickerProps {
     raceDate: string | Date;
     selectedId: string | null;
-    onSelect: (activityId: string | null) => void;
+    onSelect: (_activityId: string | null) => void;
 }
 
 interface RaceActivity {
@@ -22,14 +23,6 @@ interface RaceActivity {
     totalElevation: number | null;
 }
 
-function formatPace(distanceMeters: number, timeSeconds: number): string {
-    if (distanceMeters <= 0 || timeSeconds <= 0) return '-';
-    const paceSecsPerKm = timeSeconds / (distanceMeters / 1000);
-    const mins = Math.floor(paceSecsPerKm / 60);
-    const secs = Math.round(paceSecsPerKm % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}/km`;
-}
-
 function formatDuration(seconds: number): string {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -39,12 +32,13 @@ function formatDuration(seconds: number): string {
 
 export default function RaceActivityPicker({ raceDate, selectedId, onSelect }: RaceActivityPickerProps) {
     const [searchQuery, setSearchQuery] = useState('');
+    const { useImperial } = useUnits();
 
     const raceDateObj = typeof raceDate === 'string' ? new Date(raceDate) : raceDate;
     const fromDate = subDays(raceDateObj, 7);
     const toDate = addDays(raceDateObj, 7);
 
-    const { data, isLoading, error } = useQuery({
+    const { data, isLoading } = useQuery({
         queryKey: ['race-activities', raceDate],
         queryFn: async () => {
             const params = new URLSearchParams({
@@ -126,12 +120,12 @@ export default function RaceActivityPicker({ raceDate, selectedId, onSelect }: R
                                     </p>
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-400">
                                         <span>{format(new Date(activity.startDate), 'MMM d, yyyy')}</span>
-                                        <span>{(activity.distance / 1000).toFixed(1)} km</span>
+                                        <span>{formatDistanceWithUnit(activity.distance, useImperial, 1)}</span>
                                         <span>{formatDuration(activity.movingTime)}</span>
-                                        <span>{formatPace(activity.distance, activity.movingTime)}</span>
+                                        <span>{formatPace(activity.movingTime / (activity.distance / 1000), useImperial)}</span>
                                         {activity.averageHr && <span>{Math.round(activity.averageHr)} bpm</span>}
                                         {activity.totalElevation && activity.totalElevation > 0 && (
-                                            <span>{Math.round(activity.totalElevation)}m elev</span>
+                                            <span>{formatElevationWithUnit(activity.totalElevation, useImperial)} elev</span>
                                         )}
                                     </div>
                                 </div>

@@ -6,11 +6,12 @@ import type { Goal, SuggestedRaceActivity } from '@/lib/types';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import type { RaceDistance } from '@/lib/metrics/vdot';
 import { useUserMetrics } from './providers/UserMetricsProvider';
+import { formatDistanceWithUnit, formatPace as formatPaceWithUnits, useUnits } from '@/lib/units';
 
 interface RaceCountdownProps {
     goal: Goal | null;
     className?: string;
-    onSelectRace?: (goal: Goal, activity: SuggestedRaceActivity | null, mode: 'suggest' | 'review' | 'pick') => void;
+    onSelectRace?: (_goal: Goal, _activity: SuggestedRaceActivity | null, _mode: 'suggest' | 'review' | 'pick') => void;
 }
 
 const raceLabels: Record<string, string> = {
@@ -36,14 +37,6 @@ function formatTime(seconds: number): string {
         return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function formatPace(distanceM: number, timeS: number): string {
-    if (!distanceM || !timeS) return '-';
-    const pace = timeS / (distanceM / 1000);
-    const mins = Math.floor(pace / 60);
-    const secs = Math.round(pace % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}/km`;
 }
 
 export function RaceCountdown({
@@ -241,6 +234,7 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className }: {
     onSelectRace?: RaceCountdownProps['onSelectRace'];
     className: string;
 }) {
+    const { useImperial } = useUnits();
     const { data: suggestData, isLoading: suggestLoading } = useQuery({
         queryKey: ['suggest-race', goal.id],
         queryFn: async () => {
@@ -252,13 +246,24 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className }: {
         retry: false,
     });
 
+    const { data: planData } = useQuery({
+        queryKey: ['plan', goal.id, 'full'],
+        queryFn: async () => {
+            const res = await fetch(`/api/plan?goalId=${goal.id}`);
+            if (!res.ok) throw new Error('Failed to fetch plan');
+            return res.json();
+        },
+        staleTime: 60000,
+    });
+
     const suggestions: SuggestedRaceActivity[] = suggestData?.suggestions || [];
     const topSuggestion = suggestions.length > 0 ? suggestions[0] : null;
 
-    const workoutStats = goal.workouts
+    const workouts = planData?.goal?.workouts || goal.workouts || [];
+    const workoutStats = workouts
         ? {
-            total: goal.workouts.length,
-            completed: goal.workouts.filter(w => w.isCompleted).length,
+            total: workouts.length,
+            completed: workouts.filter((w: NonNullable<Goal['workouts']>[number]) => w.isCompleted).length,
         }
         : { total: 0, completed: 0 };
     const completionRate = workoutStats.total > 0
@@ -324,10 +329,10 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className }: {
                                 <p className="text-sm font-medium text-white truncate">{topSuggestion.name}</p>
                                 <div className="flex items-center gap-2 text-xs text-gray-400">
                                     <span>{format(new Date(topSuggestion.startDate), 'MMM d')}</span>
-                                    <span>{(topSuggestion.distance / 1000).toFixed(1)} km</span>
+                                    <span>{formatDistanceWithUnit(topSuggestion.distance, useImperial, 1)}</span>
                                     <span>{formatTime(topSuggestion.movingTime)}</span>
                                     {topSuggestion.averageSpeed && (
-                                        <span>{formatPace(1000, 3600 / topSuggestion.averageSpeed)}</span>
+                                        <span>{formatPaceWithUnits(1000 / topSuggestion.averageSpeed, useImperial)}</span>
                                     )}
                                 </div>
                             </div>

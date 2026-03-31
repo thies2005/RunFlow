@@ -11,7 +11,7 @@ import { cachedResponse } from '@/lib/api/apiResponse';
 import { validateBody } from '@/lib/validation/validator';
 import { goalSchema } from '@/lib/validation/schemas';
 import { setApiVersionHeaders } from '@/lib/api/version';
-import { RaceType, WorkoutType } from '@prisma/client';
+import { RaceType, WorkoutType } from '@/generated/prisma/browser';
 import type { ActivityForShape } from '@/lib/metrics/runalyze';
 import { logger } from '@/lib/logging/logger';
 

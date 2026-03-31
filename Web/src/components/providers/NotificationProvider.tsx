@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast, Toaster } from 'sonner';
 
@@ -17,6 +17,7 @@ export function useNotifications() {
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const { data: session } = useSession();
+    const [isMounted, setIsMounted] = useState(false);
     const retryCountRef = useRef(0);
     const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -77,6 +78,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }, [session?.user?.id]);
 
     useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    useEffect(() => {
         if (!session?.user?.id) return;
 
         // Initial check
@@ -96,7 +101,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return (
         <>
             {children}
-            <Toaster position="top-right" richColors theme="dark" />
+            {isMounted ? <Toaster position="top-right" richColors theme="dark" /> : null}
         </>
     );
 }

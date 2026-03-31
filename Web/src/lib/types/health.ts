@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/generated/prisma/browser';
 
 export type Supplement = Prisma.SupplementGetPayload<{
     select: {

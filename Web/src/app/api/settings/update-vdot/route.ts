@@ -4,7 +4,7 @@ import { calculateVdot, RaceDistance } from '@/lib/metrics/vdot';
 import { generateTrainingPlan } from '@/lib/plans';
 import { authOptions } from '@/lib/strava/oauth';
 import { NextRequest, NextResponse } from 'next/server';
-import { WorkoutType } from '@prisma/client';
+import { WorkoutType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function GET() {

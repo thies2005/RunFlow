@@ -1,8 +1,17 @@
-
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from './src/generated/prisma/client';
 import { decryptToken } from './src/lib/crypto';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is not set');
+}
+
+const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString })
+});
 
 async function main() {
     try {

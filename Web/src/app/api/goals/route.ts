@@ -13,7 +13,7 @@ import { validateBody } from '@/lib/validation/validator';
 import { goalSchema } from '@/lib/validation/schemas';
 import { handleError } from '@/lib/errors/handler';
 import { logger } from '@/lib/logging/logger';
-import { RaceType, WorkoutType } from '@prisma/client';
+import { RaceType, WorkoutType } from '@/generated/prisma/browser';
 
 // GET - List goals
 export async function GET(request: NextRequest) {

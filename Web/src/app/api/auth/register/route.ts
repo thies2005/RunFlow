@@ -10,7 +10,7 @@ import { prisma } from '@/lib/db';
 import { hashPassword, validateEmail, validatePassword } from '@/lib/auth/auth-email';
 import { createAuthCode } from '@/lib/auth/tokens';
 import { sendWelcomeEmail } from '@/lib/email';
-import { AuthCodeType } from '@prisma/client';
+import { AuthCodeType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
 import { logger } from '@/lib/logging/logger';

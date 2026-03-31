@@ -3,8 +3,8 @@
  * Replaces all 'any' types throughout the codebase
  */
 
-import { ActivityType } from '@prisma/client';
-export { ActivityType } from '@prisma/client';
+import { ActivityType } from '@/generated/prisma/browser';
+export { ActivityType } from '@/generated/prisma/browser';
 
 // ============================================
 // Activity Type Utilities (M-09)

@@ -1,6 +1,6 @@
 
 import { goalSchema } from './schemas';
-import { RaceType } from '@prisma/client';
+import { RaceType } from '@/generated/prisma/browser';
 
 describe('goalSchema Validation', () => {
     it('should accept valid RaceType values', () => {

@@ -1,6 +1,6 @@
 
 import { prisma } from '@/lib/db';
-import { Activity } from '@prisma/client';
+import { Activity } from '@/generated/prisma/browser';
 import { calculateTrimpFromZones } from './trimp';
 import { DAY_MS } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';

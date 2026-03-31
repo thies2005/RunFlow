@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 export function generateNonce(): string {
   if (typeof crypto !== 'undefined' && 'getRandomValues' in crypto) {
     const array = new Uint8Array(16)
@@ -5,6 +7,5 @@ export function generateNonce(): string {
     return btoa(String.fromCharCode(...Array.from(array)))
   }
 
-  const cryptoModule = require('crypto')
-  return cryptoModule.randomBytes(16).toString('base64')
+  return randomBytes(16).toString('base64')
 }

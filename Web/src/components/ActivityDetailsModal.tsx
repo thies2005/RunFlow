@@ -4,6 +4,7 @@ import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import type { ActivityListItem, WorkoutType, Activity } from '@/lib/types';
 import InteractiveStreamsChart from './InteractiveStreamsChart';
@@ -198,9 +199,6 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             return 'Invalid Date';
         }
     };
-
-    // Portal Implementation
-    const { createPortal } = require('react-dom');
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm animate-in fade-in duration-200">

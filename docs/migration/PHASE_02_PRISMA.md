@@ -135,7 +135,7 @@ Upgrade Prisma from v5.10 to v7.x. This is the most invasive phase because Prism
 |---|---|---|---|
 | `@prisma/client` | `^5.10.0` | `^7.5.0` | Major version upgrade |
 | `@prisma/adapter-pg` | (new) | `^7.5.0` | PostgreSQL driver adapter for Prisma 7 |
-| `@auth/prisma-adapter` | `^2.11.1` | Latest published release whose peerDependencies explicitly include Prisma 7 | Do not proceed without confirming published Prisma 7 support |
+| `@auth/prisma-adapter` | `^2.11.1` | Latest published release validated against Prisma 7 in this repo | Published peerDependencies may lag Prisma 7; require official docs plus local validation |
 | `pg` | (new) | `^8.16.0` | PostgreSQL driver for adapter |
 | `dotenv` | (new) | `^16.6.1` | Required for prisma.config.ts env loading |
 
@@ -540,9 +540,14 @@ The current code in `src/lib/strava/oauth.ts` uses:
 import { PrismaAdapter } from '@auth/prisma-adapter';
 ```
 
-Check if `@auth/prisma-adapter@^2.11.1` supports Prisma 7. If not, update to the latest compatible version. The adapter receives the `prisma` instance (which is already configured with the driver adapter), so it should work as long as the PrismaClient API is compatible.
+Check if `@auth/prisma-adapter@^2.11.1` supports Prisma 7. If a newer published version explicitly lists Prisma 7 support, update to it. If peer dependency metadata still lags behind Prisma 7, you may continue with `2.11.1` only when both of these are true:
 
-**Blocking rule:** Do not start this phase until the published `@auth/prisma-adapter` package metadata confirms Prisma 7 support. If no such version exists, stop and revise the migration plan before execution.
+1. Official Auth.js / Prisma docs still document `PrismaAdapter(prisma)` as the supported integration path.
+2. This repository passes `npx tsc --noEmit`, `npm run build`, `npm run lint`, and `npm run test` with Prisma 7 and the adapter in place.
+
+The adapter receives the `prisma` instance (which is already configured with the driver adapter), so compatibility must be proven by repo validation if published peer metadata has not caught up yet.
+
+**Blocking rule:** Do not start this phase if official Auth.js docs no longer recommend `PrismaAdapter(prisma)` for Prisma projects, or if this repository cannot pass validation with Prisma 7 in place. If peer dependency metadata is the only gap, document that explicitly in the phase notes and proceed only after local validation passes.
 
 **Important:** The `as any` cast on `Web/src/lib/strava/oauth.ts:18` must be removed or replaced with a properly typed compatibility approach in this phase. Do not defer it and do not introduce new `any`-typed callback parameters.
 
@@ -597,7 +602,7 @@ node -e "const p = require('./package.json'); console.log(p.type)"
 
 **Symptom:** TypeError when PrismaAdapter tries to call PrismaClient methods.
 
-**Fix:** Update `@auth/prisma-adapter` to a published version whose peerDependencies explicitly include Prisma 7. If no compatible version exists yet, this phase is blocked until the migration plan is revised. Do not work around the issue with `any` casts or undocumented adapter shims.
+**Fix:** Prefer updating `@auth/prisma-adapter` to a published version whose peerDependencies explicitly include Prisma 7. If metadata still lags, rely on official docs plus full repository validation to prove compatibility. If runtime or type errors remain after validation, this phase is blocked until the migration plan is revised. Do not work around the issue with `any` casts or undocumented adapter shims.
 
 ### 3. Jest fails with ESM module resolution
 
@@ -658,7 +663,7 @@ Before merging, verify:
 - [ ] `src/generated/prisma/client` exists after `npx prisma generate`
 - [ ] All 43 files updated to import from new path (grep for old path returns nothing)
 - [ ] `db.ts` uses `PrismaPg` driver adapter
-- [ ] `@auth/prisma-adapter` published peerDependencies explicitly support Prisma 7
+- [ ] `@auth/prisma-adapter` is either published with Prisma 7 support or validated in this repo against Prisma 7 with official docs still recommending `PrismaAdapter(prisma)`
 - [ ] Config files renamed to `.mjs`
 - [ ] `npx tsc --noEmit` passes
 - [ ] `npm run build` passes

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomBytes } from 'crypto';
 import { DAY_MS } from '@/lib/constants';
 
 const CSRF_COOKIE_NAME = 'csrf_token';
@@ -10,7 +11,7 @@ interface CsrfTokenData {
 }
 
 export function generateCsrfToken(): string {
-    return require('crypto').randomBytes(32).toString('hex');
+    return randomBytes(32).toString('hex');
 }
 
 export function setCsrfCookie(response: NextResponse): string {

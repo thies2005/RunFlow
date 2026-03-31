@@ -2,7 +2,12 @@
 
 import { usePathname } from 'next/navigation';
 import { useDeviceType } from '@/hooks/useDeviceType';
-import MobileLayout from './mobile-layout';
+import dynamic from 'next/dynamic';
+
+const MobileLayout = dynamic(() => import('./mobile-layout').then(m => ({ default: m.MobileLayout })), {
+    ssr: false,
+    loading: () => null,
+});
 
 interface AdaptiveLayoutProps {
     children: React.ReactNode;

@@ -4,7 +4,7 @@
  * Shared types for mobile-specific API requests and responses.
  */
 
-import { ActivityType, RaceType, WorkoutType, PlanPhase } from '@prisma/client';
+import { ActivityType, RaceType, WorkoutType, PlanPhase } from '@/generated/prisma/browser';
 
 export interface MobileUser {
     id: string;

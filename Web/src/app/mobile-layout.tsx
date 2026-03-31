@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import {
     useSensor,
     useSensors,
@@ -266,7 +266,6 @@ export function MobileLayout() {
                 const newDate = overId.replace('day-', '');
                 const currentWorkout = planData?.goal?.workouts?.find((w: WorkoutWithLinkedActivity) => w.id === workoutId);
                 if (currentWorkout) {
-                    const { isSameDay } = require('date-fns');
                     if (!isSameDay(new Date(currentWorkout.scheduledDate), new Date(newDate))) {
                         reorderMutation.mutate({ workoutId, newDate });
                     }

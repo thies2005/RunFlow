@@ -3,7 +3,9 @@
  * With additional Credentials provider for email/password auth
  */
 
-import { AuthOptions } from 'next-auth';
+import type { Adapter } from 'next-auth/adapters';
+import { type AuthOptions, type Session } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 import StravaProvider from 'next-auth/providers/strava';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
@@ -14,8 +16,22 @@ import { TIME_RANGES } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
 
+type AuthCallbacks = NonNullable<AuthOptions['callbacks']>;
+type SignInCallbackParams = Parameters<NonNullable<AuthCallbacks['signIn']>>[0];
+type JwtCallbackParams = Parameters<NonNullable<AuthCallbacks['jwt']>>[0];
+type SessionCallbackParams = Parameters<NonNullable<AuthCallbacks['session']>>[0];
+type SessionUser = NonNullable<Session['user']> & {
+    authMethod?: string;
+};
+type SessionToken = JWT & {
+    id?: string;
+};
+type StravaAccountWithAthlete = NonNullable<SignInCallbackParams['account']> & {
+    athlete?: unknown;
+};
+
 export const authOptions: AuthOptions = {
-    adapter: PrismaAdapter(prisma) as any,
+    adapter: PrismaAdapter(prisma) as Adapter,
     providers: [
         StravaProvider({
             clientId: process.env.STRAVA_CLIENT_ID!,
@@ -72,7 +88,7 @@ export const authOptions: AuthOptions = {
         }),
     ],
     callbacks: {
-        async signIn({ user: _user, account }: { user: any, account: any }) {
+        async signIn({ account }: SignInCallbackParams) {
             // Skip token handling for credentials provider
             if (account?.provider === 'credentials') {
                 return true;
@@ -81,7 +97,7 @@ export const authOptions: AuthOptions = {
             // Fix: Strava Provider returns 'athlete' object which breaks PrismaAdapter
             // We must remove it before NextAuth tries to save the account
             if (account && 'athlete' in account) {
-                delete (account as any).athlete;
+                delete (account as StravaAccountWithAthlete).athlete;
             }
 
             // Encrypt tokens before storing
@@ -122,27 +138,32 @@ export const authOptions: AuthOptions = {
 
             // Update account object for adapter (in case it's a new user)
             if (account?.access_token) {
-                account.access_token = encryptedAccess;
+                account.access_token = encryptedAccess ?? undefined;
             }
             if (account?.refresh_token) {
-                account.refresh_token = encryptedRefresh;
+                account.refresh_token = encryptedRefresh ?? undefined;
             }
 
             return true;
         },
-        async jwt({ token, user }: { token: any, user: any }) {
+        async jwt({ token, user }: JwtCallbackParams) {
+            const sessionToken = token as SessionToken;
+
             // Persist the user id to the token on first sign in
             if (user) {
-                token.id = user.id;
+                sessionToken.id = user.id;
             }
-            return token;
+            return sessionToken;
         },
-        async session({ session, token, user }: { session: any, token: any, user: any }) {
-            // For JWT strategy, get user from token; for database strategy, from user
-            const userId = token?.id || user?.id;
+        async session({ session, token, user }: SessionCallbackParams) {
+            const sessionToken = token as SessionToken;
+            const sessionUser = session.user as SessionUser | undefined;
 
-            if (session.user && userId) {
-                session.user.id = userId;
+            // For JWT strategy, get user from token; for database strategy, from user
+            const userId = sessionToken.id || user?.id;
+
+            if (sessionUser && userId) {
+                sessionUser.id = userId;
 
                 try {
                     // Check if user has valid Strava connection via Account table
@@ -163,23 +184,23 @@ export const authOptions: AuthOptions = {
                         select: { lastSyncAt: true, authMethod: true, image: true, name: true }
                     });
 
-                    session.user.hasStrava = !!stravaAccount;
-                    session.user.authMethod = dbUser?.authMethod || 'strava';
-                    session.user.lastSyncAt = dbUser?.lastSyncAt?.toISOString() ?? null;
+                    sessionUser.hasStrava = !!stravaAccount;
+                    sessionUser.authMethod = dbUser?.authMethod || 'strava';
+                    sessionUser.lastSyncAt = dbUser?.lastSyncAt?.toISOString() ?? null;
 
                     // Always refresh profile picture and name from DB
                     // (JWT may have stale data after migration or profile update)
-                    if (dbUser?.image) {
-                        session.user.image = dbUser.image;
+                    if (dbUser?.image != null) {
+                        sessionUser.image = dbUser.image;
                     }
-                    if (dbUser?.name) {
-                        session.user.name = dbUser.name;
+                    if (dbUser?.name != null) {
+                        sessionUser.name = dbUser.name;
                     }
                 } catch (error) {
                     logger.error('Error fetching user data for session', { error: error instanceof Error ? error.message : String(error) });
-                    session.user.hasStrava = false;
-                    session.user.authMethod = 'strava';
-                    session.user.lastSyncAt = null;
+                    sessionUser.hasStrava = false;
+                    sessionUser.authMethod = 'strava';
+                    sessionUser.lastSyncAt = null;
                 }
             }
             return session;

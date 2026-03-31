@@ -2,7 +2,7 @@ import { generateAuthCode, createAuthCode, verifyAuthCode } from '../tokens';
 import { prisma } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { logger } from '@/lib/logging/logger';
-import { AuthCodeType } from '@prisma/client';
+import { AuthCodeType } from '@/generated/prisma/browser';
 
 jest.mock('@/lib/db', () => ({
     prisma: {

@@ -2,7 +2,7 @@
 
 import { randomBytes } from 'crypto';
 import { prisma } from '@/lib/db';
-import { AuthCodeType } from '@prisma/client';
+import { AuthCodeType } from '@/generated/prisma/browser';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { MINUTE_MS, AUTH_TOKEN_DURATION } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';

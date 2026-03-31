@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getRedisClient } from '@/lib/redis';
+import os from 'os';
 
 interface MetricData {
   routePath: string;
@@ -20,7 +21,7 @@ const metricsBuffer: MetricData[] = [];
 let flushTimeout: NodeJS.Timeout | null = null;
 
 function getCpuUsage(): number {
-  const cpus = require('os').cpus();
+  const cpus = os.cpus();
   const totalIdle = cpus.reduce((acc: number, cpu: any) => acc + cpu.times.idle, 0);
   const totalTick = cpus.reduce((acc: number, cpu: any) => {
     return acc + cpu.times.user + cpu.times.nice + cpu.times.sys + cpu.times.idle + cpu.times.irq;

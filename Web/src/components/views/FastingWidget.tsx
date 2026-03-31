@@ -148,7 +148,7 @@ export function FastingWidget() {
                                 <button
                                     onClick={() => actionMutation.mutate('end')}
                                     disabled={actionMutation.isPending}
-                                    className="w-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border border-orange-500/30 font-bold py-2 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 text-xs"
+                                    className="w-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border border-orange-500/30 font-bold py-2 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 text-xs"
                                 >
                                     <Square className="w-3.5 h-3.5 fill-current" /> End Fast
                                 </button>

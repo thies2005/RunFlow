@@ -144,7 +144,7 @@ function RacePredictionTimeChart({
                             key={key}
                             onClick={() => toggleRace(key)}
                             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${visibleRaces[key]
-                                ? 'border-transparent text-white shadow-sm'
+                                ? 'border-transparent text-white shadow-xs'
                                 : 'border-glass-border text-foreground-muted hover:text-foreground bg-transparent'
                                 }`}
                             style={visibleRaces[key] ? { backgroundColor: RACE_COLORS[key] } : {}}

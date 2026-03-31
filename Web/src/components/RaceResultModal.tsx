@@ -98,7 +98,7 @@ function TimeInputGroup({
     onChange: (next: TimeParts) => void;
     placeholder?: string;
 }) {
-    const inputClass = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 outline-none focus:ring-2 focus:ring-accent-orange transition-all';
+    const inputClass = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 outline-hidden focus:ring-2 focus:ring-accent-orange transition-all';
 
     return (
         <div>
@@ -542,7 +542,7 @@ export default function RaceResultModal({
                                             onChange={e => setNotes(e.target.value)}
                                             placeholder="How did the race go? What went well? What would you change?"
                                             rows={3}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white text-sm placeholder-gray-500 outline-none focus:ring-2 focus:ring-accent-orange transition-all resize-none"
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white text-sm placeholder-gray-500 outline-hidden focus:ring-2 focus:ring-accent-orange transition-all resize-none"
                                         />
                                     </div>
                                 </div>

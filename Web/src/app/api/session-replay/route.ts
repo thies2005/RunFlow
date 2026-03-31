@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { requireAdmin } from '@/lib/admin/auth';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +14,7 @@ interface SessionReplayData {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     const userId = session?.user?.id;
 
     const data: SessionReplayData = await request.json();

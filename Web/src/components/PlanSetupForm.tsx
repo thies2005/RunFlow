@@ -288,7 +288,7 @@ export default function PlanSetupForm({
                     // CORRECTION: activity was actually this distance
                     // Use the calibration distance + activity time to calculate VDOT
                     vdot = calculateVdot({
-                        distance: calibrationDistance as any,
+                        distance: calibrationDistance as RaceDistance,
                         timeSeconds: activity.movingTime
                     });
                     displaySeconds = activity.movingTime;
@@ -301,7 +301,7 @@ export default function PlanSetupForm({
                     });
 
                     // 2. Predict time for the selected Calibration Distance
-                    displaySeconds = predictRaceTime(vdot, calibrationDistance as any);
+                    displaySeconds = predictRaceTime(vdot, calibrationDistance as RaceDistance);
                 }
 
                 const h = Math.floor(displaySeconds / 3600);
@@ -506,7 +506,7 @@ export default function PlanSetupForm({
 
     const isLoading = createGoalMutation.isPending || updateSettingsMutation.isPending;
 
-    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     const raceActivities: RaceActivity[] = activitiesData?.activities?.filter((a: RaceActivity) =>
         a.distance >= 4500

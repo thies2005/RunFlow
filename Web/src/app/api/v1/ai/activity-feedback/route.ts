@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { generateAndSaveActivityFeedback } from '@/lib/ai/feedback';
 import { setApiVersionHeaders } from '@/lib/api/version';
@@ -9,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             setApiVersionHeaders(response.headers);
@@ -55,7 +54,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             setApiVersionHeaders(response.headers);

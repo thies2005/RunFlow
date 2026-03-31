@@ -94,7 +94,7 @@ export default function VerificationModal({ isOpen, onClose, email, onVerified }
                             value={code[i] || ''}
                             onChange={(e) => handleCodeChange(i, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(i, e)}
-                            className="w-12 h-14 text-center text-2xl font-semibold bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase transition-all"
+                            className="w-12 h-14 text-center text-2xl font-semibold bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden uppercase transition-all"
                             maxLength={6}
                         />
                     ))}

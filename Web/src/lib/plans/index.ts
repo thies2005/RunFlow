@@ -1,4 +1,4 @@
-import { WorkoutType, RaceType } from '@prisma/client';
+import { WorkoutType, RaceType } from '@/generated/prisma/browser';
 import { calculateTrainingPaces } from '../metrics/vdot';
 
 // L-02: Configurable Constants

@@ -166,7 +166,7 @@ const ZonePieChart = memo(({ zoneTrend }: { zoneTrend: HistoryResponse['zoneTren
                         return (
                             <div key={i} className="flex items-center justify-between p-2 hover:bg-white/5 rounded">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: zone.color }} />
+                                    <div className="w-3 h-3 rounded-xs" style={{ backgroundColor: zone.color }} />
                                     <span className="text-gray-300 text-sm">{zone.name}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -333,7 +333,7 @@ function AnalyticsDashboardInner({ currentVdot, effectiveVO2max, shapePercent }:
                 <select
                     value={timeRange}
                     onChange={(e) => setTimeRange(e.target.value)}
-                    className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:ring-2 focus:ring-blue-500 outline-hidden"
                 >
                     {RANGES.map(r => (
                         <option key={r.value} value={r.value}>{r.label}</option>

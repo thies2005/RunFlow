@@ -12,7 +12,7 @@ import { prisma } from '@/lib/db';
 import { safeBigInt } from '@/lib/utils/bigint';
 import type { ActivityData } from './transform';
 import { logger } from '@/lib/logging/logger';
-import { ActivityType } from '@prisma/client';
+import { ActivityType } from '@/generated/prisma/browser';
 
 export function validateActivityType(type: string): ActivityType {
     const valid: ActivityType[] = ['RUN', 'RIDE', 'VIRTUAL_RIDE', 'WALK', 'HIKE', 'SWIM', 'WORKOUT', 'OTHER'];

@@ -5,12 +5,8 @@
 import { POST } from '../route';
 import { NextRequest } from 'next/server';
 
-jest.mock('@/lib/strava/oauth', () => ({
-    authOptions: {},
-}));
-
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn(),
+jest.mock('@/auth', () => ({
+    auth: jest.fn(),
 }));
 
 jest.mock('@/lib/db', () => ({
@@ -56,7 +52,7 @@ jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
 
-import { getServerSession } from 'next-auth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { getAiConfig, streamChat, checkUsageLimit } from '@/lib/ai';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
@@ -65,7 +61,7 @@ import { handleError } from '@/lib/errors/handler';
 describe('POST /api/ai/chat', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (getServerSession as jest.Mock).mockResolvedValue({
+        (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
@@ -105,7 +101,7 @@ describe('POST /api/ai/chat', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (getServerSession as jest.Mock).mockResolvedValue(null);
+        (auth as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
             method: 'POST',

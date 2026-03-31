@@ -4,16 +4,12 @@
 
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/db';
 import { generateAndSaveActivityFeedback } from '@/lib/ai/feedback';
+import { auth } from '@/auth';
 
-jest.mock('@/lib/strava/oauth', () => ({
-    authOptions: {},
-}));
-
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn(),
+jest.mock('@/auth', () => ({
+    auth: jest.fn(),
 }));
 
 jest.mock('@/lib/db', () => ({
@@ -38,7 +34,7 @@ jest.mock('@/lib/ai/feedback', () => ({
 describe('GET /api/ai/activity-feedback', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (getServerSession as jest.Mock).mockResolvedValue({
+        (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
         (prisma.activity.findFirst as jest.Mock).mockResolvedValue({
@@ -81,7 +77,7 @@ describe('GET /api/ai/activity-feedback', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (getServerSession as jest.Mock).mockResolvedValue(null);
+        (auth as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/activity-feedback?activityId=activity-1');
 
@@ -122,13 +118,13 @@ describe('GET /api/ai/activity-feedback', () => {
 describe('POST /api/ai/activity-feedback', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (getServerSession as jest.Mock).mockResolvedValue({
+        (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
     });
 
     it('should return 401 without authentication', async () => {
-        (getServerSession as jest.Mock).mockResolvedValue(null);
+        (auth as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/activity-feedback', {
             method: 'POST',

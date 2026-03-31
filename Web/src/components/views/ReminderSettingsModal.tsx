@@ -284,7 +284,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
                                     <select
                                         value={localSettings.workoutReminderMinutes || 60}
                                         onChange={(e) => update('workoutReminderMinutes', parseInt(e.target.value))}
-                                        className="bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                                        className="bg-white/10 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-hidden focus:ring-2 focus:ring-green-500/50"
                                     >
                                         <option value={15}>15 minutes</option>
                                         <option value={30}>30 minutes</option>
@@ -372,7 +372,7 @@ function ReminderRow({ label, enabled, time, onToggle, onTimeChange }: {
                     type="time"
                     value={time}
                     onChange={(e) => onTimeChange(e.target.value)}
-                    className="bg-white/10 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 [color-scheme:dark]"
+                    className="bg-white/10 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500/50 [color-scheme:dark]"
                 />
             )}
             <ToggleSwitch enabled={enabled} onToggle={onToggle} />

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/generated/prisma/client';
 import { logger } from '@/lib/logging/logger';
 
 // Cache for the OAuth token so we don't request a new one on every request

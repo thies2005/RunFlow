@@ -221,7 +221,7 @@ export default function LoginPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="Email address"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                                     required
                                 />
                             </div>
@@ -232,7 +232,7 @@ export default function LoginPage() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Password"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                                     required
                                 />
                             </div>

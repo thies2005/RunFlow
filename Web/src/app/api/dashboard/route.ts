@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
 import { startOfWeek, endOfWeek, subDays } from 'date-fns';
@@ -27,7 +26,7 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }

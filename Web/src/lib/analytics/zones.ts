@@ -1,4 +1,4 @@
-import { Activity } from '@prisma/client';
+import { Activity } from '@/generated/prisma/browser';
 
 export type ZoneDistribution = {
     z1: number;

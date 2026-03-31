@@ -7,6 +7,14 @@
 
 describe('config validation', () => {
     const originalEnv = process.env;
+    const setNodeEnv = (value: string | undefined) => {
+        Object.defineProperty(process.env, 'NODE_ENV', {
+            value,
+            configurable: true,
+            enumerable: true,
+            writable: true,
+        });
+    };
 
     beforeEach(() => {
         jest.resetModules();
@@ -19,7 +27,7 @@ describe('config validation', () => {
 
     describe('validateConfig', () => {
         it('should not throw in development mode', () => {
-            (process.env as any).NODE_ENV = 'development';
+            setNodeEnv('development');
             delete process.env.NEXTAUTH_SECRET;
 
             const { validateConfig } = require('../config');
@@ -27,7 +35,7 @@ describe('config validation', () => {
         });
 
         it('should throw in production with missing required secret', () => {
-            (process.env as any).NODE_ENV = 'production';
+            setNodeEnv('production');
             delete process.env.NEXTAUTH_SECRET;
             process.env.DATABASE_URL = 'postgresql://localhost:5432/testdb';
 
@@ -36,8 +44,8 @@ describe('config validation', () => {
         });
 
         it('should detect forbidden pattern in secret value', () => {
-            (process.env as any).NODE_ENV = 'production';
-            (process.env as any).NEXTAUTH_SECRET = 'development-secret-not-secure';
+            setNodeEnv('production');
+            process.env.NEXTAUTH_SECRET = 'development-secret-not-secure';
             process.env.DATABASE_URL = 'postgresql://localhost:5432/testdb';
 
             const { validateConfig } = require('../config');
@@ -53,7 +61,7 @@ describe('config validation', () => {
         });
 
         it('should throw in production for missing env var', () => {
-            (process.env as any).NODE_ENV = 'production';
+            setNodeEnv('production');
             delete process.env.NONEXISTENT;
 
             const { getRequiredEnv } = require('../config');
@@ -61,7 +69,7 @@ describe('config validation', () => {
         });
 
         it('should return empty string in development for missing env var', () => {
-            (process.env as any).NODE_ENV = 'development';
+            setNodeEnv('development');
             delete process.env.NONEXISTENT;
 
             const { getRequiredEnv } = require('../config');

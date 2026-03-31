@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
 
@@ -15,7 +14,7 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session || !session.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -64,7 +63,7 @@ export async function PATCH(
             );
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session || !session.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }

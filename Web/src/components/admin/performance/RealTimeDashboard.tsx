@@ -165,7 +165,7 @@ interface MetricCardProps {
 
 function MetricCard({ title, value, icon: Icon, color, change, inverse = false }: MetricCardProps) {
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+    <div className="bg-white p-6 rounded-xl shadow-xs border border-gray-100">
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-4">
           <div className={`p-3 rounded-lg ${color}`}>

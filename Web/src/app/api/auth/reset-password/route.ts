@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyAuthCode } from '@/lib/auth/tokens';
 import { hashPassword, validatePassword } from '@/lib/auth/auth-email';
-import { AuthCodeType } from '@prisma/client';
+import { AuthCodeType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
 

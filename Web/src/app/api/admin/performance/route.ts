@@ -48,6 +48,28 @@ interface PerformanceData {
     };
 }
 
+interface PrismaEnginePool {
+    totalCount?: number;
+    activeCount?: number;
+    idleCount?: number;
+}
+
+interface PrismaEngineConnection {
+    pool?: PrismaEnginePool;
+}
+
+interface PrismaEngineDatasource {
+    connection?: PrismaEngineConnection;
+}
+
+interface PrismaEngine {
+    datasource?: PrismaEngineDatasource;
+}
+
+interface PrismaWithEngine {
+    _engine?: PrismaEngine;
+}
+
 function getCpuUsage(): number {
     const cpus = os.cpus();
     const totalIdle = cpus.reduce((acc, cpu) => acc + cpu.times.idle, 0);
@@ -103,7 +125,7 @@ function getSystemMetrics(): SystemMetrics {
 
 async function getDatabaseMetrics() {
     try {
-        const pool: any = (prisma as any)._engine?.datasource?.connection?.pool;
+        const pool = (prisma as PrismaWithEngine)._engine?.datasource?.connection?.pool;
         if (pool) {
             return {
                 connectionPool: {

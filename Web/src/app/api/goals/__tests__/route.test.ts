@@ -5,12 +5,8 @@
 import { GET, POST } from '../route';
 import { NextRequest } from 'next/server';
 
-jest.mock('@/lib/strava/oauth', () => ({
-    authOptions: {},
-}));
-
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn(),
+jest.mock('@/auth', () => ({
+    auth: jest.fn(),
 }));
 
 jest.mock('@/lib/db', () => ({
@@ -18,6 +14,7 @@ jest.mock('@/lib/db', () => ({
         goal: {
             findMany: jest.fn(),
             create: jest.fn(),
+            updateMany: jest.fn(),
             update: jest.fn(),
         },
         activity: {
@@ -73,7 +70,7 @@ jest.mock('@/lib/plans', () => ({
     generateTrainingPlan: jest.fn(() => []),
 }));
 
-import { getServerSession } from 'next-auth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
@@ -85,7 +82,7 @@ describe('GET /api/goals', () => {
         jest.clearAllMocks();
         (getClientIdentifier as jest.Mock).mockReturnValue('test-client');
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
-        (getServerSession as jest.Mock).mockResolvedValue({
+        (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
         (prisma.goal.findMany as jest.Mock).mockResolvedValue([
@@ -116,7 +113,7 @@ describe('GET /api/goals', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (getServerSession as jest.Mock).mockResolvedValue(null);
+        (auth as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/goals');
 
@@ -166,7 +163,7 @@ describe('POST /api/goals', () => {
         jest.clearAllMocks();
         (getClientIdentifier as jest.Mock).mockReturnValue('test-client');
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
-        (getServerSession as jest.Mock).mockResolvedValue({
+        (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
         (validateBody as jest.Mock).mockResolvedValue({
@@ -187,6 +184,7 @@ describe('POST /api/goals', () => {
             raceDate: new Date('2024-04-15'),
             currentVdot: 45,
         });
+        (prisma.goal.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
         (prisma.activity.findFirst as jest.Mock).mockResolvedValue(null);
         (prisma.user.findUnique as jest.Mock).mockResolvedValue({
             hrMax: 185,
@@ -220,7 +218,7 @@ describe('POST /api/goals', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (getServerSession as jest.Mock).mockResolvedValue(null);
+        (auth as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/goals', {
             method: 'POST',
@@ -310,5 +308,4 @@ describe('POST /api/goals', () => {
         expect(handleError).toHaveBeenCalled();
     });
 });
-
 

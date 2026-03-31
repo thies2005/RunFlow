@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
@@ -8,8 +7,9 @@ import { logger } from '@/lib/logging/logger';
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.settings);
@@ -20,13 +20,13 @@ export async function PATCH(
             );
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const goal = await prisma.goal.findUnique({
-            where: { id: params.id },
+            where: { id },
             include: { raceResult: true },
         });
 
@@ -71,13 +71,13 @@ export async function PATCH(
 
         if (goal.raceResult) {
             raceResult = await prisma.raceResult.update({
-                where: { goalId: params.id },
+                where: { goalId: id },
                 data,
             });
         } else {
             raceResult = await prisma.raceResult.create({
                 data: {
-                    goalId: params.id,
+                    goalId: id,
                     ...data,
                 },
             });
@@ -85,7 +85,7 @@ export async function PATCH(
 
         logger.info('Race result updated', {
             userId: session.user.id,
-            goalId: params.id,
+            goalId: id,
         });
 
         return NextResponse.json(raceResult, { headers: rateLimitHeaders(rateLimitResult) });

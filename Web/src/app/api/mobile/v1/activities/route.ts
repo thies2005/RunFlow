@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
-import { ActivityType } from '@prisma/client';
+import { ActivityType } from '@/generated/prisma/browser';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 
 type ActivityWhereClause = {

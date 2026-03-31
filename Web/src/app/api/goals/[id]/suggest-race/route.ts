@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
@@ -15,8 +14,9 @@ const RACE_DISTANCE_MAP: Record<string, number> = {
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.general);
@@ -27,13 +27,13 @@ export async function GET(
             );
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const goal = await prisma.goal.findUnique({
-            where: { id: params.id },
+            where: { id },
         });
 
         if (!goal || goal.userId !== session.user.id) {

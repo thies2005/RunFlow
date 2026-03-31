@@ -215,7 +215,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-sm sm:items-center sm:justify-center">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
             <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
@@ -439,7 +439,7 @@ export function NutritionGoalsModal({ isOpen, onClose }: Props) {
                                                     type="number"
                                                     value={waterGoalMl}
                                                     onChange={(e) => setWaterGoalMl(parseInt(e.target.value) || 0)}
-                                                    className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:outline-none focus:border-blue-500"
+                                                    className="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white w-full focus:outline-hidden focus:border-blue-500"
                                                     min="500"
                                                     step="100"
                                                 />

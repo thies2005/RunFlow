@@ -103,7 +103,7 @@ export default function AuditLogsTab() {
                 </div>
             )}
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl shadow-xs border border-gray-100">
                 <div className="p-5 border-b border-gray-100">
                     <h3 className="font-semibold text-gray-800 text-lg">Recent Actions</h3>
                     <p className="text-sm text-gray-500 mt-1">
@@ -134,7 +134,7 @@ export default function AuditLogsTab() {
                                 <div key={log.id} className="p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-gray-50/50">
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                                         <div className="flex items-start gap-4">
-                                            <div className="mt-1 p-2 bg-white border border-gray-200 rounded-lg text-gray-600 shadow-sm">
+                                            <div className="mt-1 p-2 bg-white border border-gray-200 rounded-lg text-gray-600 shadow-xs">
                                                 {getActionIcon(log.action)}
                                             </div>
                                             <div>

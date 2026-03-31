@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { setApiVersionHeaders } from '@/lib/api/version';
 
@@ -11,10 +10,11 @@ type ActivityUpdateData = {
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session || !session.user) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             setApiVersionHeaders(response.headers);
@@ -22,7 +22,7 @@ export async function GET(
         }
 
         const activity = await prisma.activity.findUnique({
-            where: { id: params.id, userId: session.user.id },
+            where: { id, userId: session.user.id },
             include: {
                 laps: {
                     orderBy: { index: 'asc' },
@@ -57,8 +57,9 @@ export async function GET(
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.general);
@@ -72,7 +73,7 @@ export async function PATCH(
             return response;
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session || !session.user) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             setApiVersionHeaders(response.headers);
@@ -89,7 +90,7 @@ export async function PATCH(
         }
 
         const activity = await prisma.activity.findUnique({
-            where: { id: params.id },
+            where: { id },
             select: { userId: true }
         });
 
@@ -111,7 +112,7 @@ export async function PATCH(
         }
 
         const updatedActivity = await prisma.activity.update({
-            where: { id: params.id },
+            where: { id },
             data: dataToUpdate,
         });
 

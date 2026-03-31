@@ -14,12 +14,12 @@ export default function TierInputGroup({ tier, formData, setFormData }: TierInpu
     };
 
     return (
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-xs">
             <input
                 type="text"
                 value={formData[`${t}Name`]}
                 onChange={(e) => handleChange(`${t}Name`, e.target.value)}
-                className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-3 focus:outline-none focus:border-purple-500"
+                className="w-full px-2 py-1 bg-white text-gray-900 border-b border-gray-200 font-medium mb-3 focus:outline-hidden focus:border-purple-500"
                 placeholder={`Tier ${tier} Name`}
             />
             <div className="space-y-3">

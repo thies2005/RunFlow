@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { RaceType } from '@prisma/client'
+import { RaceType } from '@/generated/prisma/browser'
 import { PASSWORD_POLICY } from '@/lib/constants'
 
 export const activitySchema = z.object({

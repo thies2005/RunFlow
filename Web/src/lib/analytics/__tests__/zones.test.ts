@@ -1,5 +1,5 @@
 import { calculateZoneDistribution, calculateZonePercentages, calculateUserZones, ZoneDistribution } from '../zones';
-import { Activity } from '@prisma/client';
+import { Activity } from '@/generated/prisma/browser';
 
 describe('Zone Analytics', () => {
     describe('calculateZoneDistribution', () => {

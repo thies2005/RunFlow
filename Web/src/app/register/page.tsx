@@ -131,7 +131,7 @@ export default function RegisterPage() {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder="Name (optional)"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                             />
                         </div>
 
@@ -143,7 +143,7 @@ export default function RegisterPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Email address"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                                 required
                             />
                         </div>
@@ -156,7 +156,7 @@ export default function RegisterPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Password"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none"
+                                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden"
                                 required
                             />
                         </div>
@@ -183,7 +183,7 @@ export default function RegisterPage() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="Confirm password"
-                                className={`w-full bg-white/5 border rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-none ${confirmPassword.length > 0
+                                className={`w-full bg-white/5 border rounded-lg py-3 pl-10 pr-4 text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-accent-orange outline-hidden ${confirmPassword.length > 0
                                     ? passwordsMatch
                                         ? 'border-green-500/50'
                                         : 'border-red-500/50'

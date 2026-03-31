@@ -5,12 +5,8 @@
 import { GET, POST, DELETE } from '../route';
 import { NextRequest } from 'next/server';
 
-jest.mock('@/lib/strava/oauth', () => ({
-    authOptions: {},
-}));
-
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn(),
+jest.mock('@/auth', () => ({
+    auth: jest.fn(),
 }));
 
 jest.mock('@/lib/db', () => ({
@@ -28,14 +24,14 @@ jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
 
-import { getServerSession } from 'next-auth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
 
 describe('GET /api/ai/chat/sessions', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (getServerSession as jest.Mock).mockResolvedValue({
+        (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
         (prisma.chatSession.findMany as jest.Mock).mockResolvedValue([
@@ -64,7 +60,7 @@ describe('GET /api/ai/chat/sessions', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (getServerSession as jest.Mock).mockResolvedValue(null);
+        (auth as jest.Mock).mockResolvedValue(null);
 
         const response = await GET();
 
@@ -108,7 +104,7 @@ describe('GET /api/ai/chat/sessions', () => {
 describe('POST /api/ai/chat/sessions', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (getServerSession as jest.Mock).mockResolvedValue({
+        (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
         (prisma.chatSession.create as jest.Mock).mockResolvedValue({
@@ -138,7 +134,7 @@ describe('POST /api/ai/chat/sessions', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (getServerSession as jest.Mock).mockResolvedValue(null);
+        (auth as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat/sessions', {
             method: 'POST',
@@ -200,7 +196,7 @@ describe('POST /api/ai/chat/sessions', () => {
 describe('DELETE /api/ai/chat/sessions', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (getServerSession as jest.Mock).mockResolvedValue({
+        (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
         (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue({
@@ -226,7 +222,7 @@ describe('DELETE /api/ai/chat/sessions', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (getServerSession as jest.Mock).mockResolvedValue(null);
+        (auth as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat/sessions?sessionId=session-1', {
             method: 'DELETE',

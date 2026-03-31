@@ -19,8 +19,9 @@ import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         // Rate limiting
         const clientId = getClientIdentifier(request);
@@ -36,8 +37,6 @@ export async function POST(
             return errorResponses.unauthorized();
         }
 
-        const workoutId = params.id;
-
         // Parse request body
         const body = await request.json();
         const { activityId } = body;
@@ -51,7 +50,7 @@ export async function POST(
 
         // Verify workout ownership
         const workout = await prisma.workout.findUnique({
-            where: { id: workoutId },
+            where: { id },
             include: { goal: true }
         });
 
@@ -78,7 +77,7 @@ export async function POST(
 
         // Update workout with linked activity
         const updated = await prisma.workout.update({
-            where: { id: workoutId },
+            where: { id },
             data: {
                 isCompleted: true,
                 completedAt: new Date(),
@@ -99,7 +98,7 @@ export async function POST(
 
     } catch (error) {
         return handleApiError(error, {
-            path: `/api/mobile/v1/workouts/${params.id}/complete`
+            path: `/api/mobile/v1/workouts/${id}/complete`
         });
     }
 }

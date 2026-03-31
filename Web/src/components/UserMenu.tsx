@@ -92,7 +92,7 @@ export function UserMenu({
                                         key={t.id}
                                         onClick={() => setTheme(t.id)}
                                         className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-md text-xs transition-all ${theme === t.id
-                                            ? 'bg-background shadow-sm text-foreground'
+                                            ? 'bg-background shadow-xs text-foreground'
                                             : 'text-foreground-muted hover:text-foreground hover:bg-surface-hover'
                                             }`}
                                     >

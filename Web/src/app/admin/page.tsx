@@ -23,7 +23,7 @@ interface StatCardProps {
 }
 
 const StatCard = ({ title, value, subtext, icon: Icon }: StatCardProps) => (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-start space-x-4">
+    <div className="bg-white p-6 rounded-xl shadow-xs border border-gray-200 flex items-start space-x-4">
         <div className="bg-blue-50 text-blue-600 rounded-lg p-3">
             <Icon className="w-6 h-6" />
         </div>
@@ -53,7 +53,7 @@ const DashboardWidget = ({ title, icon: Icon, value, change, subtext, onClick, c
     return (
         <button
             onClick={onClick}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all text-left group"
+            className="bg-white p-6 rounded-xl shadow-xs border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all text-left group"
         >
             <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
@@ -306,7 +306,7 @@ function DashboardContent() {
             )}
 
             {activeTab && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
                     <div className="p-4 sm:p-6">
                         {activeTab === 'users' && (
                             <UsersTab

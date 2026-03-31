@@ -160,7 +160,7 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-white p-6 rounded-xl shadow-xs border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-800">API Routes Performance</h3>
           <div className="flex items-center gap-2 text-sm text-gray-500">

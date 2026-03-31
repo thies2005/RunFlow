@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const logId = params.id;
-
-        // Verify ownership before deleting
         const log = await prisma.nutritionLog.findUnique({
-            where: { id: logId }
+            where: { id }
         });
 
         if (!log || log.userId !== session.user.id) {
@@ -26,7 +23,7 @@ export async function DELETE(
         }
 
         await prisma.nutritionLog.delete({
-            where: { id: logId }
+            where: { id }
         });
 
         return NextResponse.json({ success: true });
@@ -37,15 +34,15 @@ export async function DELETE(
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const logId = params.id;
         const body = await request.json();
         const { quantity, mealType } = body;
 
@@ -54,7 +51,7 @@ export async function PUT(
         }
 
         const log = await prisma.nutritionLog.findUnique({
-            where: { id: logId },
+            where: { id },
             include: { foodItem: true }
         });
 
@@ -62,12 +59,11 @@ export async function PUT(
             return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });
         }
 
-        // Recalculate snapshot based on the foodItem's base macros
         const food = log.foodItem;
         const newQty = parseFloat(quantity);
 
         const updatedLog = await prisma.nutritionLog.update({
-            where: { id: logId },
+            where: { id },
             data: {
                 quantity: newQty,
                 mealType,

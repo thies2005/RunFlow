@@ -25,7 +25,7 @@ import { ReminderSettingsModal } from './ReminderSettingsModal';
 import { AiMealSuggestionModal } from './AiMealSuggestionModal';
 import SupplementAnalyticsView from './SupplementAnalyticsView';
 import type { Supplement, SupplementStack, SupplementLog, NutritionLog, FoodScanResult } from '@/lib/types/health';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/generated/prisma/browser';
 import { getCurrentUtcDayKey, parseUtcDayKey } from '@/lib/health/dates';
 import { NutritionSummary } from './health/NutritionSummary';
 import { BodyMetricsCard } from './health/BodyMetricsCard';

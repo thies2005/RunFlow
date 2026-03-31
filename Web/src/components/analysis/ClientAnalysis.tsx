@@ -163,7 +163,7 @@ export default function ClientAnalysis({ activity }: ClientAnalysisProps) {
                                 const pct = (zone.time / total) * 100;
                                 return (
                                     <div key={i} className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
-                                        <div className={`w-3 h-3 rounded-sm ${zone.color}`} />
+                                        <div className={`w-3 h-3 rounded-xs ${zone.color}`} />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-1">
                                                 <span className={`font-medium text-sm ${zone.textColor}`}>{zone.name}</span>

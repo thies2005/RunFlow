@@ -1,18 +1,18 @@
-const withPWA = require("@ducanh2912/next-pwa").default({
+import withPWA from "@ducanh2912/next-pwa";
+
+const withPWAConfig = withPWA({
     dest: "public",
     cacheOnFrontEndNav: false,
     aggressiveFrontEndNavCaching: false,
     reloadOnOnline: true,
-    swcMinify: true,
     disable: process.env.NODE_ENV === "development",
     extendDefaultRuntimeCaching: true,
-    // Exclude any static index.html from being precached
-    publicExcludes: ['!index.html'],
+    publicExcludes: ["!index.html"],
     fallbacks: {
-        document: '/~offline',
+        document: "/~offline",
     },
     workboxOptions: {
-        importScripts: ['/push-sw.js'],
+        importScripts: ["/push-sw.js"],
         skipWaiting: true,
         clientsClaim: true,
         disableDevLogs: true,
@@ -24,7 +24,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "google-fonts-webfonts",
                     expiration: {
                         maxEntries: 4,
-                        maxAgeSeconds: 365 * 24 * 60 * 60, // 1 year
+                        maxAgeSeconds: 365 * 24 * 60 * 60,
                     },
                 },
             },
@@ -35,7 +35,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "google-fonts-stylesheets",
                     expiration: {
                         maxEntries: 4,
-                        maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+                        maxAgeSeconds: 7 * 24 * 60 * 60,
                     },
                 },
             },
@@ -46,7 +46,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "static-font-assets",
                     expiration: {
                         maxEntries: 4,
-                        maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+                        maxAgeSeconds: 7 * 24 * 60 * 60,
                     },
                 },
             },
@@ -57,7 +57,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "static-image-assets",
                     expiration: {
                         maxEntries: 64,
-                        maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+                        maxAgeSeconds: 30 * 24 * 60 * 60,
                     },
                 },
             },
@@ -68,7 +68,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "next-image",
                     expiration: {
                         maxEntries: 64,
-                        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                        maxAgeSeconds: 24 * 60 * 60,
                     },
                 },
             },
@@ -80,7 +80,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "static-audio-assets",
                     expiration: {
                         maxEntries: 32,
-                        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                        maxAgeSeconds: 24 * 60 * 60,
                     },
                 },
             },
@@ -91,7 +91,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "static-js-assets",
                     expiration: {
                         maxEntries: 32,
-                        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                        maxAgeSeconds: 24 * 60 * 60,
                     },
                 },
             },
@@ -102,7 +102,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "static-style-assets",
                     expiration: {
                         maxEntries: 32,
-                        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                        maxAgeSeconds: 24 * 60 * 60,
                     },
                 },
             },
@@ -113,7 +113,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "next-data",
                     expiration: {
                         maxEntries: 32,
-                        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                        maxAgeSeconds: 24 * 60 * 60,
                     },
                 },
             },
@@ -124,44 +124,45 @@ const withPWA = require("@ducanh2912/next-pwa").default({
                     cacheName: "static-data-assets",
                     expiration: {
                         maxEntries: 32,
-                        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                        maxAgeSeconds: 24 * 60 * 60,
                     },
                 },
             },
             {
                 urlPattern: ({ url }) => {
                     const isSameOrigin = self.origin === url.origin;
-                    if (!isSameOrigin) return false;
-                    const pathname = url.pathname;
-                    // Cache API responses logic
-                    if (pathname.startsWith("/api/")) return true;
-                    return false;
+                    if (!isSameOrigin) {
+                        return false;
+                    }
+
+                    return url.pathname.startsWith("/api/");
                 },
                 handler: "NetworkFirst",
                 options: {
                     cacheName: "apis",
                     expiration: {
                         maxEntries: 16,
-                        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                        maxAgeSeconds: 24 * 60 * 60,
                     },
-                    networkTimeoutSeconds: 10, // Fallback to cache if network is slow
+                    networkTimeoutSeconds: 10,
                 },
             },
             {
                 urlPattern: ({ url }) => {
                     const isSameOrigin = self.origin === url.origin;
-                    if (!isSameOrigin) return false;
-                    const pathname = url.pathname;
-                    if (pathname.startsWith("/api/")) return false;
-                    return true;
+                    if (!isSameOrigin) {
+                        return false;
+                    }
+
+                    return !url.pathname.startsWith("/api/");
                 },
-                handler: "NetworkFirst", // Always try network first, fall back to cache when offline
+                handler: "NetworkFirst",
                 options: {
                     cacheName: "pages",
-                    networkTimeoutSeconds: 5, // Fall back to cache if network is slow
+                    networkTimeoutSeconds: 5,
                     expiration: {
                         maxEntries: 32,
-                        maxAgeSeconds: 24 * 60 * 60, // 24 hours
+                        maxAgeSeconds: 24 * 60 * 60,
                     },
                 },
             },
@@ -172,12 +173,11 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: "standalone",
-    swcMinify: true,
     compress: true,
     experimental: {
         workerThreads: false,
         cpus: 3,
-        optimizePackageImports: ['lucide-react', 'date-fns', '@tanstack/react-query']
+        optimizePackageImports: ["lucide-react", "date-fns", "@tanstack/react-query"],
     },
     images: {
         remotePatterns: [
@@ -200,23 +200,21 @@ const nextConfig = {
             },
         ],
     },
-    // Security headers are now handled in middleware.ts for proper nonce support
-    // Keeping only non-CSP security headers here
     async headers() {
         return [
             {
-                source: '/(.*)',
+                source: "/(.*)",
                 headers: [
-                    { key: 'X-Content-Type-Options', value: 'nosniff' },
-                    { key: 'X-Frame-Options', value: 'DENY' },
-                    { key: 'X-XSS-Protection', value: '1; mode=block' },
-                    { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-                    { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-                    { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' }
+                    { key: "X-Content-Type-Options", value: "nosniff" },
+                    { key: "X-Frame-Options", value: "DENY" },
+                    { key: "X-XSS-Protection", value: "1; mode=block" },
+                    { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+                    { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+                    { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
                 ],
             },
         ];
     },
 };
 
-module.exports = withPWA(nextConfig);
+export default withPWAConfig(nextConfig);

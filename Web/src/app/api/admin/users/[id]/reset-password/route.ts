@@ -11,7 +11,7 @@ import { requireAdmin } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db';
 import { createAuthCode } from '@/lib/auth/tokens';
 import { sendPasswordResetEmail } from '@/lib/email';
-import { AuthCodeType } from '@prisma/client';
+import { AuthCodeType } from '@/generated/prisma/browser';
 import { validateCsrfToken, csrfValidationErrorResponse } from '@/lib/security/csrf';
 import { adminRateLimit, applyRateLimitHeaders } from '@/lib/rateLimitAdmin';
 import { logAdminAction } from '@/lib/admin/auditLog';

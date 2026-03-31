@@ -15,6 +15,7 @@ import { calculateTrimp, type Sex } from '@/lib/metrics/trimp';
 import { calculateRunningTss, getActivityContribution } from '@/lib/metrics/fitness';
 import { calculateEffectiveVO2max } from '@/lib/metrics/runalyze';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
+import { Prisma } from '@/generated/prisma/client';
 import type { StravaActivity } from './fetch';
 
 const DEFAULT_HR_MAX = 185;
@@ -51,8 +52,8 @@ export interface ActivityData {
     hrZone5Time: number;
     hrZone6Time: number;
     hrZone7Time: number;
-    rawJson: any;
-    streams: any;
+    rawJson: Prisma.InputJsonValue;
+    streams: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
     trainingType: WorkoutType;
 }
 
@@ -280,8 +281,8 @@ export function transformActivityData(
         hrZone5Time: metrics.zoneTimes.z5,
         hrZone6Time: metrics.zoneTimes.z6,
         hrZone7Time: metrics.zoneTimes.z7,
-        rawJson: activity as any,
-        streams: null as any,
+        rawJson: activity as unknown as Prisma.InputJsonValue,
+        streams: Prisma.JsonNull,
         trainingType: determineWorkoutType(activity),
     };
 }

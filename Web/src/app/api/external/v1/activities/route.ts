@@ -12,7 +12,7 @@ import { prisma } from '@/lib/db';
 import { getExternalApiUser } from '@/lib/api/externalAuth';
 import { checkRateLimitAsync, getClientIdentifier, rateLimitHeaders } from '@/lib/rateLimit';
 import { validateOrigin, setCorsHeaders } from '@/lib/security/cors';
-import { ActivityType } from '@prisma/client';
+import { ActivityType } from '@/generated/prisma/browser';
 
 // Rate limit for external API: 100 requests per minute
 const EXTERNAL_API_RATE_LIMIT = { limit: 100, windowSeconds: 60, prefix: 'external' };

@@ -1,8 +1,7 @@
-import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/db';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
-import { WorkoutType } from '@prisma/client';
+import { WorkoutType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 // Valid workout type enum values for validation
@@ -26,7 +25,8 @@ function isValidWorkoutType(value: string): value is WorkoutType {
     return VALID_WORKOUT_TYPES.includes(value as WorkoutType);
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     try {
         // Rate limiting check (async for Redis support)
         const clientId = getClientIdentifier(req);
@@ -39,10 +39,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
             );
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { id } = params;
         const body = await req.json();
         // Allow updating type, desc, targets, date, completed
         const { workoutType, description, targetDistance, targetDuration, scheduledDate, isCompleted, linkedActivityId } = body;
@@ -94,7 +93,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     try {
         // Rate limiting check (async for Redis support)
         const clientId = getClientIdentifier(req);
@@ -107,12 +107,9 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
             );
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { id } = params;
-
-        // Verify ownership
         const workout = await prisma.workout.findUnique({
             where: { id },
             include: { goal: true }

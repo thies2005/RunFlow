@@ -1,15 +1,14 @@
-import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/db';
 import { calculateVdot, RaceDistance } from '@/lib/metrics/vdot';
 import { generateTrainingPlan } from '@/lib/plans';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { WorkoutType } from '@prisma/client';
+import { WorkoutType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -83,7 +82,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }

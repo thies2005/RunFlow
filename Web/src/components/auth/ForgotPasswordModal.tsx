@@ -112,7 +112,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden transition-all"
                             placeholder="you@example.com"
                             required
                         />
@@ -143,7 +143,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                             type="text"
                             value={code}
                             onChange={(e) => setCode(e.target.value.toUpperCase())}
-                            className="w-full text-center font-mono tracking-widest px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase"
+                            className="w-full text-center font-mono tracking-widest px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden uppercase"
                             placeholder="XCV123"
                             maxLength={6}
                             required
@@ -155,7 +155,7 @@ export default function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordM
                             type="password"
                             value={newPassword}
                             onChange={handlePasswordChange}
-                            className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500 outline-hidden transition-all"
                             placeholder="••••••••"
                             required
                         />

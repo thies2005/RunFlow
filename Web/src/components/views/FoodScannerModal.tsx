@@ -161,7 +161,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-sm sm:items-center sm:justify-center">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
             <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-white/10 shrink-0">
@@ -243,7 +243,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                                             if (cameraInputRef.current) cameraInputRef.current.value = '';
                                             if (galleryInputRef.current) galleryInputRef.current.value = '';
                                         }}
-                                        className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm p-1.5 rounded-full text-white hover:bg-black/80 transition-colors"
+                                        className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs p-1.5 rounded-full text-white hover:bg-black/80 transition-colors"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -273,7 +273,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                                     value={caption}
                                     onChange={e => setCaption(e.target.value)}
                                     placeholder={isTextOnly ? 'e.g. "A large bowl of oatmeal with a sliced banana, 2 tablespoons of peanut butter, and a drizzle of honey"' : 'e.g. "salad with 2 spoons of olive oil"'}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50 transition-colors min-h-[100px] resize-none"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-hidden focus:border-amber-500/50 transition-colors min-h-[100px] resize-none"
                                     disabled={isAnalyzing}
                                 />
                                 <p className="text-[11px] text-gray-500 mt-1.5 ml-1">

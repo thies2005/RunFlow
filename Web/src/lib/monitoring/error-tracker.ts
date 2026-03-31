@@ -8,6 +8,7 @@ interface ErrorData {
   stackTrace?: string;
   userId?: string;
   userAgent?: string;
+  timestamp?: number;
 }
 
 function generateFingerprint(errorMessage: string, stackTrace?: string): string {
@@ -45,6 +46,7 @@ export async function trackError(data: ErrorData) {
     ...data,
     errorMessage: sanitizedMessage,
     stackTrace: sanitizedStackTrace,
+    timestamp: Date.now(),
   });
 
   if (errorBuffer.length >= 50) {
@@ -122,10 +124,7 @@ async function flushErrors() {
 export function isErrorRateTooHigh(): boolean {
   const now = Date.now();
   const recentErrors = errorBuffer.filter(
-    e => {
-      const metric = e as any;
-      return (metric as any).timestamp ? now - (metric as any).timestamp < 60000 : false;
-    }
+    e => e.timestamp ? now - e.timestamp < 60000 : false
   );
   return recentErrors.length > 100;
 }

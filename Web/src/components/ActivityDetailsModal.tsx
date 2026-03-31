@@ -4,6 +4,7 @@ import { X, Calendar, Clock, MapPin, TrendingUp, Activity as ActivityIcon, Heart
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import type { ActivityListItem, WorkoutType, Activity } from '@/lib/types';
 import InteractiveStreamsChart from './InteractiveStreamsChart';
@@ -199,11 +200,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
         }
     };
 
-    // Portal Implementation
-    const { createPortal } = require('react-dom');
-
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-xs animate-in fade-in duration-200">
             <div className="relative w-full max-w-2xl bg-background border border-glass-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col" role="dialog" aria-modal="true" aria-labelledby="activity-title">
                 {/* Header */}
                 <div className="relative p-6 border-b border-glass-border bg-gradient-to-r from-accent-purple/10 to-accent-pink/10 shrink-0">
@@ -228,7 +226,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                         type="text"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
-                                        className="text-xl font-bold text-foreground bg-background-secondary border border-glass-border rounded px-2 py-1 focus:outline-none focus:border-accent-purple w-full"
+                                        className="text-xl font-bold text-foreground bg-background-secondary border border-glass-border rounded px-2 py-1 focus:outline-hidden focus:border-accent-purple w-full"
                                         autoFocus
                                         aria-label="Activity name input"
                                         onKeyDown={(e) => {
@@ -295,7 +293,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 <select
                                     value={trainingType || 'EASY'}
                                     onChange={(e) => handleTypeChange(e.target.value as WorkoutType)}
-                                    className="bg-transparent border-none text-sm text-foreground focus:ring-0 cursor-pointer appearance-none pr-8 outline-none"
+                                    className="bg-transparent border-none text-sm text-foreground focus:ring-0 cursor-pointer appearance-none pr-8 outline-hidden"
                                     disabled={isUpdatingType}
                                     aria-label="Select workout type"
                                 >
@@ -476,7 +474,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                         return (
                                             <div key={i} className="flex items-center justify-between py-1.5 px-2 hover:bg-white/5 rounded text-sm">
                                                 <div className="flex items-center gap-2">
-                                                    <div className={`w-3 h-3 rounded-sm ${zone.color}`} />
+                                                    <div className={`w-3 h-3 rounded-xs ${zone.color}`} />
                                                     <span className={`font-medium ${zone.textColor}`}>{zone.name}</span>
                                                     <span className="text-foreground-muted text-xs">{zone.label}</span>
                                                 </div>

@@ -374,7 +374,7 @@ export default function PlanPage() {
                                                             <div
                                                                 key={activity.id}
                                                                 onClick={() => {
-                                                                    setSelectedActivity(activity as any);
+                                                                    setSelectedActivity(activity);
                                                                     setIsActivityModalOpen(true);
                                                                 }}
                                                                 className="group p-3 rounded-lg flex items-center gap-3 transition-colors border border-dashed border-accent-cyan/40 bg-accent-cyan/5 cursor-pointer hover:bg-accent-cyan/10"
@@ -421,7 +421,7 @@ export default function PlanPage() {
                 <ActivityDetailsModal
                     isOpen={isActivityModalOpen}
                     onClose={() => setIsActivityModalOpen(false)}
-                    activity={selectedActivity as any}
+                    activity={selectedActivity}
                 />
                 <Footer />
             </div>

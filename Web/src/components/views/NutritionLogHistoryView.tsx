@@ -164,7 +164,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
     const sortedDates = historyGroups ? Object.keys(historyGroups).sort((a, b) => b.localeCompare(a)) : [];
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-sm sm:items-center sm:justify-center">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
             <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-white/10 shrink-0">
@@ -239,7 +239,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                                     step="0.1"
                                                                                     value={editQuantity}
                                                                                     onChange={(e) => setEditQuantity(e.target.value)}
-                                                                                    className="w-full bg-white/5 border border-white/10 rounded-l-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-pink-500/50"
+                                                                                    className="w-full bg-white/5 border border-white/10 rounded-l-lg px-3 py-1.5 text-sm text-white focus:outline-hidden focus:border-pink-500/50"
                                                                                 />
                                                                                 <div className="bg-white/10 border border-white/10 border-l-0 rounded-r-lg px-3 py-1.5 flex items-center justify-center text-xs text-gray-400">
                                                                                     srv
@@ -251,7 +251,7 @@ export function NutritionLogHistoryView({ isOpen, onClose }: Props) {
                                                                             <select
                                                                                 value={editMealType}
                                                                                 onChange={(e) => setEditMealType(e.target.value)}
-                                                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-none focus:border-pink-500/50"
+                                                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-sm text-white focus:outline-hidden focus:border-pink-500/50"
                                                                             >
                                                                                 <option value="BREAKFAST" className="bg-[#1c1c1e]">Breakfast</option>
                                                                                 <option value="LUNCH" className="bg-[#1c1c1e]">Lunch</option>

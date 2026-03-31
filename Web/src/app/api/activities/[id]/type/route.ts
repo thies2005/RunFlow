@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { WorkoutType } from '@/lib/types';
 import { logger } from '@/lib/logging/logger';
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const session = await getServerSession(authOptions);
+    const { id } = await params;
+    const session = await auth();
     if (!session || !session.user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -18,7 +18,6 @@ export async function PATCH(
         const body = await request.json();
         const { trainingType } = body;
 
-        // Validate type
         const validTypes: WorkoutType[] = [
             'EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS',
             'REPETITIONS', 'RECOVERY', 'RACE',
@@ -31,7 +30,7 @@ export async function PATCH(
         }
 
         const activity = await prisma.activity.findUnique({
-            where: { id: params.id },
+            where: { id },
             select: { userId: true }
         });
 
@@ -44,7 +43,7 @@ export async function PATCH(
         }
 
         const updatedActivity = await prisma.activity.update({
-            where: { id: params.id },
+            where: { id },
             data: { trainingType },
         });
 

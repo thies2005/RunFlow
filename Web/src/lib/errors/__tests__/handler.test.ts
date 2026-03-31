@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { handleError } from '../handler';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/generated/prisma/client';
 import { logger } from '@/lib/logging/logger';
 
 // Mock NextResponse

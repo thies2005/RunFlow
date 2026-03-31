@@ -71,7 +71,7 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
     const chartData = generateChartData();
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center">
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-xs sm:items-center sm:justify-center">
             <div className="bg-[#1c1c1e] w-full max-w-2xl rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
 
                 {/* Header */}
@@ -97,7 +97,7 @@ export function SupplementStatsModal({ isOpen, onClose, targetId, targetType, ta
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-md transition-colors ${timeRange === range
-                                    ? 'bg-white/10 text-white shadow-sm'
+                                    ? 'bg-white/10 text-white shadow-xs'
                                     : 'text-gray-400 hover:text-gray-300'
                                     }`}
                             >

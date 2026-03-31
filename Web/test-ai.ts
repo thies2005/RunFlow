@@ -1,7 +1,18 @@
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from './src/generated/prisma/client';
 import { generateCompletion } from './src/lib/ai/providers';
+import type { AiConfig } from './src/lib/ai/providers';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is not set');
+}
+
+const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString })
+});
 
 async function main() {
     console.log('Testing AI generation for non-realtimes...');
@@ -27,8 +38,9 @@ async function main() {
     const decryptedKey = decryptToken(apiKey);
     const key = decryptedKey?.split(',')[0].trim() || '';
 
-    const config = {
-        provider: type as any,
+    const provider = type === 'openai' || type === 'anthropic' || type === 'google' ? type : 'openai';
+    const config: AiConfig = {
+        provider,
         baseUrl,
         apiKey: key,
         apiKeys: [key],

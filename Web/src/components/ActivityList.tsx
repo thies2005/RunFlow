@@ -2,7 +2,7 @@
 
 import { useState, memo, useCallback, useEffect } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { FixedSizeList as List } from 'react-window';
+import { List } from 'react-window';
 import {
     Activity,
     Bike,
@@ -182,6 +182,35 @@ const ActivityCard = memo(function ActivityCard({ activity }: { activity: Activi
 
 ActivityCard.displayName = 'ActivityCard';
 
+interface ActivityRowData {
+    activities: ActivityListItem[];
+    onClick: (activity: ActivityListItem) => void;
+}
+
+const ActivityRow = ({ index, style, activities, onClick, ariaAttributes }: ActivityRowData & {
+    index: number;
+    style: React.CSSProperties;
+    ariaAttributes: {
+        "aria-posinset": number;
+        "aria-setsize": number;
+        role: "listitem";
+    };
+}) => {
+    const activity = activities[index];
+    return (
+        <div {...ariaAttributes} style={{ ...style, top: (style.top as number) + 12, height: (style.height as number) - 12 }}>
+            <button
+                type="button"
+                className="appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
+                onClick={() => onClick(activity)}
+                aria-label={`View details for ${activity.name}`}
+            >
+                <ActivityCard activity={activity} />
+            </button>
+        </div>
+    );
+};
+
 export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionFactor }: ActivityListProps) {
     const [selectedActivity, setSelectedActivity] = useState<ActivityListItem | null>(null);
     const [windowHeight, setWindowHeight] = useState(800);
@@ -242,33 +271,18 @@ export function ActivityList({ activities, isLoading, userHrMax, vdotCorrectionF
             <div className={activities.length > 50 ? "" : "space-y-3"}>
                 {activities.length > 50 ? (
                     <List
-                        height={windowHeight}
-                        itemCount={activities.length}
-                        itemSize={160}
-                        width="100%"
-                    >
-                        {({ index, style }: { index: number; style: React.CSSProperties }) => {
-                            const activity = activities[index];
-                            return (
-                                <div style={{ ...style, top: (style.top as number) + 12, height: (style.height as number) - 12 }}>
-                                    <button
-                                        type="button"
-                                        className="appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
-                                        onClick={() => handleActivityClick(activity)}
-                                        aria-label={`View details for ${activity.name}`}
-                                    >
-                                        <ActivityCard activity={activity} />
-                                    </button>
-                                </div>
-                            );
-                        }}
-                    </List>
+                        style={{ height: windowHeight }}
+                        rowCount={activities.length}
+                        rowHeight={160}
+                        rowComponent={ActivityRow}
+                        rowProps={{ activities, onClick: handleActivityClick }}
+                    />
                 ) : (
                     activities.map((activity, index) => (
                         <button
                             key={activity.id}
                             type="button"
-                            className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
+                            className="animate-slide-in appearance-none cursor-pointer text-left bg-transparent border-0 p-0 w-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent-orange focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-2xl"
                             style={{ animationDelay: `${index * 0.05}s` }}
                             onClick={() => handleActivityClick(activity)}
                             aria-label={`View details for ${activity.name}`}

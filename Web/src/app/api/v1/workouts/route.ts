@@ -1,8 +1,7 @@
-import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/db';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
-import { WorkoutType } from '@prisma/client';
+import { WorkoutType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { setApiVersionHeaders } from '@/lib/api/version';
 
@@ -20,7 +19,7 @@ export async function POST(req: Request) {
             return response;
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             setApiVersionHeaders(response.headers);

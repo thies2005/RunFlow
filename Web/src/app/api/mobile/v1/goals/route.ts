@@ -12,6 +12,7 @@ import { analyzeRace, type RaceDistance } from '@/lib/metrics/vdot';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { RaceType, WorkoutType } from '@/generated/prisma/browser';
 
 export async function GET(request: NextRequest) {
     try {
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
             try {
                 const workouts = generateTrainingPlan({
                     vdot: currentVdot,
-                    raceType: raceType as any,
+                    raceType: raceType as RaceType,
                     raceDate: new Date(raceDate),
                     startDate: planStartDate ? new Date(planStartDate) : new Date(),
                     runsPerWeek: runsPerWeek ?? 4,
@@ -191,7 +192,7 @@ export async function POST(request: NextRequest) {
                         data: workouts.map(w => ({
                             goalId: goal.id,
                             scheduledDate: w.date,
-                            workoutType: w.type as any,
+                            workoutType: w.type as WorkoutType,
                             description: w.description,
                             targetDistance: w.totalDistance,
                             targetPace: w.targetPace || 0,

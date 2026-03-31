@@ -61,6 +61,10 @@ jest.mock('next/server', () => {
 // Import the route handler AFTER mocks
 import { GET } from '@/app/api/mobile/v1/analytics/stats/route';
 
+interface MockResponse {
+    body: string | object | null;
+}
+
 describe('GET /api/mobile/v1/analytics/stats', () => {
     const mockUser = { id: 'user-1' };
     const mockDate = new Date('2023-01-01T00:00:00Z');
@@ -145,7 +149,10 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
             expect.objectContaining({ ex: 86400 })
         );
 
-        expect((response as any).body).toContain('"ctl":10');
+        const parsedBody = typeof (response as MockResponse).body === 'string'
+            ? (response as MockResponse).body
+            : JSON.stringify((response as MockResponse).body);
+        expect(parsedBody).toContain('"ctl":10');
     });
 
     it('should handle redis failure gracefully', async () => {
@@ -163,7 +170,10 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
 
         // Should fall back to calculation
         expect(prisma.activity.findMany).toHaveBeenCalled();
-        expect((response as any).body).toContain('"ctl":10');
+        const parsedBody = typeof (response as MockResponse).body === 'string'
+            ? (response as MockResponse).body
+            : JSON.stringify((response as MockResponse).body);
+        expect(parsedBody).toContain('"ctl":10');
     });
 
     it('should use new cache key when data updates', async () => {
@@ -203,4 +213,3 @@ describe('GET /api/mobile/v1/analytics/stats', () => {
         expect(mockRedis.get).toHaveBeenCalledWith(expectedKey);
     });
 });
-

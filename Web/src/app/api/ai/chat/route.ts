@@ -25,6 +25,10 @@ import { checkRateLimitAsync } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
 import { logger } from '@/lib/logging/logger';
 
+interface UserAiSettingsAccess {
+    accessAllActivities?: boolean;
+}
+
 export const dynamic = 'force-dynamic';
 
 async function detectIntent(config: AiConfig, message: string): Promise<string> {
@@ -171,7 +175,8 @@ export async function POST(request: NextRequest) {
                     let contextString = formatContextForAi(userContext);
 
                     // Lazy load extended history
-                    if ((userSettings as any)?.accessAllActivities) {
+                    const settingsAccess = userSettings as UserAiSettingsAccess | null;
+                    if (settingsAccess?.accessAllActivities) {
                         const intent = await detectIntent(config, message);
                         if (intent === 'HISTORY_QUERY') {
                             const extendedHistory = await buildExtendedHistoryContext(userId!);

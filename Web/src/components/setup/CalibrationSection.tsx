@@ -1,5 +1,5 @@
 import { BarChart2, Check, Rocket, AlertTriangle } from 'lucide-react';
-import { formatTime, calculateVdot } from '@/lib/metrics/vdot';
+import { formatTime, calculateVdot, type RaceDistance } from '@/lib/metrics/vdot';
 
 interface RaceActivity {
     id: string;
@@ -176,7 +176,7 @@ export default function CalibrationSection({
                                     // Auto-update calibration factor
                                     const secs = (parseInt(e.target.value) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
                                     if (secs > 0 && effectiveVO2max > 0) {
-                                        const raceVdot = calculateVdot({ distance: calibrationDistance as any, timeSeconds: secs });
+                                        const raceVdot = calculateVdot({ distance: calibrationDistance as RaceDistance, timeSeconds: secs });
                                         setCalibrationFactor(raceVdot / effectiveVO2max);
                                     }
                                 }}
@@ -192,7 +192,7 @@ export default function CalibrationSection({
                                     setMinutes(e.target.value);
                                     const secs = (parseInt(hours) || 0) * 3600 + (parseInt(e.target.value) || 0) * 60 + (parseInt(seconds) || 0);
                                     if (secs > 0 && effectiveVO2max > 0) {
-                                        const raceVdot = calculateVdot({ distance: calibrationDistance as any, timeSeconds: secs });
+                                        const raceVdot = calculateVdot({ distance: calibrationDistance as RaceDistance, timeSeconds: secs });
                                         setCalibrationFactor(raceVdot / effectiveVO2max);
                                     }
                                 }}
@@ -209,7 +209,7 @@ export default function CalibrationSection({
                                     setSeconds(e.target.value);
                                     const secs = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(e.target.value) || 0);
                                     if (secs > 0 && effectiveVO2max > 0) {
-                                        const raceVdot = calculateVdot({ distance: calibrationDistance as any, timeSeconds: secs });
+                                        const raceVdot = calculateVdot({ distance: calibrationDistance as RaceDistance, timeSeconds: secs });
                                         setCalibrationFactor(raceVdot / effectiveVO2max);
                                     }
                                 }}
@@ -231,7 +231,7 @@ export default function CalibrationSection({
 
                 // Calculate VDOT from the race performance
                 const raceVdot = currentSeconds > 0
-                    ? calculateVdot({ distance: calibrationDistance as any, timeSeconds: currentSeconds })
+                    ? calculateVdot({ distance: calibrationDistance as RaceDistance, timeSeconds: currentSeconds })
                     : 0;
 
                 // Calculate calibration factor: actual performance / expected performance

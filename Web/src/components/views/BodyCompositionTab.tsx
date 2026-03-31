@@ -33,9 +33,18 @@ export function BodyCompositionTab() {
         }
     });
 
+    interface BodyCompositionPayload {
+        dateStr: string;
+        bodyFat?: number;
+        muscleMass?: number;
+        waist?: number;
+        chest?: number;
+        arms?: number;
+    }
+
     const saveMutation = useMutation({
         mutationFn: async () => {
-            const payload: any = { dateStr };
+            const payload: BodyCompositionPayload = { dateStr };
             if (bodyFat) payload.bodyFat = parseFloat(bodyFat);
             if (muscleMass) payload.muscleMass = parseFloat(muscleMass);
             if (waist) payload.waist = parseFloat(waist);
@@ -146,14 +155,14 @@ export function BodyCompositionTab() {
                 <>
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex bg-white/5 rounded-lg p-1 border border-white/10 shrink-0 overflow-x-auto w-full max-w-[300px]">
-                            {[
+                            {([
                                 { id: 'bodyFat', label: 'Body Fat %' },
                                 { id: 'muscleMass', label: 'Muscle Mass' },
                                 { id: 'waist', label: 'Waist' }
-                            ].map(m => (
+                            ] as const).map(m => (
                                 <button
                                     key={m.id}
-                                    onClick={() => setSelectedMetric(m.id as any)}
+                                    onClick={() => setSelectedMetric(m.id)}
                                     className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${selectedMetric === m.id ? 'bg-white/10 text-white shadow-xs' : 'text-gray-400 hover:text-gray-300'}`}
                                 >
                                     {m.label}

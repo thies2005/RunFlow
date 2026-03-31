@@ -4,6 +4,12 @@
 
 import { ApiError, ApiErrorCode, handleApiError } from '../apiError';
 
+interface MockApiResponseBody {
+    error?: ApiErrorCode;
+    message?: string;
+    details?: unknown;
+}
+
 // Mock NextResponse.json
 jest.mock('next/server', () => ({
     NextResponse: {
@@ -94,7 +100,7 @@ describe('ApiError', () => {
             const error = ApiError.unauthorized();
             const response = error.toResponse();
 
-            expect((response.body as any).details).toBeUndefined();
+            expect((response.body as MockApiResponseBody).details).toBeUndefined();
         });
     });
 });
@@ -102,39 +108,48 @@ describe('ApiError', () => {
 describe('handleApiError', () => {
     const originalEnv = process.env.NODE_ENV;
 
+    const setNodeEnv = (value: string | undefined) => {
+        Object.defineProperty(process.env, 'NODE_ENV', {
+            value,
+            configurable: true,
+            enumerable: true,
+            writable: true,
+        });
+    };
+
     afterEach(() => {
-        (process.env as any).NODE_ENV = originalEnv;
+        setNodeEnv(originalEnv);
     });
 
     it('should handle ApiError correctly', () => {
         const error = ApiError.notFound('User');
         const response = handleApiError(error);
 
-        expect((response.body as any).error).toBe(ApiErrorCode.NOT_FOUND);
-        expect((response.body as any).message).toBe('User not found');
+        expect((response.body as MockApiResponseBody).error).toBe(ApiErrorCode.NOT_FOUND);
+        expect((response.body as MockApiResponseBody).message).toBe('User not found');
     });
 
     it('should handle standard Error in development', () => {
-        (process.env as any).NODE_ENV = 'development';
+        setNodeEnv('development');
         const error = new Error('Something went wrong');
         const response = handleApiError(error);
 
-        expect((response.body as any).error).toBe(ApiErrorCode.INTERNAL_ERROR);
-        expect((response.body as any).message).toBe('Something went wrong');
+        expect((response.body as MockApiResponseBody).error).toBe(ApiErrorCode.INTERNAL_ERROR);
+        expect((response.body as MockApiResponseBody).message).toBe('Something went wrong');
     });
 
     it('should hide error message in production', () => {
-        (process.env as any).NODE_ENV = 'production';
+        setNodeEnv('production');
         const error = new Error('Sensitive database error');
         const response = handleApiError(error);
 
-        expect((response.body as any).message).toBe('An unexpected error occurred');
+        expect((response.body as MockApiResponseBody).message).toBe('An unexpected error occurred');
     });
 
     it('should handle unknown error types', () => {
         const response = handleApiError('string error');
 
-        expect((response.body as any).error).toBe(ApiErrorCode.INTERNAL_ERROR);
+        expect((response.body as MockApiResponseBody).error).toBe(ApiErrorCode.INTERNAL_ERROR);
         expect(response.status).toBe(500);
     });
 });

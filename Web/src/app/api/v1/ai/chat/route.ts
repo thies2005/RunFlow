@@ -20,6 +20,10 @@ import { checkRateLimitAsync } from '@/lib/rateLimit';
 import { setApiVersionHeaders } from '@/lib/api/version';
 import { logger } from '@/lib/logging/logger';
 
+interface UserAiSettingsAccess {
+    accessAllActivities?: boolean;
+}
+
 export const dynamic = 'force-dynamic';
 
 async function detectIntent(config: AiConfig, message: string): Promise<string> {
@@ -144,7 +148,8 @@ export async function POST(request: NextRequest) {
                     const userContext = await buildUserContext(userId);
                     let contextString = formatContextForAi(userContext);
 
-                    if ((userSettings as any)?.accessAllActivities) {
+                    const settingsAccess = userSettings as UserAiSettingsAccess | null;
+                    if (settingsAccess?.accessAllActivities) {
                         const intent = await detectIntent(config, message);
                         if (intent === 'HISTORY_QUERY') {
                             const extendedHistory = await buildExtendedHistoryContext(userId);

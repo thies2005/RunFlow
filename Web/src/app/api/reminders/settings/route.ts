@@ -48,7 +48,7 @@ export async function GET() {
             };
         }
 
-        // Check if user has any push subscriptions
+        // Check if user has push subscriptions
         const subscriptionCount = await prisma.pushSubscription.count({
             where: { userId: session.user.id },
         });

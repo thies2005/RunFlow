@@ -1,7 +1,7 @@
 import { getCsrfToken, csrfHeaders } from '../csrfHelper';
 
 describe('csrfHelper', () => {
-    let originalDocument: any;
+    let originalDocument: typeof global.document | undefined;
 
     beforeAll(() => {
         // Save the original document to restore it later
@@ -10,7 +10,11 @@ describe('csrfHelper', () => {
 
     afterAll(() => {
         // Restore the original document
-        global.document = originalDocument;
+        if (originalDocument === undefined) {
+            delete (global as { document?: Document }).document;
+        } else {
+            global.document = originalDocument;
+        }
     });
 
     afterEach(() => {
@@ -27,13 +31,16 @@ describe('csrfHelper', () => {
         it('should return empty string if document is undefined', () => {
             // Temporarily remove document
             const tempDoc = global.document;
-            // @ts-ignore
-            delete global.document;
+            delete (global as { document?: Document }).document;
 
             expect(getCsrfToken()).toBe('');
 
             // Restore document
-            global.document = tempDoc;
+            if (tempDoc === undefined) {
+                delete (global as { document?: Document }).document;
+            } else {
+                global.document = tempDoc;
+            }
         });
 
         it('should return empty string if cookie is empty', () => {

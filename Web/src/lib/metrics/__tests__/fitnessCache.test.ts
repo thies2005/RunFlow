@@ -1,6 +1,7 @@
 
 import { updateFitnessCache } from '../fitnessCache';
 import { prisma } from '@/lib/db';
+import type { Activity } from '@/generated/prisma/browser';
 
 jest.mock('@/lib/db', () => ({
   prisma: {
@@ -46,7 +47,7 @@ describe('Fitness Cache', () => {
     (prisma.activity.findMany as jest.Mock).mockResolvedValue(activities);
 
     // Call the function
-    await updateFitnessCache(userId, [{ startDate: startDate } as any]);
+    await updateFitnessCache(userId, [{ startDate } as Partial<Activity>]);
 
     // Count calls
     const upsertCalls = (prisma.dailyFitness.upsert as jest.Mock).mock.calls.length;

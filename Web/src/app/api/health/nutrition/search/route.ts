@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { searchBLS } from '@/lib/data/blsSearch';
 
+type SearchResultItem = {
+    name?: string;
+    brand?: string;
+} & Record<string, unknown>;
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
@@ -29,11 +34,11 @@ export async function GET(request: Request) {
         ]);
 
         // Collect results from each source
-        const combined: Array<Record<string, unknown>> = [];
+        const combined: SearchResultItem[] = [];
         const seenNames = new Set<string>();
 
         // Helper to add results with deduplication
-        const addResults = (items: Array<Record<string, unknown>>, source: string) => {
+        const addResults = (items: SearchResultItem[], source: string) => {
             for (const item of items) {
                 const name = String(item.name || '').toLowerCase().trim();
                 const brand = String(item.brand || '').toLowerCase().trim();
@@ -48,8 +53,8 @@ export async function GET(request: Request) {
         };
 
         // Priority: Local DB first, then BLS
-        addResults(localItems as any[], 'local');
-        addResults(blsResults as any[], 'bls');
+        addResults(localItems as SearchResultItem[], 'local');
+        addResults(blsResults as SearchResultItem[], 'bls');
 
         // Score and rank combined results by relevance
         const queryLower = query.toLowerCase();

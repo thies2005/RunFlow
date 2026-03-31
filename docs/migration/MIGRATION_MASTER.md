@@ -108,12 +108,12 @@ npm run test
 
 ## Definition of Done
 
-- [ ] All 6 phases completed and merged.
-- [ ] All validation commands pass (`tsc`, `build`, `lint`, `test`).
+- [x] All 6 phases completed and merged.
+- [x] All validation commands pass (`tsc`, `build`, `lint`, `test`).
 - [ ] Docker build succeeds (`docker compose build`).
-- [ ] PWA service worker registers correctly.
+- [x] PWA service worker registers correctly.
 - [ ] Capacitor Android build succeeds.
-- [ ] No `--legacy-peer-deps` in Dockerfile or CI.
-- [ ] No TypeScript `any` escapes.
+- [x] No `--legacy-peer-deps` in Dockerfile or CI.
+- [x] No TypeScript `any` escapes.
 - [ ] Security headers verified in staging.
-- [ ] Migration summary log produced in Phase 06.
+- [x] Migration summary log produced in Phase 06.

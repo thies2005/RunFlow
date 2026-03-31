@@ -2,6 +2,7 @@
 import { updateFitnessCache, ensureFitnessCacheUpToDate, getCachedFitnessHistory } from '../fitnessCache';
 import { prisma } from '@/lib/db';
 import { logger } from '@/lib/logging/logger';
+import type { Activity } from '@/generated/prisma/browser';
 
 jest.mock('@/lib/db', () => ({
   prisma: {
@@ -49,7 +50,7 @@ describe('Fitness Cache Logger', () => {
 
     (prisma.activity.findMany as jest.Mock).mockResolvedValue([]);
 
-    await updateFitnessCache(userId, [{ startDate: startDate } as any]);
+    await updateFitnessCache(userId, [{ startDate } as Partial<Activity>]);
 
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining('[FitnessCache] Updated'),
@@ -62,7 +63,7 @@ describe('Fitness Cache Logger', () => {
     const error = new Error('DB Error');
     (prisma.dailyFitness.findFirst as jest.Mock).mockRejectedValue(error);
 
-    await updateFitnessCache(userId, [{ startDate: new Date() } as any]);
+    await updateFitnessCache(userId, [{ startDate: new Date() } as Partial<Activity>]);
 
     expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('[FitnessCache] Error updating fitness cache'),

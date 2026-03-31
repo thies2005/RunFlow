@@ -15,6 +15,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { Prisma } from '@/generated/prisma/client';
 import { refreshStravaToken } from './oauth';
 import { fetchStravaActivities, fetchSingleActivity, fetchActivityStreams, fetchAthleteProfile } from './fetch';
 import { DAY_MS } from '@/lib/constants';
@@ -249,7 +250,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
 
                     const metrics = enrichActivityMetrics(metricsInput);
                     const activityData = transformActivityData(activity, metrics);
-                    activityData.streams = streams;
+                    activityData.streams = streams ?? Prisma.JsonNull;
 
                     if (isNew) {
                         const createdActivity = await prisma.activity.create({
@@ -428,7 +429,7 @@ export async function syncActivityById(userId: string, activityId: number): Prom
 
         const metrics = enrichActivityMetrics(metricsInput);
         const activityData = transformActivityData(activity, metrics);
-        activityData.streams = streams;
+        activityData.streams = streams ?? Prisma.JsonNull;
 
         const { created } = await upsertActivity(userId, activity.id, activityData);
 

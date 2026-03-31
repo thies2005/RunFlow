@@ -24,7 +24,7 @@ services:
       - HOSTNAME=0.0.0.0
       - PORT=3000
       - NODE_OPTIONS=--max-old-space-size=8192
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:-}@db:5432/${POSTGRES_DB:-runflow}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-runflow}?schema=public
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - STRAVA_CLIENT_ID=${STRAVA_CLIENT_ID}
@@ -115,7 +115,7 @@ services:
           node_modules/.bin/prisma migrate deploy
     restart: "no"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:-}@db:5432/${POSTGRES_DB:-runflow}?schema=public
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-runflow}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}@db:5432/${POSTGRES_DB:-runflow}?schema=public
     depends_on:
       db:
         condition: service_healthy
@@ -132,7 +132,7 @@ services:
     restart: unless-stopped
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-runflow}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       - POSTGRES_DB=${POSTGRES_DB:-runflow}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -167,7 +167,7 @@ services:
       - POSTGRES_HOST=db
       - POSTGRES_DB=${POSTGRES_DB:-runflow}
       - POSTGRES_USER=${POSTGRES_USER:-runflow}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       - SCHEDULE=@every 6h
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6

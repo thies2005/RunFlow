@@ -4,19 +4,19 @@
 # Stage 1: Dependencies
 # ==================================
 # M-11 fix: Pin node version for reproducible builds
-FROM node:22.12.0-alpine3.19 AS deps
+FROM node:24-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # Install dependencies with cache
 COPY package.json package-lock.json* ./
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --legacy-peer-deps
+    npm ci
 
 # ==================================
 # Stage 2: Builder
 # ==================================
-FROM node:22.12.0-alpine3.19 AS builder
+FROM node:24-alpine AS builder
 # M-10 fix: Add build arg for Sentry DSN (needed at build time for client-side code)
 ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 # ==================================
 # Stage 3: Runner
 # ==================================
-FROM node:22.12.0-alpine3.19 AS runner
+FROM node:24-alpine AS runner
 RUN apk add --no-cache openssl libc6-compat wget curl postgresql16-client
 WORKDIR /app
 

@@ -88,7 +88,7 @@ services:
         max-file: "3"
 
   permissions-fixer:
-    image: alpine:3.19
+    image: alpine:3.22
     command: sh -c "mkdir -p /backups && chown -R 1001:1001 /backups && chmod -R 775 /backups"
     restart: "no"
     volumes:
@@ -193,7 +193,7 @@ services:
         max-file: "3"
 
   reminder-cron:
-    image: alpine:3.19
+    image: alpine:3.22
     restart: unless-stopped
     entrypoint: /bin/sh
     command: >
@@ -223,7 +223,7 @@ services:
         max-file: "3"
 
   feedback-queue-cron:
-    image: alpine:3.19
+    image: alpine:3.22
     restart: unless-stopped
     entrypoint: /bin/sh
     command: >

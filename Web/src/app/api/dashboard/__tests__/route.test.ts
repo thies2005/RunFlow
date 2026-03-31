@@ -20,6 +20,7 @@ jest.mock('@/lib/db', () => ({
         },
         goal: {
             findMany: jest.fn(),
+            updateMany: jest.fn(),
         },
         activity: {
             findMany: jest.fn(),
@@ -61,6 +62,10 @@ jest.mock('@/lib/metrics/fitnessCache', () => ({
     ensureFitnessCacheUpToDate: jest.fn(() => ({ ctl: 50, atl: 40, tsb: 10 })),
 }));
 
+jest.mock('@/lib/redis', () => ({
+    getRedisClient: jest.fn(async () => null),
+}));
+
 jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
@@ -93,6 +98,7 @@ describe('GET /api/dashboard', () => {
                 workouts: [],
             },
         ]);
+        (prisma.goal.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
         (prisma.activity.findMany as jest.Mock).mockResolvedValue([
             {
                 id: 'activity-1',

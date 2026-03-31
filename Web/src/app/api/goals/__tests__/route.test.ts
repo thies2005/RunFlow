@@ -18,6 +18,7 @@ jest.mock('@/lib/db', () => ({
         goal: {
             findMany: jest.fn(),
             create: jest.fn(),
+            updateMany: jest.fn(),
             update: jest.fn(),
         },
         activity: {
@@ -187,6 +188,7 @@ describe('POST /api/goals', () => {
             raceDate: new Date('2024-04-15'),
             currentVdot: 45,
         });
+        (prisma.goal.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
         (prisma.activity.findFirst as jest.Mock).mockResolvedValue(null);
         (prisma.user.findUnique as jest.Mock).mockResolvedValue({
             hrMax: 185,
@@ -310,5 +312,4 @@ describe('POST /api/goals', () => {
         expect(handleError).toHaveBeenCalled();
     });
 });
-
 

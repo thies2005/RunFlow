@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/strava/oauth'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/db'
 
 async function isAdminFromDatabase(email: string): Promise<boolean> {
@@ -50,7 +49,7 @@ export async function isAdmin(user: { email?: string | null }): Promise<boolean>
 }
 
 export async function requireAdminAuth() {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
 
   if (!session?.user?.email) {
     return { error: 'Unauthorized', status: 401 }

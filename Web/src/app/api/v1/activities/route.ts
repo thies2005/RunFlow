@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { ActivityType } from '@/generated/prisma/browser';
@@ -18,7 +17,7 @@ type ActivityWhereClause = {
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
 
         if (!session?.user?.id) {
             console.error('Activities GET: No session or user ID');
@@ -162,7 +161,7 @@ export async function POST(request: NextRequest) {
             return response;
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             setApiVersionHeaders(response.headers);

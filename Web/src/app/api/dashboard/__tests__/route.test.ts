@@ -5,12 +5,8 @@
 import { GET } from '../route';
 import { NextRequest } from 'next/server';
 
-jest.mock('@/lib/strava/oauth', () => ({
-    authOptions: {},
-}));
-
-jest.mock('next-auth', () => ({
-    getServerSession: jest.fn(),
+jest.mock('@/auth', () => ({
+    auth: jest.fn(),
 }));
 
 jest.mock('@/lib/db', () => ({
@@ -70,7 +66,7 @@ jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
 
-import { getServerSession } from 'next-auth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
@@ -81,7 +77,7 @@ describe('GET /api/dashboard', () => {
         jest.clearAllMocks();
         (getClientIdentifier as jest.Mock).mockReturnValue('test-client');
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
-        (getServerSession as jest.Mock).mockResolvedValue({
+        (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
         (prisma.user.findUnique as jest.Mock).mockResolvedValue({
@@ -132,7 +128,7 @@ describe('GET /api/dashboard', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (getServerSession as jest.Mock).mockResolvedValue(null);
+        (auth as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/dashboard');
 

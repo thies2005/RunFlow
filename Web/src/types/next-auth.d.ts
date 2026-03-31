@@ -1,12 +1,7 @@
 import { DefaultSession } from "next-auth"
 
-declare module 'cookie';
-
 declare module "next-auth" {
-    /**
-     * Returned by `useSession`, `getSession` and received as a prop on the `SessionProvider` React Context
-     */
-    interface Session { // eslint-disable-line no-unused-vars
+    interface Session {
         user: {
             id: string;
             name?: string | null;
@@ -14,7 +9,14 @@ declare module "next-auth" {
             image?: string | null;
             hasStrava: boolean;
             lastSyncAt: string | null;
+            authMethod?: string;
             isAdmin?: boolean;
         } & DefaultSession["user"]
+    }
+}
+
+declare module "@auth/core/jwt" {
+    interface JWT {
+        id?: string;
     }
 }

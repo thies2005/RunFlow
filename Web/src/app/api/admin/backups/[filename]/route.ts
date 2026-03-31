@@ -9,8 +9,9 @@ const BACKUPS_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), 'backups'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { filename: string } }
+    { params }: { params: Promise<{ filename: string }> }
 ) {
+    const { filename } = await params;
     const rateLimit = await adminRateLimit(request, 'read');
     if (!rateLimit.success) {
         return rateLimit.error;
@@ -20,8 +21,6 @@ export async function GET(
     if ('error' in authResult) {
         return authResult.error;
     }
-
-    const filename = params.filename;
 
     if (!filename) {
         return NextResponse.json({ error: 'Filename is required' }, { status: 400 });

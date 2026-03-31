@@ -7,8 +7,7 @@
 
 import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import { NextRequest } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 import { logger } from '@/lib/logging/logger';
@@ -157,7 +156,7 @@ export async function getAuthenticatedUser(
 
     // Fall back to NextAuth session (web)
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (session?.user?.id) {
             return {
                 id: session.user.id,

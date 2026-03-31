@@ -6,8 +6,9 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const authResult = await requireAdmin(request);
 
   if ('error' in authResult) {
@@ -16,7 +17,7 @@ export async function GET(
 
   try {
     const error = await prisma.errorLog.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!error) {
@@ -50,8 +51,9 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const authResult = await requireAdmin(request);
 
   if ('error' in authResult) {
@@ -62,7 +64,7 @@ export async function PATCH(
     const { resolved } = await request.json();
 
     const error = await prisma.errorLog.update({
-      where: { id: params.id },
+      where: { id },
       data: { resolved },
     });
 
@@ -78,8 +80,9 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const authResult = await requireAdmin(request);
 
   if ('error' in authResult) {
@@ -88,7 +91,7 @@ export async function DELETE(
 
   try {
     const error = await prisma.errorLog.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true, id: error.id });

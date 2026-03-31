@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 
 interface DailyNutrition {
   date: string;
@@ -35,7 +34,7 @@ interface TopContributors {
 const safeNumber = (value: number | null): number => value ?? 0;
 
 export async function GET(request: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

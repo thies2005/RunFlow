@@ -14,8 +14,9 @@ import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         // Rate limiting
         const clientId = getClientIdentifier(request);
@@ -35,7 +36,7 @@ export async function GET(
 
         const activity = await prisma.activity.findFirst({
             where: {
-                id: params.id,
+                id,
                 userId: user.id
             }
         });
@@ -59,7 +60,7 @@ export async function GET(
 
     } catch (error) {
         return handleApiError(error, {
-            path: `/api/mobile/v1/activities/${params.id}`
+            path: `/api/mobile/v1/activities/${id}`
         });
     }
 }

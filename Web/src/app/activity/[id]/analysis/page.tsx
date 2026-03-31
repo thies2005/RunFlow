@@ -1,13 +1,12 @@
 import { prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import ClientAnalysis from '@/components/analysis/ClientAnalysis';
 import { Activity } from '@/lib/types';
 
 export default async function AnalysisPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session || !session.user) {
         redirect('/login');

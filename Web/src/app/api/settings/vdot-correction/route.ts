@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { calculateVdot, type RaceDistance } from '@/lib/metrics/vdot';
 
@@ -17,7 +16,7 @@ const RACE_DISTANCES: Record<string, number> = {
  * Get current VDOT correction settings
  */
 export async function GET() {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -57,7 +56,7 @@ export async function GET() {
  * Option 2 (manual factor): { correctionFactor: number }
  */
 export async function POST(request: NextRequest) {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -200,7 +199,7 @@ export async function POST(request: NextRequest) {
  * Reset VDOT correction to 1.0 (no correction)
  */
 export async function DELETE() {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
 
     if (!session?.user?.id) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

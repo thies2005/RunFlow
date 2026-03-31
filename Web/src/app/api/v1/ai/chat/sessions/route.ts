@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { setApiVersionHeaders } from '@/lib/api/version';
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             setApiVersionHeaders(response.headers);
@@ -38,7 +37,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             setApiVersionHeaders(response.headers);
@@ -68,7 +67,7 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
             setApiVersionHeaders(response.headers);

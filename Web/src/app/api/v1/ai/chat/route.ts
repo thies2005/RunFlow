@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import {
     getAiConfig,
@@ -47,7 +46,7 @@ Reply ONLY with "HISTORY_QUERY" or "NORMAL".`;
 
 export async function POST(request: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             const response = new Response(JSON.stringify({ error: 'Unauthorized' }), {
                 status: 401,

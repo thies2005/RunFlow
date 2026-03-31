@@ -5,7 +5,6 @@ const withPWAConfig = withPWA({
     cacheOnFrontEndNav: false,
     aggressiveFrontEndNavCaching: false,
     reloadOnOnline: true,
-    swcMinify: true,
     disable: process.env.NODE_ENV === "development",
     extendDefaultRuntimeCaching: true,
     publicExcludes: ["!index.html"],
@@ -174,7 +173,6 @@ const withPWAConfig = withPWA({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: "standalone",
-    swcMinify: true,
     compress: true,
     experimental: {
         workerThreads: false,

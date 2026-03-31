@@ -94,7 +94,7 @@ export function ChartErrorBoundary({
 }: {
     children: ReactNode;
     chartName: string;
-}): JSX.Element {
+}): React.ReactElement {
     return (
         <ErrorBoundary
             componentName={chartName}

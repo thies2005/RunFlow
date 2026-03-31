@@ -1,23 +1,20 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 
 export async function POST(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const workoutId = params.id;
-
-        // Verify ownership
         const workout = await prisma.workout.findUnique({
-            where: { id: workoutId },
+            where: { id },
             include: { goal: true }
         });
 
@@ -26,7 +23,7 @@ export async function POST(
         }
 
         const updated = await prisma.workout.update({
-            where: { id: workoutId },
+            where: { id },
             data: { isCompleted: true, completedAt: new Date() }
         });
 

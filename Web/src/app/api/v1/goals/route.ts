@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { analyzeRace, type RaceDistance } from '@/lib/metrics/vdot';
 import { AnalyticsService } from '@/lib/services/analytics';
@@ -29,7 +28,7 @@ export async function GET(request: NextRequest) {
             return response;
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
 
         if (!session?.user?.id) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -82,7 +81,7 @@ export async function POST(request: NextRequest) {
             return response;
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
 
         if (!session?.user?.id) {
             const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

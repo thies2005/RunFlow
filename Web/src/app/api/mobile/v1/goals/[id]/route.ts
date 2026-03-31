@@ -15,8 +15,9 @@ import { z } from 'zod';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.general);
@@ -33,7 +34,7 @@ export async function GET(
         }
 
         const goal = await prisma.goal.findFirst({
-            where: { id: params.id, userId: user.id },
+            where: { id, userId: user.id },
             include: {
                 workouts: {
                     orderBy: { scheduledDate: 'asc' }
@@ -64,15 +65,16 @@ export async function GET(
 
     } catch (error) {
         return handleApiError(error, {
-            path: `/api/mobile/v1/goals/${params.id}`
+            path: `/api/mobile/v1/goals/${id}`
         });
     }
 }
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.settings);
@@ -88,16 +90,14 @@ export async function PUT(
             return errorResponses.unauthorized();
         }
 
-        // Verify ownership
         const existingGoal = await prisma.goal.findFirst({
-            where: { id: params.id, userId: user.id }
+            where: { id, userId: user.id }
         });
 
         if (!existingGoal) {
             return errorResponses.notFound('Goal');
         }
 
-        // M-19 fix: Add input validation for goal updates
         const goalUpdateSchema = z.object({
             name: z.string().min(1).max(255).optional(),
             targetTime: z.number().int().positive().optional(),
@@ -119,7 +119,7 @@ export async function PUT(
         const { name, targetTime, isActive, currentVdot } = body;
 
         const goal = await prisma.goal.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 name: name !== undefined ? name : undefined,
                 targetTime: targetTime !== undefined ? targetTime : undefined,
@@ -140,15 +140,16 @@ export async function PUT(
 
     } catch (error) {
         return handleApiError(error, {
-            path: `/api/mobile/v1/goals/${params.id}`
+            path: `/api/mobile/v1/goals/${id}`
         });
     }
 }
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     try {
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.settings);
@@ -164,9 +165,8 @@ export async function DELETE(
             return errorResponses.unauthorized();
         }
 
-        // Verify ownership
         const goal = await prisma.goal.findFirst({
-            where: { id: params.id, userId: user.id }
+            where: { id, userId: user.id }
         });
 
         if (!goal) {
@@ -174,14 +174,14 @@ export async function DELETE(
         }
 
         await prisma.goal.delete({
-            where: { id: params.id }
+            where: { id }
         });
 
         return NextResponse.json({ success: true }, { headers: rateLimitHeaders(rateLimitResult) });
 
     } catch (error) {
         return handleApiError(error, {
-            path: `/api/mobile/v1/goals/${params.id}`
+            path: `/api/mobile/v1/goals/${id}`
         });
     }
 }

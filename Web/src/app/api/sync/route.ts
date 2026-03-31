@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/strava/oauth';
+import { auth } from '@/auth';
 import { syncUserActivities, getSyncStatus } from '@/lib/strava/sync';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { handleError } from '@/lib/errors/handler';
@@ -21,7 +20,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const session = await getServerSession(authOptions);
+        const session = await auth();
 
         if (!session?.user?.id) {
             return handleError(new Error('Unauthorized'));
@@ -72,7 +71,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
+        const session = await auth();
 
         if (!session?.user?.id) {
             return handleError(new Error('Unauthorized'));

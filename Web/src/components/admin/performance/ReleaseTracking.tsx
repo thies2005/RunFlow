@@ -105,7 +105,7 @@ export default function ReleaseTrackingDashboard() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-100">
           <h4 className="font-medium text-gray-800">Deployment History</h4>
         </div>
@@ -164,7 +164,7 @@ export default function ReleaseTrackingDashboard() {
       </div>
 
       {comparison && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-xl shadow-xs border border-gray-100 p-6">
           <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
             <GitBranch className="w-5 h-5" />
             Performance Comparison

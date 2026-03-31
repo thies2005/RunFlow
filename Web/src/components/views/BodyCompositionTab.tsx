@@ -96,7 +96,7 @@ export function BodyCompositionTab() {
                                 type="date" 
                                 value={dateStr}
                                 onChange={(e) => setDateStr(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -105,7 +105,7 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.1" value={bodyFat} onChange={e => setBodyFat(e.target.value)}
                                     placeholder="e.g. 15.5"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                             <div>
@@ -113,7 +113,7 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.1" value={muscleMass} onChange={e => setMuscleMass(e.target.value)}
                                     placeholder="e.g. 35.2"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                             <div>
@@ -121,7 +121,7 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.5" value={waist} onChange={e => setWaist(e.target.value)}
                                     placeholder="e.g. 80"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                              <div>
@@ -129,7 +129,7 @@ export function BodyCompositionTab() {
                                 <input 
                                     type="number" step="0.5" value={chest} onChange={e => setChest(e.target.value)}
                                     placeholder="e.g. 100"
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
                         </div>
@@ -154,7 +154,7 @@ export function BodyCompositionTab() {
                                 <button
                                     key={m.id}
                                     onClick={() => setSelectedMetric(m.id as any)}
-                                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${selectedMetric === m.id ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${selectedMetric === m.id ? 'bg-white/10 text-white shadow-xs' : 'text-gray-400 hover:text-gray-300'}`}
                                 >
                                     {m.label}
                                 </button>

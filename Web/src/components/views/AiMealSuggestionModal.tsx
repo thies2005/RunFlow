@@ -120,7 +120,7 @@ export function AiMealSuggestionModal({ isOpen, onClose, remainingMacros, onLogS
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-sm sm:items-center sm:justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center p-4">
             <div className="bg-[#1c1c1e] w-full max-w-md rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-white/10 animate-in zoom-in-95">
                 
                 {/* Header */}

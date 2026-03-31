@@ -400,7 +400,7 @@ export function MobileLayout() {
                             <div className="fixed inset-0 z-[60] flex">
                                 {/* Backdrop */}
                                 <div
-                                    className="absolute inset-0 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm"
+                                    className="absolute inset-0 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-xs"
                                     onClick={() => setIsMobileSidebarOpen(false)}
                                 />
                                 {/* Sidebar */}

@@ -284,7 +284,7 @@ export default function PlanVolumeSection({
                                 <select
                                     value={longRunDay}
                                     onChange={e => setLongRunDay(parseInt(e.target.value))}
-                                    className="w-full bg-surface border border-glass-border rounded-lg p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                    className="w-full bg-surface border border-glass-border rounded-lg p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-hidden"
                                 >
                                     <option value={0}>Sunday</option>
                                     <option value={1}>Monday</option>
@@ -300,7 +300,7 @@ export default function PlanVolumeSection({
                                 <select
                                     value={qualityDay}
                                     onChange={e => setQualityDay(parseInt(e.target.value))}
-                                    className="w-full bg-surface border border-glass-border rounded-lg p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-none"
+                                    className="w-full bg-surface border border-glass-border rounded-lg p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-orange outline-hidden"
                                 >
                                     <option value={0}>Sunday</option>
                                     <option value={1}>Monday</option>

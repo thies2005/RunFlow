@@ -1,9 +1,83 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --color-background: var(--background);
+    --color-background-secondary: var(--background-secondary);
+    --color-background-tertiary: var(--background-tertiary);
+    --color-foreground: var(--foreground);
+    --color-foreground-muted: var(--foreground-muted);
+
+    --color-accent-orange: var(--accent-orange);
+    --color-accent-pink: var(--accent-pink);
+    --color-accent-purple: var(--accent-purple);
+    --color-accent-blue: #3a0ca3;
+    --color-accent-cyan: var(--accent-cyan);
+
+    --color-workout-long-run: rgb(168 85 247);
+    --color-workout-tempo: rgb(249 115 22);
+    --color-workout-interval: rgb(239 68 68);
+    --color-workout-race: rgb(234 179 8);
+    --color-workout-recovery: rgb(34 197 94);
+    --color-workout-strength: rgb(59 130 246);
+    --color-workout-easy: rgb(107 114 128);
+
+    --color-zone-1: #4ade80;
+    --color-zone-2: #a3e635;
+    --color-zone-3: #facc15;
+    --color-zone-4: #fb923c;
+    --color-zone-5: #ef4444;
+
+    --color-surface: var(--glass-bg);
+    --color-surface-hover: var(--glass-bg-hover);
+    --color-surface-active: var(--glass-border);
+
+    --color-glass-bg: var(--glass-bg);
+    --color-glass-bg-hover: var(--glass-bg-hover);
+    --color-glass-border: var(--glass-border);
+    --color-glass-border-hover: var(--glass-border-hover);
+
+    --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    --animate-glow: glow 2s ease-in-out infinite alternate;
+    --animate-slide-up: slideUp 0.3s ease-out;
+    --animate-fade-in: fadeIn 0.4s ease-out;
+
+    --backdrop-blur-xs: 2px;
+}
+
+@keyframes glow {
+    0% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.3); }
+    100% { box-shadow: 0 0 40px rgba(247, 37, 133, 0.4); }
+}
+@keyframes slideUp {
+    0% { transform: translateY(10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@layer base {
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
 
 :root {
-  /* Light Mode Defaults */
   --background: #f8fafc;
   --background-secondary: #ffffff;
   --background-tertiary: #f1f5f9;
@@ -16,18 +90,8 @@
   --accent-purple: #7209b7;
   --accent-cyan: #00b4d8;
 
-  /* Workout type colors */
-  --color-workout-long-run: 168 85 247;
-  --color-workout-tempo: 249 115 22;
-  --color-workout-interval: 239 68 68;
-  --color-workout-race: 234 179 8;
-  --color-workout-recovery: 34 197 94;
-  --color-workout-strength: 59 130 246;
-  --color-workout-easy: 107 114 128;
-
   --modal-backdrop-opacity: 0.6;
 
-  /* Glass/Surface variables */
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(0, 0, 0, 0.08);
   --glass-bg-hover: rgba(255, 255, 255, 0.85);
@@ -52,16 +116,6 @@
   --accent-purple: #7209b7;
   --accent-cyan: #4cc9f0;
 
-  /* Workout type colors (same as light mode) */
-  --color-workout-long-run: 168 85 247;
-  --color-workout-tempo: 249 115 22;
-  --color-workout-interval: 239 68 68;
-  --color-workout-race: 234 179 8;
-  --color-workout-recovery: 34 197 94;
-  --color-workout-strength: 59 130 246;
-  --color-workout-easy: 107 114 128;
-
-  /* Glass/Surface variables */
   --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.05) 100%);
@@ -89,7 +143,6 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Glassmorphism effect for cards */
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
@@ -104,7 +157,6 @@ body {
   border-color: var(--glass-border-hover);
 }
 
-/* Timeline node styling */
 .timeline-node {
   position: relative;
   padding-left: 1.5rem;
@@ -137,7 +189,6 @@ body {
   background: rgba(107, 114, 128, 0.2);
 }
 
-/* Safe Area support for mobile keyboards and notches */
 .pt-safe {
   padding-top: env(safe-area-inset-top, 1rem);
 }
@@ -145,7 +196,6 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 1rem);
 }
 
-/* Intensity gradient border */
 .intensity-border {
   position: relative;
 }
@@ -162,12 +212,10 @@ body {
   mask-composite: exclude;
 }
 
-/* Recovery gradient border */
 .recovery-border::before {
   background: linear-gradient(135deg, #4cc9f0, #4ade80);
 }
 
-/* Glow effects */
 .glow-orange {
   box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
 }
@@ -180,7 +228,6 @@ body {
   box-shadow: 0 0 30px rgba(76, 201, 240, 0.3);
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -199,7 +246,6 @@ body {
   background: var(--scrollbar-thumb-hover);
 }
 
-/* Button styles */
 .btn-primary {
   background: linear-gradient(135deg, #ff6b35 0%, #f72585 100%);
   color: white;
@@ -217,9 +263,7 @@ body {
 }
 
 .btn-secondary {
-  /* Adapted for light mode visibility */
   background: var(--background-tertiary);
-  /* Light: darker white, Dark: #12121a-ish */
   color: var(--foreground);
   font-weight: 500;
   padding: 0.75rem 1.5rem;
@@ -237,7 +281,6 @@ body {
 
 .btn-secondary:hover {
   background: var(--background-secondary);
-  /* or glass hover equivalent */
   border-color: var(--glass-border-hover);
 }
 
@@ -247,7 +290,6 @@ body {
 }
 
 
-/* Activity type badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -269,11 +311,9 @@ body {
 .badge-recovery {
   background: linear-gradient(135deg, rgba(76, 201, 240, 0.2), rgba(74, 222, 128, 0.2));
   color: #4cc9f0;
-  /* Check contrast in light mode, might need darkening */
   border: 1px solid rgba(76, 201, 240, 0.3);
 }
 
-/* Darker blue for light mode readability if needed */
 @media (prefers-color-scheme: light) {
   .badge-recovery {
     color: #0ea5e9;
@@ -286,14 +326,12 @@ body {
 .badge-easy {
   background: rgba(74, 222, 128, 0.15);
   color: #4ade80;
-  /* Light green - might be hard to read on white */
   border: 1px solid rgba(74, 222, 128, 0.3);
 }
 
 @media (prefers-color-scheme: light) {
   .badge-easy {
     color: #16a34a;
-    /* Darker green */
     background: rgba(22, 163, 74, 0.1);
     border-color: rgba(22, 163, 74, 0.2);
   }
@@ -308,7 +346,6 @@ body {
 @media (prefers-color-scheme: light) {
   .badge-tempo {
     color: #ca8a04;
-    /* Darker yellow/gold */
     background: rgba(202, 138, 4, 0.1);
     border-color: rgba(202, 138, 4, 0.2);
   }
@@ -320,7 +357,6 @@ body {
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
-/* Zone colors */
 .zone-1 {
   color: #4ade80;
 }
@@ -366,7 +402,6 @@ body {
 }
 
 
-/* Stat display */
 .stat-value {
   font-size: 2.5rem;
   font-weight: 700;
@@ -384,7 +419,6 @@ body {
   background-clip: text;
 }
 
-/* Animations */
 @keyframes pulse-glow {
 
   0%,
@@ -417,7 +451,6 @@ body {
   animation: slide-in 0.4s ease-out forwards;
 }
 
-/* Strava connect button */
 .btn-strava {
   background: #fc4c02;
   color: white;
@@ -438,7 +471,6 @@ body {
   box-shadow: 0 8px 25px rgba(252, 76, 2, 0.4);
 }
 
-/* Form inputs and Selects */
 select,
 input,
 textarea {
@@ -454,14 +486,11 @@ textarea {
   }
 }
 
-/* --- Capacitor Barcode Scanner Hacks --- */
 body.barcode-scanner-active {
   background: transparent !important;
   visibility: hidden;
-  /* Hides all Next.js UI including opaque backgrounds */
 }
 
-/* But keep our modal wrapper visible! */
 body.barcode-scanner-active .barcode-scanner-modal {
   visibility: visible;
 }

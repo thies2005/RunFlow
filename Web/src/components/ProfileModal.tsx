@@ -389,7 +389,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
     if (!isOpen) return null;
 
-    const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
         <>

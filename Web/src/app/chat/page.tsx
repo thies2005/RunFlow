@@ -34,7 +34,7 @@ function ChatContent() {
             {/* Mobile Sidebar Drawer */}
             {isMobileSidebarOpen && (
                 <div className="fixed inset-0 z-50 md:hidden flex">
-                    <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm" onClick={() => setIsMobileSidebarOpen(false)} />
+                    <div className="fixed inset-0 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-xs" onClick={() => setIsMobileSidebarOpen(false)} />
                     <aside className="relative w-[280px] bg-[#1c1c1e] h-full shadow-2xl animate-in slide-in-from-left duration-200">
                         <div className="absolute top-2 right-2 z-10">
                             <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 text-gray-400 hover:text-white">

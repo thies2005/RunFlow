@@ -18,7 +18,7 @@ export default function PromptLibrary({ isOpen, onClose, onSelectPrompt }: Promp
     const activeCategory = PROMPT_LIBRARY.find((c) => c.category === selectedCategory);
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/[var(--modal-backdrop-opacity)] backdrop-blur-xs">
             <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-white/5">

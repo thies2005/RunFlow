@@ -148,7 +148,7 @@ export default function OnboardingWizard() {
                                     <select
                                         value={importRange}
                                         onChange={(e) => setImportRange(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-accent-orange outline-none"
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white focus:ring-2 focus:ring-accent-orange outline-hidden"
                                     >
                                         <option value="1_MONTH">Last Month</option>
                                         <option value="3_MONTHS">Last 3 Months</option>

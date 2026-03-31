@@ -122,7 +122,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
 
     return (
         <>
-            <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center">
+            <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60 backdrop-blur-xs sm:items-center sm:justify-center">
                 <div
                     className="bg-[#1c1c1e] w-full max-w-md rounded-t-2xl sm:rounded-2xl flex flex-col max-h-[90vh] shadow-2xl overflow-hidden animate-in slide-in-from-bottom"
                 >
@@ -207,7 +207,7 @@ export function AddSupplementModal({ isOpen, onClose, supplementToEdit }: AddSup
                                         key={opt.value}
                                         type="button"
                                         onClick={() => setTimeOfDay(opt.value)}
-                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${timeOfDay === opt.value ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${timeOfDay === opt.value ? 'bg-white/10 text-white shadow-xs' : 'text-gray-400 hover:text-gray-300'}`}
                                     >
                                         {opt.label}
                                     </button>

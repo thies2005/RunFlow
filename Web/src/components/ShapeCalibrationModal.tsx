@@ -302,7 +302,7 @@ export default function ShapeCalibrationModal({
                         <div className="space-y-2">
                             <label className="text-sm text-foreground-muted">Auto-fill from Recent Activity</label>
                             <select
-                                className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground text-sm focus:border-accent-cyan outline-none"
+                                className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground text-sm focus:border-accent-cyan outline-hidden"
                                 value={selectedActivityId}
                                 onChange={(e) => handleActivitySelect(e.target.value)}
                             >
@@ -327,7 +327,7 @@ export default function ShapeCalibrationModal({
                                     <div className="flex gap-2">
                                         <input
                                             type="number"
-                                            className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-none"
+                                            className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-hidden"
                                             placeholder="Meters"
                                             value={customDistanceMeters}
                                             onChange={(e) => setCustomDistanceMeters(e.target.value)}
@@ -342,7 +342,7 @@ export default function ShapeCalibrationModal({
                                 ) : (
                                     <div className="flex gap-2">
                                         <select
-                                            className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-none"
+                                            className="w-full bg-background-secondary border border-glass-border rounded px-3 py-2 text-foreground focus:border-accent-cyan outline-hidden"
                                             value={vdotRaceType}
                                             onChange={(e) => setVdotRaceType(e.target.value as RaceType)}
                                         >

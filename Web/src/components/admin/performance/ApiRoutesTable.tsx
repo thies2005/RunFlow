@@ -63,7 +63,7 @@ export default function ApiRoutesTable({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
       <div className="p-6 border-b border-gray-100">
         <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
           <Zap className="w-5 h-5" />

@@ -401,7 +401,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 onKeyDown={handleKeyDown}
                                 placeholder="Ask about this activity..."
                                 disabled={isStreaming}
-                                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none disabled:opacity-50"
+                                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:border-purple-500 focus:outline-hidden disabled:opacity-50"
                             />
                             <button onClick={handleSend} disabled={!input.trim() || isStreaming} className="p-2 bg-purple-600 hover:bg-purple-500 rounded-lg disabled:opacity-50">
                                 {isStreaming ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
@@ -487,7 +487,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                 const isThinking = isStreaming && i === messages.length - 1 && msg.role === 'assistant' && msg.content && !cleanedContent;
                                 return (
                                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] rounded-2xl px-5 py-3 shadow-sm ${msg.role === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-white border border-gray-700'}`}>
+                                        <div className={`max-w-[85%] rounded-2xl px-5 py-3 shadow-xs ${msg.role === 'user' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-white border border-gray-700'}`}>
                                             <div className="text-sm sm:text-base leading-relaxed markdown-content">
                                                 {isThinking ? (
                                                     <div className="flex items-center gap-2 text-gray-400 italic">
@@ -619,7 +619,7 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Message AI..."
-                        className="flex-1 min-w-0 bg-transparent px-4 py-2 text-white placeholder-gray-400 focus:outline-none"
+                        className="flex-1 min-w-0 bg-transparent px-4 py-2 text-white placeholder-gray-400 focus:outline-hidden"
                     />
 
                     {(input.trim() || isStreaming) && (

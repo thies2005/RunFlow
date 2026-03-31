@@ -46,7 +46,7 @@ export default function CalibrationSection({
     effectiveVO2max,
     raceActivities
 }: CalibrationSectionProps) {
-    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     const formatActivityOption = (activity: RaceActivity) => {
         const date = new Date(activity.startDate).toLocaleDateString();

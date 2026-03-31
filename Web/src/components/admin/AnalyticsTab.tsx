@@ -29,7 +29,7 @@ export default function AnalyticsTab() {
     return (
         <div className="space-y-6">
             {/* Daily Token Usage Chart */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <div className="bg-white p-6 rounded-xl shadow-xs border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Daily Token Usage (Last 30 Days)</h3>
                 <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -51,7 +51,7 @@ export default function AnalyticsTab() {
             </div>
 
             {/* Top Users Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100">
                     <h3 className="text-lg font-bold text-gray-800">Top Users (This Month)</h3>
                 </div>

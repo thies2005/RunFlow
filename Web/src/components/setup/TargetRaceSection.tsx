@@ -27,7 +27,7 @@ export default function TargetRaceSection({
 }: TargetRaceSectionProps) {
     if (mode !== 'onboarding') return null;
 
-    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
         <div className="space-y-4">

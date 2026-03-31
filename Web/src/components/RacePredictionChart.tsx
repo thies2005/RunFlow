@@ -96,7 +96,7 @@ function RacePredictionChart({
                         value={simulatedVO2Max}
                         onChange={(e) => setSimulatedVO2Max(parseFloat(e.target.value) || 0)}
                         step="0.1"
-                        className="w-16 bg-transparent text-accent-orange font-bold text-right focus:outline-none focus:border-b focus:border-accent-orange"
+                        className="w-16 bg-transparent text-accent-orange font-bold text-right focus:outline-hidden focus:border-b focus:border-accent-orange"
                     />
                 </div>
             </div>

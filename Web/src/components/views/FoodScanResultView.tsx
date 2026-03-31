@@ -169,7 +169,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-sm sm:items-center sm:justify-center">
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/80 backdrop-blur-xs sm:items-center sm:justify-center">
             <div className="bg-[#1c1c1e] w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] sm:rounded-2xl flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-white/10 shrink-0">
@@ -304,7 +304,7 @@ export function FoodScanResultView({ isOpen, result, onClose, onLogSuccess }: Pr
                     <select
                         value={mealType}
                         onChange={e => setMealType(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none appearance-none text-sm"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-hidden appearance-none text-sm"
                     >
                         <option value="BREAKFAST">🌅 Breakfast</option>
                         <option value="LUNCH">☀️ Lunch</option>

@@ -86,7 +86,7 @@ export default function RaceActivityPicker({ raceDate, selectedId, onSelect }: R
                     placeholder="Search by name..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-accent-orange transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-gray-500 outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
                 />
             </div>
 

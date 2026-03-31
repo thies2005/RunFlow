@@ -404,7 +404,7 @@ function EditRaceResult({ goal, onClose }: { goal: CompletedGoalSummary; onClose
         onError: () => setMessage('Error saving'),
     });
 
-    const inputClass = "bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm w-full outline-none focus:ring-2 focus:ring-accent-orange transition-all";
+    const inputClass = "bg-white/5 border border-white/10 rounded-lg p-2 text-white text-sm w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
         <div className="bg-white/5 border border-accent-orange/30 rounded-xl p-3 space-y-3">

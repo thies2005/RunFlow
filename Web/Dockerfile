@@ -21,6 +21,11 @@ FROM node:24-alpine AS builder
 ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 
+# Prisma generate needs DATABASE_URL in prisma.config.ts but doesn't connect.
+# Dummy default is fine; the real URL is provided at runtime by the container env.
+ARG DATABASE_URL=postgresql://localhost:5432/dummy
+ENV DATABASE_URL=$DATABASE_URL
+
 RUN apk add --no-cache openssl libc6-compat
 WORKDIR /app
 

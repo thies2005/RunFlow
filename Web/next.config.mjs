@@ -175,8 +175,6 @@ const nextConfig = {
     output: "standalone",
     compress: true,
     experimental: {
-        workerThreads: false,
-        cpus: 3,
         optimizePackageImports: ["lucide-react", "date-fns", "@tanstack/react-query"],
     },
     images: {

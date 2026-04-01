@@ -1002,7 +1002,6 @@ async function generateGoogleCompletion(
                 }
             }),
             allowedUrls: [config.baseUrl],
-            }),
         });
 
         if (response.ok) break;

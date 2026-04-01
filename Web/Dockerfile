@@ -32,11 +32,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
+# Generate Prisma client (cached across builds when schema unchanged)
+RUN --mount=type=cache,target=/app/src/generated \
+    npx prisma generate
 
 # Build Next.js with cache and memory limit
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV SENTRY_DISABLE_SOURCEMAP_UPLOAD=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 RUN --mount=type=cache,target=/app/.next/cache \

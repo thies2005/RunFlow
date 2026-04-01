@@ -37,6 +37,7 @@ const authConfig = {
         StravaProvider({
             clientId: process.env.STRAVA_CLIENT_ID!,
             clientSecret: process.env.STRAVA_CLIENT_SECRET!,
+            allowDangerousEmailAccountLinking: true,
             authorization: {
                 params: {
                     scope: 'read,activity:read_all,profile:read_all',
@@ -90,62 +91,70 @@ const authConfig = {
     ],
     callbacks: {
         async signIn({ account }) {
-            if (account?.provider === 'credentials') {
-                return true;
-            }
+            try {
+                if (account?.provider === 'credentials') {
+                    return true;
+                }
 
-            if (account && 'athlete' in account) {
-                delete (account as Record<string, unknown> & { athlete?: unknown }).athlete;
-            }
+                if (account && 'athlete' in account) {
+                    delete (account as Record<string, unknown> & { athlete?: unknown }).athlete;
+                }
 
-            const encryptedAccess = tryEncryptOrPlaintextToken(
-                account?.access_token,
-                'access',
-                account?.providerAccountId
-            );
-            const encryptedRefresh = tryEncryptOrPlaintextToken(
-                account?.refresh_token,
-                'refresh',
-                account?.providerAccountId
-            );
+                const encryptedAccess = tryEncryptOrPlaintextToken(
+                    account?.access_token,
+                    'access',
+                    account?.providerAccountId
+                );
+                const encryptedRefresh = tryEncryptOrPlaintextToken(
+                    account?.refresh_token,
+                    'refresh',
+                    account?.providerAccountId
+                );
 
-            if (account?.provider === 'strava' && account.providerAccountId) {
-                try {
-                    const existingAccount = await prisma.account.findUnique({
-                        where: {
-                            provider_providerAccountId: {
-                                provider: 'strava',
-                                providerAccountId: account.providerAccountId,
-                            },
-                        },
-                    });
-
-                    if (existingAccount) {
-                        await prisma.account.update({
-                            where: { id: existingAccount.id },
-                            data: {
-                                access_token: encryptedAccess,
-                                refresh_token: encryptedRefresh,
-                                expires_at: account.expires_at,
-                                token_type: account.token_type,
-                                scope: account.scope,
+                if (account?.provider === 'strava' && account.providerAccountId) {
+                    try {
+                        const existingAccount = await prisma.account.findUnique({
+                            where: {
+                                provider_providerAccountId: {
+                                    provider: 'strava',
+                                    providerAccountId: account.providerAccountId,
+                                },
                             },
                         });
-                        logger.info('Force-updated Strava tokens', { userId: existingAccount.userId });
+
+                        if (existingAccount) {
+                            await prisma.account.update({
+                                where: { id: existingAccount.id },
+                                data: {
+                                    access_token: encryptedAccess,
+                                    refresh_token: encryptedRefresh,
+                                    expires_at: account.expires_at,
+                                    token_type: account.token_type,
+                                    scope: account.scope,
+                                },
+                            });
+                            logger.info('Force-updated Strava tokens', { userId: existingAccount.userId });
+                        }
+                    } catch (err) {
+                        logger.error('Failed to force-update Strava tokens', { error: err instanceof Error ? err.message : String(err) });
                     }
-                } catch (err) {
-                    logger.error('Failed to force-update Strava tokens', { error: err instanceof Error ? err.message : String(err) });
                 }
-            }
 
-            if (account?.access_token) {
-                (account as unknown as Record<string, unknown>).access_token = encryptedAccess ?? undefined;
-            }
-            if (account?.refresh_token) {
-                (account as unknown as Record<string, unknown>).refresh_token = encryptedRefresh ?? undefined;
-            }
+                if (account?.access_token) {
+                    (account as unknown as Record<string, unknown>).access_token = encryptedAccess ?? undefined;
+                }
+                if (account?.refresh_token) {
+                    (account as unknown as Record<string, unknown>).refresh_token = encryptedRefresh ?? undefined;
+                }
 
-            return true;
+                return true;
+            } catch (error) {
+                logger.error('Unexpected sign-in callback error, continuing auth flow', {
+                    provider: account?.provider,
+                    error: error instanceof Error ? error.message : String(error),
+                });
+                return true;
+            }
         },
         async jwt({ token, user }) {
             if (user) {

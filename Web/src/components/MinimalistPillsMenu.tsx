@@ -102,21 +102,73 @@ function MobilePanel({
 }) {
     const { theme, setTheme } = useTheme();
 
+    const handleBack = useCallback(() => {
+        if (subPage) {
+            setSubPage(null);
+        } else {
+            onClose();
+        }
+    }, [subPage, setSubPage, onClose]);
+
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => { document.body.style.overflow = ''; };
     }, []);
 
+    useEffect(() => {
+        let isCancelled = false;
+        let backListener: any = null;
+
+        const setupCapacitor = async () => {
+            try {
+                const { Capacitor } = await import('@capacitor/core');
+                if (Capacitor.isNativePlatform()) {
+                    const { App } = await import('@capacitor/app');
+                    const listener = await App.addListener('backButton', () => {
+                        if (!isCancelled) handleBack();
+                    });
+                    if (isCancelled) {
+                        listener.remove();
+                    } else {
+                        backListener = listener;
+                    }
+                }
+            } catch {
+                // non-capacitor environment
+            }
+        };
+        setupCapacitor();
+
+        return () => {
+            isCancelled = true;
+            if (backListener) backListener.remove();
+        };
+    }, [handleBack]);
+
     const menuItems = getMenuItems(session, theme);
+
+    const currentSubPageLabel = subPage
+        ? menuItems.find(i => i.subPage === subPage)?.label || 'Settings'
+        : null;
 
     return (
         <div className="fixed inset-0 z-[200] bg-background animate-fade-in">
             <div className="h-full flex flex-col">
                 {subPage ? (
-                    <SubPageContent
-                        subPage={subPage}
-                        onBack={() => setSubPage(null)}
-                    />
+                    <>
+                        <div className="flex items-center gap-2 px-4 pt-safe pb-2 border-b border-glass-border">
+                            <button onClick={handleBack} className="text-foreground-muted hover:text-foreground p-1 -ml-1">
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <span className="text-sm font-semibold text-foreground">{currentSubPageLabel}</span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            <SubPageContent
+                                subPage={subPage}
+                                onBack={() => setSubPage(null)}
+                            />
+                        </div>
+                    </>
                 ) : (
                     <>
                         <div className="flex items-center justify-between px-4 pt-safe pb-2">
@@ -244,7 +296,7 @@ function DesktopPopover({
         return (
             <div
                 ref={popoverRef}
-                className="fixed top-16 right-4 z-[200] w-80 glass-card shadow-2xl rounded-2xl overflow-hidden animate-slide-in-from-top-2"
+                className="fixed top-16 right-4 z-[200] w-80 bg-background/95 backdrop-blur-xl border border-glass-border shadow-2xl rounded-2xl overflow-hidden animate-slide-in-from-top-2"
             >
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-glass-border">
                     <button onClick={() => setSubPage(null)} className="text-foreground-muted hover:text-foreground">
@@ -264,7 +316,7 @@ function DesktopPopover({
     return (
         <div
             ref={popoverRef}
-            className="fixed top-16 right-4 z-[200] w-72 glass-card shadow-2xl rounded-2xl overflow-hidden animate-slide-in-from-top-2"
+            className="fixed top-16 right-4 z-[200] w-72 bg-background/95 backdrop-blur-xl border border-glass-border shadow-2xl rounded-2xl overflow-hidden animate-slide-in-from-top-2"
         >
             <div className="p-3 border-b border-glass-border">
                 <p className="text-sm font-semibold text-foreground truncate">{session.user.name}</p>

@@ -298,6 +298,7 @@ export async function POST(request: NextRequest) {
                     ridesPerWeek: ridesPerWeek ?? 0,
                     strengthPerWeek: strengthPerWeek ?? 0,
                     swimsPerWeek: swimsPerWeek ?? 0,
+                    weeklyMileageGoal: weeklyMileageGoal || null,
                     taperWeeks: taperWeeks ?? 2,
                     peakWeeks: peakWeeks ?? 4,
                     buildWeeks: buildWeeks ?? 4,

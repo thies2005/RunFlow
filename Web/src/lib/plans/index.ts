@@ -231,13 +231,13 @@ function getPhase(
     weeksUntilRace: number,
     options?: { taperWeeks?: number; peakWeeks?: number; buildWeeks?: number }
 ): Phase {
-    const taperWeeks = options?.taperWeeks ?? 2;
-    const peakWeeks = options?.peakWeeks ?? 4;
-    const buildWeeks = options?.buildWeeks ?? 4;
+    const taperWeeks = options?.taperWeeks ?? 0;
+    const peakWeeks = options?.peakWeeks ?? 0;
+    const buildWeeks = options?.buildWeeks ?? 0;
 
-    if (weeksUntilRace <= taperWeeks) return 'TAPER';
-    if (weeksUntilRace <= taperWeeks + peakWeeks) return 'PEAK';
-    if (weeksUntilRace <= taperWeeks + peakWeeks + buildWeeks) return 'BUILD';
+    if (taperWeeks > 0 && weeksUntilRace <= taperWeeks) return 'TAPER';
+    if (peakWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks) return 'PEAK';
+    if (buildWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks + buildWeeks) return 'BUILD';
     return 'BASE';
 }
 
@@ -477,9 +477,87 @@ function generateWeek(params: {
         }
     }
 
-    const strengthDays = getDistributedDays(strengthPerWeek, usedDays, true, workouts);
-    for (const d of strengthDays) {
+    const longRunDay = workouts.find(w => w.type === WorkoutType.LONG_RUN)?.dayOffset;
+    const qualityDay = workouts.find(w =>
+        w.type === WorkoutType.INTERVALS || w.type === WorkoutType.TEMPO ||
+        w.type === WorkoutType.REPETITIONS || w.type === WorkoutType.EASY && w.description.includes('Fartlek')
+    )?.dayOffset;
+
+    const protectedDays = new Set<number>();
+    if (longRunDay !== undefined) protectedDays.add(longRunDay);
+    if (qualityDay !== undefined) protectedDays.add(qualityDay);
+
+    const totalCardio = ridesPerWeek + swimsPerWeek;
+    const cardioFreeDays = getAvailableCrossTrainingDays(totalCardio, usedDays, protectedDays);
+    let remainingRides = ridesPerWeek;
+    let remainingSwims = swimsPerWeek;
+
+    for (const d of cardioFreeDays) {
         usedDays.add(d);
+        if (remainingRides > 0) {
+            remainingRides--;
+            workouts.push({
+                dayOffset: d,
+                type: WorkoutType.RIDE,
+                description: 'Bike Ride: 60min (Zone 1-2)',
+                totalDistance: 0,
+                targetPace: 0,
+                targetDuration: 3600,
+            });
+        } else if (remainingSwims > 0) {
+            remainingSwims--;
+            workouts.push({
+                dayOffset: d,
+                type: WorkoutType.SWIM,
+                description: 'Swim: 1500m @ Easy',
+                totalDistance: 1500,
+                targetPace: 120,
+                targetDuration: 2700,
+            });
+        }
+    }
+
+    if (remainingRides > 0 || remainingSwims > 0) {
+        const overloadDays = getDistributedDays(remainingRides + remainingSwims, usedDays, true, workouts);
+        for (const d of overloadDays) {
+            usedDays.add(d);
+            if (remainingRides > 0) {
+                remainingRides--;
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.RIDE,
+                    description: 'Bike Ride: 60min (Zone 1-2)',
+                    totalDistance: 0,
+                    targetPace: 0,
+                    targetDuration: 3600,
+                });
+            } else if (remainingSwims > 0) {
+                remainingSwims--;
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.SWIM,
+                    description: 'Swim: 1500m @ Easy',
+                    totalDistance: 1500,
+                    targetPace: 120,
+                    targetDuration: 2700,
+                });
+            }
+        }
+    }
+
+    const cardioDays = new Set<number>();
+    workouts.forEach(w => {
+        if (w.type === WorkoutType.RIDE || w.type === WorkoutType.SWIM) {
+            cardioDays.add(w.dayOffset);
+        }
+    });
+
+    const strengthOnCardio = Math.min(strengthPerWeek, cardioDays.size);
+    const strengthOnFree = strengthPerWeek - strengthOnCardio;
+
+    const cardioDaysArray = Array.from(cardioDays);
+    for (let i = 0; i < strengthOnCardio; i++) {
+        const d = cardioDaysArray[i % cardioDaysArray.length];
         workouts.push({
             dayOffset: d,
             type: WorkoutType.STRENGTH,
@@ -490,30 +568,19 @@ function generateWeek(params: {
         });
     }
 
-    const rideDays = getDistributedDays(ridesPerWeek, usedDays, true, workouts);
-    for (const d of rideDays) {
-        usedDays.add(d);
-        workouts.push({
-            dayOffset: d,
-            type: WorkoutType.RIDE,
-            description: 'Bike Ride: 60min (Zone 1-2)',
-            totalDistance: 0,
-            targetPace: 0,
-            targetDuration: 3600,
-        });
-    }
-
-    const swimDays = getDistributedDays(swimsPerWeek, usedDays, true, workouts);
-    for (const d of swimDays) {
-        usedDays.add(d);
-        workouts.push({
-            dayOffset: d,
-            type: WorkoutType.SWIM,
-            description: 'Swim: 1500m @ Easy',
-            totalDistance: 1500,
-            targetPace: 120,
-            targetDuration: 2700,
-        });
+    if (strengthOnFree > 0) {
+        const strengthFreeDays = getDistributedDays(strengthOnFree, usedDays, true, workouts);
+        for (const d of strengthFreeDays) {
+            usedDays.add(d);
+            workouts.push({
+                dayOffset: d,
+                type: WorkoutType.STRENGTH,
+                description: 'Strength: 45min Session',
+                totalDistance: 0,
+                targetPace: 0,
+                targetDuration: 2700,
+            });
+        }
     }
 
     return workouts;
@@ -660,6 +727,31 @@ function getMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
         totalDistance: 14000,
         targetPace: paces.threshold,
     };
+}
+
+function getAvailableCrossTrainingDays(count: number, usedDays: Set<number>, protectedDays: Set<number>): number[] {
+    if (count <= 0) return [];
+
+    const available: number[] = [];
+    for (let d = 0; d < 7; d++) {
+        if (!usedDays.has(d) && !protectedDays.has(d)) available.push(d);
+    }
+
+    const toTake = Math.min(count, available.length);
+    const idealInterval = available.length / toTake;
+    const selected: number[] = [];
+    const pickedIndices: number[] = [];
+
+    for (let i = 0; i < toTake; i++) {
+        const targetIndex = Math.floor(i * idealInterval);
+        const idx = Math.min(targetIndex, available.length - 1);
+        if (!pickedIndices.includes(idx)) {
+            pickedIndices.push(idx);
+            selected.push(available[idx]);
+        }
+    }
+
+    return selected;
 }
 
 function getDistributedDays(count: number, usedDays: Set<number>, allowDoubleDays = false, existingWorkouts: ScheduledWorkout[] = []): number[] {

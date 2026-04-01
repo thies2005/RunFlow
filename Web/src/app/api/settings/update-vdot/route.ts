@@ -195,7 +195,7 @@ export async function POST(req: NextRequest) {
             const mileageGoal = weeklyMileageGoal || null; // meters
 
             // Phase settings (use provided or defaults)
-            let taper = taperWeeks || 2;
+            let taper = taperWeeks ?? 2;
             let peak = peakWeeks || 4;
             let build = buildWeeks || 4;
 

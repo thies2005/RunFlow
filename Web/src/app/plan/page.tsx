@@ -260,7 +260,7 @@ export default function PlanPage() {
                             {sortedWeeks.map((weekStartIso, index) => {
                                 const weekStart = new Date(weekStartIso);
                                 const weekEnd = addDays(weekStart, 6);
-                                const weeksUntilRace = differenceInWeeks(raceDate, weekStart);
+                                const weeksUntilRace = differenceInWeeks(raceDate, weekStart) + 1;
                                 const phase = getPhase(weeksUntilRace, {
                                     taperWeeks: goal.taperWeeks ?? undefined,
                                     peakWeeks: goal.peakWeeks ?? undefined,

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { format, addDays, isToday, isSameDay, differenceInWeeks, isBefore } from 'date-fns';
+import { format, addDays, isToday, isSameDay, differenceInWeeks, isBefore, startOfWeek } from 'date-fns';
 import { DraggableWorkout } from '@/app/plan/components/DraggableWorkout';
 import { DroppableDay } from '@/app/plan/components/DroppableDay';
 import { getPhase, formatDuration, RUN_TYPES } from '@/lib/plan/utils';
@@ -38,7 +38,8 @@ export const PlanWeek = memo(function PlanWeek({
 }: PlanWeekProps) {
     const weekStart = new Date(weekStartIso);
     const weekEnd = addDays(weekStart, 6);
-    const weeksUntilRace = differenceInWeeks(raceDate, weekStart);
+    const raceWeekStart = startOfWeek(raceDate, { weekStartsOn: 1 });
+    const weeksUntilRace = differenceInWeeks(raceWeekStart, weekStart) + 1;
     const phase = getPhase(weeksUntilRace, { taperWeeks, peakWeeks, buildWeeks });
     const isPastOrCurrent = isBefore(weekStart, new Date());
 

@@ -18,13 +18,13 @@ export const RUN_TYPES = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 
 export const SWIM_TYPES = ['SWIM'];
 
 export function getPhase(weeksUntilRace: number, options?: { taperWeeks?: number; peakWeeks?: number; buildWeeks?: number }) {
-    const taperWeeks = options?.taperWeeks ?? 2;
-    const peakWeeks = options?.peakWeeks ?? 4;
-    const buildWeeks = options?.buildWeeks ?? 4;
+    const taperWeeks = options?.taperWeeks ?? 0;
+    const peakWeeks = options?.peakWeeks ?? 0;
+    const buildWeeks = options?.buildWeeks ?? 0;
 
-    if (weeksUntilRace <= taperWeeks) return { name: 'TAPER', color: 'text-teal-400 border-teal-500/30 bg-teal-500/10' };
-    if (weeksUntilRace <= taperWeeks + peakWeeks) return { name: 'PEAK', color: 'text-purple-400 border-purple-500/30 bg-purple-500/10' };
-    if (weeksUntilRace <= taperWeeks + peakWeeks + buildWeeks) return { name: 'BUILD', color: 'text-orange-400 border-orange-500/30 bg-orange-500/10' };
+    if (taperWeeks > 0 && weeksUntilRace <= taperWeeks) return { name: 'TAPER', color: 'text-teal-400 border-teal-500/30 bg-teal-500/10' };
+    if (peakWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks) return { name: 'PEAK', color: 'text-purple-400 border-purple-500/30 bg-purple-500/10' };
+    if (buildWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks + buildWeeks) return { name: 'BUILD', color: 'text-orange-400 border-orange-500/30 bg-orange-500/10' };
     return { name: 'BASE', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' };
 }
 

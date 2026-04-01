@@ -502,12 +502,85 @@ describe('Training Plan Generation', () => {
                 types.add(w.type);
             }
         });
+
+        it('bike rides avoid long run day when free days are available', () => {
+            const config = makeConfig({
+                runsPerWeek: 4,
+                ridesPerWeek: 1,
+                strengthPerWeek: 0,
+                swimsPerWeek: 0,
+            });
+            const workouts = generateTrainingPlan(config);
+            const weeks = groupByWeek(workouts);
+            for (const week of weeks) {
+                const longRun = week.find(w => w.type === WorkoutType.LONG_RUN);
+                const rides = week.filter(w => w.type === WorkoutType.RIDE);
+                if (!longRun || rides.length === 0) continue;
+                const longRunDayKey = longRun.date.toISOString().split('T')[0];
+                for (const ride of rides) {
+                    const rideDayKey = ride.date.toISOString().split('T')[0];
+                    expect(rideDayKey).not.toBe(longRunDayKey);
+                }
+            }
+        });
+
+        it('strength combines with cardio days before creating new double days', () => {
+            const config = makeConfig({
+                runsPerWeek: 4,
+                ridesPerWeek: 1,
+                strengthPerWeek: 1,
+                swimsPerWeek: 0,
+            });
+            const workouts = generateTrainingPlan(config);
+            const dayWorkouts = new Map<string, Set<string>>();
+            workouts.forEach(w => {
+                const dayKey = w.date.toISOString().split('T')[0];
+                if (!dayWorkouts.has(dayKey)) dayWorkouts.set(dayKey, new Set());
+                dayWorkouts.get(dayKey)!.add(w.type);
+            });
+            let strengthOnCardioDay = 0;
+            dayWorkouts.forEach((types) => {
+                if (types.has(WorkoutType.STRENGTH) && (types.has(WorkoutType.RIDE) || types.has(WorkoutType.SWIM))) {
+                    strengthOnCardioDay++;
+                }
+            });
+            expect(strengthOnCardioDay).toBeGreaterThan(0);
+        });
+
+        it('double cardio only occurs when all free days are exhausted', () => {
+            const config = makeConfig({
+                runsPerWeek: 4,
+                ridesPerWeek: 2,
+                strengthPerWeek: 1,
+                swimsPerWeek: 1,
+            });
+            const workouts = generateTrainingPlan(config);
+            const weeks = groupByWeek(workouts);
+            let doubleCardioWeeks = 0;
+            let freeDayExhaustedWeeks = 0;
+            for (const week of weeks) {
+                const dayWorkouts = new Map<string, number>();
+                week.forEach(w => {
+                    const key = w.date.toISOString().split('T')[0];
+                    dayWorkouts.set(key, (dayWorkouts.get(key) || 0) + 1);
+                });
+                const hasDoubleCardio = Array.from(dayWorkouts.values()).some(c => c >= 3);
+                if (hasDoubleCardio) {
+                    doubleCardioWeeks++;
+                    const totalDays = dayWorkouts.size;
+                    if (totalDays >= 7) freeDayExhaustedWeeks++;
+                }
+            }
+            if (doubleCardioWeeks > 0) {
+                expect(freeDayExhaustedWeeks).toBe(doubleCardioWeeks);
+            }
+        });
     });
 });
 
-function groupByWeek(workouts: { date: Date }[]): { date: Date }[][] {
-    const weeks: { date: Date }[][] = [];
-    let currentWeek: { date: Date }[] = [];
+function groupByWeek(workouts: { date: Date; type?: string; totalDistance?: number }[]): { date: Date; type?: string; totalDistance?: number }[][] {
+    const weeks: { date: Date; type?: string; totalDistance?: number }[][] = [];
+    let currentWeek: { date: Date; type?: string; totalDistance?: number }[] = [];
     let lastDay = -1;
 
     for (const w of workouts) {

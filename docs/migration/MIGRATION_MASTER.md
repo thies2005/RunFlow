@@ -4,6 +4,16 @@
 
 Upgrade RunFlow's core dependency stack to the selected LTS/stable targets across 6 isolated phases. Each phase produces a green, deployable build.
 
+## Current Status (Post-Migration)
+
+- Migration phases 01-06 are complete on `master`.
+- Runtime hardening after the migration included:
+  - Strava `providerAccountId` coercion in the auth adapter (Int -> String safety)
+  - Removal of custom PKCE cookie overrides to rely on Auth.js v5 defaults
+  - Token encrypt/decrypt plaintext fallback for legacy/rotated key scenarios
+  - Build tuning: re-enabled Next.js worker threads and removed CPU cap
+- Deployment focus shifted from compile errors to runtime auth stability and build resource behavior in Coolify.
+
 ## Version Matrix
 
 | Component | Current | Target | Phase |
@@ -81,7 +91,7 @@ Phase 06 — Audit + Cleanup (patch deps, lint, typecheck, test, summary log)
    - Security-sensitive logic unchanged (or change is documented).
    - Diff is minimal and safe.
 5. Reviewer approves or requests changes.
-6. Merge to main only after approval.
+6. Merge to `master` only after approval.
 
 ## Common Validation Commands
 

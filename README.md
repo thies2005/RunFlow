@@ -2,7 +2,7 @@
 
 RunFlow is a production-grade running performance dashboard that combines structured training plans with deep analytics. It features a robust web platform and a Hybrid Mobile App.
 
-- **Web Platform & PWA**: Containerized Next.js application for easy deployment.
+- **Web Platform & PWA**: Containerized Next.js 15 application with App Router and standalone output.
 - **Mobile App (Android)**: Hybrid application built with Capacitor, providing native capabilities like Health Connect integration.
 
 [**>>> Full Documentation <<<**](Web/DOCUMENTATION.md) — API reference, metrics formulas, and architecture.
@@ -12,9 +12,11 @@ RunFlow is a production-grade running performance dashboard that combines struct
 
 ## 🏗️ Architecture
 
-- **Frontend/Backend**: Next.js 14 App Router (Service Layer Architecture).
+- **Frontend/Backend**: Next.js 15 + React 19 App Router (Service Layer Architecture).
 - **Mobile**: Capacitor (Hybrid) Android App.
 - **Database**: PostgreSQL 16.
+- **ORM/Auth**: Prisma 7 + NextAuth v5 (Strava OAuth + credentials).
+- **Styling**: Tailwind CSS 4.
 - **Physics**: Custom implementation of Runalyze TRIMP, CTL/ATL/TSB, and Effective VO2max (7-Zone HR Model).
 
 ---
@@ -45,6 +47,8 @@ nano .env
 
 **Key `.env` Variables**:
 - `NEXTAUTH_URL`: Your server URL (e.g., `https://run.yourdomain.com`).
+- `NEXTAUTH_SECRET`: Auth secret (`openssl rand -base64 32`).
+- `AUTH_URL` / `AUTH_SECRET` / `AUTH_TRUST_HOST`: Optional aliases for Auth.js v5 deployments behind reverse proxies.
 - `STRAVA_CLIENT_ID` / `SECRET`: From [Strava API Settings](https://www.strava.com/settings/api).
 - `JWT_SECRET`: For mobile app authentication (`openssl rand -base64 32`).
 
@@ -59,7 +63,7 @@ docker compose up -d --build
 ### 4. Updates
 To update the web application:
 ```bash
-git pull origin main
+git pull origin master
 cd Web
 docker compose up -d --build
 ```

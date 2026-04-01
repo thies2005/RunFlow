@@ -48,19 +48,20 @@ RunFlow is a production-grade **running performance dashboard** that combines st
 
 ```
 Frontend/Backend:
-  - Next.js 14 (App Router)
+  - Next.js 15 (App Router)
+  - React 19
   - TypeScript (strict mode)
-  - Tailwind CSS
+  - Tailwind CSS 4
   - React Query (@tanstack/react-query)
   - Recharts (data visualization)
   - next-themes (dark/light mode)
 
 Database & ORM:
   - PostgreSQL 16
-  - Prisma ORM
+  - Prisma ORM 7
 
 Authentication:
-  - NextAuth.js
+  - Auth.js (NextAuth v5)
   - Strava OAuth
   - Email (Magic Code / Password)
 
@@ -114,7 +115,7 @@ RunFlow/
 ├── Dockerfile                 # Multi-stage container build
 ├── package.json               # Dependencies & scripts
 ├── tsconfig.json              # TypeScript configuration
-└── next.config.js             # Next.js configuration
+└── next.config.mjs            # Next.js configuration
 ```
 
 ### 2.2 Service Layer Architecture
@@ -1264,6 +1265,9 @@ This builds:
 |----------|----------|-------------|
 | `NEXTAUTH_URL` | Yes | Your application URL |
 | `NEXTAUTH_SECRET` | Yes | Generate with `openssl rand -base64 32` |
+| `AUTH_URL` | Optional | Alias supported by Auth.js v5 |
+| `AUTH_SECRET` | Optional | Alias supported by Auth.js v5 |
+| `AUTH_TRUST_HOST` | Optional | Set to `true` behind reverse proxies |
 | `STRAVA_CLIENT_ID` | Yes | From Strava API settings |
 | `STRAVA_CLIENT_SECRET` | Yes | From Strava API settings |
 | `STRAVA_VERIFY_TOKEN` | Yes | Custom string for webhook validation |
@@ -1315,6 +1319,13 @@ RunFlow builds natively for:
 - `linux/arm64` - ARM servers (e.g., Raspberry Pi 4, Oracle Cloud ARM)
 
 Buildx automatically creates multi-architecture images.
+
+### 10.7 Build Pipeline Notes
+
+- Production image uses Next.js standalone output (`output: "standalone"`).
+- Build stage uses BuildKit cache mounts for `.next/cache` and Prisma generated client output.
+- `SENTRY_DISABLE_SOURCEMAP_UPLOAD=1` is set during image build to avoid optional sourcemap upload overhead.
+- If deployment fails after successful compile during static page generation, review Coolify build memory headroom and timeout settings.
 
 ---
 

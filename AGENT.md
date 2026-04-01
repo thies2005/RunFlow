@@ -8,7 +8,7 @@
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 (App Router), TypeScript strict mode |
+| Framework | Next.js 15 (App Router), React 19, TypeScript strict mode |
 | Styling / Animation | Tailwind CSS, Framer Motion |
 | Data Visualization | Recharts |
 | State | TanStack React Query (server), React Context (app-wide) |
@@ -157,7 +157,7 @@ Request → API Route (auth + validation) → Service Layer → Prisma → Respo
 ### Session Start — Pull Latest Changes
 Before starting any work in a new session, you must always pull the latest changes from the repository:
 ```bash
-git pull origin main
+git pull origin master
 ```
 
 ### Pre-Push — Build & Test Requirements

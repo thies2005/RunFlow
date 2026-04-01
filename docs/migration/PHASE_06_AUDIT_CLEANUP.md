@@ -365,3 +365,25 @@ Before merging, verify:
 ```
 migration(phase-06): audit dependencies, cleanup artifacts, final validation, migration summary
 ```
+
+---
+
+## Post-Phase Addendum (2026-04-01)
+
+After Phase 06 merged, additional production hardening was required based on runtime behavior in Coolify:
+
+1. **Auth runtime compatibility fixes**
+   - Added adapter-level coercion of Strava `providerAccountId` values to string before Prisma adapter operations.
+   - Removed custom PKCE cookie overrides so Auth.js v5 uses its internal PKCE cookie handling.
+
+2. **Token compatibility fallback**
+   - Added fallback behavior that allows plaintext token reads/writes when encryption/decryption fails (legacy or rotated key scenario), preventing OAuth sign-in loops.
+
+3. **Build performance and stability tuning**
+   - Removed `workerThreads: false` and `cpus: 3` from Next config to restore default parallel build behavior.
+   - Added BuildKit cache mount for Prisma generated output in Docker build stage.
+   - Added `SENTRY_DISABLE_SOURCEMAP_UPLOAD=1` in build stage to reduce optional build overhead.
+
+4. **Operational outcome**
+   - Build compile stage improved, but static generation can still fail in constrained hosts if memory/timeout limits are too tight.
+   - Treat build-time optimization and deployment resource tuning as a separate operations track after migration completion.

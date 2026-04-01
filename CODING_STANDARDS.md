@@ -221,7 +221,7 @@ Use **kebab-case** for API route segments.
 
 ### Directory Structure
 
-Follow the established Next.js 14 App Router structure:
+Follow the established Next.js 15 App Router structure:
 
 ```
 Web/

@@ -58,3 +58,27 @@
 - Docker: BLOCKED (docker unavailable in environment)
 - PWA: PASS (`public/sw.js`, `public/workbox-*.js` generated)
 - Capacitor Android: PARTIAL (sync PASS, Gradle build BLOCKED by missing Java)
+
+## Post-Migration Architecture Notes (2026-04-01)
+
+### Authentication hardening
+- Added adapter-level coercion for Strava `providerAccountId` to ensure compatibility with Prisma's string account key.
+- Removed custom PKCE cookie overrides (`pkceCodeVerifier`, `state`) to avoid `InvalidCheck` callback failures in NextAuth v5.
+- Added `allowDangerousEmailAccountLinking: true` for Strava provider to reduce `OAuthAccountNotLinked` failures for existing credential users.
+
+### Token storage compatibility
+- Introduced plaintext fallback paths for Strava token decrypt/read and encrypt/write flows to keep legacy tokens usable if `ENCRYPTION_KEY` is missing, rotated, or invalid at runtime.
+- `ENCRYPTION_KEY` remains required for secure production operation and must decode to 32 bytes.
+
+### Build performance tuning
+- Removed `experimental.workerThreads: false` and `experimental.cpus: 3` from Next config to restore default Next.js 15 parallel build behavior.
+- Added Docker cache mount for Prisma client output during `prisma generate`.
+- Added `SENTRY_DISABLE_SOURCEMAP_UPLOAD=1` in build stage to reduce optional build-time overhead.
+
+### Deployment behavior observed in Coolify
+- Compilation now completes reliably; deployment failures can still occur later in static page generation due to host resource constraints or deployment timeout behavior.
+- Recommended operational baseline for Coolify builds: sufficient RAM headroom for parallel build stages and explicit monitoring of build duration vs resource limits.
+
+### Environment variable naming
+- RunFlow currently keeps `NEXTAUTH_URL` and `NEXTAUTH_SECRET` as canonical environment keys in compose and runtime validation.
+- `AUTH_URL` and `AUTH_SECRET` remain compatible aliases at the Auth.js layer, but are not the enforced primary keys in current deployment files.

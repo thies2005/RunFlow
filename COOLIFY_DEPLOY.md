@@ -10,7 +10,7 @@ This guide walks you through deploying RunFlow (frontend + PostgreSQL database) 
 
 | Service | Description |
 |---|---|
-| `app` | Next.js 14 frontend (port 3000, proxied by Coolify) |
+| `app` | Next.js 15 frontend (port 3000, proxied by Coolify) |
 | `db` | PostgreSQL 16 database (internal only) |
 | `migrator` | One-shot container — runs Prisma migrations on every deploy |
 | `permissions-fixer` | One-shot container — sets correct ownership on the backups volume |
@@ -73,11 +73,14 @@ Go to **Configuration → Environment Variables** and add the following. Require
 |---|---|
 | `NEXTAUTH_SECRET` * | `openssl rand -base64 32` |
 | `NEXTAUTH_URL` * | Your full public URL — e.g. `https://runflow.yourdomain.com` |
+| `AUTH_TRUST_HOST` | `true` when running behind Coolify/Traefik (optional alias behavior) |
 | `ENCRYPTION_KEY` * | `openssl rand -base64 32` |
 | `JWT_SECRET` * | `openssl rand -base64 32` (min 32 chars) |
 | `CRON_SECRET` * | `openssl rand -hex 20` |
 | `ADMIN_USERNAME` * | e.g. `admin` |
 | `ADMIN_PASSWORD` * | Strong password |
+
+> Compatibility note: Auth.js v5 also understands `AUTH_URL` / `AUTH_SECRET`, but the current RunFlow compose and validation flow use `NEXTAUTH_URL` / `NEXTAUTH_SECRET` as canonical variables.
 
 ### JWT token expiry (optional — defaults shown)
 
@@ -163,6 +166,11 @@ Click **Deploy** (top-right). Coolify will:
 4. Run `permissions-fixer` and `migrator` (applies all Prisma migrations automatically).
 5. Start `app`, `backup`, `reminder-cron`, and `feedback-queue-cron`.
 6. Assign your domain and provision a TLS certificate automatically.
+
+Build notes:
+- Docker build uses Next.js standalone output with BuildKit cache mounts.
+- Prisma client generation runs in the builder stage and is cache-mounted.
+- If deployment fails after successful compilation (during static page generation), check Coolify server memory headroom and deployment timeout settings.
 
 You can watch progress under the **Deployments** tab and live logs under **Logs**.
 

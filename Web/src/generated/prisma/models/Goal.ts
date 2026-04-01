@@ -68,6 +68,7 @@ export type GoalMinAggregateOutputType = {
   name: string | null
   raceType: $Enums.RaceType | null
   raceDate: Date | null
+  planStartDate: Date | null
   targetTime: number | null
   currentVdot: number | null
   predictedTime: number | null
@@ -95,6 +96,7 @@ export type GoalMaxAggregateOutputType = {
   name: string | null
   raceType: $Enums.RaceType | null
   raceDate: Date | null
+  planStartDate: Date | null
   targetTime: number | null
   currentVdot: number | null
   predictedTime: number | null
@@ -122,6 +124,7 @@ export type GoalCountAggregateOutputType = {
   name: number
   raceType: number
   raceDate: number
+  planStartDate: number
   targetTime: number
   currentVdot: number
   predictedTime: number
@@ -188,6 +191,7 @@ export type GoalMinAggregateInputType = {
   name?: true
   raceType?: true
   raceDate?: true
+  planStartDate?: true
   targetTime?: true
   currentVdot?: true
   predictedTime?: true
@@ -215,6 +219,7 @@ export type GoalMaxAggregateInputType = {
   name?: true
   raceType?: true
   raceDate?: true
+  planStartDate?: true
   targetTime?: true
   currentVdot?: true
   predictedTime?: true
@@ -242,6 +247,7 @@ export type GoalCountAggregateInputType = {
   name?: true
   raceType?: true
   raceDate?: true
+  planStartDate?: true
   targetTime?: true
   currentVdot?: true
   predictedTime?: true
@@ -357,6 +363,7 @@ export type GoalGroupByOutputType = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date
+  planStartDate: Date | null
   targetTime: number | null
   currentVdot: number | null
   predictedTime: number | null
@@ -408,6 +415,7 @@ export type GoalWhereInput = {
   name?: Prisma.StringFilter<"Goal"> | string
   raceType?: Prisma.EnumRaceTypeFilter<"Goal"> | $Enums.RaceType
   raceDate?: Prisma.DateTimeFilter<"Goal"> | Date | string
+  planStartDate?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   targetTime?: Prisma.IntNullableFilter<"Goal"> | number | null
   currentVdot?: Prisma.FloatNullableFilter<"Goal"> | number | null
   predictedTime?: Prisma.IntNullableFilter<"Goal"> | number | null
@@ -439,6 +447,7 @@ export type GoalOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   raceType?: Prisma.SortOrder
   raceDate?: Prisma.SortOrder
+  planStartDate?: Prisma.SortOrderInput | Prisma.SortOrder
   targetTime?: Prisma.SortOrderInput | Prisma.SortOrder
   currentVdot?: Prisma.SortOrderInput | Prisma.SortOrder
   predictedTime?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -473,6 +482,7 @@ export type GoalWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"Goal"> | string
   raceType?: Prisma.EnumRaceTypeFilter<"Goal"> | $Enums.RaceType
   raceDate?: Prisma.DateTimeFilter<"Goal"> | Date | string
+  planStartDate?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   targetTime?: Prisma.IntNullableFilter<"Goal"> | number | null
   currentVdot?: Prisma.FloatNullableFilter<"Goal"> | number | null
   predictedTime?: Prisma.IntNullableFilter<"Goal"> | number | null
@@ -504,6 +514,7 @@ export type GoalOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   raceType?: Prisma.SortOrder
   raceDate?: Prisma.SortOrder
+  planStartDate?: Prisma.SortOrderInput | Prisma.SortOrder
   targetTime?: Prisma.SortOrderInput | Prisma.SortOrder
   currentVdot?: Prisma.SortOrderInput | Prisma.SortOrder
   predictedTime?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -540,6 +551,7 @@ export type GoalScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"Goal"> | string
   raceType?: Prisma.EnumRaceTypeWithAggregatesFilter<"Goal"> | $Enums.RaceType
   raceDate?: Prisma.DateTimeWithAggregatesFilter<"Goal"> | Date | string
+  planStartDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Goal"> | Date | string | null
   targetTime?: Prisma.IntNullableWithAggregatesFilter<"Goal"> | number | null
   currentVdot?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
   predictedTime?: Prisma.IntNullableWithAggregatesFilter<"Goal"> | number | null
@@ -567,6 +579,7 @@ export type GoalCreateInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -598,6 +611,7 @@ export type GoalUncheckedCreateInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -627,6 +641,7 @@ export type GoalUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -658,6 +673,7 @@ export type GoalUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -688,6 +704,7 @@ export type GoalCreateManyInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -715,6 +732,7 @@ export type GoalUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -743,6 +761,7 @@ export type GoalUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -781,6 +800,7 @@ export type GoalCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   raceType?: Prisma.SortOrder
   raceDate?: Prisma.SortOrder
+  planStartDate?: Prisma.SortOrder
   targetTime?: Prisma.SortOrder
   currentVdot?: Prisma.SortOrder
   predictedTime?: Prisma.SortOrder
@@ -827,6 +847,7 @@ export type GoalMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   raceType?: Prisma.SortOrder
   raceDate?: Prisma.SortOrder
+  planStartDate?: Prisma.SortOrder
   targetTime?: Prisma.SortOrder
   currentVdot?: Prisma.SortOrder
   predictedTime?: Prisma.SortOrder
@@ -854,6 +875,7 @@ export type GoalMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   raceType?: Prisma.SortOrder
   raceDate?: Prisma.SortOrder
+  planStartDate?: Prisma.SortOrder
   targetTime?: Prisma.SortOrder
   currentVdot?: Prisma.SortOrder
   predictedTime?: Prisma.SortOrder
@@ -977,6 +999,7 @@ export type GoalCreateWithoutUserInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -1006,6 +1029,7 @@ export type GoalUncheckedCreateWithoutUserInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -1065,6 +1089,7 @@ export type GoalScalarWhereInput = {
   name?: Prisma.StringFilter<"Goal"> | string
   raceType?: Prisma.EnumRaceTypeFilter<"Goal"> | $Enums.RaceType
   raceDate?: Prisma.DateTimeFilter<"Goal"> | Date | string
+  planStartDate?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   targetTime?: Prisma.IntNullableFilter<"Goal"> | number | null
   currentVdot?: Prisma.FloatNullableFilter<"Goal"> | number | null
   predictedTime?: Prisma.IntNullableFilter<"Goal"> | number | null
@@ -1092,6 +1117,7 @@ export type GoalCreateWithoutRaceResultInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -1122,6 +1148,7 @@ export type GoalUncheckedCreateWithoutRaceResultInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -1166,6 +1193,7 @@ export type GoalUpdateWithoutRaceResultInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1196,6 +1224,7 @@ export type GoalUncheckedUpdateWithoutRaceResultInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1224,6 +1253,7 @@ export type GoalCreateWithoutWorkoutsInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -1254,6 +1284,7 @@ export type GoalUncheckedCreateWithoutWorkoutsInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -1298,6 +1329,7 @@ export type GoalUpdateWithoutWorkoutsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1328,6 +1360,7 @@ export type GoalUncheckedUpdateWithoutWorkoutsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1356,6 +1389,7 @@ export type GoalCreateManyUserInput = {
   name: string
   raceType: $Enums.RaceType
   raceDate: Date | string
+  planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
   predictedTime?: number | null
@@ -1383,6 +1417,7 @@ export type GoalUpdateWithoutUserInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1412,6 +1447,7 @@ export type GoalUncheckedUpdateWithoutUserInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1441,6 +1477,7 @@ export type GoalUncheckedUpdateManyWithoutUserInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
   raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1500,6 +1537,7 @@ export type GoalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   name?: boolean
   raceType?: boolean
   raceDate?: boolean
+  planStartDate?: boolean
   targetTime?: boolean
   currentVdot?: boolean
   predictedTime?: boolean
@@ -1532,6 +1570,7 @@ export type GoalSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   raceType?: boolean
   raceDate?: boolean
+  planStartDate?: boolean
   targetTime?: boolean
   currentVdot?: boolean
   predictedTime?: boolean
@@ -1561,6 +1600,7 @@ export type GoalSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   raceType?: boolean
   raceDate?: boolean
+  planStartDate?: boolean
   targetTime?: boolean
   currentVdot?: boolean
   predictedTime?: boolean
@@ -1590,6 +1630,7 @@ export type GoalSelectScalar = {
   name?: boolean
   raceType?: boolean
   raceDate?: boolean
+  planStartDate?: boolean
   targetTime?: boolean
   currentVdot?: boolean
   predictedTime?: boolean
@@ -1612,7 +1653,7 @@ export type GoalSelectScalar = {
   updatedAt?: boolean
 }
 
-export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "restDays" | "isActive" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["goal"]>
+export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "restDays" | "isActive" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["goal"]>
 export type GoalInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   workouts?: boolean | Prisma.Goal$workoutsArgs<ExtArgs>
@@ -1639,6 +1680,7 @@ export type $GoalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string
     raceType: $Enums.RaceType
     raceDate: Date
+    planStartDate: Date | null
     targetTime: number | null
     currentVdot: number | null
     predictedTime: number | null
@@ -2090,6 +2132,7 @@ export interface GoalFieldRefs {
   readonly name: Prisma.FieldRef<"Goal", 'String'>
   readonly raceType: Prisma.FieldRef<"Goal", 'RaceType'>
   readonly raceDate: Prisma.FieldRef<"Goal", 'DateTime'>
+  readonly planStartDate: Prisma.FieldRef<"Goal", 'DateTime'>
   readonly targetTime: Prisma.FieldRef<"Goal", 'Int'>
   readonly currentVdot: Prisma.FieldRef<"Goal", 'Float'>
   readonly predictedTime: Prisma.FieldRef<"Goal", 'Int'>

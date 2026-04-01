@@ -4295,6 +4295,7 @@ export const GoalScalarFieldEnum = {
   name: 'name',
   raceType: 'raceType',
   raceDate: 'raceDate',
+  planStartDate: 'planStartDate',
   targetTime: 'targetTime',
   currentVdot: 'currentVdot',
   predictedTime: 'predictedTime',

@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { middleware } from './middleware';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
 // Mock generateRequestId to avoid random values in snapshots if we used them
 jest.mock('@/lib/logging/logger', () => ({

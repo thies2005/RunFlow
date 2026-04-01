@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { DefaultSession } from "next-auth"
 
 declare module "next-auth" {

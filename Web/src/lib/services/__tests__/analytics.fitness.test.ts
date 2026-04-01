@@ -1,5 +1,4 @@
 import { AnalyticsService } from '../analytics';
-import { METRICS } from '@/lib/constants';
 
 // Helper to create mock activities
 const createActivity = (dateStr: string, trimp?: number | null, movingTime: number = 3600) => ({

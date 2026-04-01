@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { X, Camera, Upload, Sparkles, Loader2, MessageSquare } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
@@ -230,11 +231,14 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
                             {/* Image Preview */}
                             {imagePreview && (
                                 <div className="relative rounded-2xl overflow-hidden bg-black/50">
-                                    <img
-                                        src={imageBase64 || imagePreview || undefined}
+                                    <Image
+                                        src={imageBase64 || imagePreview}
                                         alt="Food to analyze"
-                                        className="w-full aspect-[4/3] object-cover"
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 600px"
+                                        className="object-cover"
                                     />
+                                    <div className="w-full aspect-[4/3]" />
                                     <button
                                         onClick={() => {
                                             setImagePreview(null);

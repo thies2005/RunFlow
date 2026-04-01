@@ -1,5 +1,3 @@
-import webpush from 'web-push';
-
 // Mock needs to be outside or hoisted
 jest.mock('web-push', () => ({
     setVapidDetails: jest.fn(),

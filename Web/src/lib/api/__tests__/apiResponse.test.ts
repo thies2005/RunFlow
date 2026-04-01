@@ -1,14 +1,12 @@
 /**
  * @jest-environment node
  */
-import { NextResponse } from 'next/server';
 import {
   apiError,
   apiSuccess,
   errorResponses,
   handleApiError,
-  ErrorCode,
-  ApiError
+  ErrorCode
 } from '../apiResponse';
 import { logger } from '@/lib/logging/logger';
 

@@ -261,7 +261,11 @@ export default function PlanPage() {
                                 const weekStart = new Date(weekStartIso);
                                 const weekEnd = addDays(weekStart, 6);
                                 const weeksUntilRace = differenceInWeeks(raceDate, weekStart);
-                                const phase = getPhase(weeksUntilRace);
+                                const phase = getPhase(weeksUntilRace, {
+                                    taperWeeks: goal.taperWeeks ?? undefined,
+                                    peakWeeks: goal.peakWeeks ?? undefined,
+                                    buildWeeks: goal.buildWeeks ?? undefined,
+                                });
                                 const weekWorkouts = weeks[weekStartIso];
 
                                 const isPastOrCurrent = isBefore(weekStart, new Date());

@@ -56,6 +56,7 @@ export async function GET() {
             healthTrackingEnabled: user?.healthTrackingEnabled ?? false,
             runsPerWeek: activeGoal?.runsPerWeek || 4,
             ridesPerWeek: activeGoal?.ridesPerWeek || 0,
+            swimsPerWeek: activeGoal?.swimsPerWeek || 0,
             strengthPerWeek: activeGoal?.strengthPerWeek || 0,
             weeklyMileageGoal: (activeGoal?.weeklyMileageGoal || 40000) / 1000, // convert m to km
             taperWeeks: activeGoal?.taperWeeks,
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, restDays } = body;
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, restDays } = body;
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -177,6 +178,7 @@ export async function POST(req: NextRequest) {
         if (activeGoal) {
             const runs = runsPerWeek || 4;
             const rides = ridesPerWeek || 0;
+            const swims = swimsPerWeek || 0;
             const strength = strengthPerWeek || 0;
             const mileageGoal = weeklyMileageGoal || null; // meters
 
@@ -222,6 +224,7 @@ export async function POST(req: NextRequest) {
                     currentVdot: newVdot,
                     runsPerWeek: runs,
                     ridesPerWeek: rides,
+                    swimsPerWeek: swims,
                     strengthPerWeek: strength,
                     weeklyMileageGoal: mileageGoal,
                     taperWeeks: taper,
@@ -252,6 +255,7 @@ export async function POST(req: NextRequest) {
                 startDate: startDate,
                 runsPerWeek: runs,
                 ridesPerWeek: rides,
+                swimsPerWeek: swims,
                 strengthPerWeek: strength,
                 weeklyMileageGoal: mileageGoal,
                 taperWeeks: taper,

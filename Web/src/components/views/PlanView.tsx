@@ -161,6 +161,9 @@ function PlanViewComponent({
                                     weekWorkouts={weeks[weekStartIso]}
                                     weekIndex={index}
                                     raceDate={raceDate}
+                                    taperWeeks={goal.taperWeeks}
+                                    peakWeeks={goal.peakWeeks}
+                                    buildWeeks={goal.buildWeeks}
                                     handleCreate={handleCreate}
                                     handleEdit={handleEdit}
                                     handleComplete={handleComplete}

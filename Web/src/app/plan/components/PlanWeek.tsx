@@ -10,6 +10,9 @@ interface PlanWeekProps {
     weekWorkouts: WorkoutWithLinkedActivity[];
     weekIndex: number;
     raceDate: Date;
+    taperWeeks?: number;
+    peakWeeks?: number;
+    buildWeeks?: number;
     handleCreate: (_date: Date) => void;
     handleEdit: (_workout: WorkoutWithLinkedActivity) => void;
     handleComplete: (_workout: WorkoutWithLinkedActivity, _e: React.MouseEvent) => void;
@@ -23,6 +26,9 @@ export const PlanWeek = memo(function PlanWeek({
     weekWorkouts,
     weekIndex,
     raceDate,
+    taperWeeks,
+    peakWeeks,
+    buildWeeks,
     handleCreate,
     handleEdit,
     handleComplete,
@@ -33,7 +39,7 @@ export const PlanWeek = memo(function PlanWeek({
     const weekStart = new Date(weekStartIso);
     const weekEnd = addDays(weekStart, 6);
     const weeksUntilRace = differenceInWeeks(raceDate, weekStart);
-    const phase = getPhase(weeksUntilRace);
+    const phase = getPhase(weeksUntilRace, { taperWeeks, peakWeeks, buildWeeks });
     const isPastOrCurrent = isBefore(weekStart, new Date());
 
     let plannedMileage = 0;

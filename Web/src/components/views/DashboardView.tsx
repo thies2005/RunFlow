@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { RefreshCw, AlertCircle, BarChart3, Hand, Target } from 'lucide-react';
 import { Session } from 'next-auth';
 import { UseMutationResult } from '@tanstack/react-query';
-import { RaceCountdown, ActivityList, Footer, UserMenu, UserAvatar } from '@/components';
+import { RaceCountdown, ActivityList, Footer, MinimalistPillsMenu, UserAvatar } from '@/components';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
@@ -38,8 +38,8 @@ export function DashboardView({
     syncMutation,
     isLoading,
     error,
-    onOpenSettings,
-    onOpenProfile,
+    onOpenSettings: _onOpenSettings,
+    onOpenProfile: _onOpenProfile,
     onEditWorkout,
     onInvalidateQueries,
     showHeader = true,
@@ -71,10 +71,7 @@ export function DashboardView({
                                         <span className="hidden sm:inline">Analytics</span>
                                     </button>
                                     <div className="flex items-center gap-3">
-                                        <UserMenu
-                                            onOpenProfile={onOpenProfile}
-                                            onOpenSettings={onOpenSettings}
-                                        />
+                                        <MinimalistPillsMenu />
                                     </div>
                                 </div>
                             </div>
@@ -105,9 +102,7 @@ export function DashboardView({
                                 <Hand className="w-8 h-8 text-accent-orange" />
                             </h1>
                             <div className="sm:hidden">
-                                <UserMenu
-                                    onOpenProfile={onOpenProfile}
-                                    onOpenSettings={onOpenSettings}
+                                <MinimalistPillsMenu
                                     trigger={
                                         <div className="rounded-full border border-glass-border">
                                             <UserAvatar

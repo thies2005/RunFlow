@@ -9,7 +9,7 @@ import { RefreshCw, AlertCircle, BarChart3, MessageSquare, Hand, Heart, Target }
 import { signIn } from 'next-auth/react';
 import { LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { RaceCountdown, ActivityList, SettingsModal, Footer, UserMenu, PullToRefresh } from '@/components';
+import { RaceCountdown, ActivityList, SettingsModal, Footer, MinimalistPillsMenu, PullToRefresh } from '@/components';
 import EditWorkoutModal from '@/components/EditWorkoutModal';
 import ProfileModal from '@/components/ProfileModal';
 import RaceResultModal from '@/components/RaceResultModal';
@@ -150,10 +150,7 @@ export default function Dashboard() {
                                         </button>
                                     )}
                                     <div className="flex items-center gap-3">
-                                        <UserMenu
-                                            onOpenProfile={() => setIsProfileOpen(true)}
-                                            onOpenSettings={() => setIsSettingsOpen(true)}
-                                        />
+                                        <MinimalistPillsMenu />
                                     </div>
                                 </div>
                             </div>

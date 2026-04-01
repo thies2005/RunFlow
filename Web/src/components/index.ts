@@ -11,6 +11,7 @@ export { default as ActivityPicker } from './ActivityPicker';
 export * from './StravaLogos';
 export { Footer } from './Footer';
 export { UserMenu } from './UserMenu';
+export { MinimalistPillsMenu } from './MinimalistPillsMenu';
 export { ErrorBoundary, ChartErrorBoundary } from './ErrorBoundary';
 export { default as SyncPlatformSelector } from './SyncPlatformSelector';
 export { UserAvatar } from './UserAvatar';

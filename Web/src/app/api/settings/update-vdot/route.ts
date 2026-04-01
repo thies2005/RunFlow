@@ -31,6 +31,10 @@ export async function GET() {
                 includeCrossTraining: true,
                 useImperial: true,
                 healthTrackingEnabled: true,
+                vdotCorrectionFactor: true,
+                vdotReferenceRaceDate: true,
+                vdotReferenceRaceTime: true,
+                vdotReferenceRaceType: true,
             }
         });
 
@@ -58,14 +62,17 @@ export async function GET() {
             ridesPerWeek: activeGoal?.ridesPerWeek || 0,
             swimsPerWeek: activeGoal?.swimsPerWeek || 0,
             strengthPerWeek: activeGoal?.strengthPerWeek || 0,
-            weeklyMileageGoal: (activeGoal?.weeklyMileageGoal || 40000) / 1000, // convert m to km
+            weeklyMileageGoal: (activeGoal?.weeklyMileageGoal || 40000) / 1000,
             taperWeeks: activeGoal?.taperWeeks,
             peakWeeks: activeGoal?.peakWeeks,
             buildWeeks: activeGoal?.buildWeeks,
             currentVdot: activeGoal?.currentVdot || 30,
             longRunDay: activeGoal?.longRunDay ?? 0,
             qualityDay: activeGoal?.workoutDay ?? 3,
-            restDays: activeGoal?.restDays ?? [1, 5]
+            restDays: activeGoal?.restDays ?? [1, 5],
+            vdotCorrectionFactor: user?.vdotCorrectionFactor || 1.0,
+            vdotReferenceRaceTime: user?.vdotReferenceRaceTime || null,
+            vdotReferenceRaceType: user?.vdotReferenceRaceType || null,
         });
     } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -117,6 +124,11 @@ export async function POST(req: NextRequest) {
         // Calibration factor: 0.5 to 2.0
         if (typeof calibrationFactor === 'number' && calibrationFactor >= 0.5 && calibrationFactor <= 2.0) {
             userUpdateData.vdotCorrectionFactor = calibrationFactor;
+            // Explicit calibration from settings overrides the revolving auto-calibration
+            if (calibrationFactor !== 1.0) {
+                userUpdateData.autoRevolvingVo2max = null;
+                userUpdateData.autoRevolvingCalculatedAt = null;
+            }
         }
 
         // Max Heart Rate: 100-250 bpm

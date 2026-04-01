@@ -125,7 +125,13 @@ export async function POST(request: NextRequest) {
         // We catch errors to prevent unhandled rejections if the main flow fails elsewhere
         const userUpdatePromise = calibrationFactor ? prisma.user.update({
             where: { id: session.user.id },
-            data: { vdotCorrectionFactor: calibrationFactor }
+            data: {
+                vdotCorrectionFactor: calibrationFactor,
+                ...(calibrationFactor !== 1.0 && {
+                    autoRevolvingVo2max: null,
+                    autoRevolvingCalculatedAt: null,
+                }),
+            }
         }).then(res => ({ result: res, error: null }))
             .catch(err => ({ result: null, error: err }))
             : Promise.resolve({ result: null, error: null });

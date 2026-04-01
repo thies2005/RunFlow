@@ -145,6 +145,8 @@ export const UserScalarFieldEnum = {
   vdotReferenceRaceDate: 'vdotReferenceRaceDate',
   vdotReferenceRaceTime: 'vdotReferenceRaceTime',
   vdotReferenceRaceType: 'vdotReferenceRaceType',
+  autoRevolvingVo2max: 'autoRevolvingVo2max',
+  autoRevolvingCalculatedAt: 'autoRevolvingCalculatedAt',
   includeCrossTraining: 'includeCrossTraining',
   useImperial: 'useImperial',
   lastSyncAt: 'lastSyncAt',

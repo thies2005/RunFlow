@@ -168,6 +168,8 @@ export async function POST(request: NextRequest) {
             where: { id: session.user.id },
             data: {
                 vdotCorrectionFactor: newCorrectionFactor,
+                autoRevolvingVo2max: null,
+                autoRevolvingCalculatedAt: null,
                 ...referenceRaceData,
             },
             select: {
@@ -213,6 +215,8 @@ export async function DELETE() {
                 vdotReferenceRaceDate: null,
                 vdotReferenceRaceTime: null,
                 vdotReferenceRaceType: null,
+                autoRevolvingVo2max: null,
+                autoRevolvingCalculatedAt: null,
             },
         });
 

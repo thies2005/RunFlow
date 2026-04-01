@@ -112,6 +112,7 @@ export default function PlanSetupForm({
     // Calibration Result
     const [calibrationFactor, setCalibrationFactor] = useState<number>(1.0);
     const lastAutoTime = useRef<number>(0);
+    const hasExistingCalibration = useRef(false);
 
     const [message, setMessage] = useState('');
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -196,6 +197,31 @@ export default function PlanSetupForm({
                 const paceSeconds = settingsData.thresholdPace;
                 setThresholdPaceMin(Math.floor(paceSeconds / 60).toString());
                 setThresholdPaceSec((paceSeconds % 60).toString().padStart(2, '0'));
+            }
+            // Restore existing calibration data
+            if (settingsData.vdotCorrectionFactor && settingsData.vdotCorrectionFactor !== 1.0) {
+                setCalibrationFactor(settingsData.vdotCorrectionFactor);
+                hasExistingCalibration.current = true;
+            }
+            if (settingsData.vdotReferenceRaceTime && settingsData.vdotReferenceRaceType) {
+                const raceTime = settingsData.vdotReferenceRaceTime;
+                const h = Math.floor(raceTime / 3600);
+                const m = Math.floor((raceTime % 3600) / 60);
+                const s = raceTime % 60;
+                setHours(h > 0 ? h.toString() : '');
+                setMinutes(m.toString().padStart(2, '0'));
+                setSeconds(s.toString().padStart(2, '0'));
+                lastAutoTime.current = raceTime;
+
+                const distMap: Record<string, string> = {
+                    '5K': '5K',
+                    '10K': '10K',
+                    'HALF': 'HALF',
+                    'MARATHON': 'MARATHON',
+                };
+                const dist = distMap[settingsData.vdotReferenceRaceType] || 'MARATHON';
+                setCalibrationDistance(dist);
+                setCalibrationMode('manual');
             }
         }
     }, [settingsData]);
@@ -295,8 +321,10 @@ export default function PlanSetupForm({
         }
     }, [goalsData]);
 
-    // Update predicted time when distance or fitness changes (Manual Mode)
+    // Update predicted time when distance or fitness changes (Manual Mode - Onboarding only)
     useEffect(() => {
+        if (mode === 'settings' && hasExistingCalibration.current) return;
+
         if (effectiveVO2max > 0 && calibrationMode === 'manual' && !selectedActivityId) {
             const getPredictedTimeForDistance = (dist: string) => {
                 const predictions = calculateAllRacePredictions(effectiveVO2max, shapePercent);

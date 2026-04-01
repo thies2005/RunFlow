@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
         // 1. User Settings & Active Goals
         const userPromise = prisma.user.findUnique({
             where: { id: userId },
-            select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true, healthTrackingEnabled: true }
+            select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true, healthTrackingEnabled: true, vdotReferenceRaceDate: true, autoRevolvingVo2max: true }
         });
 
         const activeGoalsPromise = prisma.goal.findMany({
@@ -202,6 +202,8 @@ export async function GET(req: NextRequest) {
         const maxHR = user?.hrMax || 185;
         const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
         const includeCrossTraining = user?.includeCrossTraining ?? true;
+        const hasExplicitCalibration = user?.vdotReferenceRaceDate != null;
+        const autoRevolvingVo2max = user?.autoRevolvingVo2max || null;
 
         // Split for stats logic
         const runActivities = statsActivities.filter(a => a.type === 'RUN');
@@ -210,7 +212,11 @@ export async function GET(req: NextRequest) {
         );
 
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
-        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+        let { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+
+        if (!hasExplicitCalibration && autoRevolvingVo2max && autoRevolvingVo2max > 0) {
+            effectiveVO2max = autoRevolvingVo2max;
+        }
         // Conditionally include cross-training based on user preference
         const marathonShape = AnalyticsService.calculateShape(
             runActivities,
@@ -265,6 +271,7 @@ export async function GET(req: NextRequest) {
             effectiveVO2max,
             rawVO2max,
             vdotCorrectionFactor,
+            autoRevolvingVo2max,
             marathonShape,
             currentVdot: goals[0]?.currentVdot || null,
             ctl,

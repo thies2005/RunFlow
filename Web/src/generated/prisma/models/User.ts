@@ -41,6 +41,7 @@ export type UserAvgAggregateOutputType = {
   hrZone6Max: number | null
   vdotCorrectionFactor: number | null
   vdotReferenceRaceTime: number | null
+  autoRevolvingVo2max: number | null
 }
 
 export type UserSumAggregateOutputType = {
@@ -58,6 +59,7 @@ export type UserSumAggregateOutputType = {
   hrZone6Max: number | null
   vdotCorrectionFactor: number | null
   vdotReferenceRaceTime: number | null
+  autoRevolvingVo2max: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -90,6 +92,8 @@ export type UserMinAggregateOutputType = {
   vdotReferenceRaceDate: Date | null
   vdotReferenceRaceTime: number | null
   vdotReferenceRaceType: string | null
+  autoRevolvingVo2max: number | null
+  autoRevolvingCalculatedAt: Date | null
   includeCrossTraining: boolean | null
   useImperial: boolean | null
   lastSyncAt: Date | null
@@ -130,6 +134,8 @@ export type UserMaxAggregateOutputType = {
   vdotReferenceRaceDate: Date | null
   vdotReferenceRaceTime: number | null
   vdotReferenceRaceType: string | null
+  autoRevolvingVo2max: number | null
+  autoRevolvingCalculatedAt: Date | null
   includeCrossTraining: boolean | null
   useImperial: boolean | null
   lastSyncAt: Date | null
@@ -170,6 +176,8 @@ export type UserCountAggregateOutputType = {
   vdotReferenceRaceDate: number
   vdotReferenceRaceTime: number
   vdotReferenceRaceType: number
+  autoRevolvingVo2max: number
+  autoRevolvingCalculatedAt: number
   includeCrossTraining: number
   useImperial: number
   lastSyncAt: number
@@ -197,6 +205,7 @@ export type UserAvgAggregateInputType = {
   hrZone6Max?: true
   vdotCorrectionFactor?: true
   vdotReferenceRaceTime?: true
+  autoRevolvingVo2max?: true
 }
 
 export type UserSumAggregateInputType = {
@@ -214,6 +223,7 @@ export type UserSumAggregateInputType = {
   hrZone6Max?: true
   vdotCorrectionFactor?: true
   vdotReferenceRaceTime?: true
+  autoRevolvingVo2max?: true
 }
 
 export type UserMinAggregateInputType = {
@@ -246,6 +256,8 @@ export type UserMinAggregateInputType = {
   vdotReferenceRaceDate?: true
   vdotReferenceRaceTime?: true
   vdotReferenceRaceType?: true
+  autoRevolvingVo2max?: true
+  autoRevolvingCalculatedAt?: true
   includeCrossTraining?: true
   useImperial?: true
   lastSyncAt?: true
@@ -286,6 +298,8 @@ export type UserMaxAggregateInputType = {
   vdotReferenceRaceDate?: true
   vdotReferenceRaceTime?: true
   vdotReferenceRaceType?: true
+  autoRevolvingVo2max?: true
+  autoRevolvingCalculatedAt?: true
   includeCrossTraining?: true
   useImperial?: true
   lastSyncAt?: true
@@ -326,6 +340,8 @@ export type UserCountAggregateInputType = {
   vdotReferenceRaceDate?: true
   vdotReferenceRaceTime?: true
   vdotReferenceRaceType?: true
+  autoRevolvingVo2max?: true
+  autoRevolvingCalculatedAt?: true
   includeCrossTraining?: true
   useImperial?: true
   lastSyncAt?: true
@@ -453,6 +469,8 @@ export type UserGroupByOutputType = {
   vdotReferenceRaceDate: Date | null
   vdotReferenceRaceTime: number | null
   vdotReferenceRaceType: string | null
+  autoRevolvingVo2max: number | null
+  autoRevolvingCalculatedAt: Date | null
   includeCrossTraining: boolean
   useImperial: boolean
   lastSyncAt: Date | null
@@ -516,6 +534,8 @@ export type UserWhereInput = {
   vdotReferenceRaceDate?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   vdotReferenceRaceTime?: Prisma.IntNullableFilter<"User"> | number | null
   vdotReferenceRaceType?: Prisma.StringNullableFilter<"User"> | string | null
+  autoRevolvingVo2max?: Prisma.FloatNullableFilter<"User"> | number | null
+  autoRevolvingCalculatedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   includeCrossTraining?: Prisma.BoolFilter<"User"> | boolean
   useImperial?: Prisma.BoolFilter<"User"> | boolean
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
@@ -580,6 +600,8 @@ export type UserOrderByWithRelationInput = {
   vdotReferenceRaceDate?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrderInput | Prisma.SortOrder
+  autoRevolvingVo2max?: Prisma.SortOrderInput | Prisma.SortOrder
+  autoRevolvingCalculatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -647,6 +669,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   vdotReferenceRaceDate?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   vdotReferenceRaceTime?: Prisma.IntNullableFilter<"User"> | number | null
   vdotReferenceRaceType?: Prisma.StringNullableFilter<"User"> | string | null
+  autoRevolvingVo2max?: Prisma.FloatNullableFilter<"User"> | number | null
+  autoRevolvingCalculatedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   includeCrossTraining?: Prisma.BoolFilter<"User"> | boolean
   useImperial?: Prisma.BoolFilter<"User"> | boolean
   lastSyncAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
@@ -711,6 +735,8 @@ export type UserOrderByWithAggregationInput = {
   vdotReferenceRaceDate?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrderInput | Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrderInput | Prisma.SortOrder
+  autoRevolvingVo2max?: Prisma.SortOrderInput | Prisma.SortOrder
+  autoRevolvingCalculatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -759,6 +785,8 @@ export type UserScalarWhereWithAggregatesInput = {
   vdotReferenceRaceDate?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   vdotReferenceRaceTime?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
   vdotReferenceRaceType?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  autoRevolvingVo2max?: Prisma.FloatNullableWithAggregatesFilter<"User"> | number | null
+  autoRevolvingCalculatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   includeCrossTraining?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   useImperial?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   lastSyncAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
@@ -799,6 +827,8 @@ export type UserCreateInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -863,6 +893,8 @@ export type UserUncheckedCreateInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -927,6 +959,8 @@ export type UserUpdateInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -991,6 +1025,8 @@ export type UserUncheckedUpdateInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1055,6 +1091,8 @@ export type UserCreateManyInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -1095,6 +1133,8 @@ export type UserUpdateManyMutationInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1135,6 +1175,8 @@ export type UserUncheckedUpdateManyInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1175,6 +1217,8 @@ export type UserCountOrderByAggregateInput = {
   vdotReferenceRaceDate?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrder
+  autoRevolvingVo2max?: Prisma.SortOrder
+  autoRevolvingCalculatedAt?: Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
@@ -1200,6 +1244,7 @@ export type UserAvgOrderByAggregateInput = {
   hrZone6Max?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
+  autoRevolvingVo2max?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -1232,6 +1277,8 @@ export type UserMaxOrderByAggregateInput = {
   vdotReferenceRaceDate?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrder
+  autoRevolvingVo2max?: Prisma.SortOrder
+  autoRevolvingCalculatedAt?: Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
@@ -1272,6 +1319,8 @@ export type UserMinOrderByAggregateInput = {
   vdotReferenceRaceDate?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
   vdotReferenceRaceType?: Prisma.SortOrder
+  autoRevolvingVo2max?: Prisma.SortOrder
+  autoRevolvingCalculatedAt?: Prisma.SortOrder
   includeCrossTraining?: Prisma.SortOrder
   useImperial?: Prisma.SortOrder
   lastSyncAt?: Prisma.SortOrder
@@ -1297,6 +1346,7 @@ export type UserSumOrderByAggregateInput = {
   hrZone6Max?: Prisma.SortOrder
   vdotCorrectionFactor?: Prisma.SortOrder
   vdotReferenceRaceTime?: Prisma.SortOrder
+  autoRevolvingVo2max?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -1726,6 +1776,8 @@ export type UserCreateWithoutConsentsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -1789,6 +1841,8 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -1868,6 +1922,8 @@ export type UserUpdateWithoutConsentsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1931,6 +1987,8 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1994,6 +2052,8 @@ export type UserCreateWithoutAiSettingsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -2057,6 +2117,8 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -2136,6 +2198,8 @@ export type UserUpdateWithoutAiSettingsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2199,6 +2263,8 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2262,6 +2328,8 @@ export type UserCreateWithoutFeedbackJobsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -2325,6 +2393,8 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -2404,6 +2474,8 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2467,6 +2539,8 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2530,6 +2604,8 @@ export type UserCreateWithoutAccountsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -2593,6 +2669,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -2672,6 +2750,8 @@ export type UserUpdateWithoutAccountsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2735,6 +2815,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2798,6 +2880,8 @@ export type UserCreateWithoutSessionsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -2861,6 +2945,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -2940,6 +3026,8 @@ export type UserUpdateWithoutSessionsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3003,6 +3091,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3066,6 +3156,8 @@ export type UserCreateWithoutActivitiesInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -3129,6 +3221,8 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -3208,6 +3302,8 @@ export type UserUpdateWithoutActivitiesInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3271,6 +3367,8 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3334,6 +3432,8 @@ export type UserCreateWithoutDailyFitnessInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -3397,6 +3497,8 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -3476,6 +3578,8 @@ export type UserUpdateWithoutDailyFitnessInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3539,6 +3643,8 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3602,6 +3708,8 @@ export type UserCreateWithoutSupplementStacksInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -3665,6 +3773,8 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -3744,6 +3854,8 @@ export type UserUpdateWithoutSupplementStacksInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3807,6 +3919,8 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3870,6 +3984,8 @@ export type UserCreateWithoutSupplementsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -3933,6 +4049,8 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -4012,6 +4130,8 @@ export type UserUpdateWithoutSupplementsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4075,6 +4195,8 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4138,6 +4260,8 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -4201,6 +4325,8 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -4280,6 +4406,8 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4343,6 +4471,8 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4406,6 +4536,8 @@ export type UserCreateWithoutGoalsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -4469,6 +4601,8 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -4548,6 +4682,8 @@ export type UserUpdateWithoutGoalsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4611,6 +4747,8 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4674,6 +4812,8 @@ export type UserCreateWithoutNotificationsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -4737,6 +4877,8 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -4816,6 +4958,8 @@ export type UserUpdateWithoutNotificationsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4879,6 +5023,8 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4942,6 +5088,8 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -5005,6 +5153,8 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -5084,6 +5234,8 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5147,6 +5299,8 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5210,6 +5364,8 @@ export type UserCreateWithoutReminderSettingsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -5273,6 +5429,8 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -5352,6 +5510,8 @@ export type UserUpdateWithoutReminderSettingsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5415,6 +5575,8 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5478,6 +5640,8 @@ export type UserCreateWithoutApiKeyInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -5541,6 +5705,8 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -5620,6 +5786,8 @@ export type UserUpdateWithoutApiKeyInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5683,6 +5851,8 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5746,6 +5916,8 @@ export type UserCreateWithoutChatMessagesInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -5809,6 +5981,8 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -5888,6 +6062,8 @@ export type UserUpdateWithoutChatMessagesInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -5951,6 +6127,8 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6014,6 +6192,8 @@ export type UserCreateWithoutChatSessionsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -6077,6 +6257,8 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -6156,6 +6338,8 @@ export type UserUpdateWithoutChatSessionsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6219,6 +6403,8 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6282,6 +6468,8 @@ export type UserCreateWithoutUsageHistoryInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -6345,6 +6533,8 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -6424,6 +6614,8 @@ export type UserUpdateWithoutUsageHistoryInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6487,6 +6679,8 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6550,6 +6744,8 @@ export type UserCreateWithoutNutritionLogsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -6613,6 +6809,8 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -6692,6 +6890,8 @@ export type UserUpdateWithoutNutritionLogsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6755,6 +6955,8 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -6818,6 +7020,8 @@ export type UserCreateWithoutNutritionTargetInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -6881,6 +7085,8 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -6960,6 +7166,8 @@ export type UserUpdateWithoutNutritionTargetInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7023,6 +7231,8 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7086,6 +7296,8 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -7149,6 +7361,8 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -7228,6 +7442,8 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7291,6 +7507,8 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7354,6 +7572,8 @@ export type UserCreateWithoutFastingSessionsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -7417,6 +7637,8 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -7496,6 +7718,8 @@ export type UserUpdateWithoutFastingSessionsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7559,6 +7783,8 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7622,6 +7848,8 @@ export type UserCreateWithoutHealthInsightsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -7685,6 +7913,8 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -7764,6 +7994,8 @@ export type UserUpdateWithoutHealthInsightsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7827,6 +8059,8 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -7890,6 +8124,8 @@ export type UserCreateWithoutSavedMealsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -7953,6 +8189,8 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   vdotReferenceRaceDate?: Date | string | null
   vdotReferenceRaceTime?: number | null
   vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: Date | string | null
@@ -8032,6 +8270,8 @@ export type UserUpdateWithoutSavedMealsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8095,6 +8335,8 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
   useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -8360,6 +8602,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
   vdotReferenceRaceType?: boolean
+  autoRevolvingVo2max?: boolean
+  autoRevolvingCalculatedAt?: boolean
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: boolean
@@ -8425,6 +8669,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
   vdotReferenceRaceType?: boolean
+  autoRevolvingVo2max?: boolean
+  autoRevolvingCalculatedAt?: boolean
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: boolean
@@ -8465,6 +8711,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
   vdotReferenceRaceType?: boolean
+  autoRevolvingVo2max?: boolean
+  autoRevolvingCalculatedAt?: boolean
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: boolean
@@ -8505,6 +8753,8 @@ export type UserSelectScalar = {
   vdotReferenceRaceDate?: boolean
   vdotReferenceRaceTime?: boolean
   vdotReferenceRaceType?: boolean
+  autoRevolvingVo2max?: boolean
+  autoRevolvingCalculatedAt?: boolean
   includeCrossTraining?: boolean
   useImperial?: boolean
   lastSyncAt?: boolean
@@ -8515,7 +8765,7 @@ export type UserSelectScalar = {
   isAdmin?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "vdotCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "includeCrossTraining" | "useImperial" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "name" | "image" | "emailVerified" | "passwordHash" | "authMethod" | "stravaId" | "stravaAccessToken" | "stravaRefreshToken" | "stravaTokenExpiry" | "sex" | "birthDate" | "hrMax" | "hrRest" | "weight" | "height" | "thresholdHeartRate" | "thresholdPace" | "hrZone1Max" | "hrZone2Max" | "hrZone3Max" | "hrZone4Max" | "hrZone5Max" | "hrZone6Max" | "vdotCorrectionFactor" | "vdotReferenceRaceDate" | "vdotReferenceRaceTime" | "vdotReferenceRaceType" | "autoRevolvingVo2max" | "autoRevolvingCalculatedAt" | "includeCrossTraining" | "useImperial" | "lastSyncAt" | "syncInProgress" | "createdAt" | "updatedAt" | "healthTrackingEnabled" | "isAdmin", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
@@ -8604,6 +8854,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     vdotReferenceRaceDate: Date | null
     vdotReferenceRaceTime: number | null
     vdotReferenceRaceType: string | null
+    autoRevolvingVo2max: number | null
+    autoRevolvingCalculatedAt: Date | null
     includeCrossTraining: boolean
     useImperial: boolean
     lastSyncAt: Date | null
@@ -9088,6 +9340,8 @@ export interface UserFieldRefs {
   readonly vdotReferenceRaceDate: Prisma.FieldRef<"User", 'DateTime'>
   readonly vdotReferenceRaceTime: Prisma.FieldRef<"User", 'Int'>
   readonly vdotReferenceRaceType: Prisma.FieldRef<"User", 'String'>
+  readonly autoRevolvingVo2max: Prisma.FieldRef<"User", 'Float'>
+  readonly autoRevolvingCalculatedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly includeCrossTraining: Prisma.FieldRef<"User", 'Boolean'>
   readonly useImperial: Prisma.FieldRef<"User", 'Boolean'>
   readonly lastSyncAt: Prisma.FieldRef<"User", 'DateTime'>

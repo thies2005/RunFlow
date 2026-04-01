@@ -32,7 +32,7 @@ export async function GET(req: Request) {
         const [user, activeGoal] = await Promise.all([
             prisma.user.findUnique({
                 where: { id: userId },
-                select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true }
+                select: { hrMax: true, vdotCorrectionFactor: true, includeCrossTraining: true, vdotReferenceRaceDate: true, autoRevolvingVo2max: true }
             }),
             prisma.goal.findFirst({
                 where: { userId, isActive: true },
@@ -43,8 +43,8 @@ export async function GET(req: Request) {
         const vdotCorrectionFactor = user?.vdotCorrectionFactor || 1.0;
         const includeCrossTraining = user?.includeCrossTraining ?? true;
         const currentVdot = activeGoal?.currentVdot || null;
-        // The original code used marathonShapeFactor as 'calibrationFactor' passed to VO2max calc.
-        // We will pass 1.0 to raw calculation and handle correction separately as per service.
+        const hasExplicitCalibration = user?.vdotReferenceRaceDate != null;
+        const autoRevolvingVo2max = user?.autoRevolvingVo2max || null;
 
         // 2. Fetch Data (Optimized Selection)
         // We need 6 months for Shape, but simpler metrics might need less.
@@ -91,7 +91,12 @@ export async function GET(req: Request) {
 
         // 4. Compute Metrics via Service
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
-        const { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+        const { rawVO2max, effectiveVO2max: calculatedEffectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
+
+        const effectiveVO2max = (!hasExplicitCalibration && autoRevolvingVo2max && autoRevolvingVo2max > 0)
+            ? autoRevolvingVo2max
+            : calculatedEffectiveVO2max;
+
         // Conditionally include cross-training based on user preference
         const marathonShape = AnalyticsService.calculateShape(
             runActivities,
@@ -153,6 +158,7 @@ export async function GET(req: Request) {
             effectiveVO2max,
             rawVO2max,
             vdotCorrectionFactor,
+            autoRevolvingVo2max,
             marathonShape,
             currentVdot,
             ctl,

@@ -23,6 +23,8 @@ import { enrichActivityMetrics, transformActivityData, type MetricsInput } from 
 import { upsertActivity, createNewActivityNotification, updateUserProfile, updateSyncStatus, fetchExistingActivities, getLastActivityDate } from './persistence';
 import { calculateAndSaveFitnessMetrics, type ModifiedActivity } from './fitness';
 import { logger } from '@/lib/logging/logger';
+import { AnalyticsService } from '@/lib/services/analytics';
+import { type ActivityForShape } from '@/lib/metrics/runalyze';
 import pLimit from 'p-limit';
 
 const HR_MAX_UPPER_BOUND = 220;
@@ -318,6 +320,7 @@ export async function syncUserActivities(userId: string, range?: string): Promis
         if (modifiedActivities.length > 0) {
             await calculateAndSaveFitnessMetrics(userId, modifiedActivities);
             logger.info('Updated fitness cache', { userId, activityCount: modifiedActivities.length });
+            await updateAutoRevolvingVo2max(userId);
         }
 
         return { synced, skipped, errors, syncedActivityIds };
@@ -328,6 +331,57 @@ export async function syncUserActivities(userId: string, range?: string): Promis
             logger.error('Failed to reset syncInProgress flag', { userId, error: resetErr instanceof Error ? resetErr.message : String(resetErr) });
         }
         throw err;
+    }
+}
+
+async function updateAutoRevolvingVo2max(userId: string): Promise<void> {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { hrMax: true, vdotCorrectionFactor: true }
+        });
+
+        if (!user?.hrMax) return;
+
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
+
+        const runActivities = await prisma.activity.findMany({
+            where: {
+                userId,
+                type: 'RUN',
+                startDate: { gte: sixMonthsAgo },
+            },
+            select: {
+                startDate: true,
+                distance: true,
+                movingTime: true,
+                averageHr: true,
+                hasHeartrate: true,
+            },
+            orderBy: { startDate: 'desc' },
+        });
+
+        if (runActivities.length === 0) return;
+
+        const correctionFactor = user.vdotCorrectionFactor || 1.0;
+        const { effectiveVO2max } = AnalyticsService.calculateVO2max(
+            runActivities as ActivityForShape[],
+            user.hrMax,
+            correctionFactor
+        );
+
+        if (effectiveVO2max > 0) {
+            await prisma.user.update({
+                where: { id: userId },
+                data: {
+                    autoRevolvingVo2max: effectiveVO2max,
+                    autoRevolvingCalculatedAt: new Date(),
+                }
+            });
+        }
+    } catch (err) {
+        logger.error('Failed to update auto revolving VO2max', { userId, error: err instanceof Error ? err.message : String(err) });
     }
 }
 
@@ -440,6 +494,7 @@ export async function syncActivityById(userId: string, activityId: number): Prom
         logger.info('syncActivityById: Successfully synced activity', { userId, activityId });
 
         await calculateAndSaveFitnessMetrics(userId, [{ startDate: new Date(activity.start_date) }]);
+        await updateAutoRevolvingVo2max(userId);
 
     } catch (error) {
         logger.error('syncActivityById: Error syncing activity', { userId, activityId, error: error instanceof Error ? error.message : String(error) });

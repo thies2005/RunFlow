@@ -38,6 +38,8 @@ model User {
   vdotReferenceRaceDate DateTime?
   vdotReferenceRaceTime Int?
   vdotReferenceRaceType String?
+  autoRevolvingVo2max      Float?
+  autoRevolvingCalculatedAt DateTime?
   includeCrossTraining  Boolean              @default(true)
   useImperial           Boolean              @default(false)
   lastSyncAt            DateTime?

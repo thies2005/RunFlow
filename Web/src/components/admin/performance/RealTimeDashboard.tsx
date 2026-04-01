@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Activity, Cpu, HardDrive, Zap, AlertTriangle, Clock } from 'lucide-react';
 
 interface RealTimeMetrics {
@@ -11,51 +11,73 @@ interface RealTimeMetrics {
   timestamp: string;
 }
 
+interface SparklineDataPoint {
+  value: number;
+  timestamp: number;
+}
+
 interface RealTimeDashboardProps {
   refreshInterval?: number;
 }
 
+const MAX_HISTORY = 60;
+
 export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDashboardProps) {
   const [metrics, setMetrics] = useState<RealTimeMetrics | null>(null);
   const [previousMetrics, setPreviousMetrics] = useState<RealTimeMetrics | null>(null);
+  const [history, setHistory] = useState<{
+    requests: SparklineDataPoint[];
+    responseTime: SparklineDataPoint[];
+    cpu: SparklineDataPoint[];
+    memory: SparklineDataPoint[];
+  }>({
+    requests: [],
+    responseTime: [],
+    cpu: [],
+    memory: [],
+  });
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/performance-metrics');
       if (res.ok) {
         const data = await res.json();
-        setMetrics(data.realTime);
+        if (data.realTime) {
+          setMetrics(prev => {
+            if (prev) setPreviousMetrics(prev);
+            return data.realTime;
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to fetch real-time metrics:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchMetrics();
     const interval = setInterval(fetchMetrics, refreshInterval);
     return () => clearInterval(interval);
-  }, [refreshInterval]);
+  }, [fetchMetrics, refreshInterval]);
 
   useEffect(() => {
-    if (metrics && !previousMetrics) {
-      setPreviousMetrics(metrics);
-    }
+    if (!metrics) return;
+    const now = Date.now();
+    setHistory(prev => ({
+      requests: [...prev.requests.slice(-(MAX_HISTORY - 1)), { value: metrics.requestsPerSecond, timestamp: now }],
+      responseTime: [...prev.responseTime.slice(-(MAX_HISTORY - 1)), { value: metrics.avgResponseTime, timestamp: now }],
+      cpu: [...prev.cpu.slice(-(MAX_HISTORY - 1)), { value: metrics.cpuUsage, timestamp: now }],
+      memory: [...prev.memory.slice(-(MAX_HISTORY - 1)), { value: metrics.memoryUsage, timestamp: now }],
+    }));
   }, [metrics]);
 
   const getChange = (current: number, previous?: number) => {
-    if (!previous) return null;
+    if (previous === undefined || previous === null || previous === 0) return null;
     const change = ((current - previous) / previous) * 100;
     return {
       value: Math.abs(change).toFixed(1),
       positive: change > 0,
     };
-  };
-
-  const _getStatusColor = (value: number, thresholds: { warning: number; critical: number }) => {
-    if (value >= thresholds.critical) return 'text-red-600 bg-red-50';
-    if (value >= thresholds.warning) return 'text-yellow-600 bg-yellow-50';
-    return 'text-green-600 bg-green-50';
   };
 
   if (!metrics) {
@@ -131,21 +153,30 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
       </div>
 
       <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gray-600 mb-3">Mini Sparklines</h4>
-        <div className="grid grid-cols-3 gap-4">
+        <h4 className="text-sm font-medium text-gray-600 mb-3">Trends (last 60 readings)</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Sparkline
-            label="Requests"
+            label="Requests/sec"
+            data={history.requests}
             color="#3B82F6"
             height={60}
           />
           <Sparkline
-            label="Response Time"
+            label="Response Time (ms)"
+            data={history.responseTime}
             color="#8B5CF6"
             height={60}
           />
           <Sparkline
-            label="CPU"
+            label="CPU %"
+            data={history.cpu}
             color="#10B981"
+            height={60}
+          />
+          <Sparkline
+            label="Memory (MB)"
+            data={history.memory}
+            color="#F59E0B"
             height={60}
           />
         </div>
@@ -178,7 +209,7 @@ function MetricCard({ title, value, icon: Icon, color, change, inverse = false }
               <div className={`flex items-center text-xs mt-1 ${
                 (change.positive && !inverse) || (!change.positive && inverse) ? 'text-red-500' : 'text-green-500'
               }`}>
-                <span className="mr-1">{change.positive ? '↑' : '↓'}</span>
+                <span className="mr-1">{change.positive ? '\u2191' : '\u2193'}</span>
                 {change.value}%
               </div>
             )}
@@ -191,33 +222,81 @@ function MetricCard({ title, value, icon: Icon, color, change, inverse = false }
 
 interface SparklineProps {
   label: string;
+  data: SparklineDataPoint[];
   color: string;
   height: number;
 }
 
-function Sparkline({ label, color, height }: SparklineProps) {
+function Sparkline({ label, data, color, height }: SparklineProps) {
+  if (data.length < 2) {
+    return (
+      <div>
+        <p className="text-xs text-gray-500 mb-2">{label}</p>
+        <div
+          className="rounded-lg flex items-center justify-center"
+          style={{
+            background: `linear-gradient(135deg, ${color}20, ${color}05)`,
+            height: `${height}px`,
+          }}
+        >
+          <span className="text-xs text-gray-400">Collecting data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  const values = data.map(d => d.value);
+  const maxVal = Math.max(...values, 1);
+  const minVal = Math.min(...values);
+  const range = maxVal - minVal || 1;
+  const svgWidth = 200;
+  const step = svgWidth / (data.length - 1);
+
+  const points = data.map((d, i) => {
+    const x = i * step;
+    const y = height - 4 - ((d.value - minVal) / range) * (height - 8);
+    return `${x},${y}`;
+  }).join(' ');
+
+  const areaPoints = `0,${height} ${points} ${svgWidth},${height}`;
+
   return (
     <div>
-      <p className="text-xs text-gray-500 mb-2">{label}</p>
-      <div
-        className="rounded-lg"
-        style={{
-          background: `linear-gradient(135deg, ${color}20, ${color}05)`,
-          height: `${height}px`,
-          display: 'flex',
-          alignItems: 'flex-end',
-          padding: '4px',
-        }}
-      >
-        <div
-          style={{
-            width: '100%',
-            height: `${Math.random() * 60 + 20}%`,
-            background: color,
-            borderRadius: '4px',
-            opacity: 0.6,
-          }}
-        />
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-gray-500">{label}</p>
+        {data.length > 0 && (
+          <span className="text-xs font-medium" style={{ color }}>
+            {data[data.length - 1].value < 10
+              ? data[data.length - 1].value.toFixed(2)
+              : data[data.length - 1].value.toFixed(0)}
+          </span>
+        )}
+      </div>
+      <div className="rounded-lg overflow-hidden" style={{ background: `linear-gradient(135deg, ${color}10, ${color}05)` }}>
+        <svg
+          width="100%"
+          height={height}
+          viewBox={`0 0 ${svgWidth} ${height}`}
+          preserveAspectRatio="none"
+        >
+          <polygon points={areaPoints} fill={`${color}15`} />
+          <polyline
+            points={points}
+            fill="none"
+            stroke={color}
+            strokeWidth="2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          {data.length > 0 && (
+            <circle
+              cx={(data.length - 1) * step}
+              cy={height - 4 - ((data[data.length - 1].value - minVal) / range) * (height - 8)}
+              r="3"
+              fill={color}
+            />
+          )}
+        </svg>
       </div>
     </div>
   );

@@ -162,7 +162,6 @@ export async function middleware(request: NextRequest) {
     // Add request ID header for tracing
     response.headers.set('x-request-id', requestId)
 
-    // Log response with duration - only for slow requests, errors, or in development
     const duration = Date.now() - startTime;
     const shouldLog = process.env.NODE_ENV === 'development' ||
                       request.nextUrl.pathname.startsWith('/api/') ||
@@ -177,6 +176,28 @@ export async function middleware(request: NextRequest) {
             status: response.status,
             duration,
         });
+    }
+
+    if (request.nextUrl.pathname.startsWith('/api/') &&
+        !request.nextUrl.pathname.startsWith('/api/auth') &&
+        !request.nextUrl.pathname.startsWith('/api/webhooks') &&
+        !request.nextUrl.pathname.startsWith('/api/health') &&
+        !request.nextUrl.pathname.startsWith('/api/monitoring')) {
+        const trackingSecret = process.env.CRON_SECRET || 'internal-tracking';
+        const origin = request.nextUrl.origin;
+        fetch(`${origin}/api/monitoring/track`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${trackingSecret}`,
+            },
+            body: JSON.stringify({
+                routePath: request.nextUrl.pathname,
+                method: request.method,
+                statusCode: response.status,
+                responseTime: duration,
+            }),
+        }).catch(() => {});
     }
 
     return addCorsHeaders(response, request);

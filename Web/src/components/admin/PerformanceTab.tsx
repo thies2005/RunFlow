@@ -9,6 +9,9 @@ import {
   Clock,
   Filter,
   Download,
+  Database,
+  Wifi,
+  MemoryStick,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ApiRoutesTable from '@/components/admin/performance/ApiRoutesTable';
@@ -130,6 +133,7 @@ interface ApiRoutesTabProps {
 function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
   const [routes, setRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<string>('');
 
   const fetchRoutes = async () => {
     try {
@@ -138,6 +142,7 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
       if (res.ok) {
         const data = await res.json();
         setRoutes(data.routes || []);
+        setDataSource(data.dataSource || 'unknown');
       }
     } catch {
       // silently fail fetch
@@ -148,7 +153,21 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
 
   useEffect(() => {
     fetchRoutes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
+
+  const getDataSourceBadge = () => {
+    switch (dataSource) {
+      case 'aggregated':
+        return { label: 'Pre-aggregated', icon: Database, color: 'text-green-600 bg-green-50' };
+      case 'database':
+        return { label: 'Live from DB', icon: Database, color: 'text-blue-600 bg-blue-50' };
+      case 'memory':
+        return { label: 'In-memory (current session)', icon: MemoryStick, color: 'text-yellow-600 bg-yellow-50' };
+      default:
+        return { label: 'Unknown', icon: Wifi, color: 'text-gray-600 bg-gray-50' };
+    }
+  };
 
   if (loading) {
     return (
@@ -158,14 +177,26 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
     );
   }
 
+  const sourceBadge = getDataSourceBadge();
+  const SourceIcon = sourceBadge.icon;
+
   return (
     <div className="space-y-4">
       <div className="bg-white p-6 rounded-xl shadow-xs border border-gray-100">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-800">API Routes Performance</h3>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Clock className="w-4 h-4" />
-            Last {timeRange === '1h' ? 'hour' : timeRange === '24h' ? '24 hours' : timeRange + ' days'}
+          <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sourceBadge.color}`}>
+              <SourceIcon className="w-3 h-3" />
+              {sourceBadge.label}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Clock className="w-4 h-4" />
+              Last {timeRange === '1h' ? 'hour' : timeRange === '24h' ? '24 hours' : timeRange + ' days'}
+            </div>
+            <Button onClick={fetchRoutes} variant="outline" size="sm">
+              Refresh
+            </Button>
           </div>
         </div>
         <ApiRoutesTable

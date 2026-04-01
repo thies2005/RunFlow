@@ -35,7 +35,7 @@ interface ErrorAnalyticsProps {
 export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) {
   const [errors, setErrors] = useState<ErrorLog[]>([]);
   const [errorGroups, setErrorGroups] = useState<ErrorGroup[]>([]);
-  const [_loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [selectedError, setSelectedError] = useState<ErrorLog | null>(null);
   const [filters, setFilters] = useState({
     resolved: '' as '' | 'true' | 'false',
@@ -64,7 +64,8 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
 
   useEffect(() => {
     fetchErrors();
-  }, [filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.resolved, filters.route]);
 
   const handleResolve = async (errorId: string) => {
     try {
@@ -84,6 +85,14 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
   };
 
   const unresolvedCount = errors.filter(e => !e.resolved).length;
+
+  if (loading && errors.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -135,8 +144,12 @@ export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) 
         </div>
         <div className="max-h-96 overflow-y-auto">
           {errorGroups.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              No errors found
+            <div className="p-8 text-center">
+              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+              <p className="text-gray-600 font-medium">No errors found</p>
+              <p className="text-gray-400 text-sm mt-1">
+                Errors from API routes (status 400+) will automatically appear here when they occur.
+              </p>
             </div>
           ) : (
             errorGroups.map((group) => (

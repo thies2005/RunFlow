@@ -2,37 +2,19 @@ import { LRUCache } from 'lru-cache';
 import { NextResponse } from 'next/server';
 import { MINUTE_MS } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
+import { getRedisClient, type RedisClient } from '@/lib/redis';
 
 interface AdminRateLimitRecord {
     timestamps: number[];
     violations: number[];
 }
 
-interface RedisClient {
-    incr(_key: string): Promise<number>;
-    expire(_key: string, _seconds: number): Promise<number>;
-    ttl(_key: string): Promise<number>;
-    get(_key: string): Promise<string | null>;
-    set(_key: string, _value: string, ..._args: unknown[]): Promise<unknown>;
-}
+let resolvedRedisClient: RedisClient | null | undefined = undefined;
 
-let redisClient: RedisClient | null = null;
-let redisInitialized = false;
-
-async function initRedis(): Promise<boolean> {
-    if (redisInitialized) return !!redisClient;
-    redisInitialized = true;
-
-    const redisUrl = process.env.REDIS_URL;
-    if (!redisUrl) return false;
-
-    try {
-        const { Redis } = await import('@upstash/redis') as { Redis: new (_options: { url: string; token: string }) => RedisClient };
-        redisClient = new Redis({ url: redisUrl, token: process.env.REDIS_TOKEN || '' });
-        return true;
-    } catch {
-        return false;
-    }
+async function getAdminRedisClient(): Promise<RedisClient | null> {
+    if (resolvedRedisClient !== undefined) return resolvedRedisClient;
+    resolvedRedisClient = await getRedisClient();
+    return resolvedRedisClient;
 }
 
 const adminCache = new LRUCache<string, AdminRateLimitRecord>({
@@ -119,15 +101,14 @@ function isIPBlocked(ip: string): boolean {
     return cleanViolations.length >= VIOLATION_THRESHOLD;
 }
 
-async function isIPBlockedRedis(ip: string): Promise<boolean> {
-    if (!redisClient) return false;
+async function isIPBlockedRedis(client: RedisClient, ip: string): Promise<boolean> {
     try {
         const key = getViolationKey(ip);
-        const count = await redisClient.incr(key);
+        const count = await client.incr(key);
         if (count === 1) {
-            await redisClient.expire(key, Math.ceil(BLOCK_DURATION / 1000));
+            await client.expire(key, Math.ceil(BLOCK_DURATION / 1000));
         }
-        const ttl = await redisClient.ttl(key);
+        const ttl = await client.ttl(key);
         if (ttl <= 0) return false;
         return count >= VIOLATION_THRESHOLD;
     } catch {
@@ -149,12 +130,11 @@ function recordViolation(ip: string): void {
     });
 }
 
-async function recordViolationRedis(ip: string): Promise<void> {
-    if (!redisClient) return;
+async function recordViolationRedis(client: RedisClient, ip: string): Promise<void> {
     try {
         const key = getViolationKey(ip);
-        await redisClient.incr(key);
-        await redisClient.expire(key, Math.ceil(BLOCK_DURATION / 1000));
+        await client.incr(key);
+        await client.expire(key, Math.ceil(BLOCK_DURATION / 1000));
     } catch {
         // Silently fail - in-memory will handle it
     }
@@ -173,10 +153,10 @@ export async function adminRateLimit(
     operation: AdminOperation
 ): Promise<{ success: boolean; result?: AdminRateLimitResult; error?: NextResponse }> {
     const ip = getClientIP(request);
-    const hasRedis = await initRedis();
+    const client = await getAdminRedisClient();
 
-    if (hasRedis && redisClient) {
-        return adminRateLimitRedis(ip, operation);
+    if (client) {
+        return adminRateLimitRedis(client, ip, operation);
     }
 
     if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
@@ -187,11 +167,12 @@ export async function adminRateLimit(
 }
 
 async function adminRateLimitRedis(
+    client: RedisClient,
     ip: string,
     operation: AdminOperation
 ): Promise<{ success: boolean; result?: AdminRateLimitResult; error?: NextResponse }> {
     try {
-        const blocked = await isIPBlockedRedis(ip);
+        const blocked = await isIPBlockedRedis(client, ip);
         if (blocked) {
             const now = Date.now();
             const retryAfter = Math.ceil(BLOCK_DURATION / 1000);
@@ -215,16 +196,16 @@ async function adminRateLimitRedis(
 
         const config = ADMIN_RATE_LIMITS[operation];
         const key = getCacheKey(ip, operation);
-        const count = await redisClient!.incr(key);
+        const count = await client.incr(key);
         if (count === 1) {
-            await redisClient!.expire(key, Math.ceil(config.window / 1000));
+            await client.expire(key, Math.ceil(config.window / 1000));
         }
 
-        const ttl = await redisClient!.ttl(key);
+        const ttl = await client.ttl(key);
         const resetAt = Date.now() + (ttl > 0 ? ttl * 1000 : config.window);
 
         if (count > config.limit) {
-            await recordViolationRedis(ip);
+            await recordViolationRedis(client, ip);
             const retryAfter = Math.max(0, Math.ceil((resetAt - Date.now()) / 1000));
             return {
                 success: false,

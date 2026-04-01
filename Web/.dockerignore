@@ -15,8 +15,7 @@ yarn-error.log*
 android/
 ios/
 
-# Docker files
-Dockerfile
+# Docker compose files (not Dockerfile - needed by docker compose build)
 docker-compose*.yml
 
 # Build artifacts and development

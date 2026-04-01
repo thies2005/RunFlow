@@ -1,42 +1,15 @@
 import { LRUCache } from 'lru-cache';
 import { MINUTE_MS } from '@/lib/constants';
+import { getRedisClient, type RedisClient } from '@/lib/redis';
 
 type RateLimitRecord = {
     timestamps: number[];
 };
 
-interface RedisClient {
-    incr(_key: string): Promise<number>;
-    expire(_key: string, _seconds: number): Promise<number>;
-    ttl(_key: string): Promise<number>;
-}
-
 const rateLimitCache = new LRUCache<string, RateLimitRecord>({
     max: 10000,
     ttl: 15 * MINUTE_MS,
 });
-
-let redisClient: RedisClient | null = null;
-let redisInitialized = false;
-
-async function initRedis(): Promise<boolean> {
-    if (redisInitialized) return !!redisClient;
-
-    redisInitialized = true;
-
-    const redisUrl = process.env.REDIS_URL;
-    if (!redisUrl) {
-        return false;
-    }
-
-    try {
-        const { Redis } = await import('@upstash/redis') as { Redis: new (_options: { url: string; token: string }) => RedisClient };
-        redisClient = new Redis({ url: redisUrl, token: process.env.REDIS_TOKEN || '' });
-        return true;
-    } catch {
-        return false;
-    }
-}
 
 export type RateLimitConfig = {
     limit: number;
@@ -111,17 +84,13 @@ function checkRateLimitInMemory(
 }
 
 async function checkRateLimitRedis(
+    client: RedisClient,
     key: string,
     limit: number,
     windowSeconds: number
 ): Promise<RateLimitResult> {
     const now = Date.now();
     const windowMs = windowSeconds * 1000;
-
-    const client = redisClient;
-    if (!client) {
-        throw new Error('Redis client not initialized');
-    }
 
     try {
         const currentCount = await client.incr(key);
@@ -179,16 +148,11 @@ export async function checkRateLimitAsync(
     const { limit, windowSeconds, prefix = '' } = config;
     const key = `ratelimit:${prefix}:${identifier}`;
 
-    const hasRedis = await initRedis();
-    if (hasRedis && redisClient) {
-        return checkRateLimitRedis(key, limit, windowSeconds);
+    const client = await getRedisClient();
+    if (client) {
+        return checkRateLimitRedis(client, key, limit, windowSeconds);
     }
 
-    // In serverless environments (like Vercel), in-memory rate limiting is ineffective 
-    // because state is lost between invocations. 
-    // However, for Docker/long-running processes, in-memory fallback is perfectly acceptable.
-    // We log a warning if Redis is missing in production, but we don't fail closed
-    // to ensure the app remains usable for self-hosted Docker users without Redis.
     if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
         console.warn('Rate Limit: Redis not available in production. Falling back to in-memory (acceptable for long-running Docker containers).');
     }

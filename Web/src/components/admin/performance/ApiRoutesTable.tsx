@@ -40,7 +40,7 @@ export default function ApiRoutesTable({
   onSort,
 }: ApiRoutesTableProps) {
   const getHealthStatus = (route: RouteStats) => {
-    const errorRate = (route.errorCount / route.requestCount) * 100;
+    const errorRate = route.requestCount > 0 ? (route.errorCount / route.requestCount) * 100 : 0;
     
     if (errorRate > 5) return { status: 'critical', color: 'bg-red-500' };
     if (errorRate > 1) return { status: 'warning', color: 'bg-yellow-500' };
@@ -48,7 +48,8 @@ export default function ApiRoutesTable({
     return { status: 'healthy', color: 'bg-green-500' };
   };
 
-  const formatResponseTime = (ms: number) => {
+  const formatResponseTime = (ms: number | null | undefined) => {
+    if (ms == null) return '0ms';
     if (ms < 1000) return `${ms.toFixed(0)}ms`;
     return `${(ms / 1000).toFixed(2)}s`;
   };
@@ -115,7 +116,7 @@ export default function ApiRoutesTable({
             ) : (
               routes.map((route) => {
                 const health = getHealthStatus(route);
-                const errorRate = ((route.errorCount / route.requestCount) * 100).toFixed(2);
+                const errorRate = route.requestCount > 0 ? ((route.errorCount / route.requestCount) * 100).toFixed(2) : '0.00';
                 
                 return (
                   <TableRow
@@ -148,8 +149,8 @@ export default function ApiRoutesTable({
                         <span className="text-gray-400">({errorRate}%)</span>
                       </div>
                     </TableCell>
-                    <TableCell>{route.avgCpuUsage.toFixed(1)}%</TableCell>
-                    <TableCell>{route.avgMemoryUsage.toFixed(0)}MB</TableCell>
+                    <TableCell>{(route.avgCpuUsage ?? 0).toFixed(1)}%</TableCell>
+                    <TableCell>{(route.avgMemoryUsage ?? 0).toFixed(0)}MB</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${health.color}`} />

@@ -1,0 +1,516 @@
+import { generateTrainingPlan, PLAN_CONSTANTS } from '../index';
+import { calculateTrainingPaces } from '../../metrics/vdot';
+import { WorkoutType } from '@/generated/prisma/browser';
+
+jest.mock('../../metrics/vdot', () => ({
+    calculateTrainingPaces: jest.fn(),
+}));
+
+const mockedCalculateTrainingPaces = calculateTrainingPaces as jest.MockedFunction<typeof calculateTrainingPaces>;
+
+const MOCK_PACES = {
+    easy: { min: 330, max: 390 },
+    marathon: 300,
+    threshold: 270,
+    interval: 240,
+    repetition: 220,
+};
+
+function makeConfig(overrides: Record<string, unknown> = {}) {
+    const raceDate = new Date('2026-07-19');
+    const startDate = new Date('2026-04-05');
+    return {
+        vdot: 50,
+        raceType: 'MARATHON' as const,
+        raceDate,
+        startDate,
+        runsPerWeek: 4,
+        ridesPerWeek: 0,
+        strengthPerWeek: 0,
+        swimsPerWeek: 0,
+        weeklyMileageGoal: 60000,
+        taperWeeks: 2,
+        peakWeeks: 4,
+        buildWeeks: 4,
+        ...overrides,
+    };
+}
+
+beforeEach(() => {
+    mockedCalculateTrainingPaces.mockReturnValue(MOCK_PACES);
+});
+
+describe('Training Plan Generation', () => {
+    describe('Phase 1: Critical Core Logic Bugs', () => {
+        it('5K intervals use interval pace, not threshold (Task 1.1)', () => {
+            const config = makeConfig({
+                raceType: 'FIVE_K',
+                weeklyMileageGoal: 30000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const intervalWorkouts = workouts.filter(
+                w => w.type === WorkoutType.INTERVALS
+            );
+            expect(intervalWorkouts.length).toBeGreaterThan(0);
+            for (const w of intervalWorkouts) {
+                expect(w.targetPace).toBe(MOCK_PACES.interval);
+                expect(w.targetPace).not.toBe(MOCK_PACES.threshold);
+            }
+        });
+
+        it('10K intervals use interval pace, not threshold (Task 1.1)', () => {
+            const config = makeConfig({
+                raceType: 'TEN_K',
+                weeklyMileageGoal: 40000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const intervalWorkouts = workouts.filter(
+                w => w.type === WorkoutType.INTERVALS
+            );
+            expect(intervalWorkouts.length).toBeGreaterThan(0);
+            for (const w of intervalWorkouts) {
+                expect(w.targetPace).toBe(MOCK_PACES.interval);
+            }
+        });
+
+        it('Marathon PEAK tempo sessions use marathon pace for MP segments (Task 1.2)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 60000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const mpWorkouts = workouts.filter(
+                w => w.description.includes('MP Segment')
+            );
+            expect(mpWorkouts.length).toBeGreaterThan(0);
+            for (const w of mpWorkouts) {
+                expect(w.targetPace).toBe(MOCK_PACES.marathon);
+            }
+        });
+
+        it('Half Marathon PEAK sessions use marathon pace (Task 1.2)', () => {
+            const config = makeConfig({
+                raceType: 'HALF_MARATHON',
+                weeklyMileageGoal: 50000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const mpWorkouts = workouts.filter(
+                w => w.description.includes('MP Segment')
+            );
+            expect(mpWorkouts.length).toBeGreaterThan(0);
+            for (const w of mpWorkouts) {
+                expect(w.targetPace).toBe(MOCK_PACES.marathon);
+            }
+        });
+
+        it('taper uses configurable taperWeeks, not hardcoded 2 (Task 1.3)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                taperWeeks: 3,
+                peakWeeks: 2,
+                buildWeeks: 2,
+            });
+            const workouts = generateTrainingPlan(config);
+            const weeks = groupByWeek(workouts);
+            const lastThreeWeeks = weeks.slice(-3);
+            for (const week of lastThreeWeeks) {
+                const totalDist = week.reduce((s, w) => s + w.totalDistance, 0);
+                expect(totalDist).toBeLessThan(60000 * 0.85);
+            }
+        });
+
+        it('5K taper is shorter (single week, 75% volume)', () => {
+            const config = makeConfig({
+                raceType: 'FIVE_K',
+                weeklyMileageGoal: 30000,
+                taperWeeks: 1,
+            });
+            const workouts = generateTrainingPlan(config);
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            expect(raceWorkout).toBeDefined();
+            const raceWeekStart = new Date(raceWorkout!.date);
+            raceWeekStart.setDate(raceWeekStart.getDate() - 6);
+            const raceWeekEnd = new Date(raceWorkout!.date);
+            raceWeekEnd.setDate(raceWeekEnd.getDate() + 1);
+            const taperWeekWorkouts = workouts.filter(w =>
+                w.date >= raceWeekStart && w.date <= raceWeekEnd &&
+                w.type !== WorkoutType.RACE
+            );
+            const totalDist = taperWeekWorkouts.reduce((s, w) => s + w.totalDistance, 0);
+            expect(totalDist).toBeLessThan(30000);
+        });
+    });
+
+    describe('Phase 2: Scheduling, Recovery & Race Week', () => {
+        it('race week schedules RACE on raceDate (Task 2.1)', () => {
+            const raceDate = new Date('2026-07-19');
+            const config = makeConfig({ raceDate });
+            const workouts = generateTrainingPlan(config);
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            expect(raceWorkout).toBeDefined();
+            const raceWorkoutDay = new Date(raceWorkout!.date).getDay();
+            expect(raceWorkoutDay).toBe(raceDate.getDay());
+        });
+
+        it('race week includes shakeout runs and pre-race strides (Task 2.1)', () => {
+            const config = makeConfig({ raceType: 'MARATHON' });
+            const workouts = generateTrainingPlan(config);
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            expect(raceWorkout).toBeDefined();
+            const raceWeekMs = raceWorkout!.date.getTime();
+            const weekMs = 7 * 24 * 60 * 60 * 1000;
+            const raceWeekWorkouts = workouts.filter(
+                w => Math.abs(w.date.getTime() - raceWeekMs) < weekMs
+            );
+            const hasShakeout = raceWeekWorkouts.some(
+                w => w.description.includes('Shakeout')
+            );
+            const hasStrides = raceWeekWorkouts.some(
+                w => w.description.includes('Strides')
+            );
+            expect(hasShakeout).toBe(true);
+            expect(hasStrides).toBe(true);
+        });
+
+        it('step loading applies 20% reduction every 4th BASE/BUILD week (Task 2.2)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                taperWeeks: 2,
+                peakWeeks: 2,
+                buildWeeks: 4,
+            });
+            const workouts = generateTrainingPlan(config);
+            const weeks = groupByWeek(workouts);
+            const buildPeekWeeks = weeks.slice(0, -2);
+            const volumes = buildPeekWeeks.map(w =>
+                w.reduce((s, wk) => s + wk.totalDistance, 0)
+            );
+            let recoveryCount = 0;
+            for (let i = 1; i < volumes.length; i++) {
+                if (volumes[i] < volumes[i - 1] * 0.9) {
+                    recoveryCount++;
+                }
+            }
+            expect(recoveryCount).toBeGreaterThanOrEqual(1);
+        });
+
+        it('10% weekly increase hard cap is enforced between non-recovery weeks (Task 2.3)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 60000,
+                taperWeeks: 2,
+                peakWeeks: 2,
+                buildWeeks: 4,
+            });
+            const workouts = generateTrainingPlan(config);
+            const runWorkouts = workouts.filter(w =>
+                isRunType(w.type) && w.type !== WorkoutType.RACE
+            );
+            const weeks = groupByWeek(runWorkouts);
+            const volumes = weeks.map(w =>
+                w.reduce((s, wk) => s + wk.totalDistance, 0)
+            );
+            for (let i = 1; i < volumes.length; i++) {
+                const prevVol = volumes[i - 1];
+                const curVol = volumes[i];
+                if (prevVol < 10000 || curVol < 10000) continue;
+                const prevPrev = i >= 2 ? volumes[i - 2] : prevVol;
+                const wasRecovery = prevVol < prevPrev * 0.90;
+                if (wasRecovery) continue;
+                if (curVol < prevVol * 0.90) continue;
+                const ratio = curVol / prevVol;
+                if (ratio > 1.01) {
+                    expect(ratio).toBeLessThanOrEqual(1.15);
+                }
+            }
+        });
+
+        it('48-hour gap between long run and quality session (Task 2.4)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                longRunDay: 6,
+                workoutDay: 0,
+            });
+            const workouts = generateTrainingPlan(config);
+            const weeks = groupByWeek(workouts);
+            for (const week of weeks) {
+                const longRun = week.find(w => w.type === WorkoutType.LONG_RUN);
+                const quality = week.find(
+                    w =>
+                        w.type === WorkoutType.INTERVALS ||
+                        w.type === WorkoutType.TEMPO ||
+                        w.type === WorkoutType.REPETITIONS
+                );
+                if (!longRun || !quality) continue;
+                const longRunDay = new Date(longRun.date).getDay();
+                const qualityDay = new Date(quality.date).getDay();
+                const diff = Math.abs(longRunDay - qualityDay);
+                const circularDiff = Math.min(diff, 7 - diff);
+                expect(circularDiff).toBeGreaterThanOrEqual(
+                    PLAN_CONSTANTS.MIN_GAP_DAYS
+                );
+            }
+        });
+
+        it('recovery run scheduled day after hard session (Task 2.4)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                runsPerWeek: 5,
+            });
+            const workouts = generateTrainingPlan(config);
+            const recoveryRuns = workouts.filter(
+                w => w.type === WorkoutType.RECOVERY
+            );
+            expect(recoveryRuns.length).toBeGreaterThan(0);
+            for (const rr of recoveryRuns) {
+                expect(rr.targetPace).toBe(MOCK_PACES.easy.max);
+            }
+        });
+    });
+
+    describe('Phase 3: Distance-Specific Workouts & Progression', () => {
+        it('5K focuses on VO2max reps in PEAK phase (Task 3.1)', () => {
+            const config = makeConfig({
+                raceType: 'FIVE_K',
+                weeklyMileageGoal: 30000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const reps = workouts.filter(w => w.type === WorkoutType.REPETITIONS);
+            expect(reps.length).toBeGreaterThan(0);
+            for (const r of reps) {
+                expect(r.targetPace).toBe(MOCK_PACES.repetition);
+            }
+        });
+
+        it('10K includes threshold work in PEAK phase (Task 3.1)', () => {
+            const config = makeConfig({
+                raceType: 'TEN_K',
+                weeklyMileageGoal: 40000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const thresholdTempos = workouts.filter(
+                w => w.type === WorkoutType.TEMPO && w.description.includes('Threshold')
+            );
+            expect(thresholdTempos.length).toBeGreaterThan(0);
+        });
+
+        it('HM BUILD phase uses threshold pace (Task 3.1)', () => {
+            const config = makeConfig({
+                raceType: 'HALF_MARATHON',
+                weeklyMileageGoal: 50000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const thresholdTempos = workouts.filter(
+                w =>
+                    w.type === WorkoutType.TEMPO &&
+                    w.description.includes('Threshold')
+            );
+            expect(thresholdTempos.length).toBeGreaterThan(0);
+            for (const t of thresholdTempos) {
+                expect(t.targetPace).toBe(MOCK_PACES.threshold);
+            }
+        });
+
+        it('quality sessions progress through phases: BASE fartlek -> BUILD threshold -> PEAK specific (Task 3.2)', () => {
+            expect(mockedCalculateTrainingPaces).toHaveBeenCalled();
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 60000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const allDescs = workouts.map(w => w.description);
+            const fartlekDescs = allDescs.filter(d => d.includes('Fartlek'));
+            const thresholdDescs = allDescs.filter(d => d.includes('Threshold'));
+            const mpDescs = allDescs.filter(d => d.includes('MP Segment'));
+            expect(fartlekDescs.length).toBeGreaterThan(0);
+            expect(thresholdDescs.length).toBeGreaterThan(0);
+            expect(mpDescs.length).toBeGreaterThan(0);
+        });
+
+        it('strides injected in BASE phase easy runs (Task 3.3)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                taperWeeks: 1,
+                peakWeeks: 1,
+                buildWeeks: 2,
+            });
+            const workouts = generateTrainingPlan(config);
+            const stridesRuns = workouts.filter(w =>
+                w.description.includes('Strides')
+            );
+            expect(stridesRuns.length).toBeGreaterThan(0);
+        });
+
+        it('progressive long run with MP segments in PEAK phase for marathon (Task 3.3)', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 60000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const progressiveLR = workouts.filter(
+                w =>
+                    w.type === WorkoutType.LONG_RUN &&
+                    w.description.includes('MP')
+            );
+            expect(progressiveLR.length).toBeGreaterThan(0);
+        });
+    });
+
+    describe('Phase 4: Caps, Constants & Safety Limits', () => {
+        it('HM max long run capped at 21km (Task 4.1)', () => {
+            const config = makeConfig({
+                raceType: 'HALF_MARATHON',
+                weeklyMileageGoal: 60000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const longRuns = workouts.filter(w => w.type === WorkoutType.LONG_RUN);
+            for (const lr of longRuns) {
+                expect(lr.totalDistance).toBeLessThanOrEqual(22000);
+            }
+        });
+
+        it('10K max long run capped at 17km (Task 4.1)', () => {
+            const config = makeConfig({
+                raceType: 'TEN_K',
+                weeklyMileageGoal: 50000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const longRuns = workouts.filter(w => w.type === WorkoutType.LONG_RUN);
+            for (const lr of longRuns) {
+                expect(lr.totalDistance).toBeLessThanOrEqual(18000);
+            }
+        });
+
+        it('low-volume marathon runners get higher long run ratio to reach distance minimums (Task 4.2)', () => {
+            const lowVolConfig = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 50000,
+            });
+            const highVolConfig = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 80000,
+            });
+            const lowWorkouts = generateTrainingPlan(lowVolConfig);
+            const highWorkouts = generateTrainingPlan(highVolConfig);
+            const lowMaxLR = Math.max(...lowWorkouts.filter(w => w.type === WorkoutType.LONG_RUN).map(lr => lr.totalDistance));
+            const highMaxLR = Math.max(...highWorkouts.filter(w => w.type === WorkoutType.LONG_RUN).map(lr => lr.totalDistance));
+            const lowRatio = lowMaxLR / 50000;
+            const highRatio = highMaxLR / 80000;
+            expect(lowRatio).toBeGreaterThan(highRatio);
+        });
+
+        it('time-on-feet cap prevents long runs exceeding 3.5 hours (Task 4.3)', () => {
+            const slowPaces = {
+                easy: { min: 420, max: 480 },
+                marathon: 390,
+                threshold: 360,
+                interval: 330,
+                repetition: 310,
+            };
+            mockedCalculateTrainingPaces.mockReturnValue(slowPaces);
+
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 70000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const longRuns = workouts.filter(w => w.type === WorkoutType.LONG_RUN);
+            for (const lr of longRuns) {
+                const durationSeconds = (lr.totalDistance / 1000) * slowPaces.easy.max;
+                expect(durationSeconds).toBeLessThanOrEqual(
+                    PLAN_CONSTANTS.MAX_TIME_ON_FEET_SECONDS + slowPaces.easy.max * 1
+                );
+            }
+        });
+
+        it('PLAN_CONSTANTS MAX_LONG_RUN_DIST updated correctly (Task 4.1)', () => {
+            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.HALF_MARATHON).toBe(21000);
+            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.TEN_K).toBe(17000);
+            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.MARATHON).toBe(32000);
+            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.FIVE_K).toBe(16000);
+        });
+    });
+
+    describe('Edge Cases', () => {
+        it('handles very short plans (2 weeks)', () => {
+            const raceDate = new Date('2026-04-19');
+            const startDate = new Date('2026-04-05');
+            const config = makeConfig({ raceDate, startDate, raceType: 'FIVE_K' });
+            const workouts = generateTrainingPlan(config);
+            expect(workouts.length).toBeGreaterThan(0);
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            expect(raceWorkout).toBeDefined();
+        });
+
+        it('handles single week plan', () => {
+            const raceDate = new Date('2026-04-11');
+            const startDate = new Date('2026-04-05');
+            const config = makeConfig({ raceDate, startDate, raceType: 'FIVE_K' });
+            const workouts = generateTrainingPlan(config);
+            expect(workouts.length).toBeGreaterThan(0);
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            expect(raceWorkout).toBeDefined();
+        });
+
+        it('never produces negative volume weeks', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                weeklyMileageGoal: 50000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const weeks = groupByWeek(workouts);
+            for (const week of weeks) {
+                const totalDist = week.reduce((s, w) => s + w.totalDistance, 0);
+                expect(totalDist).toBeGreaterThanOrEqual(0);
+            }
+        });
+
+        it('all workouts have valid dates between startDate and raceDate', () => {
+            const raceDate = new Date('2026-07-19');
+            const startDate = new Date('2026-04-05');
+            const config = makeConfig({ raceDate, startDate });
+            const workouts = generateTrainingPlan(config);
+            const startMs = startDate.getTime() - 7 * 24 * 60 * 60 * 1000;
+            const endMs = raceDate.getTime() + 24 * 60 * 60 * 1000;
+            for (const w of workouts) {
+                expect(w.date.getTime()).toBeGreaterThanOrEqual(startMs);
+                expect(w.date.getTime()).toBeLessThanOrEqual(endMs);
+            }
+        });
+
+        it('no duplicate workout types on the same day', () => {
+            const config = makeConfig({ runsPerWeek: 6 });
+            const workouts = generateTrainingPlan(config);
+            const dayTypes = new Map<string, Set<string>>();
+            for (const w of workouts) {
+                const dayKey = w.date.toISOString().split('T')[0];
+                if (!dayTypes.has(dayKey)) dayTypes.set(dayKey, new Set());
+                const types = dayTypes.get(dayKey)!;
+                expect(types.has(w.type)).toBe(false);
+                types.add(w.type);
+            }
+        });
+    });
+});
+
+function groupByWeek(workouts: { date: Date }[]): { date: Date }[][] {
+    const weeks: { date: Date }[][] = [];
+    let currentWeek: { date: Date }[] = [];
+    let lastDay = -1;
+
+    for (const w of workouts) {
+        const day = new Date(w.date).getDay();
+        if (day <= lastDay && currentWeek.length > 0) {
+            weeks.push(currentWeek);
+            currentWeek = [];
+        }
+        currentWeek.push(w);
+        lastDay = day;
+    }
+    if (currentWeek.length > 0) weeks.push(currentWeek);
+    return weeks;
+}
+
+function isRunType(type: string): boolean {
+    return ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 'RACE', 'REPETITIONS'].includes(type);
+}

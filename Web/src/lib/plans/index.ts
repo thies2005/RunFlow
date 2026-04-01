@@ -1,7 +1,6 @@
 import { WorkoutType, RaceType } from '@/generated/prisma/browser';
-import { calculateTrainingPaces } from '../metrics/vdot';
+import { calculateTrainingPaces, TrainingPaces } from '../metrics/vdot';
 
-// L-02: Configurable Constants
 export const PLAN_CONSTANTS = {
     MIN_PEAK_VOLUME: {
         FIVE_K: 20000,
@@ -11,49 +10,62 @@ export const PLAN_CONSTANTS = {
     },
     MAX_LONG_RUN_DIST: {
         FIVE_K: 16000,
-        TEN_K: 22000,
-        HALF_MARATHON: 26000,
+        TEN_K: 17000,
+        HALF_MARATHON: 21000,
         MARATHON: 32000
     },
     MIN_LONG_RUN: 6000,
     MIN_VOLUME_START: 15000,
     EASY_RUN_MIN: 4000,
     EASY_RUN_MAX: 12000,
-    LONG_RUN_RATIO: 0.50, // Cap at 50% of weekly volume
-    START_VOLUME_RATIO: 0.60, // Start at 60% of peak
+    LONG_RUN_RATIO: 0.50,
+    LONG_RUN_RATIO_LOW_VOLUME: 0.65,
+    LOW_VOLUME_THRESHOLD: 64000,
+    START_VOLUME_RATIO: 0.60,
+    WEEKLY_GROWTH_CAP: 1.10,
+    RECOVERY_WEEK_FACTOR: 0.80,
+    STEP_LOADING_CYCLE: 4,
+    MIN_GAP_DAYS: 2,
+    MAX_TIME_ON_FEET_SECONDS: 12600,
+};
+
+const TAPER_FRACTIONS: Record<RaceType, number[]> = {
+    FIVE_K: [0.75],
+    TEN_K: [0.80, 0.60],
+    HALF_MARATHON: [0.75, 0.55],
+    MARATHON: [0.80, 0.65, 0.45],
 };
 
 export type PlanConfig = {
     vdot: number;
     raceType: RaceType;
     raceDate: Date;
-    startDate?: Date; // Defaults to now
-    runsPerWeek?: number; // Default 4
-    ridesPerWeek?: number; // Default 0
-    strengthPerWeek?: number; // Default 0
-    swimsPerWeek?: number; // Default 0
-    weeklyMileageGoal?: number | null; // Max km per week (in meters!)
-    // Phase length overrides (weeks)
-    taperWeeks?: number; // Default 2
-    peakWeeks?: number; // Default 4
-    buildWeeks?: number; // Default 4
-    // L-03: Flexible Days (0-6)
-    longRunDay?: number; // Default 0 (Sun)
-    workoutDay?: number; // Default 3 (Wed)
+    startDate?: Date;
+    runsPerWeek?: number;
+    ridesPerWeek?: number;
+    strengthPerWeek?: number;
+    swimsPerWeek?: number;
+    weeklyMileageGoal?: number | null;
+    taperWeeks?: number;
+    peakWeeks?: number;
+    buildWeeks?: number;
+    longRunDay?: number;
+    workoutDay?: number;
 };
 
 export type GeneratedWorkout = {
     date: Date;
     type: WorkoutType;
     description: string;
-    totalDistance: number; // Estimated meters
-    targetPace?: number; // seconds per km
-    targetDuration?: number; // seconds
+    totalDistance: number;
+    targetPace?: number;
+    targetDuration?: number;
 };
 
-/**
- * Generates a training plan based on VDOT and race goal
- */
+type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER';
+
+type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
+
 export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const { vdot, raceType, raceDate } = config;
     const startDate = config.startDate || new Date();
@@ -62,58 +74,111 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const strengthPerWeek = config.strengthPerWeek || 0;
     const swimsPerWeek = config.swimsPerWeek || 0;
 
-    // Day Preferences
-    const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0; // Default Sunday
-    const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3; // Default Wednesday
+    const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0;
+    const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
 
-    // Determine Peak Volume (meters)
     let peakVolume = config.weeklyMileageGoal || 40000;
-    // Ensure logical minimum peak based on race type
     const minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[raceType];
     if (peakVolume < minPeak) peakVolume = minPeak;
 
-    // Calculate weeks available
     const timeDiff = raceDate.getTime() - startDate.getTime();
-    const totalWeeks = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 7));
+    const totalWeeks = Math.max(1, Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 7)));
 
-    // Linear Progression Logic
-    // Start at ~60% of peak volume
     let startVolume = peakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
+    if (startVolume < PLAN_CONSTANTS.MIN_VOLUME_START) {
+        startVolume = Math.min(PLAN_CONSTANTS.MIN_VOLUME_START, peakVolume);
+    }
 
-    // Ensure logical minimum floor (e.g. 15km) but don't exceed peak
-    if (startVolume < PLAN_CONSTANTS.MIN_VOLUME_START) startVolume = Math.min(PLAN_CONSTANTS.MIN_VOLUME_START, peakVolume);
-
-    // Get authorized paces
     const paces = calculateTrainingPaces(vdot);
+
+    const defaultTaperWeeks = TAPER_FRACTIONS[raceType].length;
+    const taperWeeks = config.taperWeeks ?? defaultTaperWeeks;
+    const peakWeeks = config.peakWeeks ?? 4;
+    const buildWeeks = config.buildWeeks ?? 4;
+
+    const growthRatio = peakVolume / startVolume;
+    const minRampWeeks = growthRatio > 1.001
+        ? Math.ceil(Math.log(growthRatio) / Math.log(PLAN_CONSTANTS.WEEKLY_GROWTH_CAP))
+        : 1;
+
+    let calendarRampWeeks = minRampWeeks;
+    while (calendarRampWeeks - Math.floor(calendarRampWeeks / PLAN_CONSTANTS.STEP_LOADING_CYCLE) < minRampWeeks) {
+        calendarRampWeeks++;
+    }
+
+    const availableRampWeeks = Math.max(1, totalWeeks - taperWeeks);
+    let effectivePeakVolume = peakVolume;
+    if (availableRampWeeks < calendarRampWeeks) {
+        const effWeeks = availableRampWeeks - Math.floor(availableRampWeeks / PLAN_CONSTANTS.STEP_LOADING_CYCLE);
+        effectivePeakVolume = Math.round(startVolume * Math.pow(PLAN_CONSTANTS.WEEKLY_GROWTH_CAP, Math.max(1, effWeeks)));
+        calendarRampWeeks = availableRampWeeks;
+    }
+
+    const effectiveWeeksInRamp = Math.max(1, calendarRampWeeks - Math.floor(calendarRampWeeks / PLAN_CONSTANTS.STEP_LOADING_CYCLE));
+    const weeklyGrowthRate = Math.pow(effectivePeakVolume / startVolume, 1 / effectiveWeeksInRamp);
+
+    let lastNonRecoveryVolume = startVolume;
+    let effectiveWeekIndex = 0;
+    let baseBuildCounter = 0;
 
     const workouts: GeneratedWorkout[] = [];
 
-    // Align plan start to the beginning of the week (Sunday)
     let currentDate = new Date(startDate);
     currentDate.setDate(currentDate.getDate() - currentDate.getDay());
 
     for (let week = 1; week <= totalWeeks; week++) {
-        const weeksUntilRace = totalWeeks - week + 1; // 1-based countdown
-        const phase = getPhase(weeksUntilRace, {
-            taperWeeks: config.taperWeeks,
-            peakWeeks: config.peakWeeks,
-            buildWeeks: config.buildWeeks,
-        });
+        const weeksUntilRace = totalWeeks - week + 1;
+        const phase = getPhase(weeksUntilRace, { taperWeeks, peakWeeks, buildWeeks });
 
-        // Calculate Volume Cap for this week (Linear)
-        const rampWeeks = Math.max(1, totalWeeks - (config.taperWeeks || 2));
-        const weeklyIncrement = (peakVolume - startVolume) / rampWeeks;
-        let weekVolumeCap = startVolume + (weeklyIncrement * (week - 1));
-
-        // Taper Logic: Reduce volume in last 2 weeks
-        if (weeksUntilRace <= 2) {
-            weekVolumeCap = peakVolume * (weeksUntilRace === 2 ? 0.7 : 0.4);
-        } else {
-            // Cap at Peak Volume
-            if (weekVolumeCap > peakVolume) weekVolumeCap = peakVolume;
+        if (weeksUntilRace === 1) {
+            const raceWeekWorkouts = generateRaceWeek({
+                raceDate,
+                raceType,
+                paces,
+                longRunDay,
+            });
+            raceWeekWorkouts.forEach(w => {
+                const specificDate = new Date(currentDate);
+                specificDate.setDate(specificDate.getDate() + w.dayOffset);
+                workouts.push({
+                    date: specificDate,
+                    type: w.type,
+                    description: w.description,
+                    totalDistance: w.totalDistance,
+                    targetPace: w.targetPace,
+                    targetDuration: w.targetDuration,
+                });
+            });
+            currentDate.setDate(currentDate.getDate() + 7);
+            continue;
         }
 
-        // Generate base workouts
+        let weekVolumeCap: number;
+        let isRecoveryWeek = false;
+
+        if (phase === 'TAPER') {
+            weekVolumeCap = getTaperVolume(weeksUntilRace, taperWeeks, effectivePeakVolume, raceType);
+        } else if (phase === 'PEAK') {
+            weekVolumeCap = effectivePeakVolume;
+        } else {
+            baseBuildCounter++;
+            isRecoveryWeek = baseBuildCounter % PLAN_CONSTANTS.STEP_LOADING_CYCLE === 0;
+
+            if (isRecoveryWeek) {
+                weekVolumeCap = Math.round(lastNonRecoveryVolume * weeklyGrowthRate * PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR);
+            } else {
+                effectiveWeekIndex++;
+                weekVolumeCap = Math.round(startVolume * Math.pow(weeklyGrowthRate, effectiveWeekIndex));
+                weekVolumeCap = Math.min(weekVolumeCap, effectivePeakVolume);
+                lastNonRecoveryVolume = weekVolumeCap;
+            }
+        }
+
+        const effectiveFloor = isRecoveryWeek
+            ? Math.round(PLAN_CONSTANTS.MIN_VOLUME_START * PLAN_CONSTANTS.RECOVERY_WEEK_FACTOR)
+            : PLAN_CONSTANTS.MIN_VOLUME_START;
+        weekVolumeCap = Math.max(effectiveFloor, weekVolumeCap);
+
         let weekSchedule = generateWeek({
             phase,
             raceType,
@@ -124,78 +189,20 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
             swimsPerWeek,
             weeklyVolume: weekVolumeCap,
             preferredLongRunDay: longRunDay,
-            preferredWorkoutDay: workoutDay
+            preferredWorkoutDay: workoutDay,
         });
 
-        // Scale runs to fit Volume Cap - PRIORITIZING Long Run & Quality
         const runningWorkouts = weekSchedule.filter(w => isRun(w.type));
         const totalRunDistance = runningWorkouts.reduce((sum, w) => sum + w.totalDistance, 0);
 
         if (totalRunDistance > weekVolumeCap) {
-            // Identify Priority vs Fill workouts
-            const isPriority = (w: ScheduledWorkout) =>
-                w.type === WorkoutType.LONG_RUN ||
-                w.type === WorkoutType.INTERVALS ||
-                w.type === WorkoutType.TEMPO ||
-                w.type === WorkoutType.RACE;
-
-            const priorityWorkouts = runningWorkouts.filter(isPriority);
-            const fillWorkouts = runningWorkouts.filter(w => !isPriority(w));
-
-            const priorityDist = priorityWorkouts.reduce((sum, w) => sum + w.totalDistance, 0);
-            const fillDist = fillWorkouts.reduce((sum, w) => sum + w.totalDistance, 0);
-
-            let remainingCap = weekVolumeCap - priorityDist;
-
-            // Check if we need to cut into priority workouts
-            if (remainingCap < 0) {
-                // Extreme case: Priority runs alone exceed cap. 
-                const scalingFactor = weekVolumeCap / priorityDist;
-
-                weekSchedule = weekSchedule.map(w => {
-                    if (isRun(w.type)) {
-                        if (!isPriority(w)) {
-                            // Remove fill run
-                            return { ...w, totalDistance: 0, description: 'Rest (Volume Cap)' };
-                        } else {
-                            // Scale priority
-                            const newDist = Math.round((w.totalDistance * scalingFactor) / 100) * 100;
-                            const finalDist = Math.max(newDist, 3000);
-                            return {
-                                ...w,
-                                totalDistance: finalDist,
-                                description: updateDescription(w.type, finalDist, w.targetPace || 0)
-                            };
-                        }
-                    }
-                    return w;
-                });
-            } else {
-                // We have enough for priority, scale down fill runs
-                const fillScalingFactor = fillDist > 0 ? remainingCap / fillDist : 0;
-
-                weekSchedule = weekSchedule.map(w => {
-                    if (isRun(w.type) && !isPriority(w)) {
-                        let newDist = Math.round((w.totalDistance * fillScalingFactor) / 100) * 100;
-                        if (newDist < 3000) newDist = 3000; // Soft floor
-
-                        return {
-                            ...w,
-                            totalDistance: newDist,
-                            description: updateDescription(w.type, newDist, w.targetPace || 0)
-                        };
-                    }
-                    return w;
-                });
-            }
+            weekSchedule = scaleToVolumeCap(weekSchedule, weekVolumeCap);
         }
 
-        // Add to main list
         weekSchedule.forEach(w => {
             const specificDate = new Date(currentDate);
             specificDate.setDate(specificDate.getDate() + w.dayOffset);
 
-            // Skip zero-distance runs (removed due to cap)
             if (isRun(w.type) && w.totalDistance === 0) return;
 
             workouts.push({
@@ -204,11 +211,10 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
                 description: w.description,
                 totalDistance: w.totalDistance,
                 targetPace: w.targetPace,
-                targetDuration: w.targetDuration
+                targetDuration: w.targetDuration,
             });
         });
 
-        // Move to next week
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
@@ -218,7 +224,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
 function getPhase(
     weeksUntilRace: number,
     options?: { taperWeeks?: number; peakWeeks?: number; buildWeeks?: number }
-): 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' {
+): Phase {
     const taperWeeks = options?.taperWeeks ?? 2;
     const peakWeeks = options?.peakWeeks ?? 4;
     const buildWeeks = options?.buildWeeks ?? 4;
@@ -229,56 +235,88 @@ function getPhase(
     return 'BASE';
 }
 
-/**
- * Distributes workouts evenly across available days to maximize spacing.
- * Uses interval-based approach for optimal recovery between same-type workouts.
- * 
- * @param count - Number of workouts to schedule
- * @param usedDays - Set of days already occupied by other workouts
- * @returns Array of day offsets (0=Sun, 1=Mon, ..., 6=Sat) for the workouts
- */
-function getDistributedDays(count: number, usedDays: Set<number>): number[] {
-    if (count <= 0) return [];
-
-    // Get available days (0-6, excluding used days)
-    const availableDays: number[] = [];
-    for (let d = 0; d < 7; d++) {
-        if (!usedDays.has(d)) availableDays.push(d);
-    }
-
-    if (availableDays.length === 0) return [];
-    if (count >= availableDays.length) return availableDays;
-
-    // Calculate ideal interval between workouts
-    // For n workouts in m available days, ideal spacing = m / n
-    const idealInterval = availableDays.length / count;
-
-    const selectedDays: number[] = [];
-    for (let i = 0; i < count; i++) {
-        // Pick day at ideal interval positions
-        const targetIndex = Math.floor(i * idealInterval);
-        const clampedIndex = Math.min(targetIndex, availableDays.length - 1);
-        selectedDays.push(availableDays[clampedIndex]);
-    }
-
-    return selectedDays;
+function getTaperVolume(
+    weeksUntilRace: number,
+    taperWeeks: number,
+    peakVolume: number,
+    raceType: RaceType
+): number {
+    const fractions = TAPER_FRACTIONS[raceType];
+    const taperWeekIndex = taperWeeks - weeksUntilRace;
+    const clampedIndex = Math.min(Math.max(0, taperWeekIndex), fractions.length - 1);
+    const fraction = fractions[clampedIndex];
+    return Math.round(peakVolume * fraction);
 }
 
-type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
+function generateRaceWeek(params: {
+    raceDate: Date;
+    raceType: RaceType;
+    paces: TrainingPaces;
+    longRunDay: number;
+}): ScheduledWorkout[] {
+    const { raceDate, raceType, paces } = params;
+    const workouts: ScheduledWorkout[] = [];
+    const usedDays = new Set<number>();
 
-import { TrainingPaces } from '../metrics/vdot';
+    const raceDayOfWeek = raceDate.getDay();
+    const raceDistKm = getRaceDistanceKm(raceType);
+
+    usedDays.add(raceDayOfWeek);
+    workouts.push({
+        dayOffset: raceDayOfWeek,
+        type: WorkoutType.RACE,
+        description: `Race Day: ${raceDistKm}km`,
+        totalDistance: getRaceDistanceMeters(raceType),
+        targetPace: 0,
+        targetDuration: 0,
+    });
+
+    const preRaceStrideDay = (raceDayOfWeek - 2 + 7) % 7;
+    if (!usedDays.has(preRaceStrideDay)) {
+        usedDays.add(preRaceStrideDay);
+        workouts.push({
+            dayOffset: preRaceStrideDay,
+            type: WorkoutType.EASY,
+            description: `Easy Run: 3km + 4x100m Strides`,
+            totalDistance: 3400,
+            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+            targetDuration: 0,
+        });
+    }
+
+    const allDays = [0, 1, 2, 3, 4, 5, 6];
+    const shakeoutCandidates = allDays.filter(d => {
+        if (usedDays.has(d)) return false;
+        const diff = (d - raceDayOfWeek + 7) % 7;
+        return diff > 0 && diff < 7;
+    });
+    const shakeoutDays = shakeoutCandidates.slice(0, Math.min(2, shakeoutCandidates.length));
+    for (const d of shakeoutDays) {
+        usedDays.add(d);
+        workouts.push({
+            dayOffset: d,
+            type: WorkoutType.RECOVERY,
+            description: 'Shakeout Run: 3km @ Easy',
+            totalDistance: 3000,
+            targetPace: paces.easy.max,
+            targetDuration: 0,
+        });
+    }
+
+    return workouts;
+}
 
 function generateWeek(params: {
-    phase: 'BASE' | 'BUILD' | 'PEAK' | 'TAPER',
-    raceType: RaceType,
-    paces: TrainingPaces,
-    runsPerWeek: number,
-    ridesPerWeek: number,
-    strengthPerWeek: number,
-    swimsPerWeek: number,
-    weeklyVolume: number,
-    preferredLongRunDay: number,
-    preferredWorkoutDay: number
+    phase: Phase;
+    raceType: RaceType;
+    paces: TrainingPaces;
+    runsPerWeek: number;
+    ridesPerWeek: number;
+    strengthPerWeek: number;
+    swimsPerWeek: number;
+    weeklyVolume: number;
+    preferredLongRunDay: number;
+    preferredWorkoutDay: number;
 }): ScheduledWorkout[] {
     const {
         phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, weeklyVolume,
@@ -287,98 +325,152 @@ function generateWeek(params: {
 
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
+    const hardSessionDays: number[] = [];
 
-    // Calculate Dynamic Easy Run Distance
-    // 1. Long Run
-    const longRunDist = getLongRunDistance(raceType, weeklyVolume);
+    const longRunDist = getLongRunDistance(raceType, weeklyVolume, paces);
 
-    // 2. Quality Session
-    const hasQuality = runsPerWeek >= 2 && phase !== 'BASE' && phase !== 'TAPER';
-    const qualitySession = getQualitySession(raceType, paces);
-    const qualityDist = hasQuality ? qualitySession.totalDistance : 0;
+    const hasQuality = runsPerWeek >= 2 && phase !== 'TAPER';
+    const qualitySession = hasQuality
+        ? getQualitySession(raceType, paces, phase)
+        : null;
+    const qualityDist = qualitySession ? qualitySession.totalDistance : 0;
 
-    // 3. Remaining volume
-    const longRunCount = (runsPerWeek >= 1 ? 1 : 0);
-    const qualityRunCount = (hasQuality ? 1 : 0);
+    const longRunCount = runsPerWeek >= 1 ? 1 : 0;
+    const qualityRunCount = hasQuality ? 1 : 0;
     const totalKeyRuns = longRunCount + qualityRunCount;
     const easyRunsCount = Math.max(0, runsPerWeek - totalKeyRuns);
 
     const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDist);
     const calculatedEasyDist = easyRunsCount > 0 ? remainingVol / easyRunsCount : 5000;
 
-    // Clamp Easy Run Distance
     const easyDist = Math.max(
         PLAN_CONSTANTS.EASY_RUN_MIN,
         Math.min(Math.round(calculatedEasyDist / 100) * 100, PLAN_CONSTANTS.EASY_RUN_MAX)
     );
 
-    // Helper to get next available day
-    const getAvailableDay = (preferred: number): number => {
+    const easyPace = Math.round((paces.easy.min + paces.easy.max) / 2);
+    const recoveryPace = paces.easy.max;
+
+    const getAvailableDayWithGap = (preferred: number, gapFrom: number[]): number => {
+        const candidates: number[] = [];
+        for (let d = 0; d < 7; d++) {
+            if (usedDays.has(d)) continue;
+            const tooClose = gapFrom.some(hd => {
+                const diff = Math.abs(d - hd);
+                return Math.min(diff, 7 - diff) < PLAN_CONSTANTS.MIN_GAP_DAYS;
+            });
+            if (!tooClose) candidates.push(d);
+        }
+
+        if (candidates.includes(preferred)) return preferred;
+        if (candidates.length > 0) {
+            candidates.sort((a, b) => Math.abs(a - preferred) - Math.abs(b - preferred));
+            return candidates[0];
+        }
+
         if (!usedDays.has(preferred)) return preferred;
         for (let offset = 1; offset <= 6; offset++) {
-            const before = (preferred - offset + 7) % 7;
             const after = (preferred + offset) % 7;
             if (!usedDays.has(after)) return after;
+            const before = (preferred - offset + 7) % 7;
             if (!usedDays.has(before)) return before;
         }
         return preferred;
     };
 
-    // === 1. RUNNING WORKOUTS ===
-    // Priority 1: Long Run
     if (runsPerWeek >= 1) {
-        const day = getAvailableDay(preferredLongRunDay);
+        const day = getAvailableDayWithGap(preferredLongRunDay, []);
         usedDays.add(day);
+        hardSessionDays.push(day);
+
+        let longRunDesc = `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`;
+        let longRunPace = easyPace;
+
+        if (phase === 'PEAK' && (raceType === 'HALF_MARATHON' || raceType === 'MARATHON')) {
+            const mpDist = Math.round(longRunDist * 0.3 / 100) * 100;
+            const easyPart = longRunDist - mpDist;
+            longRunDesc = `Long Run: ${(easyPart / 1000).toFixed(1)}km Easy + ${(mpDist / 1000).toFixed(1)}km @ MP`;
+            longRunPace = easyPace;
+        }
+
         workouts.push({
             dayOffset: day,
             type: WorkoutType.LONG_RUN,
-            description: `Long Run: ${(longRunDist / 1000).toFixed(1)}km @ Easy`,
+            description: longRunDesc,
             totalDistance: longRunDist,
-            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
-            targetDuration: 0
+            targetPace: longRunPace,
+            targetDuration: 0,
         });
     }
 
-    // Priority 2: Quality Session
-    if (runsPerWeek >= 2 && phase !== 'BASE' && phase !== 'TAPER') {
-        const day = getAvailableDay(preferredWorkoutDay);
+    if (hasQuality && qualitySession) {
+        const day = getAvailableDayWithGap(preferredWorkoutDay, hardSessionDays);
         usedDays.add(day);
+        hardSessionDays.push(day);
         workouts.push({
             dayOffset: day,
             ...qualitySession,
-            targetDuration: 0
+            targetDuration: 0,
         });
     } else if (runsPerWeek >= 2) {
-        // BASE/TAPER replacement for quality
-        const day = getAvailableDay(preferredWorkoutDay);
+        const day = getAvailableDayWithGap(preferredWorkoutDay, hardSessionDays);
         usedDays.add(day);
         workouts.push({
             dayOffset: day,
             type: WorkoutType.EASY,
             description: `Easy Run: ${(easyDist / 1000).toFixed(1)}km`,
             totalDistance: easyDist,
-            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
-            targetDuration: 0
+            targetPace: easyPace,
+            targetDuration: 0,
         });
     }
 
-    // Additional runs - distribute evenly for optimal recovery
-    const additionalRunsCount = Math.max(0, runsPerWeek - 2);
+    const additionalRunsCount = Math.max(0, runsPerWeek - totalKeyRuns);
     const easyRunDays = getDistributedDays(additionalRunsCount, usedDays);
+
+    let stridesInjected = 0;
+    const stridesPerWeek = phase === 'BASE' ? 2 : 0;
+
     for (const d of easyRunDays) {
         usedDays.add(d);
-        workouts.push({
-            dayOffset: d,
-            type: WorkoutType.EASY,
-            description: `Easy Run: ${(easyDist / 1000).toFixed(1)}km`,
-            totalDistance: easyDist,
-            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
-            targetDuration: 0
+
+        const dayAfterHard = hardSessionDays.some(hd => {
+            const diff = (d - hd + 7) % 7;
+            return diff === 1;
         });
+
+        if (dayAfterHard) {
+            const includeStrides = phase === 'BASE' && stridesInjected < stridesPerWeek;
+            const suffix = includeStrides ? ' + 6x100m Strides' : '';
+            if (includeStrides) stridesInjected++;
+
+            workouts.push({
+                dayOffset: d,
+                type: WorkoutType.RECOVERY,
+                description: `Recovery Run: ${(easyDist / 1000).toFixed(1)}km${suffix}`,
+                totalDistance: easyDist,
+                targetPace: recoveryPace,
+                targetDuration: 0,
+            });
+        } else {
+            const includeStrides = phase === 'BASE' && stridesInjected < stridesPerWeek;
+            const desc = includeStrides
+                ? `Easy Run: ${(easyDist / 1000).toFixed(1)}km + 6x100m Strides`
+                : `Easy Run: ${(easyDist / 1000).toFixed(1)}km`;
+
+            if (includeStrides) stridesInjected++;
+
+            workouts.push({
+                dayOffset: d,
+                type: WorkoutType.EASY,
+                description: desc,
+                totalDistance: easyDist,
+                targetPace: easyPace,
+                targetDuration: 0,
+            });
+        }
     }
 
-    // === 2. STRENGTH TRAINING ===
-    // Distribute strength sessions evenly throughout the week
     const strengthDays = getDistributedDays(strengthPerWeek, usedDays);
     for (const d of strengthDays) {
         usedDays.add(d);
@@ -388,12 +480,10 @@ function generateWeek(params: {
             description: 'Strength: 45min Session',
             totalDistance: 0,
             targetPace: 0,
-            targetDuration: 2700
+            targetDuration: 2700,
         });
     }
 
-    // === 3. CROSS TRAINING ===
-    // Distribute ride sessions
     const rideDays = getDistributedDays(ridesPerWeek, usedDays);
     for (const d of rideDays) {
         usedDays.add(d);
@@ -403,12 +493,10 @@ function generateWeek(params: {
             description: 'Bike Ride: 60min (Zone 1-2)',
             totalDistance: 0,
             targetPace: 0,
-            targetDuration: 3600
+            targetDuration: 3600,
         });
     }
 
-    // === 4. SWIMMING ===
-    // Distribute swim sessions separately from rides
     const swimDays = getDistributedDays(swimsPerWeek, usedDays);
     for (const d of swimDays) {
         usedDays.add(d);
@@ -416,41 +504,258 @@ function generateWeek(params: {
             dayOffset: d,
             type: WorkoutType.SWIM,
             description: 'Swim: 1500m @ Easy',
-            totalDistance: 1500, // meters
-            targetPace: 120, // 2:00/100m (120 seconds per 100m)
-            targetDuration: 2700 // 45min including rest
+            totalDistance: 1500,
+            targetPace: 120,
+            targetDuration: 2700,
         });
     }
 
     return workouts;
 }
 
-function getLongRunDistance(raceType: RaceType, weeklyVolume: number): number {
-    let dist = weeklyVolume * PLAN_CONSTANTS.LONG_RUN_RATIO;
+function getLongRunDistance(
+    raceType: RaceType,
+    weeklyVolume: number,
+    paces: TrainingPaces
+): number {
+    let ratio = PLAN_CONSTANTS.LONG_RUN_RATIO;
+
+    if ((raceType === 'HALF_MARATHON' || raceType === 'MARATHON') &&
+        weeklyVolume < PLAN_CONSTANTS.LOW_VOLUME_THRESHOLD) {
+        ratio = PLAN_CONSTANTS.LONG_RUN_RATIO_LOW_VOLUME;
+    }
+
+    let dist = weeklyVolume * ratio;
 
     let maxDist = PLAN_CONSTANTS.MAX_LONG_RUN_DIST[raceType];
     if (dist > maxDist) dist = maxDist;
+
+    const safeEasyMax = Math.max(120, paces.easy.max);
+    const maxDistForTime = Math.round((PLAN_CONSTANTS.MAX_TIME_ON_FEET_SECONDS / safeEasyMax) * 1000);
+    if (dist > maxDistForTime) dist = maxDistForTime;
 
     if (dist < PLAN_CONSTANTS.MIN_LONG_RUN) dist = PLAN_CONSTANTS.MIN_LONG_RUN;
 
     return Math.round(dist / 1000) * 1000;
 }
 
-function getQualitySession(raceType: RaceType, paces: TrainingPaces) {
-    if (raceType === 'FIVE_K' || raceType === 'TEN_K') {
+function getQualitySession(
+    raceType: RaceType,
+    paces: TrainingPaces,
+    phase: Phase
+): { type: WorkoutType; description: string; totalDistance: number; targetPace: number } {
+    if (raceType === 'FIVE_K') {
+        return get5KQualitySession(paces, phase);
+    }
+    if (raceType === 'TEN_K') {
+        return get10KQualitySession(paces, phase);
+    }
+    if (raceType === 'HALF_MARATHON') {
+        return getHalfMarathonQualitySession(paces, phase);
+    }
+    return getMarathonQualitySession(paces, phase);
+}
+
+function get5KQualitySession(paces: TrainingPaces, phase: Phase) {
+    if (phase === 'BASE') {
         return {
-            type: WorkoutType.INTERVALS,
-            description: `Intervals: 5x1km @ ${formatPace(paces.threshold)}`,
-            totalDistance: 10000,
-            targetPace: paces.threshold
+            type: WorkoutType.EASY,
+            description: `Fartlek: 8km (2min hard / 2min easy)`,
+            totalDistance: 8000,
+            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
         };
-    } else {
+    }
+    if (phase === 'PEAK') {
+        return {
+            type: WorkoutType.REPETITIONS,
+            description: `Reps: 6x400m @ ${formatPace(paces.repetition)}`,
+            totalDistance: 7000,
+            targetPace: paces.repetition,
+        };
+    }
+    return {
+        type: WorkoutType.INTERVALS,
+        description: `Intervals: 5x1km @ ${formatPace(paces.interval)}`,
+        totalDistance: 10000,
+        targetPace: paces.interval,
+    };
+}
+
+function get10KQualitySession(paces: TrainingPaces, phase: Phase) {
+    if (phase === 'BASE') {
+        return {
+            type: WorkoutType.EASY,
+            description: `Fartlek: 10km (3min hard / 2min easy)`,
+            totalDistance: 10000,
+            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+        };
+    }
+    if (phase === 'PEAK') {
         return {
             type: WorkoutType.TEMPO,
-            description: `Tempo: 8km @ ${formatPace(paces.marathon) || formatPace(paces.threshold)}`,
+            description: `Threshold: 4x2km @ ${formatPace(paces.threshold)}`,
             totalDistance: 12000,
-            targetPace: paces.threshold
+            targetPace: paces.threshold,
         };
+    }
+    return {
+        type: WorkoutType.INTERVALS,
+        description: `Intervals: 6x1km @ ${formatPace(paces.interval)}`,
+        totalDistance: 11000,
+        targetPace: paces.interval,
+    };
+}
+
+function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
+    if (phase === 'BASE') {
+        return {
+            type: WorkoutType.EASY,
+            description: `Fartlek: 10km (4min hard / 3min easy)`,
+            totalDistance: 10000,
+            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+        };
+    }
+    if (phase === 'PEAK') {
+        return {
+            type: WorkoutType.TEMPO,
+            description: `MP Segments: 3x3km @ ${formatPace(paces.marathon)}`,
+            totalDistance: 13000,
+            targetPace: paces.marathon,
+        };
+    }
+    return {
+        type: WorkoutType.TEMPO,
+        description: `Threshold: 8km @ ${formatPace(paces.threshold)}`,
+        totalDistance: 12000,
+        targetPace: paces.threshold,
+    };
+}
+
+function getMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
+    if (phase === 'BASE') {
+        return {
+            type: WorkoutType.EASY,
+            description: `Fartlek: 12km (5min hard / 3min easy)`,
+            totalDistance: 12000,
+            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+        };
+    }
+    if (phase === 'PEAK') {
+        return {
+            type: WorkoutType.TEMPO,
+            description: `MP Segments: 3x5km @ ${formatPace(paces.marathon)}`,
+            totalDistance: 18000,
+            targetPace: paces.marathon,
+        };
+    }
+    return {
+        type: WorkoutType.TEMPO,
+        description: `Threshold: 10km @ ${formatPace(paces.threshold)}`,
+        totalDistance: 14000,
+        targetPace: paces.threshold,
+    };
+}
+
+function getDistributedDays(count: number, usedDays: Set<number>): number[] {
+    if (count <= 0) return [];
+
+    const availableDays: number[] = [];
+    for (let d = 0; d < 7; d++) {
+        if (!usedDays.has(d)) availableDays.push(d);
+    }
+
+    if (availableDays.length === 0) return [];
+    if (count >= availableDays.length) return availableDays;
+
+    const idealInterval = availableDays.length / count;
+
+    const selectedDays: number[] = [];
+    for (let i = 0; i < count; i++) {
+        const targetIndex = Math.floor(i * idealInterval);
+        const clampedIndex = Math.min(targetIndex, availableDays.length - 1);
+        selectedDays.push(availableDays[clampedIndex]);
+    }
+
+    return selectedDays;
+}
+
+function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: number): ScheduledWorkout[] {
+    const isPriority = (w: ScheduledWorkout) =>
+        w.type === WorkoutType.LONG_RUN ||
+        w.type === WorkoutType.INTERVALS ||
+        w.type === WorkoutType.TEMPO ||
+        w.type === WorkoutType.RACE ||
+        w.type === WorkoutType.REPETITIONS ||
+        w.description.includes('Fartlek') ||
+        w.description.includes('MP Segment');
+
+    const runningWorkouts = weekSchedule.filter(w => isRun(w.type));
+    const priorityWorkouts = runningWorkouts.filter(isPriority);
+    const fillWorkouts = runningWorkouts.filter(w => !isPriority(w));
+
+    const priorityDist = priorityWorkouts.reduce((sum, w) => sum + w.totalDistance, 0);
+    const fillDist = fillWorkouts.reduce((sum, w) => sum + w.totalDistance, 0);
+
+    let remainingCap = weekVolumeCap - priorityDist;
+
+    if (remainingCap < 0) {
+        const scalingFactor = weekVolumeCap / priorityDist;
+        return weekSchedule.map(w => {
+            if (!isRun(w.type)) return w;
+            if (!isPriority(w)) {
+                return { ...w, totalDistance: 0, description: 'Rest (Volume Cap)' };
+            }
+            const newDist = Math.round((w.totalDistance * scalingFactor) / 100) * 100;
+            const finalDist = Math.max(newDist, 3000);
+            return {
+                ...w,
+                totalDistance: finalDist,
+                description: preserveSpecialDescription(w, finalDist),
+            };
+        });
+    }
+
+    const fillScalingFactor = fillDist > 0 ? remainingCap / fillDist : 0;
+    return weekSchedule.map(w => {
+        if (!isRun(w.type) || isPriority(w)) return w;
+        let newDist = Math.round((w.totalDistance * fillScalingFactor) / 100) * 100;
+        if (newDist < 3000) newDist = 3000;
+        return {
+            ...w,
+            totalDistance: newDist,
+            description: preserveSpecialDescription(w, newDist),
+        };
+    });
+}
+
+function preserveSpecialDescription(w: ScheduledWorkout, distance: number): string {
+    if (w.description.includes('Fartlek')) {
+        return `Fartlek: ${(distance / 1000).toFixed(1)}km (5min hard / 3min easy)`;
+    }
+    if (w.description.includes('Strides')) {
+        return `Easy Run: ${(distance / 1000).toFixed(1)}km + 6x100m Strides`;
+    }
+    if (w.description.includes('MP')) {
+        return w.description;
+    }
+    return updateDescription(w.type, distance, w.targetPace || 0);
+}
+
+function getRaceDistanceKm(raceType: RaceType): string {
+    switch (raceType) {
+        case 'FIVE_K': return '5';
+        case 'TEN_K': return '10';
+        case 'HALF_MARATHON': return '21.1';
+        case 'MARATHON': return '42.2';
+    }
+}
+
+function getRaceDistanceMeters(raceType: RaceType): number {
+    switch (raceType) {
+        case 'FIVE_K': return 5000;
+        case 'TEN_K': return 10000;
+        case 'HALF_MARATHON': return 21097;
+        case 'MARATHON': return 42195;
     }
 }
 
@@ -471,8 +776,10 @@ function updateDescription(type: WorkoutType, distance: number, pace: number): s
     switch (type) {
         case 'LONG_RUN': return `Long Run: ${distKm}km @ Easy`;
         case 'EASY': return `Easy Run: ${distKm}km`;
+        case 'RECOVERY': return `Recovery Run: ${distKm}km`;
         case 'TEMPO': return `Tempo: ${distKm}km${paceStr}`;
         case 'INTERVALS': return `Intervals: Total ${distKm}km Session`;
+        case 'REPETITIONS': return `Reps: Total ${distKm}km Session`;
         case 'RACE': return `Race Day: ${distKm}km`;
         default: return `${type}: ${distKm}km`;
     }

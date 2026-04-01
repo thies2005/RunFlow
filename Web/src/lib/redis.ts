@@ -12,13 +12,19 @@ export interface RedisClient {
 let redisClient: RedisClient | null = null;
 let redisInitialized = false;
 
-function createIoredisAdapter(ioredis: import('ioredis')): RedisClient {
+function createIoredisAdapter(ioredis: InstanceType<typeof import('ioredis').default>): RedisClient {
     return {
         async set(key: string, value: string, options?: { ex?: number; nx?: boolean }): Promise<string | null> {
-            const args: (string | number)[] = [];
-            if (options?.ex) args.push('EX', options.ex);
-            if (options?.nx) args.push('NX');
-            return ioredis.set(key, value, ...args);
+            if (options?.ex && options?.nx) {
+                return ioredis.set(key, value, 'EX', options.ex, 'NX');
+            }
+            if (options?.ex) {
+                return ioredis.set(key, value, 'EX', options.ex);
+            }
+            if (options?.nx) {
+                return ioredis.set(key, value, 'NX');
+            }
+            return ioredis.set(key, value);
         },
         async get(key: string): Promise<string | null> {
             return ioredis.get(key);

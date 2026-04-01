@@ -31,8 +31,11 @@ services:
       # FatSecret API
       - FATSECRET_CLIENT_ID=${FATSECRET_CLIENT_ID}
       - FATSECRET_CLIENT_SECRET=${FATSECRET_CLIENT_SECRET}
+      - REDIS_URL=redis://redis:6379
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       migrator:
         condition: service_completed_successfully
@@ -131,6 +134,33 @@ services:
         limits:
           memory: 2G
           cpus: "1.0"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: runflow-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      start_interval: 2s
+      retries: 5
+    networks:
+      - runflow-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
     logging:
       driver: json-file
       options:
@@ -236,3 +266,4 @@ networks:
 
 volumes:
   postgres_data:
+  redis_data:

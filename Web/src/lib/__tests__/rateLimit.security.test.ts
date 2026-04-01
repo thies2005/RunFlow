@@ -4,6 +4,8 @@ describe('checkRateLimitAsync Security', () => {
     let mockIncr: jest.Mock;
     let mockExpire: jest.Mock;
     let mockTtl: jest.Mock;
+    let mockOn: jest.Mock;
+    let mockConnect: jest.Mock;
 
     beforeEach(() => {
         jest.resetModules();
@@ -12,13 +14,18 @@ describe('checkRateLimitAsync Security', () => {
         mockIncr = jest.fn();
         mockExpire = jest.fn();
         mockTtl = jest.fn();
+        mockOn = jest.fn();
+        mockConnect = jest.fn().mockResolvedValue(undefined);
 
-        jest.mock('@upstash/redis', () => {
+        jest.mock('ioredis', () => {
             return {
-                Redis: jest.fn().mockImplementation(() => ({
+                __esModule: true,
+                default: jest.fn().mockImplementation(() => ({
                     incr: mockIncr,
                     expire: mockExpire,
                     ttl: mockTtl,
+                    on: mockOn,
+                    connect: mockConnect,
                 })),
             };
         });
@@ -37,14 +44,11 @@ describe('checkRateLimitAsync Security', () => {
         const result = await checkRateLimitAsync('test-id-prod', { limit: 10, windowSeconds: 60 });
 
         expect(mockIncr).not.toHaveBeenCalled();
-        // Updated expectation: The implementation intentionally falls back to in-memory for self-hosted Docker users without Redis
         expect(result.allowed).toBe(true);
     });
 
-    it('fails closed when Redis operations fail (Secure)', async () => {
+    it('falls back to in-memory when Redis operations fail', async () => {
         process.env.REDIS_URL = 'redis://localhost:6379';
-        // Even in development, if Redis is configured but fails, we should fail closed or warn.
-        // My implementation fails closed regardless of env if Redis throws.
 
         const { checkRateLimitAsync } = await import('../rateLimit');
 
@@ -54,8 +58,7 @@ describe('checkRateLimitAsync Security', () => {
         const result = await checkRateLimitAsync('test-id-fail', { limit: 10, windowSeconds: 60 });
 
         expect(mockIncr).toHaveBeenCalled();
-        expect(result.allowed).toBe(false);
-        expect(result.remaining).toBe(0);
+        expect(result.allowed).toBe(true); // Should fall back to in-memory and succeed!
     });
 
     it('falls back to in-memory when REDIS_URL is missing in DEVELOPMENT', async () => {

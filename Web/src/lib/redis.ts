@@ -57,23 +57,27 @@ export async function getRedisClient(): Promise<RedisClient | null> {
     try {
         const ioredis = (await import('ioredis')).default;
         const client = new ioredis(redisUrl, {
-            maxRetriesPerRequest: 3,
+            maxRetriesPerRequest: 1,
             retryStrategy(times) {
-                const delay = Math.min(times * 200, 5000);
+                // Keep retrying in the background indefinitely, backing off to 5 seconds
+                const delay = Math.min(times * 500, 5000);
                 return delay;
             },
-            lazyConnect: true,
-            connectTimeout: 5000,
+            enableOfflineQueue: false, // Fail fast if disconnected, allowing immediate fallback to memory
+            lazyConnect: true, // Don't block startup
         });
 
         client.on('error', (err: Error) => {
-            logger.warn('Redis connection error', { error: err.message });
+            logger.warn('Redis connection error (will retry automatically)', { error: err.message });
         });
 
-        await client.ping();
+        // Trigger background connection attempt without blocking
+        client.connect().catch(() => {
+            // Catch initial connection error; retryStrategy will handle subsequent attempts
+        });
 
         redisClient = createIoredisAdapter(client);
-        logger.info('Redis client initialized successfully');
+        logger.info('Redis client initialized with auto-reconnect');
     } catch (error) {
         logger.warn('Failed to initialize Redis client', { error: error instanceof Error ? error.message : String(error) });
     }

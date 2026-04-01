@@ -119,15 +119,8 @@ async function checkRateLimitRedis(
             limit,
         };
     } catch (error) {
-        console.error('Redis rate limit error:', error);
-        // Fail closed for security in case of Redis failure
-        return {
-            allowed: false,
-            remaining: 0,
-            resetAt: Math.floor((now + windowMs) / 1000),
-            limit,
-            retryAfter: 60,
-        };
+        console.warn('Redis rate limit error, falling back to in-memory:', error);
+        return checkRateLimitInMemory(key, limit, windowSeconds);
     }
 }
 

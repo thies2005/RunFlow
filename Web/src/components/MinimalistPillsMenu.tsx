@@ -271,6 +271,10 @@ function DesktopPopover({
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (target?.closest('[role="dialog"]')) {
+                return;
+            }
             if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
                 onClose();
             }

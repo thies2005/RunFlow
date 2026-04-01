@@ -3,13 +3,13 @@ import { Target } from 'lucide-react';
 interface TargetRaceSectionProps {
     mode: 'onboarding' | 'settings';
     goalName: string;
-    setGoalName: (val: string) => void;
+    setGoalName: (_val: string) => void;
     raceType: string;
-    setRaceType: (val: string) => void;
+    setRaceType: (_val: string) => void;
     raceDate: string;
-    setRaceDate: (val: string) => void;
+    setRaceDate: (_val: string) => void;
     planStartDate: string;
-    setPlanStartDate: (val: string) => void;
+    setPlanStartDate: (_val: string) => void;
     formErrors: Record<string, string>;
 }
 
@@ -25,8 +25,6 @@ export default function TargetRaceSection({
     setPlanStartDate,
     formErrors
 }: TargetRaceSectionProps) {
-    if (mode !== 'onboarding') return null;
-
     const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
@@ -36,17 +34,19 @@ export default function TargetRaceSection({
                 <h3 className="text-sm font-semibold uppercase tracking-wide">Target Race</h3>
             </div>
 
-            <div>
-                <label className="block text-xs text-foreground-muted mb-1 uppercase">Goal Name</label>
-                <input
-                    type="text"
-                    value={goalName}
-                    onChange={(e) => setGoalName(e.target.value)}
-                    className={`${inputClass} ${formErrors.goalName ? 'border-red-500 focus:ring-red-500' : ''}`}
-                    placeholder="e.g., Berlin Marathon 2026"
-                />
-                {formErrors.goalName && <p className="text-red-400 text-xs mt-1">{formErrors.goalName}</p>}
-            </div>
+            {mode === 'onboarding' && (
+                <div>
+                    <label className="block text-xs text-foreground-muted mb-1 uppercase">Goal Name</label>
+                    <input
+                        type="text"
+                        value={goalName}
+                        onChange={(e) => setGoalName(e.target.value)}
+                        className={`${inputClass} ${formErrors.goalName ? 'border-red-500 focus:ring-red-500' : ''}`}
+                        placeholder="e.g., Berlin Marathon 2026"
+                    />
+                    {formErrors.goalName && <p className="text-red-400 text-xs mt-1">{formErrors.goalName}</p>}
+                </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
                 <div>

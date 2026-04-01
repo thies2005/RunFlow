@@ -223,6 +223,7 @@ export async function POST(request: NextRequest) {
                 name,
                 raceType,
                 raceDate: new Date(raceDate),
+                planStartDate: planStartDate ? new Date(planStartDate) : null,
                 targetTime: targetTime || calculatedTargetTime || null,
                 weeklyMileageGoal: weeklyMileageGoal || null,
                 planWeeks: resolvedPlanWeeks,
@@ -311,11 +312,11 @@ export async function POST(request: NextRequest) {
             const { generateTrainingPlan } = await import('@/lib/plans');
 
             try {
-                const workouts = generateTrainingPlan({
+            const workouts = generateTrainingPlan({
                     vdot: currentVdot,
                     raceType: raceType,
                     raceDate: new Date(raceDate),
-                    startDate: planStartDate ? new Date(planStartDate) : new Date(),
+                    startDate: goal.planStartDate ?? new Date(),
                     runsPerWeek: runsPerWeek ?? 4,
                     ridesPerWeek: ridesPerWeek ?? 0,
                     strengthPerWeek: strengthPerWeek ?? 0,

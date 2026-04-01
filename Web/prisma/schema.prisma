@@ -462,6 +462,7 @@ model Goal {
   name                String
   raceType            RaceType
   raceDate            DateTime
+  planStartDate       DateTime?
   targetTime          Int?
   currentVdot         Float?
   predictedTime       Int?

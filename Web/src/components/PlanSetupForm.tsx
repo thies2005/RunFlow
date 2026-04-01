@@ -6,7 +6,7 @@ import {
     AlertCircle, Save, Check
 } from 'lucide-react';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
-import { calculateVdot, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
+import { calculateVdot, calculateTrainingPaces, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
 import {
     calculateProjectedGoalTime,
     type PlanSettings
@@ -96,6 +96,8 @@ export default function PlanSetupForm({
     const [thresholdHR, setThresholdHR] = useState<string>('');
     const [thresholdPaceMin, setThresholdPaceMin] = useState<string>('');
     const [thresholdPaceSec, setThresholdPaceSec] = useState<string>('');
+    const lastAutoThresholdHR = useRef<number | null>(null);
+    const lastAutoThresholdPace = useRef<number | null>(null);
 
     // Calculated 7 zones from LTHR
     const [calculatedZones, setCalculatedZones] = useState<{ label: string; min: number; max: number }[]>([]);
@@ -216,6 +218,60 @@ export default function PlanSetupForm({
         }
     }, [thresholdHR]);
 
+    // Auto-prefill threshold values from calibration data while still allowing manual overrides.
+    useEffect(() => {
+        const calibrationSeconds =
+            (parseInt(hours) || 0) * 3600 +
+            (parseInt(minutes) || 0) * 60 +
+            (parseInt(seconds) || 0);
+
+        if (calibrationSeconds <= 0) return;
+
+        const vdot = calculateVdot({
+            distance: calibrationDistance as RaceDistance,
+            timeSeconds: calibrationSeconds,
+        });
+
+        if (vdot <= 0) return;
+
+        const suggestedThresholdPace = calculateTrainingPaces(vdot).threshold;
+        const currentThresholdPace =
+            (parseInt(thresholdPaceMin) || 0) * 60 +
+            (parseInt(thresholdPaceSec) || 0);
+        const thresholdPaceIsEmpty = !thresholdPaceMin && !thresholdPaceSec;
+        const thresholdPaceMatchesLastAuto =
+            lastAutoThresholdPace.current !== null &&
+            currentThresholdPace === lastAutoThresholdPace.current;
+
+        if (thresholdPaceIsEmpty || thresholdPaceMatchesLastAuto) {
+            setThresholdPaceMin(Math.floor(suggestedThresholdPace / 60).toString());
+            setThresholdPaceSec((suggestedThresholdPace % 60).toString().padStart(2, '0'));
+            lastAutoThresholdPace.current = suggestedThresholdPace;
+        }
+
+        const suggestedThresholdHR = Math.round(maxHeartRate * 0.9);
+        const currentThresholdHR = parseInt(thresholdHR);
+        const thresholdHRIsEmpty = !thresholdHR;
+        const thresholdHRMatchesLastAuto =
+            !isNaN(currentThresholdHR) &&
+            lastAutoThresholdHR.current !== null &&
+            currentThresholdHR === lastAutoThresholdHR.current;
+
+        if (thresholdHRIsEmpty || thresholdHRMatchesLastAuto) {
+            setThresholdHR(suggestedThresholdHR.toString());
+            lastAutoThresholdHR.current = suggestedThresholdHR;
+        }
+    }, [
+        calibrationDistance,
+        hours,
+        minutes,
+        seconds,
+        maxHeartRate,
+        thresholdHR,
+        thresholdPaceMin,
+        thresholdPaceSec,
+    ]);
+
     // Populate goal data for settings mode
     useEffect(() => {
         if (goalsData?.goals?.length > 0) {
@@ -225,6 +281,15 @@ export default function PlanSetupForm({
                 setRaceType(activeGoal.raceType || 'MARATHON');
                 if (activeGoal.raceDate) {
                     setRaceDate(new Date(activeGoal.raceDate).toISOString().split('T')[0]);
+                }
+                if (activeGoal.planStartDate) {
+                    setPlanStartDate(new Date(activeGoal.planStartDate).toISOString().split('T')[0]);
+                } else if (activeGoal.workouts?.length > 0) {
+                    const sortedWorkouts = [...activeGoal.workouts].sort((a: any, b: any) =>
+                        new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()
+                    );
+                    const firstPlannedDate = new Date(sortedWorkouts[0].scheduledDate).toISOString().split('T')[0];
+                    setPlanStartDate(firstPlannedDate);
                 }
             }
         }
@@ -266,9 +331,7 @@ export default function PlanSetupForm({
                 setCalibrationFactor(1.0);
             }
         }
-        // hours/minutes/seconds intentionally excluded — reading current form values
-        // to avoid overwriting user edits; adding them would cause infinite re-renders
-    }, [calibrationDistance, effectiveVO2max, shapePercent, calibrationMode, selectedActivityId]);
+    }, [calibrationDistance, effectiveVO2max, shapePercent, calibrationMode, selectedActivityId, hours, minutes, seconds]);
 
     // Auto-fill time when activity is selected (Activity Mode)
     useEffect(() => {

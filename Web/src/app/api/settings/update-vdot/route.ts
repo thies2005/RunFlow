@@ -27,6 +27,7 @@ export async function GET() {
                 hrZone5Max: true,
                 hrZone6Max: true,
                 thresholdHeartRate: true,
+                thresholdPace: true,
                 includeCrossTraining: true,
                 useImperial: true,
                 healthTrackingEnabled: true,
@@ -43,6 +44,7 @@ export async function GET() {
             weight: user?.weight || 70,
             height: user?.height || 175,
             thresholdHeartRate: user?.thresholdHeartRate,
+            thresholdPace: user?.thresholdPace,
             hrZone1Max: user?.hrZone1Max || 130,
             hrZone2Max: user?.hrZone2Max || 148,
             hrZone3Max: user?.hrZone3Max || 160,
@@ -88,7 +90,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, restDays } = body;
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, restDays } = body;
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -150,6 +152,14 @@ export async function POST(req: NextRequest) {
             if (value !== null) userUpdateData[key] = value;
         });
 
+        if (typeof thresholdHeartRate === 'number' && thresholdHeartRate >= 100 && thresholdHeartRate <= 220) {
+            userUpdateData.thresholdHeartRate = Math.round(thresholdHeartRate);
+        }
+
+        if (typeof thresholdPace === 'number' && thresholdPace >= 120 && thresholdPace <= 900) {
+            userUpdateData.thresholdPace = Math.round(thresholdPace);
+        }
+
         // Update user if there's anything to update
         if (Object.keys(userUpdateData).length > 0) {
             await prisma.user.update({
@@ -189,6 +199,22 @@ export async function POST(req: NextRequest) {
                 build = Math.max(0, weeksUntilRace - taper - peak);
             }
 
+            // Regenerate Plan
+
+            // Preserve the current plan anchor by reusing the earliest pending workout date.
+            const firstPendingWorkout = await prisma.workout.findFirst({
+                where: {
+                    goalId: activeGoal.id,
+                    isCompleted: false,
+                },
+                orderBy: {
+                    scheduledDate: 'asc',
+                },
+                select: {
+                    scheduledDate: true,
+                },
+            });
+
             // Update Goal Settings
             await prisma.goal.update({
                 where: { id: activeGoal.id },
@@ -204,14 +230,12 @@ export async function POST(req: NextRequest) {
                     ...(typeof longRunDay === 'number' && { longRunDay }),
                     ...(typeof qualityDay === 'number' && { workoutDay: qualityDay }),
                     ...(Array.isArray(restDays) && { restDays }),
+                    ...(firstPendingWorkout?.scheduledDate && { planStartDate: firstPendingWorkout.scheduledDate }),
                 }
             });
 
-            // Regenerate Plan
-
-            // Delete ALL incomplete workouts for this goal before regenerating
-            // This prevents duplicates from week boundary alignment issues
-            // We keep completed workouts to preserve history
+            // Delete ALL incomplete workouts for this goal before regenerating.
+            // We keep completed workouts to preserve history.
             await prisma.workout.deleteMany({
                 where: {
                     goalId: activeGoal.id,
@@ -219,9 +243,7 @@ export async function POST(req: NextRequest) {
                 }
             });
 
-            // Generate new plan starting from today
-            // The plan generator will align to the start of the week
-            const startDate = new Date();
+            const startDate = activeGoal.planStartDate ?? firstPendingWorkout?.scheduledDate ?? new Date();
 
             const workouts = generateTrainingPlan({
                 vdot: newVdot,

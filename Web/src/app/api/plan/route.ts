@@ -111,7 +111,7 @@ export async function GET(req: Request) {
         // Fetch unlinked activities within the plan period (if requested)
         let unlinkedActivities: ActivityListItem[] = [];
         if (includeUnlinked) {
-            const planStartDate = activeGoal.createdAt;
+            const planStartDate = activeGoal.planStartDate || activeGoal.createdAt;
             const planEndDate = activeGoal.raceDate;
 
             // Get all activity IDs that are linked to workouts for this goal

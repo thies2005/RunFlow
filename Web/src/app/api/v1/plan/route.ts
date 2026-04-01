@@ -79,7 +79,7 @@ export async function GET(req: Request) {
 
         let unlinkedActivities: UnlinkedActivity[] = [];
         if (includeUnlinked) {
-            const planStartDate = activeGoal.createdAt;
+            const planStartDate = activeGoal.planStartDate || activeGoal.createdAt;
             const planEndDate = activeGoal.raceDate;
 
             const allLinkedActivityIds = await prisma.workout.findMany({

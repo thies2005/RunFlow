@@ -156,6 +156,7 @@ export interface Goal {
     longRunDay?: number;
     workoutDay?: number;
     restDays?: number[];
+    planStartDate?: string | Date | null;
     isActive: boolean;
     completedAt: string | Date | null;
     workouts?: Workout[];

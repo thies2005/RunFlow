@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    AlertCircle, Save, Check
+    AlertCircle, Save, Check, Trash2, Loader2
 } from 'lucide-react';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { calculateVdot, calculateTrainingPaces, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
@@ -568,6 +568,33 @@ export default function PlanSetupForm({
 
     const isLoading = createGoalMutation.isPending || updateSettingsMutation.isPending;
 
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    const deletePlanMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch('/api/goals', { method: 'DELETE' });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || 'Failed to delete plan');
+            }
+            return res.json();
+        },
+        onSuccess: (data) => {
+            setMessage(`Plan deleted (${data.deletedWorkouts} workouts removed).`);
+            setShowDeleteConfirm(false);
+            queryClient.invalidateQueries({ queryKey: ['goals'] });
+            queryClient.invalidateQueries({ queryKey: ['plan'] });
+            setTimeout(() => {
+                setMessage('');
+                onSuccess?.();
+            }, 2000);
+        },
+        onError: (err) => {
+            setMessage(`Failed to delete: ${err.message}`);
+            setShowDeleteConfirm(false);
+        },
+    });
+
     const raceActivities: RaceActivity[] = activitiesData?.activities?.filter((a: RaceActivity) =>
         a.distance >= 4500
     ) || [];
@@ -739,6 +766,52 @@ export default function PlanSetupForm({
                     <p className="text-xs text-foreground-muted text-center">
                         Adjusting settings will regenerate future workouts. Completed workouts are preserved.
                     </p>
+                )
+            }
+
+            {
+                mode === 'settings' && !showDeleteConfirm && (
+                    <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Plan
+                    </button>
+                )
+            }
+
+            {
+                mode === 'settings' && showDeleteConfirm && (
+                    <div className="border border-red-500/30 rounded-xl p-4 space-y-3 bg-red-500/5">
+                        <p className="text-sm text-red-400 font-medium">Delete this plan and all future workouts?</p>
+                        <p className="text-xs text-foreground-muted">Completed workouts are preserved. You can create a new plan from the onboarding flow.</p>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="flex-1 py-2 text-sm rounded-lg border border-glass-border text-foreground hover:bg-surface-hover transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => deletePlanMutation.mutate()}
+                                disabled={deletePlanMutation.isPending}
+                                className="flex-1 py-2 text-sm rounded-lg bg-red-500 text-white font-medium flex items-center justify-center gap-2 hover:bg-red-600 transition-colors disabled:opacity-50"
+                            >
+                                {deletePlanMutation.isPending ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 )
             }
         </div>

@@ -357,3 +357,55 @@ export async function POST(request: NextRequest) {
         return handleError(error);
     }
 }
+
+// DELETE - Delete active plan (pending workouts + deactivate goal)
+export async function DELETE(request: NextRequest) {
+    try {
+        const clientId = getClientIdentifier(request);
+        const rateLimitResult = await checkRateLimitAsync(clientId, RATE_LIMITS.settings);
+
+        if (!rateLimitResult.allowed) {
+            return NextResponse.json(
+                { error: 'Too many requests. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(rateLimitResult) }
+            );
+        }
+
+        const session = await auth();
+
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const activeGoal = await prisma.goal.findFirst({
+            where: { userId: session.user.id, isActive: true },
+        });
+
+        if (!activeGoal) {
+            return NextResponse.json({ error: 'No active plan found' }, { status: 404 });
+        }
+
+        const now = new Date();
+
+        const deletedCount = await prisma.workout.deleteMany({
+            where: {
+                goalId: activeGoal.id,
+                isCompleted: false,
+                scheduledDate: { gte: now },
+            },
+        });
+
+        await prisma.goal.update({
+            where: { id: activeGoal.id },
+            data: { isActive: false, completedAt: now },
+        });
+
+        return NextResponse.json({
+            success: true,
+            deletedWorkouts: deletedCount.count,
+            goalId: activeGoal.id,
+        }, { headers: rateLimitHeaders(rateLimitResult) });
+    } catch (error) {
+        return handleError(error);
+    }
+}

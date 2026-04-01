@@ -50,6 +50,7 @@ services:
       - FATSECRET_CLIENT_ID=${FATSECRET_CLIENT_ID}
       - FATSECRET_CLIENT_SECRET=${FATSECRET_CLIENT_SECRET}
       - REDIS_URL=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     depends_on:
       db:
         condition: service_healthy
@@ -166,11 +167,24 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    command: >
+      sh -c '
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --requirepass "$$REDIS_PASSWORD"
+        else
+          redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+        fi
+      '
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+        [
+          "CMD-SHELL",
+          "if [ -n \"$${REDIS_PASSWORD}\" ]; then redis-cli -a \"$${REDIS_PASSWORD}\" ping; else redis-cli ping; fi",
+        ]
       interval: 10s
       timeout: 5s
       start_period: 10s

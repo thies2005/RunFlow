@@ -145,15 +145,48 @@ function DashboardContent() {
                 return;
             }
 
-            const statsData = await statsRes.json();
-            const usersData = await usersRes.json();
-            const backupsData = await backupsRes.json();
-            const aiData = aiRes.ok ? await aiRes.json() : null;
+            let statsData: AdminStats | null = null;
+            let usersData: AdminUser[] = [];
+            let backupsData: AdminBackup[] = [];
+            let aiData: AdminAiSettings | null = null;
+            const errors: string[] = [];
+
+            if (statsRes.ok) {
+                statsData = await statsRes.json();
+            } else {
+                const errBody = await statsRes.json().catch(() => ({}));
+                errors.push(`Stats: ${errBody.error || statsRes.statusText}`);
+            }
+
+            if (usersRes.ok) {
+                const usersJson = await usersRes.json();
+                usersData = usersJson.users || [];
+            } else {
+                const errBody = await usersRes.json().catch(() => ({}));
+                errors.push(`Users: ${errBody.error || usersRes.statusText}`);
+            }
+
+            if (backupsRes.ok) {
+                const backupsJson = await backupsRes.json();
+                backupsData = backupsJson.backups || [];
+            } else {
+                const errBody = await backupsRes.json().catch(() => ({}));
+                errors.push(`Backups: ${errBody.error || backupsRes.statusText}`);
+            }
+
+            if (aiRes.ok) {
+                aiData = await aiRes.json();
+            }
 
             setStats(statsData);
-            setUsers(usersData.users || []);
-            setBackups(backupsData.backups || []);
+            setUsers(usersData);
+            setBackups(backupsData);
             setAiSettings(aiData);
+
+            if (errors.length > 0) {
+                setActionMessage({ type: 'error', text: `API errors: ${errors.join('; ')}` });
+                setTimeout(() => setActionMessage(null), 15000);
+            }
 
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);

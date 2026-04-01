@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -27,6 +27,8 @@ export default function Dashboard() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
     const [initialComplete, setInitialComplete] = useState(false);
+    const [sessionTimedOut, setSessionTimedOut] = useState(false);
+    const sessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [raceResultModal, setRaceResultModal] = useState<{
         goal: Goal;
         suggestedActivity: SuggestedRaceActivity | null;
@@ -100,10 +102,44 @@ export default function Dashboard() {
 
 
     // Loading State
-    if (status === 'loading' || (status === 'authenticated' && isLoading)) {
+    useEffect(() => {
+        if (status === 'loading') {
+            sessionTimerRef.current = setTimeout(() => {
+                setSessionTimedOut(true);
+            }, 10000);
+        }
+        return () => {
+            if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
+        };
+    }, [status]);
+
+    if (status === 'loading' && !sessionTimedOut) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="animate-pulse text-gray-400">Loading...</div>
+            </div>
+        );
+    }
+
+    if (status === 'loading' && sessionTimedOut) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="text-center max-w-md px-4">
+                    <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold text-foreground mb-2">Unable to load session</h2>
+                    <p className="text-gray-400 mb-4">The session check is taking too long. This may be a network or database issue.</p>
+                    <button onClick={() => { setSessionTimedOut(false); }} className="btn-primary py-2 px-6">
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (status === 'authenticated' && isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="animate-pulse text-gray-400">Loading dashboard...</div>
             </div>
         );
     }

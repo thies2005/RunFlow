@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Clock, Utensils, Zap, Play, Square } from 'lucide-react';
-import { differenceInMinutes, differenceInSeconds } from 'date-fns';
+import { differenceInSeconds } from 'date-fns';
 
 export function FastingWidget() {
     const queryClient = useQueryClient();

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot, LinkIcon, Bell, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Save, AlertCircle, User, Trash2, RefreshCw, Key, Copy, Check, ExternalLink, Bot, LinkIcon, Bell, ShieldCheck, ShieldOff } from 'lucide-react';
 import Link from 'next/link';
 import { signIn, signOut } from 'next-auth/react';
 
@@ -388,8 +388,6 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     };
 
     if (!isOpen) return null;
-
-    const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
 
     return (
         <>

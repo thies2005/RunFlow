@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { format, isSameDay } from 'date-fns';
 import {
@@ -23,7 +24,6 @@ import { useAnalyticsMetrics } from '@/hooks/useAnalyticsMetrics';
 import ProfileModal from '@/components/ProfileModal';
 import ActivityDetailsModal from '@/components/ActivityDetailsModal';
 import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
-import AiChat from '@/components/AiChat';
 import AiSettingsModal from '@/components/AiSettingsModal';
 import HealthView from '@/components/views/HealthView';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
@@ -31,6 +31,8 @@ import type { Workout, Goal, ActivityListItem } from '@/lib/types';
 import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
 import { Capacitor } from '@capacitor/core';
 import { syncLocalNotifications } from '@/lib/mobile/notifications';
+
+const AiChat = dynamic(() => import('@/components/AiChat'), { ssr: false });
 
 export function MobileLayout() {
     const { data: session, status } = useSession();

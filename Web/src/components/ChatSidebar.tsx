@@ -68,7 +68,7 @@ export default function ChatSidebar({ sessionId, className = '', onCloseMobile, 
                 if (!res.ok) throw new Error('Failed to delete history');
                 queryClient.invalidateQueries({ queryKey: ['chat-sessions'] });
                 router.push('/chat');
-            } catch (error) {
+            } catch {
                 alert('Failed to delete history');
             }
         }

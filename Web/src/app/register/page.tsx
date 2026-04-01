@@ -94,7 +94,7 @@ export default function RegisterPage() {
                 // Instead of redirecting immediately, show verification modal
                 setShowVerification(true);
             }
-        } catch (err) {
+        } catch {
             setError('An error occurred. Please try again.');
         } finally {
             setIsLoading(false);

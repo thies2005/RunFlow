@@ -47,8 +47,8 @@ Reply ONLY with "HISTORY_QUERY" or "NORMAL".`;
             }
         ]);
         return response.trim().toUpperCase().includes('HISTORY_QUERY') ? 'HISTORY_QUERY' : 'NORMAL';
-    } catch (e) {
-        logger.error('Intent detection failed', { error: e instanceof Error ? e.message : String(e) });
+    } catch (error) {
+        logger.error('Intent detection failed', { error: error instanceof Error ? error.message : String(error) });
         return 'NORMAL';
     }
 }
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
                     heartbeat = setInterval(() => {
                         try {
                             controller.enqueue(encoder.encode(': heartbeat\n\n'));
-                        } catch (e) {
+                        } catch {
                             if (heartbeat) clearInterval(heartbeat);
                         }
                     }, 15000);

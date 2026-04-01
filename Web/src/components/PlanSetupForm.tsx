@@ -3,11 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    Activity, Bike, Move, ChevronDown, ChevronUp,
-    AlertCircle, AlertTriangle, Save, Check, Target, Waves, Dumbbell, Rocket, BarChart2
+    AlertCircle, Save, Check
 } from 'lucide-react';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
-import { formatTime, calculateVdot, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
+import { calculateVdot, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
 import {
     calculateProjectedGoalTime,
     type PlanSettings
@@ -506,18 +505,9 @@ export default function PlanSetupForm({
 
     const isLoading = createGoalMutation.isPending || updateSettingsMutation.isPending;
 
-    const inputClass = "bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
-
     const raceActivities: RaceActivity[] = activitiesData?.activities?.filter((a: RaceActivity) =>
         a.distance >= 4500
     ) || [];
-
-    const formatActivityOption = (activity: RaceActivity) => {
-        const date = new Date(activity.startDate).toLocaleDateString();
-        const distance = (activity.distance / 1000).toFixed(1);
-        const time = formatTime(activity.movingTime);
-        return `${activity.name} - ${distance}km in ${time} (${date})`;
-    };
 
     return (
         <div className="space-y-6">

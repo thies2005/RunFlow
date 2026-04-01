@@ -175,7 +175,15 @@ const nextConfig = {
     output: "standalone",
     compress: true,
     experimental: {
-        optimizePackageImports: ["lucide-react", "date-fns", "@tanstack/react-query"],
+        optimizePackageImports: [
+            "lucide-react",
+            "date-fns",
+            "@tanstack/react-query",
+            "recharts",
+            "framer-motion",
+            "react-markdown",
+            "dompurify",
+        ],
     },
     images: {
         remotePatterns: [

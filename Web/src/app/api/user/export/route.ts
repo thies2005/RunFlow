@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         const session = await auth();
 
@@ -117,6 +117,9 @@ export async function GET(request: Request) {
             isAdmin,
             ...safeUserData
         } = user;
+
+        void passwordHash;
+        void isAdmin;
 
         const dateStr = new Date().toISOString().split('T')[0];
         const filename = `runflow-data-export-${dateStr}.json`;

@@ -7,7 +7,7 @@ import { logger, generateRequestId } from '@/lib/logging/logger'
  * Defines allowed origins for cross-origin requests.
  * In production, this should match your deployed domain(s).
  */
-const getAllowedOrigins = (): string[] => {
+const computeAllowedOrigins = (): string[] => {
     const origins: string[] = [];
 
     // Production domains are handled below via NEXT_PUBLIC_APP_URL
@@ -43,12 +43,14 @@ const getAllowedOrigins = (): string[] => {
     return Array.from(new Set(origins));
 };
 
+const ALLOWED_ORIGINS = computeAllowedOrigins();
+
 /**
  * Handle CORS for API routes
  */
 function handleCors(request: NextRequest): NextResponse | null {
     const origin = request.headers.get('origin');
-    const allowedOrigins = getAllowedOrigins();
+    const allowedOrigins = ALLOWED_ORIGINS;
     const requestOrigin = request.nextUrl.origin;
     const isSameOrigin = origin === requestOrigin;
 
@@ -86,7 +88,7 @@ function handleCors(request: NextRequest): NextResponse | null {
  */
 function addCorsHeaders(response: NextResponse, request: NextRequest): NextResponse {
     const origin = request.headers.get('origin');
-    const allowedOrigins = getAllowedOrigins();
+    const allowedOrigins = ALLOWED_ORIGINS;
     const requestOrigin = request.nextUrl.origin;
 
     if (origin && (allowedOrigins.includes(origin) || origin === requestOrigin)) {
@@ -157,12 +159,6 @@ export async function middleware(request: NextRequest) {
     });
 
     response.headers.set('Content-Security-Policy', csp)
-    response.headers.set('X-Content-Type-Options', 'nosniff')
-    response.headers.set('X-Frame-Options', 'DENY')
-    response.headers.set('X-XSS-Protection', '1; mode=block')
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-
     // Add request ID header for tracing
     response.headers.set('x-request-id', requestId)
 

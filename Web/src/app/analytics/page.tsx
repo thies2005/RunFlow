@@ -4,12 +4,7 @@ import { useState, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw, Settings2, Heart } from 'lucide-react';
-import {
-    LineChart, Line, AreaChart, Area,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-    PieChart, Pie, Cell
-} from 'recharts';
+import { ArrowLeft, RefreshCw, Heart } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
 
@@ -22,6 +17,7 @@ const TrendChartsSection = dynamic(() => import('@/components/analytics/TrendCha
 const ZoneDistributionSection = dynamic(() => import('@/components/analytics/ZoneDistributionSection'), { ssr: false });
 const TopMetricsSection = dynamic(() => import('@/components/analytics/TopMetricsSection'), { ssr: false });
 const TrainingPacesSection = dynamic(() => import('@/components/analytics/TrainingPacesSection'), { ssr: false });
+const FitnessChart = dynamic(() => import('@/components/FitnessChart'), { ssr: false });
 import { Footer } from '@/components';
 import {
     calculatePredictedTimes,
@@ -29,9 +25,7 @@ import {
     calculateEffectiveVO2max,
 } from '@/lib/metrics/runalyze';
 import {
-    formatTime,
     calculateTrainingPaces,
-    formatPace
 } from '@/lib/metrics/vdot';
 import type { Activity, Goal } from '@/lib/types';
 
@@ -420,47 +414,7 @@ export default function AnalyticsPage() {
                         />
 
                         {/* === FITNESS & FORM === */}
-                        <div className="glass-card p-6">
-                            <h3 className="text-lg font-semibold text-foreground mb-4">Fitness & Form (CTL / ATL / TSB)</h3>
-                            <div className="h-72 min-h-[288px] w-full relative">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={filteredFitness}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
-                                        <XAxis
-                                            dataKey="date"
-                                            stroke="var(--foreground-muted)"
-                                            fontSize={11}
-                                            tickLine={false}
-                                            minTickGap={timeRange === '1M' ? 20 : 50}
-                                            tickFormatter={(val) => {
-                                                const date = new Date(val);
-                                                if (timeRange === '1M') {
-                                                    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                                                } else if (['3M', '6M'].includes(timeRange)) {
-                                                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                                } else {
-                                                    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                                                }
-                                            }}
-                                        />
-                                        <YAxis stroke="#9ca3af" fontSize={11} tickLine={false} tickFormatter={(val) => val.toFixed(0)} />
-                                        <Tooltip
-                                            contentStyle={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px', backdropFilter: 'blur(12px)' }}
-                                            labelStyle={{ color: 'var(--foreground)' }}
-                                            itemStyle={{ color: 'var(--foreground)' }}
-                                            labelFormatter={(val) => new Date(val).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                        />
-                                        <Legend />
-                                        <Line type="monotone" dataKey="ctl" stroke="#3b82f6" strokeWidth={2} dot={false} isAnimationActive={false} name="Fitness (CTL)" />
-                                        <Line type="monotone" dataKey="atl" stroke="#ef4444" strokeWidth={2} dot={false} isAnimationActive={false} name="Fatigue (ATL)" />
-                                        <Line type="monotone" dataKey="tsb" stroke="#10b981" strokeWidth={2} dot={false} isAnimationActive={false} name="Form (TSB)" />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-4 text-center">
-                                CTL = Long-term fitness • ATL = Short-term fatigue • TSB = Form (CTL - ATL)
-                            </p>
-                        </div>
+                        <FitnessChart data={filteredFitness} />
 
                         {/* Shape Details */}
                         <div className="glass-card p-4">

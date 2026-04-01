@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { HeartPulse, Info, Bell, RefreshCw } from 'lucide-react';
 import { isMobile, syncHistoricalHealthData, SyncHistoricalResult, isHealthConnectAvailable } from '@/lib/mobile/healthConnect';
 import { Capacitor } from '@capacitor/core';
@@ -11,7 +12,6 @@ const IS_NATIVE = Capacitor.isNativePlatform();
 import { useSession } from 'next-auth/react';
 import { AddSupplementModal } from './AddSupplementModal';
 import { HealthTrendModal } from './HealthTrendModal';
-import { BarcodeScannerModal } from './BarcodeScannerModal';
 import { ManualFoodEntryModal } from './ManualFoodEntryModal';
 import NutritionAnalyticsView from './NutritionAnalyticsView';
 import { NutritionGoalsModal } from './NutritionGoalsModal';
@@ -25,7 +25,6 @@ import { ReminderSettingsModal } from './ReminderSettingsModal';
 import { AiMealSuggestionModal } from './AiMealSuggestionModal';
 import SupplementAnalyticsView from './SupplementAnalyticsView';
 import type { Supplement, SupplementStack, SupplementLog, NutritionLog, FoodScanResult } from '@/lib/types/health';
-import type { Prisma } from '@/generated/prisma/browser';
 import { getCurrentUtcDayKey, parseUtcDayKey } from '@/lib/health/dates';
 import { NutritionSummary } from './health/NutritionSummary';
 import { BodyMetricsCard } from './health/BodyMetricsCard';
@@ -33,6 +32,11 @@ import { QuickActions } from './health/QuickActions';
 import { MealSection } from './health/MealSection';
 import { SupplementsSection } from './health/SupplementsSection';
 import { SectionErrorCard, SectionLoadingCard } from './health/SectionStates';
+
+const BarcodeScannerModal = dynamic(
+    () => import('./BarcodeScannerModal').then((mod) => mod.BarcodeScannerModal),
+    { ssr: false }
+);
 
 interface HealthViewProps {
     showHeader?: boolean;
@@ -427,7 +431,7 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                     try {
                                         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                                         setCameraStream(stream);
-                                    } catch (err) {
+                                    } catch {
                                         toast.error('Camera permission is required to scan barcodes. Please allow camera access in your browser settings.');
                                         return;
                                     }

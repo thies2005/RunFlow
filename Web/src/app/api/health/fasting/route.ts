@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
-import { differenceInMinutes } from 'date-fns';
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         const session = await auth();
         if (!session?.user?.id) {
@@ -37,7 +36,7 @@ export async function GET(request: Request) {
             enabled: target?.fastingEnabled || false
         });
 
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch fasting data' }, { status: 500 });
     }
 }
@@ -102,7 +101,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to manage fasting session' }, { status: 500 });
     }
 }

@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
 import DOMPurify from 'dompurify';
 import PromptLibrary from './PromptLibrary';
-import ProactiveRunWidget, { type RecentActivity } from './chat/ProactiveRunWidget';
+import ProactiveRunWidget from './chat/ProactiveRunWidget';
 import ProactiveCalorieSnapWidget from './chat/ProactiveCalorieSnapWidget';
 import MacroLoggedWidget from './chat/MacroLoggedWidget';
 import TimelineNode from './chat/TimelineNode';
@@ -68,7 +68,7 @@ const parseMealLoggedData = (content: string): { mealName: string; calories: num
                 return { mealName: data.mealName, calories: data.calories, protein: data.protein ?? 0, carbs: data.carbs ?? 0, fats: data.fats ?? 0 };
             }
         }
-    } catch (e) {
+    } catch {
         // Stream might be incomplete, return null and wait for more data
         return null;
     }
@@ -343,16 +343,6 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
             setIsStreaming(false);
             abortControllerRef.current = null;
         }
-    };
-
-    const handleNewChat = () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-        setMessages([]);
-        setInput('');
-        setError(null);
-        router.push('/chat');
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {

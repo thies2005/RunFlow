@@ -10,7 +10,7 @@ async function getPublicHealthStatus() {
 
         const status = databaseStatus === 'unhealthy' ? 'unhealthy' : 'healthy';
         return { status, statusCode: status === 'unhealthy' ? 503 : 200 };
-    } catch (error) {
+    } catch {
         return { status: 'unhealthy', statusCode: 503 };
     }
 }
@@ -52,7 +52,7 @@ export async function HEAD() {
     try {
         const publicHealth = await getPublicHealthStatus();
         return new NextResponse(null, { status: publicHealth.statusCode });
-    } catch (error) {
+    } catch {
         return new NextResponse(null, { status: 503 });
     }
 }

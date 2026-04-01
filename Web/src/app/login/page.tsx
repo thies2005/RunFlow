@@ -51,7 +51,7 @@ export default function LoginPage() {
                 // Redirect to home - it will handle onboarding check if needed
                 router.push('/');
             }
-        } catch (err) {
+        } catch {
             setError('An error occurred. Please try again.');
         } finally {
             setIsLoading(false);

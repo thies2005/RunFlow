@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-    X,
     Save,
     AlertCircle,
     Bot,
@@ -266,7 +265,7 @@ export default function AiSettingsModal({ isOpen, onClose }: AiSettingsModalProp
             } else {
                 setTestResult({ success: false, message: data.error || 'API key test failed' });
             }
-        } catch (error) {
+        } catch {
             setTestResult({ success: false, message: 'Connection error - check your base URL' });
         } finally {
             setTestingKey(false);

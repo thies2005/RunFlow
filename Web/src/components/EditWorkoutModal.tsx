@@ -135,8 +135,6 @@ export default function EditWorkoutModal({ isOpen, onClose, workout, goalId, def
         }
     });
 
-    const inputClass = "bg-white/5 border border-white/10 rounded-lg p-3 text-white w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all";
-
     return (
         <Modal
             isOpen={isOpen}

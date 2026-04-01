@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Calendar, Activity, Clock, Heart } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';

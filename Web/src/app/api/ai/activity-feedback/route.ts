@@ -92,6 +92,26 @@ export async function POST(request: NextRequest) {
             if (message.includes('AI features not enabled or no provider configured')) {
                 return NextResponse.json({ error: message }, { status: 403 });
             }
+            if (message.includes('rate limited') || message.includes('(429)')) {
+                await prisma.feedbackJob.upsert({
+                    where: { activityId },
+                    create: {
+                        userId,
+                        activityId,
+                        priority: 1,
+                    },
+                    update: {
+                        status: 'PENDING',
+                        retryCount: 0,
+                        nextRunAt: new Date(),
+                        errorLog: 'Rate limited during on-demand request'
+                    }
+                });
+                return NextResponse.json({
+                    queued: true,
+                    message: 'Server rate limited. Your feedback is being prepared and will appear shortly.'
+                }, { status: 429 });
+            }
             if (message.includes('Usage limit reached') || message.includes('No tokens remaining') || message.includes('Quota exhausted')) {
                 return NextResponse.json({ error: message }, { status: 429 });
             }

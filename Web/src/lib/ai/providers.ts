@@ -803,6 +803,9 @@ function findJsonBoundary(str: string): number {
 }
 
 async function handleError(response: Response) {
+    if (response.status === 429) {
+        throw new Error('AI provider rate limited (429)');
+    }
     let errorMessage = `AI API error: ${response.status}`;
     try {
         const data = await response.json();

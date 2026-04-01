@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -17,21 +17,36 @@ import {
 import { X } from 'lucide-react';
 
 import { MobileSwipeLayout } from '@/components/navigation';
-import ChatSidebar from '@/components/ChatSidebar';
-import { DashboardView, PlanView, AnalyticsView } from '@/components/views';
-import { SettingsModal, EditWorkoutModal } from '@/components';
 import { useAnalyticsMetrics } from '@/hooks/useAnalyticsMetrics';
-import ProfileModal from '@/components/ProfileModal';
-import ActivityDetailsModal from '@/components/ActivityDetailsModal';
-import ShapeCalibrationModal from '@/components/ShapeCalibrationModal';
-import AiSettingsModal from '@/components/AiSettingsModal';
-import HealthView from '@/components/views/HealthView';
 import type { TimeRange } from '@/components/CombinedAnalyticsChart';
 import type { Workout, Goal, ActivityListItem } from '@/lib/types';
 import { WorkoutWithLinkedActivity, PlanResponse } from '@/lib/types';
 import { Capacitor } from '@capacitor/core';
 import { syncLocalNotifications } from '@/lib/mobile/notifications';
 
+const DashboardView = dynamic(() => import('@/components/views/DashboardView'), {
+    ssr: false,
+    loading: () => <div className="h-full w-full animate-pulse bg-background" />,
+});
+const PlanView = dynamic(() => import('@/components/views/PlanView'), {
+    ssr: false,
+    loading: () => <div className="h-full w-full animate-pulse bg-background" />,
+});
+const AnalyticsView = dynamic(() => import('@/components/views/AnalyticsView'), {
+    ssr: false,
+    loading: () => <div className="h-full w-full animate-pulse bg-background" />,
+});
+const HealthView = dynamic(() => import('@/components/views/HealthView'), {
+    ssr: false,
+    loading: () => <div className="h-full w-full animate-pulse bg-background" />,
+});
+const ChatSidebar = dynamic(() => import('@/components/ChatSidebar'), { ssr: false, loading: () => null });
+const SettingsModal = dynamic(() => import('@/components/SettingsModal'), { ssr: false, loading: () => null });
+const EditWorkoutModal = dynamic(() => import('@/components/EditWorkoutModal'), { ssr: false, loading: () => null });
+const ProfileModal = dynamic(() => import('@/components/ProfileModal'), { ssr: false, loading: () => null });
+const ActivityDetailsModal = dynamic(() => import('@/components/ActivityDetailsModal'), { ssr: false, loading: () => null });
+const ShapeCalibrationModal = dynamic(() => import('@/components/ShapeCalibrationModal'), { ssr: false, loading: () => null });
+const AiSettingsModal = dynamic(() => import('@/components/AiSettingsModal'), { ssr: false, loading: () => null });
 const AiChat = dynamic(() => import('@/components/AiChat'), { ssr: false });
 
 export function MobileLayout() {
@@ -314,7 +329,7 @@ export function MobileLayout() {
     // === RENDER ===
 
     return (
-        <>
+        <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
             <MobileSwipeLayout showAiChat={showAiChat} showHealth={showHealth} onChatTabClick={() => setAiChatResetKey(prev => prev + 1)}>
                 {/* Dashboard View - always index 0 */}
                 <DashboardView
@@ -480,7 +495,7 @@ export function MobileLayout() {
                 isOpen={isAiSettingsOpen}
                 onClose={() => setIsAiSettingsOpen(false)}
             />
-        </>
+        </Suspense>
     );
 }
 

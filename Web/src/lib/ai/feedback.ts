@@ -174,28 +174,6 @@ export function formatActivityForAi(ctx: NonNullable<Awaited<ReturnType<typeof b
 }
 
 /**
- * Generates feedback using the appropriate AI provider.
- */
-async function generateFeedback(
-    promptStr: string,
-    userContext: string,
-    activityContext: string,
-    providerConfig: AiConfig,
-    signal?: AbortSignal
-): Promise<string> {
-    const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n${promptStr}\n\n--- Athlete Profile ---\n${userContext}`;
-    const userMessage: string = `Here's the activity to analyze:\n\n${activityContext}`;
-
-    const { generateCompletion } = await import('@/lib/ai/providers');
-    const messages: ChatMessage[] = [
-        { role: 'system', content: systemPromptMessage },
-        { role: 'user', content: userMessage },
-    ];
-
-    return generateCompletion(providerConfig, messages, signal);
-}
-
-/**
  * Main service function to generate, save, and return Activity AI Feedback.
  */
 export async function generateAndSaveActivityFeedback(
@@ -269,12 +247,38 @@ export async function generateAndSaveActivityFeedback(
         throw new Error('AI features not enabled or no provider configured that supports the requested model');
     }
 
-    // Generate the 3 feedback components in parallel
-    const [plannedComparison, progressAnalysis, goalTrajectory] = await Promise.all([
-        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.plannedComparison, baseContext, activityStr, providerConfig, signal),
-        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.progressAnalysis, baseContext, activityStr, providerConfig, signal),
-        generateFeedback(ACTIVITY_FEEDBACK_PROMPTS.goalTrajectory, baseContext, activityStr, providerConfig, signal),
-    ]);
+    // Generate all feedback in a single AI request
+    const combinedPrompt: string = ACTIVITY_FEEDBACK_PROMPTS.combined;
+    const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n--- Athlete Profile ---\n${baseContext}`;
+    const userMessage: string = `Here's the activity to analyze:\n\n${activityStr}`;
+
+    const { generateCompletion } = await import('@/lib/ai/providers');
+    const messages: ChatMessage[] = [
+        { role: 'system', content: systemPromptMessage },
+        { role: 'user', content: userMessage },
+    ];
+
+    const raw = await generateCompletion(providerConfig, messages, signal);
+
+    // Parse the combined response into the 3 sections by splitting on ## headers
+    const sectionRegex = /^##\s+(.+)$/gm;
+    const sections: Record<string, string> = {};
+    const matches = [...raw.matchAll(sectionRegex)];
+
+    for (let i = 0; i < matches.length; i++) {
+        const title = matches[i][1].trim().toLowerCase();
+        const startIdx = matches[i].index! + matches[i][0].length;
+        const endIdx = i + 1 < matches.length ? matches[i + 1].index! : raw.length;
+        const content = raw.slice(startIdx, endIdx).trim();
+
+        if (title.includes('planned comparison')) sections.plannedComparison = content;
+        else if (title.includes('progress analysis')) sections.progressAnalysis = content;
+        else if (title.includes('goal trajectory')) sections.goalTrajectory = content;
+    }
+
+    const plannedComparison = sections.plannedComparison || '';
+    const progressAnalysis = sections.progressAnalysis || '';
+    const goalTrajectory = sections.goalTrajectory || '';
 
     // Upsert into DB
     const feedback = await prisma.activityAiFeedback.upsert({

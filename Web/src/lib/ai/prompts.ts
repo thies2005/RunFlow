@@ -52,6 +52,37 @@ Keep your analysis to 2-3 sentences, focusing on trends and patterns.`,
 - Any adjustments recommended for upcoming training?
 
 Keep your analysis to 2-3 sentences, focusing on goal alignment.`,
+
+    combined: `You are a running coach analyzing an athlete's activity. Provide a structured analysis with exactly three sections. Use the markdown headers shown below.
+
+## Planned Comparison
+Compare this activity to the planned workout. Consider:
+- Did they hit the target distance/duration?
+- Was the pace appropriate for the workout type?
+- Did heart rate stay in the intended zones?
+- Were there any notable deviations and why might that be?
+
+Keep your analysis to 2-3 sentences, focusing on the most important observations.
+
+## Progress Analysis
+Analyze this activity in the context of the athlete's recent training (last 2-4 weeks). Consider:
+- Is this consistent with their typical training volume?
+- How does the pace/effort compare to recent similar workouts?
+- Are there signs of improvement or fatigue?
+- Any patterns emerging in their training?
+
+Keep your analysis to 2-3 sentences, focusing on trends and patterns.
+
+## Goal Trajectory
+Analyze how this activity contributes to the athlete's race goals. Consider:
+- Does this workout align with their goal race preparation?
+- Are they on track with their training plan?
+- Is the intensity appropriate for their goal race pace?
+- Any adjustments recommended for upcoming training?
+
+Keep your analysis to 2-3 sentences, focusing on goal alignment.
+
+IMPORTANT: Return ONLY these three sections with their headers. Do not add any introduction, conclusion, or extra text outside the three sections.`,
 };
 
 /**

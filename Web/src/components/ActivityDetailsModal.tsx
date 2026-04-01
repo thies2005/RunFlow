@@ -152,7 +152,11 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
             } else {
                 const errorData = await res.json().catch(() => null);
                 if (res.status === 429) {
-                    setFeedbackError("Quota exhausted. Please upgrade your plan or contact admin.");
+                    if (errorData?.queued) {
+                        setFeedbackError(errorData.message || 'Server rate limited. Your feedback is being prepared and will appear shortly.');
+                    } else {
+                        setFeedbackError("Quota exhausted. Please upgrade your plan or contact admin.");
+                    }
                 } else {
                     setFeedbackError(errorData?.error || 'Failed to generate AI feedback');
                 }

@@ -86,6 +86,7 @@ export type GoalMinAggregateOutputType = {
   workoutDay: number | null
   isActive: boolean | null
   completedAt: Date | null
+  deletedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -114,6 +115,7 @@ export type GoalMaxAggregateOutputType = {
   workoutDay: number | null
   isActive: boolean | null
   completedAt: Date | null
+  deletedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -143,6 +145,7 @@ export type GoalCountAggregateOutputType = {
   restDays: number
   isActive: number
   completedAt: number
+  deletedAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -209,6 +212,7 @@ export type GoalMinAggregateInputType = {
   workoutDay?: true
   isActive?: true
   completedAt?: true
+  deletedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -237,6 +241,7 @@ export type GoalMaxAggregateInputType = {
   workoutDay?: true
   isActive?: true
   completedAt?: true
+  deletedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -266,6 +271,7 @@ export type GoalCountAggregateInputType = {
   restDays?: true
   isActive?: true
   completedAt?: true
+  deletedAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -382,6 +388,7 @@ export type GoalGroupByOutputType = {
   restDays: runtime.JsonValue
   isActive: boolean
   completedAt: Date | null
+  deletedAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: GoalCountAggregateOutputType | null
@@ -434,6 +441,7 @@ export type GoalWhereInput = {
   restDays?: Prisma.JsonFilter<"Goal">
   isActive?: Prisma.BoolFilter<"Goal"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
+  deletedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -466,6 +474,7 @@ export type GoalOrderByWithRelationInput = {
   restDays?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -501,6 +510,7 @@ export type GoalWhereUniqueInput = Prisma.AtLeast<{
   restDays?: Prisma.JsonFilter<"Goal">
   isActive?: Prisma.BoolFilter<"Goal"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
+  deletedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -533,6 +543,7 @@ export type GoalOrderByWithAggregationInput = {
   restDays?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.GoalCountOrderByAggregateInput
@@ -570,6 +581,7 @@ export type GoalScalarWhereWithAggregatesInput = {
   restDays?: Prisma.JsonWithAggregatesFilter<"Goal">
   isActive?: Prisma.BoolWithAggregatesFilter<"Goal"> | boolean
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Goal"> | Date | string | null
+  deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Goal"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Goal"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Goal"> | Date | string
 }
@@ -598,6 +610,7 @@ export type GoalCreateInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -630,6 +643,7 @@ export type GoalUncheckedCreateInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
@@ -660,6 +674,7 @@ export type GoalUpdateInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -692,6 +707,7 @@ export type GoalUncheckedUpdateInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
@@ -723,6 +739,7 @@ export type GoalCreateManyInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -751,6 +768,7 @@ export type GoalUpdateManyMutationInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -780,6 +798,7 @@ export type GoalUncheckedUpdateManyInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -819,6 +838,7 @@ export type GoalCountOrderByAggregateInput = {
   restDays?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -865,6 +885,7 @@ export type GoalMaxOrderByAggregateInput = {
   workoutDay?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -893,6 +914,7 @@ export type GoalMinOrderByAggregateInput = {
   workoutDay?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1018,6 +1040,7 @@ export type GoalCreateWithoutUserInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
@@ -1048,6 +1071,7 @@ export type GoalUncheckedCreateWithoutUserInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
@@ -1108,6 +1132,7 @@ export type GoalScalarWhereInput = {
   restDays?: Prisma.JsonFilter<"Goal">
   isActive?: Prisma.BoolFilter<"Goal"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
+  deletedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
 }
@@ -1136,6 +1161,7 @@ export type GoalCreateWithoutRaceResultInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -1167,6 +1193,7 @@ export type GoalUncheckedCreateWithoutRaceResultInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
@@ -1212,6 +1239,7 @@ export type GoalUpdateWithoutRaceResultInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -1243,6 +1271,7 @@ export type GoalUncheckedUpdateWithoutRaceResultInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
@@ -1272,6 +1301,7 @@ export type GoalCreateWithoutWorkoutsInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
@@ -1303,6 +1333,7 @@ export type GoalUncheckedCreateWithoutWorkoutsInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
@@ -1348,6 +1379,7 @@ export type GoalUpdateWithoutWorkoutsInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
@@ -1379,6 +1411,7 @@ export type GoalUncheckedUpdateWithoutWorkoutsInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
@@ -1408,6 +1441,7 @@ export type GoalCreateManyUserInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
+  deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1436,6 +1470,7 @@ export type GoalUpdateWithoutUserInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
@@ -1466,6 +1501,7 @@ export type GoalUncheckedUpdateWithoutUserInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
@@ -1496,6 +1532,7 @@ export type GoalUncheckedUpdateManyWithoutUserInput = {
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1556,6 +1593,7 @@ export type GoalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   restDays?: boolean
   isActive?: boolean
   completedAt?: boolean
+  deletedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1589,6 +1627,7 @@ export type GoalSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   restDays?: boolean
   isActive?: boolean
   completedAt?: boolean
+  deletedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1619,6 +1658,7 @@ export type GoalSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   restDays?: boolean
   isActive?: boolean
   completedAt?: boolean
+  deletedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1649,11 +1689,12 @@ export type GoalSelectScalar = {
   restDays?: boolean
   isActive?: boolean
   completedAt?: boolean
+  deletedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "restDays" | "isActive" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["goal"]>
+export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "restDays" | "isActive" | "completedAt" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["goal"]>
 export type GoalInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   workouts?: boolean | Prisma.Goal$workoutsArgs<ExtArgs>
@@ -1699,6 +1740,7 @@ export type $GoalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     restDays: runtime.JsonValue
     isActive: boolean
     completedAt: Date | null
+    deletedAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["goal"]>
@@ -2151,6 +2193,7 @@ export interface GoalFieldRefs {
   readonly restDays: Prisma.FieldRef<"Goal", 'Json'>
   readonly isActive: Prisma.FieldRef<"Goal", 'Boolean'>
   readonly completedAt: Prisma.FieldRef<"Goal", 'DateTime'>
+  readonly deletedAt: Prisma.FieldRef<"Goal", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Goal", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Goal", 'DateTime'>
 }

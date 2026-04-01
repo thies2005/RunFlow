@@ -83,7 +83,6 @@ export async function GET(req: NextRequest) {
             where: { userId, isActive: true },
             orderBy: { raceDate: 'asc' },
             include: {
-                // Optimized: Fetch workouts only for current week (anchored to client date)
                 workouts: {
                     where: {
                         scheduledDate: {
@@ -94,6 +93,28 @@ export async function GET(req: NextRequest) {
                     orderBy: { scheduledDate: 'asc' }
                 }
             }
+        });
+
+        const incompleteGoalsPromise = prisma.goal.findMany({
+            where: {
+                userId,
+                isActive: false,
+                completedAt: { not: null },
+                deletedAt: null,
+                raceResult: { is: null },
+            },
+            orderBy: { completedAt: 'desc' },
+            take: 1,
+            select: {
+                id: true,
+                name: true,
+                raceType: true,
+                raceDate: true,
+                targetTime: true,
+                planWeeks: true,
+                isActive: true,
+                completedAt: true,
+            },
         });
 
         // 2. Recent Activities (Limit 10)
@@ -168,12 +189,13 @@ export async function GET(req: NextRequest) {
         const syncStatusPromise = getSyncStatus(userId);
 
         // Execute all promises in parallel
-        const [user, goals, recentActivities, statsActivities, syncStatus] = await Promise.all([
+        const [user, goals, recentActivities, statsActivities, syncStatus, incompleteGoals] = await Promise.all([
             userPromise,
             activeGoalsPromise,
             recentActivitiesPromise,
             statsActivitiesPromise,
-            syncStatusPromise
+            syncStatusPromise,
+            incompleteGoalsPromise,
         ]);
 
         // --- METRIC CALCULATION (Server-Side) ---
@@ -264,8 +286,9 @@ export async function GET(req: NextRequest) {
 
         const responseData = {
             stats,
-            recentActivities: { activities: serializedActivities }, // Match expected format or simplfy? Keeping nested for compatibility
+            recentActivities: { activities: serializedActivities },
             goals: { goals },
+            incompleteGoal: incompleteGoals[0] || null,
             syncStatus
         };
 

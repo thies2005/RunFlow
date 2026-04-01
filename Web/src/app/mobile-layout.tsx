@@ -266,6 +266,7 @@ export function MobileLayout() {
     const recentActivities = dashboardData?.recentActivities?.activities || [];
     const goalsList = dashboardData?.goals?.goals || [];
     const activeGoal: Goal | undefined = goalsList.find((g: Goal) => g.isActive);
+    const incompleteGoal: Goal | null = dashboardData?.incompleteGoal || null;
     const weeklyWorkouts: Workout[] = activeGoal?.workouts || [];
     const syncStatus = dashboardData?.syncStatus;
 
@@ -324,7 +325,7 @@ export function MobileLayout() {
         return null;
     }
 
-    if (status === 'authenticated' && !isDashboardLoading && !activeGoal) {
+    if (status === 'authenticated' && !isDashboardLoading && !activeGoal && !incompleteGoal) {
         const dismissed = typeof window !== 'undefined' && localStorage.getItem('runflow_onboarding_dismissed') === 'true';
         if (!dismissed) {
             router.push('/onboarding');
@@ -349,6 +350,7 @@ export function MobileLayout() {
                         statsData={dashboardStats}
                         recentActivities={recentActivities}
                         activeGoal={activeGoal}
+                        incompleteGoal={incompleteGoal}
                         weeklyWorkouts={weeklyWorkouts}
                         syncStatus={syncStatus}
                         syncMutation={syncMutation}

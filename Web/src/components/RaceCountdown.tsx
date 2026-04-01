@@ -1,7 +1,7 @@
-import { Calendar, Target, Timer, Trophy, CheckCircle, Loader2 } from 'lucide-react';
+import { Calendar, Target, Timer, Trophy, CheckCircle, Loader2, Trash2 } from 'lucide-react';
 import { differenceInDays, differenceInWeeks, format } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import type { Goal, SuggestedRaceActivity } from '@/lib/types';
 import { calculateProjectedGoalTime, calculateWeeksUntilRace, type PlanSettings } from '@/lib/metrics/goalProjection';
 import type { RaceDistance } from '@/lib/metrics/vdot';
@@ -12,6 +12,7 @@ interface RaceCountdownProps {
     goal: Goal | null;
     className?: string;
     onSelectRace?: (_goal: Goal, _activity: SuggestedRaceActivity | null, _mode: 'suggest' | 'review' | 'pick') => void;
+    isIncompleteArchived?: boolean;
 }
 
 const raceLabels: Record<string, string> = {
@@ -43,6 +44,7 @@ export function RaceCountdown({
     goal,
     className = '',
     onSelectRace,
+    isIncompleteArchived = false,
 }: RaceCountdownProps) {
     const router = useRouter();
     const {
@@ -78,11 +80,11 @@ export function RaceCountdown({
     const weeksToRace = differenceInWeeks(raceDate, today);
 
     // Auto-archive check: 14 days past race date with no race result
-    const isOverdue = daysToRace < -14 && !goal.raceResult;
+    const isOverdue = !isIncompleteArchived && daysToRace < -14 && !goal.raceResult;
 
     // POST-RACE STATE: Race date passed, no race result linked
-    if (daysToRace <= 0 && !goal.raceResult && !isOverdue) {
-        return <PostRacePending goal={goal} daysToRace={daysToRace} onSelectRace={onSelectRace} className={className} />;
+    if ((daysToRace <= 0 || isIncompleteArchived) && !goal.raceResult && !isOverdue) {
+        return <PostRacePending goal={goal} daysToRace={daysToRace} onSelectRace={onSelectRace} className={className} isIncompleteArchived={isIncompleteArchived} />;
     }
 
     if (isOverdue) {
@@ -228,13 +230,26 @@ export function RaceCountdown({
     );
 }
 
-function PostRacePending({ goal, daysToRace, onSelectRace, className }: {
+function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncompleteArchived = false }: {
     goal: Goal;
     daysToRace: number;
     onSelectRace?: RaceCountdownProps['onSelectRace'];
     className: string;
+    isIncompleteArchived?: boolean;
 }) {
     const { useImperial } = useUnits();
+    const queryClient = useQueryClient();
+
+    const deleteMutation = useMutation({
+        mutationFn: async () => {
+            const res = await fetch(`/api/goals?goalId=${goal.id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete plan');
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
+        },
+    });
     const { data: suggestData, isLoading: suggestLoading } = useQuery({
         queryKey: ['suggest-race', goal.id],
         queryFn: async () => {
@@ -288,10 +303,14 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className }: {
             <div className="bg-accent-pink/10 border border-accent-pink/30 rounded-xl p-4 mb-4">
                 <div className="flex items-center gap-2 mb-1">
                     <Trophy className="w-5 h-5 text-accent-pink" />
-                    <p className="font-semibold text-accent-pink">Race Week!</p>
+                    <p className="font-semibold text-accent-pink">
+                        {isIncompleteArchived ? 'Unfinished Race' : 'Race Week!'}
+                    </p>
                 </div>
                 <p className="text-sm text-gray-300">
-                    {daysToRace === 0 ? "Today is race day!" : daysToRace >= -1 ? "The race has passed!" : `The race was ${Math.abs(daysToRace)} days ago.`}
+                    {isIncompleteArchived
+                        ? 'This race was not recorded. Would you like to link your race result or remove this plan?'
+                        : daysToRace === 0 ? "Today is race day!" : daysToRace >= -1 ? "The race has passed!" : `The race was ${Math.abs(daysToRace)} days ago.`}
                 </p>
             </div>
 
@@ -366,12 +385,23 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className }: {
                 </div>
             )}
 
-            <button
-                onClick={() => onSelectRace?.(goal, null, 'suggest')}
-                className="w-full text-xs text-gray-500 hover:text-gray-300 transition-colors py-2"
-            >
-                I didn&apos;t race / Skip for now
-            </button>
+            {isIncompleteArchived ? (
+                <button
+                    onClick={() => deleteMutation.mutate()}
+                    disabled={deleteMutation.isPending}
+                    className="w-full flex items-center justify-center gap-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors py-2 rounded-lg disabled:opacity-50"
+                >
+                    {deleteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                    Delete Plan
+                </button>
+            ) : (
+                <button
+                    onClick={() => onSelectRace?.(goal, null, 'suggest')}
+                    className="w-full text-xs text-gray-500 hover:text-gray-300 transition-colors py-2"
+                >
+                    I didn&apos;t race / Skip for now
+                </button>
+            )}
         </div>
     );
 }

@@ -477,7 +477,7 @@ function generateWeek(params: {
         }
     }
 
-    const strengthDays = getDistributedDays(strengthPerWeek, usedDays);
+    const strengthDays = getDistributedDays(strengthPerWeek, usedDays, true, workouts);
     for (const d of strengthDays) {
         usedDays.add(d);
         workouts.push({
@@ -490,7 +490,7 @@ function generateWeek(params: {
         });
     }
 
-    const rideDays = getDistributedDays(ridesPerWeek, usedDays);
+    const rideDays = getDistributedDays(ridesPerWeek, usedDays, true, workouts);
     for (const d of rideDays) {
         usedDays.add(d);
         workouts.push({
@@ -503,7 +503,7 @@ function generateWeek(params: {
         });
     }
 
-    const swimDays = getDistributedDays(swimsPerWeek, usedDays);
+    const swimDays = getDistributedDays(swimsPerWeek, usedDays, true, workouts);
     for (const d of swimDays) {
         usedDays.add(d);
         workouts.push({
@@ -662,24 +662,56 @@ function getMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
     };
 }
 
-function getDistributedDays(count: number, usedDays: Set<number>): number[] {
+function getDistributedDays(count: number, usedDays: Set<number>, allowDoubleDays = false, existingWorkouts: ScheduledWorkout[] = []): number[] {
     if (count <= 0) return [];
 
-    const availableDays: number[] = [];
+    let availableDays: number[] = [];
     for (let d = 0; d < 7; d++) {
         if (!usedDays.has(d)) availableDays.push(d);
     }
 
-    if (availableDays.length === 0) return [];
-    if (count >= availableDays.length) return availableDays;
-
-    const idealInterval = availableDays.length / count;
-
     const selectedDays: number[] = [];
-    for (let i = 0; i < count; i++) {
-        const targetIndex = Math.floor(i * idealInterval);
-        const clampedIndex = Math.min(targetIndex, availableDays.length - 1);
-        selectedDays.push(availableDays[clampedIndex]);
+    let remaining = count;
+
+    while (remaining > 0) {
+        if (availableDays.length === 0) {
+            if (!allowDoubleDays) break;
+            
+            // Fallback: Pick days with the least number of scheduled workouts
+            const dayCounts = new Array(7).fill(0);
+            for (const w of existingWorkouts) {
+                if (w.dayOffset >= 0 && w.dayOffset < 7) {
+                    dayCounts[w.dayOffset]++;
+                }
+            }
+            
+            const minCount = Math.min(...dayCounts);
+            availableDays = [];
+            for (let d = 0; d < 7; d++) {
+                if (dayCounts[d] === minCount) availableDays.push(d);
+            }
+            
+            // If still empty (shouldn't happen), just use all days
+            if (availableDays.length === 0) availableDays = [0, 1, 2, 3, 4, 5, 6];
+        }
+
+        const toTake = Math.min(remaining, availableDays.length);
+        const idealInterval = availableDays.length / toTake;
+
+        // Collect indices to pick, then remove them in reverse order to not shift indices
+        const indicesToPick: number[] = [];
+        for (let i = 0; i < toTake; i++) {
+            const targetIndex = Math.floor(i * idealInterval);
+            indicesToPick.push(Math.min(targetIndex, availableDays.length - 1));
+        }
+
+        for (const idx of indicesToPick) {
+            selectedDays.push(availableDays[idx]);
+        }
+        
+        availableDays = availableDays.filter((_, idx) => !indicesToPick.includes(idx));
+        
+        remaining -= toTake;
     }
 
     return selectedDays;

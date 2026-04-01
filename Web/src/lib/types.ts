@@ -159,6 +159,7 @@ export interface Goal {
     planStartDate?: string | Date | null;
     isActive: boolean;
     completedAt: string | Date | null;
+    deletedAt?: string | Date | null;
     workouts?: Workout[];
     raceResult?: RaceResult | null;
     createdAt: string | Date;

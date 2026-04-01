@@ -4314,6 +4314,7 @@ export const GoalScalarFieldEnum = {
   restDays: 'restDays',
   isActive: 'isActive',
   completedAt: 'completedAt',
+  deletedAt: 'deletedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

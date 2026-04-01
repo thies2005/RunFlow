@@ -3,19 +3,22 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { RefreshCw, AlertCircle, BarChart3, Hand, Target } from 'lucide-react';
+import { useState } from 'react';
 import { Session } from 'next-auth';
 import { UseMutationResult } from '@tanstack/react-query';
 import { RaceCountdown, ActivityList, Footer, MinimalistPillsMenu, UserAvatar } from '@/components';
 import TrainingStatusCard from '@/components/dashboard/TrainingStatusCard';
 import WorkoutScheduleCard from '@/components/dashboard/WorkoutScheduleCard';
 import { UserMetricsProvider } from '@/components/providers/UserMetricsProvider';
-import type { Workout, Goal, ActivityListItem, AnalyticsStats } from '@/lib/types';
+import type { Workout, Goal, ActivityListItem, AnalyticsStats, SuggestedRaceActivity } from '@/lib/types';
+import RaceResultModal from '@/components/RaceResultModal';
 
 interface DashboardViewProps {
     session: Session | null;
     statsData: AnalyticsStats | null;
     recentActivities: ActivityListItem[];
     activeGoal: Goal | undefined;
+    incompleteGoal?: Goal | null;
     weeklyWorkouts: Workout[];
     syncStatus: { totalActivities?: number; syncInProgress?: boolean } | null;
     syncMutation: UseMutationResult<any, Error, void, unknown>;
@@ -33,6 +36,7 @@ export function DashboardView({
     statsData,
     recentActivities,
     activeGoal,
+    incompleteGoal,
     weeklyWorkouts,
     syncStatus,
     syncMutation,
@@ -46,6 +50,13 @@ export function DashboardView({
 }: DashboardViewProps) {
     const router = useRouter();
     const hasError = error || syncMutation.error;
+    const [raceResultModal, setRaceResultModal] = useState<{
+        goal: Goal;
+        suggestedActivity: SuggestedRaceActivity | null;
+        mode: 'suggest' | 'review' | 'pick';
+    } | null>(null);
+
+    const planTileGoal: Goal | null = activeGoal || incompleteGoal || null;
 
     return (
         <div className="min-h-screen bg-background">
@@ -139,6 +150,26 @@ export function DashboardView({
                                 <RaceCountdown
                                     goal={activeGoal}
                                     className="h-full"
+                                    onSelectRace={(goal, activity, mode) => {
+                                        setRaceResultModal({
+                                            goal,
+                                            suggestedActivity: activity,
+                                            mode,
+                                        });
+                                    }}
+                                />
+                            ) : planTileGoal ? (
+                                <RaceCountdown
+                                    goal={planTileGoal}
+                                    className="h-full"
+                                    isIncompleteArchived={!activeGoal && !!incompleteGoal}
+                                    onSelectRace={(goal, activity, mode) => {
+                                        setRaceResultModal({
+                                            goal,
+                                            suggestedActivity: activity,
+                                            mode,
+                                        });
+                                    }}
                                 />
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center bg-surface/50 border border-glass-border rounded-xl p-8 text-center">
@@ -192,6 +223,16 @@ export function DashboardView({
 
                 {showHeader && <Footer />}
             </UserMetricsProvider>
+
+            {raceResultModal && (
+                <RaceResultModal
+                    isOpen={!!raceResultModal}
+                    onClose={() => setRaceResultModal(null)}
+                    goal={raceResultModal.goal}
+                    suggestedActivity={raceResultModal.suggestedActivity}
+                    initialMode={raceResultModal.mode}
+                />
+            )}
         </div>
     );
 }

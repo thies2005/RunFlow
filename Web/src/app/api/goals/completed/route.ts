@@ -60,6 +60,8 @@ export async function GET(request: NextRequest) {
                 userId: session.user.id,
                 isActive: false,
                 completedAt: { not: null },
+                deletedAt: null,
+                raceResult: { isNot: null },
             },
             orderBy: { completedAt: 'desc' },
             include: {

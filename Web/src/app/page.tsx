@@ -88,6 +88,8 @@ export default function Dashboard() {
 
     // Find active goal
     const activeGoal: Goal | undefined = goalsList.find((g: Goal) => g.isActive);
+    const incompleteGoal: Goal | null = dashboardData?.incompleteGoal || null;
+    const planTileGoal: Goal | null = activeGoal || incompleteGoal;
     const weeklyWorkouts: Workout[] = activeGoal?.workouts || [];
 
     const today = new Date().toDateString();
@@ -217,10 +219,11 @@ export default function Dashboard() {
                                 />
                             </div>
                             <div className="lg:col-span-1">
-                                {activeGoal ? (
+                                {planTileGoal ? (
                                     <RaceCountdown
-                                        goal={activeGoal}
+                                        goal={planTileGoal}
                                         className="h-full"
+                                        isIncompleteArchived={!activeGoal && !!incompleteGoal}
                                         onSelectRace={(goal, activity, mode) => {
                                             setRaceResultModal({
                                                 goal,

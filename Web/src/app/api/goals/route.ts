@@ -362,7 +362,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// DELETE - Delete active plan (pending workouts + deactivate goal)
+// DELETE - Delete plan (pending workouts + deactivate goal)
 export async function DELETE(request: NextRequest) {
     try {
         const clientId = getClientIdentifier(request);
@@ -381,33 +381,43 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const activeGoal = await prisma.goal.findFirst({
-            where: { userId: session.user.id, isActive: true },
-        });
+        const url = new URL(request.url);
+        const goalIdParam = url.searchParams.get('goalId');
 
-        if (!activeGoal) {
-            return NextResponse.json({ error: 'No active plan found' }, { status: 404 });
+        let goal;
+        if (goalIdParam) {
+            goal = await prisma.goal.findFirst({
+                where: { id: goalIdParam, userId: session.user.id, deletedAt: null },
+            });
+        } else {
+            goal = await prisma.goal.findFirst({
+                where: { userId: session.user.id, isActive: true },
+            });
+        }
+
+        if (!goal) {
+            return NextResponse.json({ error: 'No plan found' }, { status: 404 });
         }
 
         const now = new Date();
 
         const deletedCount = await prisma.workout.deleteMany({
             where: {
-                goalId: activeGoal.id,
+                goalId: goal.id,
                 isCompleted: false,
                 scheduledDate: { gte: now },
             },
         });
 
         await prisma.goal.update({
-            where: { id: activeGoal.id },
-            data: { isActive: false, completedAt: now },
+            where: { id: goal.id },
+            data: { isActive: false, completedAt: now, deletedAt: now },
         });
 
         return NextResponse.json({
             success: true,
             deletedWorkouts: deletedCount.count,
-            goalId: activeGoal.id,
+            goalId: goal.id,
         }, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {
         return handleError(error);

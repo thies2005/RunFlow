@@ -138,8 +138,13 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
                 longRunDay,
             });
             raceWeekWorkouts.forEach(w => {
-                const specificDate = new Date(currentDate);
-                specificDate.setDate(specificDate.getDate() + w.dayOffset);
+                const specificDate = w.type === WorkoutType.RACE
+                    ? new Date(raceDate)
+                    : new Date(currentDate);
+                if (w.type !== WorkoutType.RACE) {
+                    specificDate.setDate(specificDate.getDate() + w.dayOffset);
+                }
+                if (specificDate < startDate) return;
                 workouts.push({
                     date: specificDate,
                     type: w.type,
@@ -202,6 +207,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
         weekSchedule.forEach(w => {
             const specificDate = new Date(currentDate);
             specificDate.setDate(specificDate.getDate() + w.dayOffset);
+            if (specificDate < startDate) return;
 
             if (isRun(w.type) && w.totalDistance === 0) return;
 

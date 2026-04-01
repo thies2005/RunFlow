@@ -150,6 +150,7 @@ describe('Training Plan Generation', () => {
             expect(raceWorkout).toBeDefined();
             const raceWorkoutDay = new Date(raceWorkout!.date).getDay();
             expect(raceWorkoutDay).toBe(raceDate.getDay());
+            expect(raceWorkout!.date.getTime()).toBe(raceDate.getTime());
         });
 
         it('race week includes shakeout runs and pre-race strides (Task 2.1)', () => {
@@ -470,11 +471,22 @@ describe('Training Plan Generation', () => {
             const startDate = new Date('2026-04-05');
             const config = makeConfig({ raceDate, startDate });
             const workouts = generateTrainingPlan(config);
-            const startMs = startDate.getTime() - 7 * 24 * 60 * 60 * 1000;
+            const startMs = startDate.getTime();
             const endMs = raceDate.getTime() + 24 * 60 * 60 * 1000;
             for (const w of workouts) {
                 expect(w.date.getTime()).toBeGreaterThanOrEqual(startMs);
                 expect(w.date.getTime()).toBeLessThanOrEqual(endMs);
+            }
+        });
+
+        it('does not schedule workouts before a mid-week startDate', () => {
+            const raceDate = new Date('2026-07-19');
+            const startDate = new Date('2026-04-08');
+            const config = makeConfig({ raceDate, startDate, raceType: 'HALF_MARATHON' });
+            const workouts = generateTrainingPlan(config);
+            expect(workouts.length).toBeGreaterThan(0);
+            for (const w of workouts) {
+                expect(w.date.getTime()).toBeGreaterThanOrEqual(startDate.getTime());
             }
         });
 

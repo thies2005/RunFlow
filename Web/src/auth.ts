@@ -4,11 +4,32 @@ import StravaProvider from 'next-auth/providers/strava';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
-import { encryptToken, decryptToken } from '@/lib/crypto';
+import { encryptToken } from '@/lib/crypto';
 import { verifyPassword } from '@/lib/auth/auth-email';
 import { TIME_RANGES } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
+
+function tryEncryptOrPlaintextToken(
+    token: string | null | undefined,
+    tokenType: 'access' | 'refresh',
+    providerAccountId?: string
+): string | null {
+    if (!token) {
+        return null;
+    }
+
+    try {
+        return encryptToken(token);
+    } catch (error) {
+        logger.warn('Failed to encrypt Strava token, storing plaintext fallback', {
+            tokenType,
+            providerAccountId,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        return token;
+    }
+}
 
 const authConfig = {
     adapter: PrismaAdapter(prisma),
@@ -77,8 +98,16 @@ const authConfig = {
                 delete (account as Record<string, unknown> & { athlete?: unknown }).athlete;
             }
 
-            const encryptedAccess = account?.access_token ? encryptToken(account.access_token) : null;
-            const encryptedRefresh = account?.refresh_token ? encryptToken(account.refresh_token) : null;
+            const encryptedAccess = tryEncryptOrPlaintextToken(
+                account?.access_token,
+                'access',
+                account?.providerAccountId
+            );
+            const encryptedRefresh = tryEncryptOrPlaintextToken(
+                account?.refresh_token,
+                'refresh',
+                account?.providerAccountId
+            );
 
             if (account?.provider === 'strava' && account.providerAccountId) {
                 try {

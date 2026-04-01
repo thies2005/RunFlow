@@ -39,7 +39,7 @@ RUN --mount=type=cache,target=/app/src/generated \
 # Build Next.js with cache and memory limit
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SENTRY_DISABLE_SOURCEMAP_UPLOAD=1
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV NODE_OPTIONS="--max-old-space-size=6144"
 
 RUN --mount=type=cache,target=/app/.next/cache \
     npm run build

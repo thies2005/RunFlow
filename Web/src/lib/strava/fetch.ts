@@ -11,6 +11,7 @@
 import { getRedisClient, type RedisClient } from '@/lib/redis';
 import { MINUTE_MS } from '@/lib/constants';
 import { logger } from '@/lib/logging/logger';
+import { decryptToken } from '@/lib/crypto';
 
 const STRAVA_API_BASE = 'https://www.strava.com/api/v3';
 const MAX_PER_PAGE = 200;
@@ -19,6 +20,22 @@ const RATE_LIMIT_WINDOW_MS = 15 * MINUTE_MS;
 const MAX_RETRIES = 3;
 
 const RATE_LIMIT_KEY = 'strava:rate_limit:requests';
+
+function tryDecryptOrPlaintextAccessToken(token: string | null | undefined, userId: string): string | null {
+    if (!token) {
+        return null;
+    }
+
+    try {
+        return decryptToken(token);
+    } catch (error) {
+        logger.warn('Falling back to legacy plaintext Strava access token', {
+            userId,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        return token;
+    }
+}
 
 export interface StravaActivity {
     id: number;
@@ -244,7 +261,6 @@ export interface StravaAthleteProfile {
  */
 export async function getStravaAthleteWeight(userId: string): Promise<number | null> {
     const { prisma } = await import('@/lib/db');
-    const { decryptToken } = await import('@/lib/crypto');
 
     // Find user's Strava account with access token
     const account = await prisma.account.findFirst({
@@ -265,8 +281,8 @@ export async function getStravaAthleteWeight(userId: string): Promise<number | n
         return null;
     }
 
-    // Decrypt the access token
-    let accessToken: string | null = decryptToken(account.access_token);
+    // Decrypt the access token (or fallback to legacy plaintext token)
+    let accessToken: string | null = tryDecryptOrPlaintextAccessToken(account.access_token, userId);
     if (!accessToken) {
         logger.warn('Failed to decrypt Strava access token', { userId });
         return null;

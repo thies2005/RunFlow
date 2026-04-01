@@ -2,6 +2,259 @@ import { prisma } from '@/lib/db';
 import { encryptToken, decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 
+function tryDecryptOrPlaintext(token: string | null | undefined, tokenType: 'access' | 'refresh', userId: string): string | null {
+    if (!token) {
+        return null;
+    }
+
+    try {
+        return decryptToken(token);
+    } catch (error) {
+        logger.warn('Falling back to legacy plaintext Strava token', {
+            userId,
+            tokenType,
+            error: error instanceof Error ? error.message : String(error),
+        });
+        return token;
+    }
+}
+
+export const authOptions: AuthOptions = {
+    adapter: PrismaAdapter(prisma) as any,
+    providers: [
+        StravaProvider({
+            clientId: process.env.STRAVA_CLIENT_ID!,
+            clientSecret: process.env.STRAVA_CLIENT_SECRET!,
+            authorization: {
+                params: {
+                    scope: 'read,activity:read_all,profile:read_all',
+                    approval_prompt: 'auto',
+                },
+            },
+        }),
+        CredentialsProvider({
+            credentials: {
+                email: { label: 'Email', type: 'email' },
+                password: { label: 'Password', type: 'password' }
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) {
+                    throw new Error('Email and password are required');
+                }
+
+                const identifier = credentials.email.toLowerCase();
+                const rateLimitResult = await checkRateLimitAsync(identifier, {
+                    limit: 5,
+                    windowSeconds: 300,
+                    prefix: 'login'
+                });
+
+                if (!rateLimitResult.allowed) {
+                    logger.warn('Rate limit exceeded for login', { email: identifier });
+                    throw new Error('Too many login attempts. Please try again later.');
+                }
+
+                const user = await prisma.user.findUnique({
+                    where: { email: identifier }
+                });
+
+                if (!user || !user.passwordHash) {
+                    throw new Error('Invalid email or password');
+                }
+
+                const isValid = await verifyPassword(credentials.password, user.passwordHash);
+                if (!isValid) {
+                    throw new Error('Invalid email or password');
+                }
+
+                return {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    image: user.image,
+                };
+            }
+        }),
+    ],
+    callbacks: {
+        async signIn({ user: _user, account }: { user: any, account: any }) {
+            // Skip token handling for credentials provider
+            if (account?.provider === 'credentials') {
+                return true;
+            }
+
+            // Fix: Strava Provider returns 'athlete' object which breaks PrismaAdapter
+            // We must remove it before NextAuth tries to save the account
+            if (account && 'athlete' in account) {
+                delete (account as any).athlete;
+            }
+
+            // Encrypt tokens before storing
+            const encryptedAccess = account?.access_token ? encryptToken(account.access_token) : null;
+            const encryptedRefresh = account?.refresh_token ? encryptToken(account.refresh_token) : null;
+
+            // CRITICAL FIX: Force-update account tokens on re-authentication
+            // PrismaAdapter may skip updating existing accounts, so we explicitly update
+            if (account?.provider === 'strava' && account?.providerAccountId) {
+                try {
+                    // Try to update existing account directly by provider+providerAccountId
+                    const existingAccount = await prisma.account.findUnique({
+                        where: {
+                            provider_providerAccountId: {
+                                provider: 'strava',
+                                providerAccountId: account.providerAccountId
+                            }
+                        }
+                    });
+
+                    if (existingAccount) {
+                        await prisma.account.update({
+                            where: { id: existingAccount.id },
+                            data: {
+                                access_token: encryptedAccess,
+                                refresh_token: encryptedRefresh,
+                                expires_at: account.expires_at,
+                                token_type: account.token_type,
+                                scope: account.scope,
+                            }
+                        });
+                        logger.info('Force-updated Strava tokens', { userId: existingAccount.userId });
+                    }
+                } catch (err) {
+                    logger.error('Failed to force-update Strava tokens', { error: err instanceof Error ? err.message : String(err) });
+                }
+            }
+
+            // Update account object for adapter (in case it's a new user)
+            if (account?.access_token) {
+                account.access_token = encryptedAccess;
+            }
+            if (account?.refresh_token) {
+                account.refresh_token = encryptedRefresh;
+            }
+
+            return true;
+        },
+        async jwt({ token, user }: { token: any, user: any }) {
+            // Persist the user id to the token on first sign in
+            if (user) {
+                token.id = user.id;
+            }
+            return token;
+        },
+        async session({ session, token, user }: { session: any, token: any, user: any }) {
+            // For JWT strategy, get user from token; for database strategy, from user
+            const userId = token?.id || user?.id;
+
+            if (session.user && userId) {
+                session.user.id = userId;
+
+                try {
+                    // Check if user has valid Strava connection via Account table
+                    const stravaAccount = await prisma.account.findFirst({
+                        where: {
+                            userId: userId,
+                            provider: 'strava'
+                        },
+                        select: {
+                            providerAccountId: true,
+                            expires_at: true,
+                        }
+                    });
+
+                    // Get user's sync status, auth method, and profile data
+                    const dbUser = await prisma.user.findUnique({
+                        where: { id: userId },
+                        select: { lastSyncAt: true, authMethod: true, image: true, name: true }
+                    });
+
+                    session.user.hasStrava = !!stravaAccount;
+                    session.user.authMethod = dbUser?.authMethod || 'strava';
+                    session.user.lastSyncAt = dbUser?.lastSyncAt?.toISOString() ?? null;
+
+                    // Always refresh profile picture and name from DB
+                    // (JWT may have stale data after migration or profile update)
+                    if (dbUser?.image) {
+                        session.user.image = dbUser.image;
+                    }
+                    if (dbUser?.name) {
+                        session.user.name = dbUser.name;
+                    }
+                } catch (error) {
+                    logger.error('Error fetching user data for session', { error: error instanceof Error ? error.message : String(error) });
+                    session.user.hasStrava = false;
+                    session.user.authMethod = 'strava';
+                    session.user.lastSyncAt = null;
+                }
+            }
+            return session;
+        },
+    },
+    pages: {
+        signIn: '/login',
+        error: '/login',
+    },
+    session: {
+        strategy: 'jwt',
+        maxAge: TIME_RANGES.SYNC_LOOKBACK_DAYS * 24 * 60 * 60, // 30 days
+    },
+    // Cookie configuration for HTTPS behind reverse proxy (Cloudflare Tunnel)
+    cookies: {
+        sessionToken: {
+            name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
+        callbackUrl: {
+            name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.callback-url' : 'next-auth.callback-url',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
+        csrfToken: {
+            name: process.env.NODE_ENV === 'production' ? '__Host-next-auth.csrf-token' : 'next-auth.csrf-token',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
+        pkceCodeVerifier: {
+            name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.pkce.code_verifier' : 'next-auth.pkce.code_verifier',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 60 * 15, // 15 minutes
+            },
+        },
+        state: {
+            name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.state' : 'next-auth.state',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 60 * 15, // 15 minutes
+            },
+        },
+    },
+    debug: process.env.NODE_ENV === 'development',
+};
+
+/**
+ * Refresh Strava access token if expired
+ * Handles encrypted tokens - decrypts for use, encrypts when storing
+ */
 export async function refreshStravaToken(userId: string): Promise<string | null> {
     const account = await prisma.account.findFirst({
         where: {
@@ -14,7 +267,7 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
         return null;
     }
 
-    const decryptedRefreshToken = decryptToken(account.refresh_token);
+    const decryptedRefreshToken = tryDecryptOrPlaintext(account.refresh_token, 'refresh', userId);
 
     if (!decryptedRefreshToken) {
         logger.error('Failed to decrypt refresh token, forcing re-authentication', { userId });
@@ -22,7 +275,7 @@ export async function refreshStravaToken(userId: string): Promise<string | null>
     }
 
     if (account.expires_at && account.expires_at * 1000 > Date.now() + 5 * 60 * 1000) {
-        return account.access_token ? decryptToken(account.access_token) : null;
+        return tryDecryptOrPlaintext(account.access_token, 'access', userId);
     }
 
     const response = await fetch('https://www.strava.com/oauth/token', {

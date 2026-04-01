@@ -2,10 +2,12 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { Menu, X, Book, ArrowLeft } from 'lucide-react';
-import AiChat from '@/components/AiChat';
-import AiSettingsModal from '@/components/AiSettingsModal';
-import ChatSidebar from '@/components/ChatSidebar';
+
+const AiChat = dynamic(() => import('@/components/AiChat'), { ssr: false, loading: () => <div className="flex-1 animate-pulse bg-[#212121]" /> });
+const AiSettingsModal = dynamic(() => import('@/components/AiSettingsModal'), { ssr: false, loading: () => null });
+const ChatSidebar = dynamic(() => import('@/components/ChatSidebar'), { ssr: false, loading: () => null });
 
 function ChatContent() {
     const router = useRouter();

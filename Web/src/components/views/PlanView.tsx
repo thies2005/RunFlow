@@ -56,7 +56,7 @@ function PlanViewComponent({
                 const monday = startOfWeek(d, { weekStartsOn: 1 }).toISOString();
                 if (!weeks[monday]) weeks[monday] = [];
                 weeks[monday].push(w);
-            } catch (e) {
+            } catch {
                 console.warn('Invalid workout date:', w);
             }
         });

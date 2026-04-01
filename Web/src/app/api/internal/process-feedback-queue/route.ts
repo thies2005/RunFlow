@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     try {
         const result = await processPendingFeedbackJobs();
         return NextResponse.json(result);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

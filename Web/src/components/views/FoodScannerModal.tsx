@@ -30,7 +30,7 @@ interface ScanResult {
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onScanComplete: (result: ScanResult) => void;
+    onScanComplete: (_result: ScanResult) => void;
 }
 
 export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
@@ -138,7 +138,7 @@ export function FoodScannerModal({ isOpen, onClose, onScanComplete }: Props) {
             let data: any = { error: 'Unknown error occurred' };
             try {
                 data = JSON.parse(text);
-            } catch (e) {
+            } catch {
                 if (!res.ok) {
                     throw new Error(`Server returned ${res.status}: ${res.statusText}`);
                 }

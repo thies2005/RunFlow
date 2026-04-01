@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, FormEvent, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { X, Target, Info, Flame, Save, Loader2, AlertTriangle, Activity } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

@@ -4,7 +4,7 @@ import { auth } from '@/auth';
 import { upsertDailyHealthLog } from '@/lib/health/dailyHealth';
 import { parseUtcDayKey, toUtcDayKey } from '@/lib/health/dates';
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
     try {
         const session = await auth();
         if (!session?.user?.id) {
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ measurements: formatted });
 
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch body composition data' }, { status: 500 });
     }
 }
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true, record });
 
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to save body composition data' }, { status: 500 });
     }
 }

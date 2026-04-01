@@ -1,6 +1,5 @@
 import { execSync } from 'child_process';
 import { prisma } from '@/lib/db';
-import * as fs from 'fs';
 
 export interface ReleaseInfo {
   version: string;

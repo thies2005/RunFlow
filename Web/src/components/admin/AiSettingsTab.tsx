@@ -436,7 +436,7 @@ const ProviderForm = ({ initialData, onClose, onSuccess }: any) => {
             } else {
                 setTestResult({ success: false, message: data.error || 'Connection failed' });
             }
-        } catch (error) {
+        } catch {
             setTestResult({ success: false, message: 'Network error' });
         } finally {
             setTesting(false);

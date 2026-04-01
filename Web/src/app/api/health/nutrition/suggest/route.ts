@@ -147,7 +147,7 @@ export async function POST(request: Request) {
         } catch {
             try {
                 parsed = extractJsonObject(normalizeAiOutput(textContent));
-            } catch (parseError) {
+            } catch {
                 const strictPrompt = buildMealPrompt({
                     remainingCalories,
                     remainingProtein,

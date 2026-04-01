@@ -9,7 +9,6 @@ import {
 } from '@/lib/ai';
 import type { ChatMessage } from '@/lib/ai';
 import { logger } from '@/lib/logging/logger';
-import { AiConfig } from '@/lib/ai/providers';
 
 async function canAutoGenerateFeedback(userId: string): Promise<boolean> {
     const aiSettings = await prisma.userAiSettings.findUnique({
@@ -248,7 +247,7 @@ export async function generateAndSaveActivityFeedback(
     }
 
     // Generate all feedback in a single AI request
-    const combinedPrompt: string = ACTIVITY_FEEDBACK_PROMPTS.combined;
+    const _combinedPrompt: string = ACTIVITY_FEEDBACK_PROMPTS.combined;
     const systemPromptMessage: string = `You are a running coach analyzing an athlete's activity.\n\n--- Athlete Profile ---\n${baseContext}`;
     const userMessage: string = `Here's the activity to analyze:\n\n${activityStr}`;
 

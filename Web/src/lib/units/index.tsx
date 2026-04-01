@@ -49,7 +49,7 @@ export function UnitProvider({ children }: { children: ReactNode }) {
             setUseImperial(settings.useImperial);
             try {
                 localStorage.setItem('runflow-units', settings.useImperial ? 'imperial' : 'metric');
-            } catch (e) {
+            } catch {
                 // Ignore storage errors
             }
         }

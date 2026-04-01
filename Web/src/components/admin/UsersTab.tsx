@@ -7,11 +7,11 @@ import { AdminUser, AdminAiSettings } from '@/app/admin/types';
 
 interface UsersTabProps {
     users: AdminUser[];
-    setUsers: (users: AdminUser[]) => void;
+    setUsers: (_users: AdminUser[]) => void;
     aiSettings: AdminAiSettings | null;
     processing: boolean;
-    setProcessing: (val: boolean) => void;
-    setActionMessage: (msg: { type: 'success' | 'error', text: string } | null) => void;
+    setProcessing: (_val: boolean) => void;
+    setActionMessage: (_msg: { type: 'success' | 'error', text: string } | null) => void;
     fetchAllData: () => void;
 }
 
@@ -105,7 +105,7 @@ export default function UsersTab({
 
             setActionMessage({ type: 'success', text: 'User deleted successfully' });
             fetchAllData();
-        } catch (error) {
+        } catch {
             setActionMessage({ type: 'error', text: 'Failed to delete user' });
         } finally {
             setProcessing(false);

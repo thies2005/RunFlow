@@ -27,7 +27,7 @@ function getTimeAgo(dateString: string) {
 
 interface ProactiveRunWidgetProps {
     activity: RecentActivity;
-    onAutoFillChat: (text: string) => void;
+    onAutoFillChat: (_text: string) => void;
 }
 
 export default function ProactiveRunWidget({ activity, onAutoFillChat }: ProactiveRunWidgetProps) {

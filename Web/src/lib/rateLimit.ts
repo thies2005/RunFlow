@@ -33,7 +33,7 @@ async function initRedis(): Promise<boolean> {
         const { Redis } = await import('@upstash/redis') as { Redis: new (_options: { url: string; token: string }) => RedisClient };
         redisClient = new Redis({ url: redisUrl, token: process.env.REDIS_TOKEN || '' });
         return true;
-    } catch (error) {
+    } catch {
         return false;
     }
 }

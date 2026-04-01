@@ -52,7 +52,7 @@ export default function PerformanceTab() {
         a.click();
         URL.revokeObjectURL(url);
       }
-    } catch (error) {
+    } catch {
       // silently fail export
     }
   };
@@ -139,7 +139,7 @@ function ApiRoutesTab({ timeRange }: ApiRoutesTabProps) {
         const data = await res.json();
         setRoutes(data.routes || []);
       }
-    } catch (error) {
+    } catch {
       // silently fail fetch
     } finally {
       setLoading(false);

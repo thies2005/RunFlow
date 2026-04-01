@@ -6,7 +6,7 @@ import { CheckCircle, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ReconsentBanner() {
-    const { data: session, status } = useSession();
+    const { data: _session, status } = useSession();
     const [needsConsent, setNeedsConsent] = useState(false);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);

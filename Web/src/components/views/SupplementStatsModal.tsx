@@ -6,7 +6,7 @@ import { X, Calendar as CalendarIcon, Activity as ActivityIcon } from 'lucide-re
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { format, subDays, isSameDay, startOfDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 type TimeRange = '1W' | '1M' | '6M' | '1Y' | 'ALL';
 

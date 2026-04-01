@@ -52,7 +52,7 @@ export default function RealTimeDashboard({ refreshInterval = 1000 }: RealTimeDa
     };
   };
 
-  const getStatusColor = (value: number, thresholds: { warning: number; critical: number }) => {
+  const _getStatusColor = (value: number, thresholds: { warning: number; critical: number }) => {
     if (value >= thresholds.critical) return 'text-red-600 bg-red-50';
     if (value >= thresholds.warning) return 'text-yellow-600 bg-yellow-50';
     return 'text-green-600 bg-green-50';

@@ -22,7 +22,7 @@ export function countTokens(text: string, model: string = "gpt-4o"): number {
         let encoder;
         try {
             encoder = encodingForModel(model as TiktokenModel);
-        } catch (e) {
+        } catch {
             // If model not found, default to cl100k_base (GPT-4/3.5)
             encoder = encodingForModel("gpt-4");
         }

@@ -9,7 +9,7 @@ import rehypeRaw from 'rehype-raw';
 export function WeeklyInsightsCard() {
     const queryClient = useQueryClient();
 
-    const { data: insightData, isLoading: isLoadingInsight } = useQuery({
+    const { data: insightData, isLoading: _isLoadingInsight } = useQuery({
         queryKey: ['health-insight'],
         queryFn: async () => {
             const res = await fetch('/api/health/insights');

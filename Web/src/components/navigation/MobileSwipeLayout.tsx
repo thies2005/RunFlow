@@ -9,6 +9,7 @@ import StravaPoweredFooter from '@/components/StravaPoweredFooter';
 interface MobileSwipeLayoutProps {
     children: React.ReactNode[];
     onPageChange?: (_index: number) => void;
+    onPathChange?: (_path: string) => void;
     showAiChat?: boolean;
     showHealth?: boolean;
     onChatTabClick?: () => void;
@@ -16,7 +17,7 @@ interface MobileSwipeLayoutProps {
 
 const _BASE_PATHS = ['/', '/plan', '/analytics'];
 
-export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, showHealth = false, onChatTabClick }: MobileSwipeLayoutProps) {
+export function MobileSwipeLayout({ children, onPageChange, onPathChange, showAiChat = true, showHealth = false, onChatTabClick }: MobileSwipeLayoutProps) {
 
     const tabs = useMemo(() => [
         { icon: Home, label: 'Home', path: '/' },
@@ -34,6 +35,17 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, s
     }, [paths]);
 
     const [activeIndex, setActiveIndex] = useState(() => getIndexFromPath(typeof window !== 'undefined' ? window.location.pathname : '/'));
+
+    useEffect(() => {
+        if (activeIndex >= paths.length) {
+            setActiveIndex(0);
+        }
+    }, [activeIndex, paths.length]);
+
+    useEffect(() => {
+        const currentPath = paths[activeIndex] ?? '/';
+        onPathChange?.(currentPath);
+    }, [activeIndex, onPathChange, paths]);
 
     // Listen for browser navigation (like swipe-to-go-back) to update tabs natively
     useEffect(() => {
@@ -115,7 +127,6 @@ export function MobileSwipeLayout({ children, onPageChange, showAiChat = true, s
 }
 
 export default MobileSwipeLayout;
-
 
 
 

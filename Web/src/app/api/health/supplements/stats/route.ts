@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
 
 // Helper to ensure dates are handled as midnight UTC
-function getMidnightUTCDate(dateStr: string) {
+function _getMidnightUTCDate(dateStr: string) {
     const d = new Date(dateStr);
     return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }

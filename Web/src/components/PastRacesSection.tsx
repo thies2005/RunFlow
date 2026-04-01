@@ -85,7 +85,7 @@ function SmallTimeInputGroup({
 }: {
     label: string;
     value: TimeParts;
-    onChange: (next: TimeParts) => void;
+    onChange: (_next: TimeParts) => void;
     inputClass: string;
 }) {
     return (

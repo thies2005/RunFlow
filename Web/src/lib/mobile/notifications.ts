@@ -1,4 +1,4 @@
-import { LocalNotifications, ScheduleOptions, LocalNotificationSchema } from '@capacitor/local-notifications';
+import { LocalNotifications, LocalNotificationSchema } from '@capacitor/local-notifications';
 
 // Use the local ReminderSettings type instead of Prisma direct import which might be outdated locally
 export interface ReminderSettings {

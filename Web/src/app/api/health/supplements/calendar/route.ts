@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
 
-function getMidnightUTCDate(dateStr: string) {
+function _getMidnightUTCDate(dateStr: string) {
     const d = new Date(dateStr);
     return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }

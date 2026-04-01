@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, Calendar, Trash2, Edit2, Loader2, Save, Check, Bookmark } from 'lucide-react';
+import { X, Calendar, Trash2, Edit2, Loader2, Check, Bookmark } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';

@@ -553,10 +553,10 @@ async function streamAnthropic(
         const userMessages = messages.filter(m => m.role !== 'system');
 
         let response: Response | undefined;
-        let activeKeyIndex = 0;
+        let _activeKeyIndex = 0;
 
         for (let i = 0; i < config.apiKeys.length; i++) {
-            activeKeyIndex = i;
+            _activeKeyIndex = i;
             const currentKey = config.apiKeys[i];
 
             response = await safeFetch(`${config.baseUrl}/v1/messages`, {
@@ -667,10 +667,10 @@ async function streamGoogle(
         })).filter(m => m.parts[0].text);
 
         let response: Response | undefined;
-        let activeKeyIndex = 0;
+        let _activeKeyIndex = 0;
 
         for (let i = 0; i < config.apiKeys.length; i++) {
-            activeKeyIndex = i;
+            _activeKeyIndex = i;
             const currentKey = config.apiKeys[i];
             const url = `${config.baseUrl}/v1beta/models/${config.model}:streamGenerateContent`;
 

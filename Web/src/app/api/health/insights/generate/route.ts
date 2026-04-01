@@ -5,7 +5,7 @@ import { logger } from '@/lib/logging/logger';
 import { auth } from '@/auth';
 import { subDays, format } from 'date-fns';
 
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
     try {
         const session = await auth();
         if (!session?.user?.id) {

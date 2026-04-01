@@ -32,7 +32,7 @@ interface ReleaseComparison {
 
 export default function ReleaseTrackingDashboard() {
   const [releases, setReleases] = useState<Release[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [selectedVersions, setSelectedVersions] = useState<[string, string] | null>(null);
   const [comparison, setComparison] = useState<ReleaseComparison | null>(null);
   const [tracking, setTracking] = useState(false);

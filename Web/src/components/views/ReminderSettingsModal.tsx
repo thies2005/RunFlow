@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bell, BellOff, Clock, Dumbbell, UtensilsCrossed, Pill, Scale, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Bell, BellOff, Clock, Dumbbell, UtensilsCrossed, Pill, Scale, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useMobileNotifications } from '@/hooks/useMobileNotifications';
@@ -51,7 +51,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
     const [isDirty, setIsDirty] = useState(false);
 
     // Fetch current settings
-    const { data: settings, isLoading } = useQuery<ReminderSettingsData>({
+    const { data: settings, isLoading: _isLoading } = useQuery<ReminderSettingsData>({
         queryKey: ['reminder-settings'],
         queryFn: async () => {
             const res = await fetch('/api/reminders/settings');
@@ -111,7 +111,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
         queryClient.invalidateQueries({ queryKey: ['reminder-settings'] });
     };
 
-    const anyReminderEnabled = localSettings.supplementMorningEnabled
+    const _anyReminderEnabled = localSettings.supplementMorningEnabled
         || localSettings.supplementNoonEnabled
         || localSettings.supplementEveningEnabled
         || localSettings.weightReminderEnabled
@@ -338,7 +338,7 @@ export function ReminderSettingsModal({ isOpen, onClose }: ReminderSettingsModal
 // Sub-components
 // ============================================
 
-function ReminderSection({ icon, title, color, children }: {
+function ReminderSection({ icon, title, color: _color, children }: {
     icon: React.ReactNode;
     title: string;
     color: string;
@@ -361,8 +361,8 @@ function ReminderRow({ label, enabled, time, onToggle, onTimeChange }: {
     label: string;
     enabled: boolean;
     time: string;
-    onToggle: (enabled: boolean) => void;
-    onTimeChange: (time: string) => void;
+    onToggle: (_enabled: boolean) => void;
+    onTimeChange: (_time: string) => void;
 }) {
     return (
         <div className="flex items-center justify-between gap-3">
@@ -380,7 +380,7 @@ function ReminderRow({ label, enabled, time, onToggle, onTimeChange }: {
     );
 }
 
-function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: (v: boolean) => void }) {
+function ToggleSwitch({ enabled, onToggle }: { enabled: boolean; onToggle: (_v: boolean) => void }) {
     return (
         <button
             type="button"

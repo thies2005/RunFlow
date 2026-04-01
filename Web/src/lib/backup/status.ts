@@ -26,7 +26,7 @@ let status: BackupStatus = {
 }
 
 let startTime = Date.now()
-let isInitialized = false
+let _isInitialized = false
 
 async function ensureStatusDirAsync(): Promise<void> {
     const dir = path.dirname(STATUS_FILE)
@@ -44,11 +44,11 @@ async function loadStatusAsync(): Promise<BackupStatus> {
             await fsPromises.access(STATUS_FILE)
             const data = await fsPromises.readFile(STATUS_FILE, 'utf-8')
             status = JSON.parse(data) as BackupStatus
-            isInitialized = true
+            _isInitialized = true
             return status
-        } catch (e) {
+        } catch {
             // File doesn't exist or other error, return default status
-            isInitialized = true
+            _isInitialized = true
             return status
         }
     } catch (error) {

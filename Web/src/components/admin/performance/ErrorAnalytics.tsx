@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle, Clock, Search, Filter } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -29,13 +29,13 @@ interface ErrorGroup {
 }
 
 interface ErrorAnalyticsProps {
-  onResolveError?: (errorId: string) => void;
+  onResolveError?: (_errorId: string) => void;
 }
 
 export default function ErrorAnalytics({ onResolveError }: ErrorAnalyticsProps) {
   const [errors, setErrors] = useState<ErrorLog[]>([]);
   const [errorGroups, setErrorGroups] = useState<ErrorGroup[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [selectedError, setSelectedError] = useState<ErrorLog | null>(null);
   const [filters, setFilters] = useState({
     resolved: '' as '' | 'true' | 'false',

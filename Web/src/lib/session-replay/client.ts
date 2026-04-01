@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db';
+import { prisma as _prisma } from '@/lib/db';
 
 export interface SessionEvent {
   type: 'click' | 'input' | 'navigation' | 'error' | 'console' | 'scroll' | 'resize';

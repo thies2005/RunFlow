@@ -64,7 +64,7 @@ export async function GET() {
             qualityDay: activeGoal?.workoutDay ?? 3,
             restDays: activeGoal?.restDays ?? [1, 5]
         });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

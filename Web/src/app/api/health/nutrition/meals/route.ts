@@ -18,7 +18,7 @@ export async function GET(request: Request) {
         });
 
         return NextResponse.json(meals);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch meals' }, { status: 500 });
     }
 }
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
         });
 
         return NextResponse.json(meal);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to save meal' }, { status: 500 });
     }
 }
@@ -76,7 +76,7 @@ export async function DELETE(request: Request) {
     try {
         await prisma.savedMeal.delete({ where: { id } });
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to delete meal' }, { status: 500 });
     }
 }

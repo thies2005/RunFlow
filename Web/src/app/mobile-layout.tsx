@@ -70,6 +70,7 @@ export function MobileLayout() {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
     const [aiChatResetKey, setAiChatResetKey] = useState(0);
+    const [activePath, setActivePath] = useState(() => (typeof window !== 'undefined' ? window.location.pathname : '/'));
 
     // Plan State
     const [showUnlinked, setShowUnlinked] = useState(true);
@@ -77,6 +78,11 @@ export function MobileLayout() {
     // Analytics State
     const [timeRange, setTimeRange] = useState<TimeRange>('1Y');
     const [zonesTimeRange, setZonesTimeRange] = useState<'1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL'>('1Y');
+
+    const isPlanPath = activePath === '/plan';
+    const isAnalyticsPath = activePath === '/analytics';
+    const isHealthPath = activePath === '/health';
+    const isChatPath = activePath === '/chat';
 
     // DnD Sensors for Plan
     // DnD Sensors for Plan
@@ -109,7 +115,7 @@ export function MobileLayout() {
             if (!res.ok) throw new Error('Failed to fetch plan');
             return res.json();
         },
-        enabled: status === 'authenticated',
+        enabled: status === 'authenticated' && (isPlanPath || !!editingWorkout || !!createDate),
         placeholderData: keepPreviousData
     });
 
@@ -121,7 +127,7 @@ export function MobileLayout() {
             if (!res.ok) throw new Error('Failed to fetch activities');
             return res.json();
         },
-        enabled: status === 'authenticated',
+        enabled: status === 'authenticated' && (isAnalyticsPath || isCalibrationOpen),
     });
 
     // User Settings Query
@@ -143,7 +149,7 @@ export function MobileLayout() {
             if (!res.ok) throw new Error('Failed to fetch goals');
             return res.json();
         },
-        enabled: status === 'authenticated',
+        enabled: status === 'authenticated' && isAnalyticsPath,
     });
 
     // Analytics Stats Query
@@ -154,7 +160,7 @@ export function MobileLayout() {
             if (!res.ok) throw new Error('Failed to fetch stats');
             return res.json();
         },
-        enabled: status === 'authenticated',
+        enabled: status === 'authenticated' && isAnalyticsPath,
     });
 
     // AI Settings Query
@@ -189,7 +195,7 @@ export function MobileLayout() {
             if (!res.ok) throw new Error('Failed to fetch history');
             return res.json();
         },
-        enabled: status === 'authenticated',
+        enabled: status === 'authenticated' && isAnalyticsPath,
     });
 
     // Background Sync for Native Mobile Notifications
@@ -265,11 +271,11 @@ export function MobileLayout() {
 
     // Analytics calculated data
     const analyticsMetrics = useAnalyticsMetrics(
-        activitiesData,
-        goalsData,
-        statsData,
-        historyData,
-        userData
+        isAnalyticsPath ? activitiesData : undefined,
+        isAnalyticsPath ? goalsData : undefined,
+        isAnalyticsPath ? statsData : undefined,
+        isAnalyticsPath ? historyData : undefined,
+        isAnalyticsPath ? userData : undefined
     );
 
     // === HANDLERS ===
@@ -330,69 +336,80 @@ export function MobileLayout() {
 
     return (
         <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
-            <MobileSwipeLayout showAiChat={showAiChat} showHealth={showHealth} onChatTabClick={() => setAiChatResetKey(prev => prev + 1)}>
+            <MobileSwipeLayout
+                showAiChat={showAiChat}
+                showHealth={showHealth}
+                onPathChange={setActivePath}
+                onChatTabClick={() => setAiChatResetKey(prev => prev + 1)}
+            >
                 {/* Dashboard View - always index 0 */}
-                <DashboardView
-                    session={session}
-                    statsData={dashboardStats}
-                    recentActivities={recentActivities}
-                    activeGoal={activeGoal}
-                    weeklyWorkouts={weeklyWorkouts}
-                    syncStatus={syncStatus}
-                    syncMutation={syncMutation}
-                    isLoading={isDashboardLoading}
-                    error={dashboardError}
-                    onOpenSettings={() => setIsSettingsOpen(true)}
-                    onOpenProfile={() => setIsProfileOpen(true)}
-                    onEditWorkout={handleEditWorkout}
-                    onInvalidateQueries={() => queryClient.invalidateQueries()}
-                    showHeader={false}
-                />
+                {activePath === '/' ? (
+                    <DashboardView
+                        session={session}
+                        statsData={dashboardStats}
+                        recentActivities={recentActivities}
+                        activeGoal={activeGoal}
+                        weeklyWorkouts={weeklyWorkouts}
+                        syncStatus={syncStatus}
+                        syncMutation={syncMutation}
+                        isLoading={isDashboardLoading}
+                        error={dashboardError}
+                        onOpenSettings={() => setIsSettingsOpen(true)}
+                        onOpenProfile={() => setIsProfileOpen(true)}
+                        onEditWorkout={handleEditWorkout}
+                        onInvalidateQueries={() => queryClient.invalidateQueries()}
+                        showHeader={false}
+                    />
+                ) : <div className="h-full w-full" />}
 
                 {/* Plan View - always index 1 */}
-                <PlanView
-                    data={planData}
-                    isLoading={isPlanLoading}
-                    showUnlinked={showUnlinked}
-                    setShowUnlinked={setShowUnlinked}
-                    sensors={sensors}
-                    handleDragEnd={handleDragEnd}
-                    handleEdit={(w) => handleEditWorkout(w, false)}
-                    handleComplete={(w, e) => { e.stopPropagation(); handleEditWorkout(w, true); }}
-                    handleCreate={handleCreateWorkout}
-                    handleActivityClick={handleActivityClick}
-                    showHeader={false}
-                />
+                {isPlanPath ? (
+                    <PlanView
+                        data={planData}
+                        isLoading={isPlanLoading}
+                        showUnlinked={showUnlinked}
+                        setShowUnlinked={setShowUnlinked}
+                        sensors={sensors}
+                        handleDragEnd={handleDragEnd}
+                        handleEdit={(w) => handleEditWorkout(w, false)}
+                        handleComplete={(w, e) => { e.stopPropagation(); handleEditWorkout(w, true); }}
+                        handleCreate={handleCreateWorkout}
+                        handleActivityClick={handleActivityClick}
+                        showHeader={false}
+                    />
+                ) : <div className="h-full w-full" />}
 
                 {/* Analytics View - always index 2 */}
-                <AnalyticsView
-                    runalyzeMetrics={analyticsMetrics.runalyzeMetrics}
-                    vo2TrendData={analyticsMetrics.vo2TrendData}
-                    shapeTrendData={analyticsMetrics.shapeTrendData}
-                    fitnessData={analyticsMetrics.fitnessData}
-                    combinedData={analyticsMetrics.combinedData}
-                    trainingPaces={analyticsMetrics.trainingPaces}
-                    userData={userData}
-                    activitiesData={activitiesData}
-                    timeRange={timeRange}
-                    zonesTimeRange={zonesTimeRange}
-                    setTimeRange={setTimeRange}
-                    setZonesTimeRange={setZonesTimeRange}
-                    onRecalculate={() => recalculateMutation.mutate()}
-                    isRecalculating={recalculateMutation.isPending}
-                    onOpenCalibration={() => setIsCalibrationOpen(true)}
-                    showHeader={false}
-                />
+                {isAnalyticsPath ? (
+                    <AnalyticsView
+                        runalyzeMetrics={analyticsMetrics.runalyzeMetrics}
+                        vo2TrendData={analyticsMetrics.vo2TrendData}
+                        shapeTrendData={analyticsMetrics.shapeTrendData}
+                        fitnessData={analyticsMetrics.fitnessData}
+                        combinedData={analyticsMetrics.combinedData}
+                        trainingPaces={analyticsMetrics.trainingPaces}
+                        userData={userData}
+                        activitiesData={activitiesData}
+                        timeRange={timeRange}
+                        zonesTimeRange={zonesTimeRange}
+                        setTimeRange={setTimeRange}
+                        setZonesTimeRange={setZonesTimeRange}
+                        onRecalculate={() => recalculateMutation.mutate()}
+                        isRecalculating={recalculateMutation.isPending}
+                        onOpenCalibration={() => setIsCalibrationOpen(true)}
+                        showHeader={false}
+                    />
+                ) : <div className="h-full w-full" />}
 
                 {/* Health View — index 3, ONLY rendered when health is enabled so tabs align */}
-                {showHealth && (
+                {showHealth && isHealthPath && (
                     <HealthView
                         showHeader={false}
                     />
                 )}
 
                 {/* Chat View — always LAST; index depends on whether Health tab is present */}
-                {showAiChat && (
+                {showAiChat && isChatPath && (
                     <div className="h-full flex flex-col min-h-0 bg-background relative">
                         <AiChat
                             key={aiChatResetKey}

@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
             if (body && body.userId) {
                 targetUserId = body.userId;
             }
-        } catch (e) {
+        } catch {
             // Ignore JSON parse error, assume no body -> all users
         }
 

@@ -12,7 +12,7 @@ export interface ConfirmOptions {
 export function useConfirmAction() {
     const [isOpen, setIsOpen] = useState(false);
     const [options, setOptions] = useState<ConfirmOptions | null>(null);
-    const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
+    const [resolver, setResolver] = useState<((_value: boolean) => void) | null>(null);
 
     const confirm = useCallback((opts: ConfirmOptions): Promise<boolean> => {
         setOptions(opts);

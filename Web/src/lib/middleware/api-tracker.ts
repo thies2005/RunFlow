@@ -86,11 +86,11 @@ async function flushMetrics() {
   flushTimeout = null;
 }
 
-export function withApiTracking(handler: (req: NextRequest) => Promise<NextResponse>) {
+export function withApiTracking(handler: (_req: NextRequest) => Promise<NextResponse>) {
   return async (req: NextRequest) => {
     const startTime = Date.now();
-    const startCpu = getCpuUsage();
-    const startMemory = getMemoryUsage();
+    const _startCpu = getCpuUsage();
+    const _startMemory = getMemoryUsage();
 
     const url = new URL(req.url);
     const routePath = url.pathname;
@@ -102,7 +102,7 @@ export function withApiTracking(handler: (req: NextRequest) => Promise<NextRespo
       if (session) {
         userId = session;
       }
-    } catch (error) {
+    } catch {
       // Ignore auth errors
     }
 
@@ -118,7 +118,7 @@ export function withApiTracking(handler: (req: NextRequest) => Promise<NextRespo
     try {
       response = await handler(req);
       statusCode = response.status;
-    } catch (error) {
+    } catch {
       isError = true;
       response = NextResponse.json(
         { error: 'Internal server error' },
@@ -165,7 +165,7 @@ export function withApiTracking(handler: (req: NextRequest) => Promise<NextRespo
 }
 
 export function withManualApiTracking(
-  handler: (req: NextRequest) => Promise<NextResponse>,
+  handler: (_req: NextRequest) => Promise<NextResponse>,
   options?: {
     routePath?: string;
     method?: string;
@@ -180,7 +180,7 @@ export function withManualApiTracking(
 
     let response: NextResponse;
     let isError = false;
-    let error: Error | undefined;
+    let _error: Error | undefined;
 
     try {
       response = await handler(req);

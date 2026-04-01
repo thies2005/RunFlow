@@ -145,7 +145,7 @@ async function getDatabaseMetrics() {
             },
             queriesLastMinute: 0,
         };
-    } catch (error) {
+    } catch {
         return {
             connectionPool: {
                 totalCount: 0,

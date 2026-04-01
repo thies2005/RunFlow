@@ -5,7 +5,7 @@ import { formatTime } from '@/lib/metrics/vdot';
 
 interface TopMetricsSectionProps {
     runalyzeMetrics: any;
-    setIsCalibrationOpen: (open: boolean) => void;
+    setIsCalibrationOpen: (_open: boolean) => void;
 }
 
 export default function TopMetricsSection({ runalyzeMetrics, setIsCalibrationOpen }: TopMetricsSectionProps) {

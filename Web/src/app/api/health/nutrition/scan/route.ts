@@ -89,7 +89,7 @@ export async function GET(request: Request) {
         };
 
         return NextResponse.json(standardData);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch nutrition data' }, { status: 500 });
     }
 }

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 import {
-    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Cell
+    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine
 } from 'recharts';
 
 interface Props {
@@ -59,7 +59,7 @@ export default function SupplementAnalyticsView({ onClose }: Props) {
     // Toggle mutation for calendar editing
     const toggleMutation = useMutation({
         mutationFn: async ({ supplementId, date, taken }: { supplementId: string; date: string; taken: boolean }) => {
-            const dateObj = new Date(date + 'T00:00:00Z');
+            const _dateObj = new Date(date + 'T00:00:00Z');
             const res = await fetch('/api/health/daily', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

@@ -3,7 +3,7 @@ import { NutritionLog } from '@/lib/types/health';
 
 interface Props {
     foodLogs: NutritionLog[];
-    copyYesterdayMutation: { mutate: (variables: { mealType: string }) => void; isPending: boolean; variables?: { mealType: string } };
+    copyYesterdayMutation: { mutate: (_variables: { mealType: string }) => void; isPending: boolean; variables?: { mealType: string } };
     onOpenHistory: () => void;
     onQuickAddMeal: (_mealType: string) => void;
 }

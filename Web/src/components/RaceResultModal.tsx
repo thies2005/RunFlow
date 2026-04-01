@@ -95,7 +95,7 @@ function TimeInputGroup({
     label: string;
     idPrefix: string;
     value: TimeParts;
-    onChange: (next: TimeParts) => void;
+    onChange: (_next: TimeParts) => void;
     placeholder?: string;
 }) {
     const inputClass = 'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 outline-hidden focus:ring-2 focus:ring-accent-orange transition-all';

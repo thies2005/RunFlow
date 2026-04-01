@@ -6,8 +6,8 @@ export interface ChartTooltipProps {
     active?: boolean;
     payload?: PayloadEntry[];
     label?: string | number;
-    labelFormatter?: (label: string | number) => React.ReactNode;
-    formatter?: (value: number | string, name: string) => React.ReactNode | [React.ReactNode, string];
+    labelFormatter?: (_label: string | number) => React.ReactNode;
+    formatter?: (_value: number | string, _name: string) => React.ReactNode | [React.ReactNode, string];
 }
 
 export function ChartTooltip({ active, payload, label, labelFormatter, formatter }: ChartTooltipProps) {

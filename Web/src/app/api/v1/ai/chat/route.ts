@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
                     heartbeat = setInterval(() => {
                         try {
                             controller.enqueue(encoder.encode(': heartbeat\n\n'));
-                        } catch (e) {
+                        } catch {
                             if (heartbeat) clearInterval(heartbeat);
                         }
                     }, 15000);
@@ -194,9 +194,9 @@ export async function POST(request: NextRequest) {
 
                     const stream = await streamChat(config, aiMessages);
 
-                    let tokenCount = 0;
+                    let _tokenCount = 0;
                     for await (const token of stream) {
-                        tokenCount++;
+                        _tokenCount++;
                         fullResponse += token;
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
                     }

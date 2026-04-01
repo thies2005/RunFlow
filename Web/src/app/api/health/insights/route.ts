@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
 import { handleError } from '@/lib/errors/handler';
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
     try {
         const session = await auth();
         if (!session?.user?.id) {

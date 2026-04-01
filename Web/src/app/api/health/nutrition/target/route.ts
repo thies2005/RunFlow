@@ -49,11 +49,11 @@ export async function GET(request: Request) {
         });
 
         let totalActiveCals = 0;
-        let countWithCals = 0;
+        let _countWithCals = 0;
         for (const act of activities) {
             if (act.calories) {
                 totalActiveCals += act.calories;
-                countWithCals++;
+                _countWithCals++;
             }
         }
         // Daily average active calories (divided by 30 days, not just days with workouts, to get daily TDEE addition)

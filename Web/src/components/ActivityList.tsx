@@ -184,7 +184,7 @@ ActivityCard.displayName = 'ActivityCard';
 
 interface ActivityRowData {
     activities: ActivityListItem[];
-    onClick: (activity: ActivityListItem) => void;
+    onClick: (_activity: ActivityListItem) => void;
 }
 
 const ActivityRow = ({ index, style, activities, onClick, ariaAttributes }: ActivityRowData & {

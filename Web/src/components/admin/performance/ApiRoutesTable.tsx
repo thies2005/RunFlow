@@ -26,17 +26,17 @@ interface RouteStats {
 
 interface ApiRoutesTableProps {
   routes: RouteStats[];
-  onRouteClick?: (route: RouteStats) => void;
-  sortBy?: keyof RouteStats;
-  sortOrder?: 'asc' | 'desc';
-  onSort?: (sortBy: keyof RouteStats) => void;
+  onRouteClick?: (_route: RouteStats) => void;
+  _sortBy?: keyof RouteStats;
+  _sortOrder?: 'asc' | 'desc';
+  onSort?: (_sortBy: keyof RouteStats) => void;
 }
 
 export default function ApiRoutesTable({
   routes,
   onRouteClick,
-  sortBy,
-  sortOrder,
+  _sortBy,
+  _sortOrder,
   onSort,
 }: ApiRoutesTableProps) {
   const getHealthStatus = (route: RouteStats) => {

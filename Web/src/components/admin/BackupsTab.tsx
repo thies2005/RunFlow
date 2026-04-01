@@ -7,8 +7,8 @@ import { AdminBackup } from '@/app/admin/types';
 interface BackupsTabProps {
     backups: AdminBackup[];
     processing: boolean;
-    setProcessing: (val: boolean) => void;
-    setActionMessage: (msg: { type: 'success' | 'error', text: string } | null) => void;
+    setProcessing: (_val: boolean) => void;
+    setActionMessage: (_msg: { type: 'success' | 'error', text: string } | null) => void;
     fetchAllData: () => void;
 }
 

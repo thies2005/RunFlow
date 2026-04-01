@@ -3,7 +3,7 @@ import React from 'react';
 interface TierInputGroupProps {
     tier: 1 | 2 | 3;
     formData: any;
-    setFormData: (updater: (prev: any) => any) => void;
+    setFormData: (_updater: (_prev: any) => any) => void;
 }
 
 export default function TierInputGroup({ tier, formData, setFormData }: TierInputGroupProps) {

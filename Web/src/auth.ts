@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth';
 import type { NextAuthConfig } from 'next-auth';
+import type { Adapter, AdapterAccount } from '@auth/core/adapters';
 import StravaProvider from 'next-auth/providers/strava';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
@@ -31,8 +32,26 @@ function tryEncryptOrPlaintextToken(
     }
 }
 
+const baseAdapter = PrismaAdapter(prisma);
+
+const adapter: Adapter = {
+    ...baseAdapter,
+    async getUserByAccount(account: AdapterAccount) {
+        return baseAdapter.getUserByAccount!({
+            ...account,
+            providerAccountId: String(account.providerAccountId),
+        });
+    },
+    async linkAccount(account: AdapterAccount): Promise<AdapterAccount | null | undefined> {
+        return baseAdapter.linkAccount!({
+            ...account,
+            providerAccountId: String(account.providerAccountId),
+        }) as Promise<AdapterAccount | null | undefined>;
+    },
+};
+
 const authConfig = {
-    adapter: PrismaAdapter(prisma),
+    adapter,
     providers: [
         StravaProvider({
             clientId: process.env.STRAVA_CLIENT_ID!,
@@ -243,26 +262,7 @@ const authConfig = {
                 secure: process.env.NODE_ENV === 'production',
             },
         },
-        pkceCodeVerifier: {
-            name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.pkce.code_verifier' : 'next-auth.pkce.code_verifier',
-            options: {
-                httpOnly: true,
-                sameSite: 'lax',
-                path: '/',
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 60 * 15,
-            },
-        },
-        state: {
-            name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.state' : 'next-auth.state',
-            options: {
-                httpOnly: true,
-                sameSite: 'lax',
-                path: '/',
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 60 * 15,
-            },
-        },
+
     },
     debug: process.env.NODE_ENV === 'development',
 } satisfies NextAuthConfig;

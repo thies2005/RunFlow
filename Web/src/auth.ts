@@ -136,7 +136,7 @@ const authConfig = {
                             where: {
                                 provider_providerAccountId: {
                                     provider: 'strava',
-                                    providerAccountId: account.providerAccountId,
+                                    providerAccountId: String(account.providerAccountId),
                                 },
                             },
                         });

@@ -412,6 +412,7 @@ async function handleOpenAIRetry(
                 temperature: 0.7,
             }),
             signal: options?.signal,
+            allowedUrls: [config.baseUrl],
         });
 
         if (response.ok) break;
@@ -574,6 +575,7 @@ async function streamAnthropic(
                     temperature: 0.7,
                 }),
                 signal: options?.signal,
+                allowedUrls: [config.baseUrl],
             });
 
             if (response.ok) {
@@ -689,6 +691,7 @@ async function streamGoogle(
                     }
                 }),
                 signal: options?.signal,
+                allowedUrls: [config.baseUrl],
             });
 
             if (response.ok) {
@@ -861,6 +864,7 @@ async function generateOpenAICompletion(
                 max_tokens: 4096,
                 temperature: 0.7,
             }),
+            allowedUrls: [config.baseUrl],
         });
 
         if (response.ok) {
@@ -932,6 +936,7 @@ async function generateAnthropicCompletion(
                 max_tokens: 4096,
                 temperature: 0.7,
             }),
+            allowedUrls: [config.baseUrl],
         });
 
         if (response.ok) break;
@@ -995,6 +1000,8 @@ async function generateGoogleCompletion(
                     maxOutputTokens: 1000,
                     temperature: 0.7,
                 }
+            }),
+            allowedUrls: [config.baseUrl],
             }),
         });
 

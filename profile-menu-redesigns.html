@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunFlow — Profile Menu Redesigns</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f0f13;
+    --surface: rgba(255,255,255,0.05);
+    --surface-hover: rgba(255,255,255,0.08);
+    --glass: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.1);
+    --text: #e4e4e7;
+    --text-muted: #71717a;
+    --text-dim: #52525b;
+    --orange: #f97316;
+    --orange-dim: rgba(249,115,22,0.15);
+    --purple: #a855f7;
+    --purple-dim: rgba(168,85,247,0.15);
+    --green: #22c55e;
+    --green-dim: rgba(34,197,94,0.15);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.15);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.15);
+    --cyan: #06b6d4;
+    --cyan-dim: rgba(6,182,212,0.15);
+    --yellow: #eab308;
+    --yellow-dim: rgba(234,179,8,0.15);
+    --pink: #ec4899;
+    --pink-dim: rgba(236,72,153,0.15);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  .page-header {
+    text-align: center;
+    padding: 60px 20px 20px;
+  }
+  .page-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--orange), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .designs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 60px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  @media (min-width: 1200px) {
+    .designs-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .design-section:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .design-section {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 32px;
+    position: relative;
+  }
+  .design-section .design-label {
+    position: absolute;
+    top: -14px;
+    left: 24px;
+    background: linear-gradient(135deg, var(--orange), var(--purple));
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .design-section h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .design-section .subtitle {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+  }
+
+  /* Simulated header bar */
+  .sim-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: rgba(255,255,255,0.03);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    border: 1px solid var(--glass-border);
+    position: relative;
+  }
+  .sim-logo {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--orange);
+  }
+  .sim-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 600; color: white;
+    cursor: pointer;
+    position: relative;
+  }
+
+  /* Menu panels */
+  .menu-panel {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    background: rgba(15,15,20,0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .menu-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 0.875rem;
+  }
+  .menu-row:hover {
+    background: var(--surface-hover);
+  }
+  .menu-row .icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .menu-row .label { flex: 1; }
+  .menu-row .label small { display: block; color: var(--text-muted); font-size: 0.75rem; }
+  .menu-row .chevron { color: var(--text-dim); font-size: 0.8rem; }
+
+  .menu-divider {
+    height: 1px;
+    background: var(--glass-border);
+    margin: 4px 16px;
+  }
+
+  .menu-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .menu-header .avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; color: white;
+  }
+  .menu-header .info h3 { font-size: 0.9rem; font-weight: 600; }
+  .menu-header .info p { font-size: 0.75rem; color: var(--text-muted); }
+
+  /* Submenu indicator */
+  .submenu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 12px 16px;
+  }
+  .submenu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    transition: background 0.15s;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+  .submenu-item:hover { background: var(--surface-hover); }
+  .submenu-item .sub-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+  }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--glass-border);
+    padding: 0 8px;
+  }
+  .tab-bar .tab {
+    padding: 10px 12px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .tab-bar .tab.active {
+    color: var(--orange);
+    border-bottom-color: var(--orange);
+  }
+
+  .tab-content {
+    padding: 12px 16px;
+  }
+  .tab-content .setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 0.8rem;
+  }
+  .tab-content .setting-row .val { color: var(--text-muted); font-size: 0.75rem; }
+
+  .toggle-track {
+    width: 36px; height: 20px;
+    border-radius: 10px;
+    background: var(--text-dim);
+    position: relative;
+    display: inline-block;
+  }
+  .toggle-track.on { background: var(--green); }
+  .toggle-track::after {
+    content: '';
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 2px; left: 2px;
+    transition: transform 0.15s;
+  }
+  .toggle-track.on::after { transform: translateX(16px); }
+
+  /* Design 1 specific: Mega menu columns */
+  .mega-columns {
+    display: grid;
+    grid-template-columns: 180px 1fr 1fr;
+    min-height: 340px;
+  }
+  .mega-nav {
+    border-right: 1px solid var(--glass-border);
+    padding: 8px 0;
+  }
+  .mega-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    color: var(--text-muted);
+  }
+  .mega-nav-item:hover, .mega-nav-item.active {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+  .mega-nav-item.active {
+    border-left: 2px solid var(--orange);
+  }
+  .mega-nav-item .nav-icon {
+    font-size: 0.85rem;
+    width: 20px;
+    text-align: center;
+  }
+  .mega-content {
+    padding: 16px;
+  }
+  .mega-content h4 {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+  .mega-content .item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin-bottom: 2px;
+  }
+  .mega-content .item:hover {
+    background: var(--surface);
+    color: var(--text);
+  }
+  .mega-content .item .item-val {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  /* Design 5 specific: sidebar */
+  .sidebar-sim {
+    display: flex;
+    height: 460px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+  }
+  .sidebar-panel {
+    width: 280px;
+    background: rgba(15,15,20,0.95);
+    border-right: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-main {
+    flex: 1;
+    background: rgba(20,20,28,0.5);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar-main .placeholder {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+  }
+
+  .nav-arrow { font-size: 0.7rem; margin-left: auto; opacity: 0.5; }
+  .badge {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  /* Quick stats row */
+  .quick-stats {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .quick-stat {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    background: var(--surface);
+    border-radius: 6px;
+  }
+  .quick-stat .qs-val { font-size: 0.9rem; font-weight: 700; }
+  .quick-stat .qs-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* Pinned section */
+  .section-title {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 16px 4px;
+  }
+
+  /* Design 2: grouped rows */
+  .group-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 16px 4px;
+  }
+
+  /* Design 3: card hub */
+  .hub-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 16px;
+  }
+  .hub-card {
+    background: var(--surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .hub-card:hover {
+    background: var(--surface-hover);
+    border-color: rgba(255,255,255,0.15);
+  }
+  .hub-card .hc-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    margin: 0 auto 8px;
+  }
+  .hub-card .hc-title { font-size: 0.8rem; font-weight: 600; margin-bottom: 2px; }
+  .hub-card .hc-desc { font-size: 0.65rem; color: var(--text-muted); }
+
+  /* Design 4: accordion */
+  .accordion-item {
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: background 0.15s;
+  }
+  .accordion-header:hover { background: var(--surface-hover); }
+  .accordion-header .acc-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+  .accordion-header .acc-arrow {
+    margin-left: auto;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  .accordion-header.open .acc-arrow { transform: rotate(180deg); }
+  .accordion-body {
+    padding: 4px 16px 12px 54px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .accordion-body .acc-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    cursor: pointer;
+  }
+  .accordion-body .acc-link:hover { color: var(--text); }
+
+  .footer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--glass-border);
+    font-size: 0.8rem;
+  }
+
+  .theme-pills {
+    display: flex;
+    gap: 4px;
+    padding: 8px 16px;
+  }
+  .theme-pill {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .theme-pill.active {
+    background: var(--orange-dim);
+    color: var(--orange);
+  }
+
+  .profile-mini {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .profile-mini .pm-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; color: white; font-size: 0.85rem;
+  }
+  .profile-mini .pm-info { flex: 1; }
+  .profile-mini .pm-info .pm-name { font-size: 0.85rem; font-weight: 600; }
+  .profile-mini .pm-info .pm-email { font-size: 0.7rem; color: var(--text-muted); }
+  .profile-mini .pm-plan {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--green-dim);
+    color: var(--green);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>RunFlow Profile Menu Redesigns</h1>
+  <p>5 concepts for the dropdown after pressing the profile picture — all functionality accessible via submenus</p>
+</div>
+
+<div class="designs-grid">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DESIGN 1 — MEGA MENU (Three-Column)
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="design-section" style="grid-column: 1 / -1;">
+  <span class="design-label">Design 1</span>
+  <h2>Mega Menu</h2>
+  <p class="subtitle">Three-column layout with navigation sidebar + detail panels. Best for wide screens. Click a category to see its contents in the right panels.</p>
+
+  <div class="sim-header">
+    <span class="sim-logo">RunFlow</span>
+    <div class="sim-avatar">JM</div>
+  </div>
+
+  <div class="menu-panel">
+    <!-- User header -->
+    <div class="menu-header">
+      <div class="avatar">JM</div>
+      <div class="info" style="flex:1">
+        <h3>John Marathoner</h3>
+        <p>john@runner.com</p>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;">
+        <span style="font-size:0.7rem;color:var(--green);">&#9679;</span>
+        <span style="font-size:0.7rem;color:var(--text-muted);">Pro Plan</span>
+      </div>
+    </div>
+
+    <div class="mega-columns">
+      <!-- Left nav -->
+      <div class="mega-nav">
+        <div class="mega-nav-item active">
+          <span class="nav-icon">&#128516;</span> My Profile
+          <span class="nav-arrow">&#8250;</span>
+        </div>
+        <div class="mega-nav-item">
+          <span class="nav-icon">&#127939;</span> Training Plan
+          <span class="nav-arrow">&#8250;</span>
+        </div>
+        <div class="mega-nav-item">
+          <span class="nav-icon">&#127942;</span> Past Races
+          <span class="nav-arrow">&#8250;</span>
+        </div>
+        <div class="mega-nav-item">
+          <span class="nav-icon">&#10084;&#65039;</span> Health & Body
+          <span class="nav-arrow">&#8250;</span>
+        </div>
+        <div class="mega-nav-item">
+          <span class="nav-icon">&#9881;&#65039;</span> App Settings
+          <span class="nav-arrow">&#8250;</span>
+        </div>
+        <div class="mega-nav-item">
+          <span class="nav-icon">&#128274;</span> Privacy & Data
+          <span class="nav-arrow">&#8250;</span>
+        </div>
+        <div class="mega-nav-item">
+          <span class="nav-icon">&#129302;</span> AI Coach
+          <span class="nav-arrow">&#8250;</span>
+        </div>
+        <div class="mega-nav-item">
+          <span class="nav-icon">&#128276;</span> Reminders
+          <span class="nav-arrow">&#8250;</span>
+        </div>
+      </div>
+
+      <!-- Center: "My Profile" content -->
+      <div class="mega-content" style="border-right:1px solid var(--glass-border);">
+        <h4>&#128516; My Profile</h4>
+        <div class="item">Weight <span class="item-val">72 kg</span></div>
+        <div class="item">Height <span class="item-val">178 cm</span></div>
+        <div class="item">Threshold HR (LTHR) <span class="item-val">172 bpm</span></div>
+        <div class="item">Use Miles <span class="toggle-track" style="width:30px;height:16px;border-radius:8px;"></span></div>
+        <div class="item">Include Cross-Training <span class="toggle-track on" style="width:30px;height:16px;border-radius:8px;"></span></div>
+        <div class="item">Marathon Shape <span class="item-val" style="color:var(--green);">78%</span></div>
+        <div class="item" style="color:var(--orange);">Edit Profile &rarr;</div>
+      </div>
+
+      <!-- Right: HR Zones + Quick Stats -->
+      <div class="mega-content">
+        <h4>&#128148; Heart Rate Zones</h4>
+        <div class="item">Zone 1 (Recovery) <span class="item-val">&lt; 129 bpm</span></div>
+        <div class="item">Zone 2 (Easy) <span class="item-val">&lt; 150 bpm</span></div>
+        <div class="item">Zone 3 (Tempo) <span class="item-val">&lt; 162 bpm</span></div>
+        <div class="item">Zone 4 (Threshold) <span class="item-val">&lt; 172 bpm</span></div>
+        <div class="item">Zone 5 (VO2Max) <span class="item-val">&lt; 181 bpm</span></div>
+        <div class="item">Zone 6 (Anaerobic) <span class="item-val">&lt; 189 bpm</span></div>
+        <div class="item">Zone 7 (Neuromuscular) <span class="item-val">&gt; 189 bpm</span></div>
+        <div class="item" style="color:var(--orange);">Edit Zones &rarr;</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-row" style="justify-content:space-between;">
+      <div class="theme-pills">
+        <span class="theme-pill">&#9728;&#65039; Light</span>
+        <span class="theme-pill active">&#127769; Dark</span>
+        <span class="theme-pill">&#128187; Auto</span>
+      </div>
+      <div class="menu-row" style="padding:6px 12px;color:var(--red);border-radius:6px;background:var(--red-dim);font-size:0.8rem;">
+        &#128682; Log Out
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DESIGN 2 — GROUPED LIST (iOS Settings Style)
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="design-section">
+  <span class="design-label">Design 2</span>
+  <h2>Grouped List</h2>
+  <p class="subtitle">iOS Settings-inspired grouped rows with chevrons. Compact, familiar, scannable. Each row drills into a detail view.</p>
+
+  <div class="sim-header">
+    <span class="sim-logo">RunFlow</span>
+    <div class="sim-avatar">JM</div>
+  </div>
+
+  <div class="menu-panel" style="width:320px;">
+    <!-- Profile -->
+    <div class="profile-mini">
+      <div class="pm-avatar">JM</div>
+      <div class="pm-info">
+        <div class="pm-name">John Marathoner</div>
+        <div class="pm-email">john@runner.com</div>
+      </div>
+      <span class="pm-plan">Active</span>
+    </div>
+
+    <!-- Training -->
+    <div class="group-label">Training</div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--orange-dim);color:var(--orange);">&#127939;</div>
+      <div class="label">
+        Training Plan
+        <small>Marathon &middot; 16 weeks &middot; Week 8/16</small>
+      </div>
+      <span class="chevron">&#8250;</span>
+    </div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--yellow-dim);color:var(--yellow);">&#127942;</div>
+      <div class="label">
+        Past Races
+        <small>5 completed &middot; Last: Berlin HM</small>
+      </div>
+      <span class="badge" style="background:var(--yellow-dim);color:var(--yellow);">5</span>
+      <span class="chevron">&#8250;</span>
+    </div>
+
+    <div class="menu-divider"></div>
+
+    <!-- Body & Health -->
+    <div class="group-label">Body & Health</div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--red-dim);color:var(--red);">&#10084;&#65039;</div>
+      <div class="label">Heart Rate Zones</div>
+      <span class="chevron">&#8250;</span>
+    </div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--pink-dim);color:var(--pink);">&#9878;</div>
+      <div class="label">Biometrics</div>
+      <span style="font-size:0.7rem;color:var(--text-muted);margin-right:6px;">72 kg</span>
+      <span class="chevron">&#8250;</span>
+    </div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--cyan-dim);color:var(--cyan);">&#128137;</div>
+      <div class="label">Health Tracking</div>
+      <span class="toggle-track on" style="width:30px;height:16px;border-radius:8px;"></span>
+    </div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--blue-dim);color:var(--blue);">&#128276;</div>
+      <div class="label">Reminders</div>
+      <span class="chevron">&#8250;</span>
+    </div>
+
+    <div class="menu-divider"></div>
+
+    <!-- Settings -->
+    <div class="group-label">Settings</div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--purple-dim);color:var(--purple);">&#129302;</div>
+      <div class="label">AI Coach</div>
+      <span class="chevron">&#8250;</span>
+    </div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--green-dim);color:var(--green);">&#128279;</div>
+      <div class="label">Connected Services</div>
+      <span style="font-size:0.65rem;color:var(--green);margin-right:4px;">Strava &#10003;</span>
+      <span class="chevron">&#8250;</span>
+    </div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--surface);color:var(--text-muted);">&#127760;</div>
+      <div class="label">Display & Units</div>
+      <span style="font-size:0.7rem;color:var(--text-muted);margin-right:6px;">Metric</span>
+      <span class="chevron">&#8250;</span>
+    </div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--surface);color:var(--text-muted);">&#128273;</div>
+      <div class="label">API Access</div>
+      <span class="chevron">&#8250;</span>
+    </div>
+    <div class="menu-row">
+      <div class="icon" style="background:var(--surface);color:var(--text-muted);">&#128274;</div>
+      <div class="label">Privacy & Data</div>
+      <span class="chevron">&#8250;</span>
+    </div>
+
+    <div class="menu-divider"></div>
+
+    <!-- Theme -->
+    <div class="menu-row">
+      <div class="icon" style="background:var(--surface);color:var(--text-muted);">&#127769;</div>
+      <div class="label">Appearance</div>
+      <div class="theme-pills" style="padding:0;margin-left:auto;">
+        <span class="theme-pill" style="font-size:0.6rem;padding:2px 7px;">&#9728;&#65039;</span>
+        <span class="theme-pill active" style="font-size:0.6rem;padding:2px 7px;">&#127769;</span>
+        <span class="theme-pill" style="font-size:0.6rem;padding:2px 7px;">&#128187;</span>
+      </div>
+    </div>
+
+    <div class="menu-divider"></div>
+
+    <div class="menu-row" style="color:var(--red);">
+      <div class="icon" style="background:var(--red-dim);color:var(--red);">&#128682;</div>
+      <div class="label">Log Out</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DESIGN 3 — CARD HUB
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="design-section">
+  <span class="design-label">Design 3</span>
+  <h2>Card Hub</h2>
+  <p class="subtitle">Visual card grid with icons and descriptions. Tappable cards for each area. Modern and touch-friendly.</p>
+
+  <div class="sim-header">
+    <span class="sim-logo">RunFlow</span>
+    <div class="sim-avatar">JM</div>
+  </div>
+
+  <div class="menu-panel" style="width:380px;">
+    <div class="profile-mini">
+      <div class="pm-avatar">JM</div>
+      <div class="pm-info">
+        <div class="pm-name">John Marathoner</div>
+        <div class="pm-email">john@runner.com</div>
+      </div>
+      <span style="color:var(--text-dim);cursor:pointer;font-size:0.8rem;">&#9998;</span>
+    </div>
+
+    <!-- Quick stats -->
+    <div class="quick-stats">
+      <div class="quick-stat">
+        <div class="qs-val" style="color:var(--orange);">78%</div>
+        <div class="qs-label">Marathon Shape</div>
+      </div>
+      <div class="quick-stat">
+        <div class="qs-val" style="color:var(--green);">5</div>
+        <div class="qs-label">Races Done</div>
+      </div>
+      <div class="quick-stat">
+        <div class="qs-val" style="color:var(--blue);">W8</div>
+        <div class="qs-label">Plan Week</div>
+      </div>
+    </div>
+
+    <div class="hub-grid">
+      <div class="hub-card">
+        <div class="hc-icon" style="background:var(--orange-dim);color:var(--orange);">&#127939;</div>
+        <div class="hc-title">Training Plan</div>
+        <div class="hc-desc">Configure target race, volume & schedule</div>
+      </div>
+      <div class="hub-card">
+        <div class="hc-icon" style="background:var(--yellow-dim);color:var(--yellow);">&#127942;</div>
+        <div class="hc-title">Past Races</div>
+        <div class="hc-desc">View results, edit race data</div>
+      </div>
+      <div class="hub-card">
+        <div class="hc-icon" style="background:var(--red-dim);color:var(--red);">&#10084;&#65039;</div>
+        <div class="hc-title">Health & Body</div>
+        <div class="hc-desc">HR zones, biometrics, tracking</div>
+      </div>
+      <div class="hub-card">
+        <div class="hc-icon" style="background:var(--purple-dim);color:var(--purple);">&#129302;</div>
+        <div class="hc-title">AI Coach</div>
+        <div class="hc-desc">Configure AI, data access & prompts</div>
+      </div>
+      <div class="hub-card">
+        <div class="hc-icon" style="background:var(--green-dim);color:var(--green);">&#128279;</div>
+        <div class="hc-title">Connections</div>
+        <div class="hc-desc">Strava, Health Connect, API keys</div>
+      </div>
+      <div class="hub-card">
+        <div class="hc-icon" style="background:var(--cyan-dim);color:var(--cyan);">&#9881;&#65039;</div>
+        <div class="hc-title">Settings</div>
+        <div class="hc-desc">Units, reminders, privacy, export</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:0 16px 8px;">
+      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:10px;">
+        <span class="theme-pill">&#9728;&#65039;</span>
+        <span class="theme-pill active">&#127769;</span>
+        <span class="theme-pill">&#128187;</span>
+      </div>
+    </div>
+    <div class="menu-divider"></div>
+    <div class="menu-row" style="color:var(--red);padding:10px 16px;">
+      <div class="icon" style="background:var(--red-dim);color:var(--red);">&#128682;</div>
+      <div class="label">Log Out</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DESIGN 4 — ACCORDION
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="design-section">
+  <span class="design-label">Design 4</span>
+  <h2>Accordion Sections</h2>
+  <p class="subtitle">Expandable sections that reveal sub-items inline. Keeps menu compact until expanded. Good for progressive disclosure.</p>
+
+  <div class="sim-header">
+    <span class="sim-logo">RunFlow</span>
+    <div class="sim-avatar">JM</div>
+  </div>
+
+  <div class="menu-panel" style="width:320px;">
+    <div class="profile-mini">
+      <div class="pm-avatar">JM</div>
+      <div class="pm-info">
+        <div class="pm-name">John Marathoner</div>
+        <div class="pm-email">john@runner.com</div>
+      </div>
+      <span style="font-size:0.65rem;padding:3px 8px;border-radius:4px;background:var(--orange-dim);color:var(--orange);font-weight:600;">Edit</span>
+    </div>
+
+    <!-- Accordion: Training Plan (open) -->
+    <div class="accordion-item">
+      <div class="accordion-header open">
+        <div class="acc-icon" style="background:var(--orange-dim);color:var(--orange);">&#127939;</div>
+        Training Plan
+        <span class="acc-arrow">&#9660;</span>
+      </div>
+      <div class="accordion-body">
+        <div class="acc-link">Target Race <span style="color:var(--text-dim);">Berlin Marathon</span></div>
+        <div class="acc-link">Race Date <span style="color:var(--text-dim);">Sep 28, 2026</span></div>
+        <div class="acc-link">Calibration <span style="color:var(--text-dim);">HM 1:32:00</span></div>
+        <div class="acc-link">Volume / Schedule <span style="color:var(--text-dim);">4 runs/wk</span></div>
+        <div class="acc-link">Goal Time <span style="color:var(--text-dim);">3:15:00</span></div>
+        <div class="acc-link" style="color:var(--orange);">Edit Full Plan Settings &rarr;</div>
+      </div>
+    </div>
+
+    <!-- Accordion: Past Races (closed) -->
+    <div class="accordion-item">
+      <div class="accordion-header">
+        <div class="acc-icon" style="background:var(--yellow-dim);color:var(--yellow);">&#127942;</div>
+        Past Races
+        <span class="badge" style="background:var(--yellow-dim);color:var(--yellow);margin-left:4px;">5</span>
+        <span class="acc-arrow">&#9660;</span>
+      </div>
+    </div>
+
+    <!-- Accordion: Health & Body (closed) -->
+    <div class="accordion-item">
+      <div class="accordion-header">
+        <div class="acc-icon" style="background:var(--red-dim);color:var(--red);">&#10084;&#65039;</div>
+        Health & Body
+        <span class="acc-arrow">&#9660;</span>
+      </div>
+    </div>
+
+    <!-- Accordion: AI Coach (closed) -->
+    <div class="accordion-item">
+      <div class="accordion-header">
+        <div class="acc-icon" style="background:var(--purple-dim);color:var(--purple);">&#129302;</div>
+        AI Coach
+        <span class="acc-arrow">&#9660;</span>
+      </div>
+    </div>
+
+    <!-- Accordion: Connected Services (closed) -->
+    <div class="accordion-item">
+      <div class="accordion-header">
+        <div class="acc-icon" style="background:var(--green-dim);color:var(--green);">&#128279;</div>
+        Connected Services
+        <span class="acc-arrow">&#9660;</span>
+      </div>
+    </div>
+
+    <!-- Accordion: Settings (closed) -->
+    <div class="accordion-item">
+      <div class="accordion-header">
+        <div class="acc-icon" style="background:var(--cyan-dim);color:var(--cyan);">&#9881;&#65039;</div>
+        Settings
+        <span class="acc-arrow">&#9660;</span>
+      </div>
+    </div>
+
+    <!-- Theme -->
+    <div style="padding:10px 16px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--glass-border);">
+      <span style="font-size:0.8rem;color:var(--text-muted);">Theme</span>
+      <div class="theme-pills" style="padding:0;">
+        <span class="theme-pill" style="font-size:0.65rem;padding:3px 8px;">&#9728;&#65039;</span>
+        <span class="theme-pill active" style="font-size:0.65rem;padding:3px 8px;">&#127769;</span>
+        <span class="theme-pill" style="font-size:0.65rem;padding:3px 8px;">&#128187;</span>
+      </div>
+    </div>
+
+    <div class="menu-divider"></div>
+
+    <div class="menu-row" style="color:var(--red);padding:10px 16px;">
+      <div class="icon" style="background:var(--red-dim);color:var(--red);">&#128682;</div>
+      <div class="label">Log Out</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DESIGN 5 — SLIDE-OVER SIDEBAR
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="design-section">
+  <span class="design-label">Design 5</span>
+  <h2>Slide-Over Sidebar</h2>
+  <p class="subtitle">Full-height sidebar panel with scrollable sections. Replaces the small dropdown with a spacious side drawer. Best for comprehensive navigation.</p>
+
+  <div style="position:relative;">
+    <div class="sidebar-sim">
+      <!-- Main content area (dimmed) -->
+      <div class="sidebar-main">
+        <div class="placeholder">
+          <div style="font-size:2rem;margin-bottom:8px;opacity:0.3;">&#127939;</div>
+          Dashboard<br><span style="font-size:0.7rem;">(content dimmed behind sidebar)</span>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar-panel">
+        <div class="profile-mini">
+          <div class="pm-avatar">JM</div>
+          <div class="pm-info">
+            <div class="pm-name">John Marathoner</div>
+            <div class="pm-email">john@runner.com</div>
+          </div>
+          <span style="cursor:pointer;color:var(--text-dim);font-size:1rem;">&#10005;</span>
+        </div>
+
+        <div style="flex:1;overflow-y:auto;">
+          <div class="section-title">Training</div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--orange-dim);color:var(--orange);">&#127939;</div>
+            <div class="label">Training Plan <small>Marathon &middot; Week 8</small></div>
+            <span class="chevron">&#8250;</span>
+          </div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--yellow-dim);color:var(--yellow);">&#127942;</div>
+            <div class="label">Past Races <small>5 completed</small></div>
+            <span class="badge" style="background:var(--yellow-dim);color:var(--yellow);">5</span>
+            <span class="chevron">&#8250;</span>
+          </div>
+
+          <div class="menu-divider"></div>
+
+          <div class="section-title">Body</div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--red-dim);color:var(--red);">&#128148;</div>
+            <div class="label">Heart Rate Zones</div>
+            <span class="chevron">&#8250;</span>
+          </div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--pink-dim);color:var(--pink);">&#9878;</div>
+            <div class="label">Biometrics <small>72 kg &middot; 178 cm</small></div>
+            <span class="chevron">&#8250;</span>
+          </div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--cyan-dim);color:var(--cyan);">&#128137;</div>
+            <div class="label">Health Tracking</div>
+            <span class="toggle-track on" style="width:30px;height:16px;border-radius:8px;"></span>
+          </div>
+
+          <div class="menu-divider"></div>
+
+          <div class="section-title">Integrations</div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--purple-dim);color:var(--purple);">&#129302;</div>
+            <div class="label">AI Coach</div>
+            <span class="chevron">&#8250;</span>
+          </div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--green-dim);color:var(--green);">&#128279;</div>
+            <div class="label">Strava & Health Connect</div>
+            <span style="font-size:0.6rem;color:var(--green);">&#10003;</span>
+            <span class="chevron">&#8250;</span>
+          </div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--blue-dim);color:var(--blue);">&#128276;</div>
+            <div class="label">Reminders</div>
+            <span class="chevron">&#8250;</span>
+          </div>
+
+          <div class="menu-divider"></div>
+
+          <div class="section-title">Preferences</div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--surface);color:var(--text-muted);">&#127760;</div>
+            <div class="label">Display & Units</div>
+            <span style="font-size:0.7rem;color:var(--text-muted);margin-right:4px;">Metric</span>
+            <span class="chevron">&#8250;</span>
+          </div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--surface);color:var(--text-muted);">&#127769;</div>
+            <div class="label">Appearance</div>
+            <div class="theme-pills" style="padding:0;margin-left:auto;">
+              <span class="theme-pill" style="font-size:0.6rem;padding:2px 6px;">&#9728;&#65039;</span>
+              <span class="theme-pill active" style="font-size:0.6rem;padding:2px 6px;">&#127769;</span>
+              <span class="theme-pill" style="font-size:0.6rem;padding:2px 6px;">&#128187;</span>
+            </div>
+          </div>
+
+          <div class="menu-divider"></div>
+
+          <div class="section-title">Account</div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--surface);color:var(--text-muted);">&#128273;</div>
+            <div class="label">API Access</div>
+            <span class="chevron">&#8250;</span>
+          </div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--surface);color:var(--text-muted);">&#128274;</div>
+            <div class="label">Privacy & Consent</div>
+            <span class="chevron">&#8250;</span>
+          </div>
+          <div class="menu-row">
+            <div class="icon" style="background:var(--surface);color:var(--text-muted);">&#128190;</div>
+            <div class="label">Export My Data</div>
+            <span class="chevron">&#8250;</span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="border-top:1px solid var(--glass-border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.65rem;color:var(--text-dim);">RunFlow v1.2.0</span>
+          <span style="font-size:0.8rem;color:var(--red);cursor:pointer;display:flex;align-items:center;gap:6px;">
+            &#128682; Log Out
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /designs-grid -->
+
+<!-- Summary comparison table -->
+<div style="max-width:1200px;margin:0 auto 80px;padding:0 20px;">
+  <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:16px;text-align:center;">Comparison</h2>
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--glass-border);">
+          <th style="text-align:left;padding:10px 12px;color:var(--text-muted);font-weight:600;">Feature</th>
+          <th style="text-align:center;padding:10px 12px;color:var(--orange);">D1 Mega</th>
+          <th style="text-align:center;padding:10px 12px;color:var(--orange);">D2 Grouped</th>
+          <th style="text-align:center;padding:10px 12px;color:var(--orange);">D3 Cards</th>
+          <th style="text-align:center;padding:10px 12px;color:var(--orange);">D4 Accordion</th>
+          <th style="text-align:center;padding:10px 12px;color:var(--orange);">D5 Sidebar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Training Plan</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Past Races</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">HR Zones / Biometrics</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">AI Coach Config</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Health Tracking</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Reminders</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Strava / Connections</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">API Access</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Privacy & Data</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Display & Units</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Theme Toggle</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Data Export</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--glass-border);">
+          <td style="padding:8px 12px;">Delete Account</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+          <td style="text-align:center;">&#10003;</td>
+        </tr>
+        <tr style="border-bottom:2px solid var(--glass-border);font-weight:600;">
+          <td style="padding:10px 12px;color:var(--text);">Best for</td>
+          <td style="text-align:center;padding:10px 12px;color:var(--text-muted);font-weight:400;">Desktop power users</td>
+          <td style="text-align:center;padding:10px 12px;color:var(--text-muted);font-weight:400;">Mobile & familiar UX</td>
+          <td style="text-align:center;padding:10px 12px;color:var(--text-muted);font-weight:400;">Touch-first / tablets</td>
+          <td style="text-align:center;padding:10px 12px;color:var(--text-muted);font-weight:400;">Compact progressive</td>
+          <td style="text-align:center;padding:10px 12px;color:var(--text-muted);font-weight:400;">Spacious all-in-one</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 12px;color:var(--text);">Screen fit</td>
+          <td style="text-align:center;color:var(--text-muted);">Wide only</td>
+          <td style="text-align:center;color:var(--green);">All sizes</td>
+          <td style="text-align:center;color:var(--text-muted);">Medium+</td>
+          <td style="text-align:center;color:var(--green);">All sizes</td>
+          <td style="text-align:center;color:var(--text-muted);">Medium+</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>

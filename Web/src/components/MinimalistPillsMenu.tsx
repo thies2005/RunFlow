@@ -1041,34 +1041,122 @@ function AppSettingsSubPage({ onBack: _onBack }: { onBack: () => void }) {
             <h3 className="text-lg font-bold text-foreground">App Settings</h3>
 
             <div className="space-y-1.5">
-                {[
-                    { icon: Key, label: 'API Access', desc: 'Generate & manage read-only API key', color: 'text-blue-400', bg: 'bg-blue-400/15', target: 'api' as 'api' },
-                    { icon: ShieldCheck, label: 'Privacy & Consent', desc: 'Terms, privacy policy, data consent', color: 'text-purple-400', bg: 'bg-purple-400/15', target: 'privacy' as 'privacy' },
-                    { icon: Download, label: 'Export Data', desc: 'Download all your data as JSON', color: 'text-cyan-400', bg: 'bg-cyan-400/15', target: undefined as undefined },
-                ].map((item) => (
-                    <button
-                        key={item.label}
-                        onClick={() => {
-                            if (item.target) setSection(item.target);
-                        }}
-                        className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-xl transition-colors hover:bg-surface-hover"
-                    >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.bg}`}>
-                            <item.icon className={`w-4 h-4 ${item.color}`} />
-                        </div>
-                        <div className="flex-1 text-left">
-                            <div className="text-sm font-medium text-foreground">{item.label}</div>
-                            <div className="text-[11px] text-foreground-muted">{item.desc}</div>
-                        </div>
-                        {item.target && <ChevronRight className="w-4 h-4 text-foreground-muted" />}
-                    </button>
-                ))}
+                <button
+                    onClick={() => setSection('api')}
+                    className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-xl transition-colors hover:bg-surface-hover"
+                >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-400/15">
+                        <Key className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div className="flex-1 text-left">
+                        <div className="text-sm font-medium text-foreground">API Access</div>
+                        <div className="text-[11px] text-foreground-muted">Generate & manage read-only API key</div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-foreground-muted" />
+                </button>
+                <button
+                    onClick={() => setSection('privacy')}
+                    className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-xl transition-colors hover:bg-surface-hover"
+                >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-400/15">
+                        <ShieldCheck className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <div className="flex-1 text-left">
+                        <div className="text-sm font-medium text-foreground">Privacy & Consent</div>
+                        <div className="text-[11px] text-foreground-muted">Terms, privacy policy, data consent</div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-foreground-muted" />
+                </button>
+                <ExportDataButton />
             </div>
 
             <div className="border-t border-glass-border pt-4">
                 <DangerShortcut />
             </div>
         </div>
+    );
+}
+
+function ExportDataButton() {
+    const [isExporting, setIsExporting] = useState(false);
+    const [message, setMessage] = useState('');
+
+    const handleExportData = async () => {
+        setIsExporting(true);
+        setMessage('');
+        try {
+            const res = await fetch('/api/user/export');
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || 'Failed to export data');
+            }
+
+            const disposition = res.headers.get('Content-Disposition');
+            let filename = `runflow-data-export-${new Date().toISOString().split('T')[0]}.json`;
+            if (disposition && disposition.indexOf('attachment') !== -1) {
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) {
+                    filename = matches[1].replace(/['"]/g, '');
+                }
+            }
+
+            const { Capacitor } = await import('@capacitor/core');
+            const isNative = Capacitor.isNativePlatform();
+
+            if (isNative) {
+                const { Filesystem, Directory } = await import('@capacitor/filesystem');
+                const { Share } = await import('@capacitor/share');
+                const jsonText = await res.text();
+                const writeResult = await Filesystem.writeFile({
+                    path: filename,
+                    data: jsonText,
+                    directory: Directory.Cache,
+                });
+                await Share.share({
+                    title: 'My RunFlow Data Export',
+                    url: writeResult.uri,
+                });
+            } else {
+                const blob = await res.blob();
+                const windowUrl = window.URL || window.webkitURL;
+                const url = windowUrl.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                windowUrl.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
+
+            setMessage('Data exported successfully!');
+        } catch (error: any) {
+            setMessage(`Export failed: ${error.message}`);
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    return (
+        <>
+            <button
+                onClick={handleExportData}
+                disabled={isExporting}
+                className="w-full flex items-center gap-3 px-3.5 py-3 bg-surface rounded-xl transition-colors hover:bg-surface-hover"
+            >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-400/15">
+                    <Download className={`w-4 h-4 text-cyan-400 ${isExporting ? 'animate-spin' : ''}`} />
+                </div>
+                <div className="flex-1 text-left">
+                    <div className="text-sm font-medium text-foreground">Export Data</div>
+                    <div className="text-[11px] text-foreground-muted">{isExporting ? 'Generating export...' : 'Download all your data as JSON'}</div>
+                </div>
+            </button>
+            {message && (
+                <p className={`text-xs px-3.5 ${message.includes('failed') ? 'text-red-400' : 'text-green-400'}`}>{message}</p>
+            )}
+        </>
     );
 }
 

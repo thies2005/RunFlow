@@ -87,7 +87,7 @@ export function Modal({
             role="dialog"
             aria-modal="true"
         >
-            <div className={`glass-card w-full ${maxWidthClasses[maxWidth]} p-6 relative animate-slide-in my-auto mx-auto`} onClick={e => e.stopPropagation()}>
+            <div className={`w-full ${maxWidthClasses[maxWidth]} p-6 relative animate-slide-in my-auto mx-auto bg-background/95 backdrop-blur-xl border border-glass-border shadow-2xl`} onClick={e => e.stopPropagation()}>
                 {!hideCloseButton && (
                     <button
                         onClick={onClose}

@@ -39,10 +39,15 @@ RUN --mount=type=cache,target=/app/src/generated \
 # Build Next.js with cache and memory limit
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SENTRY_DISABLE_SOURCEMAP_UPLOAD=1
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# Create swap file for memory-constrained build environments
+RUN fallocate -l 2G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=2048 2>/dev/null || true && \
+    chmod 600 /swapfile 2>/dev/null && \
+    mkswap /swapfile 2>/dev/null && \
+    swapon /swapfile 2>/dev/null || true
 
 RUN --mount=type=cache,target=/app/.next/cache \
-    npm run build
+    NODE_OPTIONS="--max-old-space-size=3072" npm run build
 
 # ==================================
 # Stage 3: Runner

@@ -61,7 +61,6 @@ services:
       permissions-fixer:
         condition: service_completed_successfully
     networks:
-      - runflow-network
       - coolify
     volumes:
       - backups:/app/backups
@@ -98,7 +97,7 @@ services:
     volumes:
       - backups:/backups
     networks:
-      - runflow-network
+      - coolify
     logging:
       driver: json-file
       options:
@@ -124,7 +123,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - runflow-network
+      - coolify
     logging:
       driver: json-file
       options:
@@ -152,7 +151,7 @@ services:
       start_interval: 2s
       retries: 5
     networks:
-      - runflow-network
+      - coolify
     deploy:
       resources:
         limits:
@@ -191,7 +190,7 @@ services:
       start_interval: 2s
       retries: 5
     networks:
-      - runflow-network
+      - coolify
     deploy:
       resources:
         limits:
@@ -221,7 +220,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - runflow-network
+      - coolify
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:8080 || exit 1"]
       interval: 60s
@@ -251,7 +250,7 @@ services:
       app:
         condition: service_healthy
     networks:
-      - runflow-network
+      - coolify
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'while true; do' || exit 1"]
       interval: 30s
@@ -281,7 +280,7 @@ services:
       app:
         condition: service_healthy
     networks:
-      - runflow-network
+      - coolify
     healthcheck:
       test: ["CMD-SHELL", "pgrep -f 'while true; do' || exit 1"]
       interval: 30s
@@ -296,8 +295,6 @@ services:
         max-file: "3"
 
 networks:
-  runflow-network:
-    driver: bridge
   coolify:
     external: true
 

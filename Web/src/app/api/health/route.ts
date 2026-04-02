@@ -26,8 +26,14 @@ export async function GET(request: NextRequest) {
 
         // For unauthenticated requests, return minimal info (for Docker/load balancer)
         if (!isAdmin) {
-            const publicHealth = await getPublicHealthStatus();
-            return NextResponse.json({ status: publicHealth.status }, { status: publicHealth.statusCode });
+            const status = health.status;
+            let statusCode = 200;
+            if (health.status === 'unhealthy') {
+                statusCode = 503;
+            } else if (health.checks?.database?.status === 'unhealthy') {
+                statusCode = 503;
+            }
+            return NextResponse.json({ status }, { status: statusCode });
         }
 
         // For admin, return full details

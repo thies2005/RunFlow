@@ -246,7 +246,7 @@ services:
       done"
     environment:
       - CRON_SECRET=${CRON_SECRET}
-      - APP_BASE_URL=${APP_BASE_URL:-${NEXTAUTH_URL}}
+      - APP_BASE_URL=${APP_BASE_URL:-http://app:3000}
     depends_on:
       app:
         condition: service_healthy
@@ -276,7 +276,7 @@ services:
       done"
     environment:
       - CRON_SECRET=${CRON_SECRET}
-      - APP_BASE_URL=${APP_BASE_URL:-${NEXTAUTH_URL}}
+      - APP_BASE_URL=${APP_BASE_URL:-http://app:3000}
     depends_on:
       app:
         condition: service_healthy

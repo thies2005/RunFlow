@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, swimDay, restDays } = body;
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, maxLongRunKm, calibrationFactor, longRunDay, qualityDay, swimDay, restDays } = body;
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -195,6 +195,9 @@ export async function POST(req: NextRequest) {
             const swims = swimsPerWeek || 0;
             const strength = strengthPerWeek || 0;
             const mileageGoal = weeklyMileageGoal || null; // meters
+            const normalizedMaxLongRunKm = typeof maxLongRunKm === 'number'
+                ? Math.max(6, Math.min(Math.round(maxLongRunKm), 32))
+                : undefined;
 
             // Phase settings (use provided or defaults)
             let taper = taperWeeks ?? 2;
@@ -280,6 +283,7 @@ export async function POST(req: NextRequest) {
                 workoutDay: typeof qualityDay === 'number' ? qualityDay : activeGoal.workoutDay,
                 swimDay: typeof swimDay === 'number' ? swimDay : undefined,
                 restDays: Array.isArray(restDays) ? restDays : (activeGoal.restDays as number[] ?? undefined),
+                maxLongRunKm: normalizedMaxLongRunKm,
             });
 
             // Save workouts (M-08: Use createMany for batch insert instead of transaction)

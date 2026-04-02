@@ -9,7 +9,7 @@ export const PLAN_CONSTANTS = {
         MARATHON: 50000
     },
     MAX_LONG_RUN_DIST: {
-        FIVE_K: 16000,
+        FIVE_K: 18000,
         TEN_K: 22000,
         HALF_MARATHON: 24000,
         MARATHON: 34000
@@ -50,6 +50,7 @@ export type PlanConfig = {
     taperWeeks?: number;
     peakWeeks?: number;
     buildWeeks?: number;
+    maxLongRunKm?: number;
     longRunDay?: number;
     workoutDay?: number;
     swimDay?: number;
@@ -103,7 +104,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
         ? config.taperWeeks
         : defaultTaperWeeks;
     const availableStructured = Math.max(1, totalWeeks - taperWeeks - 1);
-    const peakWeeks = Math.min(config.peakWeeks ?? 4, Math.floor(availableStructured / 2));
+    const peakWeeks = Math.min(config.peakWeeks ?? 2, Math.floor(availableStructured / 2));
     const buildWeeks = Math.min(config.buildWeeks ?? 4, availableStructured - peakWeeks);
 
     const growthRatio = peakVolume / startVolume;
@@ -204,7 +205,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
             strengthPerWeek,
             swimsPerWeek,
             weeklyVolume: weekVolumeCap,
-            peakVolume: effectivePeakVolume,
+            maxLongRunKm: config.maxLongRunKm,
             preferredLongRunDay: longRunDay,
             preferredWorkoutDay: workoutDay,
             preferredSwimDay: config.swimDay,
@@ -419,7 +420,7 @@ function generateWeek(params: {
     strengthPerWeek: number;
     swimsPerWeek: number;
     weeklyVolume: number;
-    peakVolume: number;
+    maxLongRunKm?: number;
     preferredLongRunDay: number;
     preferredWorkoutDay: number;
     preferredSwimDay?: number;
@@ -427,7 +428,7 @@ function generateWeek(params: {
 }): ScheduledWorkout[] {
     const {
         phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, weeklyVolume,
-        peakVolume,
+        maxLongRunKm,
         preferredLongRunDay, preferredWorkoutDay, preferredSwimDay, restDays
     } = params;
 
@@ -442,7 +443,7 @@ function generateWeek(params: {
         }
     }
 
-    const longRunDist = getLongRunDistance(raceType, weeklyVolume, paces, peakVolume);
+    const longRunDist = getLongRunDistance(raceType, weeklyVolume, paces, maxLongRunKm);
 
     const hasQuality = runsPerWeek >= 2 && phase !== 'TAPER';
     const qualitySession = hasQuality
@@ -682,11 +683,33 @@ function generateWeek(params: {
     let remainingStrength = strengthPerWeek;
     const strengthDays = new Set<number>();
 
-    for (const d of rideDays) {
-        if (remainingStrength <= 0) break;
-        strengthDays.add(d);
+    const pickBestCandidate = (candidates: number[]): number | null => {
+        if (candidates.length === 0) return null;
+        if (strengthDays.size === 0) return candidates[0];
+
+        let bestCandidate = candidates[0];
+        let bestMinDist = -1;
+        for (const candidate of candidates) {
+            let minDist = 7;
+            for (const sd of strengthDays) {
+                const diff = Math.abs(candidate - sd);
+                const dist = Math.min(diff, 7 - diff);
+                if (dist < minDist) minDist = dist;
+            }
+            if (minDist > bestMinDist) {
+                bestMinDist = minDist;
+                bestCandidate = candidate;
+            }
+        }
+        return bestCandidate;
+    };
+
+    const addStrengthOnDay = (day: number): boolean => {
+        if (remainingStrength <= 0 || strengthDays.has(day)) return false;
+        strengthDays.add(day);
+        usedDays.add(day);
         workouts.push({
-            dayOffset: d,
+            dayOffset: day,
             type: WorkoutType.STRENGTH,
             description: 'Strength: 45min Session',
             totalDistance: 0,
@@ -694,57 +717,46 @@ function generateWeek(params: {
             targetDuration: 2700,
         });
         remainingStrength--;
+        return true;
+    };
+
+    const pairableRunDays = Array.from(new Set(workouts
+        .filter(w =>
+            (w.type === WorkoutType.EASY || w.type === WorkoutType.RECOVERY) &&
+            !protectedDays.has(w.dayOffset) &&
+            !rideDays.includes(w.dayOffset) &&
+            !swimDays.includes(w.dayOffset)
+        )
+        .map(w => w.dayOffset)));
+
+    while (remainingStrength > 0 && pairableRunDays.length > 0) {
+        const chosen = pickBestCandidate(pairableRunDays);
+        if (chosen === null) break;
+        const idx = pairableRunDays.indexOf(chosen);
+        if (idx >= 0) pairableRunDays.splice(idx, 1);
+        addStrengthOnDay(chosen);
     }
 
-    if (remainingStrength > 0) {
-        const pairableRunDays = workouts
-            .filter(w => (w.type === WorkoutType.EASY || w.type === WorkoutType.RECOVERY)
-                && !strengthDays.has(w.dayOffset)
-                && !swimDays.includes(w.dayOffset))
-            .map(w => w.dayOffset);
+    const freeDays: number[] = [];
+    for (let d = 0; d < 7; d++) {
+        if (!usedDays.has(d)) freeDays.push(d);
+    }
 
-        const freeDays: number[] = [];
-        for (let d = 0; d < 7; d++) {
-            if (!usedDays.has(d)) freeDays.push(d);
-        }
+    while (remainingStrength > 0 && freeDays.length > 0) {
+        const chosen = pickBestCandidate(freeDays);
+        if (chosen === null) break;
+        const idx = freeDays.indexOf(chosen);
+        if (idx >= 0) freeDays.splice(idx, 1);
+        addStrengthOnDay(chosen);
+    }
 
-        const candidates = [...pairableRunDays, ...freeDays];
-
-        for (let i = 0; i < remainingStrength && candidates.length > 0; i++) {
-            let bestIdx = 0;
-            let bestMinDist = -1;
-
-            if (strengthDays.size === 0) {
-                bestIdx = 0;
-                bestMinDist = 7;
-            } else {
-                for (let c = 0; c < candidates.length; c++) {
-                    let minDist = 7;
-                    for (const sd of strengthDays) {
-                        const diff = Math.abs(candidates[c] - sd);
-                        const dist = Math.min(diff, 7 - diff);
-                        if (dist < minDist) minDist = dist;
-                    }
-                    if (minDist > bestMinDist) {
-                        bestMinDist = minDist;
-                        bestIdx = c;
-                    }
-                }
-            }
-
-            const chosen = candidates[bestIdx];
-            strengthDays.add(chosen);
-            if (!usedDays.has(chosen)) usedDays.add(chosen);
-            candidates.splice(bestIdx, 1);
-            workouts.push({
-                dayOffset: chosen,
-                type: WorkoutType.STRENGTH,
-                description: 'Strength: 45min Session',
-                totalDistance: 0,
-                targetPace: 0,
-                targetDuration: 2700,
-            });
-        }
+    const fallbackRideDays = rideDays.filter(day => !strengthDays.has(day));
+    while (remainingStrength > 0 && fallbackRideDays.length > 0) {
+        const chosen = pickBestCandidate(fallbackRideDays);
+        if (chosen === null) break;
+        const idx = fallbackRideDays.indexOf(chosen);
+        if (idx >= 0) fallbackRideDays.splice(idx, 1);
+        addStrengthOnDay(chosen);
     }
 
     return workouts;
@@ -754,7 +766,7 @@ function getLongRunDistance(
     raceType: RaceType,
     weeklyVolume: number,
     paces: TrainingPaces,
-    peakVolume: number
+    maxLongRunKm?: number
 ): number {
     let ratio = PLAN_CONSTANTS.LONG_RUN_RATIO;
 
@@ -765,9 +777,15 @@ function getLongRunDistance(
 
     let dist = weeklyVolume * ratio;
 
-    const dynamicCap = Math.min(peakVolume * PLAN_CONSTANTS.DYNAMIC_LONG_RUN_RATIO, PLAN_CONSTANTS.MAX_LONG_RUN_DIST[raceType]);
-    let maxDist = dynamicCap;
-    if (dist > maxDist) dist = maxDist;
+    let dynamicCap = Math.min(
+        weeklyVolume * PLAN_CONSTANTS.DYNAMIC_LONG_RUN_RATIO,
+        PLAN_CONSTANTS.MAX_LONG_RUN_DIST[raceType]
+    );
+    if (maxLongRunKm) {
+        const userCap = maxLongRunKm * 1000;
+        if (userCap < dynamicCap) dynamicCap = userCap;
+    }
+    if (dist > dynamicCap) dist = dynamicCap;
 
     const safeEasyMax = Math.max(120, paces.easy.max);
     const maxDistForTime = Math.round((PLAN_CONSTANTS.MAX_TIME_ON_FEET_SECONDS / safeEasyMax) * 1000);

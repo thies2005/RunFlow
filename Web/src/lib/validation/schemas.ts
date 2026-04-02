@@ -34,6 +34,7 @@ export const goalSchema = z.object({
   taperWeeks: z.number().int().nonnegative().optional(),
   peakWeeks: z.number().int().nonnegative().optional(),
   buildWeeks: z.number().int().nonnegative().optional(),
+  maxLongRunKm: z.number().int().min(6).max(32).optional(),
   longRunDay: z.number().int().min(0).max(6).optional(),
   workoutDay: z.number().int().min(0).max(6).optional(),
   calibrationTime: z.number().int().positive().optional(),

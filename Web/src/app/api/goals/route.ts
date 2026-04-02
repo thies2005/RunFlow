@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
             name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks,
             runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
             taperWeeks, peakWeeks, buildWeeks,
+            maxLongRunKm,
             longRunDay, workoutDay, restDays, swimDay,
             calibrationTime, calibrationDistance, calibrationFactor,
             planStartDate
@@ -336,6 +337,7 @@ export async function POST(request: NextRequest) {
                     taperWeeks: safeTaper,
                     peakWeeks: safePeak,
                     buildWeeks: safeBuild,
+                    maxLongRunKm,
                     longRunDay: longRunDay ?? 0,
                     workoutDay: workoutDay ?? 3,
                     swimDay: typeof swimDay === 'number' ? swimDay : undefined,

@@ -34,6 +34,19 @@ interface PlanSetupFormProps {
     shapePercent?: number;
 }
 
+const MAX_LONG_RUN_KM_BY_RACE: Record<string, number> = {
+    FIVE_K: 18,
+    TEN_K: 22,
+    HALF_MARATHON: 24,
+    MARATHON: 32,
+};
+
+function getDefaultMaxLongRunKm(raceType: string, weeklyMileageKm: number): number {
+    const raceCap = MAX_LONG_RUN_KM_BY_RACE[raceType] ?? 22;
+    const calculated = Math.round(weeklyMileageKm * 0.55);
+    return Math.max(6, Math.min(calculated, raceCap));
+}
+
 export default function PlanSetupForm({
     mode,
     onSuccess,
@@ -68,6 +81,7 @@ export default function PlanSetupForm({
     const [swimsPerWeek, setSwimsPerWeek] = useState(0);
     const [strengthPerWeek, setStrengthPerWeek] = useState(0);
     const [weeklyMileage, setWeeklyMileage] = useState(40);
+    const [maxLongRunKm, setMaxLongRunKm] = useState(() => getDefaultMaxLongRunKm('MARATHON', 40));
 
     // Phase Settings
     const [taperWeeks, setTaperWeeks] = useState(2);
@@ -244,6 +258,10 @@ export default function PlanSetupForm({
             setCalculatedZones([]);
         }
     }, [thresholdHR]);
+
+    useEffect(() => {
+        setMaxLongRunKm(getDefaultMaxLongRunKm(raceType, weeklyMileage));
+    }, [raceType, weeklyMileage]);
 
     // Auto-prefill threshold values from calibration data while still allowing manual overrides.
     useEffect(() => {
@@ -484,6 +502,7 @@ export default function PlanSetupForm({
                     peakWeeks,
                     buildWeeks,
                     weeklyMileageGoal: weeklyMileage * 1000, // Convert km to meters
+                    maxLongRunKm,
                     longRunDay,
                     workoutDay: qualityDay,
                     swimDay,
@@ -549,6 +568,7 @@ export default function PlanSetupForm({
                     taperWeeks,
                     peakWeeks,
                     buildWeeks,
+                    maxLongRunKm,
                     calibrationFactor,
                     longRunDay,
                     qualityDay,
@@ -701,6 +721,9 @@ export default function PlanSetupForm({
                 setStrengthPerWeek={setStrengthPerWeek}
                 weeklyMileage={weeklyMileage}
                 setWeeklyMileage={setWeeklyMileage}
+                raceType={raceType}
+                maxLongRunKm={maxLongRunKm}
+                setMaxLongRunKm={setMaxLongRunKm}
                 taperWeeks={taperWeeks}
                 setTaperWeeks={setTaperWeeks}
                 peakWeeks={peakWeeks}

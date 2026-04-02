@@ -9,8 +9,11 @@ interface PlanVolumeSectionProps {
     setSwimsPerWeek: (val: number) => void;
     strengthPerWeek: number;
     setStrengthPerWeek: (val: number) => void;
+    raceType: string;
     weeklyMileage: number;
     setWeeklyMileage: (val: number) => void;
+    maxLongRunKm: number;
+    setMaxLongRunKm: (val: number) => void;
     taperWeeks: number;
     setTaperWeeks: (val: number) => void;
     peakWeeks: number;
@@ -38,8 +41,11 @@ export default function PlanVolumeSection({
     setSwimsPerWeek,
     strengthPerWeek,
     setStrengthPerWeek,
+    raceType,
     weeklyMileage,
     setWeeklyMileage,
+    maxLongRunKm,
+    setMaxLongRunKm,
     taperWeeks,
     setTaperWeeks,
     peakWeeks,
@@ -57,6 +63,14 @@ export default function PlanVolumeSection({
     restDays,
     setRestDays
 }: PlanVolumeSectionProps) {
+    const maxLongRunKmCap = raceType === 'FIVE_K'
+        ? 18
+        : raceType === 'TEN_K'
+            ? 22
+            : raceType === 'HALF_MARATHON'
+                ? 24
+                : 32;
+
     return (
         <>
             {/* Plan Volume */}
@@ -199,6 +213,30 @@ export default function PlanVolumeSection({
                         <span>60km</span>
                         <span>100km</span>
                     </div>
+                </div>
+
+                <div className="mb-4">
+                    <div className="flex justify-between mb-2">
+                        <label className="text-xs text-foreground-muted uppercase flex items-center gap-1">
+                            <Move className="w-3 h-3" /> Longest Long Run
+                        </label>
+                        <span className="text-green-400 font-bold">{maxLongRunKm} km</span>
+                    </div>
+                    <input
+                        type="number"
+                        min="6"
+                        max={maxLongRunKmCap}
+                        value={maxLongRunKm}
+                        onChange={(e) => {
+                            const parsed = parseInt(e.target.value, 10);
+                            if (Number.isNaN(parsed)) return;
+                            setMaxLongRunKm(Math.max(6, Math.min(parsed, maxLongRunKmCap)));
+                        }}
+                        className="w-full bg-surface border border-glass-border rounded-lg p-2.5 text-foreground text-sm focus:ring-2 focus:ring-green-500 outline-hidden"
+                    />
+                    <p className="text-xs text-foreground-muted mt-1">
+                        Peak long run before taper. Default is calculated from your weekly distance goal.
+                    </p>
                 </div>
             </div>
 

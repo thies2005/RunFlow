@@ -430,7 +430,7 @@ describe('Training Plan Generation', () => {
             expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.HALF_MARATHON).toBe(24000);
             expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.TEN_K).toBe(22000);
             expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.MARATHON).toBe(34000);
-            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.FIVE_K).toBe(16000);
+            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.FIVE_K).toBe(18000);
         });
 
         it('10K long runs progress weekly (not frozen at cap)', () => {
@@ -762,7 +762,7 @@ describe('Training Plan Generation', () => {
             }
         });
 
-        it('strength combines with cardio days before creating new double days', () => {
+        it('strength prefers easy/standalone days before ride days', () => {
             const config = makeConfig({
                 runsPerWeek: 4,
                 ridesPerWeek: 1,
@@ -777,12 +777,17 @@ describe('Training Plan Generation', () => {
                 dayWorkouts.get(dayKey)!.add(w.type);
             });
             let strengthOnCardioDay = 0;
+            let strengthTotal = 0;
             dayWorkouts.forEach((types) => {
+                if (types.has(WorkoutType.STRENGTH)) {
+                    strengthTotal++;
+                }
                 if (types.has(WorkoutType.STRENGTH) && (types.has(WorkoutType.RIDE) || types.has(WorkoutType.SWIM))) {
                     strengthOnCardioDay++;
                 }
             });
-            expect(strengthOnCardioDay).toBeGreaterThan(0);
+            expect(strengthTotal).toBeGreaterThan(0);
+            expect(strengthOnCardioDay).toBe(0);
         });
 
         it('double cardio only occurs when all free days are exhausted', () => {

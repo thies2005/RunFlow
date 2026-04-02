@@ -472,7 +472,7 @@ describe('Training Plan Generation', () => {
             expect(raceWorkout).toBeDefined();
 
             const raceWeek = workouts.filter(w => {
-                const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                const deltaDays = Math.round((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
                 return deltaDays >= -6 && deltaDays <= 0;
             });
 
@@ -500,7 +500,7 @@ describe('Training Plan Generation', () => {
 
             const workouts = generateTrainingPlan(config);
             const raceWeek = workouts.filter(w => {
-                const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                const deltaDays = Math.round((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
                 return deltaDays >= -6 && deltaDays <= 0;
             });
 
@@ -527,7 +527,7 @@ describe('Training Plan Generation', () => {
 
             const preRaceCalendarWeekRunDistance = workouts
                 .filter(w => {
-                    const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                    const deltaDays = Math.round((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
                     return deltaDays >= -13 && deltaDays <= -7 && isRunType(w.type);
                 })
                 .reduce((sum, w) => sum + w.totalDistance, 0);
@@ -553,23 +553,22 @@ describe('Training Plan Generation', () => {
 
             const raceWeekRunDistance = workouts
                 .filter(w => {
-                    const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                    const deltaDays = Math.round((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
                     return deltaDays >= -6 && deltaDays <= 0 && isRunType(w.type);
                 })
                 .reduce((sum, w) => sum + w.totalDistance, 0);
 
             const taperWeekRunDistance = workouts
                 .filter(w => {
-                    const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
-                    // Expand window slightly to catch the long run which often lands on day -14
-                    return deltaDays >= -14 && deltaDays <= -7 && isRunType(w.type) && w.totalDistance > 0 && w.type !== WorkoutType.RACE;
+                    const deltaDays = Math.round((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                    return deltaDays >= -13 && deltaDays <= -7 && isRunType(w.type);
                 })
                 .reduce((sum, w) => sum + w.totalDistance, 0);
 
             const previousWeekRunDistance = workouts
                 .filter(w => {
-                    const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
-                    return deltaDays >= -21 && deltaDays <= -15 && isRunType(w.type);
+                    const deltaDays = Math.round((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                    return deltaDays >= -20 && deltaDays <= -14 && isRunType(w.type);
                 })
                 .reduce((sum, w) => sum + w.totalDistance, 0);
 
@@ -581,7 +580,7 @@ describe('Training Plan Generation', () => {
             const effectivePeakVolume = 60000;
             const tenKCap = getRaceWeekRunVolumeCap('TEN_K', effectivePeakVolume);
 
-            expect(tenKCap).toBe(27000); // TEN_K final taper fraction (60%) * 0.75
+            expect(tenKCap).toBe(20000); // TEN_K final taper fraction (60%) * 0.5 capped at 20km
             expect(tenKCap).toBeLessThan(effectivePeakVolume);
         });
 

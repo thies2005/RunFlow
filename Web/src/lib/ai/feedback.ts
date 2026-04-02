@@ -259,25 +259,51 @@ export async function generateAndSaveActivityFeedback(
 
     const raw = await generateCompletion(providerConfig, messages, signal);
 
-    // Parse the combined response into the 3 sections by splitting on ## headers
-    const sectionRegex = /^##\s+(.+)$/gm;
+    // Parse the combined response into the 3 sections by searching for keywords
+    // This is more robust than regex as it handles different header styles (##, **, 1., etc.)
     const sections: Record<string, string> = {};
-    const matches = [...raw.matchAll(sectionRegex)];
+    const lowerRaw = raw.toLowerCase();
+    
+    const markers = [
+        { key: 'plannedComparison', label: 'planned comparison' },
+        { key: 'progressAnalysis', label: 'progress analysis' },
+        { key: 'goalTrajectory', label: 'goal trajectory' }
+    ];
 
-    for (let i = 0; i < matches.length; i++) {
-        const title = matches[i][1].trim().toLowerCase();
-        const startIdx = matches[i].index! + matches[i][0].length;
-        const endIdx = i + 1 < matches.length ? matches[i + 1].index! : raw.length;
-        const content = raw.slice(startIdx, endIdx).trim();
+    // Find indices of all markers
+    const found = markers
+        .map(m => ({ ...m, index: lowerRaw.indexOf(m.label) }))
+        .filter(m => m.index !== -1)
+        .sort((a, b) => a.index - b.index);
 
-        if (title.includes('planned comparison')) sections.plannedComparison = content;
-        else if (title.includes('progress analysis')) sections.progressAnalysis = content;
-        else if (title.includes('goal trajectory')) sections.goalTrajectory = content;
+    if (found.length > 0) {
+        for (let i = 0; i < found.length; i++) {
+            const start = found[i].index + found[i].label.length;
+            // Skip characters like ':', '#', '*', '\n' that might follow the label
+            let actualStart = start;
+            while (actualStart < raw.length && /[:\s#*>\-]/.test(raw[actualStart])) {
+                actualStart++;
+            }
+            
+            const end = i + 1 < found.length ? found[i + 1].index : raw.length;
+            
+            // Clean up the ending as well (trailing markers/formatting)
+            let sectionContent = raw.slice(actualStart, end).trim();
+            // Remove some trailing markdown noise if it exists
+            sectionContent = sectionContent.replace(/[#*>\-\s:]+$/, '').trim();
+            
+            sections[found[i].key as string] = sectionContent;
+        }
     }
 
-    const plannedComparison = sections.plannedComparison || '';
-    const progressAnalysis = sections.progressAnalysis || '';
-    const goalTrajectory = sections.goalTrajectory || '';
+    // Fallback: If no sections were parsed, or they are all empty, put the entire raw response in progressAnalysis
+    let plannedComparison = sections.plannedComparison || '';
+    let progressAnalysis = sections.progressAnalysis || '';
+    let goalTrajectory = sections.goalTrajectory || '';
+
+    if (!plannedComparison && !progressAnalysis && !goalTrajectory && raw.trim()) {
+        progressAnalysis = raw.trim();
+    }
 
     // Upsert into DB
     const feedback = await prisma.activityAiFeedback.upsert({

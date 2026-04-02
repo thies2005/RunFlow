@@ -540,19 +540,19 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                             )}
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {aiFeedback.plannedComparison && (
+                                {(aiFeedback.plannedComparison || (!aiFeedback.progressAnalysis && !aiFeedback.goalTrajectory)) && (
                                     <div className="bg-background-tertiary p-4 rounded-xl border border-glass-border">
                                         <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
                                             <Calendar className="w-3 h-3 text-accent-cyan" />
-                                            Vs Planned Workout
+                                            {aiFeedback.plannedComparison ? 'Vs Planned Workout' : 'Coach Analysis'}
                                         </h4>
                                         <div className="text-sm text-foreground-muted prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-a:text-accent-cyan hover:prose-a:text-accent-purple [&_details]:bg-black/20 [&_details]:p-3 [&_details]:rounded-lg [&_details_summary]:cursor-pointer [&_details_summary]:font-medium [&_details_summary]:mb-2 [&_details_summary]:text-accent-pink">
-                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.plannedComparison}</ReactMarkdown>
+                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{aiFeedback.plannedComparison || aiFeedback.progressAnalysis || aiFeedback.goalTrajectory || 'No detailed analysis available.'}</ReactMarkdown>
                                         </div>
                                     </div>
                                 )}
                                 
-                                {aiFeedback.progressAnalysis && (
+                                {aiFeedback.progressAnalysis && (aiFeedback.plannedComparison || aiFeedback.goalTrajectory) && (
                                     <div className="bg-background-tertiary p-4 rounded-xl border border-glass-border">
                                         <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
                                             <TrendingUp className="w-3 h-3 text-accent-pink" />
@@ -565,7 +565,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
                                 )}
                                 
                                 {aiFeedback.goalTrajectory && (
-                                    <div className="bg-background-tertiary p-4 rounded-xl border border-glass-border md:col-span-2">
+                                    <div className={`bg-background-tertiary p-4 rounded-xl border border-glass-border ${(aiFeedback.plannedComparison || aiFeedback.progressAnalysis) ? 'md:col-span-1' : 'md:col-span-2'}`}>
                                         <h4 className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
                                             <Heart className="w-3 h-3 text-accent-purple" />
                                             Goal Trajectory

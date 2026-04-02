@@ -84,7 +84,10 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[raceType];
     if (peakVolume < minPeak) peakVolume = minPeak;
 
-    const timeDiff = raceDate.getTime() - startDate.getTime();
+    let currentDate = new Date(startDate);
+    currentDate.setDate(currentDate.getDate() - currentDate.getDay());
+
+    const timeDiff = raceDate.getTime() - currentDate.getTime();
     const totalWeeks = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)));
 
     let startVolume = peakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
@@ -128,15 +131,12 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
 
     const workouts: GeneratedWorkout[] = [];
 
-    let currentDate = new Date(startDate);
-    currentDate.setDate(currentDate.getDate() - currentDate.getDay());
 
     for (let week = 1; week <= totalWeeks; week++) {
         const weeksUntilRace = totalWeeks - week + 1;
         const phase = getPhase(weeksUntilRace, { taperWeeks, peakWeeks, buildWeeks });
 
         if (phase === 'RACE_WEEK') {
-            const daysUntilRace = Math.round((raceDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
             const raceWeekWorkouts = generateRaceWeek({
                 raceDate,
                 raceType,
@@ -146,7 +146,6 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
                 ridesPerWeek,
                 swimsPerWeek,
                 strengthPerWeek,
-                daysUntilRace,
             });
             raceWeekWorkouts.forEach(w => {
                 const specificDate = new Date(raceDate);
@@ -271,8 +270,8 @@ function getTaperVolume(
 export function getRaceWeekRunVolumeCap(raceType: RaceType, effectivePeakVolume: number): number {
     const finalTaperFraction = TAPER_FRACTIONS[raceType][TAPER_FRACTIONS[raceType].length - 1];
     return Math.max(
-        Math.round(effectivePeakVolume * finalTaperFraction * 0.75),
-        getRaceDistanceMeters(raceType) + 9500,
+        Math.round(effectivePeakVolume * finalTaperFraction * 0.5),
+        getRaceDistanceMeters(raceType) + 10000,
     );
 }
 
@@ -285,10 +284,8 @@ function generateRaceWeek(params: {
     ridesPerWeek?: number;
     swimsPerWeek?: number;
     strengthPerWeek?: number;
-    daysUntilRace?: number;
 }): ScheduledWorkout[] {
     const { raceDate, raceType, paces, runsPerWeek, raceWeekRunVolumeCap } = params;
-    const daysUntilRace = params.daysUntilRace ?? 6;
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
 
@@ -332,24 +329,18 @@ function generateRaceWeek(params: {
         targetDuration: 0,
     });
 
-    const shakeoutRelativeOffsets: number[] = [-4];
-    for (let d = -daysUntilRace; d < -6; d++) {
-        if (d % 2 === 0) shakeoutRelativeOffsets.push(d);
-    }
-    for (let d = -daysUntilRace; d < -6; d++) {
-        if (d % 2 !== 0) shakeoutRelativeOffsets.push(d);
-    }
-    shakeoutRelativeOffsets.push(-5, -3, -1, -6);
-
+    const shakeoutRelativeOffsets = [-1, -3, -4, -5, -6];
+    let shakeoutCount = 0;
     for (const relativeOffset of shakeoutRelativeOffsets) {
-        if (remainingExtraRunSlots <= 0) break;
-        addSupplementalRun(relativeOffset, {
+        if (shakeoutCount >= 2) break;
+        const wasAdded = addSupplementalRun(relativeOffset, {
             type: WorkoutType.RECOVERY,
             description: 'Shakeout Run: 3km @ Easy',
             totalDistance: 3000,
             targetPace: paces.easy.max,
             targetDuration: 0,
         });
+        if (wasAdded) shakeoutCount++;
     }
 
     const rwRidesPerWeek = params.ridesPerWeek ?? 0;
@@ -357,12 +348,7 @@ function generateRaceWeek(params: {
     const rwStrengthPerWeek = params.strengthPerWeek ?? 0;
 
     if (rwRidesPerWeek > 0 || rwSwimsPerWeek > 0 || rwStrengthPerWeek > 0) {
-        const gapDaysCT: number[] = [];
-        for (let d = -daysUntilRace; d < -6; d++) {
-            gapDaysCT.push(d);
-        }
-        const candidateDays = [...gapDaysCT, -4, -3, -5, -1, -6];
-        const freeDaysForCT = candidateDays.filter(d => !usedDays.has(d));
+        const freeDaysForCT = [-4, -3, -5, -1, -6].filter(d => !usedDays.has(d));
 
         let ctRidePlaced = false;
         let ctSwimPlaced = false;

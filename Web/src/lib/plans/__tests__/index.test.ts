@@ -433,6 +433,122 @@ describe('Training Plan Generation', () => {
     });
 
     describe('Edge Cases', () => {
+        it('taper weeks do not exceed requested runs per week', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                runsPerWeek: 3,
+                ridesPerWeek: 0,
+                strengthPerWeek: 0,
+                swimsPerWeek: 0,
+                taperWeeks: 3,
+                peakWeeks: 0,
+                buildWeeks: 0,
+                raceDate: new Date('2026-05-03'),
+                startDate: new Date('2026-04-05'),
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const raceMs = config.raceDate.getTime();
+            const preRaceWeekRuns = workouts.filter(w => {
+                const deltaDays = Math.floor((w.date.getTime() - raceMs) / (24 * 60 * 60 * 1000));
+                return deltaDays >= -13 && deltaDays <= -7 && isRunType(w.type);
+            });
+
+            expect(preRaceWeekRuns.length).toBeLessThanOrEqual(3);
+        });
+
+        it('race-week supplemental runs are before race day', () => {
+            const raceDate = new Date('2026-07-19');
+            const config = makeConfig({
+                raceDate,
+                runsPerWeek: 4,
+                ridesPerWeek: 0,
+                strengthPerWeek: 0,
+                swimsPerWeek: 0,
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            expect(raceWorkout).toBeDefined();
+
+            const raceWeek = workouts.filter(w => {
+                const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                return deltaDays >= -6 && deltaDays <= 0;
+            });
+
+            for (const w of raceWeek) {
+                if (w.type === WorkoutType.RACE) continue;
+                expect(w.date.getTime()).toBeLessThanOrEqual(raceDate.getTime());
+            }
+
+            const strideWorkout = raceWeek.find(w => w.description.includes('4x100m Strides'));
+            expect(strideWorkout).toBeDefined();
+            const strideDeltaDays = Math.floor((strideWorkout!.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+            expect(strideDeltaDays).toBe(-2);
+        });
+
+        it('race week respects low runsPerWeek settings', () => {
+            const raceDate = new Date('2026-07-19');
+            const config = makeConfig({
+                raceDate,
+                raceType: 'MARATHON',
+                runsPerWeek: 1,
+                ridesPerWeek: 0,
+                strengthPerWeek: 0,
+                swimsPerWeek: 0,
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const raceWeek = workouts.filter(w => {
+                const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                return deltaDays >= -6 && deltaDays <= 0;
+            });
+
+            const runCount = raceWeek.filter(w => isRunType(w.type)).length;
+            expect(runCount).toBe(1);
+            expect(raceWeek.some(w => w.type === WorkoutType.RACE)).toBe(true);
+        });
+
+        it('scaled interval workouts preserve structured interval descriptions', () => {
+            const config = makeConfig({
+                raceType: 'FIVE_K',
+                weeklyMileageGoal: 20000,
+                runsPerWeek: 2,
+                taperWeeks: 1,
+                peakWeeks: 1,
+                buildWeeks: 4,
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const intervalWorkouts = workouts.filter(w => w.type === WorkoutType.INTERVALS);
+
+            expect(intervalWorkouts.length).toBeGreaterThan(0);
+            for (const w of intervalWorkouts) {
+                expect(w.description).toContain('5x1km');
+                expect(w.description).not.toContain('Total');
+            }
+        });
+
+        it('5K fartlek description pattern is preserved after scaling', () => {
+            const config = makeConfig({
+                raceType: 'FIVE_K',
+                weeklyMileageGoal: 20000,
+                runsPerWeek: 2,
+                taperWeeks: 1,
+                peakWeeks: 1,
+                buildWeeks: 2,
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const fartleks = workouts.filter(w => w.description.includes('Fartlek'));
+
+            expect(fartleks.length).toBeGreaterThan(0);
+            for (const w of fartleks) {
+                expect(w.description).toContain('2min hard / 2min easy');
+                expect(w.description).not.toContain('5min hard / 3min easy');
+            }
+        });
+
         it('handles very short plans (2 weeks)', () => {
             const raceDate = new Date('2026-04-19');
             const startDate = new Date('2026-04-05');

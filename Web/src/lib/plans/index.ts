@@ -68,11 +68,12 @@ type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
 
 export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const { vdot, raceType, raceDate } = config;
-    const startDate = config.startDate || new Date();
-    const runsPerWeek = config.runsPerWeek || 4;
-    const ridesPerWeek = config.ridesPerWeek || 0;
-    const strengthPerWeek = config.strengthPerWeek || 0;
-    const swimsPerWeek = config.swimsPerWeek || 0;
+    const requestedStartDate = config.startDate || new Date();
+    const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate;
+    const runsPerWeek = Math.max(0, config.runsPerWeek ?? 4);
+    const ridesPerWeek = Math.max(0, config.ridesPerWeek || 0);
+    const strengthPerWeek = Math.max(0, config.strengthPerWeek || 0);
+    const swimsPerWeek = Math.max(0, config.swimsPerWeek || 0);
 
     const longRunDay = config.longRunDay !== undefined ? config.longRunDay : 0;
     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
@@ -137,15 +138,14 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
                 raceDate,
                 raceType,
                 paces,
-                longRunDay,
+                runsPerWeek,
+                raceWeekRunVolumeCap: effectivePeakVolume,
                 ridesPerWeek,
                 swimsPerWeek,
                 strengthPerWeek,
             });
             raceWeekWorkouts.forEach(w => {
-                const specificDate = w.type === WorkoutType.RACE
-                    ? new Date(raceDate)
-                    : new Date(currentDate);
+                const specificDate = new Date(raceDate);
                 if (w.type !== WorkoutType.RACE) {
                     specificDate.setDate(specificDate.getDate() + w.dayOffset);
                 }
@@ -264,58 +264,68 @@ function generateRaceWeek(params: {
     raceDate: Date;
     raceType: RaceType;
     paces: TrainingPaces;
-    longRunDay: number;
+    runsPerWeek: number;
+    raceWeekRunVolumeCap: number;
     ridesPerWeek?: number;
     swimsPerWeek?: number;
     strengthPerWeek?: number;
 }): ScheduledWorkout[] {
-    const { raceDate, raceType, paces } = params;
+    const { raceDate, raceType, paces, runsPerWeek, raceWeekRunVolumeCap } = params;
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
 
-    const raceDayOfWeek = raceDate.getDay();
     const raceDistKm = getRaceDistanceKm(raceType);
+    const raceDistMeters = getRaceDistanceMeters(raceType);
+    const maxRunVolume = Math.max(raceDistMeters, raceWeekRunVolumeCap);
 
-    usedDays.add(raceDayOfWeek);
+    let remainingExtraRunSlots = Math.max(0, runsPerWeek - 1);
+    let remainingSupplementalRunVolume = Math.max(0, maxRunVolume - raceDistMeters);
+
+    usedDays.add(0);
     workouts.push({
-        dayOffset: raceDayOfWeek,
+        dayOffset: 0,
         type: WorkoutType.RACE,
         description: `Race Day: ${raceDistKm}km`,
-        totalDistance: getRaceDistanceMeters(raceType),
+        totalDistance: raceDistMeters,
         targetPace: 0,
         targetDuration: 0,
     });
 
-    const preRaceStrideDay = (raceDayOfWeek - 2 + 7) % 7;
-    if (!usedDays.has(preRaceStrideDay)) {
-        usedDays.add(preRaceStrideDay);
-        workouts.push({
-            dayOffset: preRaceStrideDay,
-            type: WorkoutType.EASY,
-            description: `Easy Run: 3km + 4x100m Strides`,
-            totalDistance: 3400,
-            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
-            targetDuration: 0,
-        });
-    }
+    const addSupplementalRun = (relativeOffset: number, workout: Omit<ScheduledWorkout, 'dayOffset'>): boolean => {
+        if (remainingExtraRunSlots <= 0) return false;
+        if (workout.totalDistance > remainingSupplementalRunVolume) return false;
 
-    const allDays = [0, 1, 2, 3, 4, 5, 6];
-    const shakeoutCandidates = allDays.filter(d => {
-        if (usedDays.has(d)) return false;
-        const diff = (d - raceDayOfWeek + 7) % 7;
-        return diff > 0 && diff < 7;
+        const dayOffset = relativeOffset;
+        if (usedDays.has(dayOffset)) return false;
+
+        usedDays.add(dayOffset);
+        workouts.push({ dayOffset, ...workout });
+        remainingExtraRunSlots--;
+        remainingSupplementalRunVolume -= workout.totalDistance;
+        return true;
+    };
+
+    const preRaceStrideRelativeOffset = -2;
+    addSupplementalRun(preRaceStrideRelativeOffset, {
+        type: WorkoutType.EASY,
+        description: 'Easy Run: 3km + 4x100m Strides',
+        totalDistance: 3400,
+        targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+        targetDuration: 0,
     });
-    const shakeoutDays = shakeoutCandidates.slice(0, Math.min(2, shakeoutCandidates.length));
-    for (const d of shakeoutDays) {
-        usedDays.add(d);
-        workouts.push({
-            dayOffset: d,
+
+    const shakeoutRelativeOffsets = [-1, -3, -4, -5, -6];
+    let shakeoutCount = 0;
+    for (const relativeOffset of shakeoutRelativeOffsets) {
+        if (shakeoutCount >= 2) break;
+        const wasAdded = addSupplementalRun(relativeOffset, {
             type: WorkoutType.RECOVERY,
             description: 'Shakeout Run: 3km @ Easy',
             totalDistance: 3000,
             targetPace: paces.easy.max,
             targetDuration: 0,
         });
+        if (wasAdded) shakeoutCount++;
     }
 
     const rwRidesPerWeek = params.ridesPerWeek ?? 0;
@@ -323,9 +333,7 @@ function generateRaceWeek(params: {
     const rwStrengthPerWeek = params.strengthPerWeek ?? 0;
 
     if (rwRidesPerWeek > 0 || rwSwimsPerWeek > 0 || rwStrengthPerWeek > 0) {
-        const freeDaysForCT = [1, 2, 3, 4, 5, 6, 0].filter(d =>
-            !usedDays.has(d) && d !== raceDayOfWeek && d !== preRaceStrideDay
-        );
+        const freeDaysForCT = [-4, -3, -5, -1, -6].filter(d => !usedDays.has(d));
 
         let ctRidePlaced = false;
         let ctSwimPlaced = false;
@@ -380,6 +388,7 @@ function generateRaceWeek(params: {
         }
     }
 
+    workouts.sort((a, b) => a.dayOffset - b.dayOffset);
     return workouts;
 }
 
@@ -415,7 +424,9 @@ function generateWeek(params: {
     const longRunCount = runsPerWeek >= 1 ? 1 : 0;
     const qualityRunCount = hasQuality ? 1 : 0;
     const totalKeyRuns = longRunCount + qualityRunCount;
-    const easyRunsCount = Math.max(0, runsPerWeek - totalKeyRuns);
+    const easyRunsCount = hasQuality
+        ? Math.max(0, runsPerWeek - totalKeyRuns)
+        : Math.max(0, runsPerWeek - longRunCount);
 
     const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDist);
     const calculatedEasyDist = easyRunsCount > 0 ? remainingVol / easyRunsCount : 5000;
@@ -502,7 +513,8 @@ function generateWeek(params: {
         });
     }
 
-    const additionalRunsCount = Math.max(0, runsPerWeek - totalKeyRuns);
+    const alreadyScheduledEasyRuns = hasQuality ? 0 : (runsPerWeek >= 2 ? 1 : 0);
+    const additionalRunsCount = Math.max(0, easyRunsCount - alreadyScheduledEasyRuns);
     const easyRunDays = getDistributedDays(additionalRunsCount, usedDays);
 
     let stridesInjected = 0;
@@ -918,6 +930,11 @@ function getDistributedDays(count: number, usedDays: Set<number>, allowDoubleDay
 }
 
 function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: number): ScheduledWorkout[] {
+    const roundDownTo100 = (meters: number): number => {
+        if (meters <= 0) return 0;
+        return Math.floor(meters / 100) * 100;
+    };
+
     const isPriority = (w: ScheduledWorkout) =>
         w.type === WorkoutType.LONG_RUN ||
         w.type === WorkoutType.INTERVALS ||
@@ -943,8 +960,8 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
             if (!isPriority(w)) {
                 return { ...w, totalDistance: 0, description: 'Rest (Volume Cap)' };
             }
-            const newDist = Math.round((w.totalDistance * scalingFactor) / 100) * 100;
-            const finalDist = Math.max(newDist, 3000);
+            const newDist = roundDownTo100(w.totalDistance * scalingFactor);
+            const finalDist = Math.max(newDist, 0);
             return {
                 ...w,
                 totalDistance: finalDist,
@@ -956,8 +973,7 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
     const fillScalingFactor = fillDist > 0 ? remainingCap / fillDist : 0;
     return weekSchedule.map(w => {
         if (!isRun(w.type) || isPriority(w)) return w;
-        let newDist = Math.round((w.totalDistance * fillScalingFactor) / 100) * 100;
-        if (newDist < 3000) newDist = 3000;
+        const newDist = roundDownTo100(w.totalDistance * fillScalingFactor);
         return {
             ...w,
             totalDistance: newDist,
@@ -967,12 +983,30 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
 }
 
 function preserveSpecialDescription(w: ScheduledWorkout, distance: number): string {
+    const distanceKm = (distance / 1000).toFixed(1);
+
     if (w.description.includes('Fartlek')) {
-        return `Fartlek: ${(distance / 1000).toFixed(1)}km (5min hard / 3min easy)`;
+        const match = w.description.match(/^Fartlek:\s*[0-9.]+km(.*)$/);
+        const suffix = match ? match[1] : '';
+        return `Fartlek: ${distanceKm}km${suffix}`;
     }
+
     if (w.description.includes('Strides')) {
-        return `Easy Run: ${(distance / 1000).toFixed(1)}km + 6x100m Strides`;
+        const match = w.description.match(/^(Easy Run|Recovery Run):\s*[0-9.]+km(.*Strides.*)$/);
+        if (match) {
+            return `${match[1]}: ${distanceKm}km${match[2]}`;
+        }
+        return updateDescription(w.type, distance, w.targetPace || 0);
     }
+
+    if (w.type === WorkoutType.INTERVALS || w.type === WorkoutType.REPETITIONS) {
+        return w.description;
+    }
+
+    if (w.type === WorkoutType.TEMPO && (w.description.includes('Threshold:') || w.description.includes('MP Segments'))) {
+        return w.description;
+    }
+
     if (w.description.includes('MP')) {
         return w.description;
     }

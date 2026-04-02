@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
             name, raceType, raceDate, targetTime, weeklyMileageGoal, planWeeks,
             runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
             taperWeeks, peakWeeks, buildWeeks,
-            longRunDay, workoutDay, restDays,
+            longRunDay, workoutDay, restDays, swimDay,
             calibrationTime, calibrationDistance, calibrationFactor,
             planStartDate
         } = validation.data;
@@ -242,6 +242,7 @@ export async function POST(request: NextRequest) {
                 buildWeeks: safeBuild,
                 longRunDay: longRunDay ?? 0,
                 workoutDay: workoutDay ?? 3,
+                swimDay: typeof swimDay === 'number' ? swimDay : null,
                 currentVdot,
                 predictedTime,
                 ...(Array.isArray(restDays) && { restDays }),
@@ -337,6 +338,7 @@ export async function POST(request: NextRequest) {
                     buildWeeks: safeBuild,
                     longRunDay: longRunDay ?? 0,
                     workoutDay: workoutDay ?? 3,
+                    swimDay: typeof swimDay === 'number' ? swimDay : undefined,
                     restDays: Array.isArray(restDays) ? restDays : undefined,
                 });
 

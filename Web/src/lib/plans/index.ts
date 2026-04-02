@@ -51,6 +51,7 @@ export type PlanConfig = {
     buildWeeks?: number;
     longRunDay?: number;
     workoutDay?: number;
+    swimDay?: number;
     restDays?: number[];
 };
 
@@ -202,6 +203,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
             weeklyVolume: weekVolumeCap,
             preferredLongRunDay: longRunDay,
             preferredWorkoutDay: workoutDay,
+            preferredSwimDay: config.swimDay,
             restDays: config.restDays,
         });
 
@@ -407,11 +409,12 @@ function generateWeek(params: {
     weeklyVolume: number;
     preferredLongRunDay: number;
     preferredWorkoutDay: number;
+    preferredSwimDay?: number;
     restDays?: number[];
 }): ScheduledWorkout[] {
     const {
         phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, weeklyVolume,
-        preferredLongRunDay, preferredWorkoutDay, restDays
+        preferredLongRunDay, preferredWorkoutDay, preferredSwimDay, restDays
     } = params;
 
     const workouts: ScheduledWorkout[] = [];
@@ -582,10 +585,25 @@ function generateWeek(params: {
     if (longRunDay !== undefined) protectedDays.add(longRunDay);
     if (qualityDay !== undefined) protectedDays.add(qualityDay);
 
-    const totalCardio = ridesPerWeek + swimsPerWeek;
-    const cardioFreeDays = getAvailableCrossTrainingDays(totalCardio, usedDays, protectedDays);
     let remainingRides = ridesPerWeek;
     let remainingSwims = swimsPerWeek;
+
+    // If the user has a preferred swim day, try to place the first swim there
+    if (preferredSwimDay !== undefined && remainingSwims > 0 && !usedDays.has(preferredSwimDay)) {
+        usedDays.add(preferredSwimDay);
+        remainingSwims--;
+        workouts.push({
+            dayOffset: preferredSwimDay,
+            type: WorkoutType.SWIM,
+            description: 'Swim: 1500m @ Easy',
+            totalDistance: 1500,
+            targetPace: 120,
+            targetDuration: 2700,
+        });
+    }
+
+    const totalCardio = remainingRides + remainingSwims;
+    const cardioFreeDays = getAvailableCrossTrainingDays(totalCardio, usedDays, protectedDays);
 
     for (const d of cardioFreeDays) {
         usedDays.add(d);

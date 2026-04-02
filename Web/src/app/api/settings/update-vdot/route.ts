@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, restDays } = body;
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, swimDay, restDays } = body;
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -246,6 +246,7 @@ export async function POST(req: NextRequest) {
                     buildWeeks: build,
                     ...(typeof longRunDay === 'number' && { longRunDay }),
                     ...(typeof qualityDay === 'number' && { workoutDay: qualityDay }),
+                    ...(typeof swimDay === 'number' ? { swimDay } : { swimDay: null }),
                     ...(Array.isArray(restDays) && { restDays }),
                     ...(firstPendingWorkout?.scheduledDate && { planStartDate: firstPendingWorkout.scheduledDate }),
                 }
@@ -277,6 +278,7 @@ export async function POST(req: NextRequest) {
                 buildWeeks: build,
                 longRunDay: typeof longRunDay === 'number' ? longRunDay : activeGoal.longRunDay,
                 workoutDay: typeof qualityDay === 'number' ? qualityDay : activeGoal.workoutDay,
+                swimDay: typeof swimDay === 'number' ? swimDay : undefined,
                 restDays: Array.isArray(restDays) ? restDays : (activeGoal.restDays as number[] ?? undefined),
             });
 

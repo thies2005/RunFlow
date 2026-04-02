@@ -78,6 +78,7 @@ export default function PlanSetupForm({
     const [showSchedulingSettings, setShowSchedulingSettings] = useState(false);
     const [longRunDay, setLongRunDay] = useState(0); // 0 = Sunday
     const [qualityDay, setQualityDay] = useState(3); // 3 = Wednesday
+    const [swimDay, setSwimDay] = useState(2); // 2 = Tuesday
     const [restDays, setRestDays] = useState<number[]>([1, 5]); // 1 = Monday, 5 = Friday
 
     // Heart Rate (visible by default now)
@@ -485,6 +486,7 @@ export default function PlanSetupForm({
                     weeklyMileageGoal: weeklyMileage * 1000, // Convert km to meters
                     longRunDay,
                     workoutDay: qualityDay,
+                    swimDay,
                     restDays,
                     // Always include the computed goal time (ensure integer)
                     ...(computedTargetTime && { targetTime: Math.round(computedTargetTime) }),
@@ -711,6 +713,8 @@ export default function PlanSetupForm({
                 setLongRunDay={setLongRunDay}
                 qualityDay={qualityDay}
                 setQualityDay={setQualityDay}
+                swimDay={swimDay}
+                setSwimDay={setSwimDay}
                 restDays={restDays}
                 setRestDays={setRestDays}
             />

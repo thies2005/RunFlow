@@ -23,6 +23,8 @@ interface PlanVolumeSectionProps {
     setLongRunDay: (val: number) => void;
     qualityDay: number;
     setQualityDay: (val: number) => void;
+    swimDay: number;
+    setSwimDay: (val: number) => void;
     restDays: number[];
     setRestDays: (val: number[]) => void;
 }
@@ -50,6 +52,8 @@ export default function PlanVolumeSection({
     setLongRunDay,
     qualityDay,
     setQualityDay,
+    swimDay,
+    setSwimDay,
     restDays,
     setRestDays
 }: PlanVolumeSectionProps) {
@@ -312,6 +316,28 @@ export default function PlanVolumeSection({
                                 </select>
                             </div>
                         </div>
+
+                        {swimsPerWeek > 0 && (
+                            <div>
+                                <label className="block text-xs text-foreground-muted mb-2 uppercase flex items-center gap-1">
+                                    <span>🏊</span> Swim Day
+                                </label>
+                                <select
+                                    value={swimDay}
+                                    onChange={e => setSwimDay(parseInt(e.target.value))}
+                                    className="w-full bg-surface border border-glass-border rounded-lg p-2.5 text-foreground text-sm focus:ring-2 focus:ring-accent-cyan outline-hidden"
+                                >
+                                    <option value={0}>Sunday</option>
+                                    <option value={1}>Monday</option>
+                                    <option value={2}>Tuesday</option>
+                                    <option value={3}>Wednesday</option>
+                                    <option value={4}>Thursday</option>
+                                    <option value={5}>Friday</option>
+                                    <option value={6}>Saturday</option>
+                                </select>
+                                <p className="text-xs text-foreground-muted mt-1">Preferred day to schedule swim sessions.</p>
+                            </div>
+                        )}
 
                         <div>
                             <label className="block text-xs text-foreground-muted mb-2 uppercase">Rest Days</label>

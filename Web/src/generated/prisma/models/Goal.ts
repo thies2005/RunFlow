@@ -42,6 +42,7 @@ export type GoalAvgAggregateOutputType = {
   buildWeeks: number | null
   longRunDay: number | null
   workoutDay: number | null
+  swimDay: number | null
 }
 
 export type GoalSumAggregateOutputType = {
@@ -60,6 +61,7 @@ export type GoalSumAggregateOutputType = {
   buildWeeks: number | null
   longRunDay: number | null
   workoutDay: number | null
+  swimDay: number | null
 }
 
 export type GoalMinAggregateOutputType = {
@@ -84,6 +86,7 @@ export type GoalMinAggregateOutputType = {
   buildWeeks: number | null
   longRunDay: number | null
   workoutDay: number | null
+  swimDay: number | null
   isActive: boolean | null
   completedAt: Date | null
   deletedAt: Date | null
@@ -113,6 +116,7 @@ export type GoalMaxAggregateOutputType = {
   buildWeeks: number | null
   longRunDay: number | null
   workoutDay: number | null
+  swimDay: number | null
   isActive: boolean | null
   completedAt: Date | null
   deletedAt: Date | null
@@ -142,6 +146,7 @@ export type GoalCountAggregateOutputType = {
   buildWeeks: number
   longRunDay: number
   workoutDay: number
+  swimDay: number
   restDays: number
   isActive: number
   completedAt: number
@@ -168,6 +173,7 @@ export type GoalAvgAggregateInputType = {
   buildWeeks?: true
   longRunDay?: true
   workoutDay?: true
+  swimDay?: true
 }
 
 export type GoalSumAggregateInputType = {
@@ -186,6 +192,7 @@ export type GoalSumAggregateInputType = {
   buildWeeks?: true
   longRunDay?: true
   workoutDay?: true
+  swimDay?: true
 }
 
 export type GoalMinAggregateInputType = {
@@ -210,6 +217,7 @@ export type GoalMinAggregateInputType = {
   buildWeeks?: true
   longRunDay?: true
   workoutDay?: true
+  swimDay?: true
   isActive?: true
   completedAt?: true
   deletedAt?: true
@@ -239,6 +247,7 @@ export type GoalMaxAggregateInputType = {
   buildWeeks?: true
   longRunDay?: true
   workoutDay?: true
+  swimDay?: true
   isActive?: true
   completedAt?: true
   deletedAt?: true
@@ -268,6 +277,7 @@ export type GoalCountAggregateInputType = {
   buildWeeks?: true
   longRunDay?: true
   workoutDay?: true
+  swimDay?: true
   restDays?: true
   isActive?: true
   completedAt?: true
@@ -385,6 +395,7 @@ export type GoalGroupByOutputType = {
   buildWeeks: number
   longRunDay: number
   workoutDay: number
+  swimDay: number | null
   restDays: runtime.JsonValue
   isActive: boolean
   completedAt: Date | null
@@ -438,6 +449,7 @@ export type GoalWhereInput = {
   buildWeeks?: Prisma.IntFilter<"Goal"> | number
   longRunDay?: Prisma.IntFilter<"Goal"> | number
   workoutDay?: Prisma.IntFilter<"Goal"> | number
+  swimDay?: Prisma.IntNullableFilter<"Goal"> | number | null
   restDays?: Prisma.JsonFilter<"Goal">
   isActive?: Prisma.BoolFilter<"Goal"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
@@ -471,6 +483,7 @@ export type GoalOrderByWithRelationInput = {
   buildWeeks?: Prisma.SortOrder
   longRunDay?: Prisma.SortOrder
   workoutDay?: Prisma.SortOrder
+  swimDay?: Prisma.SortOrderInput | Prisma.SortOrder
   restDays?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -507,6 +520,7 @@ export type GoalWhereUniqueInput = Prisma.AtLeast<{
   buildWeeks?: Prisma.IntFilter<"Goal"> | number
   longRunDay?: Prisma.IntFilter<"Goal"> | number
   workoutDay?: Prisma.IntFilter<"Goal"> | number
+  swimDay?: Prisma.IntNullableFilter<"Goal"> | number | null
   restDays?: Prisma.JsonFilter<"Goal">
   isActive?: Prisma.BoolFilter<"Goal"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
@@ -540,6 +554,7 @@ export type GoalOrderByWithAggregationInput = {
   buildWeeks?: Prisma.SortOrder
   longRunDay?: Prisma.SortOrder
   workoutDay?: Prisma.SortOrder
+  swimDay?: Prisma.SortOrderInput | Prisma.SortOrder
   restDays?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -578,6 +593,7 @@ export type GoalScalarWhereWithAggregatesInput = {
   buildWeeks?: Prisma.IntWithAggregatesFilter<"Goal"> | number
   longRunDay?: Prisma.IntWithAggregatesFilter<"Goal"> | number
   workoutDay?: Prisma.IntWithAggregatesFilter<"Goal"> | number
+  swimDay?: Prisma.IntNullableWithAggregatesFilter<"Goal"> | number | null
   restDays?: Prisma.JsonWithAggregatesFilter<"Goal">
   isActive?: Prisma.BoolWithAggregatesFilter<"Goal"> | boolean
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Goal"> | Date | string | null
@@ -607,6 +623,7 @@ export type GoalCreateInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -640,6 +657,7 @@ export type GoalUncheckedCreateInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -671,6 +689,7 @@ export type GoalUpdateInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -704,6 +723,7 @@ export type GoalUncheckedUpdateInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -736,6 +756,7 @@ export type GoalCreateManyInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -765,6 +786,7 @@ export type GoalUpdateManyMutationInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -795,6 +817,7 @@ export type GoalUncheckedUpdateManyInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -835,6 +858,7 @@ export type GoalCountOrderByAggregateInput = {
   buildWeeks?: Prisma.SortOrder
   longRunDay?: Prisma.SortOrder
   workoutDay?: Prisma.SortOrder
+  swimDay?: Prisma.SortOrder
   restDays?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
@@ -859,6 +883,7 @@ export type GoalAvgOrderByAggregateInput = {
   buildWeeks?: Prisma.SortOrder
   longRunDay?: Prisma.SortOrder
   workoutDay?: Prisma.SortOrder
+  swimDay?: Prisma.SortOrder
 }
 
 export type GoalMaxOrderByAggregateInput = {
@@ -883,6 +908,7 @@ export type GoalMaxOrderByAggregateInput = {
   buildWeeks?: Prisma.SortOrder
   longRunDay?: Prisma.SortOrder
   workoutDay?: Prisma.SortOrder
+  swimDay?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
@@ -912,6 +938,7 @@ export type GoalMinOrderByAggregateInput = {
   buildWeeks?: Prisma.SortOrder
   longRunDay?: Prisma.SortOrder
   workoutDay?: Prisma.SortOrder
+  swimDay?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
@@ -935,6 +962,7 @@ export type GoalSumOrderByAggregateInput = {
   buildWeeks?: Prisma.SortOrder
   longRunDay?: Prisma.SortOrder
   workoutDay?: Prisma.SortOrder
+  swimDay?: Prisma.SortOrder
 }
 
 export type GoalScalarRelationFilter = {
@@ -1037,6 +1065,7 @@ export type GoalCreateWithoutUserInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -1068,6 +1097,7 @@ export type GoalUncheckedCreateWithoutUserInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -1129,6 +1159,7 @@ export type GoalScalarWhereInput = {
   buildWeeks?: Prisma.IntFilter<"Goal"> | number
   longRunDay?: Prisma.IntFilter<"Goal"> | number
   workoutDay?: Prisma.IntFilter<"Goal"> | number
+  swimDay?: Prisma.IntNullableFilter<"Goal"> | number | null
   restDays?: Prisma.JsonFilter<"Goal">
   isActive?: Prisma.BoolFilter<"Goal"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
@@ -1158,6 +1189,7 @@ export type GoalCreateWithoutRaceResultInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -1190,6 +1222,7 @@ export type GoalUncheckedCreateWithoutRaceResultInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -1236,6 +1269,7 @@ export type GoalUpdateWithoutRaceResultInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1268,6 +1302,7 @@ export type GoalUncheckedUpdateWithoutRaceResultInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1298,6 +1333,7 @@ export type GoalCreateWithoutWorkoutsInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -1330,6 +1366,7 @@ export type GoalUncheckedCreateWithoutWorkoutsInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -1376,6 +1413,7 @@ export type GoalUpdateWithoutWorkoutsInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1408,6 +1446,7 @@ export type GoalUncheckedUpdateWithoutWorkoutsInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1438,6 +1477,7 @@ export type GoalCreateManyUserInput = {
   buildWeeks?: number
   longRunDay?: number
   workoutDay?: number
+  swimDay?: number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: boolean
   completedAt?: Date | string | null
@@ -1467,6 +1507,7 @@ export type GoalUpdateWithoutUserInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1498,6 +1539,7 @@ export type GoalUncheckedUpdateWithoutUserInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1529,6 +1571,7 @@ export type GoalUncheckedUpdateManyWithoutUserInput = {
   buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
   longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
   workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1590,6 +1633,7 @@ export type GoalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   buildWeeks?: boolean
   longRunDay?: boolean
   workoutDay?: boolean
+  swimDay?: boolean
   restDays?: boolean
   isActive?: boolean
   completedAt?: boolean
@@ -1624,6 +1668,7 @@ export type GoalSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   buildWeeks?: boolean
   longRunDay?: boolean
   workoutDay?: boolean
+  swimDay?: boolean
   restDays?: boolean
   isActive?: boolean
   completedAt?: boolean
@@ -1655,6 +1700,7 @@ export type GoalSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   buildWeeks?: boolean
   longRunDay?: boolean
   workoutDay?: boolean
+  swimDay?: boolean
   restDays?: boolean
   isActive?: boolean
   completedAt?: boolean
@@ -1686,6 +1732,7 @@ export type GoalSelectScalar = {
   buildWeeks?: boolean
   longRunDay?: boolean
   workoutDay?: boolean
+  swimDay?: boolean
   restDays?: boolean
   isActive?: boolean
   completedAt?: boolean
@@ -1694,7 +1741,7 @@ export type GoalSelectScalar = {
   updatedAt?: boolean
 }
 
-export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "restDays" | "isActive" | "completedAt" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["goal"]>
+export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "swimDay" | "restDays" | "isActive" | "completedAt" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["goal"]>
 export type GoalInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   workouts?: boolean | Prisma.Goal$workoutsArgs<ExtArgs>
@@ -1737,6 +1784,7 @@ export type $GoalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     buildWeeks: number
     longRunDay: number
     workoutDay: number
+    swimDay: number | null
     restDays: runtime.JsonValue
     isActive: boolean
     completedAt: Date | null
@@ -2190,6 +2238,7 @@ export interface GoalFieldRefs {
   readonly buildWeeks: Prisma.FieldRef<"Goal", 'Int'>
   readonly longRunDay: Prisma.FieldRef<"Goal", 'Int'>
   readonly workoutDay: Prisma.FieldRef<"Goal", 'Int'>
+  readonly swimDay: Prisma.FieldRef<"Goal", 'Int'>
   readonly restDays: Prisma.FieldRef<"Goal", 'Json'>
   readonly isActive: Prisma.FieldRef<"Goal", 'Boolean'>
   readonly completedAt: Prisma.FieldRef<"Goal", 'DateTime'>

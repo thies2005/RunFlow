@@ -480,6 +480,7 @@ model Goal {
   buildWeeks          Int       @default(4)
   longRunDay          Int       @default(0)
   workoutDay          Int       @default(3)
+  swimDay             Int?
   restDays            Json      @default("[1, 5]")
   isActive            Boolean   @default(true)
   completedAt         DateTime?

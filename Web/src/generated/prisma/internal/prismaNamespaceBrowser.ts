@@ -536,6 +536,7 @@ export const GoalScalarFieldEnum = {
   buildWeeks: 'buildWeeks',
   longRunDay: 'longRunDay',
   workoutDay: 'workoutDay',
+  swimDay: 'swimDay',
   restDays: 'restDays',
   isActive: 'isActive',
   completedAt: 'completedAt',

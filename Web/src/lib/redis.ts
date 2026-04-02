@@ -59,14 +59,17 @@ export async function getRedisClient(): Promise<RedisClient | null> {
 
         let url = redisUrl;
         const redisPassword = process.env.REDIS_PASSWORD;
-        if (redisPassword && !url.includes('@')) {
-            const parsed = new URL(url);
-            parsed.password = redisPassword;
-            url = parsed.toString();
-        } else if (redisPassword && url.includes('@') && !url.includes(':') && !url.split('@')[0].split(':').slice(-1)[0]) {
-            const parsed = new URL(url);
-            parsed.password = redisPassword;
-            url = parsed.toString();
+
+        if (redisPassword) {
+            try {
+                const parsed = new URL(url);
+                if (parsed.password !== redisPassword) {
+                    parsed.password = redisPassword;
+                    url = parsed.toString();
+                }
+            } catch {
+                url = `redis://:${redisPassword}@${url.replace(/^redis:\/\//, '')}`;
+            }
         }
 
         const client = new ioredis(url, {

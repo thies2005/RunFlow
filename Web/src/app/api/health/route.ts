@@ -55,10 +55,5 @@ export async function GET(request: NextRequest) {
 }
 
 export async function HEAD() {
-    try {
-        const publicHealth = await getPublicHealthStatus();
-        return new NextResponse(null, { status: publicHealth.statusCode });
-    } catch {
-        return new NextResponse(null, { status: 503 });
-    }
+    return new NextResponse(null, { status: 200 });
 }

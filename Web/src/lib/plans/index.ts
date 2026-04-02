@@ -92,7 +92,9 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const paces = calculateTrainingPaces(vdot);
 
     const defaultTaperWeeks = TAPER_FRACTIONS[raceType].length;
-    const taperWeeks = config.taperWeeks ?? defaultTaperWeeks;
+    const taperWeeks = (config.taperWeeks != null && config.taperWeeks > 0)
+        ? config.taperWeeks
+        : defaultTaperWeeks;
     const peakWeeks = config.peakWeeks ?? 4;
     const buildWeeks = config.buildWeeks ?? 4;
 
@@ -136,6 +138,9 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
                 raceType,
                 paces,
                 longRunDay,
+                ridesPerWeek,
+                swimsPerWeek,
+                strengthPerWeek,
             });
             raceWeekWorkouts.forEach(w => {
                 const specificDate = w.type === WorkoutType.RACE
@@ -249,6 +254,7 @@ function getTaperVolume(
 ): number {
     const fractions = TAPER_FRACTIONS[raceType];
     const taperWeekIndex = taperWeeks - weeksUntilRace;
+    // Clamp is intentional: handles case where user-configured taperWeeks < TAPER_FRACTIONS[raceType].length
     const clampedIndex = Math.min(Math.max(0, taperWeekIndex), fractions.length - 1);
     const fraction = fractions[clampedIndex];
     return Math.round(peakVolume * fraction);
@@ -259,6 +265,9 @@ function generateRaceWeek(params: {
     raceType: RaceType;
     paces: TrainingPaces;
     longRunDay: number;
+    ridesPerWeek?: number;
+    swimsPerWeek?: number;
+    strengthPerWeek?: number;
 }): ScheduledWorkout[] {
     const { raceDate, raceType, paces } = params;
     const workouts: ScheduledWorkout[] = [];
@@ -307,6 +316,68 @@ function generateRaceWeek(params: {
             targetPace: paces.easy.max,
             targetDuration: 0,
         });
+    }
+
+    const rwRidesPerWeek = params.ridesPerWeek ?? 0;
+    const rwSwimsPerWeek = params.swimsPerWeek ?? 0;
+    const rwStrengthPerWeek = params.strengthPerWeek ?? 0;
+
+    if (rwRidesPerWeek > 0 || rwSwimsPerWeek > 0 || rwStrengthPerWeek > 0) {
+        const freeDaysForCT = [1, 2, 3, 4, 5, 6, 0].filter(d =>
+            !usedDays.has(d) && d !== raceDayOfWeek && d !== preRaceStrideDay
+        );
+
+        let ctRidePlaced = false;
+        let ctSwimPlaced = false;
+        let ctStrengthPlaced = false;
+        let ctSwimDay: number | null = null;
+
+        for (const d of freeDaysForCT) {
+            if (ctRidePlaced && ctSwimPlaced && ctStrengthPlaced) break;
+
+            if (!ctRidePlaced && rwRidesPerWeek > 0) {
+                ctRidePlaced = true;
+                usedDays.add(d);
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.RIDE,
+                    description: 'Easy Spin: 30min (Zone 1)',
+                    totalDistance: 0,
+                    targetPace: 0,
+                    targetDuration: 1800,
+                });
+                continue;
+            }
+
+            if (!ctSwimPlaced && rwSwimsPerWeek > 0) {
+                ctSwimPlaced = true;
+                ctSwimDay = d;
+                usedDays.add(d);
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.SWIM,
+                    description: 'Swim: 1500m @ Easy',
+                    totalDistance: 1500,
+                    targetPace: 120,
+                    targetDuration: 2700,
+                });
+                continue;
+            }
+
+            if (!ctStrengthPlaced && rwStrengthPerWeek > 0 && d !== ctSwimDay) {
+                ctStrengthPlaced = true;
+                usedDays.add(d);
+                workouts.push({
+                    dayOffset: d,
+                    type: WorkoutType.STRENGTH,
+                    description: 'Strength: 30min (Light)',
+                    totalDistance: 0,
+                    targetPace: 0,
+                    targetDuration: 1800,
+                });
+                continue;
+            }
+        }
     }
 
     return workouts;
@@ -545,19 +616,19 @@ function generateWeek(params: {
         }
     }
 
-    const cardioDays = new Set<number>();
+    const rideDays: number[] = [];
+    const swimDays: number[] = [];
     workouts.forEach(w => {
-        if (w.type === WorkoutType.RIDE || w.type === WorkoutType.SWIM) {
-            cardioDays.add(w.dayOffset);
-        }
+        if (w.type === WorkoutType.RIDE) rideDays.push(w.dayOffset);
+        if (w.type === WorkoutType.SWIM) swimDays.push(w.dayOffset);
     });
 
-    const strengthOnCardio = Math.min(strengthPerWeek, cardioDays.size);
-    const strengthOnFree = strengthPerWeek - strengthOnCardio;
+    let remainingStrength = strengthPerWeek;
+    const strengthDays = new Set<number>();
 
-    const cardioDaysArray = Array.from(cardioDays);
-    for (let i = 0; i < strengthOnCardio; i++) {
-        const d = cardioDaysArray[i % cardioDaysArray.length];
+    for (const d of rideDays) {
+        if (remainingStrength <= 0) break;
+        strengthDays.add(d);
         workouts.push({
             dayOffset: d,
             type: WorkoutType.STRENGTH,
@@ -566,14 +637,51 @@ function generateWeek(params: {
             targetPace: 0,
             targetDuration: 2700,
         });
+        remainingStrength--;
     }
 
-    if (strengthOnFree > 0) {
-        const strengthFreeDays = getDistributedDays(strengthOnFree, usedDays, true, workouts);
-        for (const d of strengthFreeDays) {
-            usedDays.add(d);
+    if (remainingStrength > 0) {
+        const pairableRunDays = workouts
+            .filter(w => (w.type === WorkoutType.EASY || w.type === WorkoutType.RECOVERY)
+                && !strengthDays.has(w.dayOffset)
+                && !swimDays.includes(w.dayOffset))
+            .map(w => w.dayOffset);
+
+        const freeDays: number[] = [];
+        for (let d = 0; d < 7; d++) {
+            if (!usedDays.has(d)) freeDays.push(d);
+        }
+
+        const candidates = [...pairableRunDays, ...freeDays];
+
+        for (let i = 0; i < remainingStrength && candidates.length > 0; i++) {
+            let bestIdx = 0;
+            let bestMinDist = -1;
+
+            if (strengthDays.size === 0) {
+                bestIdx = 0;
+                bestMinDist = 7;
+            } else {
+                for (let c = 0; c < candidates.length; c++) {
+                    let minDist = 7;
+                    for (const sd of strengthDays) {
+                        const diff = Math.abs(candidates[c] - sd);
+                        const dist = Math.min(diff, 7 - diff);
+                        if (dist < minDist) minDist = dist;
+                    }
+                    if (minDist > bestMinDist) {
+                        bestMinDist = minDist;
+                        bestIdx = c;
+                    }
+                }
+            }
+
+            const chosen = candidates[bestIdx];
+            strengthDays.add(chosen);
+            if (!usedDays.has(chosen)) usedDays.add(chosen);
+            candidates.splice(bestIdx, 1);
             workouts.push({
-                dayOffset: d,
+                dayOffset: chosen,
                 type: WorkoutType.STRENGTH,
                 description: 'Strength: 45min Session',
                 totalDistance: 0,

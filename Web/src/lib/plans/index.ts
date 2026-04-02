@@ -62,7 +62,7 @@ export type GeneratedWorkout = {
     targetDuration?: number;
 };
 
-type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER';
+type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 
 type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
 
@@ -133,7 +133,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
         const weeksUntilRace = totalWeeks - week + 1;
         const phase = getPhase(weeksUntilRace, { taperWeeks, peakWeeks, buildWeeks });
 
-        if (weeksUntilRace === 1) {
+        if (phase === 'RACE_WEEK') {
             const raceWeekWorkouts = generateRaceWeek({
                 raceDate,
                 raceType,
@@ -168,6 +168,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
 
         if (phase === 'TAPER') {
             weekVolumeCap = getTaperVolume(weeksUntilRace, taperWeeks, effectivePeakVolume, raceType);
+            weekVolumeCap = Math.max(PLAN_CONSTANTS.EASY_RUN_MIN * 2, weekVolumeCap);
         } else if (phase === 'PEAK') {
             weekVolumeCap = effectivePeakVolume;
         } else {
@@ -240,6 +241,7 @@ function getPhase(
     const peakWeeks = options?.peakWeeks ?? 0;
     const buildWeeks = options?.buildWeeks ?? 0;
 
+    if (weeksUntilRace === 1) return 'RACE_WEEK';
     if (taperWeeks > 0 && weeksUntilRace <= taperWeeks) return 'TAPER';
     if (peakWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks) return 'PEAK';
     if (buildWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks + buildWeeks) return 'BUILD';

@@ -22,6 +22,7 @@ export function getPhase(weeksUntilRace: number, options?: { taperWeeks?: number
     const peakWeeks = options?.peakWeeks ?? 0;
     const buildWeeks = options?.buildWeeks ?? 0;
 
+    if (weeksUntilRace === 1) return { name: 'RACE WEEK', color: 'text-red-400 border-red-500/30 bg-red-500/10' };
     if (taperWeeks > 0 && weeksUntilRace <= taperWeeks) return { name: 'TAPER', color: 'text-teal-400 border-teal-500/30 bg-teal-500/10' };
     if (peakWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks) return { name: 'PEAK', color: 'text-purple-400 border-purple-500/30 bg-purple-500/10' };
     if (buildWeeks > 0 && weeksUntilRace <= taperWeeks + peakWeeks + buildWeeks) return { name: 'BUILD', color: 'text-orange-400 border-orange-500/30 bg-orange-500/10' };

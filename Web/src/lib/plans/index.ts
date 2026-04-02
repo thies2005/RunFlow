@@ -85,7 +85,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     if (peakVolume < minPeak) peakVolume = minPeak;
 
     const timeDiff = raceDate.getTime() - startDate.getTime();
-    const totalWeeks = Math.max(1, Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 7)));
+    const totalWeeks = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)));
 
     let startVolume = peakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
     if (startVolume < PLAN_CONSTANTS.MIN_VOLUME_START) {
@@ -141,7 +141,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
                 raceType,
                 paces,
                 runsPerWeek,
-                raceWeekRunVolumeCap: effectivePeakVolume,
+                raceWeekRunVolumeCap: getRaceWeekRunVolumeCap(raceType, effectivePeakVolume),
                 ridesPerWeek,
                 swimsPerWeek,
                 strengthPerWeek,
@@ -264,6 +264,14 @@ function getTaperVolume(
     const clampedIndex = Math.min(Math.max(0, taperWeekIndex), fractions.length - 1);
     const fraction = fractions[clampedIndex];
     return Math.round(peakVolume * fraction);
+}
+
+export function getRaceWeekRunVolumeCap(raceType: RaceType, effectivePeakVolume: number): number {
+    const finalTaperFraction = TAPER_FRACTIONS[raceType][TAPER_FRACTIONS[raceType].length - 1];
+    return Math.max(
+        Math.round(effectivePeakVolume * finalTaperFraction),
+        getRaceDistanceMeters(raceType) + 10000,
+    );
 }
 
 function generateRaceWeek(params: {

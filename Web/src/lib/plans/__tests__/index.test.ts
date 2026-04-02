@@ -1,4 +1,4 @@
-import { generateTrainingPlan, PLAN_CONSTANTS } from '../index';
+import { generateTrainingPlan, PLAN_CONSTANTS, getRaceWeekRunVolumeCap } from '../index';
 import { calculateTrainingPaces } from '../../metrics/vdot';
 import { WorkoutType } from '@/generated/prisma/browser';
 
@@ -507,6 +507,81 @@ describe('Training Plan Generation', () => {
             const runCount = raceWeek.filter(w => isRunType(w.type)).length;
             expect(runCount).toBe(1);
             expect(raceWeek.some(w => w.type === WorkoutType.RACE)).toBe(true);
+        });
+
+        it('10K non-Sunday race has running load in the calendar week before race week', () => {
+            const raceDate = new Date('2025-05-24'); // Saturday
+            const startDate = new Date('2025-03-30'); // Sunday
+            const config = makeConfig({
+                raceType: 'TEN_K',
+                raceDate,
+                startDate,
+                runsPerWeek: 4,
+                ridesPerWeek: 0,
+                strengthPerWeek: 1,
+                swimsPerWeek: 0,
+                weeklyMileageGoal: 40000,
+            });
+
+            const workouts = generateTrainingPlan(config);
+
+            const preRaceCalendarWeekRunDistance = workouts
+                .filter(w => {
+                    const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                    return deltaDays >= -13 && deltaDays <= -7 && isRunType(w.type);
+                })
+                .reduce((sum, w) => sum + w.totalDistance, 0);
+
+            expect(preRaceCalendarWeekRunDistance).toBeGreaterThan(0);
+        });
+
+        it('10K final weeks show taper progression (peak > taper > race week)', () => {
+            const raceDate = new Date('2025-05-24'); // Saturday
+            const startDate = new Date('2025-03-30');
+            const config = makeConfig({
+                raceType: 'TEN_K',
+                raceDate,
+                startDate,
+                runsPerWeek: 4,
+                ridesPerWeek: 0,
+                strengthPerWeek: 0,
+                swimsPerWeek: 0,
+                weeklyMileageGoal: 40000,
+            });
+
+            const workouts = generateTrainingPlan(config);
+
+            const raceWeekRunDistance = workouts
+                .filter(w => {
+                    const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                    return deltaDays >= -6 && deltaDays <= 0 && isRunType(w.type);
+                })
+                .reduce((sum, w) => sum + w.totalDistance, 0);
+
+            const taperWeekRunDistance = workouts
+                .filter(w => {
+                    const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                    return deltaDays >= -13 && deltaDays <= -7 && isRunType(w.type);
+                })
+                .reduce((sum, w) => sum + w.totalDistance, 0);
+
+            const previousWeekRunDistance = workouts
+                .filter(w => {
+                    const deltaDays = Math.floor((w.date.getTime() - raceDate.getTime()) / (24 * 60 * 60 * 1000));
+                    return deltaDays >= -20 && deltaDays <= -14 && isRunType(w.type);
+                })
+                .reduce((sum, w) => sum + w.totalDistance, 0);
+
+            expect(previousWeekRunDistance).toBeGreaterThan(taperWeekRunDistance);
+            expect(taperWeekRunDistance).toBeGreaterThan(raceWeekRunDistance);
+        });
+
+        it('race-week cap uses reduced value, not full effective peak volume', () => {
+            const effectivePeakVolume = 60000;
+            const tenKCap = getRaceWeekRunVolumeCap('TEN_K', effectivePeakVolume);
+
+            expect(tenKCap).toBe(36000); // TEN_K final taper fraction (60%)
+            expect(tenKCap).toBeLessThan(effectivePeakVolume);
         });
 
         it('scaled interval workouts preserve structured interval descriptions', () => {

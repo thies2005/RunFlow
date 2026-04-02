@@ -10,10 +10,11 @@ export const PLAN_CONSTANTS = {
     },
     MAX_LONG_RUN_DIST: {
         FIVE_K: 16000,
-        TEN_K: 17000,
-        HALF_MARATHON: 21000,
-        MARATHON: 32000
+        TEN_K: 22000,
+        HALF_MARATHON: 24000,
+        MARATHON: 34000
     },
+    DYNAMIC_LONG_RUN_RATIO: 0.55,
     MIN_LONG_RUN: 6000,
     MIN_VOLUME_START: 15000,
     EASY_RUN_MIN: 4000,
@@ -101,8 +102,9 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const taperWeeks = (config.taperWeeks != null && config.taperWeeks > 0)
         ? config.taperWeeks
         : defaultTaperWeeks;
-    const peakWeeks = config.peakWeeks ?? 4;
-    const buildWeeks = config.buildWeeks ?? 4;
+    const availableStructured = Math.max(1, totalWeeks - taperWeeks - 1);
+    const peakWeeks = Math.min(config.peakWeeks ?? 4, Math.floor(availableStructured / 2));
+    const buildWeeks = Math.min(config.buildWeeks ?? 4, availableStructured - peakWeeks);
 
     const growthRatio = peakVolume / startVolume;
     const minRampWeeks = growthRatio > 1.001
@@ -202,6 +204,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
             strengthPerWeek,
             swimsPerWeek,
             weeklyVolume: weekVolumeCap,
+            peakVolume: effectivePeakVolume,
             preferredLongRunDay: longRunDay,
             preferredWorkoutDay: workoutDay,
             preferredSwimDay: config.swimDay,
@@ -416,6 +419,7 @@ function generateWeek(params: {
     strengthPerWeek: number;
     swimsPerWeek: number;
     weeklyVolume: number;
+    peakVolume: number;
     preferredLongRunDay: number;
     preferredWorkoutDay: number;
     preferredSwimDay?: number;
@@ -423,6 +427,7 @@ function generateWeek(params: {
 }): ScheduledWorkout[] {
     const {
         phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, weeklyVolume,
+        peakVolume,
         preferredLongRunDay, preferredWorkoutDay, preferredSwimDay, restDays
     } = params;
 
@@ -437,7 +442,7 @@ function generateWeek(params: {
         }
     }
 
-    const longRunDist = getLongRunDistance(raceType, weeklyVolume, paces);
+    const longRunDist = getLongRunDistance(raceType, weeklyVolume, paces, peakVolume);
 
     const hasQuality = runsPerWeek >= 2 && phase !== 'TAPER';
     const qualitySession = hasQuality
@@ -748,7 +753,8 @@ function generateWeek(params: {
 function getLongRunDistance(
     raceType: RaceType,
     weeklyVolume: number,
-    paces: TrainingPaces
+    paces: TrainingPaces,
+    peakVolume: number
 ): number {
     let ratio = PLAN_CONSTANTS.LONG_RUN_RATIO;
 
@@ -759,7 +765,8 @@ function getLongRunDistance(
 
     let dist = weeklyVolume * ratio;
 
-    let maxDist = PLAN_CONSTANTS.MAX_LONG_RUN_DIST[raceType];
+    const dynamicCap = Math.min(peakVolume * PLAN_CONSTANTS.DYNAMIC_LONG_RUN_RATIO, PLAN_CONSTANTS.MAX_LONG_RUN_DIST[raceType]);
+    let maxDist = dynamicCap;
     if (dist > maxDist) dist = maxDist;
 
     const safeEasyMax = Math.max(120, paces.easy.max);

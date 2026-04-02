@@ -358,7 +358,7 @@ describe('Training Plan Generation', () => {
     });
 
     describe('Phase 4: Caps, Constants & Safety Limits', () => {
-        it('HM max long run capped at 21km (Task 4.1)', () => {
+        it('HM max long run capped at 24km (Task 4.1)', () => {
             const config = makeConfig({
                 raceType: 'HALF_MARATHON',
                 weeklyMileageGoal: 60000,
@@ -366,11 +366,11 @@ describe('Training Plan Generation', () => {
             const workouts = generateTrainingPlan(config);
             const longRuns = workouts.filter(w => w.type === WorkoutType.LONG_RUN);
             for (const lr of longRuns) {
-                expect(lr.totalDistance).toBeLessThanOrEqual(22000);
+                expect(lr.totalDistance).toBeLessThanOrEqual(25000);
             }
         });
 
-        it('10K max long run capped at 17km (Task 4.1)', () => {
+        it('10K max long run uses dynamic cap (peakVolume * 0.55, max 22km) (Task 4.1)', () => {
             const config = makeConfig({
                 raceType: 'TEN_K',
                 weeklyMileageGoal: 50000,
@@ -378,8 +378,10 @@ describe('Training Plan Generation', () => {
             const workouts = generateTrainingPlan(config);
             const longRuns = workouts.filter(w => w.type === WorkoutType.LONG_RUN);
             for (const lr of longRuns) {
-                expect(lr.totalDistance).toBeLessThanOrEqual(18000);
+                expect(lr.totalDistance).toBeLessThanOrEqual(23000);
             }
+            const maxLR = Math.max(...longRuns.map(lr => lr.totalDistance));
+            expect(maxLR).toBeGreaterThan(17000);
         });
 
         it('low-volume marathon runners get higher long run ratio to reach distance minimums (Task 4.2)', () => {
@@ -425,10 +427,55 @@ describe('Training Plan Generation', () => {
         });
 
         it('PLAN_CONSTANTS MAX_LONG_RUN_DIST updated correctly (Task 4.1)', () => {
-            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.HALF_MARATHON).toBe(21000);
-            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.TEN_K).toBe(17000);
-            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.MARATHON).toBe(32000);
+            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.HALF_MARATHON).toBe(24000);
+            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.TEN_K).toBe(22000);
+            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.MARATHON).toBe(34000);
             expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.FIVE_K).toBe(16000);
+        });
+
+        it('10K long runs progress weekly (not frozen at cap)', () => {
+            const config = makeConfig({
+                raceType: 'TEN_K',
+                weeklyMileageGoal: 50000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const weeks = groupByWeek(workouts);
+            const longRunDistances = weeks.map(week => {
+                const lr = week.find(w => w.type === WorkoutType.LONG_RUN);
+                return lr ? lr.totalDistance : 0;
+            }).filter(d => d > 0);
+
+            const uniqueDistances = new Set(longRunDistances);
+            expect(uniqueDistances.size).toBeGreaterThan(1);
+
+            const firstThird = longRunDistances.slice(0, Math.max(1, Math.floor(longRunDistances.length / 3)));
+            const lastThird = longRunDistances.slice(-Math.max(1, Math.floor(longRunDistances.length / 3)));
+            const avgFirst = firstThird.reduce((a, b) => a + b, 0) / firstThird.length;
+            const avgLast = lastThird.reduce((a, b) => a + b, 0) / lastThird.length;
+            expect(avgLast).toBeGreaterThan(avgFirst);
+        });
+
+        it('short plan clamps peak/build weeks to fit available weeks', () => {
+            const raceDate = new Date('2026-05-03');
+            const startDate = new Date('2026-04-05');
+            const config = makeConfig({
+                raceDate,
+                startDate,
+                raceType: 'TEN_K',
+                weeklyMileageGoal: 40000,
+            });
+
+            const workouts = generateTrainingPlan(config);
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            expect(raceWorkout).toBeDefined();
+
+            const raceMs = raceWorkout!.date.getTime();
+            const baseWorkouts = workouts.filter(w => {
+                const deltaDays = Math.round((w.date.getTime() - raceMs) / (24 * 60 * 60 * 1000));
+                return deltaDays < -20 && isRunType(w.type);
+            });
+            const hasFartlek = baseWorkouts.some(w => w.description.includes('Fartlek'));
+            expect(hasFartlek).toBe(true);
         });
     });
 

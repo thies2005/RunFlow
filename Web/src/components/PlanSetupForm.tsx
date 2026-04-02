@@ -483,6 +483,9 @@ export default function PlanSetupForm({
                     peakWeeks,
                     buildWeeks,
                     weeklyMileageGoal: weeklyMileage * 1000, // Convert km to meters
+                    longRunDay,
+                    workoutDay: qualityDay,
+                    restDays,
                     // Always include the computed goal time (ensure integer)
                     ...(computedTargetTime && { targetTime: Math.round(computedTargetTime) }),
                     // Include calibration data if provided (ensure integer times)

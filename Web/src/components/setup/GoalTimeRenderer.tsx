@@ -67,7 +67,15 @@ export default function GoalTimeRenderer({
                         className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
                         placeholder="HH"
                         value={goalTimeHours}
-                        onChange={e => setGoalTimeHours(e.target.value)}
+                        onChange={e => {
+                            setGoalTimeHours(e.target.value);
+                            const totalSecs = (parseInt(e.target.value) || 0) * 3600 +
+                                (parseInt(goalTimeMinutes) || 0) * 60 +
+                                (parseInt(goalTimeSecs) || 0);
+                            if (totalSecs > 0) {
+                                setGoalTimeSeconds(totalSecs);
+                            }
+                        }}
                         min="0"
                     />
                     <span className="text-foreground-muted">:</span>
@@ -76,7 +84,15 @@ export default function GoalTimeRenderer({
                         className="w-16 bg-surface border border-glass-border rounded-lg p-3 text-foreground text-center"
                         placeholder="MM"
                         value={goalTimeMinutes}
-                        onChange={e => setGoalTimeMinutes(e.target.value)}
+                        onChange={e => {
+                            setGoalTimeMinutes(e.target.value);
+                            const totalSecs = (parseInt(goalTimeHours) || 0) * 3600 +
+                                (parseInt(e.target.value) || 0) * 60 +
+                                (parseInt(goalTimeSecs) || 0);
+                            if (totalSecs > 0) {
+                                setGoalTimeSeconds(totalSecs);
+                            }
+                        }}
                         min="0"
                         max="59"
                     />

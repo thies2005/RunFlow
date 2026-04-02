@@ -692,11 +692,76 @@ describe('Training Plan Generation', () => {
             }
         });
     });
+
+    describe('Rest Days Support', () => {
+        it('does not schedule running workouts on user-designated rest days', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                runsPerWeek: 4,
+                ridesPerWeek: 0,
+                strengthPerWeek: 0,
+                swimsPerWeek: 0,
+                restDays: [1, 5], // Monday, Friday
+            });
+
+            const workouts = generateTrainingPlan(config);
+            // Exclude race week from this check (race week uses a different scheduler)
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            const raceMs = raceWorkout ? raceWorkout.date.getTime() : Infinity;
+            const nonRaceWeekWorkouts = workouts.filter(w => {
+                const deltaDays = Math.floor((raceMs - w.date.getTime()) / (24 * 60 * 60 * 1000));
+                return deltaDays > 7;
+            });
+
+            for (const w of nonRaceWeekWorkouts) {
+                const dayOfWeek = w.date.getDay();
+                expect([1, 5]).not.toContain(dayOfWeek);
+            }
+        });
+
+        it('handles rest days overlapping with preferred long run day', () => {
+            const config = makeConfig({
+                raceType: 'MARATHON',
+                runsPerWeek: 3,
+                longRunDay: 0, // Sunday
+                restDays: [0], // Sunday as rest — force long run to move
+            });
+
+            const workouts = generateTrainingPlan(config);
+            expect(workouts.length).toBeGreaterThan(0);
+
+            // Long runs should not be on Sunday (rest day)
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            const raceMs = raceWorkout ? raceWorkout.date.getTime() : Infinity;
+
+            const nonRaceWeekLongRuns = workouts.filter(w => {
+                const deltaDays = Math.floor((raceMs - w.date.getTime()) / (24 * 60 * 60 * 1000));
+                return w.type === WorkoutType.LONG_RUN && deltaDays > 7;
+            });
+
+            for (const lr of nonRaceWeekLongRuns) {
+                expect(lr.date.getDay()).not.toBe(0);
+            }
+        });
+
+        it('still generates a valid plan with many rest days', () => {
+            const config = makeConfig({
+                raceType: 'FIVE_K',
+                runsPerWeek: 2,
+                restDays: [0, 1, 2, 5, 6], // Only Wed/Thu available
+            });
+
+            const workouts = generateTrainingPlan(config);
+            expect(workouts.length).toBeGreaterThan(0);
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+            expect(raceWorkout).toBeDefined();
+        });
+    });
 });
 
-function groupByWeek(workouts: { date: Date; type?: string; totalDistance?: number }[]): { date: Date; type?: string; totalDistance?: number }[][] {
-    const weeks: { date: Date; type?: string; totalDistance?: number }[][] = [];
-    let currentWeek: { date: Date; type?: string; totalDistance?: number }[] = [];
+function groupByWeek(workouts: { date: Date; type?: string; totalDistance: number }[]): { date: Date; type?: string; totalDistance: number }[][] {
+    const weeks: { date: Date; type?: string; totalDistance: number }[][] = [];
+    let currentWeek: { date: Date; type?: string; totalDistance: number }[] = [];
     let lastDay = -1;
 
     for (const w of workouts) {

@@ -39,7 +39,8 @@ export const goalSchema = z.object({
   calibrationTime: z.number().int().positive().optional(),
   calibrationDistance: z.enum(['5K', '10K', 'HALF', 'MARATHON']).optional(),
   calibrationFactor: z.number().positive().optional(),
-  planStartDate: z.string().datetime().optional()
+  planStartDate: z.string().datetime().optional(),
+  restDays: z.array(z.number().int().min(0).max(6)).optional()
 })
 
 export const userSettingsSchema = z.object({

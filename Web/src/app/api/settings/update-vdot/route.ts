@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, restDays } = body;
+        const { timeSeconds, raceDistance, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek, weeklyMileageGoal, maxHeartRate, restingHeartRate, weight, hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max, thresholdHeartRate, thresholdPace, taperWeeks, peakWeeks, buildWeeks, calibrationFactor, longRunDay, qualityDay, restDays } = body;
 
         if (!timeSeconds || !raceDistance) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -159,6 +159,8 @@ export async function POST(req: NextRequest) {
             hrZone2Max: validateZone(hrZone2Max),
             hrZone3Max: validateZone(hrZone3Max),
             hrZone4Max: validateZone(hrZone4Max),
+            hrZone5Max: validateZone(hrZone5Max),
+            hrZone6Max: validateZone(hrZone6Max),
         };
 
         Object.entries(zoneUpdates).forEach(([key, value]) => {
@@ -273,6 +275,9 @@ export async function POST(req: NextRequest) {
                 taperWeeks: taper,
                 peakWeeks: peak,
                 buildWeeks: build,
+                longRunDay: typeof longRunDay === 'number' ? longRunDay : activeGoal.longRunDay,
+                workoutDay: typeof qualityDay === 'number' ? qualityDay : activeGoal.workoutDay,
+                restDays: Array.isArray(restDays) ? restDays : (activeGoal.restDays as number[] ?? undefined),
             });
 
             // Save workouts (M-08: Use createMany for batch insert instead of transaction)

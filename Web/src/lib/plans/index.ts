@@ -51,6 +51,7 @@ export type PlanConfig = {
     buildWeeks?: number;
     longRunDay?: number;
     workoutDay?: number;
+    restDays?: number[];
 };
 
 export type GeneratedWorkout = {
@@ -201,6 +202,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
             weeklyVolume: weekVolumeCap,
             preferredLongRunDay: longRunDay,
             preferredWorkoutDay: workoutDay,
+            restDays: config.restDays,
         });
 
         const runningWorkouts = weekSchedule.filter(w => isRun(w.type));
@@ -405,15 +407,23 @@ function generateWeek(params: {
     weeklyVolume: number;
     preferredLongRunDay: number;
     preferredWorkoutDay: number;
+    restDays?: number[];
 }): ScheduledWorkout[] {
     const {
         phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, weeklyVolume,
-        preferredLongRunDay, preferredWorkoutDay
+        preferredLongRunDay, preferredWorkoutDay, restDays
     } = params;
 
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
     const hardSessionDays: number[] = [];
+
+    // Pre-mark user-designated rest days so no workouts are scheduled on them
+    if (restDays && restDays.length > 0) {
+        for (const rd of restDays) {
+            usedDays.add(rd);
+        }
+    }
 
     const longRunDist = getLongRunDistance(raceType, weeklyVolume, paces);
 

@@ -5,6 +5,8 @@ export const workoutStyles: Record<string, { color: string, icon: LucideIcon, la
     LONG_RUN: { color: 'text-blue-400', icon: Mountain, label: 'Long Run' },
     TEMPO: { color: 'text-yellow-400', icon: Zap, label: 'Tempo' },
     INTERVALS: { color: 'text-red-400', icon: Zap, label: 'Intervals' },
+    FARTLEK: { color: 'text-amber-400', icon: Zap, label: 'Fartlek' },
+    REPETITIONS: { color: 'text-rose-400', icon: Zap, label: 'Repetitions' },
     RECOVERY: { color: 'text-teal-400', icon: Activity, label: 'Recovery' },
     REST: { color: 'text-gray-500', icon: Clock, label: 'Rest Day' },
     RIDE: { color: 'text-orange-400', icon: Bike, label: 'Bike Ride' },
@@ -14,7 +16,7 @@ export const workoutStyles: Record<string, { color: string, icon: LucideIcon, la
     RACE: { color: 'text-purple-400', icon: Flag, label: 'Race' },
 };
 
-export const RUN_TYPES = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 'RACE', 'REPETITIONS'];
+export const RUN_TYPES = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'RECOVERY', 'RACE', 'REPETITIONS'];
 export const SWIM_TYPES = ['SWIM'];
 
 export function getPhase(weeksUntilRace: number, options?: { taperWeeks?: number; peakWeeks?: number; buildWeeks?: number }) {
@@ -54,4 +56,3 @@ export function formatDuration(seconds: number): string {
     const mins = Math.floor((seconds % 3600) / 60);
     return `${hours}:${mins.toString().padStart(2, '0')}`;
 }
-

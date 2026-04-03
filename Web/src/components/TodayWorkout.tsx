@@ -4,7 +4,7 @@ import { CheckCircle, Heart, Clock, TrendingUp, Activity, Route, Zap, Flame, Spa
 
 interface Workout {
     id: string;
-    type: 'EASY' | 'LONG_RUN' | 'TEMPO' | 'INTERVALS' | 'RECOVERY' | 'REST' | 'RIDE' | 'SWIM' | 'STRENGTH' | 'OTHER';
+    type: 'EASY' | 'LONG_RUN' | 'TEMPO' | 'INTERVALS' | 'FARTLEK' | 'RECOVERY' | 'REST' | 'RIDE' | 'SWIM' | 'STRENGTH' | 'OTHER';
     description: string;
     targetDistance?: number; // meters
     targetDuration?: number; // seconds
@@ -43,6 +43,12 @@ const workoutConfig = {
         color: 'from-red-500 to-pink-600',
         badge: 'badge-interval',
         icon: <Flame className="w-8 h-8 text-white" />,
+    },
+    FARTLEK: {
+        label: 'Fartlek',
+        color: 'from-orange-500 to-amber-600',
+        badge: 'badge-tempo',
+        icon: <Zap className="w-8 h-8 text-white" />,
     },
     RECOVERY: {
         label: 'Recovery',

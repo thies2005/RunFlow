@@ -62,6 +62,7 @@ const getWorkoutTypeStyle = (type: WorkoutType) => {
         case 'LONG_RUN': return 'bg-workout-long-run/10 text-workout-long-run border-workout-long-run/20';
         case 'TEMPO': return 'bg-workout-tempo/10 text-workout-tempo border-workout-tempo/20';
         case 'INTERVALS': return 'bg-workout-interval/10 text-workout-interval border-workout-interval/20';
+        case 'FARTLEK': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
         case 'RACE': return 'bg-workout-race/10 text-workout-race border-workout-race/20';
         case 'RECOVERY': return 'bg-workout-recovery/10 text-workout-recovery border-workout-recovery/20';
         case 'STRENGTH': return 'bg-workout-strength/10 text-workout-strength border-workout-strength/20';

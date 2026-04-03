@@ -593,7 +593,8 @@ function generateWeek(params: {
     const longRunDay = workouts.find(w => w.type === WorkoutType.LONG_RUN)?.dayOffset;
     const qualityDay = workouts.find(w =>
         w.type === WorkoutType.INTERVALS || w.type === WorkoutType.TEMPO ||
-        w.type === WorkoutType.REPETITIONS || w.type === WorkoutType.EASY && w.description.includes('Fartlek')
+        w.type === WorkoutType.REPETITIONS || w.type === WorkoutType.FARTLEK ||
+        (w.type === WorkoutType.EASY && w.description.includes('Fartlek'))
     )?.dayOffset;
 
     const protectedDays = new Set<number>();
@@ -813,13 +814,29 @@ function getQualitySession(
     return getMarathonQualitySession(paces, phase);
 }
 
+function getFartlekHardPace(paces: TrainingPaces): number {
+    return Math.round((paces.threshold + paces.interval) / 2);
+}
+
+function getFartlekDescription(
+    distanceKm: number,
+    hardMinutes: number,
+    easyMinutes: number,
+    hardPace: number,
+    easyPace: number
+): string {
+    return `Fartlek: ${distanceKm}km (${hardMinutes}min @ F (T-I) ${formatPace(hardPace)} / ${easyMinutes}min @ E ${formatPace(easyPace)})`;
+}
+
 function get5KQualitySession(paces: TrainingPaces, phase: Phase) {
     if (phase === 'BASE') {
+        const hardPace = getFartlekHardPace(paces);
+        const easyPace = paces.easy.max;
         return {
-            type: WorkoutType.EASY,
-            description: `Fartlek: 8km (2min hard / 2min easy)`,
+            type: WorkoutType.FARTLEK,
+            description: getFartlekDescription(8, 2, 2, hardPace, easyPace),
             totalDistance: 8000,
-            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+            targetPace: hardPace,
         };
     }
     if (phase === 'PEAK') {
@@ -840,11 +857,13 @@ function get5KQualitySession(paces: TrainingPaces, phase: Phase) {
 
 function get10KQualitySession(paces: TrainingPaces, phase: Phase) {
     if (phase === 'BASE') {
+        const hardPace = getFartlekHardPace(paces);
+        const easyPace = paces.easy.max;
         return {
-            type: WorkoutType.EASY,
-            description: `Fartlek: 10km (3min hard / 2min easy)`,
+            type: WorkoutType.FARTLEK,
+            description: getFartlekDescription(10, 3, 2, hardPace, easyPace),
             totalDistance: 10000,
-            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+            targetPace: hardPace,
         };
     }
     if (phase === 'PEAK') {
@@ -865,11 +884,13 @@ function get10KQualitySession(paces: TrainingPaces, phase: Phase) {
 
 function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
     if (phase === 'BASE') {
+        const hardPace = getFartlekHardPace(paces);
+        const easyPace = paces.easy.max;
         return {
-            type: WorkoutType.EASY,
-            description: `Fartlek: 10km (4min hard / 3min easy)`,
+            type: WorkoutType.FARTLEK,
+            description: getFartlekDescription(10, 4, 3, hardPace, easyPace),
             totalDistance: 10000,
-            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+            targetPace: hardPace,
         };
     }
     if (phase === 'PEAK') {
@@ -890,11 +911,13 @@ function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
 
 function getMarathonQualitySession(paces: TrainingPaces, phase: Phase) {
     if (phase === 'BASE') {
+        const hardPace = getFartlekHardPace(paces);
+        const easyPace = paces.easy.max;
         return {
-            type: WorkoutType.EASY,
-            description: `Fartlek: 12km (5min hard / 3min easy)`,
+            type: WorkoutType.FARTLEK,
+            description: getFartlekDescription(12, 5, 3, hardPace, easyPace),
             totalDistance: 12000,
-            targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
+            targetPace: hardPace,
         };
     }
     if (phase === 'PEAK') {
@@ -1004,6 +1027,7 @@ function scaleToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: numbe
         w.type === WorkoutType.INTERVALS ||
         w.type === WorkoutType.TEMPO ||
         w.type === WorkoutType.RACE ||
+        w.type === WorkoutType.FARTLEK ||
         w.type === WorkoutType.REPETITIONS ||
         w.description.includes('Fartlek') ||
         w.description.includes('MP Segment');
@@ -1102,7 +1126,7 @@ function formatPace(secondsPerKm: number): string {
 }
 
 function isRun(type: WorkoutType): boolean {
-    return ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 'RACE', 'REPETITIONS'].includes(type);
+    return ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'RECOVERY', 'RACE', 'REPETITIONS'].includes(type);
 }
 
 function updateDescription(type: WorkoutType, distance: number, pace: number): string {
@@ -1115,6 +1139,7 @@ function updateDescription(type: WorkoutType, distance: number, pace: number): s
         case 'RECOVERY': return `Recovery Run: ${distKm}km`;
         case 'TEMPO': return `Tempo: ${distKm}km${paceStr}`;
         case 'INTERVALS': return `Intervals: Total ${distKm}km Session`;
+        case 'FARTLEK': return `Fartlek: ${distKm}km${paceStr}`;
         case 'REPETITIONS': return `Reps: Total ${distKm}km Session`;
         case 'RACE': return `Race Day: ${distKm}km`;
         default: return `${type}: ${distKm}km`;

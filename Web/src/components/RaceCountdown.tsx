@@ -199,7 +199,7 @@ export function RaceCountdown({
 
             {goal.workouts && goal.workouts.length > 0 && (() => {
                 const plannedWeekMileage = goal.workouts.reduce((acc, workout) => {
-                    const isRun = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 'RACE'].includes(workout.workoutType);
+                    const isRun = ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'RECOVERY', 'RACE', 'REPETITIONS'].includes(workout.workoutType);
                     if (isRun && workout.targetDistance) {
                         return acc + workout.targetDistance;
                     }

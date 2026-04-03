@@ -175,6 +175,7 @@ export type WorkoutType =
     | 'LONG_RUN'
     | 'TEMPO'
     | 'INTERVALS'
+    | 'FARTLEK'
     | 'REPETITIONS'
     | 'RECOVERY'
     | 'RACE'

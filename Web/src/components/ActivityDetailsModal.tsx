@@ -173,7 +173,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity, userHr
     if (!isOpen || !activity || !mounted) return null;
 
     const WORKOUT_TYPES: WorkoutType[] = [
-        'EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'REPETITIONS', 'RECOVERY', 'RACE', 'REST'
+        'EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'REPETITIONS', 'RECOVERY', 'RACE', 'REST'
     ];
 
     // Helper to format duration

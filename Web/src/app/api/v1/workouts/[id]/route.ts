@@ -10,6 +10,7 @@ const VALID_WORKOUT_TYPES: WorkoutType[] = [
     'LONG_RUN',
     'TEMPO',
     'INTERVALS',
+    'FARTLEK',
     'REPETITIONS',
     'RECOVERY',
     'RACE',

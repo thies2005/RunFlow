@@ -24,6 +24,7 @@ const WORKOUT_TYPES = [
     { value: 'LONG_RUN', label: 'Long Run' },
     { value: 'TEMPO', label: 'Tempo' },
     { value: 'INTERVALS', label: 'Intervals' },
+    { value: 'FARTLEK', label: 'Fartlek' },
     { value: 'RECOVERY', label: 'Recovery' },
     { value: 'REST', label: 'Rest Day' },
     { value: 'RIDE', label: 'Bike Ride' },

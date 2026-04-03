@@ -239,6 +239,7 @@ describe('Training Plan Generation', () => {
                 const quality = week.find(
                     w =>
                         w.type === WorkoutType.INTERVALS ||
+                        w.type === WorkoutType.FARTLEK ||
                         w.type === WorkoutType.TEMPO ||
                         w.type === WorkoutType.REPETITIONS
                 );
@@ -326,6 +327,25 @@ describe('Training Plan Generation', () => {
             expect(fartlekDescs.length).toBeGreaterThan(0);
             expect(thresholdDescs.length).toBeGreaterThan(0);
             expect(mpDescs.length).toBeGreaterThan(0);
+        });
+
+        it('BASE fartlek uses midpoint hard pace between threshold and interval with zone labels', () => {
+            const config = makeConfig({
+                raceType: 'FIVE_K',
+                taperWeeks: 1,
+                peakWeeks: 1,
+                buildWeeks: 2,
+            });
+            const workouts = generateTrainingPlan(config);
+            const fartleks = workouts.filter(w => w.type === WorkoutType.FARTLEK);
+            expect(fartleks.length).toBeGreaterThan(0);
+
+            const expectedHardPace = Math.round((MOCK_PACES.threshold + MOCK_PACES.interval) / 2);
+            for (const w of fartleks) {
+                expect(w.targetPace).toBe(expectedHardPace);
+                expect(w.description).toContain('@ F (T-I)');
+                expect(w.description).toContain('@ E ');
+            }
         });
 
         it('strides injected in BASE phase easy runs (Task 3.3)', () => {
@@ -666,8 +686,8 @@ describe('Training Plan Generation', () => {
 
             expect(fartleks.length).toBeGreaterThan(0);
             for (const w of fartleks) {
-                expect(w.description).toContain('2min hard / 2min easy');
-                expect(w.description).not.toContain('5min hard / 3min easy');
+                expect(w.description).toContain('2min @ F (T-I)');
+                expect(w.description).toContain('2min @ E');
             }
         });
 
@@ -905,5 +925,5 @@ function groupByWeek(workouts: { date: Date; type?: string; totalDistance: numbe
 }
 
 function isRunType(type: string): boolean {
-    return ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'RECOVERY', 'RACE', 'REPETITIONS'].includes(type);
+    return ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'RECOVERY', 'RACE', 'REPETITIONS'].includes(type);
 }

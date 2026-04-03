@@ -20,6 +20,7 @@ export async function PATCH(
 
         const validTypes: WorkoutType[] = [
             'EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS',
+            'FARTLEK',
             'REPETITIONS', 'RECOVERY', 'RACE',
             'REST', 'CROSS_TRAIN', 'RIDE', 'SWIM',
             'STRENGTH', 'OTHER'

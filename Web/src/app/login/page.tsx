@@ -77,7 +77,8 @@ export default function LoginPage() {
                         alt="RunFlow"
                         width={80}
                         height={80}
-                        className="rounded-2xl mx-auto mb-8 animate-pulse-glow"
+                        priority
+                        className="rounded-2xl mx-auto mb-8"
                     />
 
                     <h1 className="text-4xl font-bold text-foreground mb-4">
@@ -147,8 +148,8 @@ export default function LoginPage() {
                                             </svg>
                                         </div>
                                     </div>
-                                    <span className="text-sm text-gray-300 leading-tight">
-                                        I have read and agree to the <Link href="/terms" className="text-orange-500 hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-orange-500 hover:underline">Privacy Policy</Link>.
+                                    <span className="text-sm text-foreground-secondary leading-tight">
+                                        I have read and agree to the <Link href="/terms" className="text-orange-400 hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-orange-400 hover:underline">Privacy Policy</Link>.
                                     </span>
                                 </label>
 
@@ -166,7 +167,7 @@ export default function LoginPage() {
                                             </svg>
                                         </div>
                                     </div>
-                                    <span className="text-sm text-gray-300 leading-tight">
+                                    <span className="text-sm text-foreground-secondary leading-tight">
                                         I consent to the processing of my health and fitness data (GDPR Art. 9) for training analytics.
                                     </span>
                                 </label>
@@ -185,7 +186,7 @@ export default function LoginPage() {
                                             </svg>
                                         </div>
                                     </div>
-                                    <span className="text-sm text-gray-300 leading-tight">
+                                    <span className="text-sm text-foreground-secondary leading-tight">
                                         I confirm that I am at least 16 years old.
                                     </span>
                                 </label>

@@ -47,8 +47,8 @@
 }
 
 @keyframes glow {
-    0% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.3); }
-    100% { box-shadow: 0 0 40px rgba(247, 37, 133, 0.4); }
+    0% { opacity: 0.7; transform: scale(1); }
+    100% { opacity: 1; transform: scale(1.02); }
 }
 @keyframes slideUp {
     0% { transform: translateY(10px); opacity: 0; }
@@ -75,6 +75,16 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
+
+    a {
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+    }
+
+    a:hover {
+        text-decoration-thickness: 2px;
+    }
 }
 
 :root {
@@ -83,12 +93,12 @@
   --background-tertiary: #f1f5f9;
 
   --foreground: #0f172a;
-  --foreground-muted: #64748b;
+  --foreground-muted: #475569;
 
-  --accent-orange: #ff6b35;
-  --accent-pink: #f72585;
-  --accent-purple: #7209b7;
-  --accent-cyan: #00b4d8;
+  --accent-orange: #e65a2b;
+  --accent-pink: #d91a72;
+  --accent-purple: #6308a0;
+  --accent-cyan: #009ab8;
 
   --modal-backdrop-opacity: 0.6;
 
@@ -109,7 +119,7 @@
   --background-tertiary: #1a1a25;
 
   --foreground: #ffffff;
-  --foreground-muted: #a1a1aa;
+  --foreground-muted: #c4c4cc;
 
   --accent-orange: #ff6b35;
   --accent-pink: #f72585;
@@ -258,7 +268,7 @@ body {
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) translateZ(0);
   box-shadow: 0 8px 25px rgba(247, 37, 133, 0.4);
 }
 
@@ -423,16 +433,19 @@ body {
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+    opacity: 0.7;
+    transform: scale(1);
   }
 
   50% {
-    box-shadow: 0 0 40px rgba(247, 37, 133, 0.5);
+    opacity: 1;
+    transform: scale(1.01);
   }
 }
 
 .animate-pulse-glow {
   animation: pulse-glow 3s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 @keyframes slide-in {
@@ -449,6 +462,7 @@ body {
 
 .animate-slide-in {
   animation: slide-in 0.4s ease-out forwards;
+  will-change: transform, opacity;
 }
 
 .btn-strava {

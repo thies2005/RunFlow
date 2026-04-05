@@ -8,7 +8,12 @@ import CookieBanner from '@/components/CookieBanner';
 import { PendingConsentHandler } from '@/components/PendingConsentHandler';
 import ReconsentBanner from '@/components/layout/ReconsentBanner';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({
+    subsets: ['latin'],
+    display: 'swap',
+    preload: true,
+    fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+});
 
 export const metadata: Metadata = {
     title: 'RunFlow | Your Running Performance Dashboard',
@@ -19,11 +24,18 @@ export const metadata: Metadata = {
         statusBarStyle: "default",
         title: "RunFlow",
     },
+    other: {
+        'apple-mobile-web-app-capable': 'yes',
+        'mobile-web-app-capable': 'yes',
+    },
 };
 
 export const viewport: Viewport = {
     themeColor: '#0a0a0f',
     interactiveWidget: 'resizes-content',
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -33,9 +45,17 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
+            <head>
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                <link rel="dns-prefetch" href="https://www.strava.com" />
+                <link rel="dns-prefetch" href="https://dgalywyr863hv.cloudfront.net" />
+            </head>
             <body className={inter.className}>
                 <Providers>
-                    <AdaptiveLayout>{children}</AdaptiveLayout>
+                    <main id="main-content" role="main">
+                        <AdaptiveLayout>{children}</AdaptiveLayout>
+                    </main>
                     <PendingConsentHandler />
                     <ReconsentBanner />
                 </Providers>

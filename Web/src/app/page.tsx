@@ -165,6 +165,7 @@ export default function Dashboard() {
                                         alt="RunFlow"
                                         width={40}
                                         height={40}
+                                        priority
                                         className="rounded-xl"
                                     />
                                     <span className="text-xl font-bold text-foreground">RunFlow</span>

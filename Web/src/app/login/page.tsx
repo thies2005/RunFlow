@@ -113,7 +113,7 @@ export default function LoginPage() {
                         <button
                             onClick={() => setAuthMode('strava')}
                             className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all ${authMode === 'strava'
-                                ? 'bg-accent-orange/20 text-accent-orange'
+                                ? 'bg-accent-orange/20 text-foreground'
                                 : 'text-foreground-muted hover:text-foreground'
                                 }`}
                         >
@@ -122,7 +122,7 @@ export default function LoginPage() {
                         <button
                             onClick={() => setAuthMode('email')}
                             className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all ${authMode === 'email'
-                                ? 'bg-accent-orange/20 text-accent-orange'
+                                ? 'bg-accent-orange/20 text-foreground'
                                 : 'text-foreground-muted hover:text-foreground'
                                 }`}
                         >

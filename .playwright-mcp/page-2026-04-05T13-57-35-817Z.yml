@@ -1,0 +1,64 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e5]:
+        - img "RunFlow" [ref=e6]
+        - heading "RunFlow" [level=1] [ref=e7]
+        - paragraph [ref=e8]: Your running performance dashboard
+        - generic [ref=e9]:
+          - generic [ref=e10]:
+            - img [ref=e11]
+            - paragraph [ref=e13]: Activity Sync
+          - generic [ref=e14]:
+            - img [ref=e15]
+            - paragraph [ref=e19]: Race Goals
+          - generic [ref=e20]:
+            - img [ref=e21]
+            - paragraph [ref=e24]: VDOT Tracking
+          - generic [ref=e25]:
+            - img [ref=e26]
+            - paragraph [ref=e28]: CTL/ATL/TSB
+        - generic [ref=e29]:
+          - button "Strava" [ref=e30]
+          - button "Email" [ref=e31]
+        - generic [ref=e32]:
+          - generic [ref=e33]:
+            - generic [ref=e34] [cursor=pointer]:
+              - generic [ref=e35]:
+                - checkbox "I have read and agree to the Terms of Service and Privacy Policy." [ref=e36]
+                - img [ref=e38]
+              - generic [ref=e40]:
+                - text: I have read and agree to the
+                - link "Terms of Service" [ref=e41]:
+                  - /url: /terms
+                - text: and
+                - link "Privacy Policy" [ref=e42]:
+                  - /url: /privacy
+                - text: .
+            - generic [ref=e43] [cursor=pointer]:
+              - generic [ref=e44]:
+                - checkbox "I consent to the processing of my health and fitness data (GDPR Art. 9) for training analytics." [ref=e45]
+                - img [ref=e47]
+              - generic [ref=e49]: I consent to the processing of my health and fitness data (GDPR Art. 9) for training analytics.
+            - generic [ref=e50] [cursor=pointer]:
+              - generic [ref=e51]:
+                - checkbox "I confirm that I am at least 16 years old." [ref=e52]
+                - img [ref=e54]
+              - generic [ref=e56]: I confirm that I am at least 16 years old.
+          - button "Connect with Strava" [disabled] [ref=e58]:
+            - img [ref=e59]
+            - generic [ref=e62]: Connect with Strava
+          - paragraph [ref=e63]: We'll sync your activities to provide personalized training insights
+      - paragraph [ref=e65]: RunFlow respects your privacy. We only read your activity data.
+  - alert [ref=e66]
+  - region "Notifications alt+T"
+  - generic [ref=e68]:
+    - paragraph [ref=e70]:
+      - text: We use strictly necessary cookies to keep you logged in and secure your session. By using RunFlow, you agree to our use of these essential cookies. Read our
+      - link "Privacy Policy" [ref=e71] [cursor=pointer]:
+        - /url: /privacy
+      - text: to learn more.
+    - generic [ref=e72]:
+      - button "Got it!" [ref=e73] [cursor=pointer]
+      - button "Close banner" [ref=e74]:
+        - img [ref=e75]

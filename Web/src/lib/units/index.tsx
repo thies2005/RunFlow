@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 
 interface UnitContextType {
     useImperial: boolean;
@@ -14,6 +15,7 @@ const UnitContext = createContext<UnitContextType>({
 });
 
 export function UnitProvider({ children }: { children: ReactNode }) {
+    const { status } = useSession();
     const { data: settings, isLoading: isQueryLoading } = useQuery({
         queryKey: ['user-settings'],
         queryFn: async () => {
@@ -21,6 +23,7 @@ export function UnitProvider({ children }: { children: ReactNode }) {
             if (!res.ok) throw new Error('Failed to fetch settings');
             return res.json();
         },
+        enabled: status === 'authenticated',
         staleTime: 5 * 60 * 1000,
         refetchOnWindowFocus: false,
     });

@@ -140,7 +140,7 @@ export async function middleware(request: NextRequest) {
         `style-src 'self' 'unsafe-inline'`,
         `img-src 'self' data: https://*.strava.com https://*.googleusercontent.com https://dgalywyr863hv.cloudfront.net https://avatars.githubusercontent.com`,
         `font-src 'self' data:`,
-        `connect-src 'self' https://www.strava.com https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://openrouter.ai https://*.sentry.io https://o*.ingest.sentry.io`,
+        `connect-src 'self' https://www.strava.com https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://openrouter.ai https://*.sentry.io https://*.ingest.sentry.io`,
         `frame-src 'none'`,
         `object-src 'none'`,
         `base-uri 'self'`,

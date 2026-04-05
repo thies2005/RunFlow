@@ -112,8 +112,8 @@ export default function LoginPage() {
                     <div className="flex rounded-lg bg-white/5 p-1 mb-6">
                         <button
                             onClick={() => setAuthMode('strava')}
-                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${authMode === 'strava'
-                                ? 'bg-accent-orange text-white'
+                            className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all ${authMode === 'strava'
+                                ? 'bg-accent-orange/20 text-accent-orange'
                                 : 'text-foreground-muted hover:text-foreground'
                                 }`}
                         >
@@ -121,8 +121,8 @@ export default function LoginPage() {
                         </button>
                         <button
                             onClick={() => setAuthMode('email')}
-                            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${authMode === 'email'
-                                ? 'bg-accent-orange text-white'
+                            className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-all ${authMode === 'email'
+                                ? 'bg-accent-orange/20 text-accent-orange'
                                 : 'text-foreground-muted hover:text-foreground'
                                 }`}
                         >
@@ -149,7 +149,7 @@ export default function LoginPage() {
                                         </div>
                                     </div>
                                     <span className="text-sm text-foreground-secondary leading-tight">
-                                        I have read and agree to the <Link href="/terms" className="text-orange-400 hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-orange-400 hover:underline">Privacy Policy</Link>.
+                                        I have read and agree to the                             <Link href="/terms" className="text-foreground-secondary hover:text-foreground font-medium">Terms of Service</Link> and <Link href="/privacy" className="text-foreground-secondary hover:text-foreground font-medium">Privacy Policy</Link>.
                                     </span>
                                 </label>
 

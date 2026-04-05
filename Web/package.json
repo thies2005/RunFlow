@@ -7,6 +7,15 @@
     "node": ">=24.0.0",
     "npm": ">=10.0.0"
   },
+  "browserslist": [
+    ">0.3%",
+    "not dead",
+    "not op_mini all",
+    "chrome >= 100",
+    "firefox >= 100",
+    "safari >= 15.4",
+    "edge >= 100"
+  ],
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",

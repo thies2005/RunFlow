@@ -8,6 +8,7 @@
     --color-background-tertiary: var(--background-tertiary);
     --color-foreground: var(--foreground);
     --color-foreground-muted: var(--foreground-muted);
+    --color-foreground-secondary: var(--foreground-secondary);
 
     --color-accent-orange: var(--accent-orange);
     --color-accent-pink: var(--accent-pink);
@@ -94,6 +95,7 @@
 
   --foreground: #0f172a;
   --foreground-muted: #475569;
+  --foreground-secondary: #334155;
 
   --accent-orange: #e65a2b;
   --accent-pink: #d91a72;
@@ -120,6 +122,7 @@
 
   --foreground: #ffffff;
   --foreground-muted: #c4c4cc;
+  --foreground-secondary: #e2e2ea;
 
   --accent-orange: #ff6b35;
   --accent-pink: #f72585;

@@ -35,3 +35,6 @@ data/bls/
 Thumbs.db
 Web/nul
 Web/src/nul
+.playwright-mcp/
+pagespeed-results-new.png
+gh_2.67.0_linux_amd64.tar.gz

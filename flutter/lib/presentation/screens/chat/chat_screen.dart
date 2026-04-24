@@ -1,0 +1,677 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/data/models/chat_models.dart';
+import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
+
+final currentSessionIdProvider = NotifierProvider<CurrentSessionIdNotifier, String?>(
+  CurrentSessionIdNotifier.new,
+);
+
+class CurrentSessionIdNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? id) {
+    state = id;
+  }
+}
+
+String _formatTimeAgo(DateTime dateTime) {
+  final diff = DateTime.now().difference(dateTime);
+  if (diff.inMinutes < 1) return 'just now';
+  if (diff.inHours < 1) return '${diff.inMinutes}m ago';
+  if (diff.inDays < 1) return '${diff.inHours}h ago';
+  if (diff.inDays < 7) return '${diff.inDays}d ago';
+  return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+}
+
+class ChatScreen extends ConsumerStatefulWidget {
+  const ChatScreen({super.key});
+
+  @override
+  ConsumerState<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends ConsumerState<ChatScreen> {
+  final _messageController = TextEditingController();
+  final _scrollController = ScrollController();
+  final _focusNode = FocusNode();
+
+  static const _suggestedPrompts = [
+    "What's my current fitness level?",
+    'Suggest a workout for today',
+    'How should I taper for my race?',
+    'Analyze my recent training',
+  ];
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _sendMessage(String sessionId) {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+
+    _messageController.clear();
+    HapticFeedback.lightImpact();
+
+    ref.read(chatProvider.notifier).sendMessage(sessionId, text);
+    _scrollToBottom();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sessionId = ref.watch(currentSessionIdProvider);
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text('AI Coach'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () => _showSessionsDrawer(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.add_comment_outlined),
+            onPressed: _createNewSession,
+          ),
+        ],
+      ),
+      body: sessionId != null
+          ? _buildChatBody(sessionId, theme)
+          : _buildEmptyState(theme),
+    );
+  }
+
+  Widget _buildChatBody(String sessionId, ThemeData theme) {
+    final messagesAsync = ref.watch(chatMessagesProvider(sessionId));
+    final chatState = ref.watch(chatProvider);
+
+    return Column(
+      children: [
+        Expanded(
+          child: messagesAsync.when(
+            data: (messages) => _buildMessageList(
+              messages,
+              sessionId,
+              chatState,
+              theme,
+            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => _buildErrorState(e.toString(), sessionId),
+          ),
+        ),
+        _buildInputBar(sessionId, chatState, theme),
+      ],
+    );
+  }
+
+  Widget _buildMessageList(
+    List<ChatMessage> messages,
+    String sessionId,
+    ChatState chatState,
+    ThemeData theme,
+  ) {
+    final showStreaming = chatState.isStreaming || chatState.streamingContent.isNotEmpty;
+
+    return RefreshIndicator(
+      onRefresh: () =>
+          ref.read(chatMessagesProvider(sessionId).notifier).refresh(),
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          if (messages.isEmpty && !showStreaming)
+            SliverToBoxAdapter(
+              child: _buildSuggestionsInChat(theme, sessionId),
+            ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                if (index < messages.length) {
+                  return _MessageBubble(message: messages[index], theme: theme);
+                }
+                if (showStreaming) {
+                  return _buildStreamingBubble(chatState.streamingContent, theme);
+                }
+                return const SizedBox.shrink();
+              },
+              childCount: messages.length + (showStreaming ? 1 : 0),
+            ),
+          ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 8)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestionsInChat(ThemeData theme, String sessionId) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        children: [
+          Icon(
+            Icons.auto_awesome,
+            size: 48,
+            color: theme.colorScheme.primary.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Ask your AI Coach',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _suggestedPrompts.map((prompt) {
+              return ActionChip(
+                label: Text(prompt),
+                onPressed: () {
+                  _messageController.text = prompt;
+                  _sendMessage(sessionId);
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStreamingBubble(String content, ThemeData theme) {
+    if (content.isEmpty) {
+      return _TypingIndicator(theme: theme);
+    }
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+        padding: const EdgeInsets.all(12),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+        ),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(16),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            MarkdownBody(
+              data: content,
+              styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+                p: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputBar(
+    String sessionId,
+    ChatState chatState,
+    ThemeData theme,
+  ) {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 8,
+        top: 8,
+        bottom: MediaQuery.of(context).padding.bottom + 8,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              focusNode: _focusNode,
+              enabled: !chatState.isStreaming,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _sendMessage(sessionId),
+              decoration: const InputDecoration(
+                hintText: 'Ask your AI coach...',
+                border: InputBorder.none,
+              ),
+              maxLines: 4,
+              minLines: 1,
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton.filled(
+            onPressed:
+                chatState.isStreaming ? null : () => _sendMessage(sessionId),
+            icon: chatState.isStreaming
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.send),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(ThemeData theme) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.auto_awesome,
+              size: 64,
+              color: theme.colorScheme.primary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Your AI Running Coach',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Get personalized training advice, workout suggestions, and race strategy based on your data.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: _suggestedPrompts.map((prompt) {
+                return ActionChip(
+                  label: Text(prompt),
+                  onPressed: () => _startSessionWithPrompt(prompt),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _createNewSession,
+              icon: const Icon(Icons.add),
+              label: const Text('New Chat'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error, String sessionId) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+          const SizedBox(height: 16),
+          Text('Something went wrong',
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          FilledButton(
+            onPressed: () => ref
+                .read(chatMessagesProvider(sessionId).notifier)
+                .refresh(),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createNewSession() async {
+    try {
+      final session =
+          await ref.read(chatSessionsProvider.notifier).createSession();
+      ref.read(currentSessionIdProvider.notifier).set(session.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create session: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _startSessionWithPrompt(String prompt) async {
+    try {
+      final session =
+          await ref.read(chatSessionsProvider.notifier).createSession();
+      ref.read(currentSessionIdProvider.notifier).set(session.id);
+      _messageController.text = prompt;
+      _sendMessage(session.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start session: $e')),
+        );
+      }
+    }
+  }
+
+  void _showSessionsDrawer(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => const _SessionsSheet(),
+    );
+  }
+}
+
+class _MessageBubble extends StatelessWidget {
+  const _MessageBubble({required this.message, required this.theme});
+
+  final ChatMessage message;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUser = message.role == ChatMessageRole.user;
+
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+        padding: const EdgeInsets.all(12),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.8,
+        ),
+        decoration: BoxDecoration(
+          color: isUser
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(16),
+            topRight: const Radius.circular(16),
+            bottomLeft: Radius.circular(isUser ? 16 : 4),
+            bottomRight: Radius.circular(isUser ? 4 : 16),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isUser)
+              Text(
+                message.content,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                ),
+              )
+            else
+              MarkdownBody(
+                data: message.content,
+                styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+                  p: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 4),
+            Text(
+              _formatTimeAgo(message.createdAt),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: isUser
+                    ? theme.colorScheme.onPrimary.withValues(alpha: 0.7)
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TypingIndicator extends StatefulWidget {
+  const _TypingIndicator({required this.theme});
+
+  final ThemeData theme;
+
+  @override
+  State<_TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<_TypingIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: widget.theme.colorScheme.surfaceContainerHighest,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(16),
+          ),
+        ),
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(3, (index) {
+                final progress =
+                    (_controller.value * 3 - index).clamp(0.0, 1.0);
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: widget.theme.colorScheme.onSurfaceVariant
+                        .withValues(alpha: 0.3 + 0.7 * progress),
+                    shape: BoxShape.circle,
+                  ),
+                );
+              }),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SessionsSheet extends ConsumerWidget {
+  const _SessionsSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessionsAsync = ref.watch(chatSessionsProvider);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      maxChildSize: 0.9,
+      minChildSize: 0.3,
+      expand: false,
+      builder: (context, scrollController) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Chat History',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: sessionsAsync.when(
+                data: (sessions) {
+                  if (sessions.isEmpty) {
+                    return const Center(
+                      child: Text('No chat sessions yet'),
+                    );
+                  }
+                  return ListView.builder(
+                    controller: scrollController,
+                    itemCount: sessions.length,
+                    itemBuilder: (context, index) {
+                      final session = sessions[index];
+                      return _SessionTile(session: session);
+                    },
+                  );
+                },
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(
+                  child: Text('Error: $e'),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SessionTile extends ConsumerWidget {
+  const _SessionTile({required this.session});
+
+  final ChatSession session;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Dismissible(
+      key: ValueKey(session.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 16),
+        color: AppColors.error,
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Delete Chat'),
+            content: Text(
+                'Are you sure you want to delete "${session.title}"?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (_) {
+        ref.read(chatSessionsProvider.notifier).deleteSession(session.id);
+        final currentId = ref.read(currentSessionIdProvider);
+        if (currentId == session.id) {
+          ref.read(currentSessionIdProvider.notifier).set(null);
+        }
+      },
+      child: ListTile(
+        title: Text(session.title),
+        subtitle: Text(_formatTimeAgo(session.updatedAt)),
+        leading: const Icon(Icons.chat_bubble_outline),
+        onTap: () {
+          ref.read(currentSessionIdProvider.notifier).set(session.id);
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+}

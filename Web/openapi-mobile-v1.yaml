@@ -24,6 +24,10 @@ servers:
     description: Production
   - url: http://localhost:3000/api/mobile/v1
     description: Development
+  - url: https://api.runflow.app/api
+    description: Production (AI Chat)
+  - url: http://localhost:3000/api
+    description: Development (AI Chat)
 
 tags:
   - name: Auth
@@ -42,6 +46,8 @@ tags:
     description: Training analytics
   - name: User
     description: User profile
+  - name: AI Chat
+    description: AI coaching chat
 
 paths:
   /auth/login:
@@ -65,6 +71,77 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/email-login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - accessToken
+                  - refreshToken
+                  - expiresIn
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  expiresIn:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -146,7 +223,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Activity'
+                type: object
+                properties:
+                  activity:
+                    $ref: '#/components/schemas/Activity'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -219,7 +299,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Goal'
+                type: object
+                properties:
+                  goal:
+                    $ref: '#/components/schemas/Goal'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -373,8 +456,6 @@ paths:
           $ref: '#/components/responses/RateLimited'
         '500':
           $ref: '#/components/responses/InternalError'
-        '500':
-          $ref: '#/components/responses/InternalError'
 
   /analytics/history:
     get:
@@ -446,7 +527,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -473,13 +557,160 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /ai/chat:
+    post:
+      tags: [AI Chat]
+      summary: Send a chat message
+      description: |
+        Sends a message to the AI coach and returns an SSE stream.
+        The stream emits JSON objects with a `token` field containing incremental text.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                sessionId:
+                  type: string
+      responses:
+        '200':
+          description: SSE stream of AI response tokens
+          content:
+            text/event-stream:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /ai/chat/sessions:
+    get:
+      tags: [AI Chat]
+      summary: List chat sessions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of chat sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChatSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags: [AI Chat]
+      summary: Create a chat session
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+      responses:
+        '200':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    $ref: '#/components/schemas/ChatSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /ai/chat/sessions/delete:
+    delete:
+      tags: [AI Chat]
+      summary: Delete a chat session
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /ai/chat/history:
+    get:
+      tags: [AI Chat]
+      summary: Get chat history for a session
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChatMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -495,37 +726,9 @@ components:
       type: object
       required:
         - error
-        - timestamp
       properties:
         error:
           type: string
-          description: Human-readable error message
-        code:
-          type: string
-          enum:
-            - UNAUTHORIZED
-            - INVALID_TOKEN
-            - TOKEN_EXPIRED
-            - FORBIDDEN
-            - BAD_REQUEST
-            - VALIDATION_ERROR
-            - NOT_FOUND
-            - CONFLICT
-            - RATE_LIMITED
-            - INTERNAL_ERROR
-            - SERVICE_UNAVAILABLE
-            - DATABASE_ERROR
-          description: Machine-readable error code
-        details:
-          type: object
-          additionalProperties: true
-          description: Additional error context
-        timestamp:
-          type: string
-          format: date-time
-        path:
-          type: string
-          description: Request path for debugging
 
     LoginRequest:
       type: object
@@ -665,9 +868,6 @@ components:
           nullable: true
         estimatedVdot:
           type: number
-          nullable: true
-        trainingType:
-          type: string
           nullable: true
         trainingType:
           type: string
@@ -831,6 +1031,7 @@ components:
         - INTERVAL
         - RECOVERY
         - RACE
+        - OTHER
 
     Workout:
       type: object
@@ -895,6 +1096,7 @@ components:
         lastSyncAt:
           type: string
           format: date-time
+          nullable: true
 
     AnalyticsStats:
       type: object
@@ -909,16 +1111,8 @@ components:
         vdotCorrectionFactor:
           type: number
         marathonShape:
-          type: object
-          properties:
-            shape:
-              type: number
-            mileageScore:
-              type: number
-            longRunScore:
-              type: number
-            crossTrainingScore:
-              type: number
+          type: number
+          description: Marathon shape as a percentage
         currentVdot:
           type: number
           nullable: true
@@ -982,8 +1176,25 @@ components:
           type: integer
         hrZone4Max:
           type: integer
+        hrZone5Max:
+          type: integer
+          nullable: true
+        hrZone6Max:
+          type: integer
+          nullable: true
+        thresholdHeartRate:
+          type: integer
+          nullable: true
+        thresholdPace:
+          type: integer
+          nullable: true
+          description: Threshold pace in seconds per km
         vdotCorrectionFactor:
           type: number
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
         lastSyncAt:
           type: string
           format: date-time
@@ -1021,6 +1232,39 @@ components:
         vdotCorrectionFactor:
           type: number
 
+    ChatSession:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        sessionId:
+          type: string
+        role:
+          type: string
+          enum: [USER, ASSISTANT]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
   responses:
     BadRequest:
       description: Bad request
@@ -1030,8 +1274,6 @@ components:
             $ref: '#/components/schemas/ApiError'
           example:
             error: "Bad request"
-            code: "BAD_REQUEST"
-            timestamp: "2024-01-01T00:00:00Z"
 
     Unauthorized:
       description: Unauthorized
@@ -1041,8 +1283,6 @@ components:
             $ref: '#/components/schemas/ApiError'
           example:
             error: "Unauthorized"
-            code: "UNAUTHORIZED"
-            timestamp: "2024-01-01T00:00:00Z"
 
     Forbidden:
       description: Forbidden
@@ -1052,8 +1292,6 @@ components:
             $ref: '#/components/schemas/ApiError'
           example:
             error: "Forbidden"
-            code: "FORBIDDEN"
-            timestamp: "2024-01-01T00:00:00Z"
 
     NotFound:
       description: Resource not found
@@ -1063,8 +1301,6 @@ components:
             $ref: '#/components/schemas/ApiError'
           example:
             error: "Resource not found"
-            code: "NOT_FOUND"
-            timestamp: "2024-01-01T00:00:00Z"
 
     Conflict:
       description: Resource conflict
@@ -1074,8 +1310,6 @@ components:
             $ref: '#/components/schemas/ApiError'
           example:
             error: "Resource conflict"
-            code: "CONFLICT"
-            timestamp: "2024-01-01T00:00:00Z"
 
     RateLimited:
       description: Too many requests
@@ -1085,8 +1319,6 @@ components:
             $ref: '#/components/schemas/ApiError'
           example:
             error: "Too many requests. Please try again later."
-            code: "RATE_LIMITED"
-            timestamp: "2024-01-01T00:00:00Z"
       headers:
         X-RateLimit-Remaining:
           schema:
@@ -1105,5 +1337,3 @@ components:
             $ref: '#/components/schemas/ApiError'
           example:
             error: "Internal server error"
-            code: "INTERNAL_ERROR"
-            timestamp: "2024-01-01T00:00:00Z"

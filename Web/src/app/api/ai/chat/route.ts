@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import {
     getAiConfig,
@@ -56,15 +56,15 @@ Reply ONLY with "HISTORY_QUERY" or "NORMAL".`;
 export async function POST(request: NextRequest) {
     let userId: string | undefined;
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const user = await getAuthenticatedUser(request);
+        if (!user?.id) {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), {
                 status: 401,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
 
-        userId = session.user.id;
+        userId = user.id;
 
         // Per-request rate limit: 10 requests per minute per user
         const rateLimitResult = await checkRateLimitAsync(userId, {

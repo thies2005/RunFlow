@@ -1,21 +1,21 @@
 
 import { NextRequest } from 'next/server';
-import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const user = await getAuthenticatedUser(request);
+        if (!user?.id) {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), {
                 status: 401,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
 
-        const userId = session.user.id;
+        const userId = user.id;
         const { searchParams } = new URL(request.url);
         const activityId = searchParams.get('activityId');
         const sessionId = searchParams.get('sessionId');
@@ -61,15 +61,15 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const user = await getAuthenticatedUser(request);
+        if (!user?.id) {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), {
                 status: 401,
                 headers: { 'Content-Type': 'application/json' },
             });
         }
 
-        const userId = session.user.id;
+        const userId = user.id;
         const { searchParams } = new URL(request.url);
         const activityId = searchParams.get('activityId');
         const sessionId = searchParams.get('sessionId');

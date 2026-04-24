@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const user = await getAuthenticatedUser(request);
+        if (!user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const userId = session.user.id;
+        const userId = user.id;
 
         const chatSessions = await prisma.chatSession.findMany({
             where: { userId },
@@ -31,12 +31,12 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const user = await getAuthenticatedUser(req);
+        if (!user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const userId = session.user.id;
+        const userId = user.id;
         const { title } = await req.json().catch(() => ({ title: 'New Chat' }));
 
         const newSession = await prisma.chatSession.create({
@@ -54,12 +54,12 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const user = await getAuthenticatedUser(req);
+        if (!user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const userId = session.user.id;
+        const userId = user.id;
 
         const { searchParams } = new URL(req.url);
         const deleteAll = searchParams.get('all') === 'true';

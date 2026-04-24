@@ -5,8 +5,8 @@
 import { GET, POST, DELETE } from '../route';
 import { NextRequest } from 'next/server';
 
-jest.mock('@/auth', () => ({
-    auth: jest.fn(),
+jest.mock('@/lib/mobile/auth', () => ({
+    getAuthenticatedUser: jest.fn(),
 }));
 
 jest.mock('@/lib/db', () => ({
@@ -24,15 +24,17 @@ jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
 
-import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { handleError } from '@/lib/errors/handler';
+
+const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat/sessions');
 
 describe('GET /api/ai/chat/sessions', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (auth as jest.Mock).mockResolvedValue({
-            user: { id: 'user-1' },
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue({
+            id: 'user-1',
         });
         (prisma.chatSession.findMany as jest.Mock).mockResolvedValue([
             {
@@ -51,7 +53,7 @@ describe('GET /api/ai/chat/sessions', () => {
     });
 
     it('should handle successful request', async () => {
-        const response = await GET();
+        const response = await GET(mockRequest);
         const data = await response.json();
 
         expect(response.status).toBe(200);
@@ -60,15 +62,15 @@ describe('GET /api/ai/chat/sessions', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (auth as jest.Mock).mockResolvedValue(null);
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue(null);
 
-        const response = await GET();
+        const response = await GET(mockRequest);
 
         expect(response.status).toBe(401);
     });
 
     it('should order by updatedAt desc', async () => {
-        await GET();
+        await GET(mockRequest);
 
         expect(prisma.chatSession.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -78,7 +80,7 @@ describe('GET /api/ai/chat/sessions', () => {
     });
 
     it('should include message counts', async () => {
-        await GET();
+        await GET(mockRequest);
 
         expect(prisma.chatSession.findMany).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -95,7 +97,7 @@ describe('GET /api/ai/chat/sessions', () => {
         (prisma.chatSession.findMany as jest.Mock).mockRejectedValue(new Error('Database error'));
         (handleError as jest.Mock).mockReturnValue(new Response(JSON.stringify({ error: 'Internal error' }), { status: 500 }));
 
-        const response = await GET();
+        const response = await GET(mockRequest);
 
         expect(handleError).toHaveBeenCalled();
     });
@@ -104,8 +106,8 @@ describe('GET /api/ai/chat/sessions', () => {
 describe('POST /api/ai/chat/sessions', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (auth as jest.Mock).mockResolvedValue({
-            user: { id: 'user-1' },
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue({
+            id: 'user-1',
         });
         (prisma.chatSession.create as jest.Mock).mockResolvedValue({
             id: 'session-1',
@@ -134,7 +136,7 @@ describe('POST /api/ai/chat/sessions', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (auth as jest.Mock).mockResolvedValue(null);
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat/sessions', {
             method: 'POST',
@@ -196,8 +198,8 @@ describe('POST /api/ai/chat/sessions', () => {
 describe('DELETE /api/ai/chat/sessions', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (auth as jest.Mock).mockResolvedValue({
-            user: { id: 'user-1' },
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue({
+            id: 'user-1',
         });
         (prisma.chatSession.findUnique as jest.Mock).mockResolvedValue({
             id: 'session-1',
@@ -222,7 +224,7 @@ describe('DELETE /api/ai/chat/sessions', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (auth as jest.Mock).mockResolvedValue(null);
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat/sessions?sessionId=session-1', {
             method: 'DELETE',

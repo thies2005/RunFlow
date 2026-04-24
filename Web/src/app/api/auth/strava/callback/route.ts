@@ -8,6 +8,7 @@
  * to determine which platform initiated the request:
  * 
  * - state=android_<timestamp>: Redirect to runflow://auth?code=...
+ * - state=flutter_<timestamp>: Redirect to runflow2://auth?code=...
  * - state=<anything else>: Continue normal web OAuth flow via NextAuth
  */
 
@@ -29,8 +30,10 @@ export async function GET(request: NextRequest) {
 
         // Check if this is a mobile request
         if (state?.startsWith('android_')) {
-            // Redirect error to Android app via deep link
             return NextResponse.redirect(`runflow://auth?error=${encodeURIComponent(error)}`);
+        }
+        if (state?.startsWith('flutter_')) {
+            return NextResponse.redirect(`runflow2://auth?error=${encodeURIComponent(error)}`);
         }
 
         // Web error - redirect to login page with error
@@ -44,6 +47,9 @@ export async function GET(request: NextRequest) {
         if (state?.startsWith('android_')) {
             return NextResponse.redirect('runflow://auth?error=missing_code');
         }
+        if (state?.startsWith('flutter_')) {
+            return NextResponse.redirect('runflow2://auth?error=missing_code');
+        }
 
         return NextResponse.redirect(new URL('/login?error=missing_code', request.url));
     }
@@ -51,12 +57,17 @@ export async function GET(request: NextRequest) {
     // ============================================================
     // MOBILE APP FLOW (Android)
     // ============================================================
-    if (state?.startsWith('android_')) {
-        logger.info('Strava Callback Android Flow', { state });
+    const isFlutter = state?.startsWith('flutter_');
+    const isAndroid = state?.startsWith('android_');
+    const isMobile = isFlutter || isAndroid;
+    const mobileScheme = isFlutter ? 'runflow2' : 'runflow';
+
+    if (isMobile) {
+        logger.info('Strava Callback Mobile Flow', { state, scheme: mobileScheme });
 
         // For mobile: return an HTML page with JS redirect.
         // Chrome Custom Tabs don't always handle 302 redirects to custom URI schemes.
-        const redirectUrl = new URL('runflow://auth');
+        const redirectUrl = new URL(`${mobileScheme}://auth`);
         redirectUrl.searchParams.set('code', code);
         if (state) {
             redirectUrl.searchParams.set('state', state);

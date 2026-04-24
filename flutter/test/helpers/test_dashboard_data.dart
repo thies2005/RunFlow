@@ -1,0 +1,111 @@
+import 'package:runflow_flutter/data/models/auth_models.dart';
+import 'package:runflow_flutter/data/models/dashboard_models.dart';
+
+class TestDashboardData {
+  TestDashboardData._();
+
+  static DashboardResponse createResponse() {
+    return DashboardResponse(
+      stats: const AnalyticsStats(
+        currentWeekMileage: 42.5,
+        effectiveVO2max: 52.3,
+        rawVO2max: 51.0,
+        vdotCorrectionFactor: 1.02,
+        marathonShape: 6.5,
+        currentVdot: 52.1,
+        ctl: 45.0,
+        atl: 30.0,
+        tsb: 15.0,
+        workloadRatio: 1.2,
+        easyTrimp: 100.0,
+        hrMax: 190,
+      ),
+      recentActivities: [
+        Activity(
+          id: 'act1',
+          stravaId: '12345',
+          type: ActivityType.run,
+          name: 'Morning Run',
+          startDate: DateTime(2024, 6, 15, 7, 30),
+          distance: 8500.0,
+          movingTime: 2700,
+          averageSpeed: 3.15,
+          averageHr: 145.0,
+          maxHr: 175,
+          averageCadence: 180.0,
+          hasHeartrate: true,
+          totalElevation: 120.0,
+          trimp: 85.0,
+          runningTss: 75.0,
+          estimatedVdot: 51.2,
+          trainingType: 'EASY',
+        ),
+        Activity(
+          id: 'act2',
+          stravaId: '12346',
+          type: ActivityType.run,
+          name: 'Interval Training',
+          startDate: DateTime(2024, 6, 14, 18, 0),
+          distance: 6000.0,
+          movingTime: 1800,
+          averageSpeed: 3.33,
+          averageHr: 165.0,
+          maxHr: 185,
+          averageCadence: 185.0,
+          hasHeartrate: true,
+          totalElevation: 50.0,
+          trimp: 120.0,
+          runningTss: 95.0,
+          estimatedVdot: 54.0,
+          trainingType: 'INTERVAL',
+        ),
+      ],
+      goals: [
+        Goal(
+          id: 'goal1',
+          userId: 'user1',
+          name: 'Berlin Marathon',
+          raceType: RaceType.marathon,
+          raceDate: DateTime(2024, 9, 29),
+          targetTime: 10800,
+          weeklyMileageGoal: 60.0,
+          planWeeks: 16,
+          runsPerWeek: 4,
+          longRunDay: 6,
+          workoutDay: 2,
+          currentVdot: 52.0,
+          predictedTime: 11200,
+          isActive: true,
+          createdAt: DateTime(2024, 6, 1),
+          updatedAt: DateTime(2024, 6, 15),
+          completedAt: null,
+          workouts: [
+            Workout(
+              id: 'w1',
+              goalId: 'goal1',
+              scheduledDate: DateTime(2024, 6, 16),
+              workoutType: WorkoutType.long,
+              description: 'Long Run 18km',
+              targetDistance: 18000.0,
+              targetPace: 360.0,
+              targetDuration: 6480,
+              isCompleted: false,
+              completedAt: null,
+              activityId: null,
+            ),
+          ],
+        ),
+      ],
+      syncStatus: SyncStatus(
+        syncInProgress: false,
+        lastSyncAt: DateTime(2024, 6, 15, 8, 0),
+        totalActivities: 150,
+      ),
+      user: const User(
+        id: 'user1',
+        email: 'test@example.com',
+        name: 'Test User',
+      ),
+    );
+  }
+}

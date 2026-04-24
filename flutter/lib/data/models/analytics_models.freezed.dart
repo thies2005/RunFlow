@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FitnessHistoryMetrics {
 
- double get ctl; double get atl; double get tsb; double get ctlRunning;
+@JsonKey(fromJson: _parseDouble) double get ctl;@JsonKey(fromJson: _parseDouble) double get atl;@JsonKey(fromJson: _parseDouble) double get tsb;@JsonKey(fromJson: _parseDouble) double get ctlRunning;
 /// Create a copy of FitnessHistoryMetrics
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $FitnessHistoryMetricsCopyWith<$Res>  {
   factory $FitnessHistoryMetricsCopyWith(FitnessHistoryMetrics value, $Res Function(FitnessHistoryMetrics) _then) = _$FitnessHistoryMetricsCopyWithImpl;
 @useResult
 $Res call({
- double ctl, double atl, double tsb, double ctlRunning
+@JsonKey(fromJson: _parseDouble) double ctl,@JsonKey(fromJson: _parseDouble) double atl,@JsonKey(fromJson: _parseDouble) double tsb,@JsonKey(fromJson: _parseDouble) double ctlRunning
 });
 
 
@@ -153,7 +153,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double ctl,  double atl,  double tsb,  double ctlRunning)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _parseDouble)  double ctl, @JsonKey(fromJson: _parseDouble)  double atl, @JsonKey(fromJson: _parseDouble)  double tsb, @JsonKey(fromJson: _parseDouble)  double ctlRunning)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FitnessHistoryMetrics() when $default != null:
 return $default(_that.ctl,_that.atl,_that.tsb,_that.ctlRunning);case _:
@@ -174,7 +174,7 @@ return $default(_that.ctl,_that.atl,_that.tsb,_that.ctlRunning);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double ctl,  double atl,  double tsb,  double ctlRunning)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _parseDouble)  double ctl, @JsonKey(fromJson: _parseDouble)  double atl, @JsonKey(fromJson: _parseDouble)  double tsb, @JsonKey(fromJson: _parseDouble)  double ctlRunning)  $default,) {final _that = this;
 switch (_that) {
 case _FitnessHistoryMetrics():
 return $default(_that.ctl,_that.atl,_that.tsb,_that.ctlRunning);}
@@ -191,7 +191,7 @@ return $default(_that.ctl,_that.atl,_that.tsb,_that.ctlRunning);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double ctl,  double atl,  double tsb,  double ctlRunning)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _parseDouble)  double ctl, @JsonKey(fromJson: _parseDouble)  double atl, @JsonKey(fromJson: _parseDouble)  double tsb, @JsonKey(fromJson: _parseDouble)  double ctlRunning)?  $default,) {final _that = this;
 switch (_that) {
 case _FitnessHistoryMetrics() when $default != null:
 return $default(_that.ctl,_that.atl,_that.tsb,_that.ctlRunning);case _:
@@ -206,13 +206,13 @@ return $default(_that.ctl,_that.atl,_that.tsb,_that.ctlRunning);case _:
 @JsonSerializable()
 
 class _FitnessHistoryMetrics extends FitnessHistoryMetrics {
-  const _FitnessHistoryMetrics({required this.ctl, required this.atl, required this.tsb, required this.ctlRunning}): super._();
+  const _FitnessHistoryMetrics({@JsonKey(fromJson: _parseDouble) required this.ctl, @JsonKey(fromJson: _parseDouble) required this.atl, @JsonKey(fromJson: _parseDouble) required this.tsb, @JsonKey(fromJson: _parseDouble) required this.ctlRunning}): super._();
   factory _FitnessHistoryMetrics.fromJson(Map<String, dynamic> json) => _$FitnessHistoryMetricsFromJson(json);
 
-@override final  double ctl;
-@override final  double atl;
-@override final  double tsb;
-@override final  double ctlRunning;
+@override@JsonKey(fromJson: _parseDouble) final  double ctl;
+@override@JsonKey(fromJson: _parseDouble) final  double atl;
+@override@JsonKey(fromJson: _parseDouble) final  double tsb;
+@override@JsonKey(fromJson: _parseDouble) final  double ctlRunning;
 
 /// Create a copy of FitnessHistoryMetrics
 /// with the given fields replaced by the non-null parameter values.
@@ -247,7 +247,7 @@ abstract mixin class _$FitnessHistoryMetricsCopyWith<$Res> implements $FitnessHi
   factory _$FitnessHistoryMetricsCopyWith(_FitnessHistoryMetrics value, $Res Function(_FitnessHistoryMetrics) _then) = __$FitnessHistoryMetricsCopyWithImpl;
 @override @useResult
 $Res call({
- double ctl, double atl, double tsb, double ctlRunning
+@JsonKey(fromJson: _parseDouble) double ctl,@JsonKey(fromJson: _parseDouble) double atl,@JsonKey(fromJson: _parseDouble) double tsb,@JsonKey(fromJson: _parseDouble) double ctlRunning
 });
 
 

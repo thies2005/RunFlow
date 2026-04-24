@@ -9,10 +9,10 @@ part of 'analytics_models.dart';
 _FitnessHistoryMetrics _$FitnessHistoryMetricsFromJson(
   Map<String, dynamic> json,
 ) => _FitnessHistoryMetrics(
-  ctl: (json['ctl'] as num).toDouble(),
-  atl: (json['atl'] as num).toDouble(),
-  tsb: (json['tsb'] as num).toDouble(),
-  ctlRunning: (json['ctlRunning'] as num).toDouble(),
+  ctl: _parseDouble(json['ctl']),
+  atl: _parseDouble(json['atl']),
+  tsb: _parseDouble(json['tsb']),
+  ctlRunning: _parseDouble(json['ctlRunning']),
 );
 
 Map<String, dynamic> _$FitnessHistoryMetricsToJson(

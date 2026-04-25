@@ -58,10 +58,10 @@ export async function POST(request: NextRequest) {
         });
 
         if (existingUser) {
-            return NextResponse.json(
-                { error: 'An account with this email already exists' },
-                { status: 409 }
-            );
+            return NextResponse.json({
+                success: true,
+                message: 'Account created successfully. Please check your email to verify your account.',
+            }, { status: 201 });
         }
 
         // Create user with hashed password

@@ -63,6 +63,16 @@ export async function GET(request: NextRequest) {
     const mobileScheme = isFlutter ? 'runflow2' : 'runflow';
 
     if (isMobile) {
+        const parts = state!.split('_');
+        const timestamp = parseInt(parts[1], 10);
+        const now = Date.now();
+        const MAX_AGE_MS = 10 * 60 * 1000;
+
+        if (isNaN(timestamp) || (now - timestamp) > MAX_AGE_MS) {
+            logger.warn('Strava Callback: stale or invalid state timestamp', { state, age: now - timestamp });
+            return NextResponse.redirect(new URL('/login?error=invalid_state', request.url));
+        }
+
         logger.info('Strava Callback Mobile Flow', { state, scheme: mobileScheme });
 
         // For mobile: return an HTML page with JS redirect.

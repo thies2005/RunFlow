@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
         // Rate limiting
         const clientId = getClientIdentifier(request);
         const rateLimitResult = await checkRateLimitAsync(clientId, {
-            limit: 10,
+            limit: 5,
             windowSeconds: 60,
             prefix: 'mobile-email-login'
         });
@@ -35,6 +35,19 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 { error: 'Email and password are required' },
                 { status: 400 }
+            );
+        }
+
+        const emailRateLimit = await checkRateLimitAsync(email.toLowerCase(), {
+            limit: 5,
+            windowSeconds: 300,
+            prefix: 'mobile-email-login-email'
+        });
+
+        if (!emailRateLimit.allowed) {
+            return NextResponse.json(
+                { error: 'Too many login attempts for this account. Please try again later.' },
+                { status: 429, headers: rateLimitHeaders(emailRateLimit) }
             );
         }
 

@@ -52,7 +52,12 @@ jest.mock('@/lib/errors/handler', () => ({
     handleError: jest.fn(),
 }));
 
+jest.mock('@/lib/mobile/auth', () => ({
+    getAuthenticatedUser: jest.fn(),
+}));
+
 import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { getAiConfig, streamChat, checkUsageLimit } from '@/lib/ai';
 import { checkRateLimitAsync } from '@/lib/rateLimit';
@@ -63,6 +68,10 @@ describe('POST /api/ai/chat', () => {
         jest.clearAllMocks();
         (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
+        });
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue({
+            id: 'user-1',
+            authMethod: 'session',
         });
         (checkRateLimitAsync as jest.Mock).mockResolvedValue({ allowed: true });
         (getAiConfig as jest.Mock).mockResolvedValue({
@@ -101,7 +110,7 @@ describe('POST /api/ai/chat', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (auth as jest.Mock).mockResolvedValue(null);
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat', {
             method: 'POST',

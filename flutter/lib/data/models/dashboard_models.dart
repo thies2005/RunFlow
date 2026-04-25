@@ -5,6 +5,27 @@ import 'package:runflow_flutter/data/models/json_compat.dart';
 part 'dashboard_models.freezed.dart';
 part 'dashboard_models.g.dart';
 
+double _parseDouble(dynamic value) {
+  if (value is num) {
+    return value.toDouble();
+  }
+  if (value is String) {
+    return double.tryParse(value) ?? 0.0;
+  }
+  if (value is Map) {
+    // Handle case where server returns a map with a value property
+    final val = value['value'] ?? value['\$numberDouble'] ?? value.values.first;
+    if (val is num) return val.toDouble();
+    if (val is String) return double.tryParse(val) ?? 0.0;
+  }
+  return 0.0;
+}
+
+double? _parseDoubleNullable(dynamic value) {
+  if (value == null) return null;
+  return _parseDouble(value);
+}
+
 enum ActivityType {
   @JsonValue('RUN')
   run,
@@ -48,17 +69,17 @@ enum WorkoutType {
 @Freezed(copyWith: true)
 sealed class AnalyticsStats with _$AnalyticsStats {
   const factory AnalyticsStats({
-    required double currentWeekMileage,
-    required double effectiveVO2max,
-    required double rawVO2max,
-    required double vdotCorrectionFactor,
-    required double marathonShape,
-    required double? currentVdot,
-    required double ctl,
-    required double atl,
-    required double tsb,
-    required double workloadRatio,
-    required double easyTrimp,
+    @JsonKey(fromJson: _parseDouble) required double currentWeekMileage,
+    @JsonKey(fromJson: _parseDouble) required double effectiveVO2max,
+    @JsonKey(fromJson: _parseDouble) required double rawVO2max,
+    @JsonKey(fromJson: _parseDouble) required double vdotCorrectionFactor,
+    @JsonKey(fromJson: _parseDouble) required double marathonShape,
+    @JsonKey(fromJson: _parseDoubleNullable) required double? currentVdot,
+    @JsonKey(fromJson: _parseDouble) required double ctl,
+    @JsonKey(fromJson: _parseDouble) required double atl,
+    @JsonKey(fromJson: _parseDouble) required double tsb,
+    @JsonKey(fromJson: _parseDouble) required double workloadRatio,
+    @JsonKey(fromJson: _parseDouble) required double easyTrimp,
     required int hrMax,
   }) = _AnalyticsStats;
   const AnalyticsStats._();

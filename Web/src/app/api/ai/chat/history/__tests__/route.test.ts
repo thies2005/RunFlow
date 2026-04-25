@@ -18,7 +18,12 @@ jest.mock('@/lib/db', () => ({
     },
 }));
 
+jest.mock('@/lib/mobile/auth', () => ({
+    getAuthenticatedUser: jest.fn(),
+}));
+
 import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 
 describe('GET /api/ai/chat/history', () => {
@@ -26,6 +31,10 @@ describe('GET /api/ai/chat/history', () => {
         jest.clearAllMocks();
         (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
+        });
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue({
+            id: 'user-1',
+            authMethod: 'session',
         });
         (prisma.chatMessage.findMany as jest.Mock).mockResolvedValue([
             {
@@ -55,7 +64,7 @@ describe('GET /api/ai/chat/history', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (auth as jest.Mock).mockResolvedValue(null);
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat/history');
 
@@ -109,6 +118,10 @@ describe('DELETE /api/ai/chat/history', () => {
         (auth as jest.Mock).mockResolvedValue({
             user: { id: 'user-1' },
         });
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue({
+            id: 'user-1',
+            authMethod: 'session',
+        });
         (prisma.chatMessage.deleteMany as jest.Mock).mockResolvedValue({ count: 2 });
     });
 
@@ -125,7 +138,7 @@ describe('DELETE /api/ai/chat/history', () => {
     });
 
     it('should return 401 without authentication', async () => {
-        (auth as jest.Mock).mockResolvedValue(null);
+        (getAuthenticatedUser as jest.Mock).mockResolvedValue(null);
 
         const mockRequest = new NextRequest('http://localhost:3000/api/ai/chat/history', {
             method: 'DELETE',

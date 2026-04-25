@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { decryptToken } from '@/lib/crypto';
 import { logger } from '@/lib/logging/logger';
 import { auth } from '@/auth';
+import { safeFetch } from '@/lib/ai/providers';
 
 
 export async function POST(request: Request) {
@@ -185,9 +186,10 @@ Confidence should be "high", "medium", or "low" based on ${imageBase64 ? 'image 
             const currentKey = apiKeys[i];
             const url = `${googleProvider.baseUrl}/v1beta/models/${model}:generateContent?key=${currentKey}`;
 
-            response = await fetch(url, {
+            response = await safeFetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                allowedUrls: [googleProvider.baseUrl],
                 body: JSON.stringify({
                     contents: [{
                         parts: imageBase64 ? [

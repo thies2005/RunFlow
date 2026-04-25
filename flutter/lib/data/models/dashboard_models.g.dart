@@ -8,17 +8,17 @@ part of 'dashboard_models.dart';
 
 _AnalyticsStats _$AnalyticsStatsFromJson(Map<String, dynamic> json) =>
     _AnalyticsStats(
-      currentWeekMileage: (json['currentWeekMileage'] as num).toDouble(),
-      effectiveVO2max: (json['effectiveVO2max'] as num).toDouble(),
-      rawVO2max: (json['rawVO2max'] as num).toDouble(),
-      vdotCorrectionFactor: (json['vdotCorrectionFactor'] as num).toDouble(),
-      marathonShape: (json['marathonShape'] as num).toDouble(),
-      currentVdot: (json['currentVdot'] as num?)?.toDouble(),
-      ctl: (json['ctl'] as num).toDouble(),
-      atl: (json['atl'] as num).toDouble(),
-      tsb: (json['tsb'] as num).toDouble(),
-      workloadRatio: (json['workloadRatio'] as num).toDouble(),
-      easyTrimp: (json['easyTrimp'] as num).toDouble(),
+      currentWeekMileage: _parseDouble(json['currentWeekMileage']),
+      effectiveVO2max: _parseDouble(json['effectiveVO2max']),
+      rawVO2max: _parseDouble(json['rawVO2max']),
+      vdotCorrectionFactor: _parseDouble(json['vdotCorrectionFactor']),
+      marathonShape: _parseDouble(json['marathonShape']),
+      currentVdot: _parseDoubleNullable(json['currentVdot']),
+      ctl: _parseDouble(json['ctl']),
+      atl: _parseDouble(json['atl']),
+      tsb: _parseDouble(json['tsb']),
+      workloadRatio: _parseDouble(json['workloadRatio']),
+      easyTrimp: _parseDouble(json['easyTrimp']),
       hrMax: (json['hrMax'] as num).toInt(),
     );
 

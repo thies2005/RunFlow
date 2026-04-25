@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db'; // Will check if this path is right, sometimes it's '@/lib/prisma' or 'lib/db'
+import { prisma } from '@/lib/db';
+import { auth } from '@/auth';
 
 export async function POST(request: Request) {
     try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
+
         const body = await request.json();
-        const { userId, date, mealType, quantity, foodItem } = body;
+        const { date, mealType, quantity, foodItem } = body;
 
         let dbFoodItem;
         if (foodItem.barcode) {

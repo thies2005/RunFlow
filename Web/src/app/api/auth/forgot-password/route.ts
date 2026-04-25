@@ -35,16 +35,17 @@ export async function POST(request: NextRequest) {
         // We don't want to leak if a user exists or not, so we just return success
         // BUT we only send email if user exists and has a password (email auth) or is setting one up
         if (user) {
-            // Generate and send code
             const code = await createAuthCode(user.email!, AuthCodeType.PASSWORD_RESET);
 
-            // Send email (don't await to not block response? actually better to await to catch errors)
-            try {
-                await sendPasswordResetEmail(user.email!, code);
-            } catch (emailError) {
-                logger.error('Failed to send reset email', { email: user.email, error: emailError instanceof Error ? emailError.message : String(emailError) });
-            }
+            sendPasswordResetEmail(user.email!, code).catch((emailError) => {
+                logger.error('Failed to send reset email', {
+                    email: user.email,
+                    error: emailError instanceof Error ? emailError.message : String(emailError)
+                });
+            });
         }
+
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));
 
         return NextResponse.json({
             success: true,

@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
 
         if (existingUser) {
             return NextResponse.json(
-                { error: 'An account with this email already exists' },
-                { status: 409 }
+                { error: 'Registration failed. Please try again or contact support.' },
+                { status: 400 }
             );
         }
 

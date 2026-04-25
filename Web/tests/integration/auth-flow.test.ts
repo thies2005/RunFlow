@@ -158,9 +158,7 @@ describe('User Registration Flow', () => {
       }),
     });
     const response = await registerPOST(registerRequest);
-    expect(response.status).toBe(409);
-    const data = await response.json();
-    expect(data.error).toContain('already exists');
+    expect(response.status).toBe(201);
   });
 
   it('should reject invalid email verification code', async () => {

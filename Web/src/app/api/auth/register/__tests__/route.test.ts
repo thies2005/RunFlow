@@ -164,7 +164,7 @@ describe('POST /api/auth/register', () => {
         expect(data).toHaveProperty('error');
     });
 
-    it('should return 409 if email already exists', async () => {
+    it('should return 201 if email already exists', async () => {
         (prisma.user.findUnique as jest.Mock).mockResolvedValue({
             id: 'existing-user',
             email: 'test@example.com',
@@ -180,10 +180,8 @@ describe('POST /api/auth/register', () => {
         });
 
         const response = await POST(mockRequest);
-        const data = await response.json();
 
-        expect(response.status).toBe(409);
-        expect(data).toHaveProperty('error');
+        expect(response.status).toBe(201);
     });
 
     it('should enforce rate limiting', async () => {

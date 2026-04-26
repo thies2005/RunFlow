@@ -23,11 +23,19 @@ Future<AnalyticsStats> analyticsStats(Ref ref) async {
 @riverpod
 Future<List<FitnessHistory>> analyticsHistory(
   Ref ref, {
-  required DateTime startDate,
-  required DateTime endDate,
+  required int days,
 }) async {
   final repo = ref.read(analyticsRepositoryProvider);
+  final now = DateTime.now();
+  final endDate = DateTime(now.year, now.month, now.day);
+  final startDate = endDate.subtract(Duration(days: days));
   return repo.getHistory(startDate: startDate, endDate: endDate);
+}
+
+@riverpod
+Future<List<WeeklyMileage>> weeklyMileage(Ref ref) async {
+  final repo = ref.read(analyticsRepositoryProvider);
+  return repo.getWeeklyMileage(weeks: 10);
 }
 
 @riverpod

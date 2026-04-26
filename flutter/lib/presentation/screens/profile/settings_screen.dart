@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 
@@ -121,7 +122,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   value: settings.workoutReminders,
-                  onChanged: (value) {
+                  onChanged: (bool value) {
                     ref
                         .read(settingsProvider.notifier)
                         .setWorkoutReminders(value);
@@ -139,10 +140,28 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   value: settings.supplementReminders,
-                  onChanged: (value) {
+                  onChanged: (bool value) {
                     ref
                         .read(settingsProvider.notifier)
                         .setSupplementReminders(value);
+                  },
+                ),
+                SwitchListTile(
+                  title: Text(
+                    'Sync Notifications',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  subtitle: Text(
+                    'Notify when data sync completes',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                  value: settings.syncNotifications,
+                  onChanged: (bool value) {
+                    ref
+                        .read(settingsProvider.notifier)
+                        .setSyncNotifications(value);
                   },
                 ),
                 SwitchListTile(
@@ -157,13 +176,34 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   value: settings.chatNotifications,
-                  onChanged: (value) {
+                  onChanged: (bool value) {
                     ref
                         .read(settingsProvider.notifier)
                         .setChatNotifications(value);
                   },
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Debug',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.bug_report),
+              title: const Text('View Logs'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                context.push('/settings/logs');
+              },
             ),
           ),
         ],

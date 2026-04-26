@@ -16,10 +16,8 @@ class AnalyticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(analyticsStatsProvider);
     final selectedDays = ref.watch(selectedDateRangeProvider);
-    final now = DateTime.now();
-    final startDate = now.subtract(Duration(days: selectedDays));
     final historyAsync = ref.watch(
-      analyticsHistoryProvider(startDate: startDate, endDate: now),
+      analyticsHistoryProvider(days: selectedDays),
     );
 
     return Scaffold(
@@ -30,7 +28,7 @@ class AnalyticsScreen extends ConsumerWidget {
         onRefresh: () async {
           ref.invalidate(analyticsStatsProvider);
           ref.invalidate(
-            analyticsHistoryProvider(startDate: startDate, endDate: now),
+            analyticsHistoryProvider(days: selectedDays),
           );
         },
         child: statsAsync.when(
@@ -40,7 +38,7 @@ class AnalyticsScreen extends ConsumerWidget {
             onRetry: () {
               ref.invalidate(analyticsStatsProvider);
               ref.invalidate(
-                analyticsHistoryProvider(startDate: startDate, endDate: now),
+                analyticsHistoryProvider(days: selectedDays),
               );
             },
           ),
@@ -61,14 +59,20 @@ class AnalyticsScreen extends ConsumerWidget {
                   ),
                 ),
                 error: (_, _) => const SizedBox.shrink(),
-                data: (history) => _FitnessChart(history: history),
+                data: (history) => RepaintBoundary(
+                  child: _FitnessChart(history: history),
+                ),
               ),
               const SizedBox(height: 16),
               _RacePredictionsCard(),
               const SizedBox(height: 16),
-              _MarathonShapeSection(stats: stats),
+              RepaintBoundary(
+                child: _MarathonShapeSection(stats: stats),
+              ),
               const SizedBox(height: 16),
-              _WeeklyMileageCard(stats: stats),
+              RepaintBoundary(
+                child: _WeeklyMileageCard(stats: stats),
+              ),
             ],
           ),
         ),

@@ -111,7 +111,7 @@ final class AnalyticsHistoryProvider
         $FutureProvider<List<FitnessHistory>> {
   AnalyticsHistoryProvider._({
     required AnalyticsHistoryFamily super.from,
-    required ({DateTime startDate, DateTime endDate}) super.argument,
+    required int super.argument,
   }) : super(
          retry: null,
          name: r'analyticsHistoryProvider',
@@ -127,7 +127,7 @@ final class AnalyticsHistoryProvider
   String toString() {
     return r'analyticsHistoryProvider'
         ''
-        '$argument';
+        '($argument)';
   }
 
   @$internal
@@ -138,12 +138,8 @@ final class AnalyticsHistoryProvider
 
   @override
   FutureOr<List<FitnessHistory>> create(Ref ref) {
-    final argument = this.argument as ({DateTime startDate, DateTime endDate});
-    return analyticsHistory(
-      ref,
-      startDate: argument.startDate,
-      endDate: argument.endDate,
-    );
+    final argument = this.argument as int;
+    return analyticsHistory(ref, days: argument);
   }
 
   @override
@@ -157,14 +153,10 @@ final class AnalyticsHistoryProvider
   }
 }
 
-String _$analyticsHistoryHash() => r'9a207438bf409a90327ee3badbb3bd8efbfaacd9';
+String _$analyticsHistoryHash() => r'd3586bc9c04af1ebb0dab897177d1fda6d409ad4';
 
 final class AnalyticsHistoryFamily extends $Family
-    with
-        $FunctionalFamilyOverride<
-          FutureOr<List<FitnessHistory>>,
-          ({DateTime startDate, DateTime endDate})
-        > {
+    with $FunctionalFamilyOverride<FutureOr<List<FitnessHistory>>, int> {
   AnalyticsHistoryFamily._()
     : super(
         retry: null,
@@ -174,17 +166,53 @@ final class AnalyticsHistoryFamily extends $Family
         isAutoDispose: true,
       );
 
-  AnalyticsHistoryProvider call({
-    required DateTime startDate,
-    required DateTime endDate,
-  }) => AnalyticsHistoryProvider._(
-    argument: (startDate: startDate, endDate: endDate),
-    from: this,
-  );
+  AnalyticsHistoryProvider call({required int days}) =>
+      AnalyticsHistoryProvider._(argument: days, from: this);
 
   @override
   String toString() => r'analyticsHistoryProvider';
 }
+
+@ProviderFor(weeklyMileage)
+final weeklyMileageProvider = WeeklyMileageProvider._();
+
+final class WeeklyMileageProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<WeeklyMileage>>,
+          List<WeeklyMileage>,
+          FutureOr<List<WeeklyMileage>>
+        >
+    with
+        $FutureModifier<List<WeeklyMileage>>,
+        $FutureProvider<List<WeeklyMileage>> {
+  WeeklyMileageProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'weeklyMileageProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$weeklyMileageHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<WeeklyMileage>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<WeeklyMileage>> create(Ref ref) {
+    return weeklyMileage(ref);
+  }
+}
+
+String _$weeklyMileageHash() => r'f9c0864d8fd43f9d48741f334df67f4adbca5cc0';
 
 @ProviderFor(SelectedDateRange)
 final selectedDateRangeProvider = SelectedDateRangeProvider._();

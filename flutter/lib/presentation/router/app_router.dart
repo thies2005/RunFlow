@@ -11,6 +11,7 @@ import 'package:runflow_flutter/presentation/screens/activities/activity_detail_
 import 'package:runflow_flutter/presentation/screens/activities/activity_list_screen.dart';
 import 'package:runflow_flutter/presentation/screens/analytics/analytics_screen.dart';
 import 'package:runflow_flutter/presentation/screens/goals/goal_list_screen.dart';
+import 'package:runflow_flutter/presentation/screens/plan/plan_screen.dart';
 import 'package:runflow_flutter/presentation/screens/goals/goal_detail_screen.dart';
 import 'package:runflow_flutter/presentation/screens/goals/goal_setup_wizard.dart';
 import 'package:runflow_flutter/presentation/screens/profile/profile_screen.dart';
@@ -25,6 +26,7 @@ import 'package:runflow_flutter/presentation/screens/health/health_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/barcode_scanner_screen.dart';
 import 'package:runflow_flutter/presentation/screens/onboarding/onboarding_screen.dart';
 import 'package:runflow_flutter/presentation/screens/startup/startup_screen.dart';
+import 'package:runflow_flutter/presentation/screens/record/record_screen.dart';
 import 'package:runflow_flutter/presentation/widgets/app_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -95,8 +97,12 @@ GoRouter createRouter(Ref ref) {
         builder: (context, state) => const ChatScreen(),
       ),
       GoRoute(
-        path: '/health',
-        builder: (context, state) => const HealthScreen(),
+        path: '/analytics',
+        builder: (context, state) => const AnalyticsScreen(),
+      ),
+      GoRoute(
+        path: '/goals',
+        builder: (context, state) => const GoalListScreen(),
       ),
       GoRoute(
         path: '/health/scan',
@@ -169,24 +175,24 @@ GoRouter createRouter(Ref ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/activities',
-                builder: (context, state) => const ActivityListScreen(),
+                path: '/plan',
+                builder: (context, state) => const PlanScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/analytics',
-                builder: (context, state) => const AnalyticsScreen(),
+                path: '/record',
+                builder: (context, state) => const RecordScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/goals',
-                builder: (context, state) => const GoalListScreen(),
+                path: '/health',
+                builder: (context, state) => const HealthScreen(),
               ),
             ],
           ),
@@ -195,6 +201,10 @@ GoRouter createRouter(Ref ref) {
               GoRoute(
                 path: '/profile',
                 builder: (context, state) => const ProfileScreen(),
+              ),
+              GoRoute(
+                path: '/activities',
+                builder: (context, state) => const ActivityListScreen(),
               ),
             ],
           ),

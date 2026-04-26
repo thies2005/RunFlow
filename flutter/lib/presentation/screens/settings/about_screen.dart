@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -62,14 +63,18 @@ class AboutScreen extends StatelessWidget {
                   leading: const Icon(Icons.description_outlined),
                   title: const Text('Privacy Policy'),
                   trailing: const Icon(Icons.open_in_new, size: 18),
-                  onTap: () {},
+                  onTap: () {
+                    launchUrl(Uri.parse('https://runflow.schuelken.uk/privacy'));
+                  },
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
                   leading: const Icon(Icons.gavel_outlined),
                   title: const Text('Terms of Service'),
                   trailing: const Icon(Icons.open_in_new, size: 18),
-                  onTap: () {},
+                  onTap: () {
+                    launchUrl(Uri.parse('https://runflow.schuelken.uk/terms'));
+                  },
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(

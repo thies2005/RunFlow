@@ -433,3 +433,47 @@ abstract class _$NutritionNotifier extends $AsyncNotifier<NutritionLog> {
     element.handleCreate(ref, () => build(_$args));
   }
 }
+
+@ProviderFor(BarcodeScan)
+final barcodeScanProvider = BarcodeScanProvider._();
+
+final class BarcodeScanProvider
+    extends $AsyncNotifierProvider<BarcodeScan, FoodItem?> {
+  BarcodeScanProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'barcodeScanProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$barcodeScanHash();
+
+  @$internal
+  @override
+  BarcodeScan create() => BarcodeScan();
+}
+
+String _$barcodeScanHash() => r'68f32b4133ab80ed6fdf19ffe516695280845b1b';
+
+abstract class _$BarcodeScan extends $AsyncNotifier<FoodItem?> {
+  FutureOr<FoodItem?> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<FoodItem?>, FoodItem?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<FoodItem?>, FoodItem?>,
+              AsyncValue<FoodItem?>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}

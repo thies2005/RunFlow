@@ -14,7 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { AnalyticsService } from '@/lib/services/analytics';
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfDay, endOfDay } from 'date-fns';
 import { getSyncStatus } from '@/lib/strava/sync';
 import { ensureFitnessCacheUpToDate } from '@/lib/metrics/fitnessCache';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
@@ -175,6 +175,46 @@ export async function GET(request: NextRequest) {
             }))
         }));
 
+        // Find today's workout (first incomplete workout for today, or first incomplete workout of the week)
+        const today = new Date();
+        const todayStart = startOfDay(today);
+        const todayEnd = endOfDay(today);
+        
+        // First, look for any workout scheduled for today
+        let todayWorkout = null;
+        for (const goal of goals) {
+            const todayScheduledWorkout = goal.workouts.find(w => {
+                const workoutDate = new Date(w.scheduledDate);
+                return workoutDate >= todayStart && workoutDate <= todayEnd && !w.isCompleted;
+            });
+            if (todayScheduledWorkout) {
+                todayWorkout = todayScheduledWorkout;
+                break;
+            }
+        }
+        
+        // If no workout for today, get the first pending workout of the week
+        if (!todayWorkout) {
+            for (const goal of goals) {
+                const pendingWorkouts = goal.workouts
+                    .filter(w => !w.isCompleted)
+                    .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
+                if (pendingWorkouts.length > 0) {
+                    todayWorkout = pendingWorkouts[0];
+                    break;
+                }
+            }
+        }
+        
+        // Serialize today's workout if found
+        const serializedTodayWorkout = todayWorkout ? {
+            ...todayWorkout,
+            scheduledDate: todayWorkout.scheduledDate.toISOString(),
+            createdAt: todayWorkout.createdAt.toISOString(),
+            updatedAt: todayWorkout.updatedAt.toISOString(),
+            completedAt: todayWorkout.completedAt?.toISOString() || null
+        } : null;
+
         return NextResponse.json({
             stats: {
                 currentWeekMileage,
@@ -198,7 +238,8 @@ export async function GET(request: NextRequest) {
                 name: user.name,
                 email: user.email,
                 image: user.image
-            }
+            },
+            todayWorkout: serializedTodayWorkout
         }, { headers: rateLimitHeaders(rateLimitResult) });
 
     } catch (error) {

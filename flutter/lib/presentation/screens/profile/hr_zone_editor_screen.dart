@@ -14,30 +14,42 @@ class HrZoneEditorScreen extends ConsumerStatefulWidget {
 class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
   late List<int?> _zones;
   bool _isLoading = false;
+  ProviderSubscription<AsyncValue<UserProfile>>? _profileSub;
 
   @override
   void initState() {
     super.initState();
-    _zones = List.filled(4, null);
+    _zones = List.filled(6, null);
     _loadZones();
   }
 
   void _loadZones() {
-    final profileAsync = ref.read(profileProvider);
-    profileAsync.whenData((profile) {
-      setState(() {
-        _zones = [
-          profile.hrZone1Max,
-          profile.hrZone2Max,
-          profile.hrZone3Max,
-          profile.hrZone4Max,
-        ];
+    _profileSub = ref.listenManual(profileProvider, (previous, next) {
+      next.whenData((profile) {
+        if (mounted) {
+          setState(() {
+            _zones = [
+              profile.hrZone1Max,
+              profile.hrZone2Max,
+              profile.hrZone3Max,
+              profile.hrZone4Max,
+              profile.hrZone5Max,
+              profile.hrZone6Max,
+            ];
+          });
+        }
       });
-    });
+    }, fireImmediately: true);
+  }
+
+  @override
+  void dispose() {
+    _profileSub?.close();
+    super.dispose();
   }
 
   String? _validateZones() {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 6; i++) {
       if (_zones[i] != null && _zones[i]! <= 0) {
         return 'Zone ${i + 1} must be a positive value';
       }
@@ -67,6 +79,8 @@ class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
               hrZone2Max: _zones[1],
               hrZone3Max: _zones[2],
               hrZone4Max: _zones[3],
+              hrZone5Max: _zones[4],
+              hrZone6Max: _zones[5],
             ),
           );
       if (mounted) {
@@ -122,11 +136,11 @@ class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          for (int i = 0; i < 4; i++)
+          for (int i = 0; i < 6; i++)
             _HrZoneSlider(
               index: i,
               value: _zones[i],
-              maxValue: i < 3 ? _zones[i + 1] : 220,
+              maxValue: i < 5 ? _zones[i + 1] : 220,
               prevValue: i > 0 ? _zones[i - 1] : 0,
               onChanged: (val) {
                 setState(() {
@@ -134,6 +148,14 @@ class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
                 });
               },
             ),
+          const SizedBox(height: 16),
+          Text(
+            'Zone 7 (Neuromuscular): Everything above Zone 6',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
         ],
       ),
     );
@@ -157,16 +179,27 @@ class _HrZoneSlider extends StatelessWidget {
 
   static const _zoneColors = [
     AppColors.success,
+    AppColors.peaked,
     AppColors.warning,
     AppColors.fatigued,
+    AppColors.veryFatigued,
     AppColors.error,
+  ];
+
+  static const _zoneLabels = [
+    'Zone 1 (Recovery)',
+    'Zone 2 (Aerobic)',
+    'Zone 3 (Tempo)',
+    'Zone 4 (Threshold)',
+    'Zone 5 (VO2max)',
+    'Zone 6 (Anaerobic)',
   ];
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final zoneNumber = index + 1;
     final zoneColor = _zoneColors[index];
+    final zoneLabel = _zoneLabels[index];
     final effectiveValue = value?.toDouble() ?? (prevValue ?? 60) + 30.0;
     final minVal = (prevValue ?? 60) + 1.0;
     final maxVal = maxValue != null ? maxValue!.toDouble() : 220.0;
@@ -189,7 +222,7 @@ class _HrZoneSlider extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Zone $zoneNumber',
+                  zoneLabel,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),

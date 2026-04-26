@@ -45,23 +45,41 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
         },
       );
       final data = response.data;
-      final List<dynamic> items;
-      if (data is List) {
-        items = data;
-      } else if (data is Map<String, dynamic>) {
-        final unwrapped = unwrapPayload(data, const ['history', 'fitnessHistory']);
-        final list = unwrapped['history'] ?? unwrapped['fitnessHistory'];
-        if (list is List) {
-          items = list;
-        } else {
-          items = [];
-        }
-      } else {
-        items = [];
+      if (data is! Map<String, dynamic>) return [];
+
+      final ctlList = (data['ctl'] as List?) ?? [];
+      final atlList = (data['atl'] as List?) ?? [];
+      final tsbList = (data['tsb'] as List?) ?? [];
+
+      final atlByDate = <String, double>{};
+      for (final item in atlList) {
+        final m = item as Map<String, dynamic>;
+        atlByDate[m['date'] as String] = (m['value'] as num?)?.toDouble() ?? 0.0;
       }
-      return items
-          .map((e) => FitnessHistory.fromJson(e as Map<String, dynamic>))
-          .toList();
+
+      final tsbByDate = <String, double>{};
+      for (final item in tsbList) {
+        final m = item as Map<String, dynamic>;
+        tsbByDate[m['date'] as String] = (m['value'] as num?)?.toDouble() ?? 0.0;
+      }
+
+      final result = <FitnessHistory>[];
+      for (final item in ctlList) {
+        final m = item as Map<String, dynamic>;
+        final dateStr = m['date'] as String;
+        final ctlVal = (m['value'] as num?)?.toDouble() ?? 0.0;
+        result.add(FitnessHistory(
+          date: DateTime.parse(dateStr),
+          metrics: FitnessHistoryMetrics(
+            ctl: ctlVal,
+            atl: atlByDate[dateStr] ?? 0.0,
+            tsb: tsbByDate[dateStr] ?? 0.0,
+            ctlRunning: 0.0,
+          ),
+        ));
+      }
+
+      return result;
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException

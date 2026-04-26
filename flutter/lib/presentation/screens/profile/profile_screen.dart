@@ -14,7 +14,7 @@ class ProfileScreen extends ConsumerWidget {
     final user = authState.value;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('Athlete'),
       ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
@@ -135,6 +135,11 @@ class _ProfileMenuSection extends ConsumerWidget {
     return Column(
       children: [
         _MenuTile(
+          icon: Icons.directions_run_outlined,
+          title: 'Activities',
+          onTap: () => context.go('/activities'),
+        ),
+        _MenuTile(
           icon: Icons.edit_outlined,
           title: 'Edit Profile',
           onTap: () => context.push('/profile/edit'),
@@ -150,26 +155,19 @@ class _ProfileMenuSection extends ConsumerWidget {
           onTap: () => context.push('/profile/settings'),
         ),
         _MenuTile(
+          icon: Icons.bar_chart_outlined,
+          title: 'Analytics',
+          onTap: () => context.push('/analytics'),
+        ),
+        _MenuTile(
           icon: Icons.smart_toy_outlined,
           title: 'AI Settings',
-          onTap: () {},
+          onTap: () => context.push('/settings/ai'),
         ),
         _MenuTile(
           icon: Icons.info_outline,
           title: 'About',
-          onTap: () {
-            showAboutDialog(
-              context: context,
-              applicationName: 'RunFlow',
-              applicationVersion: '1.0.0',
-              children: [
-                Text(
-                  'Your personal running performance dashboard.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            );
-          },
+          onTap: () => context.push('/settings/about'),
         ),
         const Divider(indent: 16, endIndent: 16, height: 32),
         _MenuTile(

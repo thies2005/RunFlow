@@ -215,6 +215,9 @@ _DashboardResponse _$DashboardResponseFromJson(Map<String, dynamic> json) =>
         json['syncStatus'] as Map<String, dynamic>,
       ),
       user: User.fromJson(json['user'] as Map<String, dynamic>),
+      todayWorkout: json['todayWorkout'] == null
+          ? null
+          : Workout.fromJson(json['todayWorkout'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$DashboardResponseToJson(_DashboardResponse instance) =>
@@ -224,4 +227,5 @@ Map<String, dynamic> _$DashboardResponseToJson(_DashboardResponse instance) =>
       'goals': instance.goals,
       'syncStatus': instance.syncStatus,
       'user': instance.user,
+      'todayWorkout': instance.todayWorkout,
     };

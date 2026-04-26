@@ -151,6 +151,69 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> register({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    try {
+      final response = await dio.post(
+        ApiConstants.registerPath,
+        data: {
+          'email': email,
+          'password': password,
+          'name': name,
+        },
+      );
+      final loginResponse = LoginResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+      final user = loginResponse.user;
+      final tokens = <String, dynamic>{
+        'accessToken': loginResponse.accessToken,
+        'refreshToken': loginResponse.refreshToken,
+      };
+      final fullResponse = Map<String, dynamic>.from(tokens);
+      fullResponse['tokenType'] = loginResponse.tokenType;
+      fullResponse['user'] = {
+        'id': user.id,
+        'email': user.email,
+        'name': user.name,
+        'image': user.image,
+      };
+      await authService.storeTokens(
+        accessToken: loginResponse.accessToken,
+        refreshToken: loginResponse.refreshToken,
+      );
+      await authService.storeUser(user);
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : AuthException(
+              message: 'Registration failed. Please try again.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
+  @override
+  Future<void> forgotPassword(String email) async {
+    try {
+      await dio.post(
+        ApiConstants.forgotPasswordPath,
+        data: {'email': email},
+      );
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : AuthException(
+              message: 'Password reset request failed. Please try again.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
+  @override
   Future<bool> isLoggedIn() async {
     return authService.isLoggedIn;
   }

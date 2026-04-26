@@ -117,3 +117,35 @@ sealed class BodyMeasurement with _$BodyMeasurement {
   factory BodyMeasurement.fromJson(Map<String, dynamic> json) =>
       _$BodyMeasurementFromJson(json);
 }
+
+class NutritionTargets {
+  const NutritionTargets({
+    required this.calories,
+    required this.protein,
+    required this.carbs,
+    required this.fat,
+    required this.water,
+  });
+
+  final int calories;
+  final int protein;
+  final int carbs;
+  final int fat;
+  final double water;
+
+  Map<String, dynamic> toJson() => {
+        'calories': calories,
+        'protein': protein,
+        'carbs': carbs,
+        'fat': fat,
+        'water': water,
+      };
+
+  factory NutritionTargets.fromJson(Map<String, dynamic> json) => NutritionTargets(
+        calories: (json['calories'] as num).toInt(),
+        protein: (json['protein'] as num).toInt(),
+        carbs: (json['carbs'] as num).toInt(),
+        fat: (json['fat'] as num).toInt(),
+        water: (json['water'] as num).toDouble(),
+      );
+}

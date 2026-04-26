@@ -17,4 +17,6 @@ abstract class GoalRepository {
     DateTime? weekStart,
     DateTime? weekEnd,
   });
+
+  Future<Workout> updateWorkout(String id, UpdateWorkoutRequest request);
 }

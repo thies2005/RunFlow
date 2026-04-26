@@ -142,4 +142,24 @@ class GoalRepositoryImpl implements GoalRepository {
             );
     }
   }
+
+  @override
+  Future<Workout> updateWorkout(String id, UpdateWorkoutRequest request) async {
+    try {
+      final response = await dio.patch(
+        '${ApiConstants.workoutsPath}/$id',
+        data: request.toJson(),
+      );
+      return Workout.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : ServerException(
+              message: 'Failed to update workout.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
 }

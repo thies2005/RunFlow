@@ -198,6 +198,7 @@ sealed class DashboardResponse with _$DashboardResponse {
     required List<Goal> goals,
     required SyncStatus syncStatus,
     required User user,
+    @JsonKey(name: 'todayWorkout') @Default(null) Workout? todayWorkout,
   }) = _DashboardResponse;
   const DashboardResponse._();
 

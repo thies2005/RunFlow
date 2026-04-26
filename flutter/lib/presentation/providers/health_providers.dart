@@ -100,3 +100,28 @@ class NutritionNotifier extends _$NutritionNotifier {
     ref.invalidateSelf();
   }
 }
+
+@riverpod
+class BarcodeScan extends _$BarcodeScan {
+  @override
+  FutureOr<FoodItem?> build() => null;
+
+  Future<void> scan(String barcode) async {
+    state = const AsyncValue.loading();
+    try {
+      final repo = ref.read(healthRepositoryProvider);
+      final items = await repo.getFoodItems();
+      final item = items.cast<FoodItem?>().firstWhere(
+        (i) => i?.barcode == barcode,
+        orElse: () => null,
+      );
+      state = AsyncValue.data(item);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  void reset() {
+    state = const AsyncValue.data(null);
+  }
+}

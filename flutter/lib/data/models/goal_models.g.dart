@@ -70,3 +70,35 @@ Map<String, dynamic> _$UpdateGoalRequestToJson(_UpdateGoalRequest instance) =>
       'isActive': instance.isActive,
       'currentVdot': instance.currentVdot,
     };
+
+_UpdateWorkoutRequest _$UpdateWorkoutRequestFromJson(
+  Map<String, dynamic> json,
+) => _UpdateWorkoutRequest(
+  workoutType: $enumDecodeNullable(_$WorkoutTypeEnumMap, json['workoutType']),
+  description: json['description'] as String?,
+  targetDistance: (json['targetDistance'] as num?)?.toDouble(),
+  targetPace: (json['targetPace'] as num?)?.toDouble(),
+  targetDuration: (json['targetDuration'] as num?)?.toInt(),
+  isCompleted: json['isCompleted'] as bool?,
+);
+
+Map<String, dynamic> _$UpdateWorkoutRequestToJson(
+  _UpdateWorkoutRequest instance,
+) => <String, dynamic>{
+  'workoutType': _$WorkoutTypeEnumMap[instance.workoutType],
+  'description': instance.description,
+  'targetDistance': instance.targetDistance,
+  'targetPace': instance.targetPace,
+  'targetDuration': instance.targetDuration,
+  'isCompleted': instance.isCompleted,
+};
+
+const _$WorkoutTypeEnumMap = {
+  WorkoutType.easy: 'easy',
+  WorkoutType.long: 'long',
+  WorkoutType.tempo: 'tempo',
+  WorkoutType.interval: 'interval',
+  WorkoutType.recovery: 'recovery',
+  WorkoutType.race: 'race',
+  WorkoutType.other: 'other',
+};

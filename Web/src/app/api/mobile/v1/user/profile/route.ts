@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
         } = body;
 
         // Validate HR zones if provided
-        if (hrMax !== undefined && (typeof hrMax !== 'number' || hrMax < 100 || hrMax > 250)) {
+        if (hrMax !== undefined && hrMax !== null && (typeof hrMax !== 'number' || hrMax < 100 || hrMax > 250)) {
             return errorResponses.validation(
                 'HR Max must be between 100 and 250',
                 { field: 'hrMax', min: 100, max: 250 }

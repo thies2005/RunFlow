@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/app.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/services/background_sync.dart';
 import 'package:runflow_flutter/services/notification_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -34,8 +35,16 @@ Future<void> main() async {
 }
 
 Future<void> _initializeServices() async {
+  await _initDatabase();
   await _initNotifications();
   await _initBackgroundSync();
+}
+
+Future<void> _initDatabase() async {
+  try {
+    final db = AppDatabase.instance;
+    await db.initialize();
+  } catch (_) {}
 }
 
 Future<void> _initNotifications() async {

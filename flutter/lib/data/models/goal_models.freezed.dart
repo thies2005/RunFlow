@@ -1078,4 +1078,276 @@ as double?,
 
 }
 
+
+/// @nodoc
+mixin _$UpdateWorkoutRequest {
+
+ WorkoutType? get workoutType; String? get description; double? get targetDistance; double? get targetPace; int? get targetDuration; bool? get isCompleted;
+/// Create a copy of UpdateWorkoutRequest
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UpdateWorkoutRequestCopyWith<UpdateWorkoutRequest> get copyWith => _$UpdateWorkoutRequestCopyWithImpl<UpdateWorkoutRequest>(this as UpdateWorkoutRequest, _$identity);
+
+  /// Serializes this UpdateWorkoutRequest to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UpdateWorkoutRequest&&(identical(other.workoutType, workoutType) || other.workoutType == workoutType)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetDistance, targetDistance) || other.targetDistance == targetDistance)&&(identical(other.targetPace, targetPace) || other.targetPace == targetPace)&&(identical(other.targetDuration, targetDuration) || other.targetDuration == targetDuration)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,workoutType,description,targetDistance,targetPace,targetDuration,isCompleted);
+
+@override
+String toString() {
+  return 'UpdateWorkoutRequest(workoutType: $workoutType, description: $description, targetDistance: $targetDistance, targetPace: $targetPace, targetDuration: $targetDuration, isCompleted: $isCompleted)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UpdateWorkoutRequestCopyWith<$Res>  {
+  factory $UpdateWorkoutRequestCopyWith(UpdateWorkoutRequest value, $Res Function(UpdateWorkoutRequest) _then) = _$UpdateWorkoutRequestCopyWithImpl;
+@useResult
+$Res call({
+ WorkoutType? workoutType, String? description, double? targetDistance, double? targetPace, int? targetDuration, bool? isCompleted
+});
+
+
+
+
+}
+/// @nodoc
+class _$UpdateWorkoutRequestCopyWithImpl<$Res>
+    implements $UpdateWorkoutRequestCopyWith<$Res> {
+  _$UpdateWorkoutRequestCopyWithImpl(this._self, this._then);
+
+  final UpdateWorkoutRequest _self;
+  final $Res Function(UpdateWorkoutRequest) _then;
+
+/// Create a copy of UpdateWorkoutRequest
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? workoutType = freezed,Object? description = freezed,Object? targetDistance = freezed,Object? targetPace = freezed,Object? targetDuration = freezed,Object? isCompleted = freezed,}) {
+  return _then(_self.copyWith(
+workoutType: freezed == workoutType ? _self.workoutType : workoutType // ignore: cast_nullable_to_non_nullable
+as WorkoutType?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,targetDistance: freezed == targetDistance ? _self.targetDistance : targetDistance // ignore: cast_nullable_to_non_nullable
+as double?,targetPace: freezed == targetPace ? _self.targetPace : targetPace // ignore: cast_nullable_to_non_nullable
+as double?,targetDuration: freezed == targetDuration ? _self.targetDuration : targetDuration // ignore: cast_nullable_to_non_nullable
+as int?,isCompleted: freezed == isCompleted ? _self.isCompleted : isCompleted // ignore: cast_nullable_to_non_nullable
+as bool?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [UpdateWorkoutRequest].
+extension UpdateWorkoutRequestPatterns on UpdateWorkoutRequest {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _UpdateWorkoutRequest value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _UpdateWorkoutRequest() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _UpdateWorkoutRequest value)  $default,){
+final _that = this;
+switch (_that) {
+case _UpdateWorkoutRequest():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _UpdateWorkoutRequest value)?  $default,){
+final _that = this;
+switch (_that) {
+case _UpdateWorkoutRequest() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WorkoutType? workoutType,  String? description,  double? targetDistance,  double? targetPace,  int? targetDuration,  bool? isCompleted)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _UpdateWorkoutRequest() when $default != null:
+return $default(_that.workoutType,_that.description,_that.targetDistance,_that.targetPace,_that.targetDuration,_that.isCompleted);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WorkoutType? workoutType,  String? description,  double? targetDistance,  double? targetPace,  int? targetDuration,  bool? isCompleted)  $default,) {final _that = this;
+switch (_that) {
+case _UpdateWorkoutRequest():
+return $default(_that.workoutType,_that.description,_that.targetDistance,_that.targetPace,_that.targetDuration,_that.isCompleted);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WorkoutType? workoutType,  String? description,  double? targetDistance,  double? targetPace,  int? targetDuration,  bool? isCompleted)?  $default,) {final _that = this;
+switch (_that) {
+case _UpdateWorkoutRequest() when $default != null:
+return $default(_that.workoutType,_that.description,_that.targetDistance,_that.targetPace,_that.targetDuration,_that.isCompleted);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _UpdateWorkoutRequest extends UpdateWorkoutRequest {
+  const _UpdateWorkoutRequest({this.workoutType, this.description, this.targetDistance, this.targetPace, this.targetDuration, this.isCompleted}): super._();
+  factory _UpdateWorkoutRequest.fromJson(Map<String, dynamic> json) => _$UpdateWorkoutRequestFromJson(json);
+
+@override final  WorkoutType? workoutType;
+@override final  String? description;
+@override final  double? targetDistance;
+@override final  double? targetPace;
+@override final  int? targetDuration;
+@override final  bool? isCompleted;
+
+/// Create a copy of UpdateWorkoutRequest
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$UpdateWorkoutRequestCopyWith<_UpdateWorkoutRequest> get copyWith => __$UpdateWorkoutRequestCopyWithImpl<_UpdateWorkoutRequest>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$UpdateWorkoutRequestToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UpdateWorkoutRequest&&(identical(other.workoutType, workoutType) || other.workoutType == workoutType)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetDistance, targetDistance) || other.targetDistance == targetDistance)&&(identical(other.targetPace, targetPace) || other.targetPace == targetPace)&&(identical(other.targetDuration, targetDuration) || other.targetDuration == targetDuration)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,workoutType,description,targetDistance,targetPace,targetDuration,isCompleted);
+
+@override
+String toString() {
+  return 'UpdateWorkoutRequest(workoutType: $workoutType, description: $description, targetDistance: $targetDistance, targetPace: $targetPace, targetDuration: $targetDuration, isCompleted: $isCompleted)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$UpdateWorkoutRequestCopyWith<$Res> implements $UpdateWorkoutRequestCopyWith<$Res> {
+  factory _$UpdateWorkoutRequestCopyWith(_UpdateWorkoutRequest value, $Res Function(_UpdateWorkoutRequest) _then) = __$UpdateWorkoutRequestCopyWithImpl;
+@override @useResult
+$Res call({
+ WorkoutType? workoutType, String? description, double? targetDistance, double? targetPace, int? targetDuration, bool? isCompleted
+});
+
+
+
+
+}
+/// @nodoc
+class __$UpdateWorkoutRequestCopyWithImpl<$Res>
+    implements _$UpdateWorkoutRequestCopyWith<$Res> {
+  __$UpdateWorkoutRequestCopyWithImpl(this._self, this._then);
+
+  final _UpdateWorkoutRequest _self;
+  final $Res Function(_UpdateWorkoutRequest) _then;
+
+/// Create a copy of UpdateWorkoutRequest
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? workoutType = freezed,Object? description = freezed,Object? targetDistance = freezed,Object? targetPace = freezed,Object? targetDuration = freezed,Object? isCompleted = freezed,}) {
+  return _then(_UpdateWorkoutRequest(
+workoutType: freezed == workoutType ? _self.workoutType : workoutType // ignore: cast_nullable_to_non_nullable
+as WorkoutType?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,targetDistance: freezed == targetDistance ? _self.targetDistance : targetDistance // ignore: cast_nullable_to_non_nullable
+as double?,targetPace: freezed == targetPace ? _self.targetPace : targetPace // ignore: cast_nullable_to_non_nullable
+as double?,targetDuration: freezed == targetDuration ? _self.targetDuration : targetDuration // ignore: cast_nullable_to_non_nullable
+as int?,isCompleted: freezed == isCompleted ? _self.isCompleted : isCompleted // ignore: cast_nullable_to_non_nullable
+as bool?,
+  ));
+}
+
+
+}
+
 // dart format on

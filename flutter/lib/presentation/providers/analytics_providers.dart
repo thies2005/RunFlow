@@ -32,11 +32,7 @@ Future<List<FitnessHistory>> analyticsHistory(
   return repo.getHistory(startDate: startDate, endDate: endDate);
 }
 
-@riverpod
-Future<List<WeeklyMileage>> weeklyMileage(Ref ref) async {
-  final repo = ref.read(analyticsRepositoryProvider);
-  return repo.getWeeklyMileage(weeks: 10);
-}
+
 
 @riverpod
 class SelectedDateRange extends _$SelectedDateRange {

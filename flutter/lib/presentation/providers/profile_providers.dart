@@ -45,6 +45,10 @@ class Settings extends _$Settings {
   static const _workoutRemindersKey = 'settings_workout_reminders';
   static const _supplementRemindersKey = 'settings_supplement_reminders';
   static const _chatNotificationsKey = 'settings_chat_notifications';
+  static const _syncNotificationsKey = 'settings_sync_notifications';
+  static const _aiShareActivitiesKey = 'settings_ai_share_activities';
+  static const _aiShareHealthDataKey = 'settings_ai_share_health_data';
+  static const _aiShareGoalsKey = 'settings_ai_share_goals';
 
   @override
   AppSettings build() {
@@ -60,6 +64,10 @@ class Settings extends _$Settings {
       workoutReminders: prefs.getBool(_workoutRemindersKey) ?? true,
       supplementReminders: prefs.getBool(_supplementRemindersKey) ?? true,
       chatNotifications: prefs.getBool(_chatNotificationsKey) ?? true,
+      syncNotifications: prefs.getBool(_syncNotificationsKey) ?? true,
+      aiShareActivities: prefs.getBool(_aiShareActivitiesKey) ?? true,
+      aiShareHealthData: prefs.getBool(_aiShareHealthDataKey) ?? true,
+      aiShareGoals: prefs.getBool(_aiShareGoalsKey) ?? true,
     );
   }
 
@@ -92,6 +100,30 @@ class Settings extends _$Settings {
     await prefs.setBool(_chatNotificationsKey, value);
     state = state.copyWith(chatNotifications: value);
   }
+
+  Future<void> setSyncNotifications(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_syncNotificationsKey, value);
+    state = state.copyWith(syncNotifications: value);
+  }
+
+  Future<void> setAiShareActivities(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_aiShareActivitiesKey, value);
+    state = state.copyWith(aiShareActivities: value);
+  }
+
+  Future<void> setAiShareHealthData(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_aiShareHealthDataKey, value);
+    state = state.copyWith(aiShareHealthData: value);
+  }
+
+  Future<void> setAiShareGoals(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_aiShareGoalsKey, value);
+    state = state.copyWith(aiShareGoals: value);
+  }
 }
 
 class AppSettings {
@@ -101,6 +133,10 @@ class AppSettings {
     this.workoutReminders = true,
     this.supplementReminders = true,
     this.chatNotifications = true,
+    this.syncNotifications = true,
+    this.aiShareActivities = true,
+    this.aiShareHealthData = true,
+    this.aiShareGoals = true,
   });
 
   final UnitSystem unitSystem;
@@ -108,6 +144,10 @@ class AppSettings {
   final bool workoutReminders;
   final bool supplementReminders;
   final bool chatNotifications;
+  final bool syncNotifications;
+  final bool aiShareActivities;
+  final bool aiShareHealthData;
+  final bool aiShareGoals;
 
   AppSettings copyWith({
     UnitSystem? unitSystem,
@@ -115,6 +155,10 @@ class AppSettings {
     bool? workoutReminders,
     bool? supplementReminders,
     bool? chatNotifications,
+    bool? syncNotifications,
+    bool? aiShareActivities,
+    bool? aiShareHealthData,
+    bool? aiShareGoals,
   }) {
     return AppSettings(
       unitSystem: unitSystem ?? this.unitSystem,
@@ -122,6 +166,10 @@ class AppSettings {
       workoutReminders: workoutReminders ?? this.workoutReminders,
       supplementReminders: supplementReminders ?? this.supplementReminders,
       chatNotifications: chatNotifications ?? this.chatNotifications,
+      syncNotifications: syncNotifications ?? this.syncNotifications,
+      aiShareActivities: aiShareActivities ?? this.aiShareActivities,
+      aiShareHealthData: aiShareHealthData ?? this.aiShareHealthData,
+      aiShareGoals: aiShareGoals ?? this.aiShareGoals,
     );
   }
 }

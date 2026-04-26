@@ -19,10 +19,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _heightController = TextEditingController();
   final _hrMaxController = TextEditingController();
   final _hrRestController = TextEditingController();
+  final _thresholdHrController = TextEditingController();
 
   Sex? _selectedSex;
   DateTime? _birthDate;
   bool _isLoading = false;
+  ProviderSubscription<AsyncValue<UserProfile>>? _profileSub;
 
   @override
   void initState() {
@@ -31,25 +33,33 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   void _loadProfile() {
-    final profileAsync = ref.read(profileProvider);
-    profileAsync.whenData((profile) {
-      _nameController.text = profile.name ?? '';
-      _weightController.text = profile.weight?.toStringAsFixed(1) ?? '';
-      _heightController.text = profile.height?.toStringAsFixed(1) ?? '';
-      _hrMaxController.text = profile.hrMax?.toString() ?? '';
-      _hrRestController.text = profile.hrRest?.toString() ?? '';
-      _selectedSex = profile.sex;
-      _birthDate = profile.birthDate;
-    });
+    _profileSub = ref.listenManual(profileProvider, (previous, next) {
+      next.whenData((profile) {
+        if (mounted) {
+          setState(() {
+            _nameController.text = profile.name ?? '';
+            _weightController.text = profile.weight?.toStringAsFixed(1) ?? '';
+            _heightController.text = profile.height?.toStringAsFixed(1) ?? '';
+            _hrMaxController.text = profile.hrMax?.toString() ?? '';
+            _hrRestController.text = profile.hrRest?.toString() ?? '';
+            _thresholdHrController.text = profile.thresholdHeartRate?.toString() ?? '';
+            _selectedSex = profile.sex;
+            _birthDate = profile.birthDate;
+          });
+        }
+      });
+    }, fireImmediately: true);
   }
 
   @override
   void dispose() {
+    _profileSub?.close();
     _nameController.dispose();
     _weightController.dispose();
     _heightController.dispose();
     _hrMaxController.dispose();
     _hrRestController.dispose();
+    _thresholdHrController.dispose();
     super.dispose();
   }
 
@@ -75,6 +85,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             : null,
         hrRest: _hrRestController.text.isNotEmpty
             ? int.tryParse(_hrRestController.text)
+            : null,
+        thresholdHeartRate: _thresholdHrController.text.isNotEmpty
+            ? int.tryParse(_thresholdHrController.text)
             : null,
       );
 
@@ -148,6 +161,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<Sex>(
+              key: ValueKey(_selectedSex),
               initialValue: _selectedSex,
               decoration: const InputDecoration(
                 labelText: 'Sex',
@@ -226,6 +240,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               decoration: const InputDecoration(
                 labelText: 'Resting HR (bpm)',
                 prefixIcon: Icon(Icons.favorite_border),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _thresholdHrController,
+              decoration: const InputDecoration(
+                labelText: 'Threshold HR (bpm)',
+                prefixIcon: Icon(Icons.monitor_heart_outlined),
               ),
               keyboardType: TextInputType.number,
             ),

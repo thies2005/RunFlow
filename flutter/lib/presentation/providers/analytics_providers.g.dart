@@ -173,47 +173,6 @@ final class AnalyticsHistoryFamily extends $Family
   String toString() => r'analyticsHistoryProvider';
 }
 
-@ProviderFor(weeklyMileage)
-final weeklyMileageProvider = WeeklyMileageProvider._();
-
-final class WeeklyMileageProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<WeeklyMileage>>,
-          List<WeeklyMileage>,
-          FutureOr<List<WeeklyMileage>>
-        >
-    with
-        $FutureModifier<List<WeeklyMileage>>,
-        $FutureProvider<List<WeeklyMileage>> {
-  WeeklyMileageProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'weeklyMileageProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$weeklyMileageHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<List<WeeklyMileage>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<WeeklyMileage>> create(Ref ref) {
-    return weeklyMileage(ref);
-  }
-}
-
-String _$weeklyMileageHash() => r'f9c0864d8fd43f9d48741f334df67f4adbca5cc0';
-
 @ProviderFor(SelectedDateRange)
 final selectedDateRangeProvider = SelectedDateRangeProvider._();
 

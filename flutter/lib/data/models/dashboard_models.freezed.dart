@@ -1737,7 +1737,7 @@ as List<Workout>,
 /// @nodoc
 mixin _$DashboardResponse {
 
- AnalyticsStats get stats; List<Activity> get recentActivities; List<Goal> get goals; SyncStatus get syncStatus; User get user;
+ AnalyticsStats get stats; List<Activity> get recentActivities; List<Goal> get goals; SyncStatus get syncStatus; User get user;@JsonKey(name: 'todayWorkout') Workout? get todayWorkout;
 /// Create a copy of DashboardResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1750,16 +1750,16 @@ $DashboardResponseCopyWith<DashboardResponse> get copyWith => _$DashboardRespons
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardResponse&&(identical(other.stats, stats) || other.stats == stats)&&const DeepCollectionEquality().equals(other.recentActivities, recentActivities)&&const DeepCollectionEquality().equals(other.goals, goals)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.user, user) || other.user == user));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardResponse&&(identical(other.stats, stats) || other.stats == stats)&&const DeepCollectionEquality().equals(other.recentActivities, recentActivities)&&const DeepCollectionEquality().equals(other.goals, goals)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.user, user) || other.user == user)&&(identical(other.todayWorkout, todayWorkout) || other.todayWorkout == todayWorkout));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,stats,const DeepCollectionEquality().hash(recentActivities),const DeepCollectionEquality().hash(goals),syncStatus,user);
+int get hashCode => Object.hash(runtimeType,stats,const DeepCollectionEquality().hash(recentActivities),const DeepCollectionEquality().hash(goals),syncStatus,user,todayWorkout);
 
 @override
 String toString() {
-  return 'DashboardResponse(stats: $stats, recentActivities: $recentActivities, goals: $goals, syncStatus: $syncStatus, user: $user)';
+  return 'DashboardResponse(stats: $stats, recentActivities: $recentActivities, goals: $goals, syncStatus: $syncStatus, user: $user, todayWorkout: $todayWorkout)';
 }
 
 
@@ -1770,11 +1770,11 @@ abstract mixin class $DashboardResponseCopyWith<$Res>  {
   factory $DashboardResponseCopyWith(DashboardResponse value, $Res Function(DashboardResponse) _then) = _$DashboardResponseCopyWithImpl;
 @useResult
 $Res call({
- AnalyticsStats stats, List<Activity> recentActivities, List<Goal> goals, SyncStatus syncStatus, User user
+ AnalyticsStats stats, List<Activity> recentActivities, List<Goal> goals, SyncStatus syncStatus, User user,@JsonKey(name: 'todayWorkout') Workout? todayWorkout
 });
 
 
-$AnalyticsStatsCopyWith<$Res> get stats;$SyncStatusCopyWith<$Res> get syncStatus;$UserCopyWith<$Res> get user;
+$AnalyticsStatsCopyWith<$Res> get stats;$SyncStatusCopyWith<$Res> get syncStatus;$UserCopyWith<$Res> get user;$WorkoutCopyWith<$Res>? get todayWorkout;
 
 }
 /// @nodoc
@@ -1787,14 +1787,15 @@ class _$DashboardResponseCopyWithImpl<$Res>
 
 /// Create a copy of DashboardResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? stats = null,Object? recentActivities = null,Object? goals = null,Object? syncStatus = null,Object? user = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? stats = null,Object? recentActivities = null,Object? goals = null,Object? syncStatus = null,Object? user = null,Object? todayWorkout = freezed,}) {
   return _then(_self.copyWith(
 stats: null == stats ? _self.stats : stats // ignore: cast_nullable_to_non_nullable
 as AnalyticsStats,recentActivities: null == recentActivities ? _self.recentActivities : recentActivities // ignore: cast_nullable_to_non_nullable
 as List<Activity>,goals: null == goals ? _self.goals : goals // ignore: cast_nullable_to_non_nullable
 as List<Goal>,syncStatus: null == syncStatus ? _self.syncStatus : syncStatus // ignore: cast_nullable_to_non_nullable
 as SyncStatus,user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
-as User,
+as User,todayWorkout: freezed == todayWorkout ? _self.todayWorkout : todayWorkout // ignore: cast_nullable_to_non_nullable
+as Workout?,
   ));
 }
 /// Create a copy of DashboardResponse
@@ -1823,6 +1824,18 @@ $UserCopyWith<$Res> get user {
   
   return $UserCopyWith<$Res>(_self.user, (value) {
     return _then(_self.copyWith(user: value));
+  });
+}/// Create a copy of DashboardResponse
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$WorkoutCopyWith<$Res>? get todayWorkout {
+    if (_self.todayWorkout == null) {
+    return null;
+  }
+
+  return $WorkoutCopyWith<$Res>(_self.todayWorkout!, (value) {
+    return _then(_self.copyWith(todayWorkout: value));
   });
 }
 }
@@ -1903,10 +1916,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AnalyticsStats stats,  List<Activity> recentActivities,  List<Goal> goals,  SyncStatus syncStatus,  User user)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AnalyticsStats stats,  List<Activity> recentActivities,  List<Goal> goals,  SyncStatus syncStatus,  User user, @JsonKey(name: 'todayWorkout')  Workout? todayWorkout)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DashboardResponse() when $default != null:
-return $default(_that.stats,_that.recentActivities,_that.goals,_that.syncStatus,_that.user);case _:
+return $default(_that.stats,_that.recentActivities,_that.goals,_that.syncStatus,_that.user,_that.todayWorkout);case _:
   return orElse();
 
 }
@@ -1924,10 +1937,10 @@ return $default(_that.stats,_that.recentActivities,_that.goals,_that.syncStatus,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AnalyticsStats stats,  List<Activity> recentActivities,  List<Goal> goals,  SyncStatus syncStatus,  User user)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AnalyticsStats stats,  List<Activity> recentActivities,  List<Goal> goals,  SyncStatus syncStatus,  User user, @JsonKey(name: 'todayWorkout')  Workout? todayWorkout)  $default,) {final _that = this;
 switch (_that) {
 case _DashboardResponse():
-return $default(_that.stats,_that.recentActivities,_that.goals,_that.syncStatus,_that.user);}
+return $default(_that.stats,_that.recentActivities,_that.goals,_that.syncStatus,_that.user,_that.todayWorkout);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1941,10 +1954,10 @@ return $default(_that.stats,_that.recentActivities,_that.goals,_that.syncStatus,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AnalyticsStats stats,  List<Activity> recentActivities,  List<Goal> goals,  SyncStatus syncStatus,  User user)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AnalyticsStats stats,  List<Activity> recentActivities,  List<Goal> goals,  SyncStatus syncStatus,  User user, @JsonKey(name: 'todayWorkout')  Workout? todayWorkout)?  $default,) {final _that = this;
 switch (_that) {
 case _DashboardResponse() when $default != null:
-return $default(_that.stats,_that.recentActivities,_that.goals,_that.syncStatus,_that.user);case _:
+return $default(_that.stats,_that.recentActivities,_that.goals,_that.syncStatus,_that.user,_that.todayWorkout);case _:
   return null;
 
 }
@@ -1956,7 +1969,7 @@ return $default(_that.stats,_that.recentActivities,_that.goals,_that.syncStatus,
 @JsonSerializable()
 
 class _DashboardResponse extends DashboardResponse {
-  const _DashboardResponse({required this.stats, required final  List<Activity> recentActivities, required final  List<Goal> goals, required this.syncStatus, required this.user}): _recentActivities = recentActivities,_goals = goals,super._();
+  const _DashboardResponse({required this.stats, required final  List<Activity> recentActivities, required final  List<Goal> goals, required this.syncStatus, required this.user, @JsonKey(name: 'todayWorkout') this.todayWorkout = null}): _recentActivities = recentActivities,_goals = goals,super._();
   factory _DashboardResponse.fromJson(Map<String, dynamic> json) => _$DashboardResponseFromJson(json);
 
 @override final  AnalyticsStats stats;
@@ -1976,6 +1989,7 @@ class _DashboardResponse extends DashboardResponse {
 
 @override final  SyncStatus syncStatus;
 @override final  User user;
+@override@JsonKey(name: 'todayWorkout') final  Workout? todayWorkout;
 
 /// Create a copy of DashboardResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -1990,16 +2004,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardResponse&&(identical(other.stats, stats) || other.stats == stats)&&const DeepCollectionEquality().equals(other._recentActivities, _recentActivities)&&const DeepCollectionEquality().equals(other._goals, _goals)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.user, user) || other.user == user));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardResponse&&(identical(other.stats, stats) || other.stats == stats)&&const DeepCollectionEquality().equals(other._recentActivities, _recentActivities)&&const DeepCollectionEquality().equals(other._goals, _goals)&&(identical(other.syncStatus, syncStatus) || other.syncStatus == syncStatus)&&(identical(other.user, user) || other.user == user)&&(identical(other.todayWorkout, todayWorkout) || other.todayWorkout == todayWorkout));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,stats,const DeepCollectionEquality().hash(_recentActivities),const DeepCollectionEquality().hash(_goals),syncStatus,user);
+int get hashCode => Object.hash(runtimeType,stats,const DeepCollectionEquality().hash(_recentActivities),const DeepCollectionEquality().hash(_goals),syncStatus,user,todayWorkout);
 
 @override
 String toString() {
-  return 'DashboardResponse(stats: $stats, recentActivities: $recentActivities, goals: $goals, syncStatus: $syncStatus, user: $user)';
+  return 'DashboardResponse(stats: $stats, recentActivities: $recentActivities, goals: $goals, syncStatus: $syncStatus, user: $user, todayWorkout: $todayWorkout)';
 }
 
 
@@ -2010,11 +2024,11 @@ abstract mixin class _$DashboardResponseCopyWith<$Res> implements $DashboardResp
   factory _$DashboardResponseCopyWith(_DashboardResponse value, $Res Function(_DashboardResponse) _then) = __$DashboardResponseCopyWithImpl;
 @override @useResult
 $Res call({
- AnalyticsStats stats, List<Activity> recentActivities, List<Goal> goals, SyncStatus syncStatus, User user
+ AnalyticsStats stats, List<Activity> recentActivities, List<Goal> goals, SyncStatus syncStatus, User user,@JsonKey(name: 'todayWorkout') Workout? todayWorkout
 });
 
 
-@override $AnalyticsStatsCopyWith<$Res> get stats;@override $SyncStatusCopyWith<$Res> get syncStatus;@override $UserCopyWith<$Res> get user;
+@override $AnalyticsStatsCopyWith<$Res> get stats;@override $SyncStatusCopyWith<$Res> get syncStatus;@override $UserCopyWith<$Res> get user;@override $WorkoutCopyWith<$Res>? get todayWorkout;
 
 }
 /// @nodoc
@@ -2027,14 +2041,15 @@ class __$DashboardResponseCopyWithImpl<$Res>
 
 /// Create a copy of DashboardResponse
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? stats = null,Object? recentActivities = null,Object? goals = null,Object? syncStatus = null,Object? user = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? stats = null,Object? recentActivities = null,Object? goals = null,Object? syncStatus = null,Object? user = null,Object? todayWorkout = freezed,}) {
   return _then(_DashboardResponse(
 stats: null == stats ? _self.stats : stats // ignore: cast_nullable_to_non_nullable
 as AnalyticsStats,recentActivities: null == recentActivities ? _self._recentActivities : recentActivities // ignore: cast_nullable_to_non_nullable
 as List<Activity>,goals: null == goals ? _self._goals : goals // ignore: cast_nullable_to_non_nullable
 as List<Goal>,syncStatus: null == syncStatus ? _self.syncStatus : syncStatus // ignore: cast_nullable_to_non_nullable
 as SyncStatus,user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
-as User,
+as User,todayWorkout: freezed == todayWorkout ? _self.todayWorkout : todayWorkout // ignore: cast_nullable_to_non_nullable
+as Workout?,
   ));
 }
 
@@ -2064,6 +2079,18 @@ $UserCopyWith<$Res> get user {
   
   return $UserCopyWith<$Res>(_self.user, (value) {
     return _then(_self.copyWith(user: value));
+  });
+}/// Create a copy of DashboardResponse
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$WorkoutCopyWith<$Res>? get todayWorkout {
+    if (_self.todayWorkout == null) {
+    return null;
+  }
+
+  return $WorkoutCopyWith<$Res>(_self.todayWorkout!, (value) {
+    return _then(_self.copyWith(todayWorkout: value));
   });
 }
 }

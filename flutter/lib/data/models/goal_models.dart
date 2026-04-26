@@ -56,3 +56,19 @@ sealed class UpdateGoalRequest with _$UpdateGoalRequest {
   factory UpdateGoalRequest.fromJson(Map<String, dynamic> json) =>
       _$UpdateGoalRequestFromJson(json);
 }
+
+@Freezed(copyWith: true)
+sealed class UpdateWorkoutRequest with _$UpdateWorkoutRequest {
+  const factory UpdateWorkoutRequest({
+    WorkoutType? workoutType,
+    String? description,
+    double? targetDistance,
+    double? targetPace,
+    int? targetDuration,
+    bool? isCompleted,
+  }) = _UpdateWorkoutRequest;
+  const UpdateWorkoutRequest._();
+
+  factory UpdateWorkoutRequest.fromJson(Map<String, dynamic> json) =>
+      _$UpdateWorkoutRequestFromJson(json);
+}

@@ -1,0 +1,1012 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/data/models/recording_models.dart';
+import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
+import 'package:runflow_flutter/services/workout_recording_service.dart';
+
+class RecordScreen extends ConsumerStatefulWidget {
+  const RecordScreen({super.key});
+
+  @override
+  ConsumerState<RecordScreen> createState() => _RecordScreenState();
+}
+
+class _RecordScreenState extends ConsumerState<RecordScreen> {
+  RecordedWorkout? _lastWorkout;
+  bool _showSummary = false;
+  bool _isScanning = false;
+  List<HrSensorInfo> _scannedSensors = [];
+
+  @override
+  Widget build(BuildContext context) {
+    final AsyncValue<RecordingStatus> statusAsync =
+        ref.watch(recordingStatusProvider);
+
+    return statusAsync.when(
+      loading: () => const _IdleView(onStart: null),
+      error: (Object e, StackTrace st) => const _IdleView(onStart: null),
+      data: (RecordingStatus status) {
+        if (_showSummary && _lastWorkout != null) {
+          return _SummaryView(
+            workout: _lastWorkout!,
+            onSave: _handleSave,
+            onDiscard: _handleDiscard,
+          );
+        }
+
+        switch (status) {
+          case RecordingStatus.idle:
+            return _IdleView(
+              onStart: _handleStart,
+              isScanning: _isScanning,
+              scannedSensors: _scannedSensors,
+              onScan: _handleScan,
+              onConnectDevice: _handleConnectDevice,
+            );
+          case RecordingStatus.recording:
+            return _RecordingView(
+              onPause: _handlePause,
+              onStop: _handleStop,
+            );
+          case RecordingStatus.paused:
+            return _PausedView(
+              onResume: _handleResume,
+              onStop: _handleStop,
+            );
+        }
+      },
+    );
+  }
+
+  Future<void> _handleStart() async {
+    final WorkoutRecordingService service =
+        ref.read(recordingServiceProvider);
+    final bool hasPermission = await service.requestPermissions();
+    if (!hasPermission && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Location permission is required to record'),
+        ),
+      );
+      return;
+    }
+    await service.startRecording();
+  }
+
+  void _handlePause() {
+    ref.read(recordingServiceProvider).pauseRecording();
+  }
+
+  void _handleResume() {
+    ref.read(recordingServiceProvider).resumeRecording();
+  }
+
+  void _handleStop() {
+    final WorkoutRecordingService service =
+        ref.read(recordingServiceProvider);
+    final RecordedWorkout? workout = service.stopRecording();
+    if (workout != null) {
+      setState(() {
+        _lastWorkout = workout;
+        _showSummary = true;
+      });
+    }
+  }
+
+  Future<void> _handleSave() async {
+    final workout = _lastWorkout;
+    if (workout == null) return;
+
+    try {
+      final repo = ref.read(activityRepositoryProvider);
+      await repo.createActivity(workout);
+
+      if (mounted) {
+        setState(() {
+          _showSummary = false;
+          _lastWorkout = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Workout saved!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: $e')),
+        );
+      }
+    }
+  }
+
+  void _handleDiscard() {
+    setState(() {
+      _showSummary = false;
+      _lastWorkout = null;
+    });
+  }
+
+  Future<void> _handleScan() async {
+    setState(() {
+      _isScanning = true;
+      _scannedSensors = [];
+    });
+
+    final BleConnectionNotifier bleNotifier =
+        ref.read(bleConnectionProvider.notifier);
+    final List<HrSensorInfo> sensors = await bleNotifier.scanForDevices();
+
+    if (mounted) {
+      setState(() {
+        _scannedSensors = sensors;
+        _isScanning = false;
+      });
+    }
+  }
+
+  Future<void> _handleConnectDevice(
+      String deviceId, String deviceName) async {
+    final BleConnectionNotifier bleNotifier =
+        ref.read(bleConnectionProvider.notifier);
+    final bool success =
+        await bleNotifier.connectToDevice(deviceId, deviceName);
+
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Connected to $deviceName')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to connect')),
+        );
+      }
+    }
+  }
+}
+
+class _IdleView extends StatelessWidget {
+  const _IdleView({
+    required this.onStart,
+    this.isScanning = false,
+    this.scannedSensors = const [],
+    this.onScan,
+    this.onConnectDevice,
+  });
+
+  final VoidCallback? onStart;
+  final bool isScanning;
+  final List<HrSensorInfo> scannedSensors;
+  final VoidCallback? onScan;
+  final void Function(String deviceId, String deviceName)? onConnectDevice;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 48),
+            Text(
+              'Ready to record',
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap the button to start your workout',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+            const Spacer(),
+            _BleConnectionCard(
+              isScanning: isScanning,
+              scannedSensors: scannedSensors,
+              onScan: onScan,
+              onConnectDevice: onConnectDevice,
+            ),
+            const SizedBox(height: 32),
+            GestureDetector(
+              onTap: onStart,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 24,
+                      spreadRadius: 4,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.fiber_manual_record,
+                  size: 64,
+                  color: AppColors.onPrimary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'START',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 2,
+              ),
+            ),
+            const Spacer(flex: 2),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BleConnectionCard extends ConsumerWidget {
+  const _BleConnectionCard({
+    required this.isScanning,
+    required this.scannedSensors,
+    this.onScan,
+    this.onConnectDevice,
+  });
+
+  final bool isScanning;
+  final List<HrSensorInfo> scannedSensors;
+  final VoidCallback? onScan;
+  final void Function(String deviceId, String deviceName)? onConnectDevice;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<HrSensorInfo?> bleState =
+        ref.watch(bleConnectionProvider);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 32),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.bluetooth,
+                  size: 20,
+                  color: bleState.value != null
+                      ? AppColors.success
+                      : AppColors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    bleState.value != null
+                        ? 'Connected: ${bleState.value!.name}'
+                        : 'No HR sensor paired',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: bleState.value != null
+                              ? AppColors.success
+                              : AppColors.onSurfaceVariant,
+                        ),
+                  ),
+                ),
+                if (bleState.value != null)
+                  TextButton(
+                    onPressed: () {
+                      ref.read(bleConnectionProvider.notifier).disconnect();
+                    },
+                    child: const Text('Disconnect'),
+                  )
+                else
+                  FilledButton.tonal(
+                    onPressed: isScanning ? null : onScan,
+                    child: isScanning
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Scan'),
+                  ),
+              ],
+            ),
+            if (scannedSensors.isNotEmpty && bleState.value == null) ...[
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 8),
+              ...scannedSensors.map(
+                (HrSensorInfo sensor) => ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.watch, size: 20),
+                  title: Text(
+                    sensor.name,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  trailing: const Icon(Icons.add, size: 20),
+                  onTap: () =>
+                      onConnectDevice?.call(sensor.id, sensor.name),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecordingView extends ConsumerWidget {
+  const _RecordingView({
+    required this.onPause,
+    required this.onStop,
+  });
+
+  final VoidCallback onPause;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<RecordingMetrics> metricsAsync =
+        ref.watch(recordingMetricsProvider);
+
+    return metricsAsync.when(
+      loading: () => _RecordingContent(
+        metrics: const RecordingMetrics(),
+        onPause: onPause,
+        onStop: onStop,
+      ),
+      error: (Object e, StackTrace st) => _RecordingContent(
+        metrics: const RecordingMetrics(),
+        onPause: onPause,
+        onStop: onStop,
+      ),
+      data: (RecordingMetrics metrics) => _RecordingContent(
+        metrics: metrics,
+        onPause: onPause,
+        onStop: onStop,
+      ),
+    );
+  }
+}
+
+class _RecordingContent extends StatelessWidget {
+  const _RecordingContent({
+    required this.metrics,
+    required this.onPause,
+    required this.onStop,
+  });
+
+  final RecordingMetrics metrics;
+  final VoidCallback onPause;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              height: 200,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDarkVariant,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                        Icons.map, size: 48, color: AppColors.onSurfaceVariant),
+                    SizedBox(height: 8),
+                    Text(
+                      'Map coming soon',
+                      style: TextStyle(color: AppColors.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  _GpsIndicator(accuracy: metrics.gpsAccuracy),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Text(
+                      _formatDistance(metrics.distanceMeters),
+                      style: theme.textTheme.displayLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 56,
+                      ),
+                    ),
+                    Text(
+                      'distance',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _MetricCard(
+                              label: 'Pace',
+                              value: _formatPace(
+                                  metrics.currentPaceSecondsPerKm),
+                              icon: Icons.speed,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _MetricCard(
+                              label: 'Duration',
+                              value:
+                                  _formatDuration(metrics.durationSeconds),
+                              icon: Icons.timer,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _MetricCard(
+                              label: 'HR',
+                              value: metrics.currentHr > 0
+                                  ? '${metrics.currentHr}'
+                                  : '--',
+                              icon: Icons.favorite,
+                              color: AppColors.error,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _MetricCard(
+                              label: 'Cadence',
+                              value: metrics.cadence > 0
+                                  ? '${metrics.cadence.round()} spm'
+                                  : '--',
+                              icon: Icons.directions_walk,
+                              color: AppColors.success,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _MetricCard(
+                              label: 'Avg Pace',
+                              value: metrics.averageSpeedMps > 0.5
+                                  ? _formatPace(
+                                      1000 / metrics.averageSpeedMps)
+                                  : '--:-- /km',
+                              icon: Icons.trending_up,
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _MetricCard(
+                              label: 'Elevation',
+                              value: metrics.totalElevation > 0
+                                  ? '${metrics.totalElevation.round()} m'
+                                  : '--',
+                              icon: Icons.terrain,
+                              color: AppColors.warning,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                    onTap: onStop,
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.error,
+                      ),
+                      child: const Icon(
+                        Icons.stop,
+                        size: 32,
+                        color: AppColors.onPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 32),
+                  GestureDetector(
+                    onTap: onPause,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.onSurface,
+                      ),
+                      child: const Icon(
+                        Icons.pause,
+                        size: 40,
+                        color: AppColors.oledBlack,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDistance(double meters) {
+    if (meters >= 1000) {
+      return '${(meters / 1000).toStringAsFixed(2)} km';
+    }
+    return '${meters.toStringAsFixed(0)} m';
+  }
+
+  String _formatPace(double secondsPerKm) {
+    if (secondsPerKm <= 0) return '--:-- /km';
+    final int totalSeconds = secondsPerKm.round();
+    final int minutes = totalSeconds ~/ 60;
+    final int seconds = totalSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')} /km';
+  }
+
+  String _formatDuration(int totalSeconds) {
+    final int hours = totalSeconds ~/ 3600;
+    final int minutes = (totalSeconds % 3600) ~/ 60;
+    final int seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 16, color: color),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GpsIndicator extends StatelessWidget {
+  const _GpsIndicator({required this.accuracy});
+
+  final double accuracy;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isGood = accuracy > 0 && accuracy <= 10;
+    final bool isOk = accuracy > 10 && accuracy <= 25;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.gps_fixed,
+          size: 16,
+          color: isGood
+              ? AppColors.success
+              : isOk
+                  ? AppColors.warning
+                  : AppColors.error,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          accuracy > 0 ? 'GPS ${accuracy.round()}m' : 'GPS searching...',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PausedView extends StatelessWidget {
+  const _PausedView({
+    required this.onResume,
+    required this.onStop,
+  });
+
+  final VoidCallback onResume;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.warning.withValues(alpha: 0.15),
+                ),
+                child: const Icon(
+                  Icons.pause,
+                  size: 56,
+                  color: AppColors.warning,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Paused',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.warning,
+                ),
+              ),
+              const SizedBox(height: 48),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: onStop,
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.error,
+                      ),
+                      child: const Icon(
+                        Icons.stop,
+                        size: 32,
+                        color: AppColors.onPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 48),
+                  GestureDetector(
+                    onTap: onResume,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.primary,
+                      ),
+                      child: const Icon(
+                        Icons.play_arrow,
+                        size: 44,
+                        color: AppColors.onPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryView extends StatelessWidget {
+  const _SummaryView({
+    required this.workout,
+    required this.onSave,
+    required this.onDiscard,
+  });
+
+  final RecordedWorkout workout;
+  final VoidCallback onSave;
+  final VoidCallback onDiscard;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final double? avgPace = workout.averageSpeed != null &&
+            workout.averageSpeed! > 0
+        ? 1000 / workout.averageSpeed!
+        : null;
+
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              Center(
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      size: 64,
+                      color: AppColors.success,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Workout Complete',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              Center(
+                child: Text(
+                  _formatDistance(workout.distanceMeters),
+                  style: theme.textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 48,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      _SummaryRow(
+                        label: 'Duration',
+                        value: _formatDuration(workout.durationSeconds),
+                        icon: Icons.timer,
+                      ),
+                      const SizedBox(height: 16),
+                      _SummaryRow(
+                        label: 'Avg Pace',
+                        value: avgPace != null
+                            ? _formatPace(avgPace)
+                            : '--:-- /km',
+                        icon: Icons.speed,
+                      ),
+                      const SizedBox(height: 16),
+                      _SummaryRow(
+                        label: 'Avg Speed',
+                        value: workout.averageSpeed != null
+                            ? '${(workout.averageSpeed! * 3.6).toStringAsFixed(1)} km/h'
+                            : '--',
+                        icon: Icons.trending_up,
+                      ),
+                      if (workout.maxSpeed != null) ...[
+                        const SizedBox(height: 16),
+                        _SummaryRow(
+                          label: 'Max Speed',
+                          value:
+                              '${(workout.maxSpeed! * 3.6).toStringAsFixed(1)} km/h',
+                          icon: Icons.trending_up,
+                        ),
+                      ],
+                      if (workout.hasHeartrate &&
+                          workout.averageHr != null) ...[
+                        const SizedBox(height: 16),
+                        _SummaryRow(
+                          label: 'Avg HR',
+                          value: '${workout.averageHr!.round()} bpm',
+                          icon: Icons.favorite,
+                        ),
+                      ],
+                      if (workout.maxHr != null) ...[
+                        const SizedBox(height: 16),
+                        _SummaryRow(
+                          label: 'Max HR',
+                          value: '${workout.maxHr} bpm',
+                          icon: Icons.favorite_border,
+                        ),
+                      ],
+                      if (workout.averageCadence != null) ...[
+                        const SizedBox(height: 16),
+                        _SummaryRow(
+                          label: 'Avg Cadence',
+                          value: '${workout.averageCadence!.round()} spm',
+                          icon: Icons.directions_walk,
+                        ),
+                      ],
+                      if (workout.totalElevation != null) ...[
+                        const SizedBox(height: 16),
+                        _SummaryRow(
+                          label: 'Elevation',
+                          value: '${workout.totalElevation!.round()} m',
+                          icon: Icons.terrain,
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      _SummaryRow(
+                        label: 'GPS Points',
+                        value: '${workout.gpsPoints.length}',
+                        icon: Icons.gps_fixed,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: onDiscard,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                        side: const BorderSide(color: AppColors.error),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('Discard'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: onSave,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text('Save'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatDistance(double meters) {
+    if (meters >= 1000) {
+      return '${(meters / 1000).toStringAsFixed(2)} km';
+    }
+    return '${meters.toStringAsFixed(0)} m';
+  }
+
+  String _formatPace(double secondsPerKm) {
+    final int totalSeconds = secondsPerKm.round();
+    final int minutes = totalSeconds ~/ 60;
+    final int seconds = totalSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')} /km';
+  }
+
+  String _formatDuration(int totalSeconds) {
+    final int hours = totalSeconds ~/ 3600;
+    final int minutes = (totalSeconds % 3600) ~/ 60;
+    final int seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return '$hours h $minutes m $seconds s';
+    }
+    return '$minutes m $seconds s';
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppColors.onSurfaceVariant),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+          ),
+        ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
+    );
+  }
+}

@@ -92,6 +92,37 @@ class AuthState extends _$AuthState {
       state = const AsyncValue.data(null);
     }
   }
+
+  Future<void> register({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.register(
+        email: email,
+        password: password,
+        name: name,
+      );
+      final user = await repo.getCurrentUser();
+      state = AsyncValue.data(user);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> forgotPassword(String email) async {
+    state = const AsyncValue.loading();
+    try {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.forgotPassword(email);
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
 }
 
 @Riverpod(keepAlive: true)

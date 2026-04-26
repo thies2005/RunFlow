@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/data/models/goal_models.dart';
 import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
+import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -51,12 +55,12 @@ class _DashboardContent extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _StatsCard(stats: data.stats, syncStatus: data.syncStatus),
+        if (data.todayWorkout != null) ...[
+          const SizedBox(height: 16),
+          _TodayWorkoutCard(workout: data.todayWorkout!),
+        ],
         const SizedBox(height: 16),
         _RecentActivitiesSection(activities: data.recentActivities),
-        if (data.goals.any((g) => g.isActive)) ...[
-          const SizedBox(height: 16),
-          _ActiveGoalsSection(goals: data.goals.where((g) => g.isActive).toList()),
-        ],
         const SizedBox(height: 16),
         _SyncStatusCard(syncStatus: data.syncStatus),
       ],
@@ -75,17 +79,30 @@ class _StatsCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'This Week',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+      child: InkWell(
+        onTap: () => context.push('/analytics'),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'This Week',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ],
               ),
-            ),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -152,6 +169,7 @@ class _StatsCard extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -208,6 +226,287 @@ class _StatItem extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _TodayWorkoutCard extends ConsumerWidget {
+  const _TodayWorkoutCard({required this.workout});
+
+  final Workout workout;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: InkWell(
+        onTap: () => context.push('/record?workoutId=${workout.id}'),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      workout.isCompleted ? 'Completed' : "Today's Workout",
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: workout.isCompleted ? AppColors.success : AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (!workout.isCompleted)
+                    IconButton(
+                      icon: const Icon(Icons.swap_horiz, size: 20),
+                      onPressed: () => _showWorkoutSwitcher(context, ref),
+                      tooltip: 'Switch workout',
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                    child: Icon(
+                      _workoutTypeIcon(workout.workoutType),
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          workout.description,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _workoutDetails(workout),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatItem(
+                      label: 'Target Distance',
+                      value: '${workout.targetDistance.toStringAsFixed(1)} km',
+                      icon: Icons.straighten,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  Expanded(
+                    child: _StatItem(
+                      label: 'Target Pace',
+                      value: formatPace(workout.targetPace),
+                      icon: Icons.speed,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showWorkoutSwitcher(BuildContext context, WidgetRef ref) {
+    final goals = ref.read(goalsProvider).value;
+    if (goals == null) return;
+
+    final pendingWorkouts = <Workout>[];
+    for (final goal in goals.goals) {
+      for (final w in goal.workouts) {
+        if (!w.isCompleted) {
+          pendingWorkouts.add(w);
+        }
+      }
+    }
+
+    pendingWorkouts.sort((a, b) => a.scheduledDate.compareTo(b.scheduledDate));
+
+    if (pendingWorkouts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No pending workouts available')),
+      );
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => _WorkoutSwitcherSheet(
+        workouts: pendingWorkouts,
+        currentWorkoutId: workout.id,
+        onSelect: (selected) async {
+          Navigator.pop(context);
+          if (selected.id == workout.id) return;
+
+          logger.log('Switching workout from ${workout.id} to ${selected.id}');
+
+          try {
+            await ref.read(goalRepositoryProvider).updateWorkout(
+              workout.id,
+              UpdateWorkoutRequest(
+                description: selected.description,
+                targetDistance: selected.targetDistance,
+                targetPace: selected.targetPace,
+                targetDuration: selected.targetDuration,
+                workoutType: selected.workoutType,
+              ),
+            );
+            ref.invalidate(dashboardProvider);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Workout updated')),
+              );
+            }
+          } catch (e) {
+            logger.log('Failed to switch workout: $e');
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to update: $e')),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  IconData _workoutTypeIcon(WorkoutType type) {
+    return switch (type) {
+      WorkoutType.easy => Icons.directions_run,
+      WorkoutType.long => Icons.route,
+      WorkoutType.tempo => Icons.timer,
+      WorkoutType.interval => Icons.flash_on,
+      WorkoutType.recovery => Icons.healing,
+      WorkoutType.race => Icons.flag,
+      WorkoutType.other => Icons.fitness_center,
+    };
+  }
+
+  String _workoutDetails(Workout workout) {
+    final parts = <String>[];
+    parts.add(workout.workoutType.name.toUpperCase());
+    if (workout.targetDuration > 0) {
+      parts.add(formatDuration(workout.targetDuration));
+    }
+    return parts.join(' · ');
+  }
+}
+
+class _WorkoutSwitcherSheet extends StatelessWidget {
+  const _WorkoutSwitcherSheet({
+    required this.workouts,
+    required this.currentWorkoutId,
+    required this.onSelect,
+  });
+
+  final List<Workout> workouts;
+  final String currentWorkoutId;
+  final void Function(Workout) onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Switch Workout',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Select a different workout to replace today\'s workout',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...workouts.map((w) => ListTile(
+            leading: CircleAvatar(
+              backgroundColor: w.id == currentWorkoutId
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : AppColors.surfaceDarkVariant,
+              child: Icon(
+                _workoutTypeIcon(w.workoutType),
+                color: w.id == currentWorkoutId
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant,
+                size: 20,
+              ),
+            ),
+            title: Text(
+              w.description,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: w.id == currentWorkoutId ? FontWeight.w600 : null,
+              ),
+            ),
+            subtitle: Text(
+              '${w.workoutType.name.toUpperCase()} · ${w.targetDistance.toStringAsFixed(1)} km',
+              style: theme.textTheme.bodySmall,
+            ),
+            trailing: w.id == currentWorkoutId
+                ? const Icon(Icons.check, color: AppColors.primary)
+                : null,
+            onTap: () => onSelect(w),
+          )),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  IconData _workoutTypeIcon(WorkoutType type) {
+    return switch (type) {
+      WorkoutType.easy => Icons.directions_run,
+      WorkoutType.long => Icons.route,
+      WorkoutType.tempo => Icons.timer,
+      WorkoutType.interval => Icons.flash_on,
+      WorkoutType.recovery => Icons.healing,
+      WorkoutType.race => Icons.flag,
+      WorkoutType.other => Icons.fitness_center,
+    };
   }
 }
 
@@ -297,6 +596,7 @@ class _ActivityTile extends StatelessWidget {
             color: AppColors.onSurfaceVariant,
           ),
         ),
+        onTap: () => context.push('/activities/${activity.id}'),
       ),
     );
   }

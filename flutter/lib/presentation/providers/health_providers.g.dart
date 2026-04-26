@@ -280,7 +280,7 @@ final class FastingProvider
   Fasting create() => Fasting();
 }
 
-String _$fastingHash() => r'd208b1eedfb9edb13654037ae21b2fc3972bf31f';
+String _$fastingHash() => r'8948cd1625a4260bc69ec972456e81e95b28ce1f';
 
 abstract class _$Fasting extends $AsyncNotifier<FastingSession?> {
   FutureOr<FastingSession?> build();
@@ -324,7 +324,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'99c1c1c6c95c03b0993287451772723b2f6e216a';
+String _$supplementListHash() => r'c65c8e38761d4ac568c892d054a8a961a172d782';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();
@@ -386,7 +386,7 @@ final class NutritionNotifierProvider
   }
 }
 
-String _$nutritionNotifierHash() => r'a2631bcb930029a39f377feedcec6a2ea65f75b2';
+String _$nutritionNotifierHash() => r'd057c0d0521b5abef9f24bf31eac3be9874d4b99';
 
 final class NutritionNotifierFamily extends $Family
     with
@@ -458,7 +458,7 @@ final class BarcodeScanProvider
   BarcodeScan create() => BarcodeScan();
 }
 
-String _$barcodeScanHash() => r'68f32b4133ab80ed6fdf19ffe516695280845b1b';
+String _$barcodeScanHash() => r'f13ed5a5f29d60cf1d202f16edb78ee1fb6148fe';
 
 abstract class _$BarcodeScan extends $AsyncNotifier<FoodItem?> {
   FutureOr<FoodItem?> build();
@@ -470,6 +470,306 @@ abstract class _$BarcodeScan extends $AsyncNotifier<FoodItem?> {
         ref.element
             as $ClassProviderElement<
               AnyNotifier<AsyncValue<FoodItem?>, FoodItem?>,
+              AsyncValue<FoodItem?>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(nutritionAnalytics)
+final nutritionAnalyticsProvider = NutritionAnalyticsProvider._();
+
+final class NutritionAnalyticsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<NutritionAnalytics>,
+          NutritionAnalytics,
+          FutureOr<NutritionAnalytics>
+        >
+    with
+        $FutureModifier<NutritionAnalytics>,
+        $FutureProvider<NutritionAnalytics> {
+  NutritionAnalyticsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'nutritionAnalyticsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$nutritionAnalyticsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<NutritionAnalytics> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<NutritionAnalytics> create(Ref ref) {
+    return nutritionAnalytics(ref);
+  }
+}
+
+String _$nutritionAnalyticsHash() =>
+    r'4b5c3df4cd581b733d5ba0671cb12e8a6832249f';
+
+@ProviderFor(supplementAnalytics)
+final supplementAnalyticsProvider = SupplementAnalyticsProvider._();
+
+final class SupplementAnalyticsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SupplementAnalytics>,
+          SupplementAnalytics,
+          FutureOr<SupplementAnalytics>
+        >
+    with
+        $FutureModifier<SupplementAnalytics>,
+        $FutureProvider<SupplementAnalytics> {
+  SupplementAnalyticsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'supplementAnalyticsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$supplementAnalyticsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<SupplementAnalytics> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<SupplementAnalytics> create(Ref ref) {
+    return supplementAnalytics(ref);
+  }
+}
+
+String _$supplementAnalyticsHash() =>
+    r'b884a426f028ab559dfbcdc27dfe0856dd645f8d';
+
+@ProviderFor(healthHistory)
+final healthHistoryProvider = HealthHistoryFamily._();
+
+final class HealthHistoryProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<HealthHistory>,
+          HealthHistory,
+          FutureOr<HealthHistory>
+        >
+    with $FutureModifier<HealthHistory>, $FutureProvider<HealthHistory> {
+  HealthHistoryProvider._({
+    required HealthHistoryFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'healthHistoryProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$healthHistoryHash();
+
+  @override
+  String toString() {
+    return r'healthHistoryProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<HealthHistory> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<HealthHistory> create(Ref ref) {
+    final argument = this.argument as String;
+    return healthHistory(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is HealthHistoryProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$healthHistoryHash() => r'e189bcf6719737695a05ed28da098ee8febe41b9';
+
+final class HealthHistoryFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<HealthHistory>, String> {
+  HealthHistoryFamily._()
+    : super(
+        retry: null,
+        name: r'healthHistoryProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  HealthHistoryProvider call(String range) =>
+      HealthHistoryProvider._(argument: range, from: this);
+
+  @override
+  String toString() => r'healthHistoryProvider';
+}
+
+@ProviderFor(FoodSearch)
+final foodSearchProvider = FoodSearchFamily._();
+
+final class FoodSearchProvider
+    extends $AsyncNotifierProvider<FoodSearch, List<FoodItem>> {
+  FoodSearchProvider._({
+    required FoodSearchFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'foodSearchProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$foodSearchHash();
+
+  @override
+  String toString() {
+    return r'foodSearchProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  FoodSearch create() => FoodSearch();
+
+  @override
+  bool operator ==(Object other) {
+    return other is FoodSearchProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$foodSearchHash() => r'3c1f9ec515cd5effebc67d410fd20583beae831d';
+
+final class FoodSearchFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          FoodSearch,
+          AsyncValue<List<FoodItem>>,
+          List<FoodItem>,
+          FutureOr<List<FoodItem>>,
+          String
+        > {
+  FoodSearchFamily._()
+    : super(
+        retry: null,
+        name: r'foodSearchProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  FoodSearchProvider call(String query) =>
+      FoodSearchProvider._(argument: query, from: this);
+
+  @override
+  String toString() => r'foodSearchProvider';
+}
+
+abstract class _$FoodSearch extends $AsyncNotifier<List<FoodItem>> {
+  late final _$args = ref.$arg as String;
+  String get query => _$args;
+
+  FutureOr<List<FoodItem>> build(String query);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<List<FoodItem>>, List<FoodItem>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<FoodItem>>, List<FoodItem>>,
+              AsyncValue<List<FoodItem>>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, () => build(_$args));
+  }
+}
+
+@ProviderFor(AiScan)
+final aiScanProvider = AiScanProvider._();
+
+final class AiScanProvider
+    extends $NotifierProvider<AiScan, AsyncValue<FoodItem?>> {
+  AiScanProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'aiScanProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$aiScanHash();
+
+  @$internal
+  @override
+  AiScan create() => AiScan();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<FoodItem?> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<FoodItem?>>(value),
+    );
+  }
+}
+
+String _$aiScanHash() => r'2eb619ab76400490ab6db1fff958458f36cf7d56';
+
+abstract class _$AiScan extends $Notifier<AsyncValue<FoodItem?>> {
+  AsyncValue<FoodItem?> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<FoodItem?>, AsyncValue<FoodItem?>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<FoodItem?>, AsyncValue<FoodItem?>>,
               AsyncValue<FoodItem?>,
               Object?,
               Object?

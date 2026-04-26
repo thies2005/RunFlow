@@ -7,7 +7,9 @@ import 'package:runflow_flutter/presentation/providers/recording_providers.dart'
 import 'package:runflow_flutter/services/workout_recording_service.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {
-  const RecordScreen({super.key});
+  const RecordScreen({this.workoutId, super.key});
+
+  final String? workoutId;
 
   @override
   ConsumerState<RecordScreen> createState() => _RecordScreenState();
@@ -18,6 +20,21 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
   bool _showSummary = false;
   bool _isScanning = false;
   List<HrSensorInfo> _scannedSensors = [];
+  bool _coachEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.workoutId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadWorkoutDetails();
+      });
+    }
+  }
+
+  void _loadWorkoutDetails() {
+    // Will be used later to show workout context during recording
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +42,8 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
         ref.watch(recordingStatusProvider);
 
     return statusAsync.when(
-      loading: () => const _IdleView(onStart: null),
-      error: (Object e, StackTrace st) => const _IdleView(onStart: null),
+      loading: () => _IdleView(onStart: _handleStart),
+      error: (Object e, StackTrace st) => _IdleView(onStart: _handleStart),
       data: (RecordingStatus status) {
         if (_showSummary && _lastWorkout != null) {
           return _SummaryView(
@@ -49,6 +66,16 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
             return _RecordingView(
               onPause: _handlePause,
               onStop: _handleStop,
+              coachEnabled: _coachEnabled,
+              onToggleCoach: () {
+                final coach = ref.read(voiceCoachProvider);
+                if (coach.isEnabled) {
+                  coach.disable();
+                } else {
+                  coach.enable();
+                }
+                setState(() => _coachEnabled = !coach.isEnabled);
+              },
             );
           case RecordingStatus.paused:
             return _PausedView(
@@ -72,6 +99,11 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
       );
       return;
     }
+    if (widget.workoutId != null) {
+      final coach = ref.read(voiceCoachProvider);
+      coach.enable();
+      setState(() => _coachEnabled = true);
+    }
     await service.startRecording();
   }
 
@@ -86,6 +118,10 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
   void _handleStop() {
     final WorkoutRecordingService service =
         ref.read(recordingServiceProvider);
+    final coach = ref.read(voiceCoachProvider);
+    coach.disable();
+    coach.stop();
+    setState(() => _coachEnabled = false);
     final RecordedWorkout? workout = service.stopRecording();
     if (workout != null) {
       setState(() {
@@ -349,10 +385,14 @@ class _RecordingView extends ConsumerWidget {
   const _RecordingView({
     required this.onPause,
     required this.onStop,
+    this.coachEnabled = false,
+    this.onToggleCoach,
   });
 
   final VoidCallback onPause;
   final VoidCallback onStop;
+  final bool coachEnabled;
+  final VoidCallback? onToggleCoach;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -364,16 +404,22 @@ class _RecordingView extends ConsumerWidget {
         metrics: const RecordingMetrics(),
         onPause: onPause,
         onStop: onStop,
+        coachEnabled: coachEnabled,
+        onToggleCoach: onToggleCoach,
       ),
       error: (Object e, StackTrace st) => _RecordingContent(
         metrics: const RecordingMetrics(),
         onPause: onPause,
         onStop: onStop,
+        coachEnabled: coachEnabled,
+        onToggleCoach: onToggleCoach,
       ),
       data: (RecordingMetrics metrics) => _RecordingContent(
         metrics: metrics,
         onPause: onPause,
         onStop: onStop,
+        coachEnabled: coachEnabled,
+        onToggleCoach: onToggleCoach,
       ),
     );
   }
@@ -384,11 +430,15 @@ class _RecordingContent extends StatelessWidget {
     required this.metrics,
     required this.onPause,
     required this.onStop,
+    this.coachEnabled = false,
+    this.onToggleCoach,
   });
 
   final RecordingMetrics metrics;
   final VoidCallback onPause;
   final VoidCallback onStop;
+  final bool coachEnabled;
+  final VoidCallback? onToggleCoach;
 
   @override
   Widget build(BuildContext context) {
@@ -427,6 +477,16 @@ class _RecordingContent extends StatelessWidget {
               child: Row(
                 children: [
                   _GpsIndicator(accuracy: metrics.gpsAccuracy),
+                  const Spacer(),
+                  if (onToggleCoach != null)
+                    GestureDetector(
+                      onTap: onToggleCoach,
+                      child: Icon(
+                        coachEnabled ? Icons.record_voice_over : Icons.voice_over_off,
+                        size: 20,
+                        color: coachEnabled ? AppColors.primary : AppColors.onSurfaceVariant,
+                      ),
+                    ),
                 ],
               ),
             ),

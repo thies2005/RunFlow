@@ -16,12 +16,18 @@ class AppDatabase {
 
   Database? _db;
 
+  static const int _currentVersion = 1;
+
+  static final Map<int, void Function(Database)> _migrations = {};
+
   Future<Database> get database async {
     if (_db != null) return _db!;
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'runflow.db'));
     _db = sqlite3.open(file.path);
-    await _createTables();
+    _db!.execute('PRAGMA journal_mode = WAL');
+    _db!.execute('PRAGMA foreign_keys = ON');
+    _runMigrations(_db!);
     return _db!;
   }
 
@@ -29,8 +35,31 @@ class AppDatabase {
     await database;
   }
 
-  Future<void> _createTables() async {
-    final db = _db!;
+  void _runMigrations(Database db) {
+    final rows = db.select('PRAGMA user_version');
+    final storedVersion = rows.first['user_version'] as int;
+
+    if (storedVersion == 0) {
+      _createTables(db);
+      db.execute('PRAGMA user_version = $_currentVersion');
+      return;
+    }
+
+    for (int v = storedVersion; v < _currentVersion; v++) {
+      _migrations[v]?.call(db);
+    }
+
+    if (storedVersion < _currentVersion) {
+      db.execute('PRAGMA user_version = $_currentVersion');
+    }
+  }
+
+  void close() {
+    _db?.close();
+    _db = null;
+  }
+
+  void _createTables(Database db) {
     db.execute('''
       CREATE TABLE IF NOT EXISTS nutrition_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +70,7 @@ class AppDatabase {
         fat REAL NOT NULL DEFAULT 0,
         water REAL NOT NULL DEFAULT 0,
         notes TEXT,
-        created_at INTEGER NOT NULL DEFAULT (unixepoch())
+        created_at INTEGER NOT NULL
       )
     ''');
     db.execute('''

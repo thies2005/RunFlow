@@ -72,6 +72,7 @@ model User {
   bodyMeasurements      BodyMeasurement[]
   fastingSessions       FastingSession[]
   healthInsights        HealthInsight[]
+  deviceTokens          DeviceToken[]
 }
 
 model UserConsent {
@@ -958,6 +959,19 @@ model SessionReplay {
   @@index([userId, timestamp])
   @@index([timestamp])
   @@index([sessionId])
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String
+  platform  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@index([userId])
 }
 
 model Release {

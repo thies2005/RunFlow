@@ -1,11 +1,22 @@
 import 'package:health/health.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/data/models/health_vitals_models.dart';
 
 abstract class HealthConnectService {
+  Future<bool> isAvailable();
   Future<bool> requestPermissions();
   Future<List<Activity>> readActivities();
   Future<List<HealthDataPoint>> readHeartRate();
   Future<List<HealthDataPoint>> readSteps();
+  Future<List<HealthDataPoint>> readActiveCalories(DateTime start, DateTime end);
+  Future<List<HealthDataPoint>> readWeight(DateTime start, DateTime end);
+  Future<double?> readLatestWeight();
+
+  // Vitals
+  Future<VitalsData> readVitals();
+
+  // Sleep
+  Future<SleepData> readSleep();
 }
 
 class HealthConnectServiceImpl implements HealthConnectService {
@@ -16,8 +27,29 @@ class HealthConnectServiceImpl implements HealthConnectService {
   static const List<HealthDataType> _permissionTypes = [
     HealthDataType.WORKOUT,
     HealthDataType.HEART_RATE,
+    HealthDataType.RESTING_HEART_RATE,
+    HealthDataType.HEART_RATE_VARIABILITY_SDNN,
+    HealthDataType.BLOOD_OXYGEN,
+    HealthDataType.SLEEP_SESSION,
+    HealthDataType.SLEEP_DEEP,
+    HealthDataType.SLEEP_REM,
+    HealthDataType.SLEEP_LIGHT,
+    HealthDataType.SLEEP_AWAKE,
     HealthDataType.STEPS,
+    HealthDataType.ACTIVE_ENERGY_BURNED,
+    HealthDataType.WEIGHT,
+    HealthDataType.BODY_FAT_PERCENTAGE,
+    HealthDataType.DISTANCE_DELTA,
   ];
+
+  @override
+  Future<bool> isAvailable() async {
+    try {
+      return await _health.isHealthConnectAvailable();
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   Future<bool> requestPermissions() async {
@@ -82,6 +114,223 @@ class HealthConnectServiceImpl implements HealthConnectService {
       );
     } catch (_) {
       return [];
+    }
+  }
+
+  @override
+  Future<List<HealthDataPoint>> readActiveCalories(
+      DateTime start, DateTime end) async {
+    try {
+      await _health.configure();
+      return await _health.getHealthDataFromTypes(
+        types: [HealthDataType.ACTIVE_ENERGY_BURNED],
+        startTime: start,
+        endTime: end,
+      );
+    } catch (_) {
+      return [];
+    }
+  }
+
+  @override
+  Future<List<HealthDataPoint>> readWeight(
+      DateTime start, DateTime end) async {
+    try {
+      await _health.configure();
+      return await _health.getHealthDataFromTypes(
+        types: [HealthDataType.WEIGHT],
+        startTime: start,
+        endTime: end,
+      );
+    } catch (_) {
+      return [];
+    }
+  }
+
+  @override
+  Future<double?> readLatestWeight() async {
+    try {
+      await _health.configure();
+      final now = DateTime.now();
+      final start = now.subtract(const Duration(days: 30));
+      final data = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.WEIGHT],
+        startTime: start,
+        endTime: now,
+      );
+      if (data.isEmpty) return null;
+      data.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
+      final value = data.first.value;
+      if (value is NumericHealthValue) {
+        return value.numericValue.toDouble();
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ─── Vitals ──────────────────────────────────────────────────────────────────
+
+  @override
+  Future<VitalsData> readVitals() async {
+    try {
+      await _health.configure();
+      final now = DateTime.now();
+      final sevenDaysAgo = now.subtract(const Duration(days: 7));
+
+      final results = await Future.wait([
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.RESTING_HEART_RATE],
+          startTime: sevenDaysAgo,
+          endTime: now,
+        ),
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.HEART_RATE_VARIABILITY_SDNN],
+          startTime: sevenDaysAgo,
+          endTime: now,
+        ),
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.BLOOD_OXYGEN],
+          startTime: sevenDaysAgo,
+          endTime: now,
+        ),
+      ]);
+
+      final restingHrData = results[0];
+      final hrvData = results[1];
+      final spo2Data = results[2];
+
+      double? restingHr;
+      double? hrv;
+      double? spo2;
+
+      if (restingHrData.isNotEmpty) {
+        restingHrData.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
+        final v = restingHrData.first.value;
+        if (v is NumericHealthValue) restingHr = v.numericValue.toDouble();
+      }
+
+      if (hrvData.isNotEmpty) {
+        hrvData.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
+        final v = hrvData.first.value;
+        if (v is NumericHealthValue) hrv = v.numericValue.toDouble();
+      }
+
+      if (spo2Data.isNotEmpty) {
+        spo2Data.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
+        final v = spo2Data.first.value;
+        if (v is NumericHealthValue) spo2 = v.numericValue.toDouble();
+      }
+
+      // Build 7-day HR trend
+      final hrTrend = <DateTime, double>{};
+      for (final point in restingHrData) {
+        final v = point.value;
+        if (v is NumericHealthValue) {
+          final day =
+              DateTime(point.dateFrom.year, point.dateFrom.month, point.dateFrom.day);
+          hrTrend[day] = v.numericValue.toDouble();
+        }
+      }
+
+      return VitalsData(
+        restingHeartRate: restingHr,
+        hrv: hrv,
+        spo2: spo2,
+        lastSynced: DateTime.now(),
+        hrTrend: hrTrend,
+      );
+    } catch (_) {
+      return const VitalsData();
+    }
+  }
+
+  // ─── Sleep ───────────────────────────────────────────────────────────────────
+
+  @override
+  Future<SleepData> readSleep() async {
+    try {
+      await _health.configure();
+      final now = DateTime.now();
+      final fourteenDaysAgo = now.subtract(const Duration(days: 14));
+
+      final results = await Future.wait([
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.SLEEP_SESSION],
+          startTime: fourteenDaysAgo,
+          endTime: now,
+        ),
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.SLEEP_DEEP],
+          startTime: fourteenDaysAgo,
+          endTime: now,
+        ),
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.SLEEP_REM],
+          startTime: fourteenDaysAgo,
+          endTime: now,
+        ),
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.SLEEP_LIGHT],
+          startTime: fourteenDaysAgo,
+          endTime: now,
+        ),
+      ]);
+
+      final sessions = results[0];
+      final deepData = results[1];
+      final remData = results[2];
+      final lightData = results[3];
+
+      if (sessions.isEmpty) return const SleepData();
+
+      // Most recent session
+      sessions.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
+      final latest = sessions.first;
+
+      final totalMinutes =
+          latest.dateTo.difference(latest.dateFrom).inMinutes;
+
+      double deepMinutes = 0;
+      double remMinutes = 0;
+      double lightMinutes = 0;
+
+      void sumStage(List<HealthDataPoint> data, void Function(double) fn) {
+        for (final p in data) {
+          if (p.dateFrom.isAfter(latest.dateFrom) &&
+              p.dateTo.isBefore(latest.dateTo.add(const Duration(minutes: 1)))) {
+            fn(p.dateTo.difference(p.dateFrom).inMinutes.toDouble());
+          }
+        }
+      }
+
+      sumStage(deepData, (m) => deepMinutes += m);
+      sumStage(remData, (m) => remMinutes += m);
+      sumStage(lightData, (m) => lightMinutes += m);
+
+      // 7-day sessions
+      final dailySleep = <SleepSession>[];
+      for (final session in sessions.take(7)) {
+        dailySleep.add(SleepSession(
+          startTime: session.dateFrom,
+          endTime: session.dateTo,
+          durationMinutes: session.dateTo.difference(session.dateFrom).inMinutes,
+        ));
+      }
+
+      return SleepData(
+        lastNightMinutes: totalMinutes,
+        lastNightStart: latest.dateFrom,
+        lastNightEnd: latest.dateTo,
+        deepMinutes: deepMinutes,
+        remMinutes: remMinutes,
+        lightMinutes: lightMinutes,
+        lastSynced: DateTime.now(),
+        recentSessions: dailySleep,
+      );
+    } catch (_) {
+      return const SleepData();
     }
   }
 

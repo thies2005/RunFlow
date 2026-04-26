@@ -9,6 +9,8 @@ import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/models/goal_models.dart';
 import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
+import 'package:runflow_flutter/presentation/widgets/race_countdown_card.dart';
+import 'package:runflow_flutter/presentation/widgets/training_status_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -52,9 +54,14 @@ class _DashboardContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _StatsCard(stats: data.stats, syncStatus: data.syncStatus),
+        const SizedBox(height: 16),
+        const RaceCountdownCard(),
+        const SizedBox(height: 16),
+        const TrainingStatusCard(),
         if (data.todayWorkout != null) ...[
           const SizedBox(height: 16),
           _TodayWorkoutCard(workout: data.todayWorkout!),
@@ -62,7 +69,7 @@ class _DashboardContent extends ConsumerWidget {
         const SizedBox(height: 16),
         _RecentActivitiesSection(activities: data.recentActivities),
         const SizedBox(height: 16),
-        _SyncStatusCard(syncStatus: data.syncStatus),
+        const _SyncStatusCard(),
       ],
     );
   }
@@ -96,7 +103,7 @@ class _StatsCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  Icon(
+                  const Icon(
                     Icons.chevron_right,
                     size: 20,
                     color: AppColors.onSurfaceVariant,
@@ -240,7 +247,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
 
     return Card(
       child: InkWell(
-        onTap: () => context.push('/record?workoutId=${workout.id}'),
+        onTap: () => _showStartWorkoutDialog(context, ref, workout),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -271,7 +278,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
                       tooltip: 'Switch workout',
                       color: AppColors.onSurfaceVariant,
                     ),
-                  Icon(
+                  const Icon(
                     Icons.chevron_right,
                     size: 20,
                     color: AppColors.onSurfaceVariant,
@@ -402,6 +409,38 @@ class _TodayWorkoutCard extends ConsumerWidget {
             }
           }
         },
+      ),
+    );
+  }
+
+  void _showStartWorkoutDialog(BuildContext context, WidgetRef ref, Workout workout) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Start ${workout.description}?'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${workout.workoutType.name.toUpperCase()} · ${workout.targetDistance.toStringAsFixed(1)} km'),
+            if (workout.targetPace > 0) Text('Target Pace: ${formatPace(workout.targetPace)}'),
+            const SizedBox(height: 12),
+            const Text('This will start recording your workout with GPS tracking.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.push('/record?workoutId=${workout.id}');
+            },
+            child: const Text('Start Workout'),
+          ),
+        ],
       ),
     );
   }
@@ -602,139 +641,17 @@ class _ActivityTile extends StatelessWidget {
   }
 }
 
-class _ActiveGoalsSection extends StatelessWidget {
-  const _ActiveGoalsSection({required this.goals});
-
-  final List<Goal> goals;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Active Goals',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        ...goals.map((goal) => _GoalCard(goal: goal)),
-      ],
-    );
-  }
-}
-
-class _GoalCard extends StatelessWidget {
-  const _GoalCard({required this.goal});
-
-  final Goal goal;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final daysUntilRace = goal.raceDate.difference(DateTime.now()).inDays;
-    final completedWorkouts = goal.workouts.where((w) => w.isCompleted).length;
-    final totalWorkouts = goal.workouts.length;
-    final progress = totalWorkouts > 0 ? completedWorkouts / totalWorkouts : 0.0;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    goal.name,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    raceTypeLabel(goal.raceType),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.event,
-                  size: 16,
-                  color: AppColors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 4),                Text(
-                  daysUntilRace > 0
-                      ? '$daysUntilRace days to go'
-                      : 'Race day!',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: daysUntilRace > 0
-                        ? AppColors.onSurfaceVariant
-                        : AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '$completedWorkouts/$totalWorkouts workouts',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: AppColors.surfaceDarkVariant,
-                valueColor: const AlwaysStoppedAnimation<Color>(
-                  AppColors.primary,
-                ),
-                minHeight: 6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _SyncStatusCard extends ConsumerWidget {
-  const _SyncStatusCard({required this.syncStatus});
-
-  final SyncStatus syncStatus;
+  const _SyncStatusCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final syncStatus = ref.watch(
+      dashboardProvider.select((s) => s.value?.syncStatus),
+    );
+
+    if (syncStatus == null) return const SizedBox.shrink();
 
     return Card(
       child: Padding(
@@ -847,7 +764,9 @@ class _DashboardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final shimmerColor = Theme.of(context).colorScheme.surfaceContainerHighest;
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         Card(
@@ -856,21 +775,21 @@ class _DashboardSkeleton extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _shimmerLine(width: 100, height: 18),
+                _shimmerLine(width: 100, height: 18, color: shimmerColor),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _shimmerBlock(height: 60)),
+                    Expanded(child: _shimmerBlock(height: 60, color: shimmerColor)),
                     const SizedBox(width: 12),
-                    Expanded(child: _shimmerBlock(height: 60)),
+                    Expanded(child: _shimmerBlock(height: 60, color: shimmerColor)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _shimmerBlock(height: 60)),
+                    Expanded(child: _shimmerBlock(height: 60, color: shimmerColor)),
                     const SizedBox(width: 12),
-                    Expanded(child: _shimmerBlock(height: 60)),
+                    Expanded(child: _shimmerBlock(height: 60, color: shimmerColor)),
                   ],
                 ),
               ],
@@ -880,7 +799,7 @@ class _DashboardSkeleton extends StatelessWidget {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _shimmerLine(width: 140, height: 18),
+          child: _shimmerLine(width: 140, height: 18, color: shimmerColor),
         ),
         const SizedBox(height: 8),
         ...List.filled(3, const Card(child: _ShimmerTile())),
@@ -888,30 +807,30 @@ class _DashboardSkeleton extends StatelessWidget {
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: _shimmerBlock(height: 48),
+            child: _shimmerBlock(height: 48, color: shimmerColor),
           ),
         ),
       ],
     );
   }
 
-  Widget _shimmerLine({required double width, required double height}) {
+  Widget _shimmerLine({required double width, required double height, required Color color}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
       child: Container(
         width: width,
         height: height,
-        color: AppColors.surfaceDarkVariant,
+        color: color,
       ),
     );
   }
 
-  Widget _shimmerBlock({required double height}) {
+  Widget _shimmerBlock({required double height, required Color color}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Container(
         height: height,
-        color: AppColors.surfaceDarkVariant,
+        color: color,
       ),
     );
   }
@@ -922,16 +841,17 @@ class _ShimmerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final shimmerColor = Theme.of(context).colorScheme.surfaceContainerHighest;
     return ListTile(
-      leading: const CircleAvatar(
-        backgroundColor: AppColors.surfaceDarkVariant,
-        child: SizedBox.shrink(),
+      leading: CircleAvatar(
+        backgroundColor: shimmerColor,
+        child: const SizedBox.shrink(),
       ),
       title: ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: Container(
           height: 14,
-          color: AppColors.surfaceDarkVariant,
+          color: shimmerColor,
         ),
       ),
       subtitle: Padding(
@@ -941,7 +861,7 @@ class _ShimmerTile extends StatelessWidget {
           child: Container(
             height: 12,
             width: 120,
-            color: AppColors.surfaceDarkVariant,
+            color: shimmerColor,
           ),
         ),
       ),

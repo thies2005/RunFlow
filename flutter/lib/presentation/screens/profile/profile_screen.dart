@@ -232,7 +232,13 @@ class _ProfileMenuSection extends ConsumerWidget {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              ref.read(authStateProvider.notifier).logout();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'To delete your account, please contact support at support@runflow.app',
+                  ),
+                ),
+              );
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,

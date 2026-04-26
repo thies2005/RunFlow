@@ -102,16 +102,6 @@ NutritionLog _testNutritionLog({double water = 1.0}) => NutritionLog(
             .overrideWithValue(const AsyncValue.data([])),
         bodyMeasurementsProvider
             .overrideWithValue(const AsyncValue.data([])),
-        defaultNutritionTargetsProvider
-            .overrideWithValue(const AsyncValue<NutritionTargets>.data(
-          NutritionTargets(
-            calories: 2500,
-            protein: 150,
-            carbs: 300,
-            fat: 80,
-            water: 2.0,
-          ),
-        )),
       ],
       child: const MaterialApp(
         home: HealthScreen(),

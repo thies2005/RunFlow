@@ -1,357 +1,340 @@
-# RunFlow Flutter — Phased Build Plan
+# RunFlow Flutter — Remediation Plan
 
-> **For use with OpenCode agents.** Each phase is a self-contained prompt. Run them sequentially.
-> Agents must read `AGENT.md` before every phase.
-
----
-
-## How to Execute in OpenCode
-
-### Setup
-1. Open OpenCode in the RunFlow project: `cd "c:\Users\thies\Antigravity\Full RunFlow" && opencode`
-2. The `flutter/AGENT.md` file will be auto-read by the agent
-3. Copy each phase prompt below into OpenCode as a new task
-
-### Agent Workflow Per Phase
-Each phase follows a **3-step pipeline**:
-1. **Build** — Implement the feature
-2. **Review** — Self-audit against AGENT.md standards
-3. **Test** — Run `flutter analyze`, `flutter test`, `flutter build apk --debug`
-
-### Rules for Agents
-- Before coding, search **Brave** and **Context7 MCP** for latest docs on every package
-- Use the exact versions from `AGENT.md`
-- After each phase, commit with a descriptive message
-- Never proceed to the next phase if tests fail
+> **Date:** 2026-04-26
+> **Source:** AUDIT_REPORT.md (validated)
+> **Status:** Ready for execution
 
 ---
 
-## Phase 0: Project Scaffold
+## Overview
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
-
-Create a new Flutter project in the `flutter/` directory:
-1. Run `flutter create --org com.runflow --project-name runflow_flutter --platforms android ./flutter`
-2. Set minSdk=29, targetSdk=35, compileSdk=35 in android/app/build.gradle.kts
-3. Set applicationId to "com.runflow.app"
-4. Add ALL dependencies from AGENT.md to pubspec.yaml — search Context7 and Brave for the latest stable versions of each package before adding
-5. Create the full directory structure from AGENT.md section 3
-6. Set up Material 3 theming in core/theme/:
-   - Primary color: #FF6B35 (RunFlow orange)
-   - Dark theme with OLED black background
-   - Use Google Fonts (Inter for body, Outfit for headings)
-7. Set up go_router skeleton with routes: /login, /dashboard, /activities, /analytics, /goals, /chat, /health, /profile
-8. Set up Riverpod with code generation (riverpod_annotation + riverpod_generator)
-9. Create a basic app shell with bottom navigation bar (Dashboard, Activities, Analytics, Goals, Profile)
-10. Set up analysis_options.yaml with strict linting
-11. Run `dart run build_runner build --delete-conflicting-outputs`
-12. Verify: `flutter analyze` passes, `flutter build apk --debug` succeeds
-
-REVIEW: Check all AGENT.md standards are met. Fix any issues.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+134 confirmed bugs + 61 feature gaps against the web app. This plan fixes them in 9 phases with review gates between each.
 
 ---
 
-## Phase 1: Authentication
+## Agent Roles
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
-
-Implement authentication in the flutter/ project:
-1. Search Context7 for flutter_secure_storage and flutter_web_auth_2 latest docs
-2. Create freezed models: LoginRequest, LoginResponse, User, TokenPair (match OpenAPI spec in ../Web/openapi-mobile-v1.yaml)
-3. Create AuthService:
-   - storeTokens/getTokens/clearTokens using flutter_secure_storage
-   - isLoggedIn check
-   - Auto-login on app start from stored tokens
-4. Create Dio client with interceptors:
-   - AuthInterceptor: auto-attach Bearer token to all requests
-   - RefreshInterceptor: on 401, refresh token and retry (queue concurrent requests)
-   - ErrorInterceptor: map API errors to AppException
-5. Create AuthRepository with login(stravaCode), loginEmail(email, password), refreshToken(), logout()
-6. Create Riverpod providers: authStateProvider, currentUserProvider
-7. Build screens:
-   - LoginScreen: Strava OAuth button + email/password form
-   - Strava OAuth flow using flutter_web_auth_2 (redirect URI: runflow://auth/callback)
-8. Add auth guard to go_router: redirect to /login if not authenticated
-9. Write tests: token storage, refresh logic, interceptor behavior, login screen renders
-
-REVIEW: Verify tokens are NEVER logged. Refresh handles race conditions. All error states shown.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+| Role | Purpose |
+|---|---|
+| **FIXER-1** | Primary code implementer |
+| **FIXER-2** | Secondary code implementer (parallel to FIXER-1) |
+| **FIXER-3** | Tertiary code implementer (Phase 7 only) |
+| **SERVER** | Server-side API endpoint creation/modification |
+| **REVIEWER** | Validates fixes after each phase, catches regressions |
 
 ---
 
-## Phase 2: Dashboard
+## Phase 1: Compile Blockers
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
+**Goal:** App compiles and launches.
+**Agents:** FIXER-1, FIXER-2
+**Time:** ~30 minutes
 
-Build the Dashboard screen in flutter/:
-1. Search Context7 for flutter_riverpod AsyncNotifier patterns and fl_chart latest docs
-2. Create freezed models from OpenAPI: DashboardResponse, AnalyticsStats, SyncStatus, SyncResult
-3. Create DashboardRepository: fetchDashboard(), triggerSync(), getSyncStatus()
-4. Create dashboardProvider as AsyncNotifier — handles loading/error/data
-5. Build DashboardScreen with RefreshIndicator (pull-to-refresh):
-   - Stats card: weekly mileage, total activities count
-   - Today's workout card: type, description, target pace (tap to see details)
-   - Recent activities: last 5 with type icon, name, distance, pace, date
-   - Active goals: race name, countdown timer, progress indicator
-   - Sync status: last sync time, manual sync button with loading spinner
-6. Add shimmer/skeleton loading placeholders while data loads
-7. Support dark mode correctly
-8. Cache dashboard response in Drift for offline display
-9. Write tests: provider states, all cards render with mock data
+### FIXER-1 Tasks
 
-REVIEW: Check loading < 2s feel, dark mode correct, cards match web app info hierarchy.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+| # | Task | File | Fix |
+|---|---|---|---|
+| 1.1 | `_showAiScanSheet` undefined | `health_screen.dart:77` | Add method body: `context.push('/health/ai-scan')` |
+| 1.2 | `DropdownButtonFormField.initialValue` | `plan_screen.dart:679` | Change `initialValue:` to `value:` |
+| 1.3 | `DropdownButtonFormField.initialValue` | `edit_profile_screen.dart:165` | Change `initialValue:` to `value:` |
+| 1.4 | Null assertion crash | `app.dart:44` | `Expanded(child: child ?? const SizedBox.shrink())` |
 
----
+### FIXER-2 Tasks
 
-## Phase 3: Activities
+| # | Task | File | Fix |
+|---|---|---|---|
+| 1.5 | Duplicate `healthConnectServiceProvider` | `vitals_sleep_providers.dart:10` + `health_sync_providers.dart:7` | Remove from `health_sync_providers.dart`, import the `vitals_sleep` version (which injects `Health()`) everywhere |
+| 1.6 | Unsafe `.cast<double>()` | `activity_detail_screen.dart:97,104,115` | Replace with `.map((e) => (e as num).toDouble()).toList()` |
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
-
-Build the Activities module in flutter/:
-1. Search Context7 for fl_chart line chart and go_router navigation docs
-2. Create freezed models from OpenAPI: Activity, ActivitiesResponse, Lap, Split (match exact fields)
-3. Create ActivitiesRepository: listActivities(limit, offset, type), getActivity(id), createManual(data)
-4. Create activitiesProvider with pagination (infinite scroll using AsyncNotifier maintaining cursor)
-5. Build screens:
-   - ActivityListScreen: infinite scroll list, type filter chips (RUN, RIDE, SWIM, etc.), activity type icons
-   - ActivityDetailScreen: header with key metrics (distance, pace, HR, elevation, duration), splits table, laps section, HR zone horizontal bar chart, training type badge
-   - Stream charts using fl_chart: heart rate over time, pace over time, elevation profile
-6. Manual activity creation form
-7. Cache last 50 activities in Drift
-8. Write tests: pagination logic, filter state, detail screen sections render
-
-REVIEW: Infinite scroll doesn't re-fetch pages. Charts handle 1000+ points. Detail matches web feature parity.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+### Review Gate 1
+- Run `flutter analyze` — must pass with zero errors
+- REVIEWER reads all 6 changed files
+- Verify no regressions
 
 ---
 
-## Phase 4: Analytics & Charts
+## Phase 2: Critical State Bugs
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
+**Goal:** Core user flows work correctly.
+**Agents:** FIXER-1, FIXER-2
+**Time:** ~1 hour
 
-Build Analytics module in flutter/:
-1. Search Context7 for fl_chart interactive charts and gestures
-2. Create freezed models: AnalyticsStats, FitnessHistory
-3. Create AnalyticsRepository: getStats(), getHistory(startDate, endDate)
-4. Port VDOT calculator from AGENT.md domain formulas — put in core/utils/vdot.dart
-5. Port TSB status logic
-6. Build AnalyticsScreen:
-   - Summary cards: current VDOT, CTL, ATL, TSB (with color-coded status), form indicator
-   - Fitness chart: CTL/ATL/TSB lines over time (fl_chart with touch tooltip)
-   - Date range selector: 30/60/90/365 day buttons
-   - Race prediction widget: predicted times for 5K/10K/HM/Marathon from current VDOT
-   - Marathon shape score: circular gauge 0-100
-   - Weekly mileage bar chart
-7. Write tests: VDOT calculation (cross-reference 10 test cases), chart renders, provider states
+### FIXER-1 Tasks
 
-REVIEW: Charts performant with 365 points. VDOT matches web output. Colors consistent.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+| # | Task | File | Fix |
+|---|---|---|---|
+| 2.1 | `forgotPassword` sets user to null | `auth_providers.dart:116-125` | Don't modify `state`. Return a separate result. Use a dedicated `AsyncValue<bool>` field or don't touch state at all. |
+| 2.2 | `loadMore` loses activities on error | `activity_providers.dart:69-72` | On error, keep `AsyncValue.data(current.copyWith(isLoadingMore: false))` instead of overwriting with `AsyncValue.error`. Store error in state or just keep data. |
+| 2.3 | `ChatNotifier.error` never clears | `chat_providers.dart:66` | In `sendMessage` success path: `state = state.copyWith(isStreaming: true, streamingContent: '', error: '')` |
+| 2.4 | `Fasting.start()` discards session | `health_providers.dart:53-58` | Use returned session: `state = AsyncValue.data(session)` |
 
----
+### FIXER-2 Tasks
 
-## Phase 5: Training Plans & Goals
+| # | Task | File | Fix |
+|---|---|---|---|
+| 2.5 | Workout toggle sends empty request | `goal_detail_screen.dart:571` | Call `repo.updateWorkout(workoutId, UpdateWorkoutRequest(isCompleted: !previousState))` instead of empty `UpdateGoalRequest()` |
+| 2.6 | Delete Account = logout | `profile_screen.dart:233-236` | Implement `deleteAccount()` in auth notifier that calls server DELETE endpoint, then clears local state. Until server endpoint exists, show "Contact support" message. |
+| 2.7 | Deep link subscription leak | `main.dart:67` | Store subscription in a variable, cancel in `dispose()` or use `appLinks.stringLinkStream` with a scoped listener |
+| 2.8 | `response.data!` null dereference | `refresh_session.dart:19` | Add `if (response.data == null) throw ...` before `RefreshResponse.fromJson` |
+| 2.9 | DB time unit mismatch | `app_database.dart:44` | Change `DEFAULT (unixepoch())` to store milliseconds, or explicitly set `created_at` on insert (line 124 already does — remove the default) |
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
-
-Build Goals module in flutter/:
-1. Search Context7 for table_calendar and Flutter Stepper/multi-step form patterns
-2. Create freezed models from OpenAPI: Goal, GoalsResponse, CreateGoalRequest, UpdateGoalRequest, Workout, WorkoutsResponse, RaceResult
-3. Create GoalsRepository: listGoals(), createGoal(), getGoal(id), updateGoal(), deleteGoal()
-4. Create WorkoutsRepository: listWorkouts(goalId, weekStart, weekEnd)
-5. Build screens:
-   - GoalListScreen: active and completed goals with race countdown
-   - GoalSetupWizard: multi-step form (race type → date → target time → plan config → review)
-   - WeeklyCalendarScreen: table_calendar showing workouts per day with color-coded types
-   - WorkoutDetailScreen: description, targets, completion toggle, linked activity
-   - RaceCountdownWidget: days remaining with visual progress ring
-6. Optimistic UI updates for workout completion toggle
-7. Write tests: wizard navigation, goal creation validation, calendar renders workouts
-
-REVIEW: Wizard preserves data on back/forward. Calendar correct. Completion toggle responsive.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+### Review Gate 2
+- REVIEWER reads all changed provider files
+- Verify: forgot password doesn't log out, chat error clears, workout toggle persists, deep link subscription is managed
+- Check no regressions in auth flow
 
 ---
 
-## Phase 6: AI Coach Chat
+## Phase 3: Server Communication
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
+**Goal:** Flutter talks to server correctly for all existing endpoints.
+**Agents:** FIXER-1, FIXER-2, SERVER
+**Time:** ~2 hours
 
-Build AI Chat module in flutter/:
-1. Search Context7 for Dio streaming responses and flutter_markdown latest docs
-2. Create chat models: ChatSession, ChatMessage
-3. Create ChatRepository: sendMessage(sessionId, content) with SSE streaming, listSessions(), createSession()
-4. Build screens:
-   - ChatScreen: message bubbles (user right, AI left), markdown rendering for AI responses
-   - Streaming: use Dio responseType: ResponseType.stream for token-by-token rendering
-   - Chat input bar with send button
-   - Session drawer: list/switch/create chat sessions
-   - Typing indicator animation while AI responds
-   - Prompt library: quick-access suggested prompts
-5. Cache recent messages in Drift
-6. Write tests: message parsing, markdown rendering, session management
+### SERVER Tasks
 
-REVIEW: Streaming smooth (no jank). Markdown tables/code/lists render. Chat persists across backgrounding.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+| # | Task | Details |
+|---|---|---|
+| 3.S1 | Mobile-compatible health endpoints | Create `/api/mobile/v1/health/...` routes that mirror `/api/health/...` but use `getAuthenticatedUser()` (JWT) instead of `auth()` (session). Covers: nutrition/log, nutrition/search, nutrition/scan, nutrition/target, nutrition/analytics, fasting, supplements, body-composition, health/sync-batch, health/insights, health/daily. |
+| 3.S2 | Forgot-password for mobile | Either create `/api/mobile/v1/auth/forgot-password` or ensure the existing `/api/auth/forgot-password` accepts requests without session (it already does — just needs the Flutter path fix). |
+| 3.S3 | FCM device token endpoint | Create `POST /api/mobile/v1/device/token` accepting `{ token: string, platform: string }` with JWT auth. Store in `DeviceToken` table. |
+| 3.S4 | Mobile logout endpoint | Create or verify `POST /api/mobile/v1/auth/logout` for server-side token blacklisting. |
 
----
+### FIXER-1 Tasks
 
-## Phase 7: Health Tracking
+| # | Task | File | Fix |
+|---|---|---|---|
+| 3.1 | AI Chat URLs wrong | `api_constants.dart:36-38` | Change to `$baseUrl/api/ai/chat/sessions`, `$baseUrl/api/ai/chat/history`, `$baseUrl/api/ai/chat` |
+| 3.2 | Health API paths wrong | `api_constants.dart:40-53` | Change paths to match server: `/health/nutrition/log`, `/health/fasting`, `/health/supplements`, etc. Or keep as-is if SERVER creates mobile aliases at `/api/mobile/v1/...` |
+| 3.3 | Token refresh wastes 404 | `refresh_session.dart:38-41` | Swap order: try `legacyRefreshUrl` first, then `refreshPath` |
+| 3.4 | Logout doesn't call server | `auth_repository_impl.dart:149-151` | Add `try { await dio.post('/auth/logout'); } catch (_) {}` before `authService.clearAll()` |
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
+### FIXER-2 Tasks
 
-Build Health Tracking module in flutter/:
-1. Search Context7/Brave for the health package and nutrition tracking patterns
-2. Create models for: NutritionLog, FoodItem, Supplement, SupplementStack, DailyHealthLog, FastingSession, BodyMeasurement
-3. Build screens:
-   - NutritionDashboard: daily calorie/macro progress rings (CustomPainter), water intake
-   - FoodSearchScreen: search + barcode scan (mobile_scanner)
-   - SupplementTrackerScreen: stack management, daily check-off list
-   - FastingScreen: start/stop timer, history
-   - BodyMeasurementsScreen: weight/body fat/etc with trend line chart
-4. Background reminders via flutter_local_notifications
-5. Write tests: calorie calculations, macro percentages, progress ring renders
+| # | Task | File | Fix |
+|---|---|---|---|
+| 3.5 | FCM token never sent to server | `fcm_service.dart:20` | After `getToken()`, POST token to server's device token endpoint |
+| 3.6 | No `onTokenRefresh` listener | `fcm_service.dart` | Add `messaging.onTokenRefresh.listen((token) => _sendTokenToServer(token))` |
+| 3.7 | Empty background notification handler | `fcm_service.dart:64` | Implement: initialize Firebase, parse `RemoteMessage`, show local notification via `flutter_local_notifications` |
+| 3.8 | Empty background sync callback | `background_sync.dart:5-7` | Implement actual sync: reinitialize services, call sync endpoints, return success/failure |
 
-REVIEW: Barcode scanner works. Macro rings animate. Supplements work offline.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+### Review Gate 3
+- REVIEWER verifies all API paths resolve to correct server endpoints
+- REVIEWER checks auth methods match (JWT for mobile, session for web)
+- SERVER agent confirms new endpoints work with JWT auth
+- Test: FCM token registration flow, background sync execution, chat messaging end-to-end
 
 ---
 
-## Phase 8: Native Integrations
+## Phase 4: Auth-Aware State & Cache Invalidation
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
+**Goal:** Login/logout cleanly resets all state.
+**Agents:** FIXER
+**Time:** ~1 hour
 
-Add native integrations to flutter/:
-1. Search Context7/Brave for health package Health Connect setup, firebase_messaging, workmanager
-2. Health Connect integration:
-   - HealthConnectService: readActivities(), readHeartRate(), readSteps(), requestPermissions()
-   - Sync health data to backend via POST /activities
-   - Handle permissions denied/revoked gracefully
-3. Push notifications via Firebase Cloud Messaging:
-   - FCM setup in android/
-   - Handle foreground, background, and terminated state messages
-4. Local notifications: workout reminders, supplement reminders
-5. Background sync via workmanager: periodic Strava sync every 30 min
-6. Deep linking: register runflow:// scheme for Strava OAuth callback
-7. Share: share activity summaries using share_plus
-8. Write tests: health data transformation, notification scheduling
+| # | Task | File | Fix |
+|---|---|---|---|
+| 4.1 | No cache invalidation on logout | `auth_providers.dart:87-94` | In `logout()`, after clearing state, invalidate all data providers: `ref.invalidate(dashboardProvider)`, `ref.invalidate(goalsProvider)`, `ref.invalidate(profileProvider)`, `ref.invalidate(activitiesProvider)`, `ref.invalidate(chatSessionsProvider)`, etc. |
+| 4.2 | Providers call APIs when unauthenticated | All data providers | Add `ref.watch(currentUserProvider)` check — return empty/default when null |
+| 4.3 | `Settings.build()` returns defaults first frame | `profile_providers.dart:54-57` | Accept the async pattern or use `FutureBuilder` in UI. Document that first frame shows defaults. |
+| 4.4 | Sleep/Vitals cards show "No data" | `health_screen.dart:614-629` | Wire `_SleepCard` to `sleepProvider` and `_VitalsCard` to `vitalsProvider` from `vitals_sleep_providers.dart` |
+| 4.5 | Notification timezone hardcoded UTC | `notification_service.dart:40` | Replace `tz.setLocalLocation(tz.UTC)` with device timezone detection |
 
-REVIEW: Permissions handled gracefully. Push works when killed. Background sync doesn't drain battery.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+### Review Gate 4
+- Test: login → use app → logout → login as different user → verify no stale data
+- Test: sleep/vitals cards show real data when Health Connect available
+- Test: scheduled notifications fire at correct local time
 
 ---
 
-## Phase 9: Profile & Settings
+## Phase 5: Services & Data Layer Hardening
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
+**Goal:** Workout recording, database, and cleanup are production-ready.
+**Agents:** FIXER-1, FIXER-2
+**Time:** ~2 hours
 
-Build Profile & Settings in flutter/:
-1. Create ProfileRepository: getProfile(), updateProfile()
-2. Build screens:
-   - ProfileScreen: avatar, name, email, Strava connection status
-   - HRZoneEditorScreen: slider-based zone config with validation (each zone > previous)
-   - SettingsScreen: unit toggle (metric/imperial), theme selection (light/dark/system), notification preferences
-   - AI settings: data access toggles
-   - AccountScreen: logout (clears all local data), delete account, about/version
-3. Persist settings in SharedPreferences
-4. Unit switch immediately reflects everywhere (use Riverpod provider)
-5. Write tests: settings persistence, validation, all screens render
+### FIXER-1 Tasks
 
-REVIEW: Settings persist across restart. HR zones validate. Logout clears ALL data.
-TEST: Run flutter analyze && flutter test && flutter build apk --debug
-```
+| # | Task | File | Fix |
+|---|---|---|---|
+| 5.1 | No GPS permission check | `workout_recording_service.dart:143` | Call `requestPermissions()` at start of `startRecording()`, return early if denied |
+| 5.2 | No GPS accuracy filtering | `workout_recording_service.dart:254-301` | Reject points where `position.accuracy > 20`. Apply altitude smoothing. |
+| 5.3 | Unbounded GPS/HR arrays | `workout_recording_service.dart:57-58` | Periodically flush to SQLite during workout. Keep only last 100 points in memory for live display. |
+| 5.4 | Cadence estimate misleading | `workout_recording_service.dart:306-313` | Label as estimate. Try BLE running cadence service (0x1814) first, fall back to estimate. |
 
----
+### FIXER-2 Tasks
 
-## Phase 10: Polish & Release
+| # | Task | File | Fix |
+|---|---|---|---|
+| 5.5 | No database migrations | `app_database.dart` | Add `user_version` pragma check. Create migration map `{1: _migrateV1toV2, ...}`. Run `ALTER TABLE` statements for each version. |
+| 5.6 | No WAL mode / foreign keys | `app_database.dart:23` | Execute `PRAGMA journal_mode = WAL;` and `PRAGMA foreign_keys = ON;` after opening |
+| 5.7 | Database never closed | `app_database.dart` | Add `close()` method calling `_db?.dispose()`. Call from app shutdown. |
+| 5.8 | No coordinated logout cleanup | `auth_service_impl.dart:63-65` | Create `LogoutManager` or call: `BackgroundSyncService.cancel()`, `FcmService.dispose()`, `HealthSyncService.stopAutoSync()`, cancel BLE scans |
 
-### Prompt for OpenCode
-```
-Read flutter/AGENT.md first.
-
-Polish the flutter/ app for release:
-1. Search Context7/Brave for flutter_native_splash and sentry_flutter setup
-2. App icon: generate from RunFlow branding (orange on dark)
-3. Splash screen via flutter_native_splash
-4. Onboarding flow: 3-page walkthrough for first launch
-5. Error boundaries: Sentry integration for crash reporting
-6. Offline mode: show cached data with "offline" banner when no network
-7. Performance: profile with DevTools, fix any jank, ensure 60fps
-8. Accessibility: semantic labels, font scaling support, contrast check
-9. Release build:
-   - Create keystore for signing
-   - Configure ProGuard rules
-   - `flutter build apk --release` and verify APK size < 30MB
-10. Full E2E manual test: login → dashboard → activity detail → analytics → create goal → chat → profile
-
-REVIEW: Cold start < 3s. No jank on mid-range device. APK < 30MB.
-TEST: flutter analyze && flutter test && flutter build apk --release
-```
+### Review Gate 5
+- Test: start/stop workout recording — verify GPS filtering, memory usage stable
+- Test: database upgrade from old schema — verify migration runs
+- Test: logout stops all background services
 
 ---
 
-## Quick Reference: OpenCode Execution
+## Phase 6: UI & Theme
 
-### Starting a Phase
+**Goal:** App works in light and dark mode. Navigation correct. No memory leaks.
+**Agents:** FIXER-1, FIXER-2
+**Time:** ~2 hours
+
+### FIXER-1 Tasks
+
+| # | Task | File | Fix |
+|---|---|---|---|
+| 6.1 | Hardcoded OLED black on health screens | `health_screen.dart:27` + `nutrition_screen.dart`, `body_screen.dart`, `supplements_screen.dart`, `vitals_screen.dart`, `sleep_screen.dart`, `fasting_screen.dart` | Replace `AppColors.oledBlack` with `Theme.of(context).scaffoldBackgroundColor` |
+| 6.2 | Hardcoded dark skeleton colors | All skeleton/shimmer widgets | Use `theme.colorScheme.surfaceContainerHighest` |
+| 6.3 | CircularGauge dark background | `circular_gauge.dart:35` | Use `Theme.of(context).colorScheme.surfaceContainerHighest` |
+| 6.4 | Back button broken on activity list | `activity_list_screen.dart:183` | `context.go` → `context.push` |
+
+### FIXER-2 Tasks
+
+| # | Task | File | Fix |
+|---|---|---|---|
+| 6.5 | Controller leak in bottom sheets | `nutrition_screen.dart`, `supplements_screen.dart`, `body_screen.dart` | Use `StatefulBuilder` with dispose, or extract into proper `StatefulWidget` dialogs |
+| 6.6 | BMI hardcoded height | `body_screen.dart:215` | Read user height from `profileProvider` |
+| 6.7 | Pull-to-refresh fails when content fits | `analytics_screen.dart:47` | Add `physics: const AlwaysScrollableScrollPhysics()` to ListView |
+| 6.8 | Form validation is no-op | `edit_profile_screen.dart`, `goal_setup_wizard.dart` | Add `validator:` callbacks to `TextFormField` widgets |
+
+### Review Gate 6
+- Test: switch between light and dark theme — all screens render correctly
+- Test: activity list → tap activity → back button returns to list
+- Test: open/close bottom sheets multiple times — no controller leak warnings
+
+---
+
+## Phase 7: Feature Parity — Core (CRITICAL)
+
+**Goal:** Implement 11 critical missing features.
+**Agents:** FIXER-1, FIXER-2, FIXER-3, SERVER
+**Time:** ~1 week
+
+### FIXER-1: Race & Training Features
+
+| # | Feature | Web Reference | Key Components |
+|---|---|---|---|
+| 7.1 | Race Countdown Card | `RaceCountdown.tsx` | Days/weeks to race, progress bar, goal time, projected finish, weekly mileage tracker |
+| 7.2 | Training Status Card | `TrainingStatusCard.tsx` | Shape%, VO2max, workload balance diagram (0.8-1.3 sweet spot), CTL/ATL/TSB/TRIMP progress bars |
+| 7.3 | Race Result Flow | `RaceResultModal.tsx` | Post-race auto-detection, suggest/pick/review modes, chip time, placements, weather, RPE, training completion summary |
+
+### FIXER-2: Activity & Analytics Features
+
+| # | Feature | Web Reference | Key Components |
+|---|---|---|---|
+| 7.4 | Manual Activity Entry | `ManualActivityModal.tsx` | Form: name, date, type, distance, duration, avg HR. POST to activities endpoint. |
+| 7.5 | AI Activity Feedback | `ActivityDetailsModal.tsx:517` | Button to generate AI analysis per activity. Display: plannedComparison, progressAnalysis, goalTrajectory. Call `/api/ai/activity-feedback`. |
+| 7.6 | Shape Calibration Modal | `ShapeCalibrationModal.tsx` | 3 modes: VDOT correction factor, shape factor, manual. Activity auto-fill, custom distances, real-time preview. |
+
+### FIXER-3: Onboarding & Settings Features
+
+| # | Feature | Web Reference | Key Components |
+|---|---|---|---|
+| 7.7 | Full Onboarding Wizard | `OnboardingWizard.tsx` | 4 steps: platform select → sync data → analyze profile → plan setup. Progress bar. |
+| 7.8 | Sync Platform Selector | `SyncPlatformSelector.tsx` | Strava OAuth, Health Connect, Garmin, Polar, COROS, Suunto, Huawei |
+| 7.9 | AI Settings | `AiSettingsModal.tsx` | Custom API key (OpenAI/NVIDIA/Zhipu/OpenRouter presets), 10 data access toggles, feedback mode, custom prompt |
+| 7.10 | Combined Analytics Chart | `CombinedAnalyticsChart.tsx` | Multi-metric overlay: volume, training time, VO2max, CTL/ATL/TSB with rolling averages |
+
+### SERVER Tasks
+
+| # | Task |
+|---|---|
+| 7.S1 | Strava OAuth for mobile: deep link callback at `/api/auth/strava/callback` that exchanges code for JWT tokens and redirects to app |
+| 7.S2 | Mobile-compatible `/api/ai/activity-feedback` endpoint using `getAuthenticatedUser()` |
+
+### Review Gate 7
+- After each feature: REVIEWER verifies end-to-end flow with server
+- Weekly integration review: all 3 agents' work tested together
+- Verify: race countdown updates, manual activity creates, AI feedback generates, onboarding completes
+
+---
+
+## Phase 8: Feature Parity — Secondary (HIGH)
+
+**Goal:** Implement 23 high-priority missing features.
+**Agents:** FIXER-1, FIXER-2
+**Time:** ~1 week
+
+| # | Feature | Category |
+|---|---|---|
+| 8.1 | Race Predictions Interactive Chart | Analytics |
+| 8.2 | Training Paces Section | Analytics |
+| 8.3 | VO2/Shape Trend Charts | Analytics |
+| 8.4 | TRIMP/rTSS in Activity Details | Activities |
+| 8.5 | Training Type Tag Selector | Activities |
+| 8.6 | Activity Picker (workout linking) | Plan |
+| 8.7 | Drag-and-Drop Plan Reorder | Plan |
+| 8.8 | Phase Indicators (Base/Build/Peak/Taper) | Plan |
+| 8.9 | Post-Race Auto-Detection | Race |
+| 8.10 | Race Activity Picker | Race |
+| 8.11 | Running Profile in Onboarding | Onboarding |
+| 8.12 | Granular Data Access Controls (10 toggles) | AI Settings |
+| 8.13 | AI Feedback Mode | AI Settings |
+| 8.14 | Weight/Height Editing | Profile |
+| 8.15 | Past Races Section | Profile |
+| 8.16 | Strava Sync/Reconnect | Profile |
+| 8.17 | Data Export (JSON) | Profile |
+| 8.18 | Privacy & Consent Management | Profile |
+| 8.19 | Account Deletion (real) | Profile |
+| 8.20 | GDPR Consent Checkboxes | Auth |
+| 8.21 | Full Week Workout Schedule | Dashboard |
+| 8.22 | Strava Auth Error Banner | Dashboard |
+| 8.23 | Login/Register Navigation Links | Auth |
+
+### Review Gate 8
+- REVIEWER verifies each feature works
+- Integration testing every 2-3 features
+- No regressions in features from Phase 7
+
+---
+
+## Phase 9: Polish & Performance
+
+**Goal:** Production readiness.
+**Agents:** FIXER
+**Time:** ~3 days
+
+| # | Task | File |
+|---|---|---|
+| 9.1 | Add retry logic with exponential backoff | `dio_client.dart` |
+| 9.2 | Add request deduplication interceptor | `dio_client.dart` |
+| 9.3 | Add `sendTimeout: Duration(seconds: 30)` | `dio_client.dart` |
+| 9.4 | Offline detection before API calls | New connectivity interceptor |
+| 9.5 | Voice coach: HR-based coaching, audio focus, separate cooldowns per message type | `voice_coach_service.dart` |
+| 9.6 | Cap unbounded log list (keep last 1000) | `logger.dart` |
+| 9.7 | Verify Sentry integration works (already wired in `main.dart`) | `main.dart` |
+| 9.8 | Use `select()` in providers for granular rebuilds | All provider files |
+| 9.9 | Add missing providers: `updateActivity`, `createActivity`, food search | Provider files |
+| 9.10 | Add `alwaysScrollableScrollPhysics` to all RefreshIndicator ListViews | Multiple screens |
+
+### Final Review Gate
+- Run `flutter analyze` — zero errors
+- Full app walkthrough in both light and dark themes
+- Test: login, dashboard, activities, analytics, plan, chat, health, profile, settings, recording
+- Test: offline → online transition
+- Test: background sync and push notifications
+- Produce final PASS/FAIL report
+
+---
+
+## Execution Timeline
+
 ```
-opencode
-> Read flutter/AGENT.md, then execute Phase N from flutter/PLAN.md
+Week 1: Phases 1-6 (bug fixes + hardening)
+  Day 1: Phase 1 (compile) + Phase 2 (state bugs)     [FIXER-1, FIXER-2]
+  Day 1-2: Phase 3 (server comm)                       [FIXER-1, FIXER-2, SERVER]
+  Day 2: Phase 4 (auth cache)                           [FIXER]
+  Day 2-3: Phase 5 (services/DB)                        [FIXER-1, FIXER-2]
+  Day 3: Phase 6 (UI/theme)                             [FIXER-1, FIXER-2]
+
+Week 2-3: Phase 7 (critical features)                   [FIXER-1, FIXER-2, FIXER-3, SERVER]
+Week 3-4: Phase 8 (secondary features)                  [FIXER-1, FIXER-2]
+Week 4:   Phase 9 (polish)                              [FIXER]
 ```
 
-### If Agent Gets Stuck
-```
-> Search Brave for: [specific error or package question]
-> Search Context7 for: [package name] [specific topic]
-```
-
-### Verifying Between Phases
-```bash
-cd flutter
-flutter analyze
-flutter test
-flutter build apk --debug
-```
-
-### Running on Local Device
-```bash
-# Connect Android 10+ device via USB with developer mode enabled
-flutter devices                    # verify device appears
-flutter run --debug                # run on device
-flutter run --release              # test release performance
-```
-
-### Code Generation (run after model changes)
-```bash
-cd flutter
-dart run build_runner build --delete-conflicting-outputs
-```
+**Total: ~4 weeks with 2-3 agents in parallel.**

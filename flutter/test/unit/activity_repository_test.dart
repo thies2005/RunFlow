@@ -1,11 +1,7 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
-import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/repositories/activity_repository_impl.dart';
 
@@ -13,7 +9,6 @@ class MockDio extends Mock implements Dio {}
 
 void main() {
   late MockDio mockDio;
-  late AppDatabase database;
   late ActivityRepositoryImpl repository;
 
   final testActivity = Activity(
@@ -46,12 +41,7 @@ void main() {
 
   setUp(() {
     mockDio = MockDio();
-    database = AppDatabase.forTesting(NativeDatabase.memory());
-    repository = ActivityRepositoryImpl(dio: mockDio, database: database);
-  });
-
-  tearDown(() async {
-    await database.close();
+    repository = ActivityRepositoryImpl(dio: mockDio);
   });
 
   group('ActivityRepositoryImpl', () {
@@ -132,66 +122,6 @@ void main() {
             )).captured.single as Map<String, dynamic>;
 
         expect(captured.containsKey('type'), false);
-      });
-
-      test('success - caches activities on first page (offset=0)', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenAnswer((_) async => Response<dynamic>(
-                  requestOptions: RequestOptions(path: ''),
-                  statusCode: 200,
-                  data: testResponse,
-                ));
-
-        await repository.listActivities();
-
-        final cached = await database.cacheDao.getCachedActivities();
-        expect(cached.length, 1);
-        final cachedActivity = Activity.fromJson(
-          jsonDecode(cached.first.jsonData) as Map<String, dynamic>,
-        );
-        expect(cachedActivity.id, 'act1');
-      });
-
-      test('offline fallback - returns cached activities on DioException for offset=0', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenAnswer((_) async => Response<dynamic>(
-                  requestOptions: RequestOptions(path: ''),
-                  statusCode: 200,
-                  data: testResponse,
-                ));
-
-        await repository.listActivities();
-
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenThrow(DioException(
-              requestOptions: RequestOptions(path: ''),
-              type: DioExceptionType.connectionError,
-            ));
-
-        final result = await repository.listActivities();
-        expect(result.activities.length, 1);
-        expect(result.activities.first.id, 'act1');
-      });
-
-      test('offline fallback - throws ServerException when no cache for offset>0', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenThrow(DioException(
-              requestOptions: RequestOptions(path: ''),
-              type: DioExceptionType.connectionError,
-            ));
-
-        expect(
-          () => repository.listActivities(offset: 10),
-          throwsA(isA<ServerException>()),
-        );
       });
 
       test('pagination - returns hasMore correctly', () async {

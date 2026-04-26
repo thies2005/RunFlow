@@ -44,13 +44,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   bool _validateCurrentStep() {
     switch (_currentStep) {
       case 0:
-        if (_nameController.text.trim().isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please enter a goal name')),
-          );
-          return false;
-        }
-        return true;
+        return _nameFormKey.currentState?.validate() ?? false;
       case 1:
         final now = DateTime.now();
         if (_selectedDate.isBefore(DateTime(now.year, now.month, now.day))) {
@@ -345,6 +339,11 @@ class _NameStep extends StatelessWidget {
                 hintText: 'e.g. Berlin Marathon 2025',
               ),
               textCapitalization: TextCapitalization.words,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Goal name is required';
+                if (v.trim().length < 2) return 'At least 2 characters';
+                return null;
+              },
             ),
           ),
           const SizedBox(height: 24),

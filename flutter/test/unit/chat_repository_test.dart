@@ -3,11 +3,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
-import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/data/models/chat_models.dart';
 import 'package:runflow_flutter/data/repositories/chat_repository_impl.dart';
 
@@ -34,17 +32,11 @@ Response<dynamic> _multiChunkResponse(List<String> chunks) {
 
 void main() {
   late MockDio mockDio;
-  late AppDatabase database;
   late ChatRepositoryImpl repository;
 
   setUp(() {
     mockDio = MockDio();
-    database = AppDatabase.forTesting(NativeDatabase.memory());
-    repository = ChatRepositoryImpl(dio: mockDio, database: database);
-  });
-
-  tearDown(() async {
-    await database.close();
+    repository = ChatRepositoryImpl(dio: mockDio);
   });
 
   group('ChatRepositoryImpl', () {

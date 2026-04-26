@@ -5,7 +5,9 @@ import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/data/models/goal_models.dart';
 import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
+import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 
 class PlanScreen extends ConsumerWidget {
   const PlanScreen({super.key});
@@ -67,6 +69,7 @@ class _PlanContent extends ConsumerWidget {
         ],
       ),
       body: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
         children: [
           Card(
@@ -263,7 +266,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: InkWell(
-        onTap: () => context.push('/record?workoutId=${workout.id}'),
+        onTap: () => _showWorkoutActions(context, ref),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -328,7 +331,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
                     Row(
                       children: [
                         if (workout.targetDistance > 0) ...[
-                          Icon(Icons.straighten, size: 14, color: AppColors.onSurfaceVariant),
+                          const Icon(Icons.straighten, size: 14, color: AppColors.onSurfaceVariant),
                           const SizedBox(width: 4),
                           Text(
                             '${workout.targetDistance.toStringAsFixed(1)} km',
@@ -337,7 +340,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
                           const SizedBox(width: 12),
                         ],
                         if (workout.targetPace > 0) ...[
-                          Icon(Icons.speed, size: 14, color: AppColors.onSurfaceVariant),
+                          const Icon(Icons.speed, size: 14, color: AppColors.onSurfaceVariant),
                           const SizedBox(width: 4),
                           Text(
                             formatPace(workout.targetPace),
@@ -353,6 +356,78 @@ class _PlanWorkoutCard extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showWorkoutActions(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Edit Workout'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showEditModal(context, ref);
+              },
+            ),
+            if (!workout.isCompleted)
+              ListTile(
+                leading: const Icon(Icons.play_arrow),
+                title: const Text('Start Workout'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  context.push('/record?workoutId=${workout.id}');
+                },
+              ),
+            if (!workout.isCompleted)
+              ListTile(
+                leading: const Icon(Icons.check),
+                title: const Text('Mark Complete'),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  try {
+                    await ref.read(goalRepositoryProvider).updateWorkout(
+                      workout.id,
+                      UpdateWorkoutRequest(
+                        description: workout.description,
+                        targetDistance: workout.targetDistance,
+                        targetPace: workout.targetPace,
+                        targetDuration: workout.targetDuration,
+                        workoutType: workout.workoutType,
+                      ),
+                    );
+                    ref.invalidate(dashboardProvider);
+                  } catch (_) {}
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditModal(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => _EditWorkoutSheet(
+        workout: workout,
+        goalId: goalId,
+        onSave: (updatedWorkout) async {
+          try {
+            await ref.read(goalRepositoryProvider).updateWorkout(
+              workout.id,
+              updatedWorkout,
+            );
+            ref.invalidate(dashboardProvider);
+            if (context.mounted) Navigator.pop(ctx);
+          } catch (_) {}
+        },
       ),
     );
   }
@@ -473,9 +548,11 @@ class _PlanSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).colorScheme.surfaceContainerHighest;
     return Scaffold(
       appBar: AppBar(title: const Text('Plan')),
       body: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           Card(
             margin: const EdgeInsets.all(16),
@@ -489,18 +566,18 @@ class _PlanSkeleton extends StatelessWidget {
                       Container(
                         width: 80,
                         height: 16,
-                        decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(4)),
+                        decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4)),
                       ),
                       const Spacer(),
-                      Container(width: 80, height: 12, decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(4))),
+                      Container(width: 80, height: 12, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4))),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Container(width: 60, height: 24, decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(4))),
+                      Container(width: 60, height: 24, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4))),
                       const Spacer(),
-                      Container(width: 50, height: 50, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.surfaceDarkVariant)),
+                      Container(width: 50, height: 50, decoration: BoxDecoration(shape: BoxShape.circle, color: c)),
                     ],
                   ),
                 ],
@@ -509,7 +586,7 @@ class _PlanSkeleton extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(width: 120, height: 18, decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(4))),
+            child: Container(width: 120, height: 18, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4))),
           ),
           const SizedBox(height: 8),
           ...List.filled(3, Card(
@@ -518,15 +595,15 @@ class _PlanSkeleton extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  const CircleAvatar(radius: 18, backgroundColor: AppColors.surfaceDarkVariant),
+                  CircleAvatar(radius: 18, backgroundColor: c),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(width: 60, height: 12, decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(4))),
+                        Container(width: 60, height: 12, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4))),
                         const SizedBox(height: 4),
-                        Container(width: 120, height: 14, decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(4))),
+                        Container(width: 120, height: 14, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4))),
                       ],
                     ),
                   ),
@@ -534,7 +611,119 @@ class _PlanSkeleton extends StatelessWidget {
               ),
             ),
           )),
-        ],
+         ],
+       ),
+     );
+  }
+}
+
+class _EditWorkoutSheet extends StatefulWidget {
+  const _EditWorkoutSheet({
+    required this.workout,
+    required this.goalId,
+    required this.onSave,
+  });
+
+  final Workout workout;
+  final String goalId;
+  final Future<void> Function(UpdateWorkoutRequest) onSave;
+
+  @override
+  State<_EditWorkoutSheet> createState() => _EditWorkoutSheetState();
+}
+
+class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
+  late TextEditingController _descController;
+  late TextEditingController _distanceController;
+  late TextEditingController _paceController;
+  late TextEditingController _durationController;
+  WorkoutType _selectedType = WorkoutType.easy;
+
+  @override
+  void initState() {
+    super.initState();
+    _descController = TextEditingController(text: widget.workout.description);
+    _distanceController = TextEditingController(text: widget.workout.targetDistance.toStringAsFixed(1));
+    _paceController = TextEditingController(text: widget.workout.targetPace.toStringAsFixed(0));
+    _durationController = TextEditingController(text: widget.workout.targetDuration.toString());
+    _selectedType = widget.workout.workoutType;
+  }
+
+  @override
+  void dispose() {
+    _descController.dispose();
+    _distanceController.dispose();
+    _paceController.dispose();
+    _durationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Edit Workout',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<WorkoutType>(
+              initialValue: _selectedType,
+              decoration: const InputDecoration(labelText: 'Workout Type'),
+              items: WorkoutType.values.map((type) => DropdownMenuItem(
+                value: type,
+                child: Text(type.name.toUpperCase()),
+              )).toList(),
+              onChanged: (value) {
+                if (value != null) setState(() => _selectedType = value);
+              },
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _descController,
+              decoration: const InputDecoration(labelText: 'Description'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _distanceController,
+              decoration: const InputDecoration(labelText: 'Target Distance (km)'),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _durationController,
+              decoration: const InputDecoration(labelText: 'Target Duration (min)'),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  widget.onSave(UpdateWorkoutRequest(
+                    description: _descController.text,
+                    targetDistance: double.tryParse(_distanceController.text) ?? widget.workout.targetDistance,
+                    targetPace: widget.workout.targetPace,
+                    targetDuration: int.tryParse(_durationController.text) ?? widget.workout.targetDuration,
+                    workoutType: _selectedType,
+                  ));
+                },
+                child: const Text('Save'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

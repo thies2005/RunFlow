@@ -9,8 +9,6 @@ class _FakeGoalRepository implements GoalRepository {
   _FakeGoalRepository({required this.goal});
 
   final Goal goal;
-  bool toggleCallSucceeds = true;
-  int toggleCallCount = 0;
 
   @override
   Future<Goal> getGoal(String id) async => goal;
@@ -45,16 +43,9 @@ class _FakeGoalRepository implements GoalRepository {
   }
 
   @override
-  Future<Workout> toggleWorkoutCompletion(
-    String workoutId,
-    bool isCompleted,
-  ) async {
-    toggleCallCount++;
-    if (!toggleCallSucceeds) {
-      throw Exception('Server error');
-    }
-    return goal.workouts.firstWhere((w) => w.id == workoutId).copyWith(
-          isCompleted: isCompleted,
+  Future<Workout> updateWorkout(String id, UpdateWorkoutRequest request) async {
+    return goal.workouts.firstWhere((w) => w.id == id).copyWith(
+          isCompleted: request.isCompleted ?? false,
         );
   }
 }
@@ -97,8 +88,8 @@ Goal _createTestGoal({required bool workoutCompleted}) {
 }
 
 void main() {
-  group('GoalDetail notifier', () {
-    test('optimistically toggles workout completion', () async {
+  group('GoalDetail provider', () {
+    test('loads goal detail from repository', () async {
       final fakeRepo = _FakeGoalRepository(
         goal: _createTestGoal(workoutCompleted: false),
       );
@@ -110,46 +101,8 @@ void main() {
 
       final goal = await container.read(goalDetailProvider('g1').future);
       expect(goal.workouts.first.isCompleted, false);
+      expect(goal.name, 'Test Goal');
 
-      await container
-          .read(goalDetailProvider('g1').notifier)
-          .toggleWorkoutCompletion('w1', true);
-
-      final updated = container.read(goalDetailProvider('g1'));
-      updated.whenData((g) {
-        expect(g.workouts.first.isCompleted, true);
-      });
-
-      expect(fakeRepo.toggleCallCount, 1);
-      container.dispose();
-    });
-
-    test('reverts optimistic toggle on server error', () async {
-      final fakeRepo = _FakeGoalRepository(
-        goal: _createTestGoal(workoutCompleted: false),
-      );
-      fakeRepo.toggleCallSucceeds = false;
-      final container = ProviderContainer(
-        overrides: [
-          goalRepositoryProvider.overrideWithValue(fakeRepo),
-        ],
-      );
-
-      await container.read(goalDetailProvider('g1').future);
-
-      try {
-        await container
-            .read(goalDetailProvider('g1').notifier)
-            .toggleWorkoutCompletion('w1', true);
-        fail('Should have thrown');
-      } catch (_) {}
-
-      final reverted = container.read(goalDetailProvider('g1'));
-      reverted.whenData((g) {
-        expect(g.workouts.first.isCompleted, false);
-      });
-
-      expect(fakeRepo.toggleCallCount, 1);
       container.dispose();
     });
   });

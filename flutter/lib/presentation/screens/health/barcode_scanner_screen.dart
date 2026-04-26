@@ -448,12 +448,12 @@ class ScannerOverlayShape extends ShapeBorder {
       ..color = Colors.black.withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
 
-    canvas
-      ..drawRect(rect, paint)
-      ..drawRRect(
-        RRect.fromRectAndRadius(cutOutRect, const Radius.circular(12)),
-        Paint()..blendMode = BlendMode.clear,
-      );
+    final path = Path()
+      ..addRect(rect)
+      ..addRRect(RRect.fromRectAndRadius(cutOutRect, const Radius.circular(12)))
+      ..fillType = PathFillType.evenOdd;
+
+    canvas.drawPath(path, paint);
 
     final borderPaint = Paint()
       ..color = AppColors.primary

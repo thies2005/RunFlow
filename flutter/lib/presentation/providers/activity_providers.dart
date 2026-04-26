@@ -66,10 +66,9 @@ class Activities extends _$Activities {
           filterType: _filterType,
         ),
       );
-    } catch (e, st) {
+    } catch (e) {
       _isLoadingMore = false;
       state = AsyncValue.data(current.copyWith(isLoadingMore: false));
-      state = AsyncValue.error(e, st);
     }
   }
 
@@ -116,6 +115,42 @@ class Activities extends _$Activities {
         filterType: _filterType,
       );
     });
+  }
+
+  Future<void> addManualActivity({
+    required String name,
+    required DateTime date,
+    required String type,
+    required double distance,
+    required int duration,
+    double? hr,
+  }) async {
+    final repo = ref.read(activityRepositoryProvider);
+    await repo.createManualActivity(
+      name: name,
+      date: date,
+      type: type,
+      distance: distance,
+      duration: duration,
+      hr: hr,
+    );
+    await refresh();
+  }
+
+  Future<void> updateActivity(
+    String id, {
+    String? name,
+    ActivityType? type,
+    String? trainingType,
+  }) async {
+    final repo = ref.read(activityRepositoryProvider);
+    await repo.updateActivity(
+      id,
+      name: name,
+      type: type,
+      trainingType: trainingType,
+    );
+    await refresh();
   }
 }
 

@@ -1,19 +1,13 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
-import 'package:runflow_flutter/data/datasources/local/app_database.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/repositories/dashboard_repository_impl.dart';
 
 class MockDio extends Mock implements Dio {}
 
 void main() {
   late MockDio mockDio;
-  late AppDatabase database;
   late DashboardRepositoryImpl repository;
 
   final Map<String, dynamic> testDashboard = <String, dynamic>{
@@ -47,8 +41,7 @@ void main() {
 
   setUp(() {
     mockDio = MockDio();
-    database = AppDatabase.forTesting(NativeDatabase.memory());
-    repository = DashboardRepositoryImpl(dio: mockDio, database: database);
+    repository = DashboardRepositoryImpl(dio: mockDio);
   });
 
   Map<String, dynamic> dashboardJsonEnvelope() {
@@ -60,10 +53,6 @@ void main() {
   Map<String, dynamic> dashboardJsonFlat() {
     return testDashboard;
   }
-
-  tearDown(() async {
-    await database.close();
-  });
 
   group('DashboardRepositoryImpl', () {
     group('fetchDashboard', () {
@@ -78,13 +67,6 @@ void main() {
         expect(result.stats.marathonShape, 6.5);
         expect(result.stats.hrMax, 190);
         expect(result.user.id, 'u1');
-
-        final cached = await database.cacheDao.getCachedDashboard();
-        expect(cached, isNotNull);
-        final cachedDashboard = DashboardResponse.fromJson(
-          jsonDecode(cached!.jsonData) as Map<String, dynamic>,
-        );
-        expect(cachedDashboard.stats.marathonShape, 6.5);
       });
 
       test('success - parses flat response without envelope', () async {

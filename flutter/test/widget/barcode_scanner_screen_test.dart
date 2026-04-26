@@ -1,9 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/screens/health/barcode_scanner_screen.dart';
+
+class _FakeBarcodeScanData extends BarcodeScan {
+  final FoodItem? value;
+  _FakeBarcodeScanData(this.value);
+
+  @override
+  FutureOr<FoodItem?> build() => value;
+}
+
+class _FakeBarcodeScanLoading extends BarcodeScan {
+  @override
+  FutureOr<FoodItem?> build() =>
+      Future<FoodItem?>.delayed(const Duration(days: 1));
+}
+
+class _FakeBarcodeScanError extends BarcodeScan {
+  @override
+  FutureOr<FoodItem?> build() => throw Exception('Network error');
+}
 
 void main() {
   group('BarcodeScannerScreen', () {
@@ -12,8 +33,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            barcodeScanProvider
-                .overrideWithValue(const AsyncValue<FoodItem?>.data(null)),
+            barcodeScanProvider.overrideWith(() => _FakeBarcodeScanData(null)),
           ],
           child: const MaterialApp(
             home: BarcodeScannerScreen(),
@@ -31,8 +51,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            barcodeScanProvider
-                .overrideWithValue(const AsyncValue<FoodItem?>.data(null)),
+            barcodeScanProvider.overrideWith(() => _FakeBarcodeScanData(null)),
           ],
           child: const MaterialApp(
             home: BarcodeScannerScreen(),
@@ -49,8 +68,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            barcodeScanProvider
-                .overrideWithValue(const AsyncValue<FoodItem?>.loading()),
+            barcodeScanProvider.overrideWith(() => _FakeBarcodeScanLoading()),
           ],
           child: const MaterialApp(
             home: BarcodeScannerScreen(),
@@ -67,10 +85,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            barcodeScanProvider.overrideWithValue(
-              AsyncValue<FoodItem?>.error(
-                  Exception('Network error'), StackTrace.empty),
-            ),
+            barcodeScanProvider.overrideWith(() => _FakeBarcodeScanError()),
           ],
           child: const MaterialApp(
             home: BarcodeScannerScreen(),

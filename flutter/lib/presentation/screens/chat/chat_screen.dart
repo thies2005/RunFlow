@@ -143,6 +143,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       onRefresh: () =>
           ref.read(chatMessagesProvider(sessionId).notifier).refresh(),
       child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         controller: _scrollController,
         slivers: [
           if (messages.isEmpty && !showStreaming)

@@ -63,7 +63,7 @@ class ChatNotifier extends _$ChatNotifier {
   Future<void> sendMessage(String sessionId, String content) async {
     final repo = ref.read(chatRepositoryProvider);
 
-    state = state.copyWith(isStreaming: true, streamingContent: '');
+    state = state.copyWith(isStreaming: true, streamingContent: '', error: '');
 
     try {
       await for (final chunk in repo.sendMessage(sessionId, content)) {

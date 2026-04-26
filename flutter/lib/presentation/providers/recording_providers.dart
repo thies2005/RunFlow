@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:runflow_flutter/services/voice_coach_service.dart';
 import 'package:runflow_flutter/services/workout_recording_service.dart';
 
 final Provider<WorkoutRecordingService> recordingServiceProvider =
@@ -22,6 +23,16 @@ final StreamProvider<RecordingMetrics> recordingMetricsProvider =
   final WorkoutRecordingService service =
       ref.watch(recordingServiceProvider);
   return service.metricsStream;
+});
+
+final Provider<VoiceCoachService> voiceCoachProvider =
+    Provider<VoiceCoachService>((Ref ref) {
+  final VoiceCoachService service = VoiceCoachService();
+  service.init();
+  ref.onDispose(() {
+    service.dispose();
+  });
+  return service;
 });
 
 final NotifierProvider<BleConnectionNotifier, AsyncValue<HrSensorInfo?>>

@@ -568,6 +568,7 @@ export type UserWhereInput = {
   bodyMeasurements?: Prisma.BodyMeasurementListRelationFilter
   fastingSessions?: Prisma.FastingSessionListRelationFilter
   healthInsights?: Prisma.HealthInsightListRelationFilter
+  deviceTokens?: Prisma.DeviceTokenListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -634,6 +635,7 @@ export type UserOrderByWithRelationInput = {
   bodyMeasurements?: Prisma.BodyMeasurementOrderByRelationAggregateInput
   fastingSessions?: Prisma.FastingSessionOrderByRelationAggregateInput
   healthInsights?: Prisma.HealthInsightOrderByRelationAggregateInput
+  deviceTokens?: Prisma.DeviceTokenOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -703,6 +705,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   bodyMeasurements?: Prisma.BodyMeasurementListRelationFilter
   fastingSessions?: Prisma.FastingSessionListRelationFilter
   healthInsights?: Prisma.HealthInsightListRelationFilter
+  deviceTokens?: Prisma.DeviceTokenListRelationFilter
 }, "id" | "email" | "stravaId">
 
 export type UserOrderByWithAggregationInput = {
@@ -861,6 +864,7 @@ export type UserCreateInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -927,6 +931,7 @@ export type UserUncheckedCreateInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -993,6 +998,7 @@ export type UserUpdateInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -1059,6 +1065,7 @@ export type UserUncheckedUpdateInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1746,6 +1753,20 @@ export type UserUpdateOneRequiredWithoutSavedMealsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSavedMealsInput, Prisma.UserUpdateWithoutSavedMealsInput>, Prisma.UserUncheckedUpdateWithoutSavedMealsInput>
 }
 
+export type UserCreateNestedOneWithoutDeviceTokensInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeviceTokensInput, Prisma.UserUncheckedCreateWithoutDeviceTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeviceTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutDeviceTokensNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeviceTokensInput, Prisma.UserUncheckedCreateWithoutDeviceTokensInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeviceTokensInput
+  upsert?: Prisma.UserUpsertWithoutDeviceTokensInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDeviceTokensInput, Prisma.UserUpdateWithoutDeviceTokensInput>, Prisma.UserUncheckedUpdateWithoutDeviceTokensInput>
+}
+
 export type UserCreateWithoutConsentsInput = {
   id?: string
   email?: string | null
@@ -1809,6 +1830,7 @@ export type UserCreateWithoutConsentsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutConsentsInput = {
@@ -1874,6 +1896,7 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutConsentsInput = {
@@ -1955,6 +1978,7 @@ export type UserUpdateWithoutConsentsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutConsentsInput = {
@@ -2020,6 +2044,7 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAiSettingsInput = {
@@ -2085,6 +2110,7 @@ export type UserCreateWithoutAiSettingsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAiSettingsInput = {
@@ -2150,6 +2176,7 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAiSettingsInput = {
@@ -2231,6 +2258,7 @@ export type UserUpdateWithoutAiSettingsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAiSettingsInput = {
@@ -2296,6 +2324,7 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutFeedbackJobsInput = {
@@ -2361,6 +2390,7 @@ export type UserCreateWithoutFeedbackJobsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutFeedbackJobsInput = {
@@ -2426,6 +2456,7 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutFeedbackJobsInput = {
@@ -2507,6 +2538,7 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
@@ -2572,6 +2604,7 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -2637,6 +2670,7 @@ export type UserCreateWithoutAccountsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -2702,6 +2736,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -2783,6 +2818,7 @@ export type UserUpdateWithoutAccountsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -2848,6 +2884,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -2913,6 +2950,7 @@ export type UserCreateWithoutSessionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -2978,6 +3016,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -3059,6 +3098,7 @@ export type UserUpdateWithoutSessionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -3124,6 +3164,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutActivitiesInput = {
@@ -3189,6 +3230,7 @@ export type UserCreateWithoutActivitiesInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutActivitiesInput = {
@@ -3254,6 +3296,7 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutActivitiesInput = {
@@ -3335,6 +3378,7 @@ export type UserUpdateWithoutActivitiesInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutActivitiesInput = {
@@ -3400,6 +3444,7 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDailyFitnessInput = {
@@ -3465,6 +3510,7 @@ export type UserCreateWithoutDailyFitnessInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDailyFitnessInput = {
@@ -3530,6 +3576,7 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDailyFitnessInput = {
@@ -3611,6 +3658,7 @@ export type UserUpdateWithoutDailyFitnessInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDailyFitnessInput = {
@@ -3676,6 +3724,7 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSupplementStacksInput = {
@@ -3741,6 +3790,7 @@ export type UserCreateWithoutSupplementStacksInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSupplementStacksInput = {
@@ -3806,6 +3856,7 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSupplementStacksInput = {
@@ -3887,6 +3938,7 @@ export type UserUpdateWithoutSupplementStacksInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSupplementStacksInput = {
@@ -3952,6 +4004,7 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSupplementsInput = {
@@ -4017,6 +4070,7 @@ export type UserCreateWithoutSupplementsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSupplementsInput = {
@@ -4082,6 +4136,7 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSupplementsInput = {
@@ -4163,6 +4218,7 @@ export type UserUpdateWithoutSupplementsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSupplementsInput = {
@@ -4228,6 +4284,7 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDailyHealthLogsInput = {
@@ -4293,6 +4350,7 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
@@ -4358,6 +4416,7 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDailyHealthLogsInput = {
@@ -4439,6 +4498,7 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
@@ -4504,6 +4564,7 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutGoalsInput = {
@@ -4569,6 +4630,7 @@ export type UserCreateWithoutGoalsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutGoalsInput = {
@@ -4634,6 +4696,7 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutGoalsInput = {
@@ -4715,6 +4778,7 @@ export type UserUpdateWithoutGoalsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutGoalsInput = {
@@ -4780,6 +4844,7 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -4845,6 +4910,7 @@ export type UserCreateWithoutNotificationsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -4910,6 +4976,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -4991,6 +5058,7 @@ export type UserUpdateWithoutNotificationsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -5056,6 +5124,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPushSubscriptionsInput = {
@@ -5121,6 +5190,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
@@ -5186,6 +5256,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPushSubscriptionsInput = {
@@ -5267,6 +5338,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
@@ -5332,6 +5404,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutReminderSettingsInput = {
@@ -5397,6 +5470,7 @@ export type UserCreateWithoutReminderSettingsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReminderSettingsInput = {
@@ -5462,6 +5536,7 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReminderSettingsInput = {
@@ -5543,6 +5618,7 @@ export type UserUpdateWithoutReminderSettingsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReminderSettingsInput = {
@@ -5608,6 +5684,7 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutApiKeyInput = {
@@ -5673,6 +5750,7 @@ export type UserCreateWithoutApiKeyInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutApiKeyInput = {
@@ -5738,6 +5816,7 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutApiKeyInput = {
@@ -5819,6 +5898,7 @@ export type UserUpdateWithoutApiKeyInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApiKeyInput = {
@@ -5884,6 +5964,7 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutChatMessagesInput = {
@@ -5949,6 +6030,7 @@ export type UserCreateWithoutChatMessagesInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutChatMessagesInput = {
@@ -6014,6 +6096,7 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutChatMessagesInput = {
@@ -6095,6 +6178,7 @@ export type UserUpdateWithoutChatMessagesInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChatMessagesInput = {
@@ -6160,6 +6244,7 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutChatSessionsInput = {
@@ -6225,6 +6310,7 @@ export type UserCreateWithoutChatSessionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutChatSessionsInput = {
@@ -6290,6 +6376,7 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutChatSessionsInput = {
@@ -6371,6 +6458,7 @@ export type UserUpdateWithoutChatSessionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChatSessionsInput = {
@@ -6436,6 +6524,7 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUsageHistoryInput = {
@@ -6501,6 +6590,7 @@ export type UserCreateWithoutUsageHistoryInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUsageHistoryInput = {
@@ -6566,6 +6656,7 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUsageHistoryInput = {
@@ -6647,6 +6738,7 @@ export type UserUpdateWithoutUsageHistoryInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUsageHistoryInput = {
@@ -6712,6 +6804,7 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNutritionLogsInput = {
@@ -6777,6 +6870,7 @@ export type UserCreateWithoutNutritionLogsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNutritionLogsInput = {
@@ -6842,6 +6936,7 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNutritionLogsInput = {
@@ -6923,6 +7018,7 @@ export type UserUpdateWithoutNutritionLogsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNutritionLogsInput = {
@@ -6988,6 +7084,7 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNutritionTargetInput = {
@@ -7053,6 +7150,7 @@ export type UserCreateWithoutNutritionTargetInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNutritionTargetInput = {
@@ -7118,6 +7216,7 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNutritionTargetInput = {
@@ -7199,6 +7298,7 @@ export type UserUpdateWithoutNutritionTargetInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNutritionTargetInput = {
@@ -7264,6 +7364,7 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBodyMeasurementsInput = {
@@ -7329,6 +7430,7 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
@@ -7394,6 +7496,7 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBodyMeasurementsInput = {
@@ -7475,6 +7578,7 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
@@ -7540,6 +7644,7 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutFastingSessionsInput = {
@@ -7605,6 +7710,7 @@ export type UserCreateWithoutFastingSessionsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutFastingSessionsInput = {
@@ -7670,6 +7776,7 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutFastingSessionsInput = {
@@ -7751,6 +7858,7 @@ export type UserUpdateWithoutFastingSessionsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFastingSessionsInput = {
@@ -7816,6 +7924,7 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutHealthInsightsInput = {
@@ -7881,6 +7990,7 @@ export type UserCreateWithoutHealthInsightsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutHealthInsightsInput = {
@@ -7946,6 +8056,7 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutHealthInsightsInput = {
@@ -8027,6 +8138,7 @@ export type UserUpdateWithoutHealthInsightsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutHealthInsightsInput = {
@@ -8092,6 +8204,7 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSavedMealsInput = {
@@ -8157,6 +8270,7 @@ export type UserCreateWithoutSavedMealsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSavedMealsInput = {
@@ -8222,6 +8336,7 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
   fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
   healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSavedMealsInput = {
@@ -8303,6 +8418,7 @@ export type UserUpdateWithoutSavedMealsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSavedMealsInput = {
@@ -8368,6 +8484,287 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
   fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
   healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutDeviceTokensInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutDeviceTokensInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementUncheckedCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackUncheckedCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentUncheckedCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutDeviceTokensInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeviceTokensInput, Prisma.UserUncheckedCreateWithoutDeviceTokensInput>
+}
+
+export type UserUpsertWithoutDeviceTokensInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDeviceTokensInput, Prisma.UserUncheckedUpdateWithoutDeviceTokensInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeviceTokensInput, Prisma.UserUncheckedCreateWithoutDeviceTokensInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDeviceTokensInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDeviceTokensInput, Prisma.UserUncheckedUpdateWithoutDeviceTokensInput>
+}
+
+export type UserUpdateWithoutDeviceTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDeviceTokensInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUncheckedUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUncheckedUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUncheckedUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -8396,6 +8793,7 @@ export type UserCountOutputType = {
   bodyMeasurements: number
   fastingSessions: number
   healthInsights: number
+  deviceTokens: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -8419,6 +8817,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   bodyMeasurements?: boolean | UserCountOutputTypeCountBodyMeasurementsArgs
   fastingSessions?: boolean | UserCountOutputTypeCountFastingSessionsArgs
   healthInsights?: boolean | UserCountOutputTypeCountHealthInsightsArgs
+  deviceTokens?: boolean | UserCountOutputTypeCountDeviceTokensArgs
 }
 
 /**
@@ -8571,6 +8970,13 @@ export type UserCountOutputTypeCountHealthInsightsArgs<ExtArgs extends runtime.T
   where?: Prisma.HealthInsightWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountDeviceTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DeviceTokenWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -8636,6 +9042,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   bodyMeasurements?: boolean | Prisma.User$bodyMeasurementsArgs<ExtArgs>
   fastingSessions?: boolean | Prisma.User$fastingSessionsArgs<ExtArgs>
   healthInsights?: boolean | Prisma.User$healthInsightsArgs<ExtArgs>
+  deviceTokens?: boolean | Prisma.User$deviceTokensArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -8791,6 +9198,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   bodyMeasurements?: boolean | Prisma.User$bodyMeasurementsArgs<ExtArgs>
   fastingSessions?: boolean | Prisma.User$fastingSessionsArgs<ExtArgs>
   healthInsights?: boolean | Prisma.User$healthInsightsArgs<ExtArgs>
+  deviceTokens?: boolean | Prisma.User$deviceTokensArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -8823,6 +9231,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     bodyMeasurements: Prisma.$BodyMeasurementPayload<ExtArgs>[]
     fastingSessions: Prisma.$FastingSessionPayload<ExtArgs>[]
     healthInsights: Prisma.$HealthInsightPayload<ExtArgs>[]
+    deviceTokens: Prisma.$DeviceTokenPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -9282,6 +9691,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   bodyMeasurements<T extends Prisma.User$bodyMeasurementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$bodyMeasurementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BodyMeasurementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   fastingSessions<T extends Prisma.User$fastingSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$fastingSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FastingSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   healthInsights<T extends Prisma.User$healthInsightsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$healthInsightsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$HealthInsightPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  deviceTokens<T extends Prisma.User$deviceTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deviceTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeviceTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10296,6 +10706,30 @@ export type User$healthInsightsArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.HealthInsightScalarFieldEnum | Prisma.HealthInsightScalarFieldEnum[]
+}
+
+/**
+ * User.deviceTokens
+ */
+export type User$deviceTokensArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DeviceToken
+   */
+  select?: Prisma.DeviceTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DeviceToken
+   */
+  omit?: Prisma.DeviceTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeviceTokenInclude<ExtArgs> | null
+  where?: Prisma.DeviceTokenWhereInput
+  orderBy?: Prisma.DeviceTokenOrderByWithRelationInput | Prisma.DeviceTokenOrderByWithRelationInput[]
+  cursor?: Prisma.DeviceTokenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DeviceTokenScalarFieldEnum | Prisma.DeviceTokenScalarFieldEnum[]
 }
 
 /**

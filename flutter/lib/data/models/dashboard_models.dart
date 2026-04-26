@@ -134,6 +134,13 @@ sealed class Activity with _$Activity {
     required double? runningTss,
     required double? estimatedVdot,
     required String? trainingType,
+    @JsonKey(name: 'hrZone1Time') @Default(0) int hrZone1Time,
+    @JsonKey(name: 'hrZone2Time') @Default(0) int hrZone2Time,
+    @JsonKey(name: 'hrZone3Time') @Default(0) int hrZone3Time,
+    @JsonKey(name: 'hrZone4Time') @Default(0) int hrZone4Time,
+    @JsonKey(name: 'hrZone5Time') @Default(0) int hrZone5Time,
+    @JsonKey(name: 'streams') Map<String, dynamic>? streams,
+    @JsonKey(name: 'calories') double? calories,
   }) = _Activity;
   const Activity._();
 

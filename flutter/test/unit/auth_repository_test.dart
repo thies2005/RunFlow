@@ -167,13 +167,12 @@ void main() {
                   data: testLoginResponse,
                 ));
 
-        final result = await repository.register(
+        await repository.register(
           email: 'new@example.com',
           password: 'password123',
           name: 'New User',
         );
 
-        expect(result.user.id, 'user-1');
         verify(() => mockAuthService.storeTokens(
               accessToken: any(named: 'accessToken'),
               refreshToken: any(named: 'refreshToken'),

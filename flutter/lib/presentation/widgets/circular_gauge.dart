@@ -32,7 +32,7 @@ class CircularGauge extends StatelessWidget {
             painter: _CircularGaugePainter(
               progress: (value / maxValue).clamp(0.0, 1.0),
               color: effectiveColor,
-              backgroundColor: AppColors.surfaceDarkVariant,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
             child: Center(
               child: Text(

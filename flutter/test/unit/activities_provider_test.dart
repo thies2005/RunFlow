@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/data/models/activity_models.dart';
+import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/data/models/recording_models.dart';
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 
@@ -40,6 +42,34 @@ class FakeActivityRepository implements ActivityRepository {
 
   @override
   Future<Activity> getActivity(String id) => throw UnimplementedError();
+
+  @override
+  Future<Activity> createActivity(RecordedWorkout workout) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Activity> createManualActivity({
+    required String name,
+    required DateTime date,
+    required String type,
+    required double distance,
+    required int duration,
+    double? hr,
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<AiActivityFeedback> getAiFeedback(String activityId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<AiActivityFeedback> generateAiFeedback(String activityId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Activity> updateActivity(String id,
+          {String? name, ActivityType? type, String? trainingType}) =>
+      throw UnimplementedError();
 }
 
 class ListActivitiesCall {

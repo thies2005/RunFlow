@@ -52,6 +52,7 @@ class _GoalListContent extends StatelessWidget {
     final completedGoals = goals.where((g) => !g.isActive).toList();
 
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 80),
       children: [
         if (activeGoals.isNotEmpty) ...[
@@ -300,7 +301,9 @@ class _GoalListSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).colorScheme.surfaceContainerHighest;
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 80),
       children: [
         Padding(
@@ -310,7 +313,7 @@ class _GoalListSkeleton extends StatelessWidget {
             child: Container(
               height: 18,
               width: 120,
-              color: AppColors.surfaceDarkVariant,
+              color: c,
             ),
           ),
         ),
@@ -329,7 +332,7 @@ class _GoalListSkeleton extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                           child: Container(
                             height: 16,
-                            color: AppColors.surfaceDarkVariant,
+                            color: c,
                           ),
                         ),
                       ),
@@ -339,7 +342,7 @@ class _GoalListSkeleton extends StatelessWidget {
                         child: Container(
                           width: 60,
                           height: 24,
-                          color: AppColors.surfaceDarkVariant,
+                          color: c,
                         ),
                       ),
                     ],
@@ -350,7 +353,7 @@ class _GoalListSkeleton extends StatelessWidget {
                     child: Container(
                       height: 12,
                       width: 160,
-                      color: AppColors.surfaceDarkVariant,
+                      color: c,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -358,7 +361,7 @@ class _GoalListSkeleton extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                     child: Container(
                       height: 6,
-                      color: AppColors.surfaceDarkVariant,
+                      color: c,
                     ),
                   ),
                 ],

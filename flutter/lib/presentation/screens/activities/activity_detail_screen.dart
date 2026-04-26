@@ -5,6 +5,11 @@ import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/presentation/widgets/ai_feedback_section.dart';
+import 'package:runflow_flutter/presentation/widgets/charts/hr_zone_chart.dart';
+import 'package:runflow_flutter/presentation/widgets/charts/hr_time_chart.dart';
+import 'package:runflow_flutter/presentation/widgets/charts/pace_chart.dart';
+import 'package:runflow_flutter/presentation/widgets/charts/elevation_chart.dart';
 
 class ActivityDetailScreen extends ConsumerWidget {
   const ActivityDetailScreen({required this.activityId, super.key});
@@ -25,16 +30,20 @@ class ActivityDetailScreen extends ConsumerWidget {
           message: error.toString(),
           onRetry: () => ref.invalidate(activityDetailProvider(activityId)),
         ),
-        data: (activity) => _ActivityDetailContent(activity: activity),
+        data: (activity) => _ActivityDetailContent(
+          activity: activity,
+          activityId: activityId,
+        ),
       ),
     );
   }
 }
 
 class _ActivityDetailContent extends StatelessWidget {
-  const _ActivityDetailContent({required this.activity});
+  const _ActivityDetailContent({required this.activity, required this.activityId});
 
   final Activity activity;
+  final String activityId;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +80,57 @@ class _ActivityDetailContent extends StatelessWidget {
               color: AppColors.success,
             ),
           ),
+        ],
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: HrZoneChart(
+            zone1: activity.hrZone1Time,
+            zone2: activity.hrZone2Time,
+            zone3: activity.hrZone3Time,
+            zone4: activity.hrZone4Time,
+            zone5: activity.hrZone5Time,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: AiFeedbackSection(activityId: activityId),
+        ),
+        if (activity.streams != null) ...[
+          if (activity.streams!['time'] != null && activity.streams!['heartrate'] != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: HrTimeChart(
+                  timeData: (activity.streams!['time'] as List).map((e) => (e as num).toDouble()).toList(),
+                  hrData: (activity.streams!['heartrate'] as List).map((e) => (e as num).toDouble()).toList(),
+                ),
+              ),
+            ),
+          if (activity.streams!['time'] != null && activity.streams!['velocity_smooth'] != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: PaceChart(
+                  timeData: (activity.streams!['time'] as List).map((e) => (e as num).toDouble()).toList(),
+                  velocityData: (activity.streams!['velocity_smooth'] as List).map((e) => (e as num).toDouble()).toList(),
+                ),
+              ),
+            ),
+          if (activity.streams!['time'] != null && activity.streams!['altitude'] != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ElevationChart(
+                  timeData: (activity.streams!['time'] as List).map((e) => (e as num).toDouble()).toList(),
+                  altitudeData: (activity.streams!['altitude'] as List).map((e) => (e as num).toDouble()).toList(),
+                ),
+              ),
+            ),
         ],
       ],
     );

@@ -9,6 +9,16 @@ class GpsPoint {
     required this.timestamp,
   });
 
+  factory GpsPoint.fromJson(Map<String, dynamic> json) => GpsPoint(
+        latitude: (json['latitude'] as num).toDouble(),
+        longitude: (json['longitude'] as num).toDouble(),
+        altitude: json['altitude'] != null
+            ? (json['altitude'] as num).toDouble()
+            : null,
+        speed: (json['speed'] as num).toDouble(),
+        timestamp: DateTime.parse(json['timestamp'] as String),
+      );
+
   final double latitude;
   final double longitude;
   final double? altitude;
@@ -22,16 +32,6 @@ class GpsPoint {
         'speed': speed,
         'timestamp': timestamp.toIso8601String(),
       };
-
-  factory GpsPoint.fromJson(Map<String, dynamic> json) => GpsPoint(
-        latitude: (json['latitude'] as num).toDouble(),
-        longitude: (json['longitude'] as num).toDouble(),
-        altitude: json['altitude'] != null
-            ? (json['altitude'] as num).toDouble()
-            : null,
-        speed: (json['speed'] as num).toDouble(),
-        timestamp: DateTime.parse(json['timestamp'] as String),
-      );
 }
 
 class HrSample {
@@ -40,6 +40,11 @@ class HrSample {
     required this.timestamp,
   });
 
+  factory HrSample.fromJson(Map<String, dynamic> json) => HrSample(
+        heartRate: json['heartRate'] as int,
+        timestamp: DateTime.parse(json['timestamp'] as String),
+      );
+
   final int heartRate;
   final DateTime timestamp;
 
@@ -47,11 +52,6 @@ class HrSample {
         'heartRate': heartRate,
         'timestamp': timestamp.toIso8601String(),
       };
-
-  factory HrSample.fromJson(Map<String, dynamic> json) => HrSample(
-        heartRate: json['heartRate'] as int,
-        timestamp: DateTime.parse(json['timestamp'] as String),
-      );
 }
 
 class RecordedWorkout {
@@ -71,38 +71,6 @@ class RecordedWorkout {
     this.hrSamples = const [],
     this.totalElevation,
   });
-
-  final String name;
-  final String activityType;
-  final DateTime startTime;
-  final int durationSeconds;
-  final double distanceMeters;
-  final double? averageSpeed;
-  final double? maxSpeed;
-  final double? averageHr;
-  final int? maxHr;
-  final double? averageCadence;
-  final bool hasHeartrate;
-  final List<GpsPoint> gpsPoints;
-  final List<HrSample> hrSamples;
-  final double? totalElevation;
-
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'activityType': activityType,
-        'startTime': startTime.toIso8601String(),
-        'durationSeconds': durationSeconds,
-        'distanceMeters': distanceMeters,
-        'averageSpeed': averageSpeed,
-        'maxSpeed': maxSpeed,
-        'averageHr': averageHr,
-        'maxHr': maxHr,
-        'averageCadence': averageCadence,
-        'hasHeartrate': hasHeartrate,
-        'gpsPoints': gpsPoints.map((GpsPoint p) => p.toJson()).toList(),
-        'hrSamples': hrSamples.map((HrSample h) => h.toJson()).toList(),
-        'totalElevation': totalElevation,
-      };
 
   factory RecordedWorkout.fromJson(Map<String, dynamic> json) =>
       RecordedWorkout(
@@ -135,6 +103,38 @@ class RecordedWorkout {
             ? (json['totalElevation'] as num).toDouble()
             : null,
       );
+
+  final String name;
+  final String activityType;
+  final DateTime startTime;
+  final int durationSeconds;
+  final double distanceMeters;
+  final double? averageSpeed;
+  final double? maxSpeed;
+  final double? averageHr;
+  final int? maxHr;
+  final double? averageCadence;
+  final bool hasHeartrate;
+  final List<GpsPoint> gpsPoints;
+  final List<HrSample> hrSamples;
+  final double? totalElevation;
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'activityType': activityType,
+        'startTime': startTime.toIso8601String(),
+        'durationSeconds': durationSeconds,
+        'distanceMeters': distanceMeters,
+        'averageSpeed': averageSpeed,
+        'maxSpeed': maxSpeed,
+        'averageHr': averageHr,
+        'maxHr': maxHr,
+        'averageCadence': averageCadence,
+        'hasHeartrate': hasHeartrate,
+        'gpsPoints': gpsPoints.map((GpsPoint p) => p.toJson()).toList(),
+        'hrSamples': hrSamples.map((HrSample h) => h.toJson()).toList(),
+        'totalElevation': totalElevation,
+      };
 
   String toJsonString() => jsonEncode(toJson());
 }

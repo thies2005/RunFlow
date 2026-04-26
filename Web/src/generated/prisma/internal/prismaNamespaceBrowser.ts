@@ -96,6 +96,7 @@ export const ModelName = {
   ErrorLog: 'ErrorLog',
   PerformanceSummary: 'PerformanceSummary',
   SessionReplay: 'SessionReplay',
+  DeviceToken: 'DeviceToken',
   Release: 'Release'
 } as const
 
@@ -942,6 +943,18 @@ export const SessionReplayScalarFieldEnum = {
 } as const
 
 export type SessionReplayScalarFieldEnum = (typeof SessionReplayScalarFieldEnum)[keyof typeof SessionReplayScalarFieldEnum]
+
+
+export const DeviceTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  token: 'token',
+  platform: 'platform',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DeviceTokenScalarFieldEnum = (typeof DeviceTokenScalarFieldEnum)[keyof typeof DeviceTokenScalarFieldEnum]
 
 
 export const ReleaseScalarFieldEnum = {

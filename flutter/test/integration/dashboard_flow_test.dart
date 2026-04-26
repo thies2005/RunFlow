@@ -2,17 +2,14 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
-import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/repositories/dashboard_repository_impl.dart';
 
 void main() {
   group('Dashboard flow integration', () {
-    late AppDatabase database;
     late Dio dio;
     late DashboardRepositoryImpl repository;
 
@@ -62,13 +59,8 @@ void main() {
     );
 
     setUp(() {
-      database = AppDatabase.forTesting(NativeDatabase.memory());
       dio = Dio(BaseOptions(baseUrl: ApiConstants.fullApiUrl));
-      repository = DashboardRepositoryImpl(dio: dio, database: database);
-    });
-
-    tearDown(() async {
-      await database.close();
+      repository = DashboardRepositoryImpl(dio: dio);
     });
 
     test('fetch caches dashboard data', () async {
@@ -76,14 +68,6 @@ void main() {
 
       final result = await repository.fetchDashboard();
       expect(result.stats.marathonShape, 6.5);
-
-      final cached = await database.cacheDao.getCachedDashboard();
-      expect(cached, isNotNull);
-      final cachedData = DashboardResponse.fromJson(
-        jsonDecode(cached!.jsonData) as Map<String, dynamic>,
-      );
-      expect(cachedData.stats.marathonShape, 6.5);
-      expect(cachedData.recentActivities.length, 1);
     });
 
     test('offline fallback returns cached data', () async {
@@ -109,12 +93,6 @@ void main() {
 
       final second = await repository.fetchDashboard();
       expect(second.stats.marathonShape, 99.0);
-
-      final cached = await database.cacheDao.getCachedDashboard();
-      final cachedData = DashboardResponse.fromJson(
-        jsonDecode(cached!.jsonData) as Map<String, dynamic>,
-      );
-      expect(cachedData.stats.marathonShape, 99.0);
     });
 
     test('first fetch with network error and no cache throws', () async {

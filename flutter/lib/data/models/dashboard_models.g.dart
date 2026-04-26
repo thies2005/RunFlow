@@ -86,6 +86,13 @@ _Activity _$ActivityFromJson(Map<String, dynamic> json) => _Activity(
   runningTss: (json['runningTss'] as num?)?.toDouble(),
   estimatedVdot: (json['estimatedVdot'] as num?)?.toDouble(),
   trainingType: json['trainingType'] as String?,
+  hrZone1Time: (json['hrZone1Time'] as num?)?.toInt() ?? 0,
+  hrZone2Time: (json['hrZone2Time'] as num?)?.toInt() ?? 0,
+  hrZone3Time: (json['hrZone3Time'] as num?)?.toInt() ?? 0,
+  hrZone4Time: (json['hrZone4Time'] as num?)?.toInt() ?? 0,
+  hrZone5Time: (json['hrZone5Time'] as num?)?.toInt() ?? 0,
+  streams: json['streams'] as Map<String, dynamic>?,
+  calories: (json['calories'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$ActivityToJson(_Activity instance) => <String, dynamic>{
@@ -106,6 +113,13 @@ Map<String, dynamic> _$ActivityToJson(_Activity instance) => <String, dynamic>{
   'runningTss': instance.runningTss,
   'estimatedVdot': instance.estimatedVdot,
   'trainingType': instance.trainingType,
+  'hrZone1Time': instance.hrZone1Time,
+  'hrZone2Time': instance.hrZone2Time,
+  'hrZone3Time': instance.hrZone3Time,
+  'hrZone4Time': instance.hrZone4Time,
+  'hrZone5Time': instance.hrZone5Time,
+  'streams': instance.streams,
+  'calories': instance.calories,
 };
 
 const _$ActivityTypeEnumMap = {

@@ -158,6 +158,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 labelText: 'Name',
                 prefixIcon: Icon(Icons.person_outline),
               ),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Name is required';
+                if (v.trim().length < 2) return 'At least 2 characters';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<Sex>(
@@ -207,6 +212,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 prefixIcon: Icon(Icons.monitor_weight_outlined),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              validator: (v) {
+                if (v == null || v.isEmpty) return null;
+                final val = double.tryParse(v);
+                if (val == null) return 'Enter a valid number';
+                if (val <= 0 || val > 500) return 'Enter a valid weight';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -216,6 +228,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 prefixIcon: Icon(Icons.height),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              validator: (v) {
+                if (v == null || v.isEmpty) return null;
+                final val = double.tryParse(v);
+                if (val == null) return 'Enter a valid number';
+                if (val < 50 || val > 300) return 'Enter a valid height (50-300 cm)';
+                return null;
+              },
             ),
             const SizedBox(height: 24),
             Text(
@@ -233,6 +252,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 prefixIcon: Icon(Icons.favorite_outline),
               ),
               keyboardType: TextInputType.number,
+              validator: (v) {
+                if (v == null || v.isEmpty) return null;
+                final val = int.tryParse(v);
+                if (val == null) return 'Enter a valid number';
+                if (val < 30 || val > 250) return 'Enter a valid HR (30-250)';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -242,6 +268,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 prefixIcon: Icon(Icons.favorite_border),
               ),
               keyboardType: TextInputType.number,
+              validator: (v) {
+                if (v == null || v.isEmpty) return null;
+                final val = int.tryParse(v);
+                if (val == null) return 'Enter a valid number';
+                if (val < 20 || val > 150) return 'Enter a valid HR (20-150)';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -251,6 +284,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 prefixIcon: Icon(Icons.monitor_heart_outlined),
               ),
               keyboardType: TextInputType.number,
+              validator: (v) {
+                if (v == null || v.isEmpty) return null;
+                final val = int.tryParse(v);
+                if (val == null) return 'Enter a valid number';
+                if (val < 30 || val > 250) return 'Enter a valid HR (30-250)';
+                return null;
+              },
             ),
           ],
         ),

@@ -7,6 +7,7 @@ import 'package:runflow_flutter/data/models/analytics_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/circular_gauge.dart';
+import 'package:runflow_flutter/presentation/widgets/charts/combined_analytics_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/metric_card.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
@@ -43,6 +44,7 @@ class AnalyticsScreen extends ConsumerWidget {
             },
           ),
           data: (stats) => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.only(bottom: 24),
             children: [
               _SummaryCardsRow(stats: stats),
@@ -63,6 +65,8 @@ class AnalyticsScreen extends ConsumerWidget {
                   child: _FitnessChart(history: history),
                 ),
               ),
+              const SizedBox(height: 16),
+              const CombinedAnalyticsChart(),
               const SizedBox(height: 16),
               _RacePredictionsCard(),
               const SizedBox(height: 16),
@@ -672,16 +676,18 @@ class _AnalyticsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).colorScheme.surfaceContainerHighest;
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              Expanded(child: _shimmerBlock(height: 90)),
+              Expanded(child: _shimmerBlock(height: 90, color: c)),
               const SizedBox(width: 8),
-              Expanded(child: _shimmerBlock(height: 90)),
+              Expanded(child: _shimmerBlock(height: 90, color: c)),
             ],
           ),
         ),
@@ -690,16 +696,16 @@ class _AnalyticsSkeleton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              Expanded(child: _shimmerBlock(height: 90)),
+              Expanded(child: _shimmerBlock(height: 90, color: c)),
               const SizedBox(width: 8),
-              Expanded(child: _shimmerBlock(height: 90)),
+              Expanded(child: _shimmerBlock(height: 90, color: c)),
             ],
           ),
         ),
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _shimmerBlock(height: 48),
+          child: _shimmerBlock(height: 48, color: c),
         ),
         const SizedBox(height: 16),
         Padding(
@@ -709,7 +715,7 @@ class _AnalyticsSkeleton extends StatelessWidget {
               4,
               Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: _shimmerBlock(width: 60, height: 36),
+                child: _shimmerBlock(width: 60, height: 36, color: c),
               ),
             ),
           ),
@@ -717,29 +723,29 @@ class _AnalyticsSkeleton extends StatelessWidget {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _shimmerBlock(height: 300),
+          child: _shimmerBlock(height: 300, color: c),
         ),
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _shimmerBlock(height: 200),
+          child: _shimmerBlock(height: 200, color: c),
         ),
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _shimmerBlock(height: 200),
+          child: _shimmerBlock(height: 200, color: c),
         ),
       ],
     );
   }
 
-  Widget _shimmerBlock({double? width, required double height}) {
+  Widget _shimmerBlock({double? width, required double height, required Color color}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: width,
         height: height,
-        color: AppColors.surfaceDarkVariant,
+        color: color,
       ),
     );
   }

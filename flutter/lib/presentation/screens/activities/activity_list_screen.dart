@@ -6,6 +6,7 @@ import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/presentation/widgets/manual_activity_sheet.dart';
 
 class ActivityListScreen extends ConsumerStatefulWidget {
   const ActivityListScreen({super.key});
@@ -74,6 +75,20 @@ class _ActivityListScreenState extends ConsumerState<ActivityListScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (_) => const ManualActivitySheet(),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
@@ -85,8 +100,9 @@ class _FilterChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activitiesAsync = ref.watch(activitiesProvider);
-    final selectedType = activitiesAsync.value?.filterType;
+    final selectedType = ref.watch(
+      activitiesProvider.select((s) => s.value?.filterType),
+    );
 
     return SizedBox(
       height: 48,
@@ -144,6 +160,7 @@ class _ActivityListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       controller: scrollController,
       padding: const EdgeInsets.only(bottom: 24),
       itemCount: activities.length + (hasMore ? 1 : 0),
@@ -180,7 +197,7 @@ class _ActivityCard extends StatelessWidget {
 
     return Card(
       child: InkWell(
-        onTap: () => context.go('/activities/${activity.id}'),
+        onTap: () => context.push('/activities/${activity.id}'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -363,6 +380,7 @@ class _ActivityListSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 24),
       children: List.filled(6, const _ShimmerCard()),
     );
@@ -374,14 +392,15 @@ class _ShimmerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = Theme.of(context).colorScheme.surfaceContainerHighest;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            const CircleAvatar(
-              backgroundColor: AppColors.surfaceDarkVariant,
-              child: SizedBox.shrink(),
+            CircleAvatar(
+              backgroundColor: c,
+              child: const SizedBox.shrink(),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -393,7 +412,7 @@ class _ShimmerCard extends StatelessWidget {
                     child: Container(
                       height: 14,
                       width: 180,
-                      color: AppColors.surfaceDarkVariant,
+                      color: c,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -402,7 +421,7 @@ class _ShimmerCard extends StatelessWidget {
                     child: Container(
                       height: 12,
                       width: 120,
-                      color: AppColors.surfaceDarkVariant,
+                      color: c,
                     ),
                   ),
                 ],

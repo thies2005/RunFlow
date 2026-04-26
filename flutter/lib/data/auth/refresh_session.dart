@@ -16,6 +16,10 @@ Future<String?> refreshSession({
   try {
     final response = await _postRefresh(dio: dio, refreshToken: refreshToken);
 
+    if (response.data == null) {
+      throw const FormatException('Refresh response contained no data');
+    }
+
     final refreshResponse = RefreshResponse.fromJson(response.data!);
     await authService.storeTokens(
       accessToken: refreshResponse.accessToken,
@@ -36,8 +40,8 @@ Future<Response<Map<String, dynamic>>> _postRefresh({
   required String refreshToken,
 }) async {
   final attempts = <String>[
-    ApiConstants.refreshPath,
     ApiConstants.legacyRefreshUrl,
+    ApiConstants.refreshPath,
   ];
 
   DioException? lastError;

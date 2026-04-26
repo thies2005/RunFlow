@@ -39,3 +39,8 @@ class ValidationException extends AppException {
   const ValidationException({required super.message})
       : super(code: 'VALIDATION_ERROR');
 }
+
+class OfflineException extends AppException {
+  const OfflineException()
+      : super(message: 'No internet connection.', code: 'OFFLINE');
+}

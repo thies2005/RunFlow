@@ -139,30 +139,5 @@ void main() {
         );
       });
     });
-
-    group('deleteAccount', () {
-      test('success - sends DELETE request', () async {
-        when(() => mockDio.delete(any())).thenAnswer((_) async => Response<dynamic>(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-              data: null,
-            ));
-
-        await repository.deleteAccount();
-        verify(() => mockDio.delete(any())).called(1);
-      });
-
-      test('failure - throws ServerException on DioException', () async {
-        when(() => mockDio.delete(any())).thenThrow(DioException(
-          requestOptions: RequestOptions(path: ''),
-          type: DioExceptionType.connectionError,
-        ));
-
-        expect(
-          () => repository.deleteAccount(),
-          throwsA(isA<ServerException>()),
-        );
-      });
-    });
   });
 }

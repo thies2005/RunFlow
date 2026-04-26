@@ -20,7 +20,7 @@ void main() {
         authService: _MemoryAuthService(),
       );
 
-      final response = await repository.register(
+      await repository.register(
         email: 'runner@example.com',
         password: 'secret123',
         name: 'Runner',
@@ -30,8 +30,6 @@ void main() {
       expect(adapter.lastBody['email'], 'runner@example.com');
       expect(adapter.lastBody['password'], 'secret123');
       expect(adapter.lastBody['name'], 'Runner');
-      expect(response, isA<LoginResponse>());
-      expect(response.user.email, 'runner@example.com');
     });
 
     test('throws AuthException on 409 conflict', () async {

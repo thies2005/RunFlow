@@ -121,6 +121,8 @@ class NutritionTab extends ConsumerWidget {
                   label: const Text('Add Food'),
                 ),
               ),
+              const SizedBox(height: 16),
+              _NutritionTrendsSection(),
             ],
           ),
         );
@@ -231,6 +233,117 @@ class _MacroBar extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _NutritionTrendsSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final analyticsAsync = ref.watch(nutritionAnalyticsProvider);
+    final theme = Theme.of(context);
+
+    return analyticsAsync.when(
+      data: (analytics) {
+        if (analytics.dailyData.isEmpty) return const SizedBox.shrink();
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '7-Day Nutrition',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (analytics.macroAdherenceScore > 0)
+                  Row(
+                    children: [
+                      Text(
+                        'Macro Adherence: ',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        '${analytics.macroAdherenceScore.toStringAsFixed(0)}%',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: analytics.macroAdherenceScore >= 80
+                              ? AppColors.success
+                              : analytics.macroAdherenceScore >= 60
+                                  ? AppColors.warning
+                                  : AppColors.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 120,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: analytics.dailyData.length,
+                    itemBuilder: (context, index) {
+                      final day = analytics.dailyData[index];
+                      return Container(
+                        width: 60,
+                        margin: const EdgeInsets.only(right: 8),
+                        child: Column(
+                          children: [
+                            Text(
+                              '${day.calories.toInt()}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Expanded(
+                              child: Stack(
+                                alignment: Alignment.bottomCenter,
+                                children: [
+                                  Container(
+                                    width: 32,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 32,
+                                    height: (day.calories / 3000 * 100).clamp(0, 100),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${day.date.day}/${day.date.month}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

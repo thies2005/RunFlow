@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/auth/login_screen.dart';
 import 'package:runflow_flutter/presentation/screens/auth/register_screen.dart';
@@ -24,9 +26,17 @@ import 'package:runflow_flutter/presentation/screens/settings/logs_screen.dart';
 import 'package:runflow_flutter/presentation/screens/chat/chat_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/health_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/barcode_scanner_screen.dart';
-import 'package:runflow_flutter/presentation/screens/onboarding/onboarding_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/nutrition_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/supplements_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/body_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/vitals_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/sleep_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/fasting_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/ai_scan_screen.dart';
+import 'package:runflow_flutter/presentation/screens/onboarding/onboarding_wizard_screen.dart';
 import 'package:runflow_flutter/presentation/screens/startup/startup_screen.dart';
 import 'package:runflow_flutter/presentation/screens/record/record_screen.dart';
+import 'package:runflow_flutter/presentation/screens/race/race_result_screen.dart';
 import 'package:runflow_flutter/presentation/widgets/app_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -35,9 +45,10 @@ GoRouter createRouter(Ref ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/startup',
+    observers: kReleaseMode ? [SentryNavigatorObserver()] : null,
     redirect: (context, state) async {
       final authState = ref.read(authStateProvider);
-      final onboardingComplete = await OnboardingScreen.isCompleted();
+      final onboardingComplete = await OnboardingWizardScreen.isCompleted();
       final isStartup = state.matchedLocation == '/startup';
       final isLoggingIn = state.matchedLocation == '/login';
       final isOnboarding = state.matchedLocation == '/onboarding';
@@ -78,7 +89,7 @@ GoRouter createRouter(Ref ref) {
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        builder: (context, state) => const OnboardingWizardScreen(),
       ),
       GoRoute(
         path: '/login',
@@ -108,6 +119,41 @@ GoRouter createRouter(Ref ref) {
         path: '/health/scan',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const BarcodeScannerScreen(),
+      ),
+      GoRoute(
+        path: '/health/nutrition',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const NutritionScreen(),
+      ),
+      GoRoute(
+        path: '/health/supplements',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SupplementsScreen(),
+      ),
+      GoRoute(
+        path: '/health/body',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BodyScreen(),
+      ),
+      GoRoute(
+        path: '/health/vitals',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const VitalsScreen(),
+      ),
+      GoRoute(
+        path: '/health/sleep',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SleepScreen(),
+      ),
+      GoRoute(
+        path: '/health/fasting',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const FastingScreen(),
+      ),
+      GoRoute(
+        path: '/health/ai-scan',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AiScanScreen(),
       ),
       GoRoute(
         path: '/profile/edit',
@@ -159,6 +205,14 @@ GoRouter createRouter(Ref ref) {
           return GoalDetailScreen(goalId: id);
         },
       ),
+      GoRoute(
+        path: '/race-result/:goalId',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final goalId = state.pathParameters['goalId']!;
+          return RaceResultScreen(goalId: goalId);
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppShell(navigationShell: navigationShell);
@@ -184,7 +238,10 @@ GoRouter createRouter(Ref ref) {
             routes: [
               GoRoute(
                 path: '/record',
-                builder: (context, state) => const RecordScreen(),
+                builder: (context, state) {
+                  final workoutId = state.uri.queryParameters['workoutId'];
+                  return RecordScreen(workoutId: workoutId);
+                },
               ),
             ],
           ),

@@ -105,6 +105,8 @@ class SupplementsTab extends ConsumerWidget {
                   label: const Text('Add Supplement'),
                 ),
               ),
+              const SizedBox(height: 16),
+              _SupplementAdherenceSection(),
             ],
           ),
         );
@@ -192,6 +194,79 @@ class _SupplementCard extends StatelessWidget {
           color: supplement.isActive ? AppColors.primary : AppColors.onSurfaceVariant,
         ),
       ),
+    );
+  }
+}
+
+class _SupplementAdherenceSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final analyticsAsync = ref.watch(supplementAnalyticsProvider);
+    final theme = Theme.of(context);
+
+    return analyticsAsync.when(
+      data: (analytics) {
+        if (analytics.supplements.isEmpty) return const SizedBox.shrink();
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Weekly Adherence',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...analytics.supplements.map((s) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          s.name,
+                          style: theme.textTheme.bodySmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: s.adherencePercent / 100,
+                            backgroundColor: AppColors.surfaceDarkVariant,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              s.adherencePercent >= 80
+                                  ? AppColors.success
+                                  : s.adherencePercent >= 60
+                                      ? AppColors.warning
+                                      : AppColors.error,
+                            ),
+                            minHeight: 8,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${s.adherencePercent.toStringAsFixed(0)}%',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

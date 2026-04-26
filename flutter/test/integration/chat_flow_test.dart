@@ -2,27 +2,19 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
-import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/data/models/chat_models.dart';
 import 'package:runflow_flutter/data/repositories/chat_repository_impl.dart';
 
 void main() {
   group('Chat flow integration', () {
-    late AppDatabase database;
     late Dio dio;
     late ChatRepositoryImpl repository;
 
     setUp(() {
-      database = AppDatabase.forTesting(NativeDatabase.memory());
       dio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
-      repository = ChatRepositoryImpl(dio: dio, database: database);
-    });
-
-    tearDown(() async {
-      await database.close();
+      repository = ChatRepositoryImpl(dio: dio);
     });
 
     test('create session then list sessions', () async {
@@ -57,9 +49,6 @@ void main() {
       expect(messages.first.role, ChatMessageRole.user);
       expect(messages.last.role, ChatMessageRole.assistant);
 
-      final cached = await database.cacheDao.getCachedChatMessages('s-1');
-      expect(cached, isNotNull);
-
       dio.httpClientAdapter = _NetworkErrorAdapter();
 
       final cachedMessages = await repository.getMessages('s-1');
@@ -74,15 +63,9 @@ void main() {
       dio.httpClientAdapter = _MessagesAdapter();
       await repository.getMessages(session.id);
 
-      var cached = await database.cacheDao.getCachedChatMessages(session.id);
-      expect(cached, isNotNull);
-
       dio.httpClientAdapter = _DeleteSessionAdapter();
       final deleted = await repository.deleteSession(session.id);
       expect(deleted, true);
-
-      cached = await database.cacheDao.getCachedChatMessages(session.id);
-      expect(cached, isNull);
     });
 
     test('SSE handles partial chunks across stream events', () async {

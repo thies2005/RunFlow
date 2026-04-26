@@ -230,6 +230,21 @@ const nextConfig = {
             },
         ];
     },
+    async rewrites() {
+        return [
+            { source: '/api/mobile/v1/health/daily', destination: '/api/health/daily' },
+            { source: '/api/mobile/v1/health/daily/:path*', destination: '/api/health/daily/:path*' },
+            { source: '/api/mobile/v1/nutrition/:path*', destination: '/api/health/nutrition/:path*' },
+            { source: '/api/mobile/v1/supplements/:path*', destination: '/api/health/supplements/:path*' },
+            { source: '/api/mobile/v1/fasting/:path*', destination: '/api/health/fasting/:path*' },
+            { source: '/api/mobile/v1/body-composition', destination: '/api/health/body-composition' },
+            { source: '/api/mobile/v1/health/sync-batch', destination: '/api/health/sync-batch' },
+            { source: '/api/mobile/v1/health/insights/:path*', destination: '/api/health/insights/:path*' },
+            { source: '/api/mobile/v1/health/history', destination: '/api/health/history' },
+            { source: '/api/mobile/v1/health/nutrition-analytics', destination: '/api/health/nutrition/analytics' },
+            { source: '/api/mobile/v1/health/supplement-analytics', destination: '/api/health/supplements/analytics' },
+        ];
+    },
 };
 
 export default withPWAConfig(nextConfig);

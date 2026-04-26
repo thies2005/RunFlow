@@ -147,6 +147,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
+    try {
+      await dio.post('/api/mobile/v1/auth/logout');
+    } catch (_) {}
     await authService.clearAll();
   }
 

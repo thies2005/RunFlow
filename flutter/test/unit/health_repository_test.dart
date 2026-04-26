@@ -1,79 +1,19 @@
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
 import 'package:runflow_flutter/data/repositories/health_repository_impl.dart';
-import 'package:runflow_flutter/domain/repositories/health_api_repository.dart';
-
-class MockHealthApiRepository extends Mock implements HealthApiRepository {}
 
 void main() {
   late AppDatabase database;
-  late MockHealthApiRepository mockApiRepository;
   late HealthRepositoryImpl repository;
 
-  setUpAll(() {
-    registerFallbackValue(
-      NutritionLog(
-        id: 0,
-        date: DateTime(2024, 1, 1),
-        calories: 0,
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-        water: 0,
-        createdAt: DateTime(2024, 1, 1),
-      ),
-    );
-    registerFallbackValue(
-      const Supplement(
-        id: 0,
-        name: '',
-        dosage: '',
-        frequency: '',
-        isActive: true,
-      ),
-    );
-    registerFallbackValue(
-      BodyMeasurement(
-        id: 0,
-        date: DateTime(2024, 1, 1),
-        weight: 0,
-        bodyFat: 0,
-      ),
-    );
-    registerFallbackValue(
-      FastingSession(
-        id: 0,
-        startTime: DateTime(2024, 1, 1),
-        duration: 0,
-        isActive: true,
-      ),
-    );
-  });
-
   setUp(() {
-    database = AppDatabase.forTesting(NativeDatabase.memory());
-    mockApiRepository = MockHealthApiRepository();
-    repository = HealthRepositoryImpl(
-      database: database,
-      apiRepository: mockApiRepository,
-    );
-    when(() => mockApiRepository.syncNutritionLog(any()))
-        .thenAnswer((_) async {});
-    when(() => mockApiRepository.saveSupplementRemote(any()))
-        .thenAnswer((_) async {});
-    when(() => mockApiRepository.syncBodyMeasurement(any()))
-        .thenAnswer((_) async {});
-    when(() => mockApiRepository.syncFasting(any()))
-        .thenAnswer((_) async {});
-    when(() => mockApiRepository.searchFood(any()))
-        .thenAnswer((_) async => <FoodItem>[]);
+    database = AppDatabase.forTesting();
+    repository = HealthRepositoryImpl(database: database);
   });
 
-  tearDown(() async {
-    await database.close();
+  tearDown(() {
+    database.close();
   });
 
   group('HealthRepositoryImpl', () {
@@ -164,75 +104,9 @@ void main() {
           protein: 0.5, carbs: 25.0, fat: 0.3, servingSize: 182.0,
         ));
 
-        when(() => mockApiRepository.searchFood(any()))
-            .thenAnswer((_) async => []);
-
         final results = await repository.searchFoodItems('Ban');
         expect(results.length, 1);
         expect(results.first.name, 'Banana');
-      });
-
-      test('searchFoodItems merges local and server results', () async {
-        await repository.saveFoodItem(const FoodItem(
-          id: 0, name: 'Apple', calories: 95.0,
-          protein: 0.5, carbs: 25.0, fat: 0.3, servingSize: 182.0,
-        ));
-
-        when(() => mockApiRepository.searchFood(any()))
-            .thenAnswer((_) async => [
-                  const FoodItem(
-                    id: 99, name: 'Apple Pie', calories: 300.0,
-                    protein: 2.0, carbs: 40.0, fat: 15.0, servingSize: 120.0,
-                  ),
-                ]);
-
-        final results = await repository.searchFoodItems('Apple');
-        expect(results.length, 2);
-      });
-
-      test('searchFoodItems deduplicates by name (case-insensitive)', () async {
-        await repository.saveFoodItem(const FoodItem(
-          id: 0, name: 'Banana', calories: 105.0,
-          protein: 1.3, carbs: 27.0, fat: 0.4, servingSize: 118.0,
-        ));
-
-        when(() => mockApiRepository.searchFood(any()))
-            .thenAnswer((_) async => [
-                  const FoodItem(
-                    id: 99, name: 'banana', calories: 110.0,
-                    protein: 1.0, carbs: 28.0, fat: 0.5, servingSize: 120.0,
-                  ),
-                ]);
-
-        final results = await repository.searchFoodItems('banana');
-        expect(results.length, 1);
-        expect(results.first.name, 'Banana');
-      });
-
-      test('searchFoodItems returns local only when apiRepository throws', () async {
-        await repository.saveFoodItem(const FoodItem(
-          id: 0, name: 'Local Food', calories: 50.0,
-          protein: 1.0, carbs: 10.0, fat: 1.0, servingSize: 100.0,
-        ));
-
-        when(() => mockApiRepository.searchFood(any()))
-            .thenThrow(Exception('Network error'));
-
-        final results = await repository.searchFoodItems('Local');
-        expect(results.length, 1);
-        expect(results.first.name, 'Local Food');
-      });
-
-      test('searchFoodItems works without apiRepository', () async {
-        final HealthRepositoryImpl localRepo =
-            HealthRepositoryImpl(database: database);
-        await localRepo.saveFoodItem(const FoodItem(
-          id: 0, name: 'Orange', calories: 62.0,
-          protein: 1.2, carbs: 15.0, fat: 0.2, servingSize: 131.0,
-        ));
-
-        final results = await localRepo.searchFoodItems('Orange');
-        expect(results.length, 1);
       });
     });
 
@@ -381,22 +255,6 @@ void main() {
 
         final history = await repository.getFastingHistory();
         expect(history, isEmpty);
-      });
-    });
-
-    group('syncAll', () {
-      test('calls batchSync on api repository', () async {
-        when(() => mockApiRepository.batchSync(any()))
-            .thenAnswer((_) async {});
-
-        await repository.syncAll();
-
-        verify(() => mockApiRepository.batchSync(any())).called(1);
-      });
-
-      test('does nothing when apiRepository is null', () async {
-        final localRepo = HealthRepositoryImpl(database: database);
-        await localRepo.syncAll();
       });
     });
   });

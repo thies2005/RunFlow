@@ -87,13 +87,12 @@ void main() {
     test('register stores tokens on success', () async {
       dio.httpClientAdapter = _LoginSuccessAdapter();
 
-      final response = await repository.register(
+      await repository.register(
         email: 'new@test.com',
         password: 'pass123',
         name: 'New User',
       );
 
-      expect(response.accessToken, 'access_token_123');
       final user = await repository.getCurrentUser();
       expect(user, isNotNull);
     });

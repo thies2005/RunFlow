@@ -568,9 +568,9 @@ class _CompletionCheckboxState extends ConsumerState<_CompletionCheckbox> {
 
     try {
       final repo = ref.read(goalRepositoryProvider);
-      await repo.updateGoal(
-        widget.goalId,
-        const UpdateGoalRequest(),
+      await repo.updateWorkout(
+        widget.workout.id,
+        UpdateWorkoutRequest(isCompleted: _isCompleted),
       );
       ref.invalidate(goalDetailProvider(widget.goalId));
     } catch (_) {

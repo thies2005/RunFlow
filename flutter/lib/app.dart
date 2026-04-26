@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
@@ -14,10 +16,18 @@ class RunFlowApp extends ConsumerStatefulWidget {
 }
 
 class _RunFlowAppState extends ConsumerState<RunFlowApp> {
+  StreamSubscription<Uri>? _deepLinkSubscription;
+
   @override
   void initState() {
     super.initState();
-    initDeepLinks();
+    _deepLinkSubscription = initDeepLinks();
+  }
+
+  @override
+  void dispose() {
+    _deepLinkSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -41,7 +51,7 @@ class _RunFlowAppState extends ConsumerState<RunFlowApp> {
         return Column(
           children: [
             const OfflineBanner(),
-            Expanded(child: child!),
+            Expanded(child: child ?? const SizedBox.shrink()),
           ],
         );
       },

@@ -307,8 +307,8 @@ void main() {
       });
     });
 
-    group('toggleWorkoutCompletion', () {
-      test('success - sends isCompleted and returns Workout', () async {
+    group('updateWorkout', () {
+      test('success - sends UpdateWorkoutRequest and returns Workout', () async {
         final workout = Workout(
           id: 'w1',
           goalId: 'goal-1',
@@ -332,7 +332,10 @@ void main() {
                   data: workout.toJson(),
                 ));
 
-        final result = await repository.toggleWorkoutCompletion('w1', true);
+        final result = await repository.updateWorkout(
+          'w1',
+          const UpdateWorkoutRequest(isCompleted: true),
+        );
         expect(result.isCompleted, true);
       });
 
@@ -346,7 +349,10 @@ void main() {
             ));
 
         expect(
-          () => repository.toggleWorkoutCompletion('w1', true),
+          () => repository.updateWorkout(
+            'w1',
+            const UpdateWorkoutRequest(isCompleted: true),
+          ),
           throwsA(isA<ServerException>()),
         );
       });

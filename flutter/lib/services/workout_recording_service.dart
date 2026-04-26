@@ -90,8 +90,14 @@ class WorkoutRecordingService {
   bool get isScanning => _isScanning;
   bool get isBleConnected => _connectedSensor != null;
 
-  Stream<RecordingStatus> get statusStream => _statusController.stream;
-  Stream<RecordingMetrics> get metricsStream => _metricsController.stream;
+  Stream<RecordingStatus> get statusStream async* {
+    yield _status;
+    yield* _statusController.stream;
+  }
+  Stream<RecordingMetrics> get metricsStream async* {
+    yield currentMetrics;
+    yield* _metricsController.stream;
+  }
 
   RecordingMetrics get currentMetrics => RecordingMetrics(
         distanceMeters: _totalDistance,

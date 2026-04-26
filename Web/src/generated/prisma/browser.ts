@@ -243,6 +243,11 @@ export type PerformanceSummary = Prisma.PerformanceSummaryModel
  */
 export type SessionReplay = Prisma.SessionReplayModel
 /**
+ * Model DeviceToken
+ * 
+ */
+export type DeviceToken = Prisma.DeviceTokenModel
+/**
  * Model Release
  * 
  */

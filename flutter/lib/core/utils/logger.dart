@@ -8,9 +8,9 @@ enum LogLevel {
 }
 
 class AppLogger {
-  static final AppLogger _instance = AppLogger._internal();
   factory AppLogger() => _instance;
   AppLogger._internal();
+  static final AppLogger _instance = AppLogger._internal();
 
   final List<String> _logs = [];
   LogLevel _minLevel = LogLevel.debug;
@@ -33,6 +33,9 @@ class AppLogger {
     };
     final logMessage = '[$timestamp] [$levelStr] $message';
     _logs.add(logMessage);
+    if (_logs.length > 1000) {
+      _logs.removeRange(0, _logs.length - 1000);
+    }
 
     if (kDebugMode) {
       switch (level) {

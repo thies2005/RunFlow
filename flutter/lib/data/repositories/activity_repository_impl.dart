@@ -3,6 +3,7 @@ import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
 import 'package:runflow_flutter/data/models/activity_models.dart';
+import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/models/recording_models.dart';
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
@@ -149,14 +150,14 @@ class ActivityRepositoryImpl implements ActivityRepository {
         if (workout.totalElevation != null)
           'totalElevation': workout.totalElevation,
         if (timeStream != null || latlngStream != null || hrStream != null)
-          'streams': <String, dynamic>{
-            if (timeStream != null) 'time': timeStream,
-            if (latlngStream != null) 'latlng': latlngStream,
-            if (altitudeStream != null) 'altitude': altitudeStream,
-            if (velocityStream != null) 'velocity_smooth': velocityStream,
-            if (hrStream != null) 'heartrate': hrStream,
-            if (cadenceStream != null) 'cadence': cadenceStream,
-          },
+            'streams': <String, dynamic>{
+              if (timeStream != null) 'time': timeStream,
+              if (latlngStream != null) 'latlng': latlngStream,
+              if (altitudeStream != null) 'altitude': altitudeStream,
+              if (velocityStream != null) 'velocity_smooth': velocityStream,
+              if (hrStream != null) 'heartrate': hrStream,
+              if (cadenceStream != null) 'cadence': cadenceStream,
+            },
       };
 
       final response = await dio.post(
@@ -173,6 +174,91 @@ class ActivityRepositoryImpl implements ActivityRepository {
           ? e.error as AppException
           : ServerException(
               message: 'Failed to create activity.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
+  @override
+  Future<Activity> createManualActivity({
+    required String name,
+    required DateTime date,
+    required String type,
+    required double distance,
+    required int duration,
+    double? hr,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'name': name,
+        'type': type,
+        'startDate': date.toIso8601String(),
+        'distance': distance * 1000,
+        'movingTime': duration * 60,
+        'elapsedTime': duration * 60,
+        if (hr != null) 'averageHr': hr,
+        if (hr != null) 'hasHeartrate': true,
+      };
+      final response = await dio.post(
+        ApiConstants.activitiesPath,
+        data: body,
+      );
+      final payload = unwrapPayload(
+        Map<String, dynamic>.from(response.data as Map),
+        const ['activity'],
+      );
+      return Activity.fromJson(payload);
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : ServerException(
+              message: 'Failed to create activity.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
+  @override
+  Future<AiActivityFeedback> getAiFeedback(String activityId) async {
+    try {
+      final response = await dio.get(
+        '/ai/activity-feedback',
+        queryParameters: {'activityId': activityId},
+      );
+      final data = response.data as Map<String, dynamic>;
+      final feedback = data['feedback'];
+      if (feedback is Map<String, dynamic>) {
+        return AiActivityFeedback.fromJson(feedback);
+      }
+      return const AiActivityFeedback();
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : ServerException(
+              message: 'Failed to load AI feedback.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
+  @override
+  Future<AiActivityFeedback> generateAiFeedback(String activityId) async {
+    try {
+      final response = await dio.post(
+        '/ai/activity-feedback',
+        data: {'activityId': activityId, 'regenerate': true},
+      );
+      final data = response.data as Map<String, dynamic>;
+      final feedback = data['feedback'];
+      if (feedback is Map<String, dynamic>) {
+        return AiActivityFeedback.fromJson(feedback);
+      }
+      return const AiActivityFeedback();
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : ServerException(
+              message: 'Failed to generate AI feedback.',
               statusCode: e.response?.statusCode,
             );
     }

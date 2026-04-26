@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/repositories/analytics_repository_impl.dart';
 
 class MockDio extends Mock implements Dio {}
@@ -212,105 +211,6 @@ void main() {
             startDate: DateTime(2024, 1, 1),
             endDate: DateTime(2024, 1, 31),
           ),
-          throwsA(isA<ServerException>()),
-        );
-      });
-    });
-
-    group('getWeeklyMileage', () {
-      test('success - returns weekly mileage from activities', () async {
-        final now = DateTime.now();
-        final activity = Activity(
-          id: 'act1',
-          stravaId: '12345',
-          type: ActivityType.run,
-          name: 'Morning Run',
-          startDate: now.subtract(const Duration(days: 3)),
-          distance: 10000.0,
-          movingTime: 3000,
-          averageSpeed: null,
-          averageHr: null,
-          maxHr: null,
-          averageCadence: null,
-          hasHeartrate: false,
-          totalElevation: 0.0,
-          trimp: null,
-          runningTss: null,
-          estimatedVdot: null,
-          trainingType: null,
-        );
-
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenAnswer((_) async => Response<dynamic>(
-                  requestOptions: RequestOptions(path: ''),
-                  statusCode: 200,
-                  data: {
-                    'activities': [activity.toJson()],
-                    'total': 1,
-                    'limit': 200,
-                    'offset': 0,
-                    'hasMore': false,
-                  },
-                ));
-
-        final result = await repository.getWeeklyMileage(weeks: 4);
-        expect(result.length, 4);
-        expect(result.any((w) => w.distanceKm > 0), true);
-      });
-
-      test('success - filters non-run activities', () async {
-        final activity = Activity(
-          id: 'ride1',
-          stravaId: '999',
-          type: ActivityType.ride,
-          name: 'Cycling',
-          startDate: DateTime(2024, 6, 12),
-          distance: 20000.0,
-          movingTime: 3600,
-          averageSpeed: null,
-          averageHr: null,
-          maxHr: null,
-          averageCadence: null,
-          hasHeartrate: false,
-          totalElevation: 0.0,
-          trimp: null,
-          runningTss: null,
-          estimatedVdot: null,
-          trainingType: null,
-        );
-
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenAnswer((_) async => Response<dynamic>(
-                  requestOptions: RequestOptions(path: ''),
-                  statusCode: 200,
-                  data: {
-                    'activities': [activity.toJson()],
-                    'total': 1,
-                    'limit': 200,
-                    'offset': 0,
-                    'hasMore': false,
-                  },
-                ));
-
-        final result = await repository.getWeeklyMileage(weeks: 2);
-        expect(result.every((w) => w.distanceKm == 0.0), true);
-      });
-
-      test('failure - throws ServerException on DioException', () async {
-        when(() => mockDio.get(
-              any(),
-              queryParameters: any(named: 'queryParameters'),
-            )).thenThrow(DioException(
-              requestOptions: RequestOptions(path: ''),
-              type: DioExceptionType.connectionError,
-            ));
-
-        expect(
-          () => repository.getWeeklyMileage(),
           throwsA(isA<ServerException>()),
         );
       });

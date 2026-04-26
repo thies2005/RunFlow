@@ -40,7 +40,7 @@ class _FakeAuthRepository implements AuthRepository {
   Future<void> restoreSession() async {}
 
   @override
-  Future<LoginResponse> register({
+  Future<void> register({
     required String email,
     required String password,
     required String name,
@@ -50,69 +50,6 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> forgotPassword(String email) async {}
-}
-
-class _FakeSettingsNotifier extends Settings {
-  _FakeSettingsNotifier([AppSettings? initial])
-      : _state = initial ?? const AppSettings();
-
-  AppSettings _state;
-
-  @override
-  AppSettings get state => _state;
-
-  @override
-  set state(AppSettings value) {
-    _state = value;
-  }
-
-  @override
-  AppSettings build() => _state;
-
-  @override
-  Future<void> setUnitSystem(UnitSystem unit) async {
-    state = _state.copyWith(unitSystem: unit);
-  }
-
-  @override
-  Future<void> setThemeMode(AppThemeMode mode) async {
-    state = _state.copyWith(themeMode: mode);
-  }
-
-  @override
-  Future<void> setWorkoutReminders(bool value) async {
-    state = _state.copyWith(workoutReminders: value);
-  }
-
-  @override
-  Future<void> setSupplementReminders(bool value) async {
-    state = _state.copyWith(supplementReminders: value);
-  }
-
-  @override
-  Future<void> setChatNotifications(bool value) async {
-    state = _state.copyWith(chatNotifications: value);
-  }
-
-  @override
-  Future<void> setSyncNotifications(bool value) async {
-    state = _state.copyWith(syncNotifications: value);
-  }
-
-  @override
-  Future<void> setAiShareActivities(bool value) async {
-    state = _state.copyWith(aiShareActivities: value);
-  }
-
-  @override
-  Future<void> setAiShareHealthData(bool value) async {
-    state = _state.copyWith(aiShareHealthData: value);
-  }
-
-  @override
-  Future<void> setAiShareGoals(bool value) async {
-    state = _state.copyWith(aiShareGoals: value);
-  }
 }
 
 class _FakeProfileRepository implements ProfileRepository {
@@ -125,23 +62,18 @@ class _FakeProfileRepository implements ProfileRepository {
   Future<UserProfile> updateProfile(UpdateProfileRequest request) async {
     throw UnimplementedError();
   }
-
-  @override
-  Future<void> deleteAccount() async {}
 }
 
 void main() {
   group('ProfileScreen Delete Account', () {
-    late _FakeSettingsNotifier fakeSettings;
 
     Widget createTestWidget() {
-      fakeSettings = _FakeSettingsNotifier();
       return ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
           profileRepositoryProvider
               .overrideWithValue(_FakeProfileRepository()),
-          settingsProvider.overrideWith(() => fakeSettings),
+          settingsProvider.overrideWithValue(const AppSettings()),
         ],
         child: const MaterialApp(
           home: ProfileScreen(),

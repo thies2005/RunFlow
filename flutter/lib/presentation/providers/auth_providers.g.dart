@@ -89,7 +89,7 @@ final class DioClientProvider
   }
 }
 
-String _$dioClientHash() => r'1a8115786e8b2b073d139fa8b2d848a7d7d0000e';
+String _$dioClientHash() => r'387f1693ec9edbf522094f27f242239decda2825';
 
 @ProviderFor(authRepository)
 final authRepositoryProvider = AuthRepositoryProvider._();
@@ -155,7 +155,7 @@ final class AuthStateProvider extends $AsyncNotifierProvider<AuthState, User?> {
   AuthState create() => AuthState();
 }
 
-String _$authStateHash() => r'2f3a2e2658b1694d75eefc6d227c2d663bd6451e';
+String _$authStateHash() => r'67d5614841c98e0556e47d8598c40bd5212d4ab4';
 
 abstract class _$AuthState extends $AsyncNotifier<User?> {
   FutureOr<User?> build();

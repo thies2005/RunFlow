@@ -2,13 +2,20 @@ import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/datasources/remote/dio_client.dart';
 import 'package:runflow_flutter/data/interceptors/auth_interceptor.dart';
+import 'package:runflow_flutter/data/interceptors/connectivity_interceptor.dart';
+import 'package:runflow_flutter/data/interceptors/deduplication_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/error_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/refresh_interceptor.dart';
+import 'package:runflow_flutter/data/interceptors/retry_interceptor.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
 import 'package:runflow_flutter/data/repositories/auth_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
+import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
+import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
 import 'package:runflow_flutter/services/auth_service.dart';
 import 'package:runflow_flutter/services/auth_service_impl.dart';
+import 'package:runflow_flutter/services/background_sync.dart';
+import 'package:runflow_flutter/services/fcm_service.dart';
 
 part 'auth_providers.g.dart';
 
@@ -25,8 +32,11 @@ DioClient dioClient(Ref ref) {
   final client = DioClient(dio: dio);
 
   dio.interceptors.addAll([
+    ConnectivityInterceptor(),
+    DeduplicationInterceptor(),
     AuthInterceptor(authService: authService),
     RefreshInterceptor(authService: authService, dio: dio),
+    RetryInterceptor(dio: dio),
     ErrorInterceptor(),
   ]);
 
@@ -86,6 +96,12 @@ class AuthState extends _$AuthState {
 
   Future<void> logout() async {
     try {
+      await BackgroundSyncService.cancel();
+      await FcmService.dispose();
+      ref.read(healthSyncServiceProvider).stopAutoSync();
+      final recordingService = ref.read(recordingServiceProvider);
+      recordingService.discardRecording();
+      await recordingService.disconnectHeartRateMonitor();
       final repo = ref.read(authRepositoryProvider);
       await repo.logout();
     } finally {
@@ -114,14 +130,8 @@ class AuthState extends _$AuthState {
   }
 
   Future<void> forgotPassword(String email) async {
-    state = const AsyncValue.loading();
-    try {
-      final repo = ref.read(authRepositoryProvider);
-      await repo.forgotPassword(email);
-      state = const AsyncValue.data(null);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
+    final repo = ref.read(authRepositoryProvider);
+    await repo.forgotPassword(email);
   }
 }
 

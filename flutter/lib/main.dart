@@ -24,6 +24,8 @@ Future<void> main() async {
       (options) {
         options.dsn = AppConstants.sentryDsn;
         options.tracesSampleRate = 1.0;
+        options.enableAutoSessionTracking = true;
+        options.attachStacktrace = true;
       },
       appRunner: () => runApp(
         const ProviderScope(child: RunFlowApp()),
@@ -61,11 +63,12 @@ Future<void> _initBackgroundSync() async {
   } catch (_) {}
 }
 
-void initDeepLinks() {
+StreamSubscription<Uri>? initDeepLinks() {
   try {
     final appLinks = AppLinks();
-    appLinks.uriLinkStream.listen(_handleDeepLink);
+    return appLinks.uriLinkStream.listen(_handleDeepLink);
   } catch (_) {}
+  return null;
 }
 
 void _handleDeepLink(Uri uri) {

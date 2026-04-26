@@ -33,19 +33,24 @@ class ApiConstants {
   static String chatSessionMessagesPath(String id) =>
       '/chat/sessions/$id/messages';
 
-  static String get aiChatSessionsUrl => '$baseUrl/ai/chat/sessions';
-  static String get aiChatHistoryUrl => '$baseUrl/ai/chat/history';
-  static String get aiChatStreamUrl => '$baseUrl/ai/chat';
+  static String get aiChatSessionsUrl => '$baseUrl/api/ai/chat/sessions';
+  static String get aiChatHistoryUrl => '$baseUrl/api/ai/chat/history';
+  static String get aiChatStreamUrl => '$baseUrl/api/ai/chat';
 
-  static const String nutritionLogPath = '/nutrition/log';
-  static const String nutritionSearchPath = '/nutrition/search';
-  static const String nutritionScanPath = '/nutrition/scan';
-  static const String nutritionTargetPath = '/nutrition/target';
-  static const String fastingPath = '/fasting';
-  static const String bodyCompositionPath = '/body/composition';
-  static const String healthSyncBatchPath = '/health/sync';
-  static const String healthInsightsPath = '/health/insights';
-  static const String supplementsPath = '/supplements';
+  static const String nutritionLogPath = 'health/nutrition/log';
+  static const String nutritionSearchPath = 'health/nutrition/search';
+  static const String nutritionScanPath = 'health/nutrition/scan';
+  static const String nutritionAiScanPath = 'health/nutrition/ai-scan';
+  static const String nutritionTargetPath = 'health/nutrition/target';
+  static const String nutritionAnalyticsPath = 'health/nutrition/analytics';
+  static const String fastingPath = 'health/fasting';
+  static const String bodyCompositionPath = 'health/body-composition';
+  static const String healthSyncBatchPath = 'health/sync-batch';
+  static const String healthInsightsPath = 'health/insights';
+  static const String healthHistoryPath = 'health/history';
+  static const String healthDailyPath = 'health/daily';
+  static const String supplementsPath = 'health/supplements';
+  static const String supplementsAnalyticsPath = 'health/supplements/analytics';
 }
 
 class AppConstants {

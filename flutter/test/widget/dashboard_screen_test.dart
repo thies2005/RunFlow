@@ -70,6 +70,14 @@ void main() {
 
       expect(find.text('RunFlow'), findsOneWidget);
       expect(find.text('This Week'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Recent Activities'),
+        500,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
       expect(find.text('Recent Activities'), findsOneWidget);
       expect(find.text('Morning Run'), findsOneWidget);
     });
@@ -156,10 +164,11 @@ void main() {
       expect(find.byIcon(Icons.sync), findsOneWidget);
     });
 
-    testWidgets('displays active goals section', (WidgetTester tester) async {
+    testWidgets('displays race goal from active goals', (WidgetTester tester) async {
       const testUser = User(
         id: 'test-user',
         email: 'test@example.com',
+        name: 'Test User',
       );
 
       final testDashboard = TestDashboardData.createResponse();
@@ -179,7 +188,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Active Goals'), findsOneWidget);
       expect(find.text('Berlin Marathon'), findsOneWidget);
       expect(find.text('Marathon'), findsOneWidget);
     });

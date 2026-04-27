@@ -50,14 +50,14 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('Dashboard'), findsWidgets);
-    expect(find.text('Activities'), findsOneWidget);
-    expect(find.text('Analytics'), findsOneWidget);
-    expect(find.text('Goals'), findsOneWidget);
-    expect(find.text('Profile'), findsOneWidget);
+    expect(find.text('Dashboard'), findsOneWidget);
+    expect(find.text('Plan'), findsOneWidget);
+    expect(find.text('Record'), findsOneWidget);
+    expect(find.text('Health'), findsOneWidget);
+    expect(find.text('Athlete'), findsOneWidget);
   });
 
-  testWidgets('Navigation switches to Activities tab',
+  testWidgets('Navigation switches to Health tab',
       (WidgetTester tester) async {
     const testUser = User(
       id: 'test-user',
@@ -75,11 +75,11 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    await tester.tap(find.text('Activities'));
+    await tester.tap(find.text('Health'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('Activities'), findsWidgets);
+    expect(find.text('Health'), findsWidgets);
   });
 
   testWidgets('Onboarding is shown before auth when not completed',
@@ -94,7 +94,6 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('Track Your Runs'), findsOneWidget);
     expect(find.text('Skip'), findsOneWidget);
   });
 

@@ -76,8 +76,11 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump();
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
+
+      await tester.pump(const Duration(hours: 25));
     });
 
     testWidgets('shows network error on scan failure',

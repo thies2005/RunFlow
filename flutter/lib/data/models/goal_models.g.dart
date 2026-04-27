@@ -31,10 +31,25 @@ _CreateGoalRequest _$CreateGoalRequestFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       raceType: $enumDecode(_$RaceTypeEnumMap, json['raceType']),
       raceDate: DateTime.parse(json['raceDate'] as String),
+      planStartDate: json['planStartDate'] == null
+          ? null
+          : DateTime.parse(json['planStartDate'] as String),
       targetTime: (json['targetTime'] as num?)?.toInt(),
       weeklyMileageGoal: (json['weeklyMileageGoal'] as num?)?.toDouble(),
       planWeeks: (json['planWeeks'] as num?)?.toInt() ?? 12,
       runsPerWeek: (json['runsPerWeek'] as num?)?.toInt() ?? 4,
+      ridesPerWeek: (json['ridesPerWeek'] as num?)?.toInt() ?? 0,
+      swimsPerWeek: (json['swimsPerWeek'] as num?)?.toInt() ?? 0,
+      strengthPerWeek: (json['strengthPerWeek'] as num?)?.toInt() ?? 0,
+      taperWeeks: (json['taperWeeks'] as num?)?.toInt() ?? 2,
+      peakWeeks: (json['peakWeeks'] as num?)?.toInt() ?? 4,
+      buildWeeks: (json['buildWeeks'] as num?)?.toInt() ?? 4,
+      maxLongRunKm: (json['maxLongRunKm'] as num?)?.toDouble(),
+      longRunDay: (json['longRunDay'] as num?)?.toInt() ?? 0,
+      workoutDay: (json['workoutDay'] as num?)?.toInt() ?? 3,
+      calibrationTime: (json['calibrationTime'] as num?)?.toInt(),
+      calibrationDistance: json['calibrationDistance'] as String?,
+      calibrationFactor: (json['calibrationFactor'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
@@ -42,10 +57,23 @@ Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
       'name': instance.name,
       'raceType': _$RaceTypeEnumMap[instance.raceType]!,
       'raceDate': instance.raceDate.toIso8601String(),
+      'planStartDate': instance.planStartDate?.toIso8601String(),
       'targetTime': instance.targetTime,
       'weeklyMileageGoal': instance.weeklyMileageGoal,
       'planWeeks': instance.planWeeks,
       'runsPerWeek': instance.runsPerWeek,
+      'ridesPerWeek': instance.ridesPerWeek,
+      'swimsPerWeek': instance.swimsPerWeek,
+      'strengthPerWeek': instance.strengthPerWeek,
+      'taperWeeks': instance.taperWeeks,
+      'peakWeeks': instance.peakWeeks,
+      'buildWeeks': instance.buildWeeks,
+      'maxLongRunKm': instance.maxLongRunKm,
+      'longRunDay': instance.longRunDay,
+      'workoutDay': instance.workoutDay,
+      'calibrationTime': instance.calibrationTime,
+      'calibrationDistance': instance.calibrationDistance,
+      'calibrationFactor': instance.calibrationFactor,
     };
 
 const _$RaceTypeEnumMap = {

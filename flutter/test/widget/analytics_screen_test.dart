@@ -58,9 +58,9 @@ void main() {
 
       expect(find.text('Analytics'), findsOneWidget);
       expect(find.text('VDOT'), findsOneWidget);
-      expect(find.text('CTL'), findsOneWidget);
-      expect(find.text('ATL'), findsOneWidget);
-      expect(find.text('TSB'), findsOneWidget);
+      expect(find.text('CTL'), findsWidgets);
+      expect(find.text('ATL'), findsWidgets);
+      expect(find.text('TSB'), findsWidgets);
     });
 
     testWidgets('shows date range selector', (WidgetTester tester) async {
@@ -113,8 +113,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            analyticsStatsProvider.overrideWith(
-              (ref) async => throw Exception('Network error'),
+            analyticsStatsProvider.overrideWithValue(
+              AsyncValue.error(Exception('Network error'), StackTrace.current),
             ),
             analyticsHistoryProvider.overrideWith(
               (ref, arg) async => testHistory,

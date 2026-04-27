@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'health_models.freezed.dart';
@@ -43,14 +45,14 @@ sealed class FoodItem with _$FoodItem {
 @Freezed(copyWith: true)
 sealed class Supplement with _$Supplement {
   const factory Supplement({
-    required int id,
+    required String id,
     required String name,
-    @JsonKey(name: 'amount') @Default('') String amount,
+    @JsonKey(name: 'amount', fromJson: _parseSupplementAmount) @Default(0) double amount,
     @JsonKey(name: 'unit') @Default('mg') String unit,
     @JsonKey(name: 'timeOfDay') @Default('MORNING') String timeOfDay,
-    @JsonKey(name: 'daysOfWeek') @Default('[]') String daysOfWeek,
+    @JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) @Default([]) List<int> daysOfWeek,
     @Default(true) bool isActive,
-    @JsonKey(name: 'stackId') int? stackId,
+    @JsonKey(name: 'stackId') String? stackId,
     @Default(0) int order,
     @JsonKey(name: 'dosage') @Default('') String dosage,
     @JsonKey(name: 'frequency') @Default('Daily') String frequency,
@@ -59,7 +61,39 @@ sealed class Supplement with _$Supplement {
 
   factory Supplement.fromJson(Map<String, dynamic> json) =>
       _$SupplementFromJson(json);
+
+  @override
+  Map<String, dynamic> toJson() => {
+    if (id.isNotEmpty) 'id': id,
+    'name': name,
+    'amount': amount,
+    'unit': unit,
+    'timeOfDay': timeOfDay,
+    'daysOfWeek': _serializeDaysOfWeek(daysOfWeek),
+    'isActive': isActive,
+    if (stackId != null) 'stackId': stackId,
+    if (order != 0) 'order': order,
+  };
 }
+
+double _parseSupplementAmount(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0;
+  return 0;
+}
+
+List<int> _parseDaysOfWeek(dynamic value) {
+  if (value is List) return value.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0).toList();
+  if (value is String && value.isNotEmpty) {
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is List) return decoded.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0).toList();
+    } catch (_) {}
+  }
+  return [0, 1, 2, 3, 4, 5, 6];
+}
+
+List<dynamic> _serializeDaysOfWeek(List<int> days) => days;
 
 @Freezed(copyWith: true)
 sealed class SupplementStack with _$SupplementStack {
@@ -186,15 +220,15 @@ class NutritionTargets {
   });
 
   factory NutritionTargets.fromJson(Map<String, dynamic> json) => NutritionTargets(
-        calories: (json['dailyCalories'] ?? json['calories'] ?? 2500) as int,
-        protein: (json['protein'] ?? 0) as int,
-        carbs: (json['carbs'] ?? 0) as int,
-        fat: (json['fat'] ?? 0) as int,
+        calories: ((json['dailyCalories'] ?? json['calories'] ?? 2500) as num).toInt(),
+        protein: ((json['protein'] ?? 0) as num).toInt(),
+        carbs: ((json['carbs'] ?? 0) as num).toInt(),
+        fat: ((json['fat'] ?? 0) as num).toInt(),
         water: ((json['waterGoalMl'] ?? json['water'] ?? 2000) as num).toDouble(),
         proteinPercent: ((json['proteinPercent'] ?? 30) as num).toDouble(),
         carbsPercent: ((json['carbsPercent'] ?? 40) as num).toDouble(),
         fatsPercent: ((json['fatsPercent'] ?? 30) as num).toDouble(),
-        waterGoalMl: (json['waterGoalMl'] ?? 2000) as int,
+        waterGoalMl: ((json['waterGoalMl'] ?? 2000) as num).toInt(),
         exerciseCalorieFactor: ((json['exerciseCalorieFactor'] ?? 0.5) as num).toDouble(),
         exerciseCalorieSource: (json['exerciseCalorieSource'] ?? 'strava') as String,
       );

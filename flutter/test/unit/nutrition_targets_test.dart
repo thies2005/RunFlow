@@ -112,7 +112,7 @@ void main() {
         await repository.setNutritionTargets(targets);
 
         verify(() => mockDio.post(
-              '/api/health/nutrition/target',
+              'health/nutrition/target',
               data: any(named: 'data'),
             )).called(1);
       });

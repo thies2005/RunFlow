@@ -14,16 +14,16 @@ class PlanScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dashboardAsync = ref.watch(dashboardProvider);
+    final goalsAsync = ref.watch(goalsProvider);
 
-    return dashboardAsync.when(
+    return goalsAsync.when(
       loading: () => const _PlanSkeleton(),
       error: (error, _) => _PlanError(
         message: error.toString(),
-        onRetry: () => ref.invalidate(dashboardProvider),
+        onRetry: () => ref.invalidate(goalsProvider),
       ),
-      data: (dashboard) {
-        final activeGoal = dashboard.goals.where((g) => g.isActive).firstOrNull;
+      data: (goalsResponse) {
+        final activeGoal = goalsResponse.goals.where((g) => g.isActive).firstOrNull;
         
         if (activeGoal == null) {
           return _NoPlanState(
@@ -334,7 +334,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
                           const Icon(Icons.straighten, size: 14, color: AppColors.onSurfaceVariant),
                           const SizedBox(width: 4),
                           Text(
-                            '${workout.targetDistance.toStringAsFixed(1)} km',
+                            formatDistance(workout.targetDistance),
                             style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
                           ),
                           const SizedBox(width: 12),
@@ -399,6 +399,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
                         targetPace: workout.targetPace,
                         targetDuration: workout.targetDuration,
                         workoutType: workout.workoutType,
+                        isCompleted: true,
                       ),
                     );
                     ref.invalidate(dashboardProvider);
@@ -643,9 +644,9 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
   void initState() {
     super.initState();
     _descController = TextEditingController(text: widget.workout.description);
-    _distanceController = TextEditingController(text: widget.workout.targetDistance.toStringAsFixed(1));
+    _distanceController = TextEditingController(text: (widget.workout.targetDistance / 1000).toStringAsFixed(1));
     _paceController = TextEditingController(text: widget.workout.targetPace.toStringAsFixed(0));
-    _durationController = TextEditingController(text: widget.workout.targetDuration.toString());
+    _durationController = TextEditingController(text: (widget.workout.targetDuration ~/ 60).toString());
     _selectedType = widget.workout.workoutType;
   }
 
@@ -713,9 +714,9 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
                 onPressed: () {
                   widget.onSave(UpdateWorkoutRequest(
                     description: _descController.text,
-                    targetDistance: double.tryParse(_distanceController.text) ?? widget.workout.targetDistance,
+                    targetDistance: (double.tryParse(_distanceController.text) ?? 0) * 1000,
                     targetPace: widget.workout.targetPace,
-                    targetDuration: int.tryParse(_durationController.text) ?? widget.workout.targetDuration,
+                    targetDuration: (int.tryParse(_durationController.text) ?? 0) * 60,
                     workoutType: _selectedType,
                   ));
                 },

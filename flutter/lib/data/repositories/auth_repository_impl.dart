@@ -190,6 +190,12 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       await authService.storeUser(user);
     } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw AuthException(
+          message: 'An account with this email already exists.',
+          statusCode: 409,
+        );
+      }
       throw e.error is AppException
           ? e.error as AppException
           : AuthException(

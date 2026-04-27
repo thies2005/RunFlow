@@ -574,7 +574,7 @@ as String?,
 /// @nodoc
 mixin _$Supplement {
 
- int get id; String get name;@JsonKey(name: 'amount') String get amount;@JsonKey(name: 'unit') String get unit;@JsonKey(name: 'timeOfDay') String get timeOfDay;@JsonKey(name: 'daysOfWeek') String get daysOfWeek; bool get isActive;@JsonKey(name: 'stackId') int? get stackId; int get order;@JsonKey(name: 'dosage') String get dosage;@JsonKey(name: 'frequency') String get frequency;
+ String get id; String get name;@JsonKey(name: 'amount', fromJson: _parseSupplementAmount) double get amount;@JsonKey(name: 'unit') String get unit;@JsonKey(name: 'timeOfDay') String get timeOfDay;@JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) List<int> get daysOfWeek; bool get isActive;@JsonKey(name: 'stackId') String? get stackId; int get order;@JsonKey(name: 'dosage') String get dosage;@JsonKey(name: 'frequency') String get frequency;
 /// Create a copy of Supplement
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -587,12 +587,12 @@ $SupplementCopyWith<Supplement> get copyWith => _$SupplementCopyWithImpl<Supplem
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Supplement&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.timeOfDay, timeOfDay) || other.timeOfDay == timeOfDay)&&(identical(other.daysOfWeek, daysOfWeek) || other.daysOfWeek == daysOfWeek)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.stackId, stackId) || other.stackId == stackId)&&(identical(other.order, order) || other.order == order)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.frequency, frequency) || other.frequency == frequency));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Supplement&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.timeOfDay, timeOfDay) || other.timeOfDay == timeOfDay)&&const DeepCollectionEquality().equals(other.daysOfWeek, daysOfWeek)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.stackId, stackId) || other.stackId == stackId)&&(identical(other.order, order) || other.order == order)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.frequency, frequency) || other.frequency == frequency));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,amount,unit,timeOfDay,daysOfWeek,isActive,stackId,order,dosage,frequency);
+int get hashCode => Object.hash(runtimeType,id,name,amount,unit,timeOfDay,const DeepCollectionEquality().hash(daysOfWeek),isActive,stackId,order,dosage,frequency);
 
 @override
 String toString() {
@@ -607,7 +607,7 @@ abstract mixin class $SupplementCopyWith<$Res>  {
   factory $SupplementCopyWith(Supplement value, $Res Function(Supplement) _then) = _$SupplementCopyWithImpl;
 @useResult
 $Res call({
- int id, String name,@JsonKey(name: 'amount') String amount,@JsonKey(name: 'unit') String unit,@JsonKey(name: 'timeOfDay') String timeOfDay,@JsonKey(name: 'daysOfWeek') String daysOfWeek, bool isActive,@JsonKey(name: 'stackId') int? stackId, int order,@JsonKey(name: 'dosage') String dosage,@JsonKey(name: 'frequency') String frequency
+ String id, String name,@JsonKey(name: 'amount', fromJson: _parseSupplementAmount) double amount,@JsonKey(name: 'unit') String unit,@JsonKey(name: 'timeOfDay') String timeOfDay,@JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) List<int> daysOfWeek, bool isActive,@JsonKey(name: 'stackId') String? stackId, int order,@JsonKey(name: 'dosage') String dosage,@JsonKey(name: 'frequency') String frequency
 });
 
 
@@ -627,14 +627,14 @@ class _$SupplementCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? amount = null,Object? unit = null,Object? timeOfDay = null,Object? daysOfWeek = null,Object? isActive = null,Object? stackId = freezed,Object? order = null,Object? dosage = null,Object? frequency = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
-as String,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
+as double,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String,timeOfDay: null == timeOfDay ? _self.timeOfDay : timeOfDay // ignore: cast_nullable_to_non_nullable
 as String,daysOfWeek: null == daysOfWeek ? _self.daysOfWeek : daysOfWeek // ignore: cast_nullable_to_non_nullable
-as String,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as List<int>,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,stackId: freezed == stackId ? _self.stackId : stackId // ignore: cast_nullable_to_non_nullable
-as int?,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
+as String?,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int,dosage: null == dosage ? _self.dosage : dosage // ignore: cast_nullable_to_non_nullable
 as String,frequency: null == frequency ? _self.frequency : frequency // ignore: cast_nullable_to_non_nullable
 as String,
@@ -719,7 +719,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name, @JsonKey(name: 'amount')  String amount, @JsonKey(name: 'unit')  String unit, @JsonKey(name: 'timeOfDay')  String timeOfDay, @JsonKey(name: 'daysOfWeek')  String daysOfWeek,  bool isActive, @JsonKey(name: 'stackId')  int? stackId,  int order, @JsonKey(name: 'dosage')  String dosage, @JsonKey(name: 'frequency')  String frequency)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'amount', fromJson: _parseSupplementAmount)  double amount, @JsonKey(name: 'unit')  String unit, @JsonKey(name: 'timeOfDay')  String timeOfDay, @JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek)  List<int> daysOfWeek,  bool isActive, @JsonKey(name: 'stackId')  String? stackId,  int order, @JsonKey(name: 'dosage')  String dosage, @JsonKey(name: 'frequency')  String frequency)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Supplement() when $default != null:
 return $default(_that.id,_that.name,_that.amount,_that.unit,_that.timeOfDay,_that.daysOfWeek,_that.isActive,_that.stackId,_that.order,_that.dosage,_that.frequency);case _:
@@ -740,7 +740,7 @@ return $default(_that.id,_that.name,_that.amount,_that.unit,_that.timeOfDay,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name, @JsonKey(name: 'amount')  String amount, @JsonKey(name: 'unit')  String unit, @JsonKey(name: 'timeOfDay')  String timeOfDay, @JsonKey(name: 'daysOfWeek')  String daysOfWeek,  bool isActive, @JsonKey(name: 'stackId')  int? stackId,  int order, @JsonKey(name: 'dosage')  String dosage, @JsonKey(name: 'frequency')  String frequency)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name, @JsonKey(name: 'amount', fromJson: _parseSupplementAmount)  double amount, @JsonKey(name: 'unit')  String unit, @JsonKey(name: 'timeOfDay')  String timeOfDay, @JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek)  List<int> daysOfWeek,  bool isActive, @JsonKey(name: 'stackId')  String? stackId,  int order, @JsonKey(name: 'dosage')  String dosage, @JsonKey(name: 'frequency')  String frequency)  $default,) {final _that = this;
 switch (_that) {
 case _Supplement():
 return $default(_that.id,_that.name,_that.amount,_that.unit,_that.timeOfDay,_that.daysOfWeek,_that.isActive,_that.stackId,_that.order,_that.dosage,_that.frequency);}
@@ -757,7 +757,7 @@ return $default(_that.id,_that.name,_that.amount,_that.unit,_that.timeOfDay,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name, @JsonKey(name: 'amount')  String amount, @JsonKey(name: 'unit')  String unit, @JsonKey(name: 'timeOfDay')  String timeOfDay, @JsonKey(name: 'daysOfWeek')  String daysOfWeek,  bool isActive, @JsonKey(name: 'stackId')  int? stackId,  int order, @JsonKey(name: 'dosage')  String dosage, @JsonKey(name: 'frequency')  String frequency)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name, @JsonKey(name: 'amount', fromJson: _parseSupplementAmount)  double amount, @JsonKey(name: 'unit')  String unit, @JsonKey(name: 'timeOfDay')  String timeOfDay, @JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek)  List<int> daysOfWeek,  bool isActive, @JsonKey(name: 'stackId')  String? stackId,  int order, @JsonKey(name: 'dosage')  String dosage, @JsonKey(name: 'frequency')  String frequency)?  $default,) {final _that = this;
 switch (_that) {
 case _Supplement() when $default != null:
 return $default(_that.id,_that.name,_that.amount,_that.unit,_that.timeOfDay,_that.daysOfWeek,_that.isActive,_that.stackId,_that.order,_that.dosage,_that.frequency);case _:
@@ -772,17 +772,23 @@ return $default(_that.id,_that.name,_that.amount,_that.unit,_that.timeOfDay,_tha
 @JsonSerializable()
 
 class _Supplement extends Supplement {
-  const _Supplement({required this.id, required this.name, @JsonKey(name: 'amount') this.amount = '', @JsonKey(name: 'unit') this.unit = 'mg', @JsonKey(name: 'timeOfDay') this.timeOfDay = 'MORNING', @JsonKey(name: 'daysOfWeek') this.daysOfWeek = '[]', this.isActive = true, @JsonKey(name: 'stackId') this.stackId, this.order = 0, @JsonKey(name: 'dosage') this.dosage = '', @JsonKey(name: 'frequency') this.frequency = 'Daily'}): super._();
+  const _Supplement({required this.id, required this.name, @JsonKey(name: 'amount', fromJson: _parseSupplementAmount) this.amount = 0, @JsonKey(name: 'unit') this.unit = 'mg', @JsonKey(name: 'timeOfDay') this.timeOfDay = 'MORNING', @JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) final  List<int> daysOfWeek = const [], this.isActive = true, @JsonKey(name: 'stackId') this.stackId, this.order = 0, @JsonKey(name: 'dosage') this.dosage = '', @JsonKey(name: 'frequency') this.frequency = 'Daily'}): _daysOfWeek = daysOfWeek,super._();
   factory _Supplement.fromJson(Map<String, dynamic> json) => _$SupplementFromJson(json);
 
-@override final  int id;
+@override final  String id;
 @override final  String name;
-@override@JsonKey(name: 'amount') final  String amount;
+@override@JsonKey(name: 'amount', fromJson: _parseSupplementAmount) final  double amount;
 @override@JsonKey(name: 'unit') final  String unit;
 @override@JsonKey(name: 'timeOfDay') final  String timeOfDay;
-@override@JsonKey(name: 'daysOfWeek') final  String daysOfWeek;
+ final  List<int> _daysOfWeek;
+@override@JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) List<int> get daysOfWeek {
+  if (_daysOfWeek is EqualUnmodifiableListView) return _daysOfWeek;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_daysOfWeek);
+}
+
 @override@JsonKey() final  bool isActive;
-@override@JsonKey(name: 'stackId') final  int? stackId;
+@override@JsonKey(name: 'stackId') final  String? stackId;
 @override@JsonKey() final  int order;
 @override@JsonKey(name: 'dosage') final  String dosage;
 @override@JsonKey(name: 'frequency') final  String frequency;
@@ -800,12 +806,12 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Supplement&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.timeOfDay, timeOfDay) || other.timeOfDay == timeOfDay)&&(identical(other.daysOfWeek, daysOfWeek) || other.daysOfWeek == daysOfWeek)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.stackId, stackId) || other.stackId == stackId)&&(identical(other.order, order) || other.order == order)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.frequency, frequency) || other.frequency == frequency));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Supplement&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.timeOfDay, timeOfDay) || other.timeOfDay == timeOfDay)&&const DeepCollectionEquality().equals(other._daysOfWeek, _daysOfWeek)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.stackId, stackId) || other.stackId == stackId)&&(identical(other.order, order) || other.order == order)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.frequency, frequency) || other.frequency == frequency));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,amount,unit,timeOfDay,daysOfWeek,isActive,stackId,order,dosage,frequency);
+int get hashCode => Object.hash(runtimeType,id,name,amount,unit,timeOfDay,const DeepCollectionEquality().hash(_daysOfWeek),isActive,stackId,order,dosage,frequency);
 
 @override
 String toString() {
@@ -820,7 +826,7 @@ abstract mixin class _$SupplementCopyWith<$Res> implements $SupplementCopyWith<$
   factory _$SupplementCopyWith(_Supplement value, $Res Function(_Supplement) _then) = __$SupplementCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name,@JsonKey(name: 'amount') String amount,@JsonKey(name: 'unit') String unit,@JsonKey(name: 'timeOfDay') String timeOfDay,@JsonKey(name: 'daysOfWeek') String daysOfWeek, bool isActive,@JsonKey(name: 'stackId') int? stackId, int order,@JsonKey(name: 'dosage') String dosage,@JsonKey(name: 'frequency') String frequency
+ String id, String name,@JsonKey(name: 'amount', fromJson: _parseSupplementAmount) double amount,@JsonKey(name: 'unit') String unit,@JsonKey(name: 'timeOfDay') String timeOfDay,@JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) List<int> daysOfWeek, bool isActive,@JsonKey(name: 'stackId') String? stackId, int order,@JsonKey(name: 'dosage') String dosage,@JsonKey(name: 'frequency') String frequency
 });
 
 
@@ -840,14 +846,14 @@ class __$SupplementCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? amount = null,Object? unit = null,Object? timeOfDay = null,Object? daysOfWeek = null,Object? isActive = null,Object? stackId = freezed,Object? order = null,Object? dosage = null,Object? frequency = null,}) {
   return _then(_Supplement(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
-as String,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
+as double,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
 as String,timeOfDay: null == timeOfDay ? _self.timeOfDay : timeOfDay // ignore: cast_nullable_to_non_nullable
-as String,daysOfWeek: null == daysOfWeek ? _self.daysOfWeek : daysOfWeek // ignore: cast_nullable_to_non_nullable
-as String,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as String,daysOfWeek: null == daysOfWeek ? _self._daysOfWeek : daysOfWeek // ignore: cast_nullable_to_non_nullable
+as List<int>,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,stackId: freezed == stackId ? _self.stackId : stackId // ignore: cast_nullable_to_non_nullable
-as int?,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
+as String?,order: null == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int,dosage: null == dosage ? _self.dosage : dosage // ignore: cast_nullable_to_non_nullable
 as String,frequency: null == frequency ? _self.frequency : frequency // ignore: cast_nullable_to_non_nullable
 as String,

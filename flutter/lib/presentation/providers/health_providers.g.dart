@@ -324,7 +324,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'c65c8e38761d4ac568c892d054a8a961a172d782';
+String _$supplementListHash() => r'518941783fe4a9caa278adfb7102afd0ae2247f8';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();

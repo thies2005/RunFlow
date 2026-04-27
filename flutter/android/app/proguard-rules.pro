@@ -19,3 +19,9 @@
 
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# Health Connect plugin
+-keep class androidx.health.** { *; }
+-dontwarn androidx.health.**
+-keep class plugin.health.** { *; }
+-dontwarn plugin.health.**

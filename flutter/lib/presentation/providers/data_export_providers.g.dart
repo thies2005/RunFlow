@@ -41,7 +41,7 @@ final class DataExportProvider
   }
 }
 
-String _$dataExportHash() => r'bb2cc1323b657695a70f49fc5a83c2396fd62634';
+String _$dataExportHash() => r'3b2b2793043821c9ccb270056542b1d293d3ec7b';
 
 abstract class _$DataExport extends $Notifier<DataExportState> {
   DataExportState build();

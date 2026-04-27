@@ -55,14 +55,16 @@ Map<String, dynamic> _$FoodItemToJson(_FoodItem instance) => <String, dynamic>{
 };
 
 _Supplement _$SupplementFromJson(Map<String, dynamic> json) => _Supplement(
-  id: (json['id'] as num).toInt(),
+  id: json['id'] as String,
   name: json['name'] as String,
-  amount: json['amount'] as String? ?? '',
+  amount: json['amount'] == null ? 0 : _parseSupplementAmount(json['amount']),
   unit: json['unit'] as String? ?? 'mg',
   timeOfDay: json['timeOfDay'] as String? ?? 'MORNING',
-  daysOfWeek: json['daysOfWeek'] as String? ?? '[]',
+  daysOfWeek: json['daysOfWeek'] == null
+      ? const []
+      : _parseDaysOfWeek(json['daysOfWeek']),
   isActive: json['isActive'] as bool? ?? true,
-  stackId: (json['stackId'] as num?)?.toInt(),
+  stackId: json['stackId'] as String?,
   order: (json['order'] as num?)?.toInt() ?? 0,
   dosage: json['dosage'] as String? ?? '',
   frequency: json['frequency'] as String? ?? 'Daily',
@@ -75,7 +77,7 @@ Map<String, dynamic> _$SupplementToJson(_Supplement instance) =>
       'amount': instance.amount,
       'unit': instance.unit,
       'timeOfDay': instance.timeOfDay,
-      'daysOfWeek': instance.daysOfWeek,
+      'daysOfWeek': _serializeDaysOfWeek(instance.daysOfWeek),
       'isActive': instance.isActive,
       'stackId': instance.stackId,
       'order': instance.order,

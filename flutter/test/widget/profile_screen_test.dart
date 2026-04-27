@@ -9,6 +9,26 @@ import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 import 'package:runflow_flutter/presentation/screens/profile/profile_screen.dart';
 
+class _FakeAuthState extends AuthState {
+  _FakeAuthState(this.user);
+
+  final User? user;
+
+  @override
+  Future<User?> build() async => user;
+}
+
+class _FakeSettingsNotifier extends Settings {
+  @override
+  AppSettings get state => const AppSettings();
+
+  @override
+  set state(AppSettings value) {}
+
+  @override
+  AppSettings build() => const AppSettings();
+}
+
 class _FakeAuthRepository implements AuthRepository {
   @override
   Future<LoginResponse> loginWithEmail({
@@ -68,12 +88,19 @@ void main() {
   group('ProfileScreen Delete Account', () {
 
     Widget createTestWidget() {
+      const testUser = User(
+        id: 'test-user',
+        email: 'test@example.com',
+        name: 'Test User',
+      );
       return ProviderScope(
         overrides: [
+          authStateProvider
+              .overrideWith(() => _FakeAuthState(testUser)),
           authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
           profileRepositoryProvider
               .overrideWithValue(_FakeProfileRepository()),
-          settingsProvider.overrideWithValue(const AppSettings()),
+          settingsProvider.overrideWith(() => _FakeSettingsNotifier()),
         ],
         child: const MaterialApp(
           home: ProfileScreen(),
@@ -118,9 +145,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Delete Account'), findsAtLeast(1));
-      expect(find.textContaining('irreversible'), findsOneWidget);
+      expect(find.textContaining('permanent'), findsOneWidget);
       expect(find.text('Cancel'), findsOneWidget);
-      expect(find.text('Continue'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
     });
 
     testWidgets('cancel dismisses first dialog', (tester) async {
@@ -139,64 +166,14 @@ void main() {
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Final Confirmation'), findsNothing);
+      expect(find.text('Delete'), findsNothing);
     });
 
-    testWidgets('shows second confirmation dialog after Continue',
-        (tester) async {
+    testWidgets('renders Strava Connected badge in header', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(
-        findDeleteAccountButton(),
-        100.0,
-        scrollable: find.byType(Scrollable),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(findDeleteAccountButton());
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Continue'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Final Confirmation'), findsOneWidget);
-      expect(find.text('Delete Forever'), findsOneWidget);
-    });
-
-    testWidgets('cancel dismisses second dialog', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
-
-      await tester.scrollUntilVisible(
-        findDeleteAccountButton(),
-        100.0,
-        scrollable: find.byType(Scrollable),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(findDeleteAccountButton());
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Continue'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Delete Forever'), findsNothing);
-    });
-
-    testWidgets('renders Strava Connection section', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
-
-      await tester.scrollUntilVisible(
-        find.text('Strava Connection'),
-        100.0,
-        scrollable: find.byType(Scrollable),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Strava Connection'), findsOneWidget);
+      expect(find.text('Strava Connected'), findsOneWidget);
     });
 
     testWidgets('renders About menu tile', (tester) async {

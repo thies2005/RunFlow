@@ -12,6 +12,7 @@ class ChatRepositoryImpl implements ChatRepository {
   ChatRepositoryImpl({required this.dio});
 
   final Dio dio;
+  final Map<String, List<ChatMessage>> _messagesCache = {};
 
   @override
   Future<List<ChatSession>> listSessions() async {
@@ -62,8 +63,12 @@ class ChatRepositoryImpl implements ChatRepository {
       final messages = (data['messages'] as List<dynamic>)
           .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
           .toList();
+      _messagesCache[sessionId] = messages;
       return messages;
     } on DioException catch (e) {
+      if (_messagesCache.containsKey(sessionId)) {
+        return _messagesCache[sessionId]!;
+      }
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(

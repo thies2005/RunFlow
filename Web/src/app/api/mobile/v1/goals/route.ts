@@ -9,7 +9,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { prisma } from '@/lib/db';
 import { analyzeRace, type RaceDistance } from '@/lib/metrics/vdot';
-import { startOfWeek, endOfWeek } from 'date-fns';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { RaceType, WorkoutType } from '@/generated/prisma/browser';
@@ -32,21 +31,11 @@ export async function GET(request: NextRequest) {
             return errorResponses.unauthorized();
         }
 
-        const now = new Date();
-        const start = startOfWeek(now, { weekStartsOn: 1 });
-        const end = endOfWeek(now, { weekStartsOn: 1 });
-
         const goals = await prisma.goal.findMany({
             where: { userId: user.id },
             orderBy: { raceDate: 'asc' },
             include: {
                 workouts: {
-                    where: {
-                        scheduledDate: {
-                            gte: start,
-                            lte: end,
-                        },
-                    },
                     orderBy: { scheduledDate: 'asc' },
                 },
             },

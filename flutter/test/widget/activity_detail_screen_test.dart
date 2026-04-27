@@ -1,13 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
+import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/presentation/providers/ai_feedback_providers.dart';
 import 'package:runflow_flutter/presentation/screens/activities/activity_detail_screen.dart';
 
 import '../helpers/test_activity_data.dart';
 
+class _FakeAiFeedback extends AiFeedback {
+  _FakeAiFeedback(this._activityId);
+  final String _activityId;
+
+  @override
+  Future<AiActivityFeedback> build(String activityId) async {
+    return const AiActivityFeedback();
+  }
+}
+
 void main() {
   group('ActivityDetailScreen', () {
+    Future<void> pumpDetail(
+      WidgetTester tester, {
+      required Activity testActivity,
+      String activityId = 'act1',
+    }) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            activityDetailProvider(activityId)
+                .overrideWithValue(AsyncValue.data(testActivity)),
+            aiFeedbackProvider(activityId)
+                .overrideWith(() => _FakeAiFeedback(activityId)),
+          ],
+          child: MaterialApp(
+            home: ActivityDetailScreen(activityId: activityId),
+          ),
+        ),
+      );
+      for (var i = 0; i < 8; i++) {
+        await tester.pump(const Duration(milliseconds: 250));
+      }
+    }
+
     testWidgets('renders activity detail content',
         (WidgetTester tester) async {
       final testActivity = TestActivityData.createActivity(
@@ -16,18 +52,7 @@ void main() {
         estimatedVdot: 51.2,
       );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            activityDetailProvider('act1')
-                .overrideWithValue(AsyncValue.data(testActivity)),
-          ],
-          child: const MaterialApp(
-            home: ActivityDetailScreen(activityId: 'act1'),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+      await pumpDetail(tester, testActivity: testActivity);
 
       expect(find.text('Activity Detail'), findsOneWidget);
       expect(find.text('Morning Run'), findsOneWidget);
@@ -79,18 +104,7 @@ void main() {
         trainingType: 'TEMPO',
       );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            activityDetailProvider('act1')
-                .overrideWithValue(AsyncValue.data(testActivity)),
-          ],
-          child: const MaterialApp(
-            home: ActivityDetailScreen(activityId: 'act1'),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+      await pumpDetail(tester, testActivity: testActivity);
 
       expect(find.text('TEMPO'), findsOneWidget);
     });
@@ -100,18 +114,7 @@ void main() {
         estimatedVdot: 52.5,
       );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            activityDetailProvider('act1')
-                .overrideWithValue(AsyncValue.data(testActivity)),
-          ],
-          child: const MaterialApp(
-            home: ActivityDetailScreen(activityId: 'act1'),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+      await pumpDetail(tester, testActivity: testActivity);
 
       expect(find.text('52.5'), findsOneWidget);
     });
@@ -122,18 +125,7 @@ void main() {
         trainingType: null,
       );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            activityDetailProvider('act1')
-                .overrideWithValue(AsyncValue.data(testActivity)),
-          ],
-          child: const MaterialApp(
-            home: ActivityDetailScreen(activityId: 'act1'),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+      await pumpDetail(tester, testActivity: testActivity);
 
       expect(find.text('Training Type'), findsNothing);
     });
@@ -145,18 +137,7 @@ void main() {
         maxHr: 185,
       );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            activityDetailProvider('act1')
-                .overrideWithValue(AsyncValue.data(testActivity)),
-          ],
-          child: const MaterialApp(
-            home: ActivityDetailScreen(activityId: 'act1'),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
+      await pumpDetail(tester, testActivity: testActivity);
 
       expect(find.text('155 bpm'), findsOneWidget);
       expect(find.text('185 bpm'), findsOneWidget);

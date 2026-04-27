@@ -81,7 +81,7 @@ final class ActivitiesProvider
   Activities create() => Activities();
 }
 
-String _$activitiesHash() => r'9c63218e27bedf6d73c00c5f4a991d3a4134a3e1';
+String _$activitiesHash() => r'a0c488522e49b2b1766effcf8b3c3014fe5c6691';
 
 abstract class _$Activities extends $AsyncNotifier<ActivitiesState> {
   FutureOr<ActivitiesState> build();

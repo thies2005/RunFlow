@@ -42,7 +42,7 @@ void main() {
         await repository.syncNutritionLog(log);
 
         verify(() => mockDio.post(
-              '/api/health/nutrition/log',
+              'health/nutrition/log',
               data: any(named: 'data'),
             )).called(1);
       });
@@ -147,9 +147,9 @@ void main() {
 
     group('scanBarcode', () {
       test('returns FoodItem when found', () async {
-        when(() => mockDio.post(
+        when(() => mockDio.get(
               any(),
-              data: any(named: 'data'),
+              queryParameters: any(named: 'queryParameters'),
             )).thenAnswer((_) async => Response<dynamic>(
               requestOptions: RequestOptions(path: ''),
               statusCode: 200,
@@ -175,9 +175,9 @@ void main() {
       });
 
       test('returns null when barcode not found (404)', () async {
-        when(() => mockDio.post(
+        when(() => mockDio.get(
               any(),
-              data: any(named: 'data'),
+              queryParameters: any(named: 'queryParameters'),
             )).thenThrow(DioException(
               requestOptions: RequestOptions(path: ''),
               response: Response<dynamic>(
@@ -193,9 +193,9 @@ void main() {
       });
 
       test('throws on non-404 error', () async {
-        when(() => mockDio.post(
+        when(() => mockDio.get(
               any(),
-              data: any(named: 'data'),
+              queryParameters: any(named: 'queryParameters'),
             )).thenThrow(DioException(
               requestOptions: RequestOptions(path: ''),
               response: Response<dynamic>(
@@ -219,7 +219,7 @@ void main() {
               statusCode: 200,
               data: [
                 {
-                  'id': 1,
+                  'id': '1',
                   'name': 'Vitamin D',
                   'dosage': '2000 IU',
                   'frequency': 'Daily',
@@ -241,8 +241,8 @@ void main() {
               data: {
                 'supplements': [
                   {
-                    'id': 2,
-                    'name': 'Creatine',
+                  'id': '2',
+                  'name': 'Creatine',
                     'dosage': '5g',
                     'frequency': 'Daily',
                     'isActive': true,
@@ -261,7 +261,7 @@ void main() {
     group('saveSupplementRemote', () {
       test('sends POST to supplements path', () async {
         const supplement = Supplement(
-          id: 1,
+          id: '1',
           name: 'Zinc',
           dosage: '15mg',
           frequency: 'Daily',
@@ -280,7 +280,7 @@ void main() {
         await repository.saveSupplementRemote(supplement);
 
         verify(() => mockDio.post(
-              '/api/health/supplements',
+              'health/supplements',
               data: any(named: 'data'),
             )).called(1);
       });
@@ -307,7 +307,7 @@ void main() {
         await repository.syncFasting(session);
 
         verify(() => mockDio.post(
-              '/api/health/fasting',
+              'health/fasting',
               data: any(named: 'data'),
             )).called(1);
       });
@@ -334,7 +334,7 @@ void main() {
         await repository.syncBodyMeasurement(measurement);
 
         verify(() => mockDio.post(
-              '/api/health/body-composition',
+              'health/body-composition',
               data: any(named: 'data'),
             )).called(1);
       });
@@ -359,7 +359,7 @@ void main() {
         await repository.batchSync(data);
 
         verify(() => mockDio.post(
-              '/api/health/sync-batch',
+              'health/sync-batch',
               data: any(named: 'data'),
             )).called(1);
       });

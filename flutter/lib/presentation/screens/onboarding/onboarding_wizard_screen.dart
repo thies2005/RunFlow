@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
@@ -10,6 +9,15 @@ import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart
 import 'package:runflow_flutter/presentation/widgets/sync_platform_selector.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+
+import 'steps/experience_level_step.dart';
+import 'steps/race_goal_step.dart';
+import 'steps/current_fitness_step.dart';
+import 'steps/goal_time_step.dart';
+import 'steps/training_volume_step.dart';
+import 'steps/training_schedule_step.dart';
+import 'steps/heart_rate_step.dart';
+import 'steps/review_step.dart';
 
 class OnboardingWizardScreen extends ConsumerStatefulWidget {
   const OnboardingWizardScreen({super.key});
@@ -35,8 +43,17 @@ class _OnboardingWizardScreenState
   Widget build(BuildContext context) {
     final onboarding = ref.watch(onboardingProvider);
     final step = onboarding.currentStep;
-    final totalSteps = OnboardingStep.values.length;
-    final progress = (step.index + 1) / totalSteps;
+
+    final double progress;
+    if (step == OnboardingStep.planSetup) {
+      final subIndex = onboarding.currentPlanSubStep.index;
+      final totalSubSteps = PlanSubStep.values.length;
+      final baseProgress = OnboardingStep.values.length - 1;
+      progress = (baseProgress + (subIndex + 1) / totalSubSteps) /
+          OnboardingStep.values.length;
+    } else {
+      progress = (step.index + 1) / OnboardingStep.values.length;
+    }
 
     return Scaffold(
       backgroundColor: AppColors.oledBlack,
@@ -47,11 +64,9 @@ class _OnboardingWizardScreenState
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
               child: Row(
                 children: [
-                  if (step.index > 0)
+                  if (step.index > 0 || onboarding.currentPlanSubStep.index > 0)
                     TextButton(
-                      onPressed: () => ref
-                          .read(onboardingProvider.notifier)
-                          .previousStep(),
+                      onPressed: _handleBack,
                       child: const Text('Back'),
                     )
                   else
@@ -60,10 +75,16 @@ class _OnboardingWizardScreenState
                       child: const Text('Skip'),
                     ),
                   const Spacer(),
-                  Text(
-                    '${step.index + 1} / $totalSteps',
-                    style: const TextStyle(color: AppColors.onSurfaceVariant),
-                  ),
+                  if (step == OnboardingStep.planSetup)
+                    Text(
+                      '${onboarding.currentPlanSubStep.index + 1} / ${PlanSubStep.values.length}',
+                      style: const TextStyle(color: AppColors.onSurfaceVariant),
+                    )
+                  else
+                    Text(
+                      '${step.index + 1} / ${OnboardingStep.values.length}',
+                      style: const TextStyle(color: AppColors.onSurfaceVariant),
+                    ),
                 ],
               ),
             ),
@@ -93,6 +114,16 @@ class _OnboardingWizardScreenState
     );
   }
 
+  void _handleBack() {
+    final onboarding = ref.read(onboardingProvider);
+    if (onboarding.currentStep == OnboardingStep.planSetup &&
+        onboarding.currentPlanSubStep.index > 0) {
+      ref.read(onboardingProvider.notifier).previousPlanSubStep();
+    } else if (onboarding.currentStep.index > 0) {
+      ref.read(onboardingProvider.notifier).previousStep();
+    }
+  }
+
   Widget _buildStep(OnboardingStep step) {
     switch (step) {
       case OnboardingStep.platformSelect:
@@ -108,8 +139,8 @@ class _OnboardingWizardScreenState
           key: ValueKey('analyze'),
         );
       case OnboardingStep.planSetup:
-        return const _PlanSetupStep(
-          key: ValueKey('plan'),
+        return _PlanSetupStepRouter(
+          key: ValueKey('plan-${ref.watch(onboardingProvider).currentPlanSubStep.index}'),
         );
     }
   }
@@ -572,249 +603,125 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-class _PlanSetupStep extends ConsumerStatefulWidget {
-  const _PlanSetupStep({super.key});
+class _PlanSetupStepRouter extends ConsumerWidget {
+  const _PlanSetupStepRouter({super.key});
 
   @override
-  ConsumerState<_PlanSetupStep> createState() => _PlanSetupStepState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final onboarding = ref.watch(onboardingProvider);
+    final subStep = onboarding.currentPlanSubStep;
+
+    final child = _buildSubStep(subStep);
+
+    return Column(
+      children: [
+        Expanded(child: child),
+        _PlanStepNavButtons(subStep: subStep),
+      ],
+    );
+  }
+
+  Widget _buildSubStep(PlanSubStep subStep) {
+    switch (subStep) {
+      case PlanSubStep.experienceLevel:
+        return const ExperienceLevelStep();
+      case PlanSubStep.raceGoal:
+        return const RaceGoalStep();
+      case PlanSubStep.currentFitness:
+        return const CurrentFitnessStep();
+      case PlanSubStep.goalTime:
+        return const GoalTimeStep();
+      case PlanSubStep.trainingVolume:
+        return const TrainingVolumeStep();
+      case PlanSubStep.trainingSchedule:
+        return const TrainingScheduleStep();
+      case PlanSubStep.heartRateProfile:
+        return const HeartRateProfileStep();
+      case PlanSubStep.review:
+        return const ReviewStep();
+    }
+  }
 }
 
-class _PlanSetupStepState extends ConsumerState<_PlanSetupStep> {
-  RaceType _selectedRaceType = RaceType.marathon;
-  DateTime _raceDate = DateTime.now().add(const Duration(days: 84));
-  int _runsPerWeek = 4;
-  double _weeklyMileage = 40.0;
-  int _planWeeks = 12;
-  bool _isSubmitting = false;
+class _PlanStepNavButtons extends ConsumerWidget {
+  const _PlanStepNavButtons({required this.subStep});
+
+  final PlanSubStep subStep;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final onboarding = ref.watch(onboardingProvider);
+    final notifier = ref.read(onboardingProvider.notifier);
+    final isLast = subStep == PlanSubStep.review;
+    final isFirst = subStep == PlanSubStep.experienceLevel;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 16),
-          const Icon(
-            Icons.calendar_month,
-            color: AppColors.primary,
-            size: 48,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Build Your Plan',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Set up your race goal and training preferences.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Race Type',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+          if (!isLast)
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton(
+                onPressed: onboarding.isPlanSubmitting
+                    ? null
+                    : () => notifier.nextPlanSubStep(),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _nextLabel(subStep),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: RaceType.values.map((type) {
-                      final selected = type == _selectedRaceType;
-                      return ChoiceChip(
-                        label: Text(raceTypeLabel(type)),
-                        selected: selected,
-                        onSelected: (_) =>
-                            setState(() => _selectedRaceType = type),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Race Date',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      TextButton.icon(
-                        onPressed: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _raceDate,
-                            firstDate: DateTime.now(),
-                            lastDate:
-                                DateTime.now().add(const Duration(days: 730)),
-                          );
-                          if (picked != null) {
-                            setState(() => _raceDate = picked);
-                          }
-                        },
-                        icon: const Icon(Icons.calendar_today, size: 16),
-                        label: Text(_formatDate(_raceDate)),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  Row(
-                    children: [
-                      const Icon(Icons.directions_run,
-                          color: AppColors.primary, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Runs per week',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                      Text(
-                        '$_runsPerWeek',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: _runsPerWeek.toDouble(),
-                    min: 2,
-                    max: 7,
-                    divisions: 5,
-                    label: '$_runsPerWeek',
-                    onChanged: (v) =>
-                        setState(() => _runsPerWeek = v.round()),
-                  ),
-                  Row(
-                    children: [
-                      const Icon(Icons.straighten,
-                          color: AppColors.primary, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Weekly mileage goal',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                      Text(
-                        '${_weeklyMileage.toStringAsFixed(0)} km',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: _weeklyMileage,
-                    min: 10,
-                    max: 120,
-                    divisions: 22,
-                    label: '${_weeklyMileage.toStringAsFixed(0)} km',
-                    onChanged: (v) => setState(() => _weeklyMileage = v),
-                  ),
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_month,
-                          color: AppColors.primary, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Plan duration',
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ),
-                      Text(
-                        '$_planWeeks weeks',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Slider(
-                    value: _planWeeks.toDouble(),
-                    min: 4,
-                    max: 24,
-                    divisions: 20,
-                    label: '$_planWeeks weeks',
-                    onChanged: (v) =>
-                        setState(() => _planWeeks = v.round()),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: FilledButton(
-              onPressed: _isSubmitting ? null : _submitPlan,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward, size: 18),
+                  ],
                 ),
               ),
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.onPrimary,
-                      ),
-                    )
-                  : const Text(
-                      'Finish Setup',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
             ),
-          ),
-          const SizedBox(height: 32),
+          if (!isFirst) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: TextButton(
+                onPressed: () => notifier.previousPlanSubStep(),
+                child: const Text('Back'),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
-  Future<void> _submitPlan() async {
-    setState(() => _isSubmitting = true);
-    try {
-      await OnboardingWizardScreen.markCompleted();
-      if (mounted) {
-        context.go('/dashboard');
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+  String _nextLabel(PlanSubStep step) {
+    switch (step) {
+      case PlanSubStep.experienceLevel:
+        return 'Next';
+      case PlanSubStep.raceGoal:
+        return 'Next';
+      case PlanSubStep.currentFitness:
+        return 'Next';
+      case PlanSubStep.goalTime:
+        return 'Next';
+      case PlanSubStep.trainingVolume:
+        return 'Next';
+      case PlanSubStep.trainingSchedule:
+        return 'Next';
+      case PlanSubStep.heartRateProfile:
+        return 'Review Plan';
+      case PlanSubStep.review:
+        return 'Generate';
     }
   }
 }

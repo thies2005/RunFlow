@@ -154,7 +154,7 @@ class SupplementsScreen extends ConsumerWidget {
                 child: FilledButton(
                   onPressed: () {
                     final supplement = Supplement(
-                      id: 0,
+                      id: '',
                       name: nameCtl.text,
                       dosage: dosageCtl.text,
                       frequency: freqCtl.text.isEmpty ? selectedTime : freqCtl.text,

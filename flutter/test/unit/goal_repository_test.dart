@@ -323,7 +323,7 @@ void main() {
           activityId: null,
         );
 
-        when(() => mockDio.put(
+        when(() => mockDio.patch(
               any(),
               data: any(named: 'data'),
             )).thenAnswer((_) async => Response<dynamic>(
@@ -340,7 +340,7 @@ void main() {
       });
 
       test('failure - throws ServerException', () async {
-        when(() => mockDio.put(
+        when(() => mockDio.patch(
               any(),
               data: any(named: 'data'),
             )).thenThrow(DioException(

@@ -80,15 +80,31 @@ class SupplementList extends _$SupplementList {
     }
   }
 
-  Future<void> toggle(int id) async {
-    final repo = ref.read(healthRepositoryProvider);
-    await repo.toggleSupplement(id);
+  Future<void> toggle(String id) async {
+    try {
+      final apiRepo = ref.read(healthApiRepositoryProvider);
+      final supplements = state.value ?? [];
+      final supplement = supplements.cast<Supplement?>().firstWhere(
+        (s) => s?.id == id,
+        orElse: () => null,
+      );
+      if (supplement != null) {
+        await apiRepo.saveSupplementRemote(
+          supplement.copyWith(isActive: !supplement.isActive),
+        );
+      }
+    } catch (_) {}
     ref.invalidateSelf();
   }
 
   Future<void> add(Supplement supplement) async {
-    final repo = ref.read(healthRepositoryProvider);
-    await repo.saveSupplement(supplement);
+    try {
+      final apiRepo = ref.read(healthApiRepositoryProvider);
+      await apiRepo.saveSupplementRemote(supplement);
+    } catch (_) {
+      final repo = ref.read(healthRepositoryProvider);
+      await repo.saveSupplement(supplement);
+    }
     ref.invalidateSelf();
   }
 }

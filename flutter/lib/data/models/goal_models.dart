@@ -32,10 +32,23 @@ sealed class CreateGoalRequest with _$CreateGoalRequest {
     required String name,
     required RaceType raceType,
     required DateTime raceDate,
+    DateTime? planStartDate,
     int? targetTime,
     double? weeklyMileageGoal,
     @Default(12) int planWeeks,
     @Default(4) int runsPerWeek,
+    @Default(0) int ridesPerWeek,
+    @Default(0) int swimsPerWeek,
+    @Default(0) int strengthPerWeek,
+    @Default(2) int taperWeeks,
+    @Default(4) int peakWeeks,
+    @Default(4) int buildWeeks,
+    double? maxLongRunKm,
+    @Default(0) int longRunDay,
+    @Default(3) int workoutDay,
+    int? calibrationTime,
+    String? calibrationDistance,
+    double? calibrationFactor,
   }) = _CreateGoalRequest;
   const CreateGoalRequest._();
 

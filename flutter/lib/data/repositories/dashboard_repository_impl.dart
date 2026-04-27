@@ -9,18 +9,22 @@ class DashboardRepositoryImpl implements DashboardRepository {
   DashboardRepositoryImpl({required this.dio});
 
   final Dio dio;
+  DashboardResponse? _cachedDashboard;
 
   @override
   Future<DashboardResponse> fetchDashboard() async {
     try {
       final response = await dio.get(ApiConstants.dashboardPath);
-      return DashboardResponse.fromJson(
+      final result = DashboardResponse.fromJson(
         unwrapPayload(
           response.data as Map<String, dynamic>,
           const ['dashboard'],
         ),
       );
+      _cachedDashboard = result;
+      return result;
     } on DioException catch (e) {
+      if (_cachedDashboard != null) return _cachedDashboard!;
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(

@@ -9,7 +9,11 @@ import 'package:sqlite3/sqlite3.dart';
 class AppDatabase {
   AppDatabase._();
 
-  AppDatabase.forTesting();
+  AppDatabase.forTesting() {
+    _db = sqlite3.openInMemory();
+    _db!.execute('PRAGMA foreign_keys = ON');
+    _runMigrations(_db!);
+  }
 
   static AppDatabase? _instance;
   static AppDatabase get instance => _instance ??= AppDatabase._();
@@ -244,7 +248,7 @@ class AppDatabase {
       final db = await database;
       db.execute(
         'UPDATE supplements SET name = ?, dosage = ?, frequency = ?, is_active = ? WHERE id = ?',
-        [supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0, supplement.id],
+        [supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0, int.tryParse(supplement.id) ?? supplement.id],
       );
     } catch (e) {
       throw CacheException(message: 'Failed to update supplement: $e');
@@ -377,7 +381,7 @@ class AppDatabase {
 
   Supplement _rowToSupplement(Row row) {
     return Supplement(
-      id: row['id'] as int,
+      id: (row['id'] as int).toString(),
       name: row['name'] as String,
       dosage: row['dosage'] as String,
       frequency: row['frequency'] as String,

@@ -94,26 +94,20 @@ void main() {
             )).thenAnswer((_) async => Response<dynamic>(
                   requestOptions: RequestOptions(path: ''),
                   statusCode: 200,
-                  data: [
-                    {
-                      'date': '2024-06-15T00:00:00Z',
-                      'metrics': {
-                        'ctl': 45.0,
-                        'atl': 35.0,
-                        'tsb': 10.0,
-                        'ctlRunning': 40.0,
-                      },
-                    },
-                    {
-                      'date': '2024-06-14T00:00:00Z',
-                      'metrics': {
-                        'ctl': 44.0,
-                        'atl': 34.0,
-                        'tsb': 10.0,
-                        'ctlRunning': 39.0,
-                      },
-                    },
-                  ],
+                  data: {
+                    'ctl': [
+                      {'date': '2024-06-15', 'value': 45.0},
+                      {'date': '2024-06-14', 'value': 44.0},
+                    ],
+                    'atl': [
+                      {'date': '2024-06-15', 'value': 35.0},
+                      {'date': '2024-06-14', 'value': 34.0},
+                    ],
+                    'tsb': [
+                      {'date': '2024-06-15', 'value': 10.0},
+                      {'date': '2024-06-14', 'value': 10.0},
+                    ],
+                  },
                 ));
 
         final result = await repository.getHistory(
@@ -123,7 +117,7 @@ void main() {
 
         expect(result.length, 2);
         expect(result.first.metrics.ctl, 45.0);
-        expect(result.last.metrics.ctlRunning, 39.0);
+        expect(result.last.metrics.atl, 34.0);
       });
 
       test('success - sends startDate and endDate query params', () async {
@@ -175,16 +169,14 @@ void main() {
                   requestOptions: RequestOptions(path: ''),
                   statusCode: 200,
                   data: {
-                    'fitnessHistory': [
-                      {
-                        'date': '2024-06-15T00:00:00Z',
-                        'metrics': {
-                          'ctl': 45.0,
-                          'atl': 35.0,
-                          'tsb': 10.0,
-                          'ctlRunning': 40.0,
-                        },
-                      },
+                    'ctl': [
+                      {'date': '2024-06-15', 'value': 45.0},
+                    ],
+                    'atl': [
+                      {'date': '2024-06-15', 'value': 35.0},
+                    ],
+                    'tsb': [
+                      {'date': '2024-06-15', 'value': 10.0},
                     ],
                   },
                 ));

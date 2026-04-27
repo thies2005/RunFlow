@@ -110,10 +110,11 @@ void main() {
 
       expect(find.text('Workout Reminders'), findsOneWidget);
       expect(find.text('Supplement Reminders'), findsOneWidget);
+      expect(find.text('Sync Notifications'), findsOneWidget);
       expect(find.text('Chat Notifications'), findsOneWidget);
 
       final switches = tester.widgetList<Switch>(find.byType(Switch));
-      expect(switches.length, 3);
+      expect(switches.length, 4);
       for (final s in switches) {
         expect(s.value, true);
       }

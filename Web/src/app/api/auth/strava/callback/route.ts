@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logging/logger';
 
+function getAppBaseUrl(): string {
+    return process.env.NEXT_PUBLIC_APP_URL
+        || process.env.NEXTAUTH_URL
+        || 'https://runflow.schuelken.uk';
+}
+
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const state = searchParams.get('state');
     const error = searchParams.get('error');
     const scope = searchParams.get('scope');
+    const baseUrl = getAppBaseUrl();
 
     if (error) {
         logger.error('Strava Callback Error', { error, state: state || 'unknown' });
@@ -18,11 +25,11 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(`runflow2://auth/callback?error=${encodeURIComponent(error)}`);
         }
 
-        return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}`, request.url));
+        return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}`, baseUrl));
     }
 
     if (!code) {
-        logger.error('Strava Callback Missing Code', { state: state || 'unknown' });
+        logger.error('Strava Callback Missing Code', { state: state || 'unknown', url: request.url });
 
         if (state?.startsWith('android_')) {
             return NextResponse.redirect('runflow://auth/callback?error=missing_code');
@@ -31,7 +38,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect('runflow2://auth/callback?error=missing_code');
         }
 
-        return NextResponse.redirect(new URL('/login?error=missing_code', request.url));
+        return NextResponse.redirect(new URL('/login?error=missing_code', baseUrl));
     }
 
     const isFlutter = state?.startsWith('flutter_');
@@ -63,7 +70,7 @@ export async function GET(request: NextRequest) {
 
     logger.info('Strava Callback Web Flow', { state: state || 'unknown' });
 
-    const nextAuthCallbackUrl = new URL('/api/auth/callback/strava', request.url);
+    const nextAuthCallbackUrl = new URL('/api/auth/callback/strava', baseUrl);
     nextAuthCallbackUrl.searchParams.set('code', code);
     if (state) {
         nextAuthCallbackUrl.searchParams.set('state', state);

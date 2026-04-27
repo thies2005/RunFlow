@@ -26,29 +26,44 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            _buildSliverAppBar(theme),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  const SizedBox(height: 8),
-                  _SyncBanner(),
-                  const SizedBox(height: 20),
-                  // Primary 2-col grid
-                  _buildDashboardGrid(
-                    context,
-                    nutritionAsync: nutritionAsync,
-                    supplementsAsync: supplementsAsync,
-                    bodyAsync: bodyAsync,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildQuickActions(context),
-                ]),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            final today = DateTime.now();
+            ref.invalidate(nutritionProvider(today));
+            ref.invalidate(supplementListProvider);
+            ref.invalidate(bodyMeasurementsProvider);
+            ref.invalidate(fastingProvider);
+            await Future.wait([
+              ref.read(nutritionProvider(today).future),
+              ref.read(supplementListProvider.future),
+              ref.read(bodyMeasurementsProvider.future),
+              ref.read(fastingProvider.future),
+            ]);
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              _buildSliverAppBar(theme),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: 8),
+                    _SyncBanner(),
+                    const SizedBox(height: 20),
+                    _buildDashboardGrid(
+                      context,
+                      nutritionAsync: nutritionAsync,
+                      supplementsAsync: supplementsAsync,
+                      bodyAsync: bodyAsync,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildQuickActions(context),
+                  ]),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -241,7 +256,14 @@ class _SyncBanner extends ConsumerWidget {
             ),
           ),
           GestureDetector(
-            onTap: () => syncService.syncHistoricalHealth(),
+            onTap: () async {
+              await syncService.syncHistoricalHealth();
+              final today = DateTime.now();
+              ref.invalidate(nutritionProvider(today));
+              ref.invalidate(supplementListProvider);
+              ref.invalidate(bodyMeasurementsProvider);
+              ref.invalidate(fastingProvider);
+            },
             child: Text(
               'Sync Now',
               style: theme.textTheme.labelSmall?.copyWith(

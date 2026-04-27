@@ -44,7 +44,7 @@ RaceCountdownData? raceCountdown(Ref ref) {
           final fitnessGain = weeksToRace * 0.3;
           projectedVdot = currentVdot + fitnessGain;
           projectedTimeSeconds =
-              racePrediction(projectedVdot, distance).round();
+              (racePrediction(projectedVdot, distance) * 60).round();
         }
       }
 

@@ -328,7 +328,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
                   Expanded(
                     child: _StatItem(
                       label: 'Target Distance',
-                      value: '${workout.targetDistance.toStringAsFixed(1)} km',
+                      value: '${(workout.targetDistance / 1000).toStringAsFixed(1)} km',
                       icon: Icons.straighten,
                       color: AppColors.primary,
                     ),
@@ -422,7 +422,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${workout.workoutType.name.toUpperCase()} · ${workout.targetDistance.toStringAsFixed(1)} km'),
+            Text('${workout.workoutType.name.toUpperCase()} · ${(workout.targetDistance / 1000).toStringAsFixed(1)} km'),
             if (workout.targetPace > 0) Text('Target Pace: ${formatPace(workout.targetPace)}'),
             const SizedBox(height: 12),
             const Text('This will start recording your workout with GPS tracking.'),
@@ -522,7 +522,7 @@ class _WorkoutSwitcherSheet extends StatelessWidget {
               ),
             ),
             subtitle: Text(
-              '${w.workoutType.name.toUpperCase()} · ${w.targetDistance.toStringAsFixed(1)} km',
+              '${w.workoutType.name.toUpperCase()} · ${(w.targetDistance / 1000).toStringAsFixed(1)} km',
               style: theme.textTheme.bodySmall,
             ),
             trailing: w.id == currentWorkoutId

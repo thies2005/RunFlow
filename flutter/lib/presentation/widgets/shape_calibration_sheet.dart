@@ -527,7 +527,7 @@ class _ShapeFactorTab extends StatelessWidget {
           : _raceTypeDistance(state.raceType);
 
       if (raceDist > 0) {
-        optimalSeconds = racePrediction(effectiveVO2max, raceDist).round();
+        optimalSeconds = (racePrediction(effectiveVO2max, raceDist) * 60).round();
         final shapeImpact = raceDist >= 42000 ? 0.30 : 0.15;
         final baseShapePenalty =
             (1 - min(shapePercent, 100) / 100) * shapeImpact;
@@ -856,7 +856,7 @@ class _ApplyButton extends ConsumerWidget {
         if (totalSeconds <= 0 || effectiveVO2max <= 0) return false;
         final raceDist = _raceTypeDistance(state.raceType);
         final optimalSeconds =
-            racePrediction(effectiveVO2max, raceDist).round();
+            (racePrediction(effectiveVO2max, raceDist) * 60).round();
         final ratio = totalSeconds / optimalSeconds;
         final shapeImpact = raceDist >= 42000 ? 0.30 : 0.15;
         final adjusted = (1 - shapePercent / 100) * shapeImpact;
@@ -882,7 +882,7 @@ class _ApplyButton extends ConsumerWidget {
           final totalSeconds = notifier.totalSeconds;
           final raceDist = _raceTypeDistance(state.raceType);
           final optimalSeconds =
-              racePrediction(effectiveVO2max, raceDist).round();
+              (racePrediction(effectiveVO2max, raceDist) * 60).round();
           final ratio = totalSeconds / optimalSeconds;
           final shapeImpact = raceDist >= 42000 ? 0.30 : 0.15;
           final adjusted = (1 - shapePercent / 100) * shapeImpact;

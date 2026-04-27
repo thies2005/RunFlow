@@ -52,16 +52,16 @@ Future<Map<String, Duration>> racePredictions(Ref ref) async {
 
   return {
     '5K': Duration(
-      seconds: racePrediction(vdot, 5000).round(),
+      seconds: (racePrediction(vdot, 5000) * 60).round(),
     ),
     '10K': Duration(
-      seconds: racePrediction(vdot, 10000).round(),
+      seconds: (racePrediction(vdot, 10000) * 60).round(),
     ),
     'Half Marathon': Duration(
-      seconds: racePrediction(vdot, 21097.5).round(),
+      seconds: (racePrediction(vdot, 21097.5) * 60).round(),
     ),
     'Marathon': Duration(
-      seconds: racePrediction(vdot, 42195).round(),
+      seconds: (racePrediction(vdot, 42195) * 60).round(),
     ),
   };
 }

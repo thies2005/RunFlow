@@ -25,11 +25,12 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.workoutId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(recordingServiceProvider).requestPermissions();
+      if (widget.workoutId != null) {
         _loadWorkoutDetails();
-      });
-    }
+      }
+    });
   }
 
   void _loadWorkoutDetails() {

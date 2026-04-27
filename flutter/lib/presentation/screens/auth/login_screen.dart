@@ -51,7 +51,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       final result = await FlutterWebAuth2.authenticate(
         url: authUrl.toString(),
-        callbackUrlScheme: AppConstants.stravaCallbackScheme,
+        callbackUrlScheme: 'https',
+        options: const FlutterWebAuth2Options(
+          httpsHost: 'runflow.schuelken.uk',
+          httpsPath: '/api/auth/strava/callback',
+        ),
       );
 
       final code = Uri.parse(result).queryParameters['code'];

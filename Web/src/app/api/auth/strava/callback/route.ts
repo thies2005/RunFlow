@@ -7,6 +7,15 @@ function getAppBaseUrl(): string {
         || 'https://runflow.schuelken.uk';
 }
 
+function mobileRedirect(scheme: string, params: string): NextResponse {
+    const url = `${scheme}://auth/callback?${params}`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Returning to RunFlow...</title></head><body><script>window.location.replace(${JSON.stringify(url)});</script><p>Returning to RunFlow app...</p></body></html>`;
+    return new NextResponse(html, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+    });
+}
+
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
@@ -19,10 +28,10 @@ export async function GET(request: NextRequest) {
         logger.error('Strava Callback Error', { error, state: state || 'unknown' });
 
         if (state?.startsWith('android_')) {
-            return NextResponse.redirect(`runflow://auth/callback?error=${encodeURIComponent(error)}`);
+            return mobileRedirect('runflow', `error=${encodeURIComponent(error)}`);
         }
         if (state?.startsWith('flutter_')) {
-            return NextResponse.redirect(`runflow2://auth/callback?error=${encodeURIComponent(error)}`);
+            return mobileRedirect('runflow2', `error=${encodeURIComponent(error)}`);
         }
 
         return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}`, baseUrl));
@@ -32,10 +41,10 @@ export async function GET(request: NextRequest) {
         logger.error('Strava Callback Missing Code', { state: state || 'unknown', url: request.url });
 
         if (state?.startsWith('android_')) {
-            return NextResponse.redirect('runflow://auth/callback?error=missing_code');
+            return mobileRedirect('runflow', 'error=missing_code');
         }
         if (state?.startsWith('flutter_')) {
-            return NextResponse.redirect('runflow2://auth/callback?error=missing_code');
+            return mobileRedirect('runflow2', 'error=missing_code');
         }
 
         return NextResponse.redirect(new URL('/login?error=missing_code', baseUrl));
@@ -54,8 +63,7 @@ export async function GET(request: NextRequest) {
 
         if (isNaN(timestamp) || (now - timestamp) > MAX_AGE_MS) {
             logger.warn('Strava Callback: stale or invalid state timestamp', { state, age: now - timestamp });
-            const errorUrl = `${mobileScheme}://auth/callback?error=invalid_state`;
-            return NextResponse.redirect(errorUrl);
+            return mobileRedirect(mobileScheme, 'error=invalid_state');
         }
 
         logger.info('Strava Callback Mobile Flow (pass-through)', { state, scheme: mobileScheme });
@@ -65,7 +73,8 @@ export async function GET(request: NextRequest) {
         if (state) deepLink.searchParams.set('state', state);
         if (scope) deepLink.searchParams.set('scope', scope);
 
-        return NextResponse.redirect(deepLink.toString());
+        const qs = deepLink.searchParams.toString();
+        return mobileRedirect(mobileScheme, qs);
     }
 
     logger.info('Strava Callback Web Flow', { state: state || 'unknown' });

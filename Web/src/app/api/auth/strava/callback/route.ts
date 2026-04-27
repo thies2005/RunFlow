@@ -9,11 +9,7 @@ function getAppBaseUrl(): string {
 
 function mobileRedirect(scheme: string, params: string): NextResponse {
     const url = `${scheme}://auth/callback?${params}`;
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Returning to RunFlow...</title></head><body><script>window.location.replace(${JSON.stringify(url)});</script><p>Returning to RunFlow app...</p></body></html>`;
-    return new NextResponse(html, {
-        status: 200,
-        headers: { 'Content-Type': 'text/html' },
-    });
+    return NextResponse.redirect(url, { status: 302 });
 }
 
 export async function GET(request: NextRequest) {

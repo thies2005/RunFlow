@@ -205,11 +205,7 @@ class _SyncPlatformSelectorState extends ConsumerState<SyncPlatformSelector> {
 
       final result = await FlutterWebAuth2.authenticate(
         url: uri.toString(),
-        callbackUrlScheme: 'https',
-        options: const FlutterWebAuth2Options(
-          httpsHost: 'runflow.schuelken.uk',
-          httpsPath: '/api/auth/strava/callback',
-        ),
+        callbackUrlScheme: 'runflow2',
       );
 
       final code = Uri.parse(result).queryParameters['code'];

@@ -87,11 +87,7 @@ class StravaAuthBanner extends ConsumerWidget {
 
       final result = await FlutterWebAuth2.authenticate(
         url: authUrl.toString(),
-        callbackUrlScheme: 'https',
-        options: const FlutterWebAuth2Options(
-          httpsHost: 'runflow.schuelken.uk',
-          httpsPath: '/api/auth/strava/callback',
-        ),
+        callbackUrlScheme: 'runflow2',
       );
 
       final code = Uri.parse(result).queryParameters['code'];

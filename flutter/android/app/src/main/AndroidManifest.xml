@@ -44,14 +44,19 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
             <intent-filter>
+                <action android:name="androidx.health.action.VIEW_HEALTH_CONNECT_PERMISSIONS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
+            android:exported="true"
+            android:taskAffinity="">
+            <intent-filter android:label="flutter_web_auth_2">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="runflow2" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="androidx.health.action.VIEW_HEALTH_CONNECT_PERMISSIONS" />
-                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

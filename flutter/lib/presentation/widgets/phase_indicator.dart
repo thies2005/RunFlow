@@ -104,7 +104,7 @@ class PhaseIndicator extends StatelessWidget {
                     borderRadius: BorderRadius.circular(3),
                     child: LinearProgressIndicator(
                       value: progress.clamp(0.0, 1.0),
-                      backgroundColor: AppColors.surfaceDarkVariant,
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         _phaseColor(currentPhase),
                       ),

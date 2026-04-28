@@ -8,6 +8,7 @@ class VitalsData {
     this.spo2,
     this.lastSynced,
     this.hrTrend = const {},
+    this.hrvTrend = const {},
   });
 
   final double? restingHeartRate;
@@ -15,6 +16,7 @@ class VitalsData {
   final double? spo2;
   final DateTime? lastSynced;
   final Map<DateTime, double> hrTrend;
+  final Map<DateTime, double> hrvTrend;
 
   bool get hasData =>
       restingHeartRate != null || hrv != null || spo2 != null;

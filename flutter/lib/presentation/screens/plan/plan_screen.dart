@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/models/goal_models.dart';
 import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
@@ -142,7 +143,7 @@ class _PlanContent extends ConsumerWidget {
                             CircularProgressIndicator(
                               value: progress,
                               strokeWidth: 6,
-                              backgroundColor: AppColors.surfaceDarkVariant,
+                              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                             ),
                             Center(
@@ -411,7 +412,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
                     );
                     ref.invalidate(dashboardProvider);
                   } catch (e) {
-                    debugPrint('[_PlanWorkoutCard] Mark complete failed: $e');
+                    logger.error('[_PlanWorkoutCard] Mark complete failed: $e');
                   }
                 },
               ),
@@ -437,7 +438,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
             ref.invalidate(dashboardProvider);
             if (context.mounted) Navigator.pop(ctx);
           } catch (e) {
-            debugPrint('[_PlanWorkoutCard] Edit workout failed: $e');
+            logger.error('[_PlanWorkoutCard] Edit workout failed: $e');
           }
         },
       ),

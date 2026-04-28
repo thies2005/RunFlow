@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/app.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
+import 'package:runflow_flutter/presentation/providers/notification_providers.dart';
 import 'package:runflow_flutter/services/background_sync.dart';
-import 'package:runflow_flutter/services/notification_service.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-GoRouter? globalRouter;
+final container = ProviderContainer();
+final databaseInitFailed = ValueNotifier<bool>(false);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,35 +30,38 @@ Future<void> main() async {
         options.attachStacktrace = true;
       },
       appRunner: () => runApp(
-        const ProviderScope(child: RunFlowApp()),
+        UncontrolledProviderScope(container: container, child: const RunFlowApp()),
       ),
     );
   } else {
-    runApp(const ProviderScope(child: RunFlowApp()));
+    runApp(UncontrolledProviderScope(container: container, child: const RunFlowApp()));
   }
 }
 
 Future<void> _initializeServices() async {
-  await _initDatabase();
-  await _initNotifications();
-  await _initBackgroundSync();
+  await Future.wait([
+    _initDatabase(),
+    _initNotifications(),
+    _initBackgroundSync(),
+  ]);
 }
 
 Future<void> _initDatabase() async {
   try {
     final db = AppDatabase.instance;
     await db.initialize();
-  } catch (e) {
-    debugPrint('[_initDatabase] Database init failed: $e');
+  } catch (e, stackTrace) {
+    databaseInitFailed.value = true;
+    logger.error('Database init failed: $e\n$stackTrace');
   }
 }
 
 Future<void> _initNotifications() async {
   try {
-    final notificationService = NotificationServiceImpl();
+    final notificationService = container.read(notificationServiceProvider);
     await notificationService.initialize();
-  } catch (e) {
-    debugPrint('[_initNotifications] Notification init failed: $e');
+  } catch (e, stackTrace) {
+    logger.warning('Notification init failed: $e\n$stackTrace');
   }
 }
 
@@ -64,32 +69,32 @@ Future<void> _initBackgroundSync() async {
   try {
     await BackgroundSyncService.initialize();
     await BackgroundSyncService.registerPeriodicSync();
-  } catch (e) {
-    debugPrint('[_initBackgroundSync] Background sync init failed: $e');
+  } catch (e, stackTrace) {
+    logger.warning('Background sync init failed: $e\n$stackTrace');
   }
 }
 
-StreamSubscription<Uri>? initDeepLinks() {
+StreamSubscription<Uri>? initDeepLinks(GoRouter router) {
   try {
     final appLinks = AppLinks();
-    return appLinks.uriLinkStream.listen(_handleDeepLink);
-  } catch (e) {
-    debugPrint('[initDeepLinks] Deep link init failed: $e');
+    return appLinks.uriLinkStream.listen((uri) => _handleDeepLink(uri, router));
+  } catch (e, stackTrace) {
+    logger.warning('Deep link init failed: $e\n$stackTrace');
   }
   return null;
 }
 
-void _handleDeepLink(Uri uri) {
+void _handleDeepLink(Uri uri, GoRouter router) {
   if (uri.scheme != 'runflow2') return;
 
   if (uri.host == 'auth' && uri.pathSegments.contains('callback')) {
-    globalRouter?.go('/dashboard');
+    router.go('/dashboard');
     return;
   }
 
   if (uri.host == 'activities' && uri.pathSegments.isNotEmpty) {
     final id = uri.pathSegments.first;
-    globalRouter?.go('/activities/$id');
+    router.go('/activities/$id');
     return;
   }
 }

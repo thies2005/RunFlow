@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'health_models.freezed.dart';
@@ -92,7 +92,7 @@ List<int> _parseDaysOfWeek(dynamic value) {
       final decoded = jsonDecode(value);
       if (decoded is List) return decoded.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0).toList();
     } catch (e) {
-      debugPrint('[_parseDaysOfWeek] JSON decode failed: $e');
+      logger.error('[_parseDaysOfWeek] JSON decode failed: $e');
     }
   }
   return [0, 1, 2, 3, 4, 5, 6];
@@ -201,6 +201,7 @@ sealed class BodyMeasurement with _$BodyMeasurement {
     double? chest,
     double? waist,
     double? hips,
+    double? arms,
     String? notes,
   }) = _BodyMeasurement;
   const BodyMeasurement._();

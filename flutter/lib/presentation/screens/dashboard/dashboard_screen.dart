@@ -506,7 +506,7 @@ class _WorkoutSwitcherSheet extends StatelessWidget {
             leading: CircleAvatar(
               backgroundColor: w.id == currentWorkoutId
                   ? AppColors.primary.withValues(alpha: 0.15)
-                  : AppColors.surfaceDarkVariant,
+                  : Theme.of(context).colorScheme.surfaceContainerHighest,
               child: Icon(
                 _workoutTypeIcon(w.workoutType),
                 color: w.id == currentWorkoutId

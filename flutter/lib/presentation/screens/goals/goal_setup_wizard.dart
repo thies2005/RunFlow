@@ -153,7 +153,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                         height: 4,
                         color: index <= _currentStep
                             ? AppColors.primary
-                            : AppColors.surfaceDarkVariant,
+                            : Theme.of(context).colorScheme.surfaceContainerHighest,
                       ),
                     ),
                   ),

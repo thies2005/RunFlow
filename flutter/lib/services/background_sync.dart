@@ -1,7 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/data/interceptors/auth_interceptor.dart';
+import 'package:runflow_flutter/data/interceptors/error_interceptor.dart';
+import 'package:runflow_flutter/data/interceptors/refresh_interceptor.dart';
+import 'package:runflow_flutter/data/interceptors/retry_interceptor.dart';
+import 'package:runflow_flutter/services/auth_service_impl.dart';
 import 'package:workmanager/workmanager.dart';
 
 Future<bool> performBackgroundSync({
@@ -13,20 +18,15 @@ Future<bool> performBackgroundSync({
     if (accessToken == null || accessToken.isEmpty) return true;
 
     await dio.post(
-      '${ApiConstants.fullApiUrl}${ApiConstants.syncPath}',
+      ApiConstants.syncPath,
       data: {},
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $accessToken',
-        },
-      ),
     );
     return true;
   } on DioException catch (e) {
     final statusCode = e.response?.statusCode;
-    if (statusCode == 401) return true;
+    if (statusCode == 401) return false;
     if (statusCode != null && statusCode >= 500) return false;
-    return true;
+    return false;
   } catch (_) {
     return false;
   }
@@ -37,11 +37,25 @@ void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (task == 'backgroundSync') {
       const storage = FlutterSecureStorage();
+      final authService = AuthServiceImpl(storage: storage);
       final dio = Dio(BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
+        baseUrl: ApiConstants.fullApiUrl,
         connectTimeout: ApiConstants.connectTimeout,
+        sendTimeout: const Duration(seconds: 30),
         receiveTimeout: ApiConstants.receiveTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       ));
+
+      dio.interceptors.addAll([
+        AuthInterceptor(authService: authService),
+        RefreshInterceptor(authService: authService, dio: dio),
+        RetryInterceptor(dio: dio),
+        ErrorInterceptor(),
+      ]);
+
       return performBackgroundSync(storage: storage, dio: dio);
     }
     return true;
@@ -60,7 +74,7 @@ class BackgroundSyncService {
       await Workmanager().initialize(callbackDispatcher);
       _initialized = true;
     } catch (e) {
-      debugPrint('[BackgroundSyncService] Initialize failed: $e');
+      logger.error('[BackgroundSyncService] Initialize failed: $e');
     }
   }
 
@@ -78,7 +92,7 @@ class BackgroundSyncService {
         existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
       );
     } catch (e) {
-      debugPrint('[BackgroundSyncService] Register periodic sync failed: $e');
+      logger.error('[BackgroundSyncService] Register periodic sync failed: $e');
     }
   }
 
@@ -88,7 +102,7 @@ class BackgroundSyncService {
     try {
       await Workmanager().cancelByUniqueName('runflow-background-sync');
     } catch (e) {
-      debugPrint('[BackgroundSyncService] Cancel failed: $e');
+      logger.error('[BackgroundSyncService] Cancel failed: $e');
     }
   }
 }

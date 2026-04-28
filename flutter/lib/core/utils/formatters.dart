@@ -27,6 +27,16 @@ String formatDuration(int seconds) {
   return '${secs}s';
 }
 
+String formatDurationClock(int seconds) {
+  final hours = seconds ~/ 3600;
+  final minutes = (seconds % 3600) ~/ 60;
+  final secs = seconds % 60;
+  if (hours > 0) {
+    return '$hours:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+  return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+}
+
 String formatRelativeDate(DateTime date) {
   final now = DateTime.now();
   final difference = now.difference(date).inDays;

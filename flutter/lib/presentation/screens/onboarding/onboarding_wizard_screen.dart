@@ -100,7 +100,7 @@ class _OnboardingWizardScreenState
                 borderRadius: BorderRadius.circular(2),
                 child: LinearProgressIndicator(
                   value: progress,
-                  backgroundColor: AppColors.surfaceDarkVariant,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                   valueColor: const AlwaysStoppedAnimation<Color>(
                     AppColors.primary,
                   ),

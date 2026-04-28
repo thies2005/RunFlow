@@ -107,7 +107,7 @@ class SupplementsScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surfaceDarkVariant,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -196,7 +196,7 @@ class _TodayProgressCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.success.withValues(alpha: 0.15), AppColors.surfaceDarkVariant],
+          colors: [AppColors.success.withValues(alpha: 0.15), Theme.of(context).colorScheme.surfaceContainerHighest],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -260,7 +260,7 @@ class _SupplementCalendar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDarkVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -334,7 +334,7 @@ class _SupplementTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDarkVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
         border: isTaken
             ? Border.all(color: AppColors.success.withValues(alpha: 0.3))
@@ -349,7 +349,7 @@ class _SupplementTile extends StatelessWidget {
               shape: BoxShape.circle,
               color: isTaken
                   ? AppColors.success.withValues(alpha: 0.15)
-                  : AppColors.surfaceDarkVariant,
+                  : Theme.of(context).colorScheme.surfaceContainerHighest,
             ),
             child: Icon(
               Icons.medication,
@@ -408,7 +408,7 @@ class _SupplementAdherenceSection extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surfaceDarkVariant,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(

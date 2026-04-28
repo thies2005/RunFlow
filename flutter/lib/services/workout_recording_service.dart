@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:runflow_flutter/data/models/recording_models.dart';
 import 'package:universal_ble/universal_ble.dart' as ble;
@@ -367,11 +367,11 @@ class WorkoutRecordingService {
       await _scanSubscription?.cancel();
       _scanSubscription = null;
     } catch (e) {
-      debugPrint('BLE scan error: $e');
+      logger.error('BLE scan error: $e');
       try {
         await ble.UniversalBle.stopScan();
       } catch (e) {
-        debugPrint('[WorkoutRecordingService] BLE stop scan failed: $e');
+        logger.error('[WorkoutRecordingService] BLE stop scan failed: $e');
       }
     }
 
@@ -433,7 +433,7 @@ class WorkoutRecordingService {
       _hrSubscription = null;
       await ble.UniversalBle.disconnect(_connectedSensor!.id);
     } catch (e) {
-      debugPrint('[WorkoutRecordingService] HR monitor disconnect failed: $e');
+      logger.error('[WorkoutRecordingService] HR monitor disconnect failed: $e');
     }
 
     _connectedSensor = null;

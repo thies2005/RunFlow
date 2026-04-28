@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/data/auth/refresh_session.dart';
@@ -80,50 +80,14 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Response<dynamic>> _postEmailLogin({
     required String email,
     required String password,
-  }) async {
-    final attempts = <Future<Response<dynamic>> Function()>[
-      () => dio.post(
-            ApiConstants.emailLoginPath,
-            data: {
-              'email': email,
-              'password': password,
-            },
-          ),
-      () => dio.post(
-            ApiConstants.loginPath,
-            data: {
-              'email': email,
-              'password': password,
-            },
-          ),
-      () => dio.post(
-            ApiConstants.loginPath,
-            data: {
-              'code': email,
-              'password': password,
-            },
-          ),
-    ];
-
-    DioException? lastError;
-
-    for (final attempt in attempts) {
-      try {
-        return await attempt();
-      } on DioException catch (error) {
-        lastError = error;
-        final statusCode = error.response?.statusCode;
-        if (statusCode != 404 && statusCode != 405) {
-          rethrow;
-        }
-      }
-    }
-
-    throw lastError ??
-        DioException(
-          requestOptions: RequestOptions(path: ApiConstants.emailLoginPath),
-          type: DioExceptionType.unknown,
-        );
+  }) {
+    return dio.post(
+      ApiConstants.emailLoginPath,
+      data: {
+        'email': email,
+        'password': password,
+      },
+    );
   }
 
   @override
@@ -151,7 +115,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await dio.post('/auth/logout');
     } catch (e) {
-      debugPrint('[AuthRepositoryImpl] Logout request failed: $e');
+      logger.error('[AuthRepositoryImpl] Logout request failed: $e');
     }
     await authService.clearAll();
   }

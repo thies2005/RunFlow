@@ -289,7 +289,7 @@ class _RaceCountdownCard extends StatelessWidget {
                   CircularProgressIndicator(
                     value: progress.clamp(0.0, 1.0),
                     strokeWidth: 6,
-                    backgroundColor: AppColors.surfaceDarkVariant,
+                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                     valueColor: const AlwaysStoppedAnimation<Color>(
                       AppColors.primary,
                     ),

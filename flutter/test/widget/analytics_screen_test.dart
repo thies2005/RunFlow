@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runflow_flutter/data/datasources/remote/dio_client.dart';
 import 'package:runflow_flutter/data/models/analytics_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
+import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/analytics/analytics_screen.dart';
 
 import '../helpers/test_analytics_data.dart';
@@ -138,6 +141,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            dioClientProvider.overrideWithValue(DioClient(dio: Dio())),
             analyticsStatsProvider.overrideWith((ref) async => testStats),
             analyticsHistoryProvider.overrideWith(
               (ref, arg) async => testHistory,
@@ -169,6 +173,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            dioClientProvider.overrideWithValue(DioClient(dio: Dio())),
             analyticsStatsProvider.overrideWith((ref) async => testStats),
             analyticsHistoryProvider.overrideWith(
               (ref, arg) async => testHistory,

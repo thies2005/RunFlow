@@ -18,7 +18,6 @@ class ApiConstants {
   static const String refreshPath = '/auth/refresh';
   static const String registerPath = '/auth/register';
   static const String forgotPasswordPath = '/auth/forgot-password';
-  static const String legacyRefreshUrl = '$mobileBaseUrl$refreshPath';
   static const String dashboardPath = '/dashboard';
   static const String activitiesPath = '/activities';
   static const String goalsPath = '/goals';
@@ -33,9 +32,9 @@ class ApiConstants {
   static String chatSessionMessagesPath(String id) =>
       '/chat/sessions/$id/messages';
 
-  static String get aiChatSessionsUrl => '$baseUrl/api/ai/chat/sessions';
-  static String get aiChatHistoryUrl => '$baseUrl/api/ai/chat/history';
-  static String get aiChatStreamUrl => '$baseUrl/api/ai/chat';
+  static String get aiChatSessionsUrl => '$fullApiUrl/ai/chat/sessions';
+  static String get aiChatHistoryUrl => '$fullApiUrl/ai/chat/history';
+  static String get aiChatStreamUrl => '$fullApiUrl/ai/chat';
 
   static const String nutritionLogPath = '/health/nutrition/log';
   static const String nutritionSearchPath = '/health/nutrition/search';

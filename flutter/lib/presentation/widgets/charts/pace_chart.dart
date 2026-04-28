@@ -58,8 +58,8 @@ class PaceChart extends StatelessWidget {
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
-                    getDrawingHorizontalLine: (value) => const FlLine(
-                      color: AppColors.surfaceDarkVariant,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       strokeWidth: 1,
                     ),
                   ),

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
@@ -114,7 +114,7 @@ class SupplementList extends _$SupplementList {
       await apiRepo.toggleSupplementLog(supplementId, today, !currentlyTaken);
       ref.invalidate(dailyHealthProvider(today));
     } catch (e) {
-      debugPrint('[SupplementList] Toggle supplement failed: $e');
+      logger.error('[SupplementList] Toggle supplement failed: $e');
     }
   }
 
@@ -169,7 +169,7 @@ class NutritionNotifier extends _$NutritionNotifier {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       await apiRepo.syncNutritionLog(log);
     } catch (e) {
-      debugPrint('[NutritionNotifier] Sync nutrition log failed: $e');
+      logger.error('[NutritionNotifier] Sync nutrition log failed: $e');
     }
     ref.invalidateSelf();
   }
@@ -190,7 +190,7 @@ class BarcodeScan extends _$BarcodeScan {
         return;
       }
     } catch (e) {
-      debugPrint('[BarcodeScan] API barcode scan failed: $e');
+      logger.error('[BarcodeScan] API barcode scan failed: $e');
     }
     try {
       final repo = ref.read(healthRepositoryProvider);

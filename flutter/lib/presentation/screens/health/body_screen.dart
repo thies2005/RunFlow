@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
@@ -72,6 +73,9 @@ class BodyScreen extends ConsumerWidget {
                 // Body fat chart
                 _BodyFatChart(measurements: recent),
                 const SizedBox(height: 16),
+                // Circumference chart
+                _CircumferenceChart(measurements: recent),
+                const SizedBox(height: 16),
                 // Measurements history
                 _HistorySection(sorted: sorted),
               ],
@@ -90,63 +94,71 @@ class BodyScreen extends ConsumerWidget {
     final waistCtl = TextEditingController();
     final chestCtl = TextEditingController();
     final hipsCtl = TextEditingController();
+    final armsCtl = TextEditingController();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surfaceDarkVariant,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.onSurfaceVariant, borderRadius: BorderRadius.circular(2)))),
-            const SizedBox(height: 20),
-            Text('Log Measurement', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            Row(children: [
-              Expanded(child: TextField(controller: weightCtl, decoration: const InputDecoration(labelText: 'Weight (kg)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
-              const SizedBox(width: 8),
-              Expanded(child: TextField(controller: bfCtl, decoration: const InputDecoration(labelText: 'Body Fat (%)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
-            ]),
-            const SizedBox(height: 10),
-            Row(children: [
-              Expanded(child: TextField(controller: waistCtl, decoration: const InputDecoration(labelText: 'Waist (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
-              const SizedBox(width: 8),
-              Expanded(child: TextField(controller: chestCtl, decoration: const InputDecoration(labelText: 'Chest (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
-              const SizedBox(width: 8),
-              Expanded(child: TextField(controller: hipsCtl, decoration: const InputDecoration(labelText: 'Hips (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
-            ]),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () async {
-                  final m = BodyMeasurement(
-                    id: 0,
-                    date: DateTime.now(),
-                    weight: double.tryParse(weightCtl.text) ?? 0.0,
-                    bodyFat: double.tryParse(bfCtl.text) ?? 0.0,
-                    chest: double.tryParse(chestCtl.text),
-                    waist: double.tryParse(waistCtl.text),
-                    hips: double.tryParse(hipsCtl.text),
-                  );
-                  await ref.read(healthRepositoryProvider).saveBodyMeasurement(m);
-                  try {
-                    await ref.read(healthApiRepositoryProvider).syncBodyMeasurement(m);
-                  } catch (e) {
-                    debugPrint('[BodyScreen] Sync body measurement failed: $e');
-                  }
-                  ref.invalidate(bodyMeasurementsProvider);
-                  if (!ctx.mounted) return;
-                  Navigator.pop(ctx);
-                },
-                child: const Text('Save'),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.onSurfaceVariant, borderRadius: BorderRadius.circular(2)))),
+              const SizedBox(height: 20),
+              Text('Log Measurement', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 16),
+              Row(children: [
+                Expanded(child: TextField(controller: weightCtl, decoration: const InputDecoration(labelText: 'Weight (kg)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(controller: bfCtl, decoration: const InputDecoration(labelText: 'Body Fat (%)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+              ]),
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(child: TextField(controller: waistCtl, decoration: const InputDecoration(labelText: 'Waist (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(controller: chestCtl, decoration: const InputDecoration(labelText: 'Chest (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+              ]),
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(child: TextField(controller: hipsCtl, decoration: const InputDecoration(labelText: 'Hips (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(controller: armsCtl, decoration: const InputDecoration(labelText: 'Arms (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+              ]),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () async {
+                    final m = BodyMeasurement(
+                      id: 0,
+                      date: DateTime.now(),
+                      weight: double.tryParse(weightCtl.text) ?? 0.0,
+                      bodyFat: double.tryParse(bfCtl.text) ?? 0.0,
+                      chest: double.tryParse(chestCtl.text),
+                      waist: double.tryParse(waistCtl.text),
+                      hips: double.tryParse(hipsCtl.text),
+                      arms: double.tryParse(armsCtl.text),
+                    );
+                    await ref.read(healthRepositoryProvider).saveBodyMeasurement(m);
+                    try {
+                      await ref.read(healthApiRepositoryProvider).syncBodyMeasurement(m);
+                    } catch (e) {
+                      logger.error('[BodyScreen] Sync body measurement failed: $e');
+                    }
+                    ref.invalidate(bodyMeasurementsProvider);
+                    if (!ctx.mounted) return;
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('Save'),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ).whenComplete(() {
@@ -155,6 +167,7 @@ class BodyScreen extends ConsumerWidget {
       waistCtl.dispose();
       chestCtl.dispose();
       hipsCtl.dispose();
+      armsCtl.dispose();
     });
   }
 }
@@ -169,18 +182,39 @@ class _StatsRow extends StatelessWidget {
     final weightDiff = prev != null ? latest.weight - prev!.weight : 0.0;
     final bfDiff = prev != null ? latest.bodyFat - prev!.bodyFat : 0.0;
 
-    return Row(
+    return Column(
       children: [
-        Expanded(child: _StatCard(label: 'Weight', value: '${latest.weight.toStringAsFixed(1)} kg',
-          diff: prev != null ? '${weightDiff > 0 ? '+' : ''}${weightDiff.toStringAsFixed(1)} kg' : null,
-          diffPositive: weightDiff < 0)),
-        const SizedBox(width: 10),
-        Expanded(child: _StatCard(label: 'Body Fat', value: '${latest.bodyFat.toStringAsFixed(1)}%',
-          diff: prev != null ? '${bfDiff > 0 ? '+' : ''}${bfDiff.toStringAsFixed(1)}%' : null,
-          diffPositive: bfDiff < 0)),
-        if (latest.waist != null) ...[
-          const SizedBox(width: 10),
-          Expanded(child: _StatCard(label: 'Waist', value: '${latest.waist!.toStringAsFixed(1)} cm')),
+        Row(
+          children: [
+            Expanded(child: _StatCard(label: 'Weight', value: '${latest.weight.toStringAsFixed(1)} kg',
+              diff: prev != null ? '${weightDiff > 0 ? '+' : ''}${weightDiff.toStringAsFixed(1)} kg' : null,
+              diffPositive: weightDiff < 0)),
+            const SizedBox(width: 10),
+            Expanded(child: _StatCard(label: 'Body Fat', value: '${latest.bodyFat.toStringAsFixed(1)}%',
+              diff: prev != null ? '${bfDiff > 0 ? '+' : ''}${bfDiff.toStringAsFixed(1)}%' : null,
+              diffPositive: bfDiff < 0)),
+          ],
+        ),
+        if (latest.waist != null || latest.chest != null || latest.hips != null || latest.arms != null) ...[
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              if (latest.waist != null)
+                Expanded(child: _StatCard(label: 'Waist', value: '${latest.waist!.toStringAsFixed(1)} cm')),
+              if (latest.waist != null && latest.chest != null)
+                const SizedBox(width: 10),
+              if (latest.chest != null)
+                Expanded(child: _StatCard(label: 'Chest', value: '${latest.chest!.toStringAsFixed(1)} cm')),
+              if ((latest.waist != null || latest.chest != null) && latest.hips != null)
+                const SizedBox(width: 10),
+              if (latest.hips != null)
+                Expanded(child: _StatCard(label: 'Hips', value: '${latest.hips!.toStringAsFixed(1)} cm')),
+              if ((latest.waist != null || latest.chest != null || latest.hips != null) && latest.arms != null)
+                const SizedBox(width: 10),
+              if (latest.arms != null)
+                Expanded(child: _StatCard(label: 'Arms', value: '${latest.arms!.toStringAsFixed(1)} cm')),
+            ],
+          ),
         ],
       ],
     );
@@ -199,7 +233,7 @@ class _StatCard extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(14)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -231,7 +265,7 @@ class _BmiCard extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(16)),
       child: Row(
         children: [
           Expanded(
@@ -277,7 +311,7 @@ class _WeightChart extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -322,7 +356,7 @@ class _BodyFatChart extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -353,6 +387,105 @@ class _BodyFatChart extends StatelessWidget {
   }
 }
 
+class _CircumferenceChart extends StatelessWidget {
+  const _CircumferenceChart({required this.measurements});
+  final List<BodyMeasurement> measurements;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasCircumference = measurements.any(
+      (m) => m.waist != null || m.chest != null || m.hips != null || m.arms != null,
+    );
+    if (measurements.length < 2 || !hasCircumference) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final waistSpots = <FlSpot>[];
+    final chestSpots = <FlSpot>[];
+    final hipsSpots = <FlSpot>[];
+    final armsSpots = <FlSpot>[];
+
+    for (var i = 0; i < measurements.length; i++) {
+      final m = measurements[i];
+      if (m.waist != null) waistSpots.add(FlSpot(i.toDouble(), m.waist!));
+      if (m.chest != null) chestSpots.add(FlSpot(i.toDouble(), m.chest!));
+      if (m.hips != null) hipsSpots.add(FlSpot(i.toDouble(), m.hips!));
+      if (m.arms != null) armsSpots.add(FlSpot(i.toDouble(), m.arms!));
+    }
+
+    final allValues = [
+      ...waistSpots.map((e) => e.y),
+      ...chestSpots.map((e) => e.y),
+      ...hipsSpots.map((e) => e.y),
+      ...armsSpots.map((e) => e.y),
+    ];
+    if (allValues.isEmpty) return const SizedBox.shrink();
+
+    final minY = allValues.reduce((a, b) => a < b ? a : b) - 2;
+    final maxY = allValues.reduce((a, b) => a > b ? a : b) + 2;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Circumferences', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 12,
+            children: [
+              if (waistSpots.isNotEmpty) _chartLegend(AppColors.primary, 'Waist'),
+              if (chestSpots.isNotEmpty) _chartLegend(AppColors.success, 'Chest'),
+              if (hipsSpots.isNotEmpty) _chartLegend(AppColors.peaked, 'Hips'),
+              if (armsSpots.isNotEmpty) _chartLegend(AppColors.warning, 'Arms'),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 160,
+            child: LineChart(LineChartData(
+              minY: minY, maxY: maxY,
+              gridData: const FlGridData(show: false),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 40, getTitlesWidget: (v, _) => Text('${v.toStringAsFixed(0)}cm', style: theme.textTheme.bodySmall))),
+                bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              borderData: FlBorderData(show: false),
+              lineBarsData: [
+                if (waistSpots.isNotEmpty) _buildLine(waistSpots, AppColors.primary),
+                if (chestSpots.isNotEmpty) _buildLine(chestSpots, AppColors.success),
+                if (hipsSpots.isNotEmpty) _buildLine(hipsSpots, AppColors.peaked),
+                if (armsSpots.isNotEmpty) _buildLine(armsSpots, AppColors.warning),
+              ],
+            )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  LineChartBarData _buildLine(List<FlSpot> spots, Color color) {
+    return LineChartBarData(
+      spots: spots, isCurved: true, color: color, barWidth: 2,
+      dotData: FlDotData(show: spots.length <= 10),
+      belowBarData: BarAreaData(show: true, color: color.withValues(alpha: 0.06)),
+    );
+  }
+
+  Widget _chartLegend(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 12, height: 3, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+}
+
 class _HistorySection extends StatelessWidget {
   const _HistorySection({required this.sorted});
   final List<BodyMeasurement> sorted;
@@ -370,7 +503,7 @@ class _HistorySection extends StatelessWidget {
         ...sorted.reversed.take(10).map((m) => Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
           child: Row(
             children: [
               const Icon(Icons.monitor_weight, color: AppColors.primary, size: 20),
@@ -385,8 +518,24 @@ class _HistorySection extends StatelessWidget {
                   ],
                 ),
               ),
-              if (m.waist != null)
-                Text('W: ${m.waist!.toStringAsFixed(1)}cm', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant)),
+              if (m.waist != null || m.chest != null || m.hips != null || m.arms != null)
+                Expanded(
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 2,
+                    alignment: WrapAlignment.end,
+                    children: [
+                      if (m.waist != null)
+                        Text('W:${m.waist!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
+                      if (m.chest != null)
+                        Text('C:${m.chest!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
+                      if (m.hips != null)
+                        Text('H:${m.hips!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
+                      if (m.arms != null)
+                        Text('A:${m.arms!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
+                    ],
+                  ),
+                ),
             ],
           ),
         )),

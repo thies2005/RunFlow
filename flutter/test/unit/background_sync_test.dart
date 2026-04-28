@@ -101,7 +101,7 @@ void main() {
         dio: mockDio,
       );
 
-      expect(result, true);
+      expect(result, false);
     });
 
     test('returns true on connection error (offline)', () async {
@@ -121,7 +121,7 @@ void main() {
         dio: mockDio,
       );
 
-      expect(result, true);
+      expect(result, false);
     });
 
     test('returns true on unknown error (offline fallback)', () async {
@@ -141,7 +141,7 @@ void main() {
         dio: mockDio,
       );
 
-      expect(result, true);
+      expect(result, false);
     });
 
     test('returns false on server error', () async {

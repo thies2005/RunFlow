@@ -30,7 +30,7 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
     final theme = Theme.of(context);
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: AppColors.surfaceDarkVariant,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

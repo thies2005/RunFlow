@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/app.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/data/datasources/remote/dio_client.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -43,6 +45,7 @@ void main() {
       ProviderScope(
         overrides: [
             authStateProvider.overrideWith(() => _FakeAuthState(testUser)),
+            dioClientProvider.overrideWithValue(DioClient(dio: Dio())),
           ],
         child: const RunFlowApp(),
       ),
@@ -69,6 +72,7 @@ void main() {
       ProviderScope(
         overrides: [
             authStateProvider.overrideWith(() => _FakeAuthState(testUser)),
+            dioClientProvider.overrideWithValue(DioClient(dio: Dio())),
           ],
         child: const RunFlowApp(),
       ),
@@ -90,7 +94,12 @@ void main() {
     });
 
     await tester.pumpWidget(
-      const ProviderScope(child: RunFlowApp()),
+      ProviderScope(
+        overrides: [
+          dioClientProvider.overrideWithValue(DioClient(dio: Dio())),
+        ],
+        child: const RunFlowApp(),
+      ),
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
@@ -107,7 +116,12 @@ void main() {
     });
 
     await tester.pumpWidget(
-      const ProviderScope(child: RunFlowApp()),
+      ProviderScope(
+        overrides: [
+          dioClientProvider.overrideWithValue(DioClient(dio: Dio())),
+        ],
+        child: const RunFlowApp(),
+      ),
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));

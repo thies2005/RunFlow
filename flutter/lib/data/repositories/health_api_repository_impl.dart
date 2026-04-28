@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
@@ -69,12 +72,11 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   @override
   Future<FoodItem?> aiScanImage(String imagePath) async {
     try {
-      final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(imagePath),
-      });
+      final bytes = await File(imagePath).readAsBytes();
+      final base64String = base64Encode(bytes);
       final response = await dio.post(
         ApiConstants.nutritionAiScanPath,
-        data: formData,
+        data: {'imageBase64': base64String},
       );
       final data = response.data;
       if (data == null) return null;

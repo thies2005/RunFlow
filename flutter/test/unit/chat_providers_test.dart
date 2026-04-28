@@ -237,13 +237,12 @@ void main() {
       container = ProviderContainer(
         overrides: [
           chatRepositoryProvider.overrideWithValue(fakeRepo),
+          chatProvider.overrideWith(() => _TestChatNotifier()),
         ],
       );
     });
 
-    tearDown(() {
-      container.dispose();
-    });
+    tearDown(() {});
 
     test('sendMessage streams content chunks and updates state', () async {
       fakeRepo.streamToReturn = Stream.fromIterable(['Hel', 'lo!']);
@@ -273,4 +272,9 @@ void main() {
       expect(state.error, contains('Server error'));
     });
   });
+}
+
+class _TestChatNotifier extends ChatNotifier {
+  @override
+  ChatState build() => const ChatState();
 }

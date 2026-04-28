@@ -216,6 +216,7 @@ _BodyMeasurement _$BodyMeasurementFromJson(Map<String, dynamic> json) =>
       chest: (json['chest'] as num?)?.toDouble(),
       waist: (json['waist'] as num?)?.toDouble(),
       hips: (json['hips'] as num?)?.toDouble(),
+      arms: (json['arms'] as num?)?.toDouble(),
       notes: json['notes'] as String?,
     );
 
@@ -228,6 +229,7 @@ Map<String, dynamic> _$BodyMeasurementToJson(_BodyMeasurement instance) =>
       'chest': instance.chest,
       'waist': instance.waist,
       'hips': instance.hips,
+      'arms': instance.arms,
       'notes': instance.notes,
     };
 

@@ -159,7 +159,7 @@ class _RaceActivityTile extends StatelessWidget {
                 radius: 18,
                 backgroundColor: isSelected
                     ? AppColors.primary.withValues(alpha: 0.2)
-                    : AppColors.surfaceDarkVariant,
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: Icon(
                   Icons.directions_run,
                   size: 18,

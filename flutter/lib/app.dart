@@ -21,7 +21,7 @@ class _RunFlowAppState extends ConsumerState<RunFlowApp> {
   @override
   void initState() {
     super.initState();
-    _deepLinkSubscription = initDeepLinks();
+    _deepLinkSubscription = initDeepLinks(ref.read(routerProvider));
   }
 
   @override
@@ -34,7 +34,6 @@ class _RunFlowAppState extends ConsumerState<RunFlowApp> {
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final settings = ref.watch(settingsProvider);
-    globalRouter = router;
 
     return MaterialApp.router(
       title: 'RunFlow',

@@ -13,7 +13,7 @@ part of 'health_models.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$NutritionLog implements DiagnosticableTreeMixin {
+mixin _$NutritionLog {
 
  int get id; DateTime get date; double get calories; double get protein; double get carbs; double get fat; double get water; String? get notes; DateTime get createdAt;
 /// Create a copy of NutritionLog
@@ -25,12 +25,6 @@ $NutritionLogCopyWith<NutritionLog> get copyWith => _$NutritionLogCopyWithImpl<N
   /// Serializes this NutritionLog to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'NutritionLog'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('calories', calories))..add(DiagnosticsProperty('protein', protein))..add(DiagnosticsProperty('carbs', carbs))..add(DiagnosticsProperty('fat', fat))..add(DiagnosticsProperty('water', water))..add(DiagnosticsProperty('notes', notes))..add(DiagnosticsProperty('createdAt', createdAt));
-}
 
 @override
 bool operator ==(Object other) {
@@ -42,7 +36,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,date,calories,protein,carbs,fat,water,notes,createdAt);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'NutritionLog(id: $id, date: $date, calories: $calories, protein: $protein, carbs: $carbs, fat: $fat, water: $water, notes: $notes, createdAt: $createdAt)';
 }
 
@@ -216,7 +210,7 @@ return $default(_that.id,_that.date,_that.calories,_that.protein,_that.carbs,_th
 /// @nodoc
 @JsonSerializable()
 
-class _NutritionLog extends NutritionLog with DiagnosticableTreeMixin {
+class _NutritionLog extends NutritionLog {
   const _NutritionLog({required this.id, required this.date, required this.calories, required this.protein, required this.carbs, required this.fat, required this.water, this.notes, required this.createdAt}): super._();
   factory _NutritionLog.fromJson(Map<String, dynamic> json) => _$NutritionLogFromJson(json);
 
@@ -240,12 +234,6 @@ _$NutritionLogCopyWith<_NutritionLog> get copyWith => __$NutritionLogCopyWithImp
 Map<String, dynamic> toJson() {
   return _$NutritionLogToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'NutritionLog'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('calories', calories))..add(DiagnosticsProperty('protein', protein))..add(DiagnosticsProperty('carbs', carbs))..add(DiagnosticsProperty('fat', fat))..add(DiagnosticsProperty('water', water))..add(DiagnosticsProperty('notes', notes))..add(DiagnosticsProperty('createdAt', createdAt));
-}
 
 @override
 bool operator ==(Object other) {
@@ -257,7 +245,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,date,calories,protein,carbs,fat,water,notes,createdAt);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'NutritionLog(id: $id, date: $date, calories: $calories, protein: $protein, carbs: $carbs, fat: $fat, water: $water, notes: $notes, createdAt: $createdAt)';
 }
 
@@ -306,7 +294,7 @@ as DateTime,
 
 
 /// @nodoc
-mixin _$FoodItem implements DiagnosticableTreeMixin {
+mixin _$FoodItem {
 
  int get id; String get name; double get calories; double get protein; double get carbs; double get fat; double get servingSize; String? get barcode;
 /// Create a copy of FoodItem
@@ -318,12 +306,6 @@ $FoodItemCopyWith<FoodItem> get copyWith => _$FoodItemCopyWithImpl<FoodItem>(thi
   /// Serializes this FoodItem to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'FoodItem'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('calories', calories))..add(DiagnosticsProperty('protein', protein))..add(DiagnosticsProperty('carbs', carbs))..add(DiagnosticsProperty('fat', fat))..add(DiagnosticsProperty('servingSize', servingSize))..add(DiagnosticsProperty('barcode', barcode));
-}
 
 @override
 bool operator ==(Object other) {
@@ -335,7 +317,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,name,calories,protein,carbs,fat,servingSize,barcode);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'FoodItem(id: $id, name: $name, calories: $calories, protein: $protein, carbs: $carbs, fat: $fat, servingSize: $servingSize, barcode: $barcode)';
 }
 
@@ -508,7 +490,7 @@ return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_th
 /// @nodoc
 @JsonSerializable()
 
-class _FoodItem extends FoodItem with DiagnosticableTreeMixin {
+class _FoodItem extends FoodItem {
   const _FoodItem({required this.id, required this.name, required this.calories, required this.protein, required this.carbs, required this.fat, required this.servingSize, this.barcode}): super._();
   factory _FoodItem.fromJson(Map<String, dynamic> json) => _$FoodItemFromJson(json);
 
@@ -531,12 +513,6 @@ _$FoodItemCopyWith<_FoodItem> get copyWith => __$FoodItemCopyWithImpl<_FoodItem>
 Map<String, dynamic> toJson() {
   return _$FoodItemToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'FoodItem'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('calories', calories))..add(DiagnosticsProperty('protein', protein))..add(DiagnosticsProperty('carbs', carbs))..add(DiagnosticsProperty('fat', fat))..add(DiagnosticsProperty('servingSize', servingSize))..add(DiagnosticsProperty('barcode', barcode));
-}
 
 @override
 bool operator ==(Object other) {
@@ -548,7 +524,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,name,calories,protein,carbs,fat,servingSize,barcode);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'FoodItem(id: $id, name: $name, calories: $calories, protein: $protein, carbs: $carbs, fat: $fat, servingSize: $servingSize, barcode: $barcode)';
 }
 
@@ -596,7 +572,7 @@ as String?,
 
 
 /// @nodoc
-mixin _$Supplement implements DiagnosticableTreeMixin {
+mixin _$Supplement {
 
  int get id; String? get serverId; String get name;@JsonKey(name: 'amount', fromJson: _parseSupplementAmount) double get amount;@JsonKey(name: 'unit') String get unit;@JsonKey(name: 'timeOfDay') String get timeOfDay;@JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) List<int> get daysOfWeek; bool get isActive;@JsonKey(name: 'stackId') String? get stackId; int get order;@JsonKey(name: 'dosage') String get dosage;@JsonKey(name: 'frequency') String get frequency;
 /// Create a copy of Supplement
@@ -608,12 +584,6 @@ $SupplementCopyWith<Supplement> get copyWith => _$SupplementCopyWithImpl<Supplem
   /// Serializes this Supplement to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'Supplement'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('serverId', serverId))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('amount', amount))..add(DiagnosticsProperty('unit', unit))..add(DiagnosticsProperty('timeOfDay', timeOfDay))..add(DiagnosticsProperty('daysOfWeek', daysOfWeek))..add(DiagnosticsProperty('isActive', isActive))..add(DiagnosticsProperty('stackId', stackId))..add(DiagnosticsProperty('order', order))..add(DiagnosticsProperty('dosage', dosage))..add(DiagnosticsProperty('frequency', frequency));
-}
 
 @override
 bool operator ==(Object other) {
@@ -625,7 +595,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,serverId,name,amount,unit,timeOfDay,const DeepCollectionEquality().hash(daysOfWeek),isActive,stackId,order,dosage,frequency);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'Supplement(id: $id, serverId: $serverId, name: $name, amount: $amount, unit: $unit, timeOfDay: $timeOfDay, daysOfWeek: $daysOfWeek, isActive: $isActive, stackId: $stackId, order: $order, dosage: $dosage, frequency: $frequency)';
 }
 
@@ -802,7 +772,7 @@ return $default(_that.id,_that.serverId,_that.name,_that.amount,_that.unit,_that
 /// @nodoc
 @JsonSerializable()
 
-class _Supplement extends Supplement with DiagnosticableTreeMixin {
+class _Supplement extends Supplement {
   const _Supplement({required this.id, this.serverId, required this.name, @JsonKey(name: 'amount', fromJson: _parseSupplementAmount) this.amount = 0, @JsonKey(name: 'unit') this.unit = 'mg', @JsonKey(name: 'timeOfDay') this.timeOfDay = 'MORNING', @JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) final  List<int> daysOfWeek = const [], this.isActive = true, @JsonKey(name: 'stackId') this.stackId, this.order = 0, @JsonKey(name: 'dosage') this.dosage = '', @JsonKey(name: 'frequency') this.frequency = 'Daily'}): _daysOfWeek = daysOfWeek,super._();
   factory _Supplement.fromJson(Map<String, dynamic> json) => _$SupplementFromJson(json);
 
@@ -835,12 +805,6 @@ _$SupplementCopyWith<_Supplement> get copyWith => __$SupplementCopyWithImpl<_Sup
 Map<String, dynamic> toJson() {
   return _$SupplementToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'Supplement'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('serverId', serverId))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('amount', amount))..add(DiagnosticsProperty('unit', unit))..add(DiagnosticsProperty('timeOfDay', timeOfDay))..add(DiagnosticsProperty('daysOfWeek', daysOfWeek))..add(DiagnosticsProperty('isActive', isActive))..add(DiagnosticsProperty('stackId', stackId))..add(DiagnosticsProperty('order', order))..add(DiagnosticsProperty('dosage', dosage))..add(DiagnosticsProperty('frequency', frequency));
-}
 
 @override
 bool operator ==(Object other) {
@@ -852,7 +816,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,serverId,name,amount,unit,timeOfDay,const DeepCollectionEquality().hash(_daysOfWeek),isActive,stackId,order,dosage,frequency);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'Supplement(id: $id, serverId: $serverId, name: $name, amount: $amount, unit: $unit, timeOfDay: $timeOfDay, daysOfWeek: $daysOfWeek, isActive: $isActive, stackId: $stackId, order: $order, dosage: $dosage, frequency: $frequency)';
 }
 
@@ -904,7 +868,7 @@ as String,
 
 
 /// @nodoc
-mixin _$SupplementStack implements DiagnosticableTreeMixin {
+mixin _$SupplementStack {
 
  int get id; String get name; List<Supplement> get supplements; bool get isActive;
 /// Create a copy of SupplementStack
@@ -916,12 +880,6 @@ $SupplementStackCopyWith<SupplementStack> get copyWith => _$SupplementStackCopyW
   /// Serializes this SupplementStack to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'SupplementStack'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('supplements', supplements))..add(DiagnosticsProperty('isActive', isActive));
-}
 
 @override
 bool operator ==(Object other) {
@@ -933,7 +891,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,name,const DeepCollectionEquality().hash(supplements),isActive);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'SupplementStack(id: $id, name: $name, supplements: $supplements, isActive: $isActive)';
 }
 
@@ -1102,7 +1060,7 @@ return $default(_that.id,_that.name,_that.supplements,_that.isActive);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _SupplementStack extends SupplementStack with DiagnosticableTreeMixin {
+class _SupplementStack extends SupplementStack {
   const _SupplementStack({required this.id, required this.name, required final  List<Supplement> supplements, required this.isActive}): _supplements = supplements,super._();
   factory _SupplementStack.fromJson(Map<String, dynamic> json) => _$SupplementStackFromJson(json);
 
@@ -1127,12 +1085,6 @@ _$SupplementStackCopyWith<_SupplementStack> get copyWith => __$SupplementStackCo
 Map<String, dynamic> toJson() {
   return _$SupplementStackToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'SupplementStack'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('supplements', supplements))..add(DiagnosticsProperty('isActive', isActive));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1144,7 +1096,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,name,const DeepCollectionEquality().hash(_supplements),isActive);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'SupplementStack(id: $id, name: $name, supplements: $supplements, isActive: $isActive)';
 }
 
@@ -1188,7 +1140,7 @@ as bool,
 
 
 /// @nodoc
-mixin _$DailyHealthLog implements DiagnosticableTreeMixin {
+mixin _$DailyHealthLog {
 
  int get id; DateTime get date; int get steps; double? get weight; double get waterIntake; int get exerciseCalories; List<SupplementLog> get supplementLogs; List<FoodLogEntry> get foodLogs; DailyHealthMeta? get meta;
 /// Create a copy of DailyHealthLog
@@ -1200,12 +1152,6 @@ $DailyHealthLogCopyWith<DailyHealthLog> get copyWith => _$DailyHealthLogCopyWith
   /// Serializes this DailyHealthLog to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'DailyHealthLog'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('steps', steps))..add(DiagnosticsProperty('weight', weight))..add(DiagnosticsProperty('waterIntake', waterIntake))..add(DiagnosticsProperty('exerciseCalories', exerciseCalories))..add(DiagnosticsProperty('supplementLogs', supplementLogs))..add(DiagnosticsProperty('foodLogs', foodLogs))..add(DiagnosticsProperty('meta', meta));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1217,7 +1163,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,date,steps,weight,waterIntake,exerciseCalories,const DeepCollectionEquality().hash(supplementLogs),const DeepCollectionEquality().hash(foodLogs),meta);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'DailyHealthLog(id: $id, date: $date, steps: $steps, weight: $weight, waterIntake: $waterIntake, exerciseCalories: $exerciseCalories, supplementLogs: $supplementLogs, foodLogs: $foodLogs, meta: $meta)';
 }
 
@@ -1403,7 +1349,7 @@ return $default(_that.id,_that.date,_that.steps,_that.weight,_that.waterIntake,_
 /// @nodoc
 @JsonSerializable()
 
-class _DailyHealthLog extends DailyHealthLog with DiagnosticableTreeMixin {
+class _DailyHealthLog extends DailyHealthLog {
   const _DailyHealthLog({required this.id, required this.date, this.steps = 0, this.weight, this.waterIntake = 0, this.exerciseCalories = 0, final  List<SupplementLog> supplementLogs = const [], final  List<FoodLogEntry> foodLogs = const [], this.meta}): _supplementLogs = supplementLogs,_foodLogs = foodLogs,super._();
   factory _DailyHealthLog.fromJson(Map<String, dynamic> json) => _$DailyHealthLogFromJson(json);
 
@@ -1439,12 +1385,6 @@ _$DailyHealthLogCopyWith<_DailyHealthLog> get copyWith => __$DailyHealthLogCopyW
 Map<String, dynamic> toJson() {
   return _$DailyHealthLogToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'DailyHealthLog'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('steps', steps))..add(DiagnosticsProperty('weight', weight))..add(DiagnosticsProperty('waterIntake', waterIntake))..add(DiagnosticsProperty('exerciseCalories', exerciseCalories))..add(DiagnosticsProperty('supplementLogs', supplementLogs))..add(DiagnosticsProperty('foodLogs', foodLogs))..add(DiagnosticsProperty('meta', meta));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1456,7 +1396,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,date,steps,weight,waterIntake,exerciseCalories,const DeepCollectionEquality().hash(_supplementLogs),const DeepCollectionEquality().hash(_foodLogs),meta);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'DailyHealthLog(id: $id, date: $date, steps: $steps, weight: $weight, waterIntake: $waterIntake, exerciseCalories: $exerciseCalories, supplementLogs: $supplementLogs, foodLogs: $foodLogs, meta: $meta)';
 }
 
@@ -1517,7 +1457,7 @@ $DailyHealthMetaCopyWith<$Res>? get meta {
 
 
 /// @nodoc
-mixin _$SupplementLog implements DiagnosticableTreeMixin {
+mixin _$SupplementLog {
 
  String get supplementId; DateTime get date; bool get taken;
 /// Create a copy of SupplementLog
@@ -1529,12 +1469,6 @@ $SupplementLogCopyWith<SupplementLog> get copyWith => _$SupplementLogCopyWithImp
   /// Serializes this SupplementLog to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'SupplementLog'))
-    ..add(DiagnosticsProperty('supplementId', supplementId))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('taken', taken));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1546,7 +1480,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,supplementId,date,taken);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'SupplementLog(supplementId: $supplementId, date: $date, taken: $taken)';
 }
 
@@ -1714,7 +1648,7 @@ return $default(_that.supplementId,_that.date,_that.taken);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _SupplementLog extends SupplementLog with DiagnosticableTreeMixin {
+class _SupplementLog extends SupplementLog {
   const _SupplementLog({required this.supplementId, required this.date, this.taken = false}): super._();
   factory _SupplementLog.fromJson(Map<String, dynamic> json) => _$SupplementLogFromJson(json);
 
@@ -1732,12 +1666,6 @@ _$SupplementLogCopyWith<_SupplementLog> get copyWith => __$SupplementLogCopyWith
 Map<String, dynamic> toJson() {
   return _$SupplementLogToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'SupplementLog'))
-    ..add(DiagnosticsProperty('supplementId', supplementId))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('taken', taken));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1749,7 +1677,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,supplementId,date,taken);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'SupplementLog(supplementId: $supplementId, date: $date, taken: $taken)';
 }
 
@@ -1792,7 +1720,7 @@ as bool,
 
 
 /// @nodoc
-mixin _$FoodLogEntry implements DiagnosticableTreeMixin {
+mixin _$FoodLogEntry {
 
  String get id; String get mealType; String get name; double? get quantity; double? get calories; double? get protein; double? get carbs; double? get fats; String? get foodItemId;
 /// Create a copy of FoodLogEntry
@@ -1804,12 +1732,6 @@ $FoodLogEntryCopyWith<FoodLogEntry> get copyWith => _$FoodLogEntryCopyWithImpl<F
   /// Serializes this FoodLogEntry to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'FoodLogEntry'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('mealType', mealType))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('quantity', quantity))..add(DiagnosticsProperty('calories', calories))..add(DiagnosticsProperty('protein', protein))..add(DiagnosticsProperty('carbs', carbs))..add(DiagnosticsProperty('fats', fats))..add(DiagnosticsProperty('foodItemId', foodItemId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1821,7 +1743,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,mealType,name,quantity,calories,protein,carbs,fats,foodItemId);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'FoodLogEntry(id: $id, mealType: $mealType, name: $name, quantity: $quantity, calories: $calories, protein: $protein, carbs: $carbs, fats: $fats, foodItemId: $foodItemId)';
 }
 
@@ -1995,7 +1917,7 @@ return $default(_that.id,_that.mealType,_that.name,_that.quantity,_that.calories
 /// @nodoc
 @JsonSerializable()
 
-class _FoodLogEntry extends FoodLogEntry with DiagnosticableTreeMixin {
+class _FoodLogEntry extends FoodLogEntry {
   const _FoodLogEntry({this.id = '', required this.mealType, required this.name, this.quantity, this.calories, this.protein, this.carbs, this.fats, this.foodItemId}): super._();
   factory _FoodLogEntry.fromJson(Map<String, dynamic> json) => _$FoodLogEntryFromJson(json);
 
@@ -2019,12 +1941,6 @@ _$FoodLogEntryCopyWith<_FoodLogEntry> get copyWith => __$FoodLogEntryCopyWithImp
 Map<String, dynamic> toJson() {
   return _$FoodLogEntryToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'FoodLogEntry'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('mealType', mealType))..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('quantity', quantity))..add(DiagnosticsProperty('calories', calories))..add(DiagnosticsProperty('protein', protein))..add(DiagnosticsProperty('carbs', carbs))..add(DiagnosticsProperty('fats', fats))..add(DiagnosticsProperty('foodItemId', foodItemId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2036,7 +1952,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,mealType,name,quantity,calories,protein,carbs,fats,foodItemId);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'FoodLogEntry(id: $id, mealType: $mealType, name: $name, quantity: $quantity, calories: $calories, protein: $protein, carbs: $carbs, fats: $fats, foodItemId: $foodItemId)';
 }
 
@@ -2085,7 +2001,7 @@ as String?,
 
 
 /// @nodoc
-mixin _$DailyHealthMeta implements DiagnosticableTreeMixin {
+mixin _$DailyHealthMeta {
 
  bool get hasStepHistory;
 /// Create a copy of DailyHealthMeta
@@ -2097,12 +2013,6 @@ $DailyHealthMetaCopyWith<DailyHealthMeta> get copyWith => _$DailyHealthMetaCopyW
   /// Serializes this DailyHealthMeta to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'DailyHealthMeta'))
-    ..add(DiagnosticsProperty('hasStepHistory', hasStepHistory));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2114,7 +2024,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,hasStepHistory);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'DailyHealthMeta(hasStepHistory: $hasStepHistory)';
 }
 
@@ -2280,7 +2190,7 @@ return $default(_that.hasStepHistory);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _DailyHealthMeta extends DailyHealthMeta with DiagnosticableTreeMixin {
+class _DailyHealthMeta extends DailyHealthMeta {
   const _DailyHealthMeta({this.hasStepHistory = false}): super._();
   factory _DailyHealthMeta.fromJson(Map<String, dynamic> json) => _$DailyHealthMetaFromJson(json);
 
@@ -2296,12 +2206,6 @@ _$DailyHealthMetaCopyWith<_DailyHealthMeta> get copyWith => __$DailyHealthMetaCo
 Map<String, dynamic> toJson() {
   return _$DailyHealthMetaToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'DailyHealthMeta'))
-    ..add(DiagnosticsProperty('hasStepHistory', hasStepHistory));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2313,7 +2217,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,hasStepHistory);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'DailyHealthMeta(hasStepHistory: $hasStepHistory)';
 }
 
@@ -2354,7 +2258,7 @@ as bool,
 
 
 /// @nodoc
-mixin _$FastingSession implements DiagnosticableTreeMixin {
+mixin _$FastingSession {
 
  int get id; DateTime get startTime; DateTime? get endTime; int get duration; bool get isActive;
 /// Create a copy of FastingSession
@@ -2366,12 +2270,6 @@ $FastingSessionCopyWith<FastingSession> get copyWith => _$FastingSessionCopyWith
   /// Serializes this FastingSession to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'FastingSession'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('startTime', startTime))..add(DiagnosticsProperty('endTime', endTime))..add(DiagnosticsProperty('duration', duration))..add(DiagnosticsProperty('isActive', isActive));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2383,7 +2281,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,startTime,endTime,duration,isActive);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'FastingSession(id: $id, startTime: $startTime, endTime: $endTime, duration: $duration, isActive: $isActive)';
 }
 
@@ -2553,7 +2451,7 @@ return $default(_that.id,_that.startTime,_that.endTime,_that.duration,_that.isAc
 /// @nodoc
 @JsonSerializable()
 
-class _FastingSession extends FastingSession with DiagnosticableTreeMixin {
+class _FastingSession extends FastingSession {
   const _FastingSession({required this.id, required this.startTime, this.endTime, required this.duration, required this.isActive}): super._();
   factory _FastingSession.fromJson(Map<String, dynamic> json) => _$FastingSessionFromJson(json);
 
@@ -2573,12 +2471,6 @@ _$FastingSessionCopyWith<_FastingSession> get copyWith => __$FastingSessionCopyW
 Map<String, dynamic> toJson() {
   return _$FastingSessionToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'FastingSession'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('startTime', startTime))..add(DiagnosticsProperty('endTime', endTime))..add(DiagnosticsProperty('duration', duration))..add(DiagnosticsProperty('isActive', isActive));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2590,7 +2482,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,startTime,endTime,duration,isActive);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'FastingSession(id: $id, startTime: $startTime, endTime: $endTime, duration: $duration, isActive: $isActive)';
 }
 
@@ -2635,9 +2527,9 @@ as bool,
 
 
 /// @nodoc
-mixin _$BodyMeasurement implements DiagnosticableTreeMixin {
+mixin _$BodyMeasurement {
 
- int get id; DateTime get date; double get weight; double get bodyFat; double? get chest; double? get waist; double? get hips; String? get notes;
+ int get id; DateTime get date; double get weight; double get bodyFat; double? get chest; double? get waist; double? get hips; double? get arms; String? get notes;
 /// Create a copy of BodyMeasurement
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2647,25 +2539,19 @@ $BodyMeasurementCopyWith<BodyMeasurement> get copyWith => _$BodyMeasurementCopyW
   /// Serializes this BodyMeasurement to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'BodyMeasurement'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('weight', weight))..add(DiagnosticsProperty('bodyFat', bodyFat))..add(DiagnosticsProperty('chest', chest))..add(DiagnosticsProperty('waist', waist))..add(DiagnosticsProperty('hips', hips))..add(DiagnosticsProperty('notes', notes));
-}
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BodyMeasurement&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.bodyFat, bodyFat) || other.bodyFat == bodyFat)&&(identical(other.chest, chest) || other.chest == chest)&&(identical(other.waist, waist) || other.waist == waist)&&(identical(other.hips, hips) || other.hips == hips)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BodyMeasurement&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.bodyFat, bodyFat) || other.bodyFat == bodyFat)&&(identical(other.chest, chest) || other.chest == chest)&&(identical(other.waist, waist) || other.waist == waist)&&(identical(other.hips, hips) || other.hips == hips)&&(identical(other.arms, arms) || other.arms == arms)&&(identical(other.notes, notes) || other.notes == notes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,date,weight,bodyFat,chest,waist,hips,notes);
+int get hashCode => Object.hash(runtimeType,id,date,weight,bodyFat,chest,waist,hips,arms,notes);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'BodyMeasurement(id: $id, date: $date, weight: $weight, bodyFat: $bodyFat, chest: $chest, waist: $waist, hips: $hips, notes: $notes)';
+String toString() {
+  return 'BodyMeasurement(id: $id, date: $date, weight: $weight, bodyFat: $bodyFat, chest: $chest, waist: $waist, hips: $hips, arms: $arms, notes: $notes)';
 }
 
 
@@ -2676,7 +2562,7 @@ abstract mixin class $BodyMeasurementCopyWith<$Res>  {
   factory $BodyMeasurementCopyWith(BodyMeasurement value, $Res Function(BodyMeasurement) _then) = _$BodyMeasurementCopyWithImpl;
 @useResult
 $Res call({
- int id, DateTime date, double weight, double bodyFat, double? chest, double? waist, double? hips, String? notes
+ int id, DateTime date, double weight, double bodyFat, double? chest, double? waist, double? hips, double? arms, String? notes
 });
 
 
@@ -2693,7 +2579,7 @@ class _$BodyMeasurementCopyWithImpl<$Res>
 
 /// Create a copy of BodyMeasurement
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? weight = null,Object? bodyFat = null,Object? chest = freezed,Object? waist = freezed,Object? hips = freezed,Object? notes = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? date = null,Object? weight = null,Object? bodyFat = null,Object? chest = freezed,Object? waist = freezed,Object? hips = freezed,Object? arms = freezed,Object? notes = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
@@ -2702,6 +2588,7 @@ as double,bodyFat: null == bodyFat ? _self.bodyFat : bodyFat // ignore: cast_nul
 as double,chest: freezed == chest ? _self.chest : chest // ignore: cast_nullable_to_non_nullable
 as double?,waist: freezed == waist ? _self.waist : waist // ignore: cast_nullable_to_non_nullable
 as double?,hips: freezed == hips ? _self.hips : hips // ignore: cast_nullable_to_non_nullable
+as double?,arms: freezed == arms ? _self.arms : arms // ignore: cast_nullable_to_non_nullable
 as double?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -2785,10 +2672,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  DateTime date,  double weight,  double bodyFat,  double? chest,  double? waist,  double? hips,  String? notes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  DateTime date,  double weight,  double bodyFat,  double? chest,  double? waist,  double? hips,  double? arms,  String? notes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BodyMeasurement() when $default != null:
-return $default(_that.id,_that.date,_that.weight,_that.bodyFat,_that.chest,_that.waist,_that.hips,_that.notes);case _:
+return $default(_that.id,_that.date,_that.weight,_that.bodyFat,_that.chest,_that.waist,_that.hips,_that.arms,_that.notes);case _:
   return orElse();
 
 }
@@ -2806,10 +2693,10 @@ return $default(_that.id,_that.date,_that.weight,_that.bodyFat,_that.chest,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  DateTime date,  double weight,  double bodyFat,  double? chest,  double? waist,  double? hips,  String? notes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  DateTime date,  double weight,  double bodyFat,  double? chest,  double? waist,  double? hips,  double? arms,  String? notes)  $default,) {final _that = this;
 switch (_that) {
 case _BodyMeasurement():
-return $default(_that.id,_that.date,_that.weight,_that.bodyFat,_that.chest,_that.waist,_that.hips,_that.notes);}
+return $default(_that.id,_that.date,_that.weight,_that.bodyFat,_that.chest,_that.waist,_that.hips,_that.arms,_that.notes);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -2823,10 +2710,10 @@ return $default(_that.id,_that.date,_that.weight,_that.bodyFat,_that.chest,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  DateTime date,  double weight,  double bodyFat,  double? chest,  double? waist,  double? hips,  String? notes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  DateTime date,  double weight,  double bodyFat,  double? chest,  double? waist,  double? hips,  double? arms,  String? notes)?  $default,) {final _that = this;
 switch (_that) {
 case _BodyMeasurement() when $default != null:
-return $default(_that.id,_that.date,_that.weight,_that.bodyFat,_that.chest,_that.waist,_that.hips,_that.notes);case _:
+return $default(_that.id,_that.date,_that.weight,_that.bodyFat,_that.chest,_that.waist,_that.hips,_that.arms,_that.notes);case _:
   return null;
 
 }
@@ -2837,8 +2724,8 @@ return $default(_that.id,_that.date,_that.weight,_that.bodyFat,_that.chest,_that
 /// @nodoc
 @JsonSerializable()
 
-class _BodyMeasurement extends BodyMeasurement with DiagnosticableTreeMixin {
-  const _BodyMeasurement({required this.id, required this.date, required this.weight, required this.bodyFat, this.chest, this.waist, this.hips, this.notes}): super._();
+class _BodyMeasurement extends BodyMeasurement {
+  const _BodyMeasurement({required this.id, required this.date, required this.weight, required this.bodyFat, this.chest, this.waist, this.hips, this.arms, this.notes}): super._();
   factory _BodyMeasurement.fromJson(Map<String, dynamic> json) => _$BodyMeasurementFromJson(json);
 
 @override final  int id;
@@ -2848,6 +2735,7 @@ class _BodyMeasurement extends BodyMeasurement with DiagnosticableTreeMixin {
 @override final  double? chest;
 @override final  double? waist;
 @override final  double? hips;
+@override final  double? arms;
 @override final  String? notes;
 
 /// Create a copy of BodyMeasurement
@@ -2860,25 +2748,19 @@ _$BodyMeasurementCopyWith<_BodyMeasurement> get copyWith => __$BodyMeasurementCo
 Map<String, dynamic> toJson() {
   return _$BodyMeasurementToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'BodyMeasurement'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('weight', weight))..add(DiagnosticsProperty('bodyFat', bodyFat))..add(DiagnosticsProperty('chest', chest))..add(DiagnosticsProperty('waist', waist))..add(DiagnosticsProperty('hips', hips))..add(DiagnosticsProperty('notes', notes));
-}
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BodyMeasurement&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.bodyFat, bodyFat) || other.bodyFat == bodyFat)&&(identical(other.chest, chest) || other.chest == chest)&&(identical(other.waist, waist) || other.waist == waist)&&(identical(other.hips, hips) || other.hips == hips)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BodyMeasurement&&(identical(other.id, id) || other.id == id)&&(identical(other.date, date) || other.date == date)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.bodyFat, bodyFat) || other.bodyFat == bodyFat)&&(identical(other.chest, chest) || other.chest == chest)&&(identical(other.waist, waist) || other.waist == waist)&&(identical(other.hips, hips) || other.hips == hips)&&(identical(other.arms, arms) || other.arms == arms)&&(identical(other.notes, notes) || other.notes == notes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,date,weight,bodyFat,chest,waist,hips,notes);
+int get hashCode => Object.hash(runtimeType,id,date,weight,bodyFat,chest,waist,hips,arms,notes);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
-  return 'BodyMeasurement(id: $id, date: $date, weight: $weight, bodyFat: $bodyFat, chest: $chest, waist: $waist, hips: $hips, notes: $notes)';
+String toString() {
+  return 'BodyMeasurement(id: $id, date: $date, weight: $weight, bodyFat: $bodyFat, chest: $chest, waist: $waist, hips: $hips, arms: $arms, notes: $notes)';
 }
 
 
@@ -2889,7 +2771,7 @@ abstract mixin class _$BodyMeasurementCopyWith<$Res> implements $BodyMeasurement
   factory _$BodyMeasurementCopyWith(_BodyMeasurement value, $Res Function(_BodyMeasurement) _then) = __$BodyMeasurementCopyWithImpl;
 @override @useResult
 $Res call({
- int id, DateTime date, double weight, double bodyFat, double? chest, double? waist, double? hips, String? notes
+ int id, DateTime date, double weight, double bodyFat, double? chest, double? waist, double? hips, double? arms, String? notes
 });
 
 
@@ -2906,7 +2788,7 @@ class __$BodyMeasurementCopyWithImpl<$Res>
 
 /// Create a copy of BodyMeasurement
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? date = null,Object? weight = null,Object? bodyFat = null,Object? chest = freezed,Object? waist = freezed,Object? hips = freezed,Object? notes = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? date = null,Object? weight = null,Object? bodyFat = null,Object? chest = freezed,Object? waist = freezed,Object? hips = freezed,Object? arms = freezed,Object? notes = freezed,}) {
   return _then(_BodyMeasurement(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
@@ -2915,6 +2797,7 @@ as double,bodyFat: null == bodyFat ? _self.bodyFat : bodyFat // ignore: cast_nul
 as double,chest: freezed == chest ? _self.chest : chest // ignore: cast_nullable_to_non_nullable
 as double?,waist: freezed == waist ? _self.waist : waist // ignore: cast_nullable_to_non_nullable
 as double?,hips: freezed == hips ? _self.hips : hips // ignore: cast_nullable_to_non_nullable
+as double?,arms: freezed == arms ? _self.arms : arms // ignore: cast_nullable_to_non_nullable
 as double?,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -2925,7 +2808,7 @@ as String?,
 
 
 /// @nodoc
-mixin _$NutritionAnalytics implements DiagnosticableTreeMixin {
+mixin _$NutritionAnalytics {
 
  double get macroAdherenceScore; List<DailyNutrition> get dailyData; List<MicronutrientSummary> get micronutrients;
 /// Create a copy of NutritionAnalytics
@@ -2937,12 +2820,6 @@ $NutritionAnalyticsCopyWith<NutritionAnalytics> get copyWith => _$NutritionAnaly
   /// Serializes this NutritionAnalytics to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'NutritionAnalytics'))
-    ..add(DiagnosticsProperty('macroAdherenceScore', macroAdherenceScore))..add(DiagnosticsProperty('dailyData', dailyData))..add(DiagnosticsProperty('micronutrients', micronutrients));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2954,7 +2831,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,macroAdherenceScore,const DeepCollectionEquality().hash(dailyData),const DeepCollectionEquality().hash(micronutrients));
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'NutritionAnalytics(macroAdherenceScore: $macroAdherenceScore, dailyData: $dailyData, micronutrients: $micronutrients)';
 }
 
@@ -3122,7 +2999,7 @@ return $default(_that.macroAdherenceScore,_that.dailyData,_that.micronutrients);
 /// @nodoc
 @JsonSerializable()
 
-class _NutritionAnalytics extends NutritionAnalytics with DiagnosticableTreeMixin {
+class _NutritionAnalytics extends NutritionAnalytics {
   const _NutritionAnalytics({this.macroAdherenceScore = 0, final  List<DailyNutrition> dailyData = const [], final  List<MicronutrientSummary> micronutrients = const []}): _dailyData = dailyData,_micronutrients = micronutrients,super._();
   factory _NutritionAnalytics.fromJson(Map<String, dynamic> json) => _$NutritionAnalyticsFromJson(json);
 
@@ -3152,12 +3029,6 @@ _$NutritionAnalyticsCopyWith<_NutritionAnalytics> get copyWith => __$NutritionAn
 Map<String, dynamic> toJson() {
   return _$NutritionAnalyticsToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'NutritionAnalytics'))
-    ..add(DiagnosticsProperty('macroAdherenceScore', macroAdherenceScore))..add(DiagnosticsProperty('dailyData', dailyData))..add(DiagnosticsProperty('micronutrients', micronutrients));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3169,7 +3040,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,macroAdherenceScore,const DeepCollectionEquality().hash(_dailyData),const DeepCollectionEquality().hash(_micronutrients));
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'NutritionAnalytics(macroAdherenceScore: $macroAdherenceScore, dailyData: $dailyData, micronutrients: $micronutrients)';
 }
 
@@ -3212,7 +3083,7 @@ as List<MicronutrientSummary>,
 
 
 /// @nodoc
-mixin _$DailyNutrition implements DiagnosticableTreeMixin {
+mixin _$DailyNutrition {
 
  DateTime get date; double get calories; double get protein; double get carbs; double get fats;
 /// Create a copy of DailyNutrition
@@ -3224,12 +3095,6 @@ $DailyNutritionCopyWith<DailyNutrition> get copyWith => _$DailyNutritionCopyWith
   /// Serializes this DailyNutrition to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'DailyNutrition'))
-    ..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('calories', calories))..add(DiagnosticsProperty('protein', protein))..add(DiagnosticsProperty('carbs', carbs))..add(DiagnosticsProperty('fats', fats));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3241,7 +3106,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,date,calories,protein,carbs,fats);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'DailyNutrition(date: $date, calories: $calories, protein: $protein, carbs: $carbs, fats: $fats)';
 }
 
@@ -3411,7 +3276,7 @@ return $default(_that.date,_that.calories,_that.protein,_that.carbs,_that.fats);
 /// @nodoc
 @JsonSerializable()
 
-class _DailyNutrition extends DailyNutrition with DiagnosticableTreeMixin {
+class _DailyNutrition extends DailyNutrition {
   const _DailyNutrition({required this.date, this.calories = 0, this.protein = 0, this.carbs = 0, this.fats = 0}): super._();
   factory _DailyNutrition.fromJson(Map<String, dynamic> json) => _$DailyNutritionFromJson(json);
 
@@ -3431,12 +3296,6 @@ _$DailyNutritionCopyWith<_DailyNutrition> get copyWith => __$DailyNutritionCopyW
 Map<String, dynamic> toJson() {
   return _$DailyNutritionToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'DailyNutrition'))
-    ..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('calories', calories))..add(DiagnosticsProperty('protein', protein))..add(DiagnosticsProperty('carbs', carbs))..add(DiagnosticsProperty('fats', fats));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3448,7 +3307,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,date,calories,protein,carbs,fats);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'DailyNutrition(date: $date, calories: $calories, protein: $protein, carbs: $carbs, fats: $fats)';
 }
 
@@ -3493,7 +3352,7 @@ as double,
 
 
 /// @nodoc
-mixin _$MicronutrientSummary implements DiagnosticableTreeMixin {
+mixin _$MicronutrientSummary {
 
  String get name; double get amount; String get unit; double get dailyValuePercent;
 /// Create a copy of MicronutrientSummary
@@ -3505,12 +3364,6 @@ $MicronutrientSummaryCopyWith<MicronutrientSummary> get copyWith => _$Micronutri
   /// Serializes this MicronutrientSummary to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'MicronutrientSummary'))
-    ..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('amount', amount))..add(DiagnosticsProperty('unit', unit))..add(DiagnosticsProperty('dailyValuePercent', dailyValuePercent));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3522,7 +3375,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,name,amount,unit,dailyValuePercent);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'MicronutrientSummary(name: $name, amount: $amount, unit: $unit, dailyValuePercent: $dailyValuePercent)';
 }
 
@@ -3691,7 +3544,7 @@ return $default(_that.name,_that.amount,_that.unit,_that.dailyValuePercent);case
 /// @nodoc
 @JsonSerializable()
 
-class _MicronutrientSummary extends MicronutrientSummary with DiagnosticableTreeMixin {
+class _MicronutrientSummary extends MicronutrientSummary {
   const _MicronutrientSummary({required this.name, this.amount = 0, this.unit = '', this.dailyValuePercent = 0}): super._();
   factory _MicronutrientSummary.fromJson(Map<String, dynamic> json) => _$MicronutrientSummaryFromJson(json);
 
@@ -3710,12 +3563,6 @@ _$MicronutrientSummaryCopyWith<_MicronutrientSummary> get copyWith => __$Micronu
 Map<String, dynamic> toJson() {
   return _$MicronutrientSummaryToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'MicronutrientSummary'))
-    ..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('amount', amount))..add(DiagnosticsProperty('unit', unit))..add(DiagnosticsProperty('dailyValuePercent', dailyValuePercent));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3727,7 +3574,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,name,amount,unit,dailyValuePercent);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'MicronutrientSummary(name: $name, amount: $amount, unit: $unit, dailyValuePercent: $dailyValuePercent)';
 }
 
@@ -3771,7 +3618,7 @@ as double,
 
 
 /// @nodoc
-mixin _$SupplementAnalytics implements DiagnosticableTreeMixin {
+mixin _$SupplementAnalytics {
 
  double get overallAdherence; double get avgDailyDoses; int get totalSupplements; int get totalScheduled; int get totalTaken; int get totalDays; List<SupplementAdherence> get supplements;
 /// Create a copy of SupplementAnalytics
@@ -3783,12 +3630,6 @@ $SupplementAnalyticsCopyWith<SupplementAnalytics> get copyWith => _$SupplementAn
   /// Serializes this SupplementAnalytics to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'SupplementAnalytics'))
-    ..add(DiagnosticsProperty('overallAdherence', overallAdherence))..add(DiagnosticsProperty('avgDailyDoses', avgDailyDoses))..add(DiagnosticsProperty('totalSupplements', totalSupplements))..add(DiagnosticsProperty('totalScheduled', totalScheduled))..add(DiagnosticsProperty('totalTaken', totalTaken))..add(DiagnosticsProperty('totalDays', totalDays))..add(DiagnosticsProperty('supplements', supplements));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3800,7 +3641,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,overallAdherence,avgDailyDoses,totalSupplements,totalScheduled,totalTaken,totalDays,const DeepCollectionEquality().hash(supplements));
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'SupplementAnalytics(overallAdherence: $overallAdherence, avgDailyDoses: $avgDailyDoses, totalSupplements: $totalSupplements, totalScheduled: $totalScheduled, totalTaken: $totalTaken, totalDays: $totalDays, supplements: $supplements)';
 }
 
@@ -3972,7 +3813,7 @@ return $default(_that.overallAdherence,_that.avgDailyDoses,_that.totalSupplement
 /// @nodoc
 @JsonSerializable()
 
-class _SupplementAnalytics extends SupplementAnalytics with DiagnosticableTreeMixin {
+class _SupplementAnalytics extends SupplementAnalytics {
   const _SupplementAnalytics({this.overallAdherence = 0, this.avgDailyDoses = 0, this.totalSupplements = 0, this.totalScheduled = 0, this.totalTaken = 0, this.totalDays = 0, final  List<SupplementAdherence> supplements = const []}): _supplements = supplements,super._();
   factory _SupplementAnalytics.fromJson(Map<String, dynamic> json) => _$SupplementAnalyticsFromJson(json);
 
@@ -4000,12 +3841,6 @@ _$SupplementAnalyticsCopyWith<_SupplementAnalytics> get copyWith => __$Supplemen
 Map<String, dynamic> toJson() {
   return _$SupplementAnalyticsToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'SupplementAnalytics'))
-    ..add(DiagnosticsProperty('overallAdherence', overallAdherence))..add(DiagnosticsProperty('avgDailyDoses', avgDailyDoses))..add(DiagnosticsProperty('totalSupplements', totalSupplements))..add(DiagnosticsProperty('totalScheduled', totalScheduled))..add(DiagnosticsProperty('totalTaken', totalTaken))..add(DiagnosticsProperty('totalDays', totalDays))..add(DiagnosticsProperty('supplements', supplements));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4017,7 +3852,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,overallAdherence,avgDailyDoses,totalSupplements,totalScheduled,totalTaken,totalDays,const DeepCollectionEquality().hash(_supplements));
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'SupplementAnalytics(overallAdherence: $overallAdherence, avgDailyDoses: $avgDailyDoses, totalSupplements: $totalSupplements, totalScheduled: $totalScheduled, totalTaken: $totalTaken, totalDays: $totalDays, supplements: $supplements)';
 }
 
@@ -4064,7 +3899,7 @@ as List<SupplementAdherence>,
 
 
 /// @nodoc
-mixin _$SupplementAdherence implements DiagnosticableTreeMixin {
+mixin _$SupplementAdherence {
 
  String get name; double get adherencePercent; int get daysTaken; int get totalDays;
 /// Create a copy of SupplementAdherence
@@ -4076,12 +3911,6 @@ $SupplementAdherenceCopyWith<SupplementAdherence> get copyWith => _$SupplementAd
   /// Serializes this SupplementAdherence to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'SupplementAdherence'))
-    ..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('adherencePercent', adherencePercent))..add(DiagnosticsProperty('daysTaken', daysTaken))..add(DiagnosticsProperty('totalDays', totalDays));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4093,7 +3922,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,name,adherencePercent,daysTaken,totalDays);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'SupplementAdherence(name: $name, adherencePercent: $adherencePercent, daysTaken: $daysTaken, totalDays: $totalDays)';
 }
 
@@ -4262,7 +4091,7 @@ return $default(_that.name,_that.adherencePercent,_that.daysTaken,_that.totalDay
 /// @nodoc
 @JsonSerializable()
 
-class _SupplementAdherence extends SupplementAdherence with DiagnosticableTreeMixin {
+class _SupplementAdherence extends SupplementAdherence {
   const _SupplementAdherence({required this.name, this.adherencePercent = 0, this.daysTaken = 0, this.totalDays = 0}): super._();
   factory _SupplementAdherence.fromJson(Map<String, dynamic> json) => _$SupplementAdherenceFromJson(json);
 
@@ -4281,12 +4110,6 @@ _$SupplementAdherenceCopyWith<_SupplementAdherence> get copyWith => __$Supplemen
 Map<String, dynamic> toJson() {
   return _$SupplementAdherenceToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'SupplementAdherence'))
-    ..add(DiagnosticsProperty('name', name))..add(DiagnosticsProperty('adherencePercent', adherencePercent))..add(DiagnosticsProperty('daysTaken', daysTaken))..add(DiagnosticsProperty('totalDays', totalDays));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4298,7 +4121,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,name,adherencePercent,daysTaken,totalDays);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'SupplementAdherence(name: $name, adherencePercent: $adherencePercent, daysTaken: $daysTaken, totalDays: $totalDays)';
 }
 
@@ -4342,7 +4165,7 @@ as int,
 
 
 /// @nodoc
-mixin _$HealthHistory implements DiagnosticableTreeMixin {
+mixin _$HealthHistory {
 
  List<HealthHistoryPoint> get steps; List<HealthHistoryPoint> get weight;
 /// Create a copy of HealthHistory
@@ -4354,12 +4177,6 @@ $HealthHistoryCopyWith<HealthHistory> get copyWith => _$HealthHistoryCopyWithImp
   /// Serializes this HealthHistory to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'HealthHistory'))
-    ..add(DiagnosticsProperty('steps', steps))..add(DiagnosticsProperty('weight', weight));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4371,7 +4188,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(steps),const DeepCollectionEquality().hash(weight));
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'HealthHistory(steps: $steps, weight: $weight)';
 }
 
@@ -4538,7 +4355,7 @@ return $default(_that.steps,_that.weight);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _HealthHistory extends HealthHistory with DiagnosticableTreeMixin {
+class _HealthHistory extends HealthHistory {
   const _HealthHistory({final  List<HealthHistoryPoint> steps = const [], final  List<HealthHistoryPoint> weight = const []}): _steps = steps,_weight = weight,super._();
   factory _HealthHistory.fromJson(Map<String, dynamic> json) => _$HealthHistoryFromJson(json);
 
@@ -4567,12 +4384,6 @@ _$HealthHistoryCopyWith<_HealthHistory> get copyWith => __$HealthHistoryCopyWith
 Map<String, dynamic> toJson() {
   return _$HealthHistoryToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'HealthHistory'))
-    ..add(DiagnosticsProperty('steps', steps))..add(DiagnosticsProperty('weight', weight));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4584,7 +4395,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_steps),const DeepCollectionEquality().hash(_weight));
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'HealthHistory(steps: $steps, weight: $weight)';
 }
 
@@ -4626,7 +4437,7 @@ as List<HealthHistoryPoint>,
 
 
 /// @nodoc
-mixin _$HealthHistoryPoint implements DiagnosticableTreeMixin {
+mixin _$HealthHistoryPoint {
 
  DateTime get date; double get value;
 /// Create a copy of HealthHistoryPoint
@@ -4638,12 +4449,6 @@ $HealthHistoryPointCopyWith<HealthHistoryPoint> get copyWith => _$HealthHistoryP
   /// Serializes this HealthHistoryPoint to a JSON map.
   Map<String, dynamic> toJson();
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'HealthHistoryPoint'))
-    ..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('value', value));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4655,7 +4460,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,date,value);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'HealthHistoryPoint(date: $date, value: $value)';
 }
 
@@ -4822,7 +4627,7 @@ return $default(_that.date,_that.value);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _HealthHistoryPoint extends HealthHistoryPoint with DiagnosticableTreeMixin {
+class _HealthHistoryPoint extends HealthHistoryPoint {
   const _HealthHistoryPoint({required this.date, required this.value}): super._();
   factory _HealthHistoryPoint.fromJson(Map<String, dynamic> json) => _$HealthHistoryPointFromJson(json);
 
@@ -4839,12 +4644,6 @@ _$HealthHistoryPointCopyWith<_HealthHistoryPoint> get copyWith => __$HealthHisto
 Map<String, dynamic> toJson() {
   return _$HealthHistoryPointToJson(this, );
 }
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  properties
-    ..add(DiagnosticsProperty('type', 'HealthHistoryPoint'))
-    ..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('value', value));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4856,7 +4655,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,date,value);
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   return 'HealthHistoryPoint(date: $date, value: $value)';
 }
 

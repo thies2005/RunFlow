@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/core/utils/vdot.dart';
 import 'package:runflow_flutter/data/models/calibration_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
@@ -901,7 +902,7 @@ class _ApplyButton extends ConsumerWidget {
         Navigator.of(context).pop();
       }
     } catch (e) {
-      debugPrint('[ShapeCalibrationSheet] Save calibration failed: $e');
+      logger.error('[ShapeCalibrationSheet] Save calibration failed: $e');
     }
   }
 

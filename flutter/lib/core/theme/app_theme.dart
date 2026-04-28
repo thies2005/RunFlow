@@ -136,5 +136,21 @@ ThemeData _buildTheme(ColorScheme colorScheme, Brightness brightness) {
         borderRadius: BorderRadius.circular(8),
       ),
     ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: colorScheme.primary,
+      linearTrackColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.12),
+    ),
   );
 }

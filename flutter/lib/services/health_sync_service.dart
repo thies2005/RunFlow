@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/data/repositories/health_api_repository_impl.dart';
 import 'package:runflow_flutter/services/health_connect_service.dart';
@@ -25,7 +25,7 @@ class HealthSyncService {
     try {
       final available = await _healthConnect.isAvailable();
       if (!available) {
-        debugPrint('[HealthSync] Health Connect not available, skipping sync');
+        logger.warning('[HealthSync] Health Connect not available, skipping sync');
         return;
       }
 
@@ -71,7 +71,7 @@ class HealthSyncService {
         'data': [payload],
       });
     } catch (e) {
-      debugPrint('Health sync failed for $date: $e');
+      logger.error('Health sync failed for $date: $e');
     }
   }
 
@@ -92,7 +92,7 @@ class HealthSyncService {
         endTime: date,
       );
     } catch (e) {
-      debugPrint('Failed to write weight: $e');
+      logger.error('Failed to write weight: $e');
     }
   }
 

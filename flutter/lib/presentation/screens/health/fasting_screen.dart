@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
@@ -17,6 +18,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
   Timer? _timer;
   Duration _elapsed = Duration.zero;
   bool _timerStarted = false;
+  double _targetHours = 16.0;
 
   @override
   void dispose() {
@@ -27,7 +29,24 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
   @override
   void initState() {
     super.initState();
+    _loadTargetHours();
     _startTimerFromProvider();
+  }
+
+  Future<void> _loadTargetHours() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _targetHours = prefs.getDouble('fasting_target_hours') ?? 16.0;
+      });
+    }
+  }
+
+  void _startFasting(int targetHours) {
+    final prefs = SharedPreferences.getInstance();
+    prefs.then((p) => p.setDouble('fasting_target_hours', targetHours.toDouble()));
+    setState(() => _targetHours = targetHours.toDouble());
+    ref.read(fastingProvider.notifier).start();
   }
 
   void _startTimerFromProvider() {
@@ -91,7 +110,8 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                   elapsed: _elapsed,
                   fmtDuration: _fmtDuration,
                   fmtTime: _fmtTime,
-                  onStart: () => ref.read(fastingProvider.notifier).start(),
+                  targetHours: _targetHours,
+                  onStart: () => _startFasting(_targetHours.toInt()),
                   onStop: () {
                     _timer?.cancel();
                     _timer = null;
@@ -104,7 +124,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                   Text('Quick Start', style: theme.textTheme.labelMedium?.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   _FastingPresets(
-                    onStart: () => ref.read(fastingProvider.notifier).start(),
+                    onStart: (hours) => _startFasting(hours),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -131,7 +151,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(12)),
+                          decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
                           child: Row(
                             children: [
                               const Icon(Icons.timer_outlined, color: AppColors.primary, size: 20),
@@ -177,6 +197,7 @@ class _FastingTimerCard extends StatelessWidget {
     required this.fmtTime,
     required this.onStart,
     required this.onStop,
+    required this.targetHours,
   });
 
   final FastingSession? activeSession;
@@ -185,12 +206,12 @@ class _FastingTimerCard extends StatelessWidget {
   final String Function(DateTime) fmtTime;
   final VoidCallback onStart;
   final VoidCallback onStop;
+  final double targetHours;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isActive = activeSession != null;
-    const targetHours = 16.0;
     final progressPct = isActive ? (elapsed.inMinutes / (targetHours * 60)).clamp(0.0, 1.0) : 0.0;
 
     return Container(
@@ -198,8 +219,8 @@ class _FastingTimerCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isActive
-              ? [AppColors.fatigued.withValues(alpha: 0.15), AppColors.surfaceDarkVariant]
-              : [AppColors.surfaceDarkVariant, AppColors.surfaceDarkVariant],
+              ? [AppColors.fatigued.withValues(alpha: 0.15), Theme.of(context).colorScheme.surfaceContainerHighest]
+              : [Theme.of(context).colorScheme.surfaceContainerHighest, Theme.of(context).colorScheme.surfaceContainerHighest],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -276,26 +297,26 @@ class _FastingTimerCard extends StatelessWidget {
 
 class _FastingPresets extends StatelessWidget {
   const _FastingPresets({required this.onStart});
-  final VoidCallback onStart;
+  final void Function(int targetHours) onStart;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final presets = [
-      ('12:12', '12 hours'),
-      ('16:8', '16 hours'),
-      ('18:6', '18 hours'),
-      ('20:4', '20 hours'),
+      ('12:12', '12 hours', 12),
+      ('16:8', '16 hours', 16),
+      ('18:6', '18 hours', 18),
+      ('20:4', '20 hours', 20),
     ];
     return Row(
       children: presets.map((p) => Expanded(
         child: GestureDetector(
-          onTap: onStart,
+          onTap: () => onStart(p.$3),
           child: Container(
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.surfaceDarkVariant,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AppColors.fatigued.withValues(alpha: 0.3)),
             ),
@@ -352,7 +373,7 @@ class _StatsChip extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: AppColors.surfaceDarkVariant, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(12)),
       child: Column(
         children: [
           Text(value, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, color: color)),

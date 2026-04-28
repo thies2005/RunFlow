@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
@@ -19,48 +21,71 @@ class TrainingPacesCard extends ConsumerWidget {
         final vdot = stats.currentVdot ?? stats.effectiveVO2max;
         if (vdot <= 0) return const SizedBox.shrink();
 
-        final easyPace = _computePace(vdot, 0.60);
-        final easyUpperPace = _computePace(vdot, 0.70);
-        final tempoPace = _computePace(vdot, 0.80);
-        final thresholdPace = _computePace(vdot, 0.88);
-        final intervalPace = _computePace(vdot, 0.95);
-        final racePace = _computePace(vdot, 1.00);
+        final maxHr = stats.hrMax;
 
-        final zones = [
+        final easyFast = _velocityToPace(
+          _velocityAtPercentVO2max(vdot, 0.79),
+        );
+        final easySlow = _velocityToPace(
+          _velocityAtPercentVO2max(vdot, 0.65),
+        );
+        final marathon = _velocityToPace(
+          _velocityAtPercentVO2max(vdot, 0.78),
+        );
+        final threshold = _velocityToPace(
+          _velocityAtPercentVO2max(vdot, 0.88),
+        );
+        final interval = _velocityToPace(
+          _velocityAtPercentVO2max(vdot, 1.0),
+        );
+        final repetition = _velocityToPace(
+          _velocityAtPercentVO2max(vdot, 1.05),
+        );
+
+        final zones = <_PaceZone>[
           _PaceZone(
-            label: 'Easy',
-            range: '${formatPace(easyUpperPace)} – ${formatPace(easyPace)}',
-            icon: Icons.directions_run,
+            label: 'EASY (E)',
+            paceText: '${formatPace(easyFast)} – ${formatPace(easySlow)}',
             color: AppColors.success,
-            description: 'Aerobic base building',
+            hrRange: maxHr > 0
+                ? '${(maxHr * 0.65).round()}-${(maxHr * 0.79).round()} bpm'
+                : null,
+            hrPercent: '65-79% HRmax',
           ),
           _PaceZone(
-            label: 'Tempo',
-            range: '${formatPace(tempoPace)} – ${formatPace(easyUpperPace)}',
-            icon: Icons.speed,
-            color: const Color(0xFFFF9800),
-            description: 'Steady state effort',
-          ),
-          _PaceZone(
-            label: 'Threshold',
-            range: '${formatPace(thresholdPace)} – ${formatPace(tempoPace)}',
-            icon: Icons.trending_up,
+            label: 'MARATHON (M)',
+            paceText: formatPace(marathon),
             color: const Color(0xFF2196F3),
-            description: 'Lactate threshold',
+            hrRange: maxHr > 0
+                ? '${(maxHr * 0.78).round()}-${(maxHr * 0.82).round()} bpm'
+                : null,
+            hrPercent: '78-82% HRmax',
           ),
           _PaceZone(
-            label: 'Interval',
-            range: '${formatPace(intervalPace)} – ${formatPace(thresholdPace)}',
-            icon: Icons.flash_on,
+            label: 'THRESHOLD (T)',
+            paceText: formatPace(threshold),
+            color: const Color(0xFFFFC107),
+            hrRange: maxHr > 0
+                ? '${(maxHr * 0.88).round()}-${(maxHr * 0.92).round()} bpm'
+                : null,
+            hrPercent: '88-92% HRmax',
+          ),
+          _PaceZone(
+            label: 'INTERVAL (I)',
+            paceText: formatPace(interval),
+            color: const Color(0xFFFF9800),
+            hrRange: maxHr > 0
+                ? '${(maxHr * 0.98).round()}-${(maxHr * 1.0).round()} bpm'
+                : null,
+            hrPercent: '98-100% HRmax',
+          ),
+          _PaceZone(
+            label: 'REPETITION (R)',
+            paceText: formatPace(repetition),
             color: const Color(0xFFF44336),
-            description: 'VO2max intervals',
-          ),
-          _PaceZone(
-            label: 'Race Pace',
-            range: '${formatPace(racePace)} – ${formatPace(intervalPace)}',
-            icon: Icons.emoji_events,
-            color: const Color(0xFF9C27B0),
-            description: '5K race effort',
+            hrRange:
+                maxHr > 0 ? '>${(maxHr * 1.0).round()} bpm' : null,
+            hrPercent: '100%+ HRmax',
           ),
         ];
 
@@ -73,11 +98,15 @@ class TrainingPacesCard extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.timer, size: 18, color: AppColors.primary),
+                    const Icon(
+                      Icons.favorite,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Training Paces',
+                        'Training Paces & Heart Rate',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -93,10 +122,29 @@ class TrainingPacesCard extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                ...zones.map((zone) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _PaceZoneRow(zone: zone),
-                )),
+                Row(
+                  children: [
+                    Expanded(child: _PaceZoneCard(zone: zones[0])),
+                    const SizedBox(width: 8),
+                    Expanded(child: _PaceZoneCard(zone: zones[1])),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: _PaceZoneCard(zone: zones[2])),
+                    const SizedBox(width: 8),
+                    Expanded(child: _PaceZoneCard(zone: zones[3])),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: _PaceZoneCard(zone: zones[4])),
+                    const SizedBox(width: 8),
+                    const Expanded(child: SizedBox.shrink()),
+                  ],
+                ),
               ],
             ),
           ),
@@ -105,90 +153,90 @@ class TrainingPacesCard extends ConsumerWidget {
     );
   }
 
-  double _computePace(double vdot, double fraction) {
-    if (vdot <= 0) return 0;
-    final vo2Fraction = vdot * fraction;
-    if (vo2Fraction <= 0) return 0;
-    final velocity = (-0.182258 +
-            (0.182258 * 0.182258 - 4 * 0.000104 * (-4.60 - vo2Fraction)))
-        .abs() /
-        (2 * 0.000104);
-    if (velocity <= 0) return 0;
-    return 1000 / velocity;
+  double _velocityAtPercentVO2max(double vdot, double percentVO2max) {
+    final vo2 = vdot * percentVO2max;
+    const b = 0.182258;
+    const a = 0.000104;
+    final c = -4.60 - vo2;
+    final discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) return 0;
+    return (-b + sqrt(discriminant)) / (2 * a);
+  }
+
+  double _velocityToPace(double velocityMetersPerMin) {
+    if (velocityMetersPerMin <= 0) return 0;
+    return (1000 / velocityMetersPerMin) * 60;
   }
 }
 
 class _PaceZone {
   const _PaceZone({
     required this.label,
-    required this.range,
-    required this.icon,
+    required this.paceText,
     required this.color,
-    required this.description,
+    required this.hrRange,
+    required this.hrPercent,
   });
 
   final String label;
-  final String range;
-  final IconData icon;
+  final String paceText;
   final Color color;
-  final String description;
+  final String? hrRange;
+  final String hrPercent;
 }
 
-class _PaceZoneRow extends StatelessWidget {
-  const _PaceZoneRow({required this.zone});
+class _PaceZoneCard extends StatelessWidget {
+  const _PaceZoneCard({required this.zone});
 
   final _PaceZone zone;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: zone.color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(zone.icon, size: 16, color: zone.color),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: zone.color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: zone.color.withValues(alpha: 0.2),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    zone.label,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: zone.color,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      zone.range,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Text(
-                zone.description,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                  fontSize: 11,
-                ),
-              ),
-            ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            zone.label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: zone.color,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            zone.paceText,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            zone.hrRange ?? '-',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: zone.color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            zone.hrPercent,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -5,7 +5,7 @@ import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/data/auth/refresh_session.dart';
 import 'package:runflow_flutter/services/auth_service.dart';
 
-class RefreshInterceptor extends Interceptor {
+class RefreshInterceptor extends QueuedInterceptor {
   RefreshInterceptor({required this.authService, required this.dio});
 
   final AuthService authService;

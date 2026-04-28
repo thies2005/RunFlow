@@ -147,7 +147,7 @@ class _ActiveCountdownCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: data.progressPercent / 100,
-                backgroundColor: AppColors.surfaceDarkVariant,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 valueColor: const AlwaysStoppedAnimation<Color>(
                   AppColors.primary,
                 ),
@@ -246,7 +246,7 @@ class _CountdownBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: isAccent
             ? AppColors.primary.withValues(alpha: 0.1)
-            : AppColors.surfaceDarkVariant.withValues(alpha: 0.5),
+            : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -351,7 +351,7 @@ class _WeeklyMileageTracker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDarkVariant.withValues(alpha: 0.5),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -378,7 +378,7 @@ class _WeeklyMileageTracker extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: percent,
-              backgroundColor: AppColors.surfaceDarkVariant,
+              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               valueColor: const AlwaysStoppedAnimation<Color>(
                 AppColors.success,
               ),
@@ -545,7 +545,7 @@ class _PostRacePendingCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: rate / 100,
-            backgroundColor: AppColors.surfaceDarkVariant,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation<Color>(
               rate >= 80
                   ? AppColors.success

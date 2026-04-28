@@ -334,7 +334,7 @@ class _ActivityTile extends StatelessWidget {
                 radius: 18,
                 backgroundColor: isSelected
                     ? AppColors.primary.withValues(alpha: 0.2)
-                    : AppColors.surfaceDarkVariant,
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
                 child: Icon(
                   Icons.directions_run,
                   size: 18,
@@ -560,7 +560,7 @@ class _TimeComparisonCard extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surfaceDarkVariant.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -1208,7 +1208,7 @@ class _TrainingCompletionCard extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.surfaceDarkVariant.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -1270,7 +1270,7 @@ class _TrainingCompletionCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: completion.completionRate / 100,
-                  backgroundColor: AppColors.surfaceDarkVariant,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     completion.completionRate >= 80
                         ? AppColors.success
@@ -1403,7 +1403,7 @@ class _InfoBlock extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDarkVariant.withValues(alpha: 0.5),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

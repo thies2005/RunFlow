@@ -191,7 +191,7 @@ class _GoalCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: progress,
-                  backgroundColor: AppColors.surfaceDarkVariant,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     isCompleted ? AppColors.onSurfaceVariant : AppColors.primary,
                   ),

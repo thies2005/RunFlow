@@ -106,6 +106,11 @@ class _VitalsContent extends StatelessWidget {
             _HrTrendChart(hrTrend: vitals.hrTrend),
             const SizedBox(height: 16),
           ],
+          // 7-Day HRV Trend chart
+          if (vitals.hrvTrend.isNotEmpty) ...[
+            _HrvTrendChart(hrvTrend: vitals.hrvTrend),
+            const SizedBox(height: 16),
+          ],
           // Last synced
           if (vitals.lastSynced != null)
             Center(
@@ -164,7 +169,7 @@ class _VitalCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDarkVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
@@ -231,7 +236,7 @@ class _HrTrendChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDarkVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -307,6 +312,100 @@ class _HrTrendChart extends StatelessWidget {
 }
 
 // ─── Connect prompt ───────────────────────────────────────────────────────────
+
+class _HrvTrendChart extends StatelessWidget {
+  const _HrvTrendChart({required this.hrvTrend});
+  final Map<DateTime, double> hrvTrend;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final sorted = hrvTrend.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    final spots = sorted.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value.value);
+    }).toList();
+
+    final minY = sorted.map((e) => e.value).reduce((a, b) => a < b ? a : b) - 5;
+    final maxY = sorted.map((e) => e.value).reduce((a, b) => a > b ? a : b) + 5;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('7-Day HRV Trend',
+              style: theme.textTheme.titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 140,
+            child: LineChart(LineChartData(
+              minY: minY,
+              maxY: maxY,
+              gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (_) => FlLine(
+                      color: AppColors.onSurfaceVariant.withValues(alpha: 0.1),
+                      strokeWidth: 1)),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 36,
+                        getTitlesWidget: (v, _) => Text(
+                              v.toInt().toString(),
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(fontSize: 10),
+                            ))),
+                bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (v, _) {
+                          final idx = v.toInt();
+                          if (idx < 0 || idx >= sorted.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final d = sorted[idx].key;
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${d.day}/${d.month}',
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(fontSize: 9, color: AppColors.onSurfaceVariant),
+                            ),
+                          );
+                        })),
+                topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false)),
+              ),
+              borderData: FlBorderData(show: false),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: AppColors.success,
+                  barWidth: 2,
+                  dotData: FlDotData(show: spots.length <= 7),
+                  belowBarData: BarAreaData(
+                      show: true,
+                      color: AppColors.success.withValues(alpha: 0.08)),
+                )
+              ],
+            )),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _ConnectPrompt extends StatefulWidget {
   const _ConnectPrompt({required this.onSync});

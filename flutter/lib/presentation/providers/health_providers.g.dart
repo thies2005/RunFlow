@@ -400,7 +400,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'beeac841c3a0ba09bd88d78ddedb632120578241';
+String _$supplementListHash() => r'0dc9223c0d9a0ca422aec6568170833c62dc194f';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();
@@ -462,7 +462,7 @@ final class NutritionNotifierProvider
   }
 }
 
-String _$nutritionNotifierHash() => r'6e83ef1d2ae73182c30349e53cf9b96fb73f4905';
+String _$nutritionNotifierHash() => r'73d02247d8c7fc99eadc632271f3b0be0c11deb0';
 
 final class NutritionNotifierFamily extends $Family
     with
@@ -534,7 +534,7 @@ final class BarcodeScanProvider
   BarcodeScan create() => BarcodeScan();
 }
 
-String _$barcodeScanHash() => r'06118eae4bfd683199268fd6fe03d42c0ad22cee';
+String _$barcodeScanHash() => r'3cf5cf00d0cdcbc64dfbb3198297615b7cdf2912';
 
 abstract class _$BarcodeScan extends $AsyncNotifier<FoodItem?> {
   FutureOr<FoodItem?> build();

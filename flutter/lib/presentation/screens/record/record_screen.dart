@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/data/models/recording_models.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
@@ -499,7 +500,7 @@ class _RecordingContent extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 16),
               height: 200,
               decoration: BoxDecoration(
-                color: AppColors.surfaceDarkVariant,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Center(
@@ -542,7 +543,7 @@ class _RecordingContent extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      _formatDistance(metrics.distanceMeters),
+                      formatDistance(metrics.distanceMeters),
                       style: theme.textTheme.displayLarge?.copyWith(
                         fontWeight: FontWeight.w800,
                         fontSize: 56,
@@ -562,7 +563,7 @@ class _RecordingContent extends StatelessWidget {
                           Expanded(
                             child: _MetricCard(
                               label: 'Pace',
-                              value: _formatPace(
+                              value: formatPace(
                                   metrics.currentPaceSecondsPerKm),
                               icon: Icons.speed,
                               color: AppColors.primary,
@@ -573,7 +574,7 @@ class _RecordingContent extends StatelessWidget {
                             child: _MetricCard(
                               label: 'Duration',
                               value:
-                                  _formatDuration(metrics.durationSeconds),
+                                  formatDurationClock(metrics.durationSeconds),
                               icon: Icons.timer,
                               color: AppColors.onSurface,
                             ),
@@ -619,7 +620,7 @@ class _RecordingContent extends StatelessWidget {
                             child: _MetricCard(
                               label: 'Avg Pace',
                               value: metrics.averageSpeedMps > 0.5
-                                  ? _formatPace(
+                                  ? formatPace(
                                       1000 / metrics.averageSpeedMps)
                                   : '--:-- /km',
                               icon: Icons.trending_up,
@@ -691,30 +692,6 @@ class _RecordingContent extends StatelessWidget {
     );
   }
 
-  String _formatDistance(double meters) {
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(2)} km';
-    }
-    return '${meters.toStringAsFixed(0)} m';
-  }
-
-  String _formatPace(double secondsPerKm) {
-    if (secondsPerKm <= 0) return '--:-- /km';
-    final int totalSeconds = secondsPerKm.round();
-    final int minutes = totalSeconds ~/ 60;
-    final int seconds = totalSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')} /km';
-  }
-
-  String _formatDuration(int totalSeconds) {
-    final int hours = totalSeconds ~/ 3600;
-    final int minutes = (totalSeconds % 3600) ~/ 60;
-    final int seconds = totalSeconds % 60;
-    if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
 }
 
 class _MetricCard extends StatelessWidget {
@@ -936,7 +913,7 @@ class _SummaryView extends StatelessWidget {
               const SizedBox(height: 32),
               Center(
                 child: Text(
-                  _formatDistance(workout.distanceMeters),
+                  formatDistance(workout.distanceMeters),
                   style: theme.textTheme.displayLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                     fontSize: 48,
@@ -951,14 +928,14 @@ class _SummaryView extends StatelessWidget {
                     children: [
                       _SummaryRow(
                         label: 'Duration',
-                        value: _formatDuration(workout.durationSeconds),
+                        value: formatDuration(workout.durationSeconds),
                         icon: Icons.timer,
                       ),
                       const SizedBox(height: 16),
                       _SummaryRow(
                         label: 'Avg Pace',
                         value: avgPace != null
-                            ? _formatPace(avgPace)
+                            ? formatPace(avgPace)
                             : '--:-- /km',
                         icon: Icons.speed,
                       ),
@@ -1056,29 +1033,6 @@ class _SummaryView extends StatelessWidget {
     );
   }
 
-  String _formatDistance(double meters) {
-    if (meters >= 1000) {
-      return '${(meters / 1000).toStringAsFixed(2)} km';
-    }
-    return '${meters.toStringAsFixed(0)} m';
-  }
-
-  String _formatPace(double secondsPerKm) {
-    final int totalSeconds = secondsPerKm.round();
-    final int minutes = totalSeconds ~/ 60;
-    final int seconds = totalSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')} /km';
-  }
-
-  String _formatDuration(int totalSeconds) {
-    final int hours = totalSeconds ~/ 3600;
-    final int minutes = (totalSeconds % 3600) ~/ 60;
-    final int seconds = totalSeconds % 60;
-    if (hours > 0) {
-      return '$hours h $minutes m $seconds s';
-    }
-    return '$minutes m $seconds s';
-  }
 }
 
 class _SummaryRow extends StatelessWidget {

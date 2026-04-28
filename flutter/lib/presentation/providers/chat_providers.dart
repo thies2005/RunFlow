@@ -58,7 +58,15 @@ class ChatMessages extends _$ChatMessages {
 @riverpod
 class ChatNotifier extends _$ChatNotifier {
   @override
-  ChatState build() => const ChatState();
+  ChatState build() {
+    ref.onDispose(() {
+      final repo = ref.read(chatRepositoryProvider);
+      if (repo is ChatRepositoryImpl) {
+        repo.cancelStreaming();
+      }
+    });
+    return const ChatState();
+  }
 
   Future<void> sendMessage(String sessionId, String content) async {
     final repo = ref.read(chatRepositoryProvider);

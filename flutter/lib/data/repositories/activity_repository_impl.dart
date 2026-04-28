@@ -225,12 +225,12 @@ class ActivityRepositoryImpl implements ActivityRepository {
         '/ai/activity-feedback',
         queryParameters: {'activityId': activityId},
       );
-      final data = response.data as Map<String, dynamic>;
-      final feedback = data['feedback'];
-      if (feedback is Map<String, dynamic>) {
-        return AiActivityFeedback.fromJson(feedback);
-      }
-      return const AiActivityFeedback();
+      return AiActivityFeedback.fromJson(
+        unwrapPayload(
+          response.data as Map<String, dynamic>,
+          const ['feedback'],
+        ),
+      );
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -248,12 +248,12 @@ class ActivityRepositoryImpl implements ActivityRepository {
         '/ai/activity-feedback',
         data: {'activityId': activityId, 'regenerate': true},
       );
-      final data = response.data as Map<String, dynamic>;
-      final feedback = data['feedback'];
-      if (feedback is Map<String, dynamic>) {
-        return AiActivityFeedback.fromJson(feedback);
-      }
-      return const AiActivityFeedback();
+      return AiActivityFeedback.fromJson(
+        unwrapPayload(
+          response.data as Map<String, dynamic>,
+          const ['feedback'],
+        ),
+      );
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException

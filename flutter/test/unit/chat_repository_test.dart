@@ -34,6 +34,10 @@ void main() {
   late MockDio mockDio;
   late ChatRepositoryImpl repository;
 
+  setUpAll(() {
+    registerFallbackValue(CancelToken());
+  });
+
   setUp(() {
     mockDio = MockDio();
     repository = ChatRepositoryImpl(dio: mockDio);
@@ -145,6 +149,7 @@ void main() {
         when(() => mockDio.get(
               any(),
               queryParameters: any(named: 'queryParameters'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenAnswer((_) async => Response<dynamic>(
                   requestOptions: RequestOptions(path: ''),
                   statusCode: 200,
@@ -171,6 +176,7 @@ void main() {
         when(() => mockDio.get(
               any(),
               queryParameters: any(named: 'queryParameters'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenAnswer((_) async => Response<dynamic>(
                   requestOptions: RequestOptions(path: ''),
                   statusCode: 200,
@@ -182,6 +188,7 @@ void main() {
         final captured = verify(() => mockDio.get(
               any(),
               queryParameters: captureAny(named: 'queryParameters'),
+              cancelToken: any(named: 'cancelToken'),
             )).captured.single as Map<String, dynamic>;
 
         expect(captured['sessionId'], 'session-abc');
@@ -191,6 +198,7 @@ void main() {
         when(() => mockDio.get(
               any(),
               queryParameters: any(named: 'queryParameters'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenAnswer((_) async => Response<dynamic>(
                   requestOptions: RequestOptions(path: ''),
                   statusCode: 200,
@@ -212,6 +220,7 @@ void main() {
         when(() => mockDio.get(
               any(),
               queryParameters: any(named: 'queryParameters'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenThrow(DioException(
               requestOptions: RequestOptions(path: ''),
               type: DioExceptionType.connectionError,
@@ -226,6 +235,7 @@ void main() {
         when(() => mockDio.get(
               any(),
               queryParameters: any(named: 'queryParameters'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenThrow(DioException(
               requestOptions: RequestOptions(path: ''),
               type: DioExceptionType.connectionError,
@@ -246,6 +256,7 @@ void main() {
               any(),
               data: any(named: 'data'),
               options: any(named: 'options'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenAnswer((_) async => _sseResponse(sseData));
 
         final tokens = await repository.sendMessage('s1', 'Hi').toList();
@@ -260,6 +271,7 @@ void main() {
               any(),
               data: any(named: 'data'),
               options: any(named: 'options'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenAnswer((_) async => _multiChunkResponse([chunk1, chunk2]));
 
         final tokens = await repository.sendMessage('s1', 'Hi').toList();
@@ -273,6 +285,7 @@ void main() {
               any(),
               data: any(named: 'data'),
               options: any(named: 'options'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenAnswer((_) async => _sseResponse(sseData));
 
         final tokens = await repository.sendMessage('s1', 'Hi').toList();
@@ -286,6 +299,7 @@ void main() {
               any(),
               data: any(named: 'data'),
               options: any(named: 'options'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenAnswer((_) async => _sseResponse(sseData));
 
         final tokens = await repository.sendMessage('s1', 'Hi').toList();
@@ -299,6 +313,7 @@ void main() {
               any(),
               data: any(named: 'data'),
               options: any(named: 'options'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenAnswer((_) async => _sseResponse(sseData));
 
         final tokens = await repository.sendMessage('s1', 'Hi').toList();
@@ -312,6 +327,7 @@ void main() {
               any(),
               data: any(named: 'data'),
               options: any(named: 'options'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenAnswer((_) async => _sseResponse(sseData));
 
         final tokens = await repository.sendMessage('s1', 'Hi').toList();
@@ -323,6 +339,7 @@ void main() {
               any(),
               data: any(named: 'data'),
               options: any(named: 'options'),
+              cancelToken: any(named: 'cancelToken'),
             )).thenThrow(DioException(
               requestOptions: RequestOptions(path: ''),
               type: DioExceptionType.connectionError,

@@ -159,7 +159,7 @@ class _SleepSummaryCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.peaked.withValues(alpha: 0.18),
-            AppColors.surfaceDarkVariant
+            Theme.of(context).colorScheme.surfaceContainerHighest
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -245,7 +245,7 @@ class _SleepStagesCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-          color: AppColors.surfaceDarkVariant,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,7 +331,7 @@ class _SleepWeekChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-          color: AppColors.surfaceDarkVariant,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

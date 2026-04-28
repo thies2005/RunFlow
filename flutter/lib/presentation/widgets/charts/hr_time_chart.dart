@@ -53,8 +53,8 @@ class HrTimeChart extends StatelessWidget {
                     show: true,
                     drawVerticalLine: false,
                     horizontalInterval: 20,
-                    getDrawingHorizontalLine: (value) => const FlLine(
-                      color: AppColors.surfaceDarkVariant,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       strokeWidth: 1,
                     ),
                   ),

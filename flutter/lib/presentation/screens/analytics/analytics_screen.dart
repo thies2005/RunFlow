@@ -5,10 +5,14 @@ import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/vdot.dart';
 import 'package:runflow_flutter/data/models/analytics_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/circular_gauge.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/combined_analytics_chart.dart';
+import 'package:runflow_flutter/presentation/widgets/charts/hr_zone_distribution_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/metric_card.dart';
+import 'package:runflow_flutter/presentation/widgets/shape_calibration_sheet.dart';
+import 'package:runflow_flutter/presentation/widgets/training_paces_card.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -68,7 +72,11 @@ class AnalyticsScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               const CombinedAnalyticsChart(),
               const SizedBox(height: 16),
+              const _HrZoneDistributionSection(),
+              const SizedBox(height: 16),
               _RacePredictionsCard(),
+              const SizedBox(height: 16),
+              const TrainingPacesCard(),
               const SizedBox(height: 16),
               RepaintBoundary(
                 child: _MarathonShapeSection(stats: stats),
@@ -576,11 +584,29 @@ class _MarathonShapeSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Marathon Shape',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              children: [
+                Text(
+                  'Marathon Shape',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: theme.colorScheme.surface,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (_) => const ShapeCalibrationSheet(),
+                  ),
+                  icon: const Icon(Icons.tune, size: 18),
+                  label: const Text('Calibrate'),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Center(
@@ -612,6 +638,41 @@ class _WeeklyMileageCard extends StatelessWidget {
         icon: Icons.straighten,
         color: AppColors.primary,
       ),
+    );
+  }
+}
+
+class _HrZoneDistributionSection extends ConsumerWidget {
+  const _HrZoneDistributionSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activitiesAsync = ref.watch(activitiesProvider);
+    final selectedDays = ref.watch(selectedDateRangeProvider);
+
+    return activitiesAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (state) {
+        final now = DateTime.now();
+        final cutoff = now.subtract(Duration(days: selectedDays));
+        final filtered = state.activities
+            .where((a) => a.startDate.isAfter(cutoff) && a.hasHeartrate)
+            .toList();
+
+        var z1 = 0, z2 = 0, z3 = 0, z4 = 0, z5 = 0;
+        for (final a in filtered) {
+          z1 += a.hrZone1Time;
+          z2 += a.hrZone2Time;
+          z3 += a.hrZone3Time;
+          z4 += a.hrZone4Time;
+          z5 += a.hrZone5Time;
+        }
+
+        return HrZoneDistributionChart(
+          zoneTimes: [z1, z2, z3, z4, z5, 0, 0],
+        );
+      },
     );
   }
 }
@@ -729,6 +790,11 @@ class _AnalyticsSkeleton extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: _shimmerBlock(height: 200, color: c),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: _shimmerBlock(height: 280, color: c),
         ),
         const SizedBox(height: 16),
         Padding(

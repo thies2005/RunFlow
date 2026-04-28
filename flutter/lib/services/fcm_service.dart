@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/services/notification_service.dart';
 
 Future<bool> registerPushToken({
@@ -33,18 +33,16 @@ Future<bool> registerPushToken({
 }
 
 class FcmService {
-  FcmService._();
+  FcmService({Dio? dio}) : _dio = dio;
 
-  static StreamSubscription<RemoteMessage>? _foregroundSubscription;
-  static StreamSubscription<String>? _tokenRefreshSubscription;
-  static bool _initialized = false;
-  static String? _token;
-  static Dio? _dio;
+  final Dio? _dio;
+  StreamSubscription<RemoteMessage>? _foregroundSubscription;
+  StreamSubscription<String>? _tokenRefreshSubscription;
+  bool _initialized = false;
+  String? _token;
 
-  static Future<void> initialize({Dio? dio}) async {
+  Future<void> initialize() async {
     if (_initialized) return;
-
-    _dio = dio;
 
     try {
       final messaging = FirebaseMessaging.instance;
@@ -65,16 +63,16 @@ class FcmService {
     }
   }
 
-  static Future<void> _sendTokenToServer(String token) async {
+  Future<void> _sendTokenToServer(String token) async {
     if (_dio == null) return;
     try {
-      await registerPushToken(dio: _dio!, token: token);
+      await registerPushToken(dio: _dio, token: token);
     } catch (e) {
-      debugPrint('[FcmService] Send token to server failed: $e');
+      logger.error('[FcmService] Send token to server failed: $e');
     }
   }
 
-  static Future<String?> getToken() async {
+  Future<String?> getToken() async {
     if (!_initialized) return null;
     try {
       _token = await FirebaseMessaging.instance.getToken();
@@ -84,8 +82,8 @@ class FcmService {
     }
   }
 
-  static Future<void> setupForegroundHandler(
-    NotificationServiceImpl notificationService,
+  Future<void> setupForegroundHandler(
+    NotificationService notificationService,
   ) async {
     if (!_initialized) return;
 
@@ -102,11 +100,11 @@ class FcmService {
         }
       });
     } catch (e) {
-      debugPrint('[FcmService] Setup foreground handler failed: $e');
+      logger.error('[FcmService] Setup foreground handler failed: $e');
     }
   }
 
-  static Future<void> dispose() async {
+  Future<void> dispose() async {
     await _foregroundSubscription?.cancel();
     _foregroundSubscription = null;
     await _tokenRefreshSubscription?.cancel();

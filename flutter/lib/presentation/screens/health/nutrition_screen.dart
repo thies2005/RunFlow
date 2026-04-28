@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
+import 'package:runflow_flutter/presentation/providers/nutrition_targets_provider.dart';
 import 'package:runflow_flutter/presentation/widgets/circular_gauge.dart';
 
 class NutritionScreen extends ConsumerWidget {
@@ -24,6 +25,11 @@ class NutritionScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
+            onPressed: () => _showTargetsDialog(context, ref),
+            icon: const Icon(Icons.settings_outlined, color: AppColors.onSurfaceVariant),
+            tooltip: 'Set Targets',
+          ),
+          IconButton(
             onPressed: () => context.push('/health/scan'),
             icon: const Icon(Icons.qr_code_scanner, color: AppColors.primary),
             tooltip: 'Scan Barcode',
@@ -31,7 +37,14 @@ class NutritionScreen extends ConsumerWidget {
         ],
       ),
       body: nutritionAsync.when(
-        data: (nutrition) => _NutritionContent(nutrition: nutrition, ref: ref, today: today),
+        data: (nutrition) {
+          final targetsAsync = ref.watch(nutritionTargetsProvider);
+          final targets = targetsAsync.asData?.value ??
+              const NutritionTargets(
+                  calories: 2000, protein: 150, carbs: 300, fat: 80, water: 3.0);
+          return _NutritionContent(
+              nutrition: nutrition, ref: ref, today: today, targets: targets);
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Column(
@@ -58,6 +71,126 @@ class NutritionScreen extends ConsumerWidget {
     );
   }
 
+  void _showTargetsDialog(BuildContext context, WidgetRef ref) {
+    final targetsAsync = ref.read(nutritionTargetsProvider);
+    final targets = targetsAsync.asData?.value ??
+        const NutritionTargets(
+            calories: 2000, protein: 150, carbs: 300, fat: 80, water: 3.0);
+    final calCtl = TextEditingController(text: targets.calories.toString());
+    final proteinCtl =
+        TextEditingController(text: targets.protein.toString());
+    final carbsCtl = TextEditingController(text: targets.carbs.toString());
+    final fatCtl = TextEditingController(text: targets.fat.toString());
+    final waterCtl = TextEditingController(text: targets.water.toString());
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor:
+          Theme.of(context).colorScheme.surfaceContainerHighest,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 24, right: 24, top: 24,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.onSurfaceVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Nutrition Targets',
+                style: Theme.of(ctx)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            TextField(
+                controller: calCtl,
+                decoration: const InputDecoration(
+                    labelText: 'Calories (kcal)'),
+                keyboardType: TextInputType.number),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                    child: TextField(
+                        controller: proteinCtl,
+                        decoration: const InputDecoration(
+                            labelText: 'Protein (g)'),
+                        keyboardType: TextInputType.number)),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: TextField(
+                        controller: carbsCtl,
+                        decoration: const InputDecoration(
+                            labelText: 'Carbs (g)'),
+                        keyboardType: TextInputType.number)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                    child: TextField(
+                        controller: fatCtl,
+                        decoration:
+                            const InputDecoration(labelText: 'Fat (g)'),
+                        keyboardType: TextInputType.number)),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: TextField(
+                        controller: waterCtl,
+                        decoration: const InputDecoration(
+                            labelText: 'Water (L)'),
+                        keyboardType: TextInputType.number)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  final newTargets = NutritionTargets(
+                    calories:
+                        int.tryParse(calCtl.text) ?? targets.calories,
+                    protein: int.tryParse(proteinCtl.text) ??
+                        targets.protein,
+                    carbs: int.tryParse(carbsCtl.text) ?? targets.carbs,
+                    fat: int.tryParse(fatCtl.text) ?? targets.fat,
+                    water: double.tryParse(waterCtl.text) ??
+                        targets.water,
+                  );
+                  updateNutritionTargets(ref, newTargets);
+                  Navigator.pop(ctx);
+                },
+                child: const Text('Save'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).whenComplete(() {
+      calCtl.dispose();
+      proteinCtl.dispose();
+      carbsCtl.dispose();
+      fatCtl.dispose();
+      waterCtl.dispose();
+    });
+  }
+
   void _showAddFoodDialog(BuildContext context, WidgetRef ref, NutritionLog nutrition) {
     final nameCtl = TextEditingController();
     final calCtl = TextEditingController();
@@ -69,7 +202,7 @@ class NutritionScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surfaceDarkVariant,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -180,11 +313,12 @@ class NutritionScreen extends ConsumerWidget {
 }
 
 class _NutritionContent extends StatelessWidget {
-  const _NutritionContent({required this.nutrition, required this.ref, required this.today});
+  const _NutritionContent({required this.nutrition, required this.ref, required this.today, required this.targets});
 
   final NutritionLog nutrition;
   final WidgetRef ref;
   final DateTime today;
+  final NutritionTargets targets;
 
   @override
   Widget build(BuildContext context) {
@@ -201,22 +335,21 @@ class _NutritionContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Calorie ring summary
-          _CalorieRing(nutrition: nutrition),
+          _CalorieRing(nutrition: nutrition, targets: targets),
           const SizedBox(height: 20),
-          // Gauges row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              CircularGauge(value: nutrition.protein, label: 'Protein (g)', maxValue: 150, color: AppColors.success),
-              CircularGauge(value: nutrition.carbs, label: 'Carbs (g)', maxValue: 300, color: AppColors.warning),
-              CircularGauge(value: nutrition.fat, label: 'Fat (g)', maxValue: 80, color: AppColors.fatigued),
+              CircularGauge(value: nutrition.protein, label: 'Protein (g)', maxValue: targets.protein.toDouble(), color: AppColors.success),
+              CircularGauge(value: nutrition.carbs, label: 'Carbs (g)', maxValue: targets.carbs.toDouble(), color: AppColors.warning),
+              CircularGauge(value: nutrition.fat, label: 'Fat (g)', maxValue: targets.fat.toDouble(), color: AppColors.fatigued),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              CircularGauge(value: nutrition.water, label: 'Water (L)', maxValue: 3, color: AppColors.peaked),
+              CircularGauge(value: nutrition.water, label: 'Water (L)', maxValue: targets.water, color: AppColors.peaked),
             ],
           ),
           const SizedBox(height: 20),
@@ -237,6 +370,7 @@ class _NutritionContent extends StatelessWidget {
           // Water tracker
           _WaterTracker(
             currentWater: nutrition.water,
+            waterGoal: targets.water,
             onAdd: () {
               final updated = nutrition.copyWith(water: nutrition.water + 0.25);
               ref.read(nutritionProvider(today).notifier).save(updated);
@@ -252,19 +386,20 @@ class _NutritionContent extends StatelessWidget {
 }
 
 class _CalorieRing extends StatelessWidget {
-  const _CalorieRing({required this.nutrition});
+  const _CalorieRing({required this.nutrition, required this.targets});
   final NutritionLog nutrition;
+  final NutritionTargets targets;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const goal = 2000.0;
+    final goal = targets.calories.toDouble();
     final pct = (nutrition.calories / goal).clamp(0.0, 1.0);
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDarkVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -343,9 +478,10 @@ class _MacroBar extends StatelessWidget {
 }
 
 class _WaterTracker extends StatelessWidget {
-  const _WaterTracker({required this.currentWater, required this.onAdd});
+  const _WaterTracker({required this.currentWater, required this.onAdd, required this.waterGoal});
   final double currentWater;
   final VoidCallback onAdd;
+  final double waterGoal;
 
   @override
   Widget build(BuildContext context) {
@@ -354,7 +490,7 @@ class _WaterTracker extends StatelessWidget {
     return _SectionCard(
       title: 'Water Intake',
       trailing: Text(
-        '${currentWater.toStringAsFixed(2)}L / 3.0L',
+        '${currentWater.toStringAsFixed(2)}L / ${waterGoal.toStringAsFixed(1)}L',
         style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
       ),
       child: Row(
@@ -364,7 +500,7 @@ class _WaterTracker extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 1),
               child: Icon(Icons.water_drop, size: 20,
-                  color: i < glasses ? AppColors.peaked : AppColors.surfaceDarkVariant.withValues(alpha: 0.5)),
+                  color: i < glasses ? AppColors.peaked : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)),
             ),
           ),
         )),
@@ -451,7 +587,7 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDarkVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

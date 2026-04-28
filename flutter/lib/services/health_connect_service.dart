@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/models/health_vitals_models.dart';
@@ -56,11 +56,11 @@ class HealthConnectServiceImpl implements HealthConnectService {
     try {
       final available = await _health.isHealthConnectAvailable();
       if (!available) {
-        debugPrint('[HealthConnect] Health Connect not available on this device');
+        logger.warning('[HealthConnect] Health Connect not available on this device');
       }
       return available;
     } catch (e) {
-      debugPrint('[HealthConnect] isAvailable check failed: $e');
+      logger.error('[HealthConnect] isAvailable check failed: $e');
       return false;
     }
   }
@@ -72,7 +72,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
       return await _health.requestAuthorization(_permissionTypes,
           permissions: [HealthDataAccess.READ, HealthDataAccess.WRITE]);
     } catch (e) {
-      debugPrint('[HealthConnect] Permission request failed: $e');
+      logger.error('[HealthConnect] Permission request failed: $e');
       return false;
     }
   }
@@ -95,7 +95,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
           .map(_convertToActivity)
           .toList();
     } catch (e) {
-      debugPrint('[HealthConnect] readActivities failed: $e');
+      logger.error('[HealthConnect] readActivities failed: $e');
       return [];
     }
   }
@@ -113,7 +113,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
         endTime: now,
       );
     } catch (e) {
-      debugPrint('[HealthConnect] readHeartRate failed: $e');
+      logger.error('[HealthConnect] readHeartRate failed: $e');
       return [];
     }
   }
@@ -131,7 +131,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
         endTime: now,
       );
     } catch (e) {
-      debugPrint('[HealthConnect] readSteps failed: $e');
+      logger.error('[HealthConnect] readSteps failed: $e');
       return [];
     }
   }
@@ -147,7 +147,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
         endTime: end,
       );
     } catch (e) {
-      debugPrint('[HealthConnect] readActiveCalories failed: $e');
+      logger.error('[HealthConnect] readActiveCalories failed: $e');
       return [];
     }
   }
@@ -163,7 +163,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
         endTime: end,
       );
     } catch (e) {
-      debugPrint('[HealthConnect] readWeight failed: $e');
+      logger.error('[HealthConnect] readWeight failed: $e');
       return [];
     }
   }
@@ -187,7 +187,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
       }
       return null;
     } catch (e) {
-      debugPrint('[HealthConnect] readLatestWeight failed: $e');
+      logger.error('[HealthConnect] readLatestWeight failed: $e');
       return null;
     }
   }
@@ -245,7 +245,6 @@ class HealthConnectServiceImpl implements HealthConnectService {
         if (v is NumericHealthValue) spo2 = v.numericValue.toDouble();
       }
 
-      // Build 7-day HR trend
       final hrTrend = <DateTime, double>{};
       for (final point in restingHrData) {
         final v = point.value;
@@ -256,15 +255,30 @@ class HealthConnectServiceImpl implements HealthConnectService {
         }
       }
 
+      final hrvTrend = <DateTime, double>{};
+      for (final point in hrvData) {
+        final v = point.value;
+        if (v is NumericHealthValue) {
+          final day =
+              DateTime(point.dateFrom.year, point.dateFrom.month, point.dateFrom.day);
+          if (hrvTrend.containsKey(day)) {
+            hrvTrend[day] = (hrvTrend[day]! + v.numericValue.toDouble()) / 2;
+          } else {
+            hrvTrend[day] = v.numericValue.toDouble();
+          }
+        }
+      }
+
       return VitalsData(
         restingHeartRate: restingHr,
         hrv: hrv,
         spo2: spo2,
         lastSynced: DateTime.now(),
         hrTrend: hrTrend,
+        hrvTrend: hrvTrend,
       );
     } catch (e) {
-      debugPrint('[HealthConnect] readVitals failed: $e');
+      logger.error('[HealthConnect] readVitals failed: $e');
       return const VitalsData();
     }
   }
@@ -353,7 +367,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
         recentSessions: dailySleep,
       );
     } catch (e) {
-      debugPrint('[HealthConnect] readSleep failed: $e');
+      logger.error('[HealthConnect] readSleep failed: $e');
       return const SleepData();
     }
   }

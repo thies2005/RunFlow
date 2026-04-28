@@ -38,36 +38,14 @@ Future<String?> refreshSession({
 Future<Response<Map<String, dynamic>>> _postRefresh({
   required Dio dio,
   required String refreshToken,
-}) async {
-  final attempts = <String>[
-    ApiConstants.legacyRefreshUrl,
+}) {
+  return dio.post<Map<String, dynamic>>(
     ApiConstants.refreshPath,
-  ];
-
-  DioException? lastError;
-
-  for (final path in attempts) {
-    try {
-      return await dio.post<Map<String, dynamic>>(
-        path,
-        data: RefreshRequest(refreshToken: refreshToken).toJson(),
-        options: Options(
-          extra: const {
-            'skipAuthRefresh': true,
-          },
-        ),
-      );
-    } on DioException catch (error) {
-      lastError = error;
-      if (error.response?.statusCode != 404) {
-        rethrow;
-      }
-    }
-  }
-
-  throw lastError ??
-      DioException(
-        requestOptions: RequestOptions(path: ApiConstants.refreshPath),
-        type: DioExceptionType.unknown,
-      );
+    data: RefreshRequest(refreshToken: refreshToken).toJson(),
+    options: Options(
+      extra: const {
+        'skipAuthRefresh': true,
+      },
+    ),
+  );
 }

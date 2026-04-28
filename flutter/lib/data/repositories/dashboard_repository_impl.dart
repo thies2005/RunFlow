@@ -10,6 +10,15 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
   final Dio dio;
   DashboardResponse? _cachedDashboard;
+  DateTime? _cachedAt;
+
+  static const _cacheTtl = Duration(minutes: 5);
+
+  @override
+  bool get isCacheStale {
+    if (_cachedDashboard == null || _cachedAt == null) return true;
+    return DateTime.now().difference(_cachedAt!) > _cacheTtl;
+  }
 
   @override
   Future<DashboardResponse> fetchDashboard() async {
@@ -22,6 +31,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         ),
       );
       _cachedDashboard = result;
+      _cachedAt = DateTime.now();
       return result;
     } on DioException catch (e) {
       if (_cachedDashboard != null) return _cachedDashboard!;

@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/data/datasources/remote/dio_client.dart';
 import 'package:runflow_flutter/data/interceptors/auth_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/connectivity_interceptor.dart';
@@ -18,6 +20,15 @@ import 'package:runflow_flutter/services/background_sync.dart';
 import 'package:runflow_flutter/services/fcm_service.dart';
 
 part 'auth_providers.g.dart';
+
+final fcmServiceProvider = Provider<FcmService>((ref) {
+  final dio = ref.watch(dioClientProvider).dio;
+  final service = FcmService(dio: dio);
+  ref.onDispose(() {
+    service.dispose();
+  });
+  return service;
+});
 
 @Riverpod(keepAlive: true)
 AuthService authServiceImpl(Ref ref) {
@@ -97,7 +108,7 @@ class AuthState extends _$AuthState {
   Future<void> logout() async {
     try {
       await BackgroundSyncService.cancel();
-      await FcmService.dispose();
+      ref.invalidate(fcmServiceProvider);
       ref.read(healthSyncServiceProvider).stopAutoSync();
       ref.invalidate(healthSyncServiceProvider);
       final recordingService = ref.read(recordingServiceProvider);
@@ -105,6 +116,7 @@ class AuthState extends _$AuthState {
       await recordingService.disconnectHeartRateMonitor();
       final repo = ref.read(authRepositoryProvider);
       await repo.logout();
+      AppDatabase.instance.close();
     } finally {
       state = const AsyncValue.data(null);
     }

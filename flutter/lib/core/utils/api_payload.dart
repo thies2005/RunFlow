@@ -15,3 +15,20 @@ Map<String, dynamic> unwrapPayload(
 
   return data;
 }
+
+List<Map<String, dynamic>> unwrapList(
+  Map<String, dynamic> data,
+  List<String> envelopeKeys,
+) {
+  for (final key in envelopeKeys) {
+    final nested = data[key];
+    if (nested is List) {
+      return [
+        for (final item in nested)
+          if (item is Map) Map<String, dynamic>.from(item),
+      ];
+    }
+  }
+
+  return [];
+}

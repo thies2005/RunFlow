@@ -33,7 +33,7 @@ import 'package:runflow_flutter/presentation/screens/health/vitals_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/sleep_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/fasting_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/ai_scan_screen.dart';
-import 'package:runflow_flutter/presentation/screens/onboarding/onboarding_wizard_screen.dart';
+import 'package:runflow_flutter/presentation/screens/onboarding/feature_showcase_screen.dart';
 import 'package:runflow_flutter/presentation/screens/startup/startup_screen.dart';
 import 'package:runflow_flutter/presentation/screens/record/record_screen.dart';
 import 'package:runflow_flutter/presentation/screens/race/race_result_screen.dart';
@@ -48,7 +48,7 @@ GoRouter createRouter(Ref ref) {
     observers: kReleaseMode ? [SentryNavigatorObserver()] : null,
     redirect: (context, state) async {
       final authState = ref.read(authStateProvider);
-      final onboardingComplete = await OnboardingWizardScreen.isCompleted();
+      final onboardingComplete = await FeatureShowcaseScreen.isCompleted();
       final isStartup = state.matchedLocation == '/startup';
       final isLoggingIn = state.matchedLocation == '/login';
       final isOnboarding = state.matchedLocation == '/onboarding';
@@ -74,7 +74,7 @@ GoRouter createRouter(Ref ref) {
         return isAuthenticated ? '/dashboard' : '/login';
       }
 
-      if (!isAuthenticated && !isPublicAuth && !isOnboarding) {
+      if (!isAuthenticated && !isPublicAuth) {
         return '/login';
       }
       if (isAuthenticated && isPublicAuth) {
@@ -89,7 +89,7 @@ GoRouter createRouter(Ref ref) {
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingWizardScreen(),
+        builder: (context, state) => const FeatureShowcaseScreen(),
       ),
       GoRoute(
         path: '/login',
@@ -256,16 +256,16 @@ GoRouter createRouter(Ref ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
-                builder: (context, state) => const ProfileScreen(),
+                path: '/activities',
+                builder: (context, state) => const ActivityListScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/activities',
-                builder: (context, state) => const ActivityListScreen(),
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),

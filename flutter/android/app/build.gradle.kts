@@ -27,7 +27,7 @@ android {
     defaultConfig {
         applicationId = "com.runflow2.app"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -47,6 +47,7 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha07")
 }
 
 flutter {

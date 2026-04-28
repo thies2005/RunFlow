@@ -54,6 +54,7 @@ void main() {
     expect(find.text('Plan'), findsOneWidget);
     expect(find.text('Record'), findsOneWidget);
     expect(find.text('Health'), findsOneWidget);
+    expect(find.text('Activities'), findsOneWidget);
     expect(find.text('Athlete'), findsOneWidget);
   });
 
@@ -92,6 +93,7 @@ void main() {
       const ProviderScope(child: RunFlowApp()),
     );
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.text('Skip'), findsOneWidget);

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/models/health_vitals_models.dart';
@@ -23,6 +24,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
   HealthConnectServiceImpl({Health? health}) : _health = health ?? Health();
 
   final Health _health;
+  bool _configured = false;
 
   static const List<HealthDataType> _permissionTypes = [
     HealthDataType.WORKOUT,
@@ -42,11 +44,23 @@ class HealthConnectServiceImpl implements HealthConnectService {
     HealthDataType.DISTANCE_DELTA,
   ];
 
+  Future<void> _ensureConfigured() async {
+    if (!_configured) {
+      await _health.configure();
+      _configured = true;
+    }
+  }
+
   @override
   Future<bool> isAvailable() async {
     try {
-      return await _health.isHealthConnectAvailable();
-    } catch (_) {
+      final available = await _health.isHealthConnectAvailable();
+      if (!available) {
+        debugPrint('[HealthConnect] Health Connect not available on this device');
+      }
+      return available;
+    } catch (e) {
+      debugPrint('[HealthConnect] isAvailable check failed: $e');
       return false;
     }
   }
@@ -54,9 +68,11 @@ class HealthConnectServiceImpl implements HealthConnectService {
   @override
   Future<bool> requestPermissions() async {
     try {
-      await _health.configure();
-      return await _health.requestAuthorization(_permissionTypes);
-    } catch (_) {
+      await _ensureConfigured();
+      return await _health.requestAuthorization(_permissionTypes,
+          permissions: [HealthDataAccess.READ, HealthDataAccess.WRITE]);
+    } catch (e) {
+      debugPrint('[HealthConnect] Permission request failed: $e');
       return false;
     }
   }
@@ -64,7 +80,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
   @override
   Future<List<Activity>> readActivities() async {
     try {
-      await _health.configure();
+      await _ensureConfigured();
       final now = DateTime.now();
       final startTime = now.subtract(const Duration(days: 30));
 
@@ -78,7 +94,8 @@ class HealthConnectServiceImpl implements HealthConnectService {
           .where((point) => point.value is WorkoutHealthValue)
           .map(_convertToActivity)
           .toList();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[HealthConnect] readActivities failed: $e');
       return [];
     }
   }
@@ -86,7 +103,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
   @override
   Future<List<HealthDataPoint>> readHeartRate() async {
     try {
-      await _health.configure();
+      await _ensureConfigured();
       final now = DateTime.now();
       final startTime = now.subtract(const Duration(days: 7));
 
@@ -95,7 +112,8 @@ class HealthConnectServiceImpl implements HealthConnectService {
         startTime: startTime,
         endTime: now,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[HealthConnect] readHeartRate failed: $e');
       return [];
     }
   }
@@ -103,7 +121,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
   @override
   Future<List<HealthDataPoint>> readSteps() async {
     try {
-      await _health.configure();
+      await _ensureConfigured();
       final now = DateTime.now();
       final startTime = now.subtract(const Duration(days: 7));
 
@@ -112,7 +130,8 @@ class HealthConnectServiceImpl implements HealthConnectService {
         startTime: startTime,
         endTime: now,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[HealthConnect] readSteps failed: $e');
       return [];
     }
   }
@@ -121,13 +140,14 @@ class HealthConnectServiceImpl implements HealthConnectService {
   Future<List<HealthDataPoint>> readActiveCalories(
       DateTime start, DateTime end) async {
     try {
-      await _health.configure();
+      await _ensureConfigured();
       return await _health.getHealthDataFromTypes(
         types: [HealthDataType.ACTIVE_ENERGY_BURNED],
         startTime: start,
         endTime: end,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[HealthConnect] readActiveCalories failed: $e');
       return [];
     }
   }
@@ -136,13 +156,14 @@ class HealthConnectServiceImpl implements HealthConnectService {
   Future<List<HealthDataPoint>> readWeight(
       DateTime start, DateTime end) async {
     try {
-      await _health.configure();
+      await _ensureConfigured();
       return await _health.getHealthDataFromTypes(
         types: [HealthDataType.WEIGHT],
         startTime: start,
         endTime: end,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[HealthConnect] readWeight failed: $e');
       return [];
     }
   }
@@ -150,7 +171,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
   @override
   Future<double?> readLatestWeight() async {
     try {
-      await _health.configure();
+      await _ensureConfigured();
       final now = DateTime.now();
       final start = now.subtract(const Duration(days: 30));
       final data = await _health.getHealthDataFromTypes(
@@ -165,7 +186,8 @@ class HealthConnectServiceImpl implements HealthConnectService {
         return value.numericValue.toDouble();
       }
       return null;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[HealthConnect] readLatestWeight failed: $e');
       return null;
     }
   }
@@ -175,7 +197,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
   @override
   Future<VitalsData> readVitals() async {
     try {
-      await _health.configure();
+      await _ensureConfigured();
       final now = DateTime.now();
       final sevenDaysAgo = now.subtract(const Duration(days: 7));
 
@@ -241,7 +263,8 @@ class HealthConnectServiceImpl implements HealthConnectService {
         lastSynced: DateTime.now(),
         hrTrend: hrTrend,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[HealthConnect] readVitals failed: $e');
       return const VitalsData();
     }
   }
@@ -251,7 +274,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
   @override
   Future<SleepData> readSleep() async {
     try {
-      await _health.configure();
+      await _ensureConfigured();
       final now = DateTime.now();
       final fourteenDaysAgo = now.subtract(const Duration(days: 14));
 
@@ -329,7 +352,8 @@ class HealthConnectServiceImpl implements HealthConnectService {
         lastSynced: DateTime.now(),
         recentSessions: dailySleep,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[HealthConnect] readSleep failed: $e');
       return const SleepData();
     }
   }

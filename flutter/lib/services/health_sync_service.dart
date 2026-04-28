@@ -23,6 +23,12 @@ class HealthSyncService {
 
   Future<void> syncDailyHealth(DateTime date) async {
     try {
+      final available = await _healthConnect.isAvailable();
+      if (!available) {
+        debugPrint('[HealthSync] Health Connect not available, skipping sync');
+        return;
+      }
+
       final start = DateTime(date.year, date.month, date.day);
       final end = start.add(const Duration(days: 1));
 

@@ -11,7 +11,7 @@ class AppShell extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex.clamp(0, 4),
+        selectedIndex: navigationShell.currentIndex.clamp(0, 5),
         onDestinationSelected: (index) {
           navigationShell.goBranch(
             index,
@@ -38,6 +38,11 @@ class AppShell extends StatelessWidget {
             icon: Icon(Icons.monitor_heart_outlined),
             selectedIcon: Icon(Icons.monitor_heart),
             label: 'Health',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.directions_run_outlined),
+            selectedIcon: Icon(Icons.directions_run),
+            label: 'Activities',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

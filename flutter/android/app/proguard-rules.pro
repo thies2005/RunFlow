@@ -25,3 +25,8 @@
 -dontwarn androidx.health.**
 -keep class plugin.health.** { *; }
 -dontwarn plugin.health.**
+
+# Health Flutter plugin platform channel
+-keep class cachet.plugins.health.** { *; }
+-dontwarn cachet.plugins.health.**
+-keep class io.flutter.plugins.** { *; }

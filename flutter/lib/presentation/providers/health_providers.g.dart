@@ -256,6 +256,81 @@ final class BodyMeasurementsProvider
 
 String _$bodyMeasurementsHash() => r'f4d6848c151a0810b9841a64ead191f46f0fec7c';
 
+@ProviderFor(dailyHealth)
+final dailyHealthProvider = DailyHealthFamily._();
+
+final class DailyHealthProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<DailyHealthLog>,
+          DailyHealthLog,
+          FutureOr<DailyHealthLog>
+        >
+    with $FutureModifier<DailyHealthLog>, $FutureProvider<DailyHealthLog> {
+  DailyHealthProvider._({
+    required DailyHealthFamily super.from,
+    required DateTime super.argument,
+  }) : super(
+         retry: null,
+         name: r'dailyHealthProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$dailyHealthHash();
+
+  @override
+  String toString() {
+    return r'dailyHealthProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<DailyHealthLog> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<DailyHealthLog> create(Ref ref) {
+    final argument = this.argument as DateTime;
+    return dailyHealth(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is DailyHealthProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$dailyHealthHash() => r'52a4535c244860b3228a21e72daf58a1978eff58';
+
+final class DailyHealthFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<DailyHealthLog>, DateTime> {
+  DailyHealthFamily._()
+    : super(
+        retry: null,
+        name: r'dailyHealthProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  DailyHealthProvider call(DateTime date) =>
+      DailyHealthProvider._(argument: date, from: this);
+
+  @override
+  String toString() => r'dailyHealthProvider';
+}
+
 @ProviderFor(takenSupplementIds)
 final takenSupplementIdsProvider = TakenSupplementIdsProvider._();
 
@@ -294,7 +369,7 @@ final class TakenSupplementIdsProvider
 }
 
 String _$takenSupplementIdsHash() =>
-    r'edf3d75695efb7e35050990885578ce5b1567208';
+    r'f2efc3a5389325149edb97cae325b3f47cc84ea3';
 
 @ProviderFor(Fasting)
 final fastingProvider = FastingProvider._();
@@ -364,7 +439,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'b2d8e5f7f07d36e27d573d648a638c017c2837de';
+String _$supplementListHash() => r'fef464ef01ac2f1fd64eb0952157fa442ac35ece';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();
@@ -426,7 +501,7 @@ final class NutritionNotifierProvider
   }
 }
 
-String _$nutritionNotifierHash() => r'd057c0d0521b5abef9f24bf31eac3be9874d4b99';
+String _$nutritionNotifierHash() => r'c4e2b530f88c1495a28b9d851501142e4e090ef0';
 
 final class NutritionNotifierFamily extends $Family
     with

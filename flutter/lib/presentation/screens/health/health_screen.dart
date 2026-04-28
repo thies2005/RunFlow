@@ -19,7 +19,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final today = DateTime.now();
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     final nutritionAsync = ref.watch(nutritionProvider(today));
     final supplementsAsync = ref.watch(supplementListProvider);
     final bodyAsync = ref.watch(bodyMeasurementsProvider);
@@ -28,7 +28,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            final today = DateTime.now();
+            final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
             ref.invalidate(nutritionProvider(today));
             ref.invalidate(supplementListProvider);
             ref.invalidate(bodyMeasurementsProvider);
@@ -258,7 +258,7 @@ class _SyncBanner extends ConsumerWidget {
           GestureDetector(
             onTap: () async {
               await syncService.syncHistoricalHealth();
-              final today = DateTime.now();
+              final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
               ref.invalidate(nutritionProvider(today));
               ref.invalidate(supplementListProvider);
               ref.invalidate(bodyMeasurementsProvider);
@@ -458,7 +458,7 @@ class _NutritionCard extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => _NoDataWidget(
           label: 'nutrition',
-          onSync: () => ref.invalidate(nutritionProvider(DateTime.now())),
+          onSync: () => ref.invalidate(nutritionProvider(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day))),
         ),
       ),
     );

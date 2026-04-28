@@ -50,11 +50,16 @@ Future<List<BodyMeasurement>> bodyMeasurements(Ref ref) async {
 }
 
 @riverpod
+Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
+  final apiRepo = ref.read(healthApiRepositoryProvider);
+  return apiRepo.getDailyHealth(date);
+}
+
+@riverpod
 Future<Set<String>> takenSupplementIds(Ref ref) async {
   final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   try {
-    final apiRepo = ref.read(healthApiRepositoryProvider);
-    final daily = await apiRepo.getDailyHealth(today);
+    final daily = await ref.watch(dailyHealthProvider(today).future);
     return daily.supplementLogs
         .where((log) => log.taken)
         .map((log) => log.supplementId)
@@ -104,15 +109,14 @@ class SupplementList extends _$SupplementList {
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-      final daily = await apiRepo.getDailyHealth(today);
+      final daily = await ref.read(dailyHealthProvider(today).future);
       final existingLog = daily.supplementLogs
           .where((log) => log.supplementId == id)
           .firstOrNull;
       final currentlyTaken = existingLog?.taken ?? false;
       await apiRepo.toggleSupplementLog(id, today, !currentlyTaken);
-      ref.invalidate(takenSupplementIdsProvider);
+      ref.invalidate(dailyHealthProvider(today));
     } catch (_) {}
-    ref.invalidateSelf();
   }
 
   Future<void> add(Supplement supplement) async {
@@ -132,8 +136,7 @@ class NutritionNotifier extends _$NutritionNotifier {
   @override
   Future<NutritionLog> build(DateTime date) async {
     try {
-      final apiRepo = ref.read(healthApiRepositoryProvider);
-      final daily = await apiRepo.getDailyHealth(date);
+      final daily = await ref.watch(dailyHealthProvider(date).future);
       double totalCalories = 0;
       double totalProtein = 0;
       double totalCarbs = 0;

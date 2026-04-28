@@ -11,7 +11,7 @@ class NutritionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final today = DateTime.now();
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     final nutritionAsync = ref.watch(nutritionProvider(today));
     final theme = Theme.of(context);
 
@@ -64,7 +64,7 @@ class NutritionScreen extends ConsumerWidget {
     final proteinCtl = TextEditingController();
     final carbsCtl = TextEditingController();
     final fatCtl = TextEditingController();
-    final today = DateTime.now();
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
     showModalBottomSheet(
       context: context,

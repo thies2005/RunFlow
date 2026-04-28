@@ -10,6 +10,7 @@ class SupplementsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final supplementsAsync = ref.watch(supplementListProvider);
+    final takenAsync = ref.watch(takenSupplementIdsProvider);
     final theme = Theme.of(context);
 
     return supplementsAsync.when(
@@ -19,96 +20,104 @@ class SupplementsTab extends ConsumerWidget {
         final inactiveSupplements =
             supplements.where((s) => !s.isActive).toList();
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Daily Supplements',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (activeSupplements.isEmpty && inactiveSupplements.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.medication_outlined,
-                          size: 48,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No supplements yet',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Track your daily supplements here',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+        return takenAsync.when(
+          data: (takenIds) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Daily Supplements',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              if (activeSupplements.isNotEmpty) ...[
-                Text(
-                  'Active',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 16),
+                  if (activeSupplements.isEmpty && inactiveSupplements.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.medication_outlined,
+                              size: 48,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No supplements yet',
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Track your daily supplements here',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (activeSupplements.isNotEmpty) ...[
+                    Text(
+                      'Active',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...activeSupplements.map(
+                      (s) => _SupplementCard(
+                        supplement: s,
+                        isTaken: takenIds.contains(s.id),
+                        onToggle: () => ref
+                            .read(supplementListProvider.notifier)
+                            .toggle(s.id),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (inactiveSupplements.isNotEmpty) ...[
+                    Text(
+                      'Inactive',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...inactiveSupplements.map(
+                      (s) => _SupplementCard(
+                        supplement: s,
+                        isTaken: false,
+                        onToggle: () => ref
+                            .read(supplementListProvider.notifier)
+                            .toggle(s.id),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => _showAddSupplementDialog(context, ref),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Supplement'),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                ...activeSupplements.map(
-                  (s) => _SupplementCard(
-                    supplement: s,
-                    onToggle: () => ref
-                        .read(supplementListProvider.notifier)
-                        .toggle(s.id),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              if (inactiveSupplements.isNotEmpty) ...[
-                Text(
-                  'Inactive',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ...inactiveSupplements.map(
-                  (s) => _SupplementCard(
-                    supplement: s,
-                    onToggle: () => ref
-                        .read(supplementListProvider.notifier)
-                        .toggle(s.id),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => _showAddSupplementDialog(context, ref),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Supplement'),
-                ),
+                  const SizedBox(height: 16),
+                  _SupplementAdherenceSection(),
+                ],
               ),
-              const SizedBox(height: 16),
-              _SupplementAdherenceSection(),
-            ],
-          ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e')),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -172,10 +181,12 @@ class SupplementsTab extends ConsumerWidget {
 class _SupplementCard extends StatelessWidget {
   const _SupplementCard({
     required this.supplement,
+    required this.isTaken,
     required this.onToggle,
   });
 
   final Supplement supplement;
+  final bool isTaken;
   final VoidCallback onToggle;
 
   @override
@@ -185,13 +196,13 @@ class _SupplementCard extends StatelessWidget {
         title: Text(supplement.name),
         subtitle: Text('${supplement.dosage} - ${supplement.frequency}'),
         trailing: Switch(
-          value: supplement.isActive,
+          value: isTaken,
           onChanged: (_) => onToggle(),
           activeTrackColor: AppColors.primary,
         ),
         leading: Icon(
           Icons.medication,
-          color: supplement.isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+          color: isTaken ? AppColors.primary : AppColors.onSurfaceVariant,
         ),
       ),
     );

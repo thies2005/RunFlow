@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
+import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 
 class BodyScreen extends ConsumerWidget {
@@ -122,7 +123,7 @@ class BodyScreen extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () {
+                onPressed: () async {
                   final m = BodyMeasurement(
                     id: 0,
                     date: DateTime.now(),
@@ -133,6 +134,9 @@ class BodyScreen extends ConsumerWidget {
                     hips: double.tryParse(hipsCtl.text),
                   );
                   ref.read(healthRepositoryProvider).saveBodyMeasurement(m);
+                  try {
+                    await ref.read(healthApiRepositoryProvider).syncBodyMeasurement(m);
+                  } catch (_) {}
                   ref.invalidate(bodyMeasurementsProvider);
                   Navigator.pop(ctx);
                 },

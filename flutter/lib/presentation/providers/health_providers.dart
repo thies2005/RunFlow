@@ -40,8 +40,28 @@ Future<List<FastingSession>> fastingHistory(Ref ref) async {
 
 @riverpod
 Future<List<BodyMeasurement>> bodyMeasurements(Ref ref) async {
-  final repo = ref.read(healthRepositoryProvider);
-  return repo.getBodyMeasurements();
+  try {
+    final apiRepo = ref.read(healthApiRepositoryProvider);
+    return await apiRepo.getBodyMeasurements();
+  } catch (_) {
+    final repo = ref.read(healthRepositoryProvider);
+    return repo.getBodyMeasurements();
+  }
+}
+
+@riverpod
+Future<Set<String>> takenSupplementIds(Ref ref) async {
+  final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  try {
+    final apiRepo = ref.read(healthApiRepositoryProvider);
+    final daily = await apiRepo.getDailyHealth(today);
+    return daily.supplementLogs
+        .where((log) => log.taken)
+        .map((log) => log.supplementId)
+        .toSet();
+  } catch (_) {
+    return {};
+  }
 }
 
 @riverpod
@@ -83,16 +103,14 @@ class SupplementList extends _$SupplementList {
   Future<void> toggle(String id) async {
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
-      final supplements = state.value ?? [];
-      final supplement = supplements.cast<Supplement?>().firstWhere(
-        (s) => s?.id == id,
-        orElse: () => null,
-      );
-      if (supplement != null) {
-        await apiRepo.saveSupplementRemote(
-          supplement.copyWith(isActive: !supplement.isActive),
-        );
-      }
+      final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      final daily = await apiRepo.getDailyHealth(today);
+      final existingLog = daily.supplementLogs
+          .where((log) => log.supplementId == id)
+          .firstOrNull;
+      final currentlyTaken = existingLog?.taken ?? false;
+      await apiRepo.toggleSupplementLog(id, today, !currentlyTaken);
+      ref.invalidate(takenSupplementIdsProvider);
     } catch (_) {}
     ref.invalidateSelf();
   }

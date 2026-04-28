@@ -254,7 +254,47 @@ final class BodyMeasurementsProvider
   }
 }
 
-String _$bodyMeasurementsHash() => r'0db6bac0ce9e5489559cf46a8eea83c549e420da';
+String _$bodyMeasurementsHash() => r'f4d6848c151a0810b9841a64ead191f46f0fec7c';
+
+@ProviderFor(takenSupplementIds)
+final takenSupplementIdsProvider = TakenSupplementIdsProvider._();
+
+final class TakenSupplementIdsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Set<String>>,
+          Set<String>,
+          FutureOr<Set<String>>
+        >
+    with $FutureModifier<Set<String>>, $FutureProvider<Set<String>> {
+  TakenSupplementIdsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'takenSupplementIdsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$takenSupplementIdsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Set<String>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Set<String>> create(Ref ref) {
+    return takenSupplementIds(ref);
+  }
+}
+
+String _$takenSupplementIdsHash() =>
+    r'edf3d75695efb7e35050990885578ce5b1567208';
 
 @ProviderFor(Fasting)
 final fastingProvider = FastingProvider._();
@@ -324,7 +364,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'518941783fe4a9caa278adfb7102afd0ae2247f8';
+String _$supplementListHash() => r'b2d8e5f7f07d36e27d573d648a638c017c2837de';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();

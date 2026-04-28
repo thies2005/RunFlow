@@ -161,6 +161,28 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
+  Future<List<BodyMeasurement>> getBodyMeasurements() async {
+    try {
+      final response = await dio.get(ApiConstants.bodyCompositionPath);
+      final data = response.data;
+      if (data is List) {
+        return data
+            .map((dynamic item) =>
+                BodyMeasurement.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+      final map = data as Map<String, dynamic>;
+      final measurements = map['measurements'] as List<dynamic>? ?? map['data'] as List<dynamic>? ?? [];
+      return measurements
+          .map((dynamic item) =>
+              BodyMeasurement.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw _mapException(e, 'Failed to get body measurements.');
+    }
+  }
+
+  @override
   Future<void> batchSync(Map<String, dynamic> allData) async {
     try {
       await dio.post(

@@ -9,6 +9,7 @@ abstract class HealthApiRepository {
   Future<void> saveSupplementRemote(Supplement supplement);
   Future<void> syncFasting(FastingSession session);
   Future<void> syncBodyMeasurement(BodyMeasurement measurement);
+  Future<List<BodyMeasurement>> getBodyMeasurements();
   Future<void> batchSync(Map<String, dynamic> allData);
   Future<Map<String, dynamic>> getInsights();
   Future<NutritionTargets> getNutritionTargets();

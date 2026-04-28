@@ -21,18 +21,7 @@ String tsbStatus(double tsb) {
 
 double racePrediction(double vdot, double distanceMeters) {
   if (vdot <= 0) return 0;
-
-  final velocity = (-4.60 +
-          0.182258 * (distanceMeters / estimateTime(vdot, distanceMeters)) +
-          0.000104 *
-              pow(distanceMeters / estimateTime(vdot, distanceMeters), 2)) /
-      (0.8 +
-          0.1894393 *
-              exp(-0.012778 * estimateTime(vdot, distanceMeters)) +
-          0.2989558 *
-              exp(-0.1932605 * estimateTime(vdot, distanceMeters)));
-
-  return distanceMeters / velocity;
+  return estimateTime(vdot, distanceMeters);
 }
 
 double estimateTime(double vdot, double distanceMeters) {

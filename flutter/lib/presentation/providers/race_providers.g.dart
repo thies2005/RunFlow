@@ -54,7 +54,7 @@ final class RaceCountdownProvider
   }
 }
 
-String _$raceCountdownHash() => r'b8e722f45277d081fd3f572450f395dc5d60083c';
+String _$raceCountdownHash() => r'2a454f0af014e61485fd2e96d2687e86c9fa7c00';
 
 @ProviderFor(trainingStatus)
 final trainingStatusProvider = TrainingStatusProvider._();

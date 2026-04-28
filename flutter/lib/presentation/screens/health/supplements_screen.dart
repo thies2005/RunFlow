@@ -11,6 +11,7 @@ class SupplementsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final supplementsAsync = ref.watch(supplementListProvider);
+    final takenAsync = ref.watch(takenSupplementIdsProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -31,60 +32,64 @@ class SupplementsScreen extends ConsumerWidget {
         data: (supplements) {
           final active = supplements.where((s) => s.isActive).toList();
           final inactive = supplements.where((s) => !s.isActive).toList();
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Today's progress card
-                _TodayProgressCard(active: active, total: supplements.length),
-                const SizedBox(height: 16),
-                // Weekly calendar heatmap
-                _SupplementCalendar(supplements: supplements),
-                const SizedBox(height: 16),
-                // Active supplements
-                if (active.isNotEmpty) ...[
-                  _SectionHeader('Active · ${active.length}'),
-                  const SizedBox(height: 8),
-                  ...active.map((s) => _SupplementTile(
-                    supplement: s,
-                    onToggle: () => ref.read(supplementListProvider.notifier).toggle(s.id),
-                  )),
-                  const SizedBox(height: 16),
-                ],
-                // Inactive supplements
-                if (inactive.isNotEmpty) ...[
-                  _SectionHeader('Inactive · ${inactive.length}'),
-                  const SizedBox(height: 8),
-                  ...inactive.map((s) => _SupplementTile(
-                    supplement: s,
-                    onToggle: () => ref.read(supplementListProvider.notifier).toggle(s.id),
-                  )),
-                  const SizedBox(height: 16),
-                ],
-                if (supplements.isEmpty)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(40),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.medication_outlined, size: 52, color: AppColors.onSurfaceVariant),
-                          const SizedBox(height: 12),
-                          Text('No supplements yet', style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.onSurfaceVariant)),
-                          const SizedBox(height: 8),
-                          FilledButton.icon(
-                            onPressed: () => _showAddSupplementDialog(context, ref),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add First Supplement'),
+          return takenAsync.when(
+            data: (takenIds) {
+              final takenCount = active.where((s) => takenIds.contains(s.id)).length;
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _TodayProgressCard(taken: takenCount, total: active.length),
+                    const SizedBox(height: 16),
+                    _SupplementCalendar(supplements: supplements, takenIds: takenIds),
+                    const SizedBox(height: 16),
+                    if (active.isNotEmpty) ...[
+                      _SectionHeader('Active · ${active.length}'),
+                      const SizedBox(height: 8),
+                      ...active.map((s) => _SupplementTile(
+                        supplement: s,
+                        isTaken: takenIds.contains(s.id),
+                        onToggle: () => ref.read(supplementListProvider.notifier).toggle(s.id),
+                      )),
+                      const SizedBox(height: 16),
+                    ],
+                    if (inactive.isNotEmpty) ...[
+                      _SectionHeader('Inactive · ${inactive.length}'),
+                      const SizedBox(height: 8),
+                      ...inactive.map((s) => _SupplementTile(
+                        supplement: s,
+                        isTaken: false,
+                        onToggle: () => ref.read(supplementListProvider.notifier).toggle(s.id),
+                      )),
+                      const SizedBox(height: 16),
+                    ],
+                    if (supplements.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(40),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.medication_outlined, size: 52, color: AppColors.onSurfaceVariant),
+                              const SizedBox(height: 12),
+                              Text('No supplements yet', style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.onSurfaceVariant)),
+                              const SizedBox(height: 8),
+                              FilledButton.icon(
+                                onPressed: () => _showAddSupplementDialog(context, ref),
+                                icon: const Icon(Icons.add),
+                                label: const Text('Add First Supplement'),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                // Weekly adherence
-                _SupplementAdherenceSection(),
-              ],
-            ),
+                    _SupplementAdherenceSection(),
+                  ],
+                ),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('Error: $e')),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -179,14 +184,14 @@ class SupplementsScreen extends ConsumerWidget {
 }
 
 class _TodayProgressCard extends StatelessWidget {
-  const _TodayProgressCard({required this.active, required this.total});
-  final List<Supplement> active;
+  const _TodayProgressCard({required this.taken, required this.total});
+  final int taken;
   final int total;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final pct = total > 0 ? active.length / total : 0.0;
+    final pct = total > 0 ? taken / total : 0.0;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -224,11 +229,11 @@ class _TodayProgressCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${active.length}/$total taken today',
+                '$taken/$total taken today',
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               Text(
-                total > 0 && active.length == total ? '✅ All done!' : '${total - active.length} remaining',
+                total > 0 && taken == total ? '✅ All done!' : '${total - taken} remaining',
                 style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
               ),
             ],
@@ -240,8 +245,9 @@ class _TodayProgressCard extends StatelessWidget {
 }
 
 class _SupplementCalendar extends StatelessWidget {
-  const _SupplementCalendar({required this.supplements});
+  const _SupplementCalendar({required this.supplements, this.takenIds = const {}});
   final List<Supplement> supplements;
+  final Set<String> takenIds;
 
   @override
   Widget build(BuildContext context) {
@@ -265,9 +271,10 @@ class _SupplementCalendar extends StatelessWidget {
           Row(
             children: days.map((day) {
               final isToday = day.day == now.day && day.month == now.month;
-              // Simulate: taken if day <= today and supplements exist
-              final taken = day.isBefore(now) || isToday;
-              final pct = supplements.isEmpty ? 0.0 : taken ? 0.8 : 0.0;
+              final activeToday = supplements.where((s) => s.isActive).length;
+              final pct = isToday && activeToday > 0
+                  ? takenIds.where((id) => supplements.any((s) => s.id == id && s.isActive)).length / activeToday
+                  : isToday ? 0.0 : -1.0;
               final label = dayLabels[day.weekday - 1];
               return Expanded(
                 child: Column(
@@ -285,8 +292,8 @@ class _SupplementCalendar extends StatelessWidget {
                       height: 32,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: pct > 0
-                            ? AppColors.success.withValues(alpha: pct)
+                        color: pct >= 0
+                            ? AppColors.success.withValues(alpha: pct.clamp(0.0, 1.0))
                             : Theme.of(context).colorScheme.surfaceContainerHighest,
                         border: Border.all(
                           color: isToday ? AppColors.primary : AppColors.onSurfaceVariant.withValues(alpha: 0.2),
@@ -297,7 +304,7 @@ class _SupplementCalendar extends StatelessWidget {
                         child: Text(
                           '${day.day}',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: pct > 0.5 ? Colors.white : AppColors.onSurfaceVariant,
+                            color: pct >= 0.5 ? Colors.white : AppColors.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -315,8 +322,9 @@ class _SupplementCalendar extends StatelessWidget {
 }
 
 class _SupplementTile extends StatelessWidget {
-  const _SupplementTile({required this.supplement, required this.onToggle});
+  const _SupplementTile({required this.supplement, required this.isTaken, required this.onToggle});
   final Supplement supplement;
+  final bool isTaken;
   final VoidCallback onToggle;
 
   @override
@@ -328,7 +336,7 @@ class _SupplementTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceDarkVariant,
         borderRadius: BorderRadius.circular(12),
-        border: supplement.isActive
+        border: isTaken
             ? Border.all(color: AppColors.success.withValues(alpha: 0.3))
             : null,
       ),
@@ -339,14 +347,14 @@ class _SupplementTile extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: supplement.isActive
+              color: isTaken
                   ? AppColors.success.withValues(alpha: 0.15)
                   : AppColors.surfaceDarkVariant,
             ),
             child: Icon(
               Icons.medication,
               size: 20,
-              color: supplement.isActive ? AppColors.success : AppColors.onSurfaceVariant,
+              color: isTaken ? AppColors.success : AppColors.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 12),
@@ -363,7 +371,7 @@ class _SupplementTile extends StatelessWidget {
             ),
           ),
           Switch(
-            value: supplement.isActive,
+            value: isTaken,
             onChanged: (_) => onToggle(),
             activeTrackColor: AppColors.success,
           ),

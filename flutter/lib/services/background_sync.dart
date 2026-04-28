@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:workmanager/workmanager.dart';
@@ -58,7 +59,9 @@ class BackgroundSyncService {
     try {
       await Workmanager().initialize(callbackDispatcher);
       _initialized = true;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[BackgroundSyncService] Initialize failed: $e');
+    }
   }
 
   static Future<void> registerPeriodicSync() async {
@@ -74,7 +77,9 @@ class BackgroundSyncService {
         ),
         existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[BackgroundSyncService] Register periodic sync failed: $e');
+    }
   }
 
   static Future<void> cancel() async {
@@ -82,6 +87,8 @@ class BackgroundSyncService {
 
     try {
       await Workmanager().cancelByUniqueName('runflow-background-sync');
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[BackgroundSyncService] Cancel failed: $e');
+    }
   }
 }

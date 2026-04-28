@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 enum CoachMessageType { pace, hr, distance, motivation, phase }
@@ -63,7 +64,9 @@ class VoiceCoachService {
   Future<void> _requestAudioFocus() async {
     try {
       await _tts.setVolume(1.0);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[VoiceCoachService] Request audio focus failed: $e');
+    }
   }
 
   Future<void> _releaseAudioFocus() async {}

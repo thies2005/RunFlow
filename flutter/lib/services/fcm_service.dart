@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/services/notification_service.dart';
@@ -68,7 +69,9 @@ class FcmService {
     if (_dio == null) return;
     try {
       await registerPushToken(dio: _dio!, token: token);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[FcmService] Send token to server failed: $e');
+    }
   }
 
   static Future<String?> getToken() async {
@@ -98,7 +101,9 @@ class FcmService {
           );
         }
       });
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[FcmService] Setup foreground handler failed: $e');
+    }
   }
 
   static Future<void> dispose() async {

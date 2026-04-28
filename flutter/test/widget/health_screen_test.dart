@@ -35,7 +35,7 @@ class _FakeSupplementList extends SupplementList {
   Future<List<Supplement>> build() => SynchronousFuture(_items);
 
   @override
-  Future<void> toggle(String id) async {}
+  Future<void> toggle(int id) async {}
 
   @override
   Future<void> add(Supplement supplement) async {}
@@ -87,12 +87,12 @@ class _FakeHealthConnectService implements HealthConnectService {
   @override
   Future<VitalsData> readVitals() async => const VitalsData();
   @override
-  Future<SleepData> readSleep() async => SleepData();
+  Future<SleepData> readSleep() async => const SleepData();
 }
 
 void main() {
   group('HealthScreen', () {
-    defaultOverrides() {
+    List<Object> defaultOverrides() {
       return [
           // ignore: deprecated_member_use
           nutritionProvider.overrideWith(
@@ -128,7 +128,7 @@ void main() {
     testWidgets('renders Health title', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: defaultOverrides(),
+          overrides: defaultOverrides().cast(),
           child: const MaterialApp(
             home: HealthScreen(),
           ),
@@ -142,7 +142,7 @@ void main() {
     testWidgets('renders Nutrition card', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: defaultOverrides(),
+          overrides: defaultOverrides().cast(),
           child: const MaterialApp(
             home: HealthScreen(),
           ),
@@ -156,7 +156,7 @@ void main() {
     testWidgets('renders Body card', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: defaultOverrides(),
+          overrides: defaultOverrides().cast(),
           child: const MaterialApp(
             home: HealthScreen(),
           ),
@@ -170,7 +170,7 @@ void main() {
     testWidgets('renders Supplements card', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: defaultOverrides(),
+          overrides: defaultOverrides().cast(),
           child: const MaterialApp(
             home: HealthScreen(),
           ),
@@ -185,7 +185,7 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: defaultOverrides(),
+          overrides: defaultOverrides().cast(),
           child: const MaterialApp(
             home: HealthScreen(),
           ),
@@ -200,7 +200,7 @@ void main() {
     testWidgets('renders Quick Actions section', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: defaultOverrides(),
+          overrides: defaultOverrides().cast(),
           child: const MaterialApp(
             home: HealthScreen(),
           ),
@@ -217,7 +217,7 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: defaultOverrides(),
+          overrides: defaultOverrides().cast(),
           child: const MaterialApp(
             home: HealthScreen(),
           ),

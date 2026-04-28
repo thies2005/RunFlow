@@ -68,7 +68,13 @@ class _PlanContent extends ConsumerWidget {
           ),
         ],
       ),
-      body: ListView(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(goalsProvider);
+          ref.invalidate(dashboardProvider);
+          await ref.read(goalsProvider.future);
+        },
+        child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
         children: [
@@ -231,6 +237,7 @@ class _PlanContent extends ConsumerWidget {
               );
             }),
         ],
+      ),
       ),
     );
   }
@@ -403,7 +410,9 @@ class _PlanWorkoutCard extends ConsumerWidget {
                       ),
                     );
                     ref.invalidate(dashboardProvider);
-                  } catch (_) {}
+                  } catch (e) {
+                    debugPrint('[_PlanWorkoutCard] Mark complete failed: $e');
+                  }
                 },
               ),
           ],
@@ -427,7 +436,9 @@ class _PlanWorkoutCard extends ConsumerWidget {
             );
             ref.invalidate(dashboardProvider);
             if (context.mounted) Navigator.pop(ctx);
-          } catch (_) {}
+          } catch (e) {
+            debugPrint('[_PlanWorkoutCard] Edit workout failed: $e');
+          }
         },
       ),
     );

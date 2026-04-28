@@ -328,7 +328,7 @@ void main() {
       ];
       final supplements = [
         const Supplement(
-          id: '1',
+          id: 1,
           name: 'Vitamin D',
           dosage: '2000 IU',
           frequency: 'Daily',

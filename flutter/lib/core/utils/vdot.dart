@@ -25,6 +25,39 @@ double racePrediction(double vdot, double distanceMeters) {
 }
 
 double estimateTime(double vdot, double distanceMeters) {
+  if (vdot <= 0 || distanceMeters <= 0) return 0;
+
+  double t = _initialTimeEstimate(vdot, distanceMeters);
+
+  for (int i = 0; i < 20; i++) {
+    final v = distanceMeters / t;
+    final pctVo2 = _pctVo2max(t);
+    final vo2 = _vo2FromVelocity(v);
+    final pctVo2Deriv = _pctVo2maxDerivative(t);
+    final dVo2Dt = -(distanceMeters / (t * t)) *
+        (0.182258 + 0.000208 * v);
+
+    final f = vdot * pctVo2 - vo2;
+    final fp = vdot * pctVo2Deriv - dVo2Dt;
+
+    if (fp.abs() < 1e-12) break;
+
+    final delta = f / fp;
+    t = t - delta;
+
+    if (t <= 0 || t.isNaN || t.isInfinite) {
+      t = _initialTimeEstimate(vdot, distanceMeters);
+      break;
+    }
+
+    if (delta.abs() < 0.1 / 60) break;
+  }
+
+  if (t <= 0 || t.isNaN || t.isInfinite) return 0;
+  return t;
+}
+
+double _initialTimeEstimate(double vdot, double distanceMeters) {
   final vo2 = vdot *
       (0.8 +
           0.1894393 * exp(-0.012778 * 30) +
@@ -35,4 +68,19 @@ double estimateTime(double vdot, double distanceMeters) {
       (2 * 0.000104);
 
   return distanceMeters / velocity;
+}
+
+double _pctVo2max(double t) {
+  return 0.8 +
+      0.1894393 * exp(-0.012778 * t) +
+      0.2989558 * exp(-0.1932605 * t);
+}
+
+double _pctVo2maxDerivative(double t) {
+  return -0.1894393 * 0.012778 * exp(-0.012778 * t) -
+      0.2989558 * 0.1932605 * exp(-0.1932605 * t);
+}
+
+double _vo2FromVelocity(double v) {
+  return -4.60 + 0.182258 * v + 0.000104 * v * v;
 }

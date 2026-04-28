@@ -133,11 +133,14 @@ class BodyScreen extends ConsumerWidget {
                     waist: double.tryParse(waistCtl.text),
                     hips: double.tryParse(hipsCtl.text),
                   );
-                  ref.read(healthRepositoryProvider).saveBodyMeasurement(m);
+                  await ref.read(healthRepositoryProvider).saveBodyMeasurement(m);
                   try {
                     await ref.read(healthApiRepositoryProvider).syncBodyMeasurement(m);
-                  } catch (_) {}
+                  } catch (e) {
+                    debugPrint('[BodyScreen] Sync body measurement failed: $e');
+                  }
                   ref.invalidate(bodyMeasurementsProvider);
+                  if (!ctx.mounted) return;
                   Navigator.pop(ctx);
                 },
                 child: const Text('Save'),

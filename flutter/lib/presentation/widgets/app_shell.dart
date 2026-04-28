@@ -11,7 +11,7 @@ class AppShell extends StatelessWidget {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
+        selectedIndex: navigationShell.currentIndex.clamp(0, 4),
         onDestinationSelected: (index) {
           navigationShell.goBranch(
             index,

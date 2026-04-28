@@ -370,7 +370,9 @@ class WorkoutRecordingService {
       debugPrint('BLE scan error: $e');
       try {
         await ble.UniversalBle.stopScan();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[WorkoutRecordingService] BLE stop scan failed: $e');
+      }
     }
 
     _isScanning = false;
@@ -430,7 +432,9 @@ class WorkoutRecordingService {
       await _hrSubscription?.cancel();
       _hrSubscription = null;
       await ble.UniversalBle.disconnect(_connectedSensor!.id);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[WorkoutRecordingService] HR monitor disconnect failed: $e');
+    }
 
     _connectedSensor = null;
     _currentHr = 0;

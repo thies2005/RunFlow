@@ -151,9 +151,17 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   @override
   Future<void> syncBodyMeasurement(BodyMeasurement measurement) async {
     try {
+      final dateStr = measurement.date.toIso8601String().split('T').first;
       await dio.post(
         ApiConstants.bodyCompositionPath,
-        data: measurement.toJson(),
+        data: {
+          'dateStr': dateStr,
+          'weight': measurement.weight,
+          'bodyFat': measurement.bodyFat,
+          if (measurement.chest != null) 'chest': measurement.chest,
+          if (measurement.waist != null) 'waist': measurement.waist,
+          if (measurement.hips != null) 'hips': measurement.hips,
+        },
       );
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to sync body measurement.');
@@ -167,19 +175,48 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       final data = response.data;
       if (data is List) {
         return data
-            .map((dynamic item) =>
-                BodyMeasurement.fromJson(item as Map<String, dynamic>))
+            .map((dynamic item) => _parseBodyMeasurement(item as Map<String, dynamic>))
             .toList();
       }
       final map = data as Map<String, dynamic>;
       final measurements = map['measurements'] as List<dynamic>? ?? map['data'] as List<dynamic>? ?? [];
       return measurements
-          .map((dynamic item) =>
-              BodyMeasurement.fromJson(item as Map<String, dynamic>))
+          .map((dynamic item) => _parseBodyMeasurement(item as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get body measurements.');
     }
+  }
+
+  BodyMeasurement _parseBodyMeasurement(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    final id = rawId is num ? rawId.toInt() : int.tryParse(rawId?.toString() ?? '') ?? 0;
+    final rawDate = json['date'] ?? json['dateStr'];
+    final date = DateTime.tryParse(rawDate?.toString() ?? '') ?? DateTime.now();
+
+    double toDouble(dynamic value) {
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    double? toNullableDouble(dynamic value) {
+      if (value == null) return null;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value);
+      return null;
+    }
+
+    return BodyMeasurement(
+      id: id,
+      date: date,
+      weight: toDouble(json['weight']),
+      bodyFat: toDouble(json['bodyFat']),
+      chest: toNullableDouble(json['chest']),
+      waist: toNullableDouble(json['waist']),
+      hips: toNullableDouble(json['hips']),
+      notes: json['notes'] as String?,
+    );
   }
 
   @override
@@ -246,7 +283,43 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
         ApiConstants.healthDailyPath,
         queryParameters: {'date': dateStr},
       );
-      return DailyHealthLog.fromJson(response.data as Map<String, dynamic>);
+      final envelope = response.data as Map<String, dynamic>;
+      final dailyHealthData = envelope['dailyHealth'] as Map<String, dynamic>?;
+      if (dailyHealthData == null) {
+        return DailyHealthLog(
+          id: envelope['id'] as int? ?? 0,
+          date: date,
+          steps: 0,
+          waterIntake: 0,
+          exerciseCalories: (envelope['exerciseCalories'] as num?)?.toInt() ?? 0,
+          supplementLogs: (envelope['supplementLogs'] as List<dynamic>?)
+                  ?.map((e) => SupplementLog.fromJson(e as Map<String, dynamic>))
+                  .toList() ??
+              [],
+          foodLogs: (envelope['foodLogs'] as List<dynamic>?)
+                  ?.map((e) => FoodLogEntry.fromJson(e as Map<String, dynamic>))
+                  .toList() ??
+              [],
+          meta: envelope['meta'] != null
+              ? DailyHealthMeta.fromJson(envelope['meta'] as Map<String, dynamic>)
+              : null,
+        );
+      }
+      dailyHealthData['date'] = dailyHealthData['date'] ?? dateStr;
+      dailyHealthData['id'] = dailyHealthData['id'] ?? 0;
+      if (envelope.containsKey('exerciseCalories')) {
+        dailyHealthData['exerciseCalories'] = envelope['exerciseCalories'];
+      }
+      if (envelope.containsKey('supplementLogs')) {
+        dailyHealthData['supplementLogs'] = envelope['supplementLogs'];
+      }
+      if (envelope.containsKey('foodLogs')) {
+        dailyHealthData['foodLogs'] = envelope['foodLogs'];
+      }
+      if (envelope.containsKey('meta')) {
+        dailyHealthData['meta'] = envelope['meta'];
+      }
+      return DailyHealthLog.fromJson(dailyHealthData);
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get daily health.');
     }
@@ -256,8 +329,12 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   Future<void> updateWater(DateTime date, double amount) async {
     try {
       await dio.post(
-        '${ApiConstants.healthDailyPath}/water',
-        data: {'date': date.toIso8601String().split('T').first, 'amount': amount},
+        ApiConstants.healthDailyPath,
+        data: {
+          'action': 'updateWater',
+          'date': date.toIso8601String().split('T').first,
+          'amount': amount,
+        },
       );
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to update water.');
@@ -268,8 +345,9 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   Future<void> toggleSupplementLog(String supplementId, DateTime date, bool taken) async {
     try {
       await dio.post(
-        '${ApiConstants.supplementsPath}/log',
+        ApiConstants.healthDailyPath,
         data: {
+          'action': 'toggleSupplement',
           'supplementId': supplementId,
           'date': date.toIso8601String().split('T').first,
           'taken': taken,
@@ -300,7 +378,28 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   Future<SupplementAnalytics> getSupplementAnalytics() async {
     try {
       final response = await dio.get(ApiConstants.supplementsAnalyticsPath);
-      return SupplementAnalytics.fromJson(response.data as Map<String, dynamic>);
+      final data = response.data as Map<String, dynamic>;
+
+      final mostMissed = data['mostMissed'] as List<dynamic>? ?? [];
+      final supplements = mostMissed.map((item) {
+        final map = item as Map<String, dynamic>;
+        return SupplementAdherence(
+          name: map['name'] as String? ?? '',
+          adherencePercent: (map['adherence'] as num?)?.toDouble() ?? 0,
+          daysTaken: (map['taken'] as num?)?.toInt() ?? 0,
+          totalDays: (map['scheduled'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+
+      return SupplementAnalytics(
+        overallAdherence: (data['overallAdherence'] as num?)?.toDouble() ?? 0,
+        avgDailyDoses: (data['avgDailyDoses'] as num?)?.toDouble() ?? 0,
+        totalSupplements: (data['totalSupplements'] as num?)?.toInt() ?? 0,
+        totalScheduled: (data['totalScheduled'] as num?)?.toInt() ?? 0,
+        totalTaken: (data['totalTaken'] as num?)?.toInt() ?? 0,
+        totalDays: (data['totalDays'] as num?)?.toInt() ?? 0,
+        supplements: supplements,
+      );
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get supplement analytics.');
     }
@@ -313,7 +412,25 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
         ApiConstants.healthHistoryPath,
         queryParameters: {'range': range},
       );
-      return HealthHistory.fromJson(response.data as Map<String, dynamic>);
+      final data = response.data as Map<String, dynamic>;
+      final historyList = data['history'] as List<dynamic>? ?? [];
+
+      final stepsPoints = <HealthHistoryPoint>[];
+      final weightPoints = <HealthHistoryPoint>[];
+
+      for (final item in historyList) {
+        final map = item as Map<String, dynamic>;
+        final dateStr = map['date'] as String? ?? map['dateStr'] as String? ?? '';
+        final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+        if (map['steps'] != null) {
+          stepsPoints.add(HealthHistoryPoint(date: date, value: (map['steps'] as num).toDouble()));
+        }
+        if (map['weight'] != null) {
+          weightPoints.add(HealthHistoryPoint(date: date, value: (map['weight'] as num).toDouble()));
+        }
+      }
+
+      return HealthHistory(steps: stepsPoints, weight: weightPoints);
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get health history.');
     }

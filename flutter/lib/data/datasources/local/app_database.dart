@@ -20,9 +20,13 @@ class AppDatabase {
 
   Database? _db;
 
-  static const int _currentVersion = 1;
+  static const int _currentVersion = 2;
 
-  static final Map<int, void Function(Database)> _migrations = {};
+  static final Map<int, void Function(Database)> _migrations = {
+    1: (Database db) {
+      _addColumnIfNotExists(db, 'supplements', 'server_id', 'TEXT');
+    },
+  };
 
   Future<Database> get database async {
     if (_db != null) return _db!;
@@ -63,6 +67,14 @@ class AppDatabase {
     _db = null;
   }
 
+  static void _addColumnIfNotExists(Database db, String table, String column, String type) {
+    final columns = db.select('PRAGMA table_info($table)');
+    final exists = columns.any((row) => row['name'] == column);
+    if (!exists) {
+      db.execute('ALTER TABLE $table ADD COLUMN $column $type');
+    }
+  }
+
   void _createTables(Database db) {
     db.execute('''
       CREATE TABLE IF NOT EXISTS nutrition_logs (
@@ -92,6 +104,7 @@ class AppDatabase {
     db.execute('''
       CREATE TABLE IF NOT EXISTS supplements (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        server_id TEXT,
         name TEXT NOT NULL,
         dosage TEXT NOT NULL,
         frequency TEXT NOT NULL,
@@ -234,8 +247,8 @@ class AppDatabase {
     try {
       final db = await database;
       db.execute(
-        'INSERT INTO supplements (name, dosage, frequency, is_active) VALUES (?, ?, ?, ?)',
-        [supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0],
+        'INSERT INTO supplements (server_id, name, dosage, frequency, is_active) VALUES (?, ?, ?, ?, ?)',
+        [supplement.serverId, supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0],
       );
       return db.lastInsertRowId;
     } catch (e) {
@@ -247,8 +260,8 @@ class AppDatabase {
     try {
       final db = await database;
       db.execute(
-        'UPDATE supplements SET name = ?, dosage = ?, frequency = ?, is_active = ? WHERE id = ?',
-        [supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0, int.tryParse(supplement.id) ?? supplement.id],
+        'UPDATE supplements SET server_id = ?, name = ?, dosage = ?, frequency = ?, is_active = ? WHERE id = ?',
+        [supplement.serverId, supplement.name, supplement.dosage, supplement.frequency, supplement.isActive ? 1 : 0, supplement.id],
       );
     } catch (e) {
       throw CacheException(message: 'Failed to update supplement: $e');
@@ -381,7 +394,8 @@ class AppDatabase {
 
   Supplement _rowToSupplement(Row row) {
     return Supplement(
-      id: (row['id'] as int).toString(),
+      id: row['id'] as int,
+      serverId: row['server_id'] as String?,
       name: row['name'] as String,
       dosage: row['dosage'] as String,
       frequency: row['frequency'] as String,

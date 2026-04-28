@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/models/race_models.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
@@ -8,82 +10,82 @@ import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 part 'race_providers.g.dart';
 
 @riverpod
-RaceCountdownData? raceCountdown(Ref ref) {
+List<RaceCountdownData> raceCountdown(Ref ref) {
   final dashboardAsync = ref.watch(dashboardProvider);
 
   return dashboardAsync.when(
-    loading: () => null,
-    error: (_, _) => null,
+    loading: () => [],
+    error: (_, _) => [],
     data: (data) {
       final activeGoals = data.goals.where((g) => g.isActive).toList();
-      if (activeGoals.isEmpty) return null;
+      if (activeGoals.isEmpty) return [];
 
-      final goal = activeGoals.first;
-      final now = DateTime.now();
-      final daysToRace = goal.raceDate.difference(now).inDays;
-      final weeksToRace = (daysToRace / 7).floor();
-      final totalWeeks = goal.planWeeks;
-      final weeksCompleted = (totalWeeks - weeksToRace).clamp(0, totalWeeks);
-      final progressPercent = totalWeeks > 0
-          ? (weeksCompleted / totalWeeks * 100).clamp(0.0, 100.0)
-          : 0.0;
-
-      final completedWorkouts =
-          goal.workouts.where((w) => w.isCompleted).length;
-      final totalWorkouts = goal.workouts.length;
-
-      final stats = data.stats;
-      final currentVdot = stats.currentVdot ?? stats.effectiveVO2max;
-
-      int? projectedTimeSeconds;
-      double? projectedVdot;
-      if (currentVdot > 0 && daysToRace > 0) {
-        final distance = raceTypeDistance(goal.raceType);
-        final basePrediction = racePrediction(currentVdot, distance);
-        if (basePrediction > 0) {
-          final fitnessGain = weeksToRace * 0.3;
-          projectedVdot = currentVdot + fitnessGain;
-          projectedTimeSeconds =
-              (racePrediction(projectedVdot, distance) * 60).round();
-        }
-      }
-
-      final plannedWorkouts = goal.workouts.where((w) {
+      return activeGoals.map((goal) {
         final now = DateTime.now();
-        final weekStart = DateTime(now.year, now.month, now.day)
-            .subtract(Duration(days: now.weekday - 1));
-        final weekEnd = weekStart.add(const Duration(days: 7));
-        return !w.scheduledDate.isBefore(weekStart) &&
-            w.scheduledDate.isBefore(weekEnd);
-      });
+        final daysToRace = goal.raceDate.difference(now).inDays;
+        final weeksToRace = (daysToRace / 7).floor();
+        final totalWeeks = goal.planWeeks;
+        final weeksCompleted = (totalWeeks - weeksToRace).clamp(0, totalWeeks);
+        final progressPercent = totalWeeks > 0
+            ? (weeksCompleted / totalWeeks * 100).clamp(0.0, 100.0)
+            : 0.0;
 
-      double plannedWeekMileage = 0;
-      for (final w in plannedWorkouts) {
-        plannedWeekMileage += w.targetDistance;
-      }
+        final completedWorkouts =
+            goal.workouts.where((w) => w.isCompleted).length;
+        final totalWorkouts = goal.workouts.length;
 
-      return RaceCountdownData(
-        goalId: goal.id,
-        goalName: goal.name,
-        raceType: raceTypeLabel(goal.raceType),
-        raceDate: goal.raceDate,
-        daysToRace: daysToRace,
-        weeksToRace: weeksToRace,
-        planWeeks: totalWeeks,
-        weeksCompleted: weeksCompleted,
-        progressPercent: progressPercent,
-        targetTimeSeconds: goal.targetTime,
-        projectedTimeSeconds: projectedTimeSeconds,
-        projectedVdot: projectedVdot,
-        currentWeekMileage: stats.currentWeekMileage,
-        plannedWeekMileage: plannedWeekMileage,
-        isRaceDay: daysToRace == 0,
-        isPostRace: daysToRace < 0,
-        isOverdue: daysToRace < -14,
-        hasRaceResult: false,
-        totalWorkouts: totalWorkouts,
-        completedWorkouts: completedWorkouts,
-      );
+        final stats = data.stats;
+        final currentVdot = stats.currentVdot ?? stats.effectiveVO2max;
+
+        int? projectedTimeSeconds;
+        double? projectedVdot;
+        if (currentVdot > 0 && daysToRace > 0) {
+          final distance = raceTypeDistance(goal.raceType);
+          final basePrediction = racePrediction(currentVdot, distance);
+          if (basePrediction > 0) {
+            final fitnessGain = 0.3 * log(1 + weeksToRace) / log(2);
+            projectedVdot = min(currentVdot + fitnessGain, currentVdot + 5.0);
+            projectedTimeSeconds =
+                (racePrediction(projectedVdot, distance) * 60).round();
+          }
+        }
+
+        final plannedWorkouts = goal.workouts.where((w) {
+          final weekStart = DateTime(now.year, now.month, now.day)
+              .subtract(Duration(days: now.weekday - 1));
+          final weekEnd = weekStart.add(const Duration(days: 7));
+          return !w.scheduledDate.isBefore(weekStart) &&
+              w.scheduledDate.isBefore(weekEnd);
+        });
+
+        double plannedWeekMileage = 0;
+        for (final w in plannedWorkouts) {
+          plannedWeekMileage += w.targetDistance;
+        }
+
+        return RaceCountdownData(
+          goalId: goal.id,
+          goalName: goal.name,
+          raceType: raceTypeLabel(goal.raceType),
+          raceDate: goal.raceDate,
+          daysToRace: daysToRace,
+          weeksToRace: weeksToRace,
+          planWeeks: totalWeeks,
+          weeksCompleted: weeksCompleted,
+          progressPercent: progressPercent,
+          targetTimeSeconds: goal.targetTime,
+          projectedTimeSeconds: projectedTimeSeconds,
+          projectedVdot: projectedVdot,
+          currentWeekMileage: stats.currentWeekMileage,
+          plannedWeekMileage: plannedWeekMileage,
+          isRaceDay: daysToRace == 0,
+          isPostRace: daysToRace < 0,
+          isOverdue: daysToRace < -14,
+          hasRaceResult: false,
+          totalWorkouts: totalWorkouts,
+          completedWorkouts: completedWorkouts,
+        );
+      }).toList();
     },
   );
 }

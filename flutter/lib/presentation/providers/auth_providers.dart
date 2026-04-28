@@ -99,6 +99,7 @@ class AuthState extends _$AuthState {
       await BackgroundSyncService.cancel();
       await FcmService.dispose();
       ref.read(healthSyncServiceProvider).stopAutoSync();
+      ref.invalidate(healthSyncServiceProvider);
       final recordingService = ref.read(recordingServiceProvider);
       recordingService.discardRecording();
       await recordingService.disconnectHeartRateMonitor();

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/data/auth/refresh_session.dart';
@@ -148,8 +149,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout() async {
     try {
-      await dio.post('/api/mobile/v1/auth/logout');
-    } catch (_) {}
+      await dio.post('/auth/logout');
+    } catch (e) {
+      debugPrint('[AuthRepositoryImpl] Logout request failed: $e');
+    }
     await authService.clearAll();
   }
 
@@ -190,10 +193,16 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       await authService.storeUser(user);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 409) {
+      final statusCode = e.response?.statusCode;
+      final errorData = e.response?.data;
+      final errorMessage = errorData is Map<String, dynamic>
+          ? (errorData['message'] as String?) ?? ''
+          : '';
+      if (statusCode == 409 ||
+          (statusCode == 400 && errorMessage.contains('already exists'))) {
         throw AuthException(
           message: 'An account with this email already exists.',
-          statusCode: 409,
+          statusCode: statusCode,
         );
       }
       throw e.error is AppException

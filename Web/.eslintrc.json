@@ -2,5 +2,13 @@
   "extends": "next/core-web-vitals",
   "rules": {
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**/*.ts", "**/__tests__/**/*.tsx"],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    }
+  ]
 }

@@ -15,15 +15,15 @@ interface GoalTimeRendererProps {
     buildWeeks: number;
     shapePercent: number;
     goalTimeSeconds: number | null;
-    setGoalTimeSeconds: (val: number | null) => void;
+    setGoalTimeSeconds: (_val: number | null) => void;
     goalTimeHours: string;
-    setGoalTimeHours: (val: string) => void;
+    setGoalTimeHours: (_val: string) => void;
     goalTimeMinutes: string;
-    setGoalTimeMinutes: (val: string) => void;
+    setGoalTimeMinutes: (_val: string) => void;
     goalTimeSecs: string;
-    setGoalTimeSecs: (val: string) => void;
+    setGoalTimeSecs: (_val: string) => void;
     isEditingGoalTime: boolean;
-    setIsEditingGoalTime: (val: boolean) => void;
+    setIsEditingGoalTime: (_val: boolean) => void;
 }
 
 export default function GoalTimeRenderer({

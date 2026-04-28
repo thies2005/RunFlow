@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
@@ -21,12 +22,6 @@ HealthRepository healthRepository(Ref ref) {
 }
 
 @riverpod
-Future<List<Supplement>> supplements(Ref ref) async {
-  final repo = ref.read(healthRepositoryProvider);
-  return repo.getSupplements();
-}
-
-@riverpod
 Future<FastingSession?> activeFasting(Ref ref) async {
   final repo = ref.read(healthRepositoryProvider);
   return repo.getActiveFasting();
@@ -38,7 +33,7 @@ Future<List<FastingSession>> fastingHistory(Ref ref) async {
   return repo.getFastingHistory();
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<List<BodyMeasurement>> bodyMeasurements(Ref ref) async {
   try {
     final apiRepo = ref.read(healthApiRepositoryProvider);
@@ -49,7 +44,7 @@ Future<List<BodyMeasurement>> bodyMeasurements(Ref ref) async {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
   final apiRepo = ref.read(healthApiRepositoryProvider);
   return apiRepo.getDailyHealth(date);
@@ -59,7 +54,7 @@ Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
 Future<Set<String>> takenSupplementIds(Ref ref) async {
   final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   try {
-    final daily = await ref.watch(dailyHealthProvider(today).future);
+    final daily = await ref.read(dailyHealthProvider(today).future);
     return daily.supplementLogs
         .where((log) => log.taken)
         .map((log) => log.supplementId)
@@ -92,7 +87,7 @@ class Fasting extends _$Fasting {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class SupplementList extends _$SupplementList {
   @override
   Future<List<Supplement>> build() async {
@@ -105,18 +100,22 @@ class SupplementList extends _$SupplementList {
     }
   }
 
-  Future<void> toggle(String id) async {
+  Future<void> toggle(int id) async {
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      final supplement = state.value?.where((s) => s.id == id).firstOrNull;
+      final supplementId = supplement?.serverId ?? id.toString();
       final daily = await ref.read(dailyHealthProvider(today).future);
       final existingLog = daily.supplementLogs
-          .where((log) => log.supplementId == id)
+          .where((log) => log.supplementId == supplementId)
           .firstOrNull;
       final currentlyTaken = existingLog?.taken ?? false;
-      await apiRepo.toggleSupplementLog(id, today, !currentlyTaken);
+      await apiRepo.toggleSupplementLog(supplementId, today, !currentlyTaken);
       ref.invalidate(dailyHealthProvider(today));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[SupplementList] Toggle supplement failed: $e');
+    }
   }
 
   Future<void> add(Supplement supplement) async {
@@ -136,7 +135,7 @@ class NutritionNotifier extends _$NutritionNotifier {
   @override
   Future<NutritionLog> build(DateTime date) async {
     try {
-      final daily = await ref.watch(dailyHealthProvider(date).future);
+      final daily = await ref.read(dailyHealthProvider(date).future);
       double totalCalories = 0;
       double totalProtein = 0;
       double totalCarbs = 0;
@@ -166,6 +165,12 @@ class NutritionNotifier extends _$NutritionNotifier {
   Future<void> save(NutritionLog log) async {
     final repo = ref.read(healthRepositoryProvider);
     await repo.saveNutritionLog(log);
+    try {
+      final apiRepo = ref.read(healthApiRepositoryProvider);
+      await apiRepo.syncNutritionLog(log);
+    } catch (e) {
+      debugPrint('[NutritionNotifier] Sync nutrition log failed: $e');
+    }
     ref.invalidateSelf();
   }
 }
@@ -184,7 +189,9 @@ class BarcodeScan extends _$BarcodeScan {
         state = AsyncValue.data(item);
         return;
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[BarcodeScan] API barcode scan failed: $e');
+    }
     try {
       final repo = ref.read(healthRepositoryProvider);
       final items = await repo.getFoodItems();

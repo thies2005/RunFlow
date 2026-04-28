@@ -8,8 +8,8 @@ import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/screens/health/barcode_scanner_screen.dart';
 
 class _FakeBarcodeScanData extends BarcodeScan {
-  final FoodItem? value;
   _FakeBarcodeScanData(this.value);
+  final FoodItem? value;
 
   @override
   FutureOr<FoodItem?> build() => value;

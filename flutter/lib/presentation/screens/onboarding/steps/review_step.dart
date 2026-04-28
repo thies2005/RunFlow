@@ -216,11 +216,11 @@ class ReviewStep extends ConsumerWidget {
 
       await OnboardingWizardScreen.markCompleted();
 
-      if (context.mounted) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('onboarding_step');
-        context.go('/dashboard');
-      }
+      if (!context.mounted) return;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('onboarding_step');
+      if (!context.mounted) return;
+      context.go('/dashboard');
     } catch (e) {
       notifier
         ..setPlanError('Failed to create plan. Please try again.')

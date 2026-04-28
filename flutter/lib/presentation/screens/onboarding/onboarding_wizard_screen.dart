@@ -55,7 +55,13 @@ class _OnboardingWizardScreenState
       progress = (step.index + 1) / OnboardingStep.values.length;
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _handleBack();
+      },
+      child: Scaffold(
       backgroundColor: AppColors.oledBlack,
       body: SafeArea(
         child: Column(
@@ -110,6 +116,7 @@ class _OnboardingWizardScreenState
             ),
           ],
         ),
+      ),
       ),
     );
   }

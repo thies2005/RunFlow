@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
@@ -93,7 +94,9 @@ class NotificationServiceImpl implements NotificationService {
         notificationDetails: details,
         payload: payload,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NotificationServiceImpl] Show notification failed: $e');
+    }
   }
 
   @override
@@ -133,7 +136,9 @@ class NotificationServiceImpl implements NotificationService {
         notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NotificationServiceImpl] Schedule notification failed: $e');
+    }
   }
 
   Future<void> scheduleWorkoutReminder(

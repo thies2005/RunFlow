@@ -18,6 +18,7 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
   bool _obscureApiKey = true;
   bool _isTesting = false;
   String? _testResult;
+  bool _initialized = false;
 
   @override
   void dispose() {
@@ -34,12 +35,15 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
     final settings = ref.watch(aiSettingsProvider);
     final notifier = ref.read(aiSettingsProvider.notifier);
 
-    _promptController.text = settings.customPrompt;
-    if (_baseUrlController.text.isEmpty && settings.customBaseUrl.isEmpty) {
-      _baseUrlController.text = '';
-    }
-    if (_modelController.text.isEmpty && settings.customModel.isEmpty) {
-      _modelController.text = '';
+    if (!_initialized) {
+      _promptController.text = settings.customPrompt;
+      if (settings.customBaseUrl.isNotEmpty) {
+        _baseUrlController.text = settings.customBaseUrl;
+      }
+      if (settings.customModel.isNotEmpty) {
+        _modelController.text = settings.customModel;
+      }
+      _initialized = true;
     }
 
     return Scaffold(

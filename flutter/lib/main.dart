@@ -46,28 +46,36 @@ Future<void> _initDatabase() async {
   try {
     final db = AppDatabase.instance;
     await db.initialize();
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('[_initDatabase] Database init failed: $e');
+  }
 }
 
 Future<void> _initNotifications() async {
   try {
     final notificationService = NotificationServiceImpl();
     await notificationService.initialize();
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('[_initNotifications] Notification init failed: $e');
+  }
 }
 
 Future<void> _initBackgroundSync() async {
   try {
     await BackgroundSyncService.initialize();
     await BackgroundSyncService.registerPeriodicSync();
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('[_initBackgroundSync] Background sync init failed: $e');
+  }
 }
 
 StreamSubscription<Uri>? initDeepLinks() {
   try {
     final appLinks = AppLinks();
     return appLinks.uriLinkStream.listen(_handleDeepLink);
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('[initDeepLinks] Deep link init failed: $e');
+  }
   return null;
 }
 

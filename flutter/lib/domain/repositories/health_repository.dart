@@ -8,7 +8,7 @@ abstract class HealthRepository {
   Future<void> saveFoodItem(FoodItem item);
   Future<List<Supplement>> getSupplements();
   Future<void> saveSupplement(Supplement supplement);
-  Future<void> toggleSupplement(String id);
+  Future<void> toggleSupplement(int id);
   Future<List<BodyMeasurement>> getBodyMeasurements({
     DateTime? startDate,
     DateTime? endDate,

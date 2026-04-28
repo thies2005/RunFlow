@@ -80,16 +80,14 @@ void main() {
         expect(result, isEmpty);
       });
 
-      test('failure - throws ServerException on DioException', () async {
+      test('failure - returns empty list on DioException', () async {
         when(() => mockDio.get(any())).thenThrow(DioException(
           requestOptions: RequestOptions(path: ''),
           type: DioExceptionType.connectionError,
         ));
 
-        expect(
-          () => repository.listSessions(),
-          throwsA(isA<ServerException>()),
-        );
+        final result = await repository.listSessions();
+        expect(result, isEmpty);
       });
     });
 
@@ -366,7 +364,7 @@ void main() {
         expect(result, true);
       });
 
-      test('failure - throws ServerException', () async {
+      test('failure - returns false on DioException', () async {
         when(() => mockDio.delete(
               any(),
               queryParameters: any(named: 'queryParameters'),
@@ -375,10 +373,8 @@ void main() {
               type: DioExceptionType.connectionError,
             ));
 
-        expect(
-          () => repository.deleteSession('s1'),
-          throwsA(isA<ServerException>()),
-        );
+        final result = await repository.deleteSession('s1');
+        expect(result, false);
       });
     });
   });

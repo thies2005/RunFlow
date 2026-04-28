@@ -15,6 +15,9 @@ class _FakeAiFeedback extends AiFeedback {
 
   @override
   Future<AiActivityFeedback> build(String activityId) async {
+    if (activityId != _activityId) {
+      throw StateError('Unexpected activity id: $activityId');
+    }
     return const AiActivityFeedback();
   }
 }

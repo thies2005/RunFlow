@@ -11,19 +11,18 @@ interface RaceActivity {
 
 interface CalibrationSectionProps {
     calibrationMode: 'activity' | 'manual';
-    setCalibrationMode: (mode: 'activity' | 'manual') => void;
+    setCalibrationMode: (_mode: 'activity' | 'manual') => void;
     selectedActivityId: string;
-    setSelectedActivityId: (id: string) => void;
+    setSelectedActivityId: (_id: string) => void;
     calibrationDistance: string;
-    setCalibrationDistance: (dist: string) => void;
+    setCalibrationDistance: (_dist: string) => void;
     hours: string;
-    setHours: (val: string) => void;
+    setHours: (_val: string) => void;
     minutes: string;
-    setMinutes: (val: string) => void;
+    setMinutes: (_val: string) => void;
     seconds: string;
-    setSeconds: (val: string) => void;
-    calibrationFactor: number;
-    setCalibrationFactor: (val: number) => void;
+    setSeconds: (_val: string) => void;
+    setCalibrationFactor: (_val: number) => void;
     effectiveVO2max: number;
     raceActivities: RaceActivity[];
 }
@@ -41,7 +40,6 @@ export default function CalibrationSection({
     setMinutes,
     seconds,
     setSeconds,
-    calibrationFactor,
     setCalibrationFactor,
     effectiveVO2max,
     raceActivities

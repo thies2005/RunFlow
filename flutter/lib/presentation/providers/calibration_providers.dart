@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/models/calibration_models.dart';
-import 'package:runflow_flutter/data/repositories/activity_repository_impl.dart';
-import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 
 part 'calibration_providers.g.dart';
 
@@ -105,8 +104,7 @@ class Calibration extends _$Calibration {
   }) async {
     state = state.copyWith(isSubmitting: true, error: '');
     try {
-      final repo = ref.read(activityRepositoryProvider);
-      final dio = (repo as ActivityRepositoryImpl).dio;
+      final dio = ref.read(dioClientProvider).dio;
 
       final body = <String, dynamic>{};
       if (state.isCustomDistance) {
@@ -132,8 +130,7 @@ class Calibration extends _$Calibration {
   Future<void> submitShapeFactor(double factor) async {
     state = state.copyWith(isSubmitting: true, error: '');
     try {
-      final repo = ref.read(activityRepositoryProvider);
-      final dio = (repo as ActivityRepositoryImpl).dio;
+      final dio = ref.read(dioClientProvider).dio;
 
       await dio.post(
         '/goals/calibration',
@@ -152,8 +149,7 @@ class Calibration extends _$Calibration {
   Future<void> submitManualFactor(double factor) async {
     state = state.copyWith(isSubmitting: true, error: '');
     try {
-      final repo = ref.read(activityRepositoryProvider);
-      final dio = (repo as ActivityRepositoryImpl).dio;
+      final dio = ref.read(dioClientProvider).dio;
 
       await dio.post(
         '/goals/calibration',

@@ -378,7 +378,7 @@ export default function PlanSetupForm({
                 setCalibrationFactor(1.0);
             }
         }
-    }, [calibrationDistance, effectiveVO2max, shapePercent, calibrationMode, selectedActivityId, hours, minutes, seconds]);
+    }, [mode, calibrationDistance, effectiveVO2max, shapePercent, calibrationMode, selectedActivityId, hours, minutes, seconds]);
 
     // Auto-fill time when activity is selected (Activity Mode)
     useEffect(() => {
@@ -680,7 +680,6 @@ export default function PlanSetupForm({
                 setMinutes={setMinutes}
                 seconds={seconds}
                 setSeconds={setSeconds}
-                calibrationFactor={calibrationFactor}
                 setCalibrationFactor={setCalibrationFactor}
                 effectiveVO2max={effectiveVO2max}
                 raceActivities={raceActivities}

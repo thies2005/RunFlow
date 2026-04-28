@@ -96,45 +96,6 @@ final class HealthRepositoryProvider
 
 String _$healthRepositoryHash() => r'c012cc8e7f6b645434538e1c94cf1742314335ed';
 
-@ProviderFor(supplements)
-final supplementsProvider = SupplementsProvider._();
-
-final class SupplementsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Supplement>>,
-          List<Supplement>,
-          FutureOr<List<Supplement>>
-        >
-    with $FutureModifier<List<Supplement>>, $FutureProvider<List<Supplement>> {
-  SupplementsProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'supplementsProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$supplementsHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<List<Supplement>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<Supplement>> create(Ref ref) {
-    return supplements(ref);
-  }
-}
-
-String _$supplementsHash() => r'67162666b6188a306f0a2ae4ba8029e4bc891275';
-
 @ProviderFor(activeFasting)
 final activeFastingProvider = ActiveFastingProvider._();
 
@@ -234,7 +195,7 @@ final class BodyMeasurementsProvider
         argument: null,
         retry: null,
         name: r'bodyMeasurementsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -254,7 +215,7 @@ final class BodyMeasurementsProvider
   }
 }
 
-String _$bodyMeasurementsHash() => r'f4d6848c151a0810b9841a64ead191f46f0fec7c';
+String _$bodyMeasurementsHash() => r'a2971c548d1ffb148da0e6e7cb2ddc5d5f55170e';
 
 @ProviderFor(dailyHealth)
 final dailyHealthProvider = DailyHealthFamily._();
@@ -273,7 +234,7 @@ final class DailyHealthProvider
   }) : super(
          retry: null,
          name: r'dailyHealthProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -311,7 +272,7 @@ final class DailyHealthProvider
   }
 }
 
-String _$dailyHealthHash() => r'52a4535c244860b3228a21e72daf58a1978eff58';
+String _$dailyHealthHash() => r'b79394cabda17982903a588495e5bb2bdcc02b43';
 
 final class DailyHealthFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<DailyHealthLog>, DateTime> {
@@ -321,7 +282,7 @@ final class DailyHealthFamily extends $Family
         name: r'dailyHealthProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   DailyHealthProvider call(DateTime date) =>
@@ -369,7 +330,7 @@ final class TakenSupplementIdsProvider
 }
 
 String _$takenSupplementIdsHash() =>
-    r'f2efc3a5389325149edb97cae325b3f47cc84ea3';
+    r'0d43d53a82eb7e2ac2c782c8a8959c9cff463275';
 
 @ProviderFor(Fasting)
 final fastingProvider = FastingProvider._();
@@ -426,7 +387,7 @@ final class SupplementListProvider
         argument: null,
         retry: null,
         name: r'supplementListProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -439,7 +400,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'fef464ef01ac2f1fd64eb0952157fa442ac35ece';
+String _$supplementListHash() => r'beeac841c3a0ba09bd88d78ddedb632120578241';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();
@@ -501,7 +462,7 @@ final class NutritionNotifierProvider
   }
 }
 
-String _$nutritionNotifierHash() => r'c4e2b530f88c1495a28b9d851501142e4e090ef0';
+String _$nutritionNotifierHash() => r'6e83ef1d2ae73182c30349e53cf9b96fb73f4905';
 
 final class NutritionNotifierFamily extends $Family
     with
@@ -573,7 +534,7 @@ final class BarcodeScanProvider
   BarcodeScan create() => BarcodeScan();
 }
 
-String _$barcodeScanHash() => r'f13ed5a5f29d60cf1d202f16edb78ee1fb6148fe';
+String _$barcodeScanHash() => r'06118eae4bfd683199268fd6fe03d42c0ad22cee';
 
 abstract class _$BarcodeScan extends $AsyncNotifier<FoodItem?> {
   FutureOr<FoodItem?> build();

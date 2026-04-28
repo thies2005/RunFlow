@@ -44,7 +44,52 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
 
     return statusAsync.when(
       loading: () => _IdleView(onStart: _handleStart),
-      error: (Object e, StackTrace st) => _IdleView(onStart: _handleStart),
+      error: (Object e, StackTrace st) => Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Recording Error',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    e.toString(),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () {
+                      ref.invalidate(recordingStatusProvider);
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () {
+                      ref.read(recordingServiceProvider).discardRecording();
+                      ref.invalidate(recordingStatusProvider);
+                    },
+                    child: const Text('Reset'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
       data: (RecordingStatus status) {
         if (_showSummary && _lastWorkout != null) {
           return _SummaryView(

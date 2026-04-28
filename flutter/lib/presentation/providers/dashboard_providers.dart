@@ -21,7 +21,12 @@ class Dashboard extends _$Dashboard {
   }
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
+    final previous = state.value;
+    if (previous != null) {
+      state = AsyncData<DashboardResponse>(previous);
+    } else {
+      state = const AsyncLoading<DashboardResponse>();
+    }
     final repo = ref.read(dashboardRepositoryProvider);
     state = await AsyncValue.guard(repo.fetchDashboard);
   }

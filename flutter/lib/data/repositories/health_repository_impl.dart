@@ -43,7 +43,7 @@ class HealthRepositoryImpl implements HealthRepository {
   }
 
   @override
-  Future<void> toggleSupplement(String id) async {
+  Future<void> toggleSupplement(int id) async {
     final supplements = await database.getAllSupplements();
     final supplement = supplements.firstWhere((s) => s.id == id);
     await database.updateSupplement(

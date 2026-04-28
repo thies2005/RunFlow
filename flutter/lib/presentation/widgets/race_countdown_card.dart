@@ -10,17 +10,28 @@ class RaceCountdownCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final data = ref.watch(raceCountdownProvider);
+    final countdowns = ref.watch(raceCountdownProvider);
 
-    if (data == null) return _NoGoalCard();
+    if (countdowns.isEmpty) return _NoGoalCard();
 
-    if (data.isPostRace && !data.hasRaceResult && !data.isOverdue) {
-      return _PostRacePendingCard(data: data);
+    if (countdowns.length == 1) {
+      final data = countdowns.first;
+      if (data.isPostRace && !data.hasRaceResult && !data.isOverdue) {
+        return _PostRacePendingCard(data: data);
+      }
+      if (data.isOverdue) return _OverdueCard(data: data);
+      return _ActiveCountdownCard(data: data);
     }
 
-    if (data.isOverdue) return _OverdueCard(data: data);
-
-    return _ActiveCountdownCard(data: data);
+    return Column(
+      children: countdowns.map((data) {
+        if (data.isPostRace && !data.hasRaceResult && !data.isOverdue) {
+          return _PostRacePendingCard(data: data);
+        }
+        if (data.isOverdue) return _OverdueCard(data: data);
+        return _ActiveCountdownCard(data: data);
+      }).toList(),
+    );
   }
 }
 

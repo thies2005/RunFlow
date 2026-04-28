@@ -2,34 +2,34 @@ import { Activity, Bike, Move, ChevronDown, ChevronUp, Waves, Dumbbell } from 'l
 
 interface PlanVolumeSectionProps {
     runsPerWeek: number;
-    setRunsPerWeek: (val: number) => void;
+    setRunsPerWeek: (_val: number) => void;
     ridesPerWeek: number;
-    setRidesPerWeek: (val: number) => void;
+    setRidesPerWeek: (_val: number) => void;
     swimsPerWeek: number;
-    setSwimsPerWeek: (val: number) => void;
+    setSwimsPerWeek: (_val: number) => void;
     strengthPerWeek: number;
-    setStrengthPerWeek: (val: number) => void;
+    setStrengthPerWeek: (_val: number) => void;
     raceType: string;
     weeklyMileage: number;
-    setWeeklyMileage: (val: number) => void;
+    setWeeklyMileage: (_val: number) => void;
     maxLongRunKm: number;
-    setMaxLongRunKm: (val: number) => void;
+    setMaxLongRunKm: (_val: number) => void;
     taperWeeks: number;
-    setTaperWeeks: (val: number) => void;
+    setTaperWeeks: (_val: number) => void;
     peakWeeks: number;
-    setPeakWeeks: (val: number) => void;
+    setPeakWeeks: (_val: number) => void;
     buildWeeks: number;
-    setBuildWeeks: (val: number) => void;
+    setBuildWeeks: (_val: number) => void;
     showSchedulingSettings: boolean;
-    setShowSchedulingSettings: (val: boolean) => void;
+    setShowSchedulingSettings: (_val: boolean) => void;
     longRunDay: number;
-    setLongRunDay: (val: number) => void;
+    setLongRunDay: (_val: number) => void;
     qualityDay: number;
-    setQualityDay: (val: number) => void;
+    setQualityDay: (_val: number) => void;
     swimDay: number;
-    setSwimDay: (val: number) => void;
+    setSwimDay: (_val: number) => void;
     restDays: number[];
-    setRestDays: (val: number[]) => void;
+    setRestDays: (_val: number[]) => void;
 }
 
 export default function PlanVolumeSection({

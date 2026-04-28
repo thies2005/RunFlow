@@ -900,7 +900,9 @@ class _ApplyButton extends ConsumerWidget {
         );
         Navigator.of(context).pop();
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[ShapeCalibrationSheet] Save calibration failed: $e');
+    }
   }
 
   @override

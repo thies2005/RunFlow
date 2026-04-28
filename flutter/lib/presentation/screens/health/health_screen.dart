@@ -6,6 +6,7 @@ import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
+import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
 
 class HealthScreen extends ConsumerStatefulWidget {
   const HealthScreen({super.key});
@@ -635,19 +636,57 @@ class _SupplementsCard extends ConsumerWidget {
 
 // ─── Sleep Card ───────────────────────────────────────────────────────────────
 
-class _SleepCard extends StatelessWidget {
+class _SleepCard extends ConsumerWidget {
   const _SleepCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sleepAsync = ref.watch(sleepProvider);
     return _DashboardCard(
       title: 'Sleep',
       icon: Icons.nightlight_round,
       iconColor: AppColors.peaked,
       onTap: () => context.push('/health/sleep'),
-      child: _NoDataWidget(
-        label: 'sleep',
-        onSync: () {},
+      child: sleepAsync.when(
+        data: (sleep) {
+          if (!sleep.hasData) {
+            return _NoDataWidget(
+              label: 'sleep',
+              onSync: () => ref.invalidate(sleepProvider),
+            );
+          }
+          final theme = Theme.of(context);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${sleep.lastNightHours.toStringAsFixed(1)}h',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.onSurface,
+                ),
+              ),
+              Text(
+                'last night',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${sleep.deepMinutes.round()}m deep / ${sleep.remMinutes.round()}m REM',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppColors.peaked,
+                ),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => _NoDataWidget(
+          label: 'sleep',
+          onSync: () => ref.invalidate(sleepProvider),
+        ),
       ),
     );
   }
@@ -655,19 +694,72 @@ class _SleepCard extends StatelessWidget {
 
 // ─── Vitals Card ──────────────────────────────────────────────────────────────
 
-class _VitalsCard extends StatelessWidget {
+class _VitalsCard extends ConsumerWidget {
   const _VitalsCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vitalsAsync = ref.watch(vitalsProvider);
     return _DashboardCard(
       title: 'Vitals',
       icon: Icons.monitor_heart_outlined,
       iconColor: AppColors.error,
       onTap: () => context.push('/health/vitals'),
-      child: _NoDataWidget(
-        label: 'vitals',
-        onSync: () {},
+      child: vitalsAsync.when(
+        data: (vitals) {
+          if (!vitals.hasData) {
+            return _NoDataWidget(
+              label: 'vitals',
+              onSync: () => ref.invalidate(vitalsProvider),
+            );
+          }
+          final theme = Theme.of(context);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (vitals.restingHeartRate != null)
+                Text(
+                  '${vitals.restingHeartRate!.round()} bpm',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                  ),
+                )
+              else if (vitals.hrv != null)
+                Text(
+                  '${vitals.hrv!.round()} ms',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                  ),
+                ),
+              Text(
+                vitals.restingHeartRate != null
+                    ? 'resting HR'
+                    : vitals.hrv != null
+                        ? 'HRV'
+                        : 'vitals',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              if (vitals.spo2 != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'SpO2 ${vitals.spo2!.round()}%',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => _NoDataWidget(
+          label: 'vitals',
+          onSync: () => ref.invalidate(vitalsProvider),
+        ),
       ),
     );
   }

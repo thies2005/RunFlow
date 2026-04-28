@@ -42,7 +42,7 @@ void main() {
         await repository.syncNutritionLog(log);
 
         verify(() => mockDio.post(
-              'health/nutrition/log',
+              '/health/nutrition/log',
               data: any(named: 'data'),
             )).called(1);
       });
@@ -219,7 +219,7 @@ void main() {
               statusCode: 200,
               data: [
                 {
-                  'id': '1',
+                  'id': 1,
                   'name': 'Vitamin D',
                   'dosage': '2000 IU',
                   'frequency': 'Daily',
@@ -241,7 +241,7 @@ void main() {
               data: {
                 'supplements': [
                   {
-                  'id': '2',
+                  'id': 2,
                   'name': 'Creatine',
                     'dosage': '5g',
                     'frequency': 'Daily',
@@ -261,7 +261,7 @@ void main() {
     group('saveSupplementRemote', () {
       test('sends POST to supplements path', () async {
         const supplement = Supplement(
-          id: '1',
+          id: 1,
           name: 'Zinc',
           dosage: '15mg',
           frequency: 'Daily',
@@ -280,7 +280,7 @@ void main() {
         await repository.saveSupplementRemote(supplement);
 
         verify(() => mockDio.post(
-              'health/supplements',
+              '/health/supplements',
               data: any(named: 'data'),
             )).called(1);
       });
@@ -307,7 +307,7 @@ void main() {
         await repository.syncFasting(session);
 
         verify(() => mockDio.post(
-              'health/fasting',
+              '/health/fasting',
               data: any(named: 'data'),
             )).called(1);
       });
@@ -334,9 +334,51 @@ void main() {
         await repository.syncBodyMeasurement(measurement);
 
         verify(() => mockDio.post(
-              'health/body-composition',
-              data: any(named: 'data'),
+              '/health/body-composition',
+              data: {
+                'dateStr': '2024-06-15',
+                'weight': 75.5,
+                'bodyFat': 15.2,
+              },
             )).called(1);
+      });
+    });
+
+    group('getBodyMeasurements', () {
+      test('parses mixed server payload types', () async {
+        when(() => mockDio.get(any())).thenAnswer((_) async => Response<dynamic>(
+              requestOptions: RequestOptions(path: ''),
+              statusCode: 200,
+              data: {
+                'measurements': [
+                  {
+                    'id': 'abc-1',
+                    'dateStr': '2024-06-10',
+                    'weight': 75.2,
+                    'bodyFat': 14.8,
+                    'waist': 81,
+                  },
+                  {
+                    'id': 2,
+                    'date': '2024-06-11T00:00:00.000Z',
+                    'weight': '74.9',
+                    'bodyFat': '14.5',
+                  },
+                ],
+              },
+            ));
+
+        final result = await repository.getBodyMeasurements();
+
+        expect(result, hasLength(2));
+        expect(result.first.id, 0);
+        expect(result.first.date, DateTime(2024, 6, 10));
+        expect(result.first.weight, 75.2);
+        expect(result.first.bodyFat, 14.8);
+        expect(result.first.waist, 81);
+        expect(result.last.id, 2);
+        expect(result.last.weight, 74.9);
+        expect(result.last.bodyFat, 14.5);
       });
     });
 
@@ -359,7 +401,7 @@ void main() {
         await repository.batchSync(data);
 
         verify(() => mockDio.post(
-              'health/sync-batch',
+              '/health/sync-batch',
               data: any(named: 'data'),
             )).called(1);
       });

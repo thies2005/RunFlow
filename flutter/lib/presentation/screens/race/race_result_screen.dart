@@ -999,7 +999,7 @@ class _ExpandableDetails extends StatelessWidget {
   }
 }
 
-class _NumberField extends StatelessWidget {
+class _NumberField extends StatefulWidget {
   const _NumberField({
     required this.label,
     required this.value,
@@ -1011,25 +1011,44 @@ class _NumberField extends StatelessWidget {
   final void Function(int?) onChanged;
 
   @override
+  State<_NumberField> createState() => _NumberFieldState();
+}
+
+class _NumberFieldState extends State<_NumberField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.value != null ? '${widget.value}' : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextField(
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
-        labelText: label,
+        labelText: widget.label,
         isDense: true,
       ),
-      controller: TextEditingController(
-        text: value != null ? '$value' : '',
-      ),
+      controller: _controller,
       onChanged: (v) {
         final parsed = int.tryParse(v);
-        onChanged(parsed);
+        widget.onChanged(parsed);
       },
     );
   }
 }
 
-class _TextField extends StatelessWidget {
+class _TextField extends StatefulWidget {
   const _TextField({
     required this.label,
     required this.value,
@@ -1043,15 +1062,34 @@ class _TextField extends StatelessWidget {
   final void Function(String?) onChanged;
 
   @override
+  State<_TextField> createState() => _TextFieldState();
+}
+
+class _TextFieldState extends State<_TextField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value ?? '');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextField(
       decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
+        labelText: widget.label,
+        hintText: widget.hint,
         isDense: true,
       ),
-      controller: TextEditingController(text: value ?? ''),
-      onChanged: (v) => onChanged(v.isEmpty ? null : v),
+      controller: _controller,
+      onChanged: (v) => widget.onChanged(v.isEmpty ? null : v),
     );
   }
 }
@@ -1110,7 +1148,7 @@ class _RpeSlider extends StatelessWidget {
   }
 }
 
-class _NotesField extends StatelessWidget {
+class _NotesField extends StatefulWidget {
   const _NotesField({
     required this.value,
     required this.onChanged,
@@ -1120,6 +1158,25 @@ class _NotesField extends StatelessWidget {
   final void Function(String) onChanged;
 
   @override
+  State<_NotesField> createState() => _NotesFieldState();
+}
+
+class _NotesFieldState extends State<_NotesField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextField(
       decoration: const InputDecoration(
@@ -1127,8 +1184,8 @@ class _NotesField extends StatelessWidget {
         hintText: 'How did the race go?',
         isDense: true,
       ),
-      controller: TextEditingController(text: value),
-      onChanged: onChanged,
+      controller: _controller,
+      onChanged: widget.onChanged,
       maxLines: 3,
     );
   }

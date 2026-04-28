@@ -259,6 +259,10 @@ GoRouter createRouter(Ref ref) {
                 path: '/profile',
                 builder: (context, state) => const ProfileScreen(),
               ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
               GoRoute(
                 path: '/activities',
                 builder: (context, state) => const ActivityListScreen(),

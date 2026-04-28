@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
@@ -82,7 +83,9 @@ class Onboarding extends _$Onboarding {
       final connected = [...state.connectedPlatforms, 'strava'];
       await prefs.setStringList(_connectedKey, connected);
       state = state.copyWith(connectedPlatforms: connected);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[Onboarding] Connect Strava failed: $e');
+    }
   }
 
   Future<void> markPlatformConnected(String platformId) async {

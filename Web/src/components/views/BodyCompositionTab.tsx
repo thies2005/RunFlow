@@ -15,14 +15,16 @@ export function BodyCompositionTab() {
     
     // Form state
     const [dateStr, setDateStr] = useState(getCurrentUtcDayKey());
+    const [weight, setWeight] = useState('');
     const [bodyFat, setBodyFat] = useState('');
     const [muscleMass, setMuscleMass] = useState('');
     const [waist, setWaist] = useState('');
     const [chest, setChest] = useState('');
+    const [hips, setHips] = useState('');
     const [arms, setArms] = useState('');
     
     // View state
-    const [selectedMetric, setSelectedMetric] = useState<'bodyFat' | 'muscleMass' | 'waist'>('bodyFat');
+    const [selectedMetric, setSelectedMetric] = useState<'weight' | 'bodyFat' | 'muscleMass' | 'waist'>('weight');
 
     const { data: compData, isLoading } = useQuery({
         queryKey: ['body-composition'],
@@ -35,20 +37,24 @@ export function BodyCompositionTab() {
 
     interface BodyCompositionPayload {
         dateStr: string;
+        weight?: number;
         bodyFat?: number;
         muscleMass?: number;
         waist?: number;
         chest?: number;
+        hips?: number;
         arms?: number;
     }
 
     const saveMutation = useMutation({
         mutationFn: async () => {
             const payload: BodyCompositionPayload = { dateStr };
+            if (weight) payload.weight = parseFloat(weight);
             if (bodyFat) payload.bodyFat = parseFloat(bodyFat);
             if (muscleMass) payload.muscleMass = parseFloat(muscleMass);
             if (waist) payload.waist = parseFloat(waist);
             if (chest) payload.chest = parseFloat(chest);
+            if (hips) payload.hips = parseFloat(hips);
             if (arms) payload.arms = parseFloat(arms);
 
             const res = await fetch('/api/health/body-composition', {
@@ -63,10 +69,12 @@ export function BodyCompositionTab() {
             queryClient.invalidateQueries({ queryKey: ['body-composition'] });
             queryClient.invalidateQueries({ queryKey: ['daily-health'] });
             setIsLogging(false);
+            setWeight('');
             setBodyFat('');
             setMuscleMass('');
             setWaist('');
             setChest('');
+            setHips('');
             setArms('');
             toast.success('Measurements saved');
         },
@@ -79,6 +87,7 @@ export function BodyCompositionTab() {
 
     const getMetricConfig = () => {
         switch(selectedMetric) {
+            case 'weight': return { name: 'Weight (kg)', color: '#22c55e', dataKey: 'weight' };
             case 'bodyFat': return { name: 'Body Fat %', color: '#f97316', dataKey: 'bodyFat' };
             case 'muscleMass': return { name: 'Muscle Mass (kg)', color: '#3b82f6', dataKey: 'muscleMass' };
             case 'waist': return { name: 'Waist Size (cm)', color: '#a855f7', dataKey: 'waist' };
@@ -109,6 +118,14 @@ export function BodyCompositionTab() {
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-xs font-semibold text-gray-400 mb-1 block">Weight (kg)</label>
+                                <input 
+                                    type="number" step="0.1" value={weight} onChange={e => setWeight(e.target.value)}
+                                    placeholder="e.g. 72.4"
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                                />
+                            </div>
                             <div>
                                 <label className="text-xs font-semibold text-gray-400 mb-1 block">Body Fat (%)</label>
                                 <input 
@@ -141,6 +158,14 @@ export function BodyCompositionTab() {
                                     className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
                                 />
                             </div>
+                            <div>
+                                <label className="text-xs font-semibold text-gray-400 mb-1 block">Hips (cm)</label>
+                                <input 
+                                    type="number" step="0.5" value={hips} onChange={e => setHips(e.target.value)}
+                                    placeholder="e.g. 95"
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-hidden focus:border-blue-500"
+                                />
+                            </div>
                         </div>
                         <button 
                             onClick={() => saveMutation.mutate()}
@@ -156,6 +181,7 @@ export function BodyCompositionTab() {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex bg-white/5 rounded-lg p-1 border border-white/10 shrink-0 overflow-x-auto w-full max-w-[300px]">
                             {([
+                                { id: 'weight', label: 'Weight' },
                                 { id: 'bodyFat', label: 'Body Fat %' },
                                 { id: 'muscleMass', label: 'Muscle Mass' },
                                 { id: 'waist', label: 'Waist' }

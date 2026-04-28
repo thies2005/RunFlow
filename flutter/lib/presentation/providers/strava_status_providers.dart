@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -69,7 +70,9 @@ class StravaStatus extends _$StravaStatus {
         lastSyncAt:
             lastSync != null ? DateTime.tryParse(lastSync) : state.lastSyncAt,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[StravaStatus] Refresh from server failed: $e');
+    }
   }
 }
 

@@ -54,15 +54,15 @@ class HealthSyncService {
         }
       }
 
+      final payload = <String, dynamic>{
+        'date': start.toIso8601String().split('T').first,
+        'steps': totalSteps > 0 ? totalSteps : null,
+        'weight': weight,
+        'activeCalories': totalCalories > 0 ? totalCalories : null,
+      }..removeWhere((_, value) => value == null);
+
       await _apiRepo.batchSync({
-        'data': [
-          {
-            'date': start.toIso8601String().split('T').first,
-            if (totalSteps > 0) 'steps': totalSteps,
-            if (weight != null) 'weight': weight,
-            if (totalCalories > 0) 'activeCalories': totalCalories,
-          }
-        ]
+        'data': [payload],
       });
     } catch (e) {
       debugPrint('Health sync failed for $date: $e');

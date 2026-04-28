@@ -34,7 +34,7 @@ class SupplementsScreen extends ConsumerWidget {
           final inactive = supplements.where((s) => !s.isActive).toList();
           return takenAsync.when(
             data: (takenIds) {
-              final takenCount = active.where((s) => takenIds.contains(s.id)).length;
+              final takenCount = active.where((s) => takenIds.contains(s.serverId ?? s.id.toString())).length;
               return SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 child: Column(
@@ -49,7 +49,7 @@ class SupplementsScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       ...active.map((s) => _SupplementTile(
                         supplement: s,
-                        isTaken: takenIds.contains(s.id),
+                        isTaken: takenIds.contains(s.serverId ?? s.id.toString()),
                         onToggle: () => ref.read(supplementListProvider.notifier).toggle(s.id),
                       )),
                       const SizedBox(height: 16),
@@ -159,7 +159,7 @@ class SupplementsScreen extends ConsumerWidget {
                 child: FilledButton(
                   onPressed: () {
                     final supplement = Supplement(
-                      id: '',
+                      id: 0,
                       name: nameCtl.text,
                       dosage: dosageCtl.text,
                       frequency: freqCtl.text.isEmpty ? selectedTime : freqCtl.text,
@@ -273,7 +273,7 @@ class _SupplementCalendar extends StatelessWidget {
               final isToday = day.day == now.day && day.month == now.month;
               final activeToday = supplements.where((s) => s.isActive).length;
               final pct = isToday && activeToday > 0
-                  ? takenIds.where((id) => supplements.any((s) => s.id == id && s.isActive)).length / activeToday
+                  ? takenIds.where((id) => supplements.any((s) => (s.serverId ?? s.id.toString()) == id && s.isActive)).length / activeToday
                   : isToday ? 0.0 : -1.0;
               final label = dayLabels[day.weekday - 1];
               return Expanded(

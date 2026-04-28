@@ -92,13 +92,6 @@ TrainingPaces calculateTrainingPaces(double vdot) {
 }
 
 class TrainingPaces {
-  final int easyMin;
-  final int easyMax;
-  final int marathon;
-  final int threshold;
-  final int interval;
-  final int repetition;
-
   const TrainingPaces({
     required this.easyMin,
     required this.easyMax,
@@ -107,17 +100,16 @@ class TrainingPaces {
     required this.interval,
     required this.repetition,
   });
+
+  final int easyMin;
+  final int easyMax;
+  final int marathon;
+  final int threshold;
+  final int interval;
+  final int repetition;
 }
 
 class ProjectedGoalResult {
-  final int optimalTime;
-  final int projectedTime;
-  final int conservativeTime;
-  final double projectedVdot;
-  final double improvementPercent;
-  final double projectedShape;
-  final double shapeImprovementPercent;
-
   const ProjectedGoalResult({
     required this.optimalTime,
     required this.projectedTime,
@@ -127,6 +119,14 @@ class ProjectedGoalResult {
     required this.projectedShape,
     required this.shapeImprovementPercent,
   });
+
+  final int optimalTime;
+  final int projectedTime;
+  final int conservativeTime;
+  final double projectedVdot;
+  final double improvementPercent;
+  final double projectedShape;
+  final double shapeImprovementPercent;
 }
 
 const _maxImprovementFactor = 1.15;
@@ -271,16 +271,16 @@ String formatDuration(int totalSeconds) {
   final secs = totalSeconds % 60;
 
   if (hours > 0) {
-    return '${hours}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    return '$hours:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
-  return '${mins}:${secs.toString().padLeft(2, '0')}';
+  return '$mins:${secs.toString().padLeft(2, '0')}';
 }
 
 String formatPace(int secsPerKm) {
   if (secsPerKm <= 0) return '--:--';
   final mins = secsPerKm ~/ 60;
   final secs = secsPerKm % 60;
-  return '${mins}:${secs.toString().padLeft(2, '0')}/km';
+  return '$mins:${secs.toString().padLeft(2, '0')}/km';
 }
 
 int calculateDefaultMaxLongRunKm(String raceType, double weeklyMileageKm) {
@@ -328,13 +328,13 @@ List<HeartRateZone> calculateHRZonesFromLTHR(int lthr) {
 }
 
 class HeartRateZone {
-  final String label;
-  final int min;
-  final int max;
-
   const HeartRateZone({
     required this.label,
     required this.min,
     required this.max,
   });
+
+  final String label;
+  final int min;
+  final int max;
 }

@@ -41,7 +41,7 @@ final class StravaStatusProvider
   }
 }
 
-String _$stravaStatusHash() => r'f967ec14e8a6ca70825ee77bc7d550ae3a5d452c';
+String _$stravaStatusHash() => r'aa49ea6f5be6d899cc608f5cc3b138c44ff1c209';
 
 abstract class _$StravaStatus extends $Notifier<StravaStatusState> {
   StravaStatusState build();

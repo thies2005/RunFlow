@@ -289,7 +289,7 @@ function generateRaceWeek(params: {
     swimsPerWeek?: number;
     strengthPerWeek?: number;
 }): ScheduledWorkout[] {
-    const { raceDate, raceType, paces, runsPerWeek, raceWeekRunVolumeCap } = params;
+    const { raceType, paces, runsPerWeek, raceWeekRunVolumeCap } = params;
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
 

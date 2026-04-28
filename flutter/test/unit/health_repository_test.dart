@@ -115,7 +115,7 @@ void main() {
     group('supplements', () {
       test('saveSupplement and getSupplements round-trip', () async {
         const Supplement supplement = Supplement(
-          id: '0',
+          id: 0,
           name: 'Vitamin D',
           dosage: '2000 IU',
           frequency: 'Daily',
@@ -131,7 +131,7 @@ void main() {
 
       test('toggleSupplement flips isActive', () async {
         const Supplement supplement = Supplement(
-          id: '0',
+          id: 0,
           name: 'Creatine',
           dosage: '5g',
           frequency: 'Daily',

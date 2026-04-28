@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'health_models.freezed.dart';
@@ -45,7 +46,8 @@ sealed class FoodItem with _$FoodItem {
 @Freezed(copyWith: true)
 sealed class Supplement with _$Supplement {
   const factory Supplement({
-    required String id,
+    required int id,
+    String? serverId,
     required String name,
     @JsonKey(name: 'amount', fromJson: _parseSupplementAmount) @Default(0) double amount,
     @JsonKey(name: 'unit') @Default('mg') String unit,
@@ -64,7 +66,8 @@ sealed class Supplement with _$Supplement {
 
   @override
   Map<String, dynamic> toJson() => {
-    if (id.isNotEmpty) 'id': id,
+    if (id != 0) 'id': id,
+    if (serverId != null) 'serverId': serverId,
     'name': name,
     'amount': amount,
     'unit': unit,
@@ -88,7 +91,9 @@ List<int> _parseDaysOfWeek(dynamic value) {
     try {
       final decoded = jsonDecode(value);
       if (decoded is List) return decoded.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0).toList();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[_parseDaysOfWeek] JSON decode failed: $e');
+    }
   }
   return [0, 1, 2, 3, 4, 5, 6];
 }
@@ -341,6 +346,12 @@ sealed class MicronutrientSummary with _$MicronutrientSummary {
 @Freezed(copyWith: true)
 sealed class SupplementAnalytics with _$SupplementAnalytics {
   const factory SupplementAnalytics({
+    @Default(0) double overallAdherence,
+    @Default(0) double avgDailyDoses,
+    @Default(0) int totalSupplements,
+    @Default(0) int totalScheduled,
+    @Default(0) int totalTaken,
+    @Default(0) int totalDays,
     @Default([]) List<SupplementAdherence> supplements,
   }) = _SupplementAnalytics;
   const SupplementAnalytics._();

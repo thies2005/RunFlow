@@ -35,7 +35,7 @@ class _FakeSupplementList extends SupplementList {
   Future<List<Supplement>> build() => SynchronousFuture(_items);
 
   @override
-  Future<void> toggle(String id) async {}
+  Future<void> toggle(int id) async {}
 
   @override
   Future<void> add(Supplement supplement) async {}
@@ -88,7 +88,7 @@ class _FakeHealthConnectService implements HealthConnectService {
   @override
   Future<VitalsData> readVitals() async => const VitalsData();
   @override
-  Future<SleepData> readSleep() async => SleepData();
+  Future<SleepData> readSleep() async => const SleepData();
 }
 
 Widget buildTestWidget({double water = 1.0}) {

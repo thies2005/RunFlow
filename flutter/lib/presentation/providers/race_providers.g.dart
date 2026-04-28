@@ -15,11 +15,11 @@ final raceCountdownProvider = RaceCountdownProvider._();
 final class RaceCountdownProvider
     extends
         $FunctionalProvider<
-          RaceCountdownData?,
-          RaceCountdownData?,
-          RaceCountdownData?
+          List<RaceCountdownData>,
+          List<RaceCountdownData>,
+          List<RaceCountdownData>
         >
-    with $Provider<RaceCountdownData?> {
+    with $Provider<List<RaceCountdownData>> {
   RaceCountdownProvider._()
     : super(
         from: null,
@@ -36,25 +36,25 @@ final class RaceCountdownProvider
 
   @$internal
   @override
-  $ProviderElement<RaceCountdownData?> $createElement(
+  $ProviderElement<List<RaceCountdownData>> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  RaceCountdownData? create(Ref ref) {
+  List<RaceCountdownData> create(Ref ref) {
     return raceCountdown(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(RaceCountdownData? value) {
+  Override overrideWithValue(List<RaceCountdownData> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<RaceCountdownData?>(value),
+      providerOverride: $SyncValueProvider<List<RaceCountdownData>>(value),
     );
   }
 }
 
-String _$raceCountdownHash() => r'2a454f0af014e61485fd2e96d2687e86c9fa7c00';
+String _$raceCountdownHash() => r'40bac2bbaf54d3ada4a77d4b4580eb5bad70f4c8';
 
 @ProviderFor(trainingStatus)
 final trainingStatusProvider = TrainingStatusProvider._();

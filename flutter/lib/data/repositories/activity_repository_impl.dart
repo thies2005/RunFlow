@@ -133,6 +133,15 @@ class ActivityRepositoryImpl implements ActivityRepository {
               .toList()
           : null;
 
+      final streams = <String, dynamic>{
+        'time': timeStream,
+        'latlng': latlngStream,
+        'altitude': altitudeStream,
+        'velocity_smooth': velocityStream,
+        'heartrate': hrStream,
+        'cadence': cadenceStream,
+      }..removeWhere((_, value) => value == null);
+
       final body = <String, dynamic>{
         'name': workout.name,
         'type': workout.activityType,
@@ -147,17 +156,8 @@ class ActivityRepositoryImpl implements ActivityRepository {
         if (workout.averageCadence != null)
           'averageCadence': workout.averageCadence,
         'hasHeartrate': workout.hasHeartrate,
-        if (workout.totalElevation != null)
-          'totalElevation': workout.totalElevation,
-        if (timeStream != null || latlngStream != null || hrStream != null)
-            'streams': <String, dynamic>{
-              if (timeStream != null) 'time': timeStream,
-              if (latlngStream != null) 'latlng': latlngStream,
-              if (altitudeStream != null) 'altitude': altitudeStream,
-              if (velocityStream != null) 'velocity_smooth': velocityStream,
-              if (hrStream != null) 'heartrate': hrStream,
-              if (cadenceStream != null) 'cadence': cadenceStream,
-            },
+        if (workout.totalElevation != null) 'totalElevation': workout.totalElevation,
+        if (streams.isNotEmpty) 'streams': streams,
       };
 
       final response = await dio.post(
@@ -196,9 +196,9 @@ class ActivityRepositoryImpl implements ActivityRepository {
         'distance': distance * 1000,
         'movingTime': duration * 60,
         'elapsedTime': duration * 60,
-        if (hr != null) 'averageHr': hr,
-        if (hr != null) 'hasHeartrate': true,
-      };
+        'averageHr': hr,
+        'hasHeartrate': hr != null ? true : null,
+      }..removeWhere((_, value) => value == null);
       final response = await dio.post(
         ApiConstants.activitiesPath,
         data: body,

@@ -8,32 +8,32 @@ interface Zone {
 
 interface HeartRateZonesSectionProps {
     showHeartRate: boolean;
-    setShowHeartRate: (val: boolean) => void;
+    setShowHeartRate: (_val: boolean) => void;
     maxHeartRate: number;
-    setMaxHeartRate: (val: number) => void;
+    setMaxHeartRate: (_val: number) => void;
     restingHeartRate: number;
-    setRestingHeartRate: (val: number) => void;
+    setRestingHeartRate: (_val: number) => void;
     weight: number;
-    setWeight: (val: number) => void;
+    setWeight: (_val: number) => void;
     thresholdHR: string;
-    setThresholdHR: (val: string) => void;
+    setThresholdHR: (_val: string) => void;
     thresholdPaceMin: string;
-    setThresholdPaceMin: (val: string) => void;
+    setThresholdPaceMin: (_val: string) => void;
     thresholdPaceSec: string;
-    setThresholdPaceSec: (val: string) => void;
+    setThresholdPaceSec: (_val: string) => void;
     calculatedZones: Zone[];
     zone1Max: number;
-    setZone1Max: (val: number) => void;
+    setZone1Max: (_val: number) => void;
     zone2Max: number;
-    setZone2Max: (val: number) => void;
+    setZone2Max: (_val: number) => void;
     zone3Max: number;
-    setZone3Max: (val: number) => void;
+    setZone3Max: (_val: number) => void;
     zone4Max: number;
-    setZone4Max: (val: number) => void;
+    setZone4Max: (_val: number) => void;
     zone5Max: number;
-    setZone5Max: (val: number) => void;
+    setZone5Max: (_val: number) => void;
     zone6Max: number;
-    setZone6Max: (val: number) => void;
+    setZone6Max: (_val: number) => void;
 }
 
 export default function HeartRateZonesSection({

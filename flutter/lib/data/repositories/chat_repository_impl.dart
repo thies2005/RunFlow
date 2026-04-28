@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
@@ -13,6 +14,7 @@ class ChatRepositoryImpl implements ChatRepository {
 
   final Dio dio;
   final Map<String, List<ChatMessage>> _messagesCache = {};
+  final List<ChatSession> _sessionsCache = [];
 
   @override
   Future<List<ChatSession>> listSessions() async {
@@ -22,14 +24,18 @@ class ChatRepositoryImpl implements ChatRepository {
       final sessions = (data['sessions'] as List<dynamic>)
           .map((e) => ChatSession.fromJson(e as Map<String, dynamic>))
           .toList();
+      _sessionsCache
+        ..clear()
+        ..addAll(sessions);
       return sessions;
     } on DioException catch (e) {
-      throw e.error is AppException
-          ? e.error as AppException
-          : ServerException(
-              message: 'Failed to load chat sessions.',
-              statusCode: e.response?.statusCode,
-            );
+      debugPrint('[ChatRepositoryImpl] listSessions failed: $e');
+      if (_sessionsCache.isNotEmpty) return List.unmodifiable(_sessionsCache);
+      return [];
+    } catch (e) {
+      debugPrint('[ChatRepositoryImpl] listSessions unexpected error: $e');
+      if (_sessionsCache.isNotEmpty) return List.unmodifiable(_sessionsCache);
+      return [];
     }
   }
 
@@ -43,12 +49,16 @@ class ChatRepositoryImpl implements ChatRepository {
       );
       return ChatSession.fromJson(payload);
     } on DioException catch (e) {
+      debugPrint('[ChatRepositoryImpl] createSession failed: $e');
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(
-              message: 'Failed to create chat session.',
+              message: 'Failed to create chat session. Please check your connection.',
               statusCode: e.response?.statusCode,
             );
+    } catch (e) {
+      debugPrint('[ChatRepositoryImpl] createSession unexpected error: $e');
+      throw const ServerException(message: 'Failed to create chat session. Please try again.');
     }
   }
 
@@ -66,6 +76,7 @@ class ChatRepositoryImpl implements ChatRepository {
       _messagesCache[sessionId] = messages;
       return messages;
     } on DioException catch (e) {
+      debugPrint('[ChatRepositoryImpl] getMessages failed: $e');
       if (_messagesCache.containsKey(sessionId)) {
         return _messagesCache[sessionId]!;
       }
@@ -75,6 +86,12 @@ class ChatRepositoryImpl implements ChatRepository {
               message: 'Failed to load messages.',
               statusCode: e.response?.statusCode,
             );
+    } catch (e) {
+      debugPrint('[ChatRepositoryImpl] getMessages unexpected error: $e');
+      if (_messagesCache.containsKey(sessionId)) {
+        return _messagesCache[sessionId]!;
+      }
+      return [];
     }
   }
 
@@ -116,12 +133,16 @@ class ChatRepositoryImpl implements ChatRepository {
         }
       }
     } on DioException catch (e) {
+      debugPrint('[ChatRepositoryImpl] sendMessage failed: $e');
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(
-              message: 'Failed to send message.',
+              message: 'Failed to send message. Please check your connection.',
               statusCode: e.response?.statusCode,
             );
+    } catch (e) {
+      debugPrint('[ChatRepositoryImpl] sendMessage unexpected error: $e');
+      throw const ServerException(message: 'Failed to send message. Please try again.');
     }
   }
 
@@ -133,14 +154,14 @@ class ChatRepositoryImpl implements ChatRepository {
         queryParameters: {'sessionId': sessionId},
       );
       final data = response.data as Map<String, dynamic>;
+      _messagesCache.remove(sessionId);
       return data['success'] as bool? ?? true;
     } on DioException catch (e) {
-      throw e.error is AppException
-          ? e.error as AppException
-          : ServerException(
-              message: 'Failed to delete session.',
-              statusCode: e.response?.statusCode,
-            );
+      debugPrint('[ChatRepositoryImpl] deleteSession failed: $e');
+      return false;
+    } catch (e) {
+      debugPrint('[ChatRepositoryImpl] deleteSession unexpected error: $e');
+      return false;
     }
   }
 }

@@ -96,7 +96,7 @@ void main() {
   group('Supplement', () {
     test('round-trip serialization', () {
       const supplement = Supplement(
-        id: '1',
+        id: 1,
         name: 'Vitamin D',
         dosage: '2000 IU',
         frequency: 'Daily',
@@ -114,7 +114,7 @@ void main() {
 
     test('copyWith toggles isActive', () {
       const supplement = Supplement(
-        id: '1',
+        id: 1,
         name: 'Creatine',
         dosage: '5g',
         frequency: 'Daily',

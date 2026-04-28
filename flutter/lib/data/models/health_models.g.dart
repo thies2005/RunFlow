@@ -55,7 +55,8 @@ Map<String, dynamic> _$FoodItemToJson(_FoodItem instance) => <String, dynamic>{
 };
 
 _Supplement _$SupplementFromJson(Map<String, dynamic> json) => _Supplement(
-  id: json['id'] as String,
+  id: (json['id'] as num).toInt(),
+  serverId: json['serverId'] as String?,
   name: json['name'] as String,
   amount: json['amount'] == null ? 0 : _parseSupplementAmount(json['amount']),
   unit: json['unit'] as String? ?? 'mg',
@@ -73,6 +74,7 @@ _Supplement _$SupplementFromJson(Map<String, dynamic> json) => _Supplement(
 Map<String, dynamic> _$SupplementToJson(_Supplement instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'serverId': instance.serverId,
       'name': instance.name,
       'amount': instance.amount,
       'unit': instance.unit,
@@ -290,6 +292,12 @@ Map<String, dynamic> _$MicronutrientSummaryToJson(
 
 _SupplementAnalytics _$SupplementAnalyticsFromJson(Map<String, dynamic> json) =>
     _SupplementAnalytics(
+      overallAdherence: (json['overallAdherence'] as num?)?.toDouble() ?? 0,
+      avgDailyDoses: (json['avgDailyDoses'] as num?)?.toDouble() ?? 0,
+      totalSupplements: (json['totalSupplements'] as num?)?.toInt() ?? 0,
+      totalScheduled: (json['totalScheduled'] as num?)?.toInt() ?? 0,
+      totalTaken: (json['totalTaken'] as num?)?.toInt() ?? 0,
+      totalDays: (json['totalDays'] as num?)?.toInt() ?? 0,
       supplements:
           (json['supplements'] as List<dynamic>?)
               ?.map(
@@ -301,7 +309,15 @@ _SupplementAnalytics _$SupplementAnalyticsFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$SupplementAnalyticsToJson(
   _SupplementAnalytics instance,
-) => <String, dynamic>{'supplements': instance.supplements};
+) => <String, dynamic>{
+  'overallAdherence': instance.overallAdherence,
+  'avgDailyDoses': instance.avgDailyDoses,
+  'totalSupplements': instance.totalSupplements,
+  'totalScheduled': instance.totalScheduled,
+  'totalTaken': instance.totalTaken,
+  'totalDays': instance.totalDays,
+  'supplements': instance.supplements,
+};
 
 _SupplementAdherence _$SupplementAdherenceFromJson(Map<String, dynamic> json) =>
     _SupplementAdherence(

@@ -16,11 +16,28 @@ class FastingScreen extends ConsumerStatefulWidget {
 class _FastingScreenState extends ConsumerState<FastingScreen> {
   Timer? _timer;
   Duration _elapsed = Duration.zero;
+  bool _timerStarted = false;
 
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimerFromProvider();
+  }
+
+  void _startTimerFromProvider() {
+    final fastingAsync = ref.read(fastingProvider);
+    fastingAsync.whenData((activeSession) {
+      if (activeSession != null) {
+        _startTimer(activeSession.startTime);
+        _timerStarted = true;
+      }
+    });
   }
 
   void _startTimer(DateTime startTime) {
@@ -54,8 +71,9 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
       ),
       body: fastingAsync.when(
         data: (activeSession) {
-          if (activeSession != null && _timer == null) {
+          if (activeSession != null && !_timerStarted) {
             _startTimer(activeSession.startTime);
+            _timerStarted = true;
           }
           if (activeSession == null && _timer != null) {
             _timer?.cancel();

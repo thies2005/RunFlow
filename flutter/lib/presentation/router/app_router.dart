@@ -198,6 +198,10 @@ GoRouter createRouter(Ref ref) {
         builder: (context, state) => const ConsentManagementScreen(),
       ),
       GoRoute(
+        path: '/activities',
+        builder: (context, state) => const ActivityListScreen(),
+      ),
+      GoRoute(
         path: '/activities/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
@@ -262,14 +266,6 @@ GoRouter createRouter(Ref ref) {
               GoRoute(
                 path: '/health',
                 builder: (context, state) => const HealthScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/activities',
-                builder: (context, state) => const ActivityListScreen(),
               ),
             ],
           ),

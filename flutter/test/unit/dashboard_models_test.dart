@@ -299,6 +299,58 @@ void main() {
       expect(restored.isActive, true);
       expect(restored.workouts, isEmpty);
     });
+
+    test('handles missing workouts field as empty list', () {
+      final json = {
+        'id': 'g1',
+        'userId': 'u1',
+        'name': 'Test Goal',
+        'raceType': 'FIVE_K',
+        'raceDate': '2024-09-01T00:00:00.000Z',
+        'targetTime': null,
+        'weeklyMileageGoal': 30.0,
+        'planWeeks': 8,
+        'runsPerWeek': 3,
+        'longRunDay': 6,
+        'workoutDay': 3,
+        'currentVdot': null,
+        'predictedTime': null,
+        'isActive': true,
+        'createdAt': '2024-06-01T00:00:00.000Z',
+        'updatedAt': '2024-06-15T00:00:00.000Z',
+        'completedAt': null,
+      };
+      final goal = Goal.fromJson(json);
+
+      expect(goal.workouts, isEmpty);
+      expect(goal.workouts, isA<List<Workout>>());
+    });
+
+    test('handles null workouts field as empty list', () {
+      final json = {
+        'id': 'g1',
+        'userId': 'u1',
+        'name': 'Test Goal',
+        'raceType': 'FIVE_K',
+        'raceDate': '2024-09-01T00:00:00.000Z',
+        'targetTime': null,
+        'weeklyMileageGoal': 30.0,
+        'planWeeks': 8,
+        'runsPerWeek': 3,
+        'longRunDay': 6,
+        'workoutDay': 3,
+        'currentVdot': null,
+        'predictedTime': null,
+        'isActive': true,
+        'createdAt': '2024-06-01T00:00:00.000Z',
+        'updatedAt': '2024-06-15T00:00:00.000Z',
+        'completedAt': null,
+        'workouts': null,
+      };
+      final goal = Goal.fromJson(json);
+
+      expect(goal.workouts, isEmpty);
+    });
   });
 
   group('Workout', () {

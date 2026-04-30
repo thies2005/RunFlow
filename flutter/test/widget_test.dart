@@ -57,7 +57,7 @@ void main() {
     expect(find.text('Plan'), findsOneWidget);
     expect(find.text('Record'), findsOneWidget);
     expect(find.text('Health'), findsOneWidget);
-    expect(find.text('Activities'), findsOneWidget);
+    expect(find.text('Activities'), findsNothing);
     expect(find.text('Athlete'), findsOneWidget);
   });
 

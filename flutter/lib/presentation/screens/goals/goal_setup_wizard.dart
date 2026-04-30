@@ -1,12 +1,16 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/core/utils/goal_projection.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
+import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 
 class GoalSetupWizard extends ConsumerStatefulWidget {
@@ -26,6 +30,8 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   double _weeklyMileageGoal = 30.0;
   int _planWeeks = 12;
   bool _isSubmitting = false;
+  bool _isManualMode = false;
+  int? _sliderGoalTimeSeconds;
 
   final _nameFormKey = GlobalKey<FormState>();
   final _hoursController = TextEditingController();
@@ -85,6 +91,20 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   }
 
   int? get _targetTimeInSeconds {
+    final stats = ref.read(analyticsStatsProvider).value;
+    final vo2max = stats?.effectiveVO2max ?? 0;
+
+    if (vo2max > 0) {
+      if (_isManualMode) {
+        final hours = int.tryParse(_hoursController.text) ?? 0;
+        final minutes = int.tryParse(_minutesController.text) ?? 0;
+        final seconds = int.tryParse(_secondsController.text) ?? 0;
+        final total = hours * 3600 + minutes * 60 + seconds;
+        return total > 0 ? total : null;
+      }
+      return _sliderGoalTimeSeconds ?? _computeProjectedTime();
+    }
+
     if (!_hasTargetTime) return null;
     final hours = int.tryParse(_hoursController.text) ?? 0;
     final minutes = int.tryParse(_minutesController.text) ?? 0;
@@ -93,20 +113,55 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     return total > 0 ? total : null;
   }
 
+  int? _computeProjectedTime() {
+    final stats = ref.read(analyticsStatsProvider).value;
+    if (stats == null || stats.effectiveVO2max <= 0) return null;
+
+    final projection = calculateProjectedGoalTime(
+      stats.effectiveVO2max,
+      PlanSettings(
+        durationWeeks: _planWeeks,
+        runsPerWeek: _runsPerWeek,
+        weeklyMileageGoal: _weeklyMileageGoal,
+        raceDistance: _selectedRaceType,
+      ),
+      currentShapePercent: stats.marathonShape,
+    );
+
+    if (projection.projectedTime <= 0) return null;
+    return projection.projectedTime;
+  }
+
   Future<void> _submit() async {
     if (_isSubmitting) return;
+
+    final maxPlanWeeks = _selectedDate.difference(DateTime.now()).inDays ~/ 7;
+    if (maxPlanWeeks < 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            S.of(context).goalWizardFutureRaceDate,
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
 
     try {
+      final planWeeksCap = max(4, min(24, maxPlanWeeks));
+
       final request = CreateGoalRequest(
         name: _nameController.text.trim(),
         raceType: _selectedRaceType,
         raceDate: _selectedDate,
+        planStartDate: DateTime.now(),
         targetTime: _targetTimeInSeconds,
         weeklyMileageGoal: _weeklyMileageGoal,
-        planWeeks: _planWeeks,
+        planWeeks: _planWeeks.clamp(4, planWeeksCap),
         runsPerWeek: _runsPerWeek,
       );
 
@@ -129,6 +184,13 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
 
   @override
   Widget build(BuildContext context) {
+    final stats = ref.watch(analyticsStatsProvider).value;
+    final effectiveVO2max = stats?.effectiveVO2max ?? 0;
+    final marathonShape = stats?.marathonShape ?? 70;
+    final maxPlanWeeks =
+        _selectedDate.difference(DateTime.now()).inDays ~/ 7;
+    final planWeeksCap = max(4, min(24, maxPlanWeeks));
+
     return Scaffold(
       appBar: AppBar(
         title: Text(S.of(context).goalWizardNewGoal),
@@ -182,6 +244,11 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                   onDateSelected: (date) {
                     setState(() {
                       _selectedDate = date;
+                      final mw = date.difference(DateTime.now()).inDays ~/ 7;
+                      final cap = max(4, min(24, mw));
+                      if (_planWeeks > cap) {
+                        _planWeeks = cap;
+                      }
                     });
                   },
                 ),
@@ -195,11 +262,30 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                   hoursController: _hoursController,
                   minutesController: _minutesController,
                   secondsController: _secondsController,
+                  effectiveVO2max: effectiveVO2max,
+                  marathonShape: marathonShape,
+                  selectedRaceType: _selectedRaceType,
+                  planWeeks: _planWeeks,
+                  runsPerWeek: _runsPerWeek,
+                  weeklyMileageGoal: _weeklyMileageGoal,
+                  isManualMode: _isManualMode,
+                  sliderGoalTimeSeconds: _sliderGoalTimeSeconds,
+                  onManualModeChanged: (value) {
+                    setState(() {
+                      _isManualMode = value;
+                    });
+                  },
+                  onSliderGoalTimeChanged: (value) {
+                    setState(() {
+                      _sliderGoalTimeSeconds = value;
+                    });
+                  },
                 ),
                 _PlanConfigStep(
                   runsPerWeek: _runsPerWeek,
                   weeklyMileageGoal: _weeklyMileageGoal,
-                  planWeeks: _planWeeks,
+                  planWeeks: _planWeeks.clamp(4, planWeeksCap),
+                  selectedDate: _selectedDate,
                   onRunsPerWeekChanged: (value) {
                     setState(() {
                       _runsPerWeek = value;
@@ -223,7 +309,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                   targetTime: _targetTimeInSeconds,
                   runsPerWeek: _runsPerWeek,
                   weeklyMileageGoal: _weeklyMileageGoal,
-                  planWeeks: _planWeeks,
+                  planWeeks: _planWeeks.clamp(4, planWeeksCap),
                 ),
               ],
             ),
@@ -561,6 +647,16 @@ class _TargetTimeStep extends StatelessWidget {
     required this.hoursController,
     required this.minutesController,
     required this.secondsController,
+    required this.effectiveVO2max,
+    required this.marathonShape,
+    required this.selectedRaceType,
+    required this.planWeeks,
+    required this.runsPerWeek,
+    required this.weeklyMileageGoal,
+    required this.isManualMode,
+    required this.sliderGoalTimeSeconds,
+    required this.onManualModeChanged,
+    required this.onSliderGoalTimeChanged,
   });
 
   final bool hasTargetTime;
@@ -568,11 +664,247 @@ class _TargetTimeStep extends StatelessWidget {
   final TextEditingController hoursController;
   final TextEditingController minutesController;
   final TextEditingController secondsController;
+  final double effectiveVO2max;
+  final double marathonShape;
+  final RaceType selectedRaceType;
+  final int planWeeks;
+  final int runsPerWeek;
+  final double weeklyMileageGoal;
+  final bool isManualMode;
+  final int? sliderGoalTimeSeconds;
+  final ValueChanged<bool> onManualModeChanged;
+  final ValueChanged<int?> onSliderGoalTimeChanged;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    if (effectiveVO2max > 0) {
+      return _buildPredictionMode(context, theme);
+    }
+    return _buildFallbackMode(context, theme);
+  }
+
+  Widget _buildPredictionMode(BuildContext context, ThemeData theme) {
+    final projection = calculateProjectedGoalTime(
+      effectiveVO2max,
+      PlanSettings(
+        durationWeeks: planWeeks,
+        runsPerWeek: runsPerWeek,
+        weeklyMileageGoal: weeklyMileageGoal,
+        raceDistance: selectedRaceType,
+      ),
+      currentShapePercent: marathonShape,
+    );
+
+    if (projection.projectedTime <= 0) {
+      return _buildFallbackMode(context, theme);
+    }
+
+    final displayTime = sliderGoalTimeSeconds ?? projection.projectedTime;
+    final sliderMin = (projection.optimalTime * 0.9).round();
+    final sliderMax = (projection.conservativeTime * 1.1).round();
+    final clampedDisplay = displayTime.clamp(sliderMin, sliderMax);
+    final divisions = ((sliderMax - sliderMin) ~/ 30).clamp(1, 200);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            S.of(context).goalWizardTargetTimeTitle,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            S.of(context).goalWizardTargetTimeDesc,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  formatDurationClock(displayTime),
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  sliderGoalTimeSeconds != null
+                      ? 'Custom goal'
+                      : 'Projected based on fitness',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: sliderGoalTimeSeconds != null
+                        ? AppColors.primary
+                        : AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: () => onManualModeChanged(!isManualMode),
+                icon: Icon(isManualMode ? Icons.tune : Icons.edit),
+                label: Text(isManualMode ? 'Prediction' : 'Manual'),
+              ),
+              if (sliderGoalTimeSeconds != null)
+                TextButton(
+                  onPressed: () {
+                    onSliderGoalTimeChanged(null);
+                    onManualModeChanged(false);
+                  },
+                  child: const Text('Reset to projected'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (isManualMode)
+            _buildTimeFields(context, theme)
+          else
+            Column(
+              children: [
+                Slider(
+                  value: clampedDisplay.toDouble(),
+                  min: sliderMin.toDouble(),
+                  max: sliderMax.toDouble(),
+                  divisions: divisions,
+                  label: formatDurationClock(clampedDisplay),
+                  onChanged: (value) =>
+                      onSliderGoalTimeChanged(value.round()),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${formatDurationClock(projection.optimalTime)} (Optimal)',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.success,
+                      ),
+                    ),
+                    Text(
+                      '${formatDurationClock(projection.conservativeTime)} (Conservative)',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'VO2max',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              effectiveVO2max.toStringAsFixed(1),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              ' \u2192 ',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                            Text(
+                              projection.projectedVdot.toStringAsFixed(1),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            if (projection.improvementPercent > 0)
+                              Text(
+                                ' (+${projection.improvementPercent.toStringAsFixed(1)}%)',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.success,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Marathon Shape',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              '${marathonShape.round()}%',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              ' \u2192 ',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                            Text(
+                              '${projection.projectedShape}%',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            if (projection.shapeImprovementPercent > 0)
+                              Text(
+                                ' (+${projection.shapeImprovementPercent.toStringAsFixed(1)}%)',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.success,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFallbackMode(BuildContext context, ThemeData theme) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -600,64 +932,68 @@ class _TargetTimeStep extends StatelessWidget {
           ),
           if (hasTargetTime) ...[
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: hoursController,
-                    decoration: InputDecoration(
-                      labelText: S.of(context).goalWizardHours,
-                      hintText: '0',
-                    ),
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: Text(
-                    ':',
-                    style: theme.textTheme.headlineMedium,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: minutesController,
-                    decoration: InputDecoration(
-                      labelText: S.of(context).goalWizardMinutes,
-                      hintText: '0',
-                    ),
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: Text(
-                    ':',
-                    style: theme.textTheme.headlineMedium,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: secondsController,
-                    decoration: InputDecoration(
-                      labelText: S.of(context).goalWizardSecondsLabel,
-                      hintText: '0',
-                    ),
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+            _buildTimeFields(context, theme),
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildTimeFields(BuildContext context, ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextFormField(
+            controller: hoursController,
+            decoration: InputDecoration(
+              labelText: S.of(context).goalWizardHours,
+              hintText: '0',
+            ),
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Text(
+            ':',
+            style: theme.textTheme.headlineMedium,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextFormField(
+            controller: minutesController,
+            decoration: InputDecoration(
+              labelText: S.of(context).goalWizardMinutes,
+              hintText: '0',
+            ),
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Text(
+            ':',
+            style: theme.textTheme.headlineMedium,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextFormField(
+            controller: secondsController,
+            decoration: InputDecoration(
+              labelText: S.of(context).goalWizardSecondsLabel,
+              hintText: '0',
+            ),
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -670,6 +1006,7 @@ class _PlanConfigStep extends StatelessWidget {
     required this.onRunsPerWeekChanged,
     required this.onWeeklyMileageGoalChanged,
     required this.onPlanWeeksChanged,
+    required this.selectedDate,
   });
 
   final int runsPerWeek;
@@ -678,10 +1015,16 @@ class _PlanConfigStep extends StatelessWidget {
   final ValueChanged<int> onRunsPerWeekChanged;
   final ValueChanged<double> onWeeklyMileageGoalChanged;
   final ValueChanged<int> onPlanWeeksChanged;
+  final DateTime selectedDate;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final maxPlanWeeks =
+        selectedDate.difference(DateTime.now()).inDays ~/ 7;
+    final effectiveMax = max(4, min(24, maxPlanWeeks));
+    final isInsufficientTime = maxPlanWeeks < 4;
+    final divisions = (effectiveMax - 4).clamp(1, 20);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -809,13 +1152,33 @@ class _PlanConfigStep extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (isInsufficientTime) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.warning_amber,
+                            color: AppColors.warning, size: 16),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Race date is too close for a training plan. Consider choosing a later date.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.warning,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   Slider(
-                    value: planWeeks.toDouble(),
+                    value: planWeeks.toDouble().clamp(4.0, effectiveMax.toDouble()),
                     min: 4,
-                    max: 24,
-                    divisions: 20,
+                    max: effectiveMax.toDouble(),
+                    divisions: divisions,
                     label: S.of(context).goalWizardWeeksCount(planWeeks),
-                    onChanged: (value) => onPlanWeeksChanged(value.round()),
+                    onChanged: isInsufficientTime
+                        ? null
+                        : (value) => onPlanWeeksChanged(value.round()),
                   ),
                 ],
               ),

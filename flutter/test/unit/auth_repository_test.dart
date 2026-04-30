@@ -204,7 +204,7 @@ void main() {
     });
 
     group('refreshToken', () {
-      test('failure - clears tokens on 401', () async {
+      test('failure - does not clear tokens on 401', () async {
         when(() => mockAuthService.getRefreshToken())
             .thenAnswer((_) async => 'old_refresh');
         when(() => mockDio.post<Map<String, dynamic>>(
@@ -226,7 +226,7 @@ void main() {
         );
 
         await Future<void>.delayed(Duration.zero);
-        verify(() => mockAuthService.clearAll()).called(greaterThanOrEqualTo(0));
+        verifyNever(() => mockAuthService.clearAll());
       });
     });
 

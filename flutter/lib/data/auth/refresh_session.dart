@@ -9,7 +9,6 @@ Future<String?> refreshSession({
 }) async {
   final refreshToken = await authService.getRefreshToken();
   if (refreshToken == null || refreshToken.isEmpty) {
-    await authService.clearAll();
     return null;
   }
 
@@ -28,7 +27,6 @@ Future<String?> refreshSession({
     return refreshResponse.accessToken;
   } on DioException catch (error) {
     if (error.response?.statusCode == 401) {
-      await authService.clearAll();
       return null;
     }
     rethrow;

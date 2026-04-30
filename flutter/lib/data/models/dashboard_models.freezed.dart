@@ -1657,7 +1657,7 @@ return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_
 @JsonSerializable()
 
 class _Goal extends Goal {
-  const _Goal({required this.id, required this.userId, required this.name, required this.raceType, required this.raceDate, required this.targetTime, required this.weeklyMileageGoal, required this.planWeeks, required this.runsPerWeek, required this.longRunDay, required this.workoutDay, required this.currentVdot, required this.predictedTime, required this.isActive, required this.createdAt, required this.updatedAt, required this.completedAt, required final  List<Workout> workouts}): _workouts = workouts,super._();
+  const _Goal({required this.id, required this.userId, required this.name, required this.raceType, required this.raceDate, required this.targetTime, required this.weeklyMileageGoal, required this.planWeeks, required this.runsPerWeek, required this.longRunDay, required this.workoutDay, required this.currentVdot, required this.predictedTime, required this.isActive, required this.createdAt, required this.updatedAt, required this.completedAt, final  List<Workout> workouts = const []}): _workouts = workouts,super._();
   factory _Goal.fromJson(Map<String, dynamic> json) => _$GoalFromJson(json);
 
 @override final  String id;
@@ -1678,7 +1678,7 @@ class _Goal extends Goal {
 @override final  DateTime updatedAt;
 @override final  DateTime? completedAt;
  final  List<Workout> _workouts;
-@override List<Workout> get workouts {
+@override@JsonKey() List<Workout> get workouts {
   if (_workouts is EqualUnmodifiableListView) return _workouts;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_workouts);

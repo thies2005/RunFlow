@@ -73,7 +73,7 @@ final class GoalsProvider extends $AsyncNotifierProvider<Goals, GoalsResponse> {
   Goals create() => Goals();
 }
 
-String _$goalsHash() => r'd9a657964bb1f4f2b5daff6444ce01a106d2910f';
+String _$goalsHash() => r'be2235a31a20929d4538f2e48bad002049fee5d3';
 
 abstract class _$Goals extends $AsyncNotifier<GoalsResponse> {
   FutureOr<GoalsResponse> build();

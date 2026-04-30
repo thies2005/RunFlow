@@ -47,7 +47,7 @@ void main() {
       expect(await authService.getRefreshToken(), 'fresh-refresh-token');
     });
 
-    test('shared refresh helper clears stored session when refresh is rejected', () async {
+    test('shared refresh helper preserves stored session when refresh is rejected', () async {
       final authService = _FakeAuthService(
         accessToken: 'expired-token',
         refreshToken: 'bad-refresh-token',
@@ -61,9 +61,9 @@ void main() {
 
       expect(accessToken, isNull);
       expect(adapter.refreshCalls, 1);
-      expect(await authService.getAccessToken(), isNull);
-      expect(await authService.getRefreshToken(), isNull);
-      expect(await authService.getUser(), isNull);
+      expect(await authService.getAccessToken(), 'expired-token');
+      expect(await authService.getRefreshToken(), 'bad-refresh-token');
+      expect(await authService.getUser(), isNotNull);
     });
   });
 }

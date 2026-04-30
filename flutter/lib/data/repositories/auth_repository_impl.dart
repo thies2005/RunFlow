@@ -103,9 +103,6 @@ class AuthRepositoryImpl implements AuthRepository {
         throw const AuthException(message: 'Session expired. Please log in again.');
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        await authService.clearAll();
-      }
       throw e.error is AppException
           ? e.error as AppException
           : const AuthException(message: 'Session expired. Please log in again.');
@@ -258,25 +255,41 @@ class AuthRepositoryImpl implements AuthRepository {
     final storedRefreshToken = await authService.getRefreshToken();
     final user = await authService.getUser();
 
-    if (storedRefreshToken == null || storedRefreshToken.isEmpty || user == null) {
+    if (user == null &&
+        (accessToken == null || accessToken.isEmpty) &&
+        (storedRefreshToken == null || storedRefreshToken.isEmpty)) {
       await authService.clearAll();
       throw const AuthException(message: 'No stored session.');
+    }
+
+    if (user != null && accessToken != null && accessToken.isNotEmpty) {
+      return;
     }
 
     try {
       await refreshToken();
     } on DioException catch (error) {
-      final canUseCachedSession = accessToken != null &&
-          accessToken.isNotEmpty &&
+      final canUseCachedSession = user != null &&
           (error.type == DioExceptionType.connectionError ||
               error.type == DioExceptionType.connectionTimeout ||
               error.type == DioExceptionType.receiveTimeout ||
               error.type == DioExceptionType.sendTimeout ||
               error.type == DioExceptionType.unknown);
 
-      if (!canUseCachedSession) {
-        rethrow;
+      if (canUseCachedSession) {
+        return;
       }
+
+      if (user != null) {
+        return;
+      }
+
+      rethrow;
+    } on AuthException {
+      if (user != null) {
+        return;
+      }
+      rethrow;
     }
   }
 }

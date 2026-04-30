@@ -190,7 +190,7 @@ sealed class Goal with _$Goal {
     required DateTime createdAt,
     required DateTime updatedAt,
     required DateTime? completedAt,
-    required List<Workout> workouts,
+    @Default([]) List<Workout> workouts,
   }) = _Goal;
   const Goal._();
 

@@ -160,55 +160,127 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Generate training plan if we have VDOT
-        if (currentVdot) {
-            const { generateTrainingPlan } = await import('@/lib/plans');
+        let responseGoal = goal;
 
-            try {
-                const workouts = generateTrainingPlan({
-                    vdot: currentVdot,
-                    raceType: raceType as RaceType,
-                    raceDate: new Date(raceDate),
-                    startDate: goal.planStartDate ?? new Date(),
-                    runsPerWeek: runsPerWeek ?? 4,
-                    ridesPerWeek: ridesPerWeek ?? 0,
-                    strengthPerWeek: strengthPerWeek ?? 0,
-                    swimsPerWeek: swimsPerWeek ?? 0,
-                    weeklyMileageGoal: weeklyMileageGoal || null,
-                    taperWeeks: taperWeeks ?? 2,
-                    peakWeeks: peakWeeks ?? 4,
-                    buildWeeks: buildWeeks ?? 4,
-                    maxLongRunKm,
-                    longRunDay: longRunDay ?? 0,
-                    workoutDay: workoutDay ?? 3,
+        // Fallback: determine VDOT if not set from calibration
+        if (!currentVdot) {
+            // (a) Try recent RUN activity within 90 days matching race distance ±10%
+            const distanceMap: Record<string, number> = {
+                'FIVE_K': 5000,
+                'TEN_K': 10000,
+                'HALF_MARATHON': 21097,
+                'MARATHON': 42195,
+            };
+            const targetDistance = distanceMap[raceType];
+
+            if (targetDistance) {
+                const recentRaceEffort = await prisma.activity.findFirst({
+                    where: {
+                        userId: user.id,
+                        type: 'RUN',
+                        distance: {
+                            gte: targetDistance * 0.9,
+                            lte: targetDistance * 1.1,
+                        },
+                        startDate: {
+                            gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+                        },
+                    },
+                    orderBy: { startDate: 'desc' },
                 });
 
-                if (workouts.length > 0) {
-                    await prisma.workout.createMany({
-                        data: workouts.map(w => ({
-                            goalId: goal.id,
-                            scheduledDate: w.date,
-                            workoutType: w.type as WorkoutType,
-                            description: w.description,
-                            targetDistance: w.totalDistance,
-                            targetPace: w.targetPace || 0,
-                            targetDuration: w.targetDuration || 0,
-                            isCompleted: false
-                        })),
+                if (recentRaceEffort) {
+                    const raceDistanceMap: Record<string, RaceDistance> = {
+                        'FIVE_K': '5K',
+                        'TEN_K': '10K',
+                        'HALF_MARATHON': 'HALF',
+                        'MARATHON': 'MARATHON',
+                    };
+                    const targetRaceDistance = raceDistanceMap[raceType] || '5K';
+                    const result = analyzeRace({
+                        distance: targetRaceDistance,
+                        timeSeconds: recentRaceEffort.movingTime,
                     });
+                    currentVdot = result.vdot;
+                    predictedTime = result.predictions[targetRaceDistance];
                 }
-            } catch (error) {
-                console.error('[Mobile API] Failed to generate training plan:', error);
             }
+
+            // (b) Reverse-engineer VDOT from targetTime + raceType
+            if (!currentVdot && targetTime) {
+                const raceDistanceMap: Record<string, RaceDistance> = {
+                    'FIVE_K': '5K',
+                    'TEN_K': '10K',
+                    'HALF_MARATHON': 'HALF',
+                    'MARATHON': 'MARATHON',
+                };
+                const dist = raceDistanceMap[raceType] || 'MARATHON';
+                const result = analyzeRace({
+                    distance: dist,
+                    timeSeconds: targetTime,
+                });
+                currentVdot = result.vdot;
+            }
+
+            // (c) Default to VDOT 30 (Beginner)
+            if (!currentVdot) {
+                currentVdot = 30.0;
+            }
+
+            // (e) Update the goal with the determined VDOT
+            responseGoal = await prisma.goal.update({
+                where: { id: goal.id },
+                data: { currentVdot, predictedTime },
+            });
+        }
+
+        // (d) Generate training plan — always runs since VDOT is guaranteed
+        const { generateTrainingPlan } = await import('@/lib/plans');
+
+        try {
+            const workouts = generateTrainingPlan({
+                vdot: currentVdot,
+                raceType: raceType as RaceType,
+                raceDate: new Date(raceDate),
+                startDate: goal.planStartDate ?? new Date(),
+                runsPerWeek: runsPerWeek ?? 4,
+                ridesPerWeek: ridesPerWeek ?? 0,
+                strengthPerWeek: strengthPerWeek ?? 0,
+                swimsPerWeek: swimsPerWeek ?? 0,
+                weeklyMileageGoal: weeklyMileageGoal || null,
+                taperWeeks: taperWeeks ?? 2,
+                peakWeeks: peakWeeks ?? 4,
+                buildWeeks: buildWeeks ?? 4,
+                maxLongRunKm,
+                longRunDay: longRunDay ?? 0,
+                workoutDay: workoutDay ?? 3,
+            });
+
+            if (workouts.length > 0) {
+                await prisma.workout.createMany({
+                    data: workouts.map(w => ({
+                        goalId: goal.id,
+                        scheduledDate: w.date,
+                        workoutType: w.type as WorkoutType,
+                        description: w.description,
+                        targetDistance: w.totalDistance,
+                        targetPace: w.targetPace || 0,
+                        targetDuration: w.targetDuration || 0,
+                        isCompleted: false
+                    })),
+                });
+            }
+        } catch (error) {
+            console.error('[Mobile API] Failed to generate training plan:', error);
         }
 
         return NextResponse.json({
             goal: {
-                ...goal,
-                raceDate: goal.raceDate.toISOString(),
-                createdAt: goal.createdAt.toISOString(),
-                updatedAt: goal.updatedAt.toISOString(),
-                completedAt: null
+                ...responseGoal,
+                raceDate: responseGoal.raceDate.toISOString(),
+                createdAt: responseGoal.createdAt.toISOString(),
+                updatedAt: responseGoal.updatedAt.toISOString(),
+                completedAt: responseGoal.completedAt?.toISOString() || null
             }
         }, { headers: rateLimitHeaders(rateLimitResult) });
 

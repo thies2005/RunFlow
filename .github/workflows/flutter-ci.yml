@@ -9,6 +9,8 @@ on:
 jobs:
   flutter:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     defaults:
       run:
         working-directory: flutter
@@ -38,3 +40,9 @@ jobs:
 
       - name: Build release APK
         run: flutter build apk --release --dart-define=STRAVA_CLIENT_ID=193995
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: runflow-release-apk
+          path: flutter/build/app/outputs/flutter-apk/app-release.apk

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/auth_models.dart';
+import 'package:runflow_flutter/domain/entities/auth_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/strava_status_providers.dart';
 
@@ -15,7 +16,7 @@ class ProfileScreen extends ConsumerWidget {
     final user = authState.value;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Athlete'),
+        title: Text(S.of(context).navAthlete),
       ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
@@ -39,7 +40,7 @@ class _ProfileHeader extends ConsumerWidget {
     final stravaStatus = ref.watch(stravaStatusProvider);
     final isStravaConnected = stravaStatus.isConnected && !stravaStatus.isAuthExpired;
     final theme = Theme.of(context);
-    final name = user?.name ?? 'Athlete';
+    final name = user?.name ?? S.of(context).navAthlete;
     final email = user?.email ?? '';
     final initials = name
         .split(' ')
@@ -109,7 +110,7 @@ class _ProfileHeader extends ConsumerWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Strava Connected',
+                              S.of(context).profileStravaConnected,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: AppColors.success,
                                 fontWeight: FontWeight.w600,
@@ -139,8 +140,8 @@ class _ProfileHeader extends ConsumerWidget {
                             const SizedBox(width: 4),
                             Text(
                               stravaStatus.isAuthExpired
-                                  ? 'Strava Auth Expired'
-                                  : 'Strava Not Connected',
+                                  ? S.of(context).profileStravaAuthExpired
+                                  : S.of(context).profileStravaNotConnected,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: AppColors.onSurfaceVariant,
                                 fontWeight: FontWeight.w600,
@@ -171,50 +172,50 @@ class _ProfileMenuSection extends ConsumerWidget {
       children: [
         _MenuTile(
           icon: Icons.directions_run_outlined,
-          title: 'Activities',
+          title: S.of(context).activitiesTitle,
           onTap: () => context.go('/activities'),
         ),
         _MenuTile(
           icon: Icons.edit_outlined,
-          title: 'Edit Profile',
+          title: S.of(context).athleteEditProfile,
           onTap: () => context.push('/profile/edit'),
         ),
         _MenuTile(
           icon: Icons.monitor_heart_outlined,
-          title: 'HR Zones',
+          title: S.of(context).profileHrZones,
           onTap: () => context.push('/profile/hr-zones'),
         ),
         _MenuTile(
           icon: Icons.settings_outlined,
-          title: 'Settings',
+          title: S.of(context).profileSettings,
           onTap: () => context.push('/profile/settings'),
         ),
         _MenuTile(
           icon: Icons.bar_chart_outlined,
-          title: 'Analytics',
+          title: S.of(context).profileAnalytics,
           onTap: () => context.push('/analytics'),
         ),
         _MenuTile(
           icon: Icons.smart_toy_outlined,
-          title: 'AI Settings',
+          title: S.of(context).settingsAiSettings,
           onTap: () => context.push('/settings/ai'),
         ),
         _MenuTile(
           icon: Icons.info_outline,
-          title: 'About',
+          title: S.of(context).settingsAbout,
           onTap: () => context.push('/settings/about'),
         ),
         const Divider(indent: 16, endIndent: 16, height: 32),
         _MenuTile(
           icon: Icons.logout,
-          title: 'Logout',
+          title: S.of(context).settingsLogout,
           iconColor: AppColors.error,
           titleColor: AppColors.error,
           onTap: () => _showLogoutDialog(context, ref),
         ),
         _MenuTile(
           icon: Icons.delete_forever_outlined,
-          title: 'Delete Account',
+          title: S.of(context).profileDeleteAccount,
           iconColor: AppColors.error,
           titleColor: AppColors.error,
           onTap: () => _showDeleteAccountDialog(context, ref),
@@ -226,16 +227,16 @@ class _ProfileMenuSection extends ConsumerWidget {
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text(
-          'Are you sure you want to logout? All local data will be cleared.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+        builder: (context) => AlertDialog(
+          title: Text(S.of(context).settingsLogout),
+          content: Text(
+            S.of(context).profileLogoutConfirm,
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(S.of(context).actionCancel),
+            ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
@@ -244,7 +245,7 @@ class _ProfileMenuSection extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: const Text('Logout'),
+            child: Text(S.of(context).settingsLogout),
           ),
         ],
       ),
@@ -254,31 +255,29 @@ class _ProfileMenuSection extends ConsumerWidget {
   void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text(
-          'This action is permanent and cannot be undone. All your data will be deleted.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+        builder: (context) => AlertDialog(
+          title: Text(S.of(context).profileDeleteAccount),
+          content: Text(
+            S.of(context).profileDeleteAccountWarning,
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(S.of(context).actionCancel),
+            ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'To delete your account, please contact support at support@runflow.app',
-                  ),
+                SnackBar(
+                  content: Text(S.of(context).profileDeleteAccountContactSupport),
                 ),
               );
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: const Text('Delete'),
+            child: Text(S.of(context).actionDelete),
           ),
         ],
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/share_formatter.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ShareButton extends StatelessWidget {

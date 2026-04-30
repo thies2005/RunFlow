@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:runflow_flutter/data/models/recording_models.dart';
+import 'package:runflow_flutter/domain/entities/recording_entities.dart';
 import 'package:universal_ble/universal_ble.dart' as ble;
 
 enum RecordingStatus { idle, recording, paused }
@@ -89,6 +89,7 @@ class WorkoutRecordingService {
   HrSensorInfo? get connectedSensor => _connectedSensor;
   bool get isScanning => _isScanning;
   bool get isBleConnected => _connectedSensor != null;
+  List<GpsPoint> get gpsPoints => List.unmodifiable(_gpsPoints);
 
   Stream<RecordingStatus> get statusStream async* {
     yield _status;
@@ -257,6 +258,8 @@ class WorkoutRecordingService {
         _gpsAccuracy = position.accuracy;
         _currentAltitude = position.altitude;
         _currentSpeed = position.speed > 0 ? position.speed : 0.0;
+
+        if (position.accuracy > 25.0) return;
 
         final GpsPoint point = GpsPoint(
           latitude: position.latitude,

@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/recording_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/ai_feedback_section.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/hr_zone_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/hr_time_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/pace_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/elevation_chart.dart';
+import 'package:runflow_flutter/presentation/widgets/runflow_map.dart';
 
 class ActivityDetailScreen extends ConsumerWidget {
   const ActivityDetailScreen({required this.activityId, super.key});
@@ -22,7 +25,7 @@ class ActivityDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Activity Detail'),
+        title: Text(S.of(context).activityDetailTitle),
       ),
       body: activityAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -55,6 +58,15 @@ class _ActivityDetailContent extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _HeaderSection(activity: activity),
+        if (_hasLatLngStreams(activity))
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: RunFlowMap(
+              gpsPoints: _parseLatLngStreams(activity),
+              height: 220,
+              showMarkers: true,
+            ),
+          ),
         const SizedBox(height: 16),
         _MetricsGrid(activity: activity, pace: pace),
         if (activity.trainingType != null) ...[
@@ -63,7 +75,7 @@ class _ActivityDetailContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _InfoBadge(
               icon: Icons.label,
-              label: 'Training Type',
+              label: S.of(context).activityTrainingType,
               value: activity.trainingType!,
               color: AppColors.primary,
             ),
@@ -75,7 +87,7 @@ class _ActivityDetailContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _InfoBadge(
               icon: Icons.speed,
-              label: 'Estimated VDOT',
+              label: S.of(context).activityEstimatedVdot,
               value: activity.estimatedVdot!.toStringAsFixed(1),
               color: AppColors.success,
             ),
@@ -131,9 +143,42 @@ class _ActivityDetailContent extends StatelessWidget {
                 ),
               ),
             ),
-        ],
-      ],
-    );
+         ],
+       ],
+     );
+   }
+
+  bool _hasLatLngStreams(Activity activity) {
+    final streams = activity.streams;
+    if (streams == null) return false;
+    final latlng = streams['latlng'];
+    if (latlng is! List || latlng.isEmpty) return false;
+    return true;
+  }
+
+  List<GpsPoint> _parseLatLngStreams(Activity activity) {
+    final latlng = activity.streams?['latlng'];
+    if (latlng is! List) return const [];
+    final points = <GpsPoint>[];
+    for (var i = 0; i < latlng.length; i++) {
+      final pair = latlng[i];
+      if (pair is List && pair.length >= 2) {
+        final lat = (pair[0] as num).toDouble();
+        final lng = (pair[1] as num).toDouble();
+        if (lat != 0.0 || lng != 0.0) {
+          points.add(GpsPoint(
+            latitude: lat,
+            longitude: lng,
+            speed: 0,
+            timestamp: DateTime.fromMillisecondsSinceEpoch(
+              activity.startDate.millisecondsSinceEpoch +
+                  (i * 1000),
+            ),
+          ));
+        }
+      }
+    }
+    return points;
   }
 }
 
@@ -229,46 +274,46 @@ class _MetricsGrid extends StatelessWidget {
         children: [
           _MetricCard(
             icon: Icons.straighten,
-            label: 'Distance',
+            label: S.of(context).distance,
             value: formatDistance(activity.distance),
             color: AppColors.primary,
           ),
           _MetricCard(
             icon: Icons.speed,
-            label: 'Pace',
+            label: S.of(context).pace,
             value: formatPace(pace),
             color: AppColors.primary,
           ),
           _MetricCard(
             icon: Icons.timer,
-            label: 'Duration',
+            label: S.of(context).duration,
             value: formatDuration(activity.movingTime),
             color: AppColors.primary,
           ),
           _MetricCard(
             icon: Icons.terrain,
-            label: 'Elevation',
+            label: S.of(context).elevation,
             value: '${activity.totalElevation.toStringAsFixed(0)} m',
             color: AppColors.fatigued,
           ),
           if (activity.averageHr != null)
             _MetricCard(
               icon: Icons.favorite,
-              label: 'Avg HR',
+              label: S.of(context).avgHr,
               value: '${activity.averageHr!.round()} bpm',
               color: AppColors.error,
             ),
           if (activity.maxHr != null)
             _MetricCard(
               icon: Icons.favorite_border,
-              label: 'Max HR',
+              label: S.of(context).maxHr,
               value: '${activity.maxHr} bpm',
               color: AppColors.error,
             ),
           if (activity.averageCadence != null)
             _MetricCard(
               icon: Icons.directions_run,
-              label: 'Cadence',
+              label: S.of(context).cadence,
               value: '${activity.averageCadence!.round()} spm',
               color: AppColors.success,
             ),
@@ -411,7 +456,7 @@ class _ActivityDetailError extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Something went wrong',
+              S.of(context).statusError,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -428,7 +473,7 @@ class _ActivityDetailError extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(S.of(context).actionRetry),
             ),
           ],
         ),

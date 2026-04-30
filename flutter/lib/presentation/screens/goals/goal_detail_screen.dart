@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 
 class GoalDetailScreen extends ConsumerWidget {
@@ -19,7 +20,7 @@ class GoalDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Goal Details'),
+        title: Text(S.of(context).goalDetailsTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
@@ -42,12 +43,12 @@ class GoalDetailScreen extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Goal'),
-        content: const Text('Are you sure you want to delete this goal? This action cannot be undone.'),
+        title: Text(S.of(context).goalDeleteTitle),
+        content: Text(S.of(context).goalDeleteConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
+            child: Text(S.of(context).actionCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -58,7 +59,7 @@ class GoalDetailScreen extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to delete goal: $e')),
+                    SnackBar(content: Text(S.of(context).goalDeleteFailed(e.toString()))),
                   );
                 }
               }
@@ -66,7 +67,7 @@ class GoalDetailScreen extends ConsumerWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: const Text('Delete'),
+            child: Text(S.of(context).actionDelete),
           ),
         ],
       ),
@@ -104,7 +105,7 @@ class _GoalDetailContent extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Workouts',
+            S.of(context).goalWorkouts,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -117,7 +118,7 @@ class _GoalDetailContent extends ConsumerWidget {
               padding: const EdgeInsets.all(24),
               child: Center(
                 child: Text(
-                  'No workouts scheduled yet',
+                  S.of(context).planNoWorkoutsScheduled,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -224,7 +225,7 @@ class _GoalHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'VDOT: ${goal.currentVdot!.toStringAsFixed(1)}',
+                    S.of(context).goalVdotValue(goal.currentVdot!.toStringAsFixed(1)),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -238,7 +239,7 @@ class _GoalHeader extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Predicted: ${formatDuration(goal.predictedTime!)}',
+                      S.of(context).goalPredictedTime(formatDuration(goal.predictedTime!)),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -311,7 +312,7 @@ class _RaceCountdownCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    daysUntilRace > 0 ? 'days to race day' : 'Race day!',
+                    daysUntilRace > 0 ? S.of(context).goalDaysToRaceDay : S.of(context).planRaceDay,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: daysUntilRace > 0
@@ -321,14 +322,14 @@ class _RaceCountdownCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$completedWorkouts of $totalWorkouts workouts completed',
+                    S.of(context).goalWorkoutsCompletedCount(completedWorkouts, totalWorkouts),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${(progress * 100).toStringAsFixed(0)}% complete',
+                    S.of(context).goalPercentComplete((progress * 100).toStringAsFixed(0)),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -391,22 +392,22 @@ class _WorkoutCard extends ConsumerWidget {
     }
   }
 
-  String _workoutLabel() {
+  String _workoutLabel(BuildContext context) {
     switch (workout.workoutType) {
       case WorkoutType.easy:
-        return 'Easy';
+        return S.of(context).workoutTypeEasy;
       case WorkoutType.long:
-        return 'Long';
+        return S.of(context).workoutTypeLong;
       case WorkoutType.tempo:
-        return 'Tempo';
+        return S.of(context).workoutTypeTempo;
       case WorkoutType.interval:
-        return 'Interval';
+        return S.of(context).workoutTypeInterval;
       case WorkoutType.recovery:
-        return 'Recovery';
+        return S.of(context).workoutTypeRecovery;
       case WorkoutType.race:
-        return 'Race';
+        return S.of(context).workoutTypeRace;
       case WorkoutType.other:
-        return 'Other';
+        return S.of(context).workoutTypeOther;
     }
   }
 
@@ -445,7 +446,7 @@ class _WorkoutCard extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          _workoutLabel(),
+                          _workoutLabel(context),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: color,
                             fontWeight: FontWeight.w600,
@@ -579,7 +580,7 @@ class _CompletionCheckboxState extends ConsumerState<_CompletionCheckbox> {
           _isCompleted = previousState;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update workout')),
+          SnackBar(content: Text(S.of(context).goalFailedToUpdateWorkout)),
         );
       }
     } finally {
@@ -651,7 +652,7 @@ class _GoalDetailError extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Something went wrong',
+              S.of(context).statusError,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -668,7 +669,7 @@ class _GoalDetailError extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(S.of(context).actionRetry),
             ),
           ],
         ),

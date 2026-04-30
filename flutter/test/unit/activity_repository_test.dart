@@ -2,7 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/data/models/dashboard_models.dart' as data;
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/data/repositories/activity_repository_impl.dart';
 
 class MockDio extends Mock implements Dio {}
@@ -11,10 +12,10 @@ void main() {
   late MockDio mockDio;
   late ActivityRepositoryImpl repository;
 
-  final testActivity = Activity(
+  final testActivity = data.Activity(
     id: 'act1',
     stravaId: '12345',
-    type: ActivityType.run,
+    type: data.ActivityType.run,
     name: 'Morning Run',
     startDate: DateTime(2024, 6, 15, 7, 30),
     distance: 8500.0,

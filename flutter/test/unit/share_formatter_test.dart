@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/core/utils/share_formatter.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 
 void main() {
   group('formatShareText', () {

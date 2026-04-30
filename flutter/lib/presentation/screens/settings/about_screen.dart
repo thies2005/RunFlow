@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -11,10 +12,11 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About'),
+        title: Text(l10n.settingsAbout),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -36,7 +38,7 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Version $appVersion ($buildNumber)',
+            l10n.aboutVersion(appVersion, buildNumber),
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
@@ -47,9 +49,7 @@ class AboutScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                'Your personal running performance dashboard. '
-                'Track activities, analyze training load, manage goals, '
-                'and get AI-powered coaching insights.',
+                l10n.aboutDescription,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium,
               ),
@@ -61,7 +61,7 @@ class AboutScreen extends StatelessWidget {
               children: [
                 ListTile(
                   leading: const Icon(Icons.description_outlined),
-                  title: const Text('Privacy Policy'),
+                  title: Text(l10n.aboutPrivacyPolicy),
                   trailing: const Icon(Icons.open_in_new, size: 18),
                   onTap: () {
                     launchUrl(Uri.parse('https://runflow.schuelken.uk/privacy'));
@@ -70,7 +70,7 @@ class AboutScreen extends StatelessWidget {
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
                   leading: const Icon(Icons.gavel_outlined),
-                  title: const Text('Terms of Service'),
+                  title: Text(l10n.aboutTermsOfService),
                   trailing: const Icon(Icons.open_in_new, size: 18),
                   onTap: () {
                     launchUrl(Uri.parse('https://runflow.schuelken.uk/terms'));
@@ -79,7 +79,7 @@ class AboutScreen extends StatelessWidget {
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
                   leading: const Icon(Icons.source_outlined),
-                  title: const Text('Open Source Licenses'),
+                  title: Text(l10n.aboutOpenSource),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     showLicensePage(

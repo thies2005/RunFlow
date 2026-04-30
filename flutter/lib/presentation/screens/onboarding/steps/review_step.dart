@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/vdot_calculator.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
 import 'package:runflow_flutter/presentation/screens/onboarding/onboarding_wizard_screen.dart';
@@ -38,7 +39,7 @@ class ReviewStep extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'Review your plan',
+            S.of(context).onboardingReviewPlanTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -46,7 +47,7 @@ class ReviewStep extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Everything looks good? Generate your training plan.',
+            S.of(context).onboardingReviewPlanSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -59,43 +60,43 @@ class ReviewStep extends ConsumerWidget {
               child: Column(
                 children: [
                   _ReviewRow(
-                    label: 'Goal Name',
+                    label: S.of(context).onboardingRaceName,
                     value: onboarding.goalName,
                   ),
                   const Divider(height: 20),
                   _ReviewRow(
-                    label: 'Race Type',
+                    label: S.of(context).onboardingRaceType,
                     value: raceTypeLabel(onboarding.raceType),
                   ),
                   const Divider(height: 20),
                   _ReviewRow(
-                    label: 'Race Date',
+                    label: S.of(context).onboardingRaceDate,
                     value: _formatDate(onboarding.raceDate),
                   ),
                   const Divider(height: 20),
                   _ReviewRow(
-                    label: 'Plan Duration',
-                    value: '${onboarding.computedPlanWeeks} weeks',
+                    label: S.of(context).onboardingPlanDuration,
+                    value: S.of(context).onboardingWeeksCount(onboarding.computedPlanWeeks),
+                  ),
+                  const Divider(height: 20),
+                    _ReviewRow(
+                      label: S.of(context).onboardingExperience,
+                      value: _experienceLabel(context, onboarding.experienceLevel),
+                    ),
+                  const Divider(height: 20),
+                  _ReviewRow(
+                    label: S.of(context).onboardingRunsPerWeek,
+                    value: S.of(context).onboardingRunsPerWeekCount(onboarding.runsPerWeek),
                   ),
                   const Divider(height: 20),
                   _ReviewRow(
-                    label: 'Experience',
-                    value: _experienceLabel(onboarding.experienceLevel),
-                  ),
-                  const Divider(height: 20),
-                  _ReviewRow(
-                    label: 'Runs/Week',
-                    value: '${onboarding.runsPerWeek}',
-                  ),
-                  const Divider(height: 20),
-                  _ReviewRow(
-                    label: 'Weekly Mileage',
+                    label: S.of(context).onboardingWeeklyMileage,
                     value:
-                        '${onboarding.weeklyMileage.toStringAsFixed(0)} km',
+                        '${onboarding.weeklyMileage.toStringAsFixed(0)} ${S.of(context).kmUnit}',
                   ),
                   const Divider(height: 20),
                   _ReviewRow(
-                    label: 'Phases',
+                    label: S.of(context).onboardingPhases,
                     value:
                         '${onboarding.buildWeeks}B / ${onboarding.peakWeeks}P / ${onboarding.taperWeeks}T',
                   ),
@@ -103,15 +104,15 @@ class ReviewStep extends ConsumerWidget {
                       onboarding.goalTimeSeconds! > 0) ...[
                     const Divider(height: 20),
                     _ReviewRow(
-                      label: 'Goal Time',
+                      label: S.of(context).onboardingGoalTime,
                       value: formatDuration(onboarding.goalTimeSeconds!),
                     ),
                   ],
                   if (onboarding.maxHeartRate > 0) ...[
                     const Divider(height: 20),
                     _ReviewRow(
-                      label: 'Max HR',
-                      value: '${onboarding.maxHeartRate} bpm',
+                      label: S.of(context).onboardingMaxHr,
+                      value: '${onboarding.maxHeartRate} ${S.of(context).bpmUnit}',
                     ),
                   ],
                 ],
@@ -166,9 +167,9 @@ class ReviewStep extends ConsumerWidget {
                         color: AppColors.onPrimary,
                       ),
                     )
-                  : const Text(
-                      'Generate Training Plan',
-                      style: TextStyle(
+                  : Text(
+                      S.of(context).onboardingGenerateTrainingPlan,
+                      style: const TextStyle(
                           fontWeight: FontWeight.w700, fontSize: 16),
                     ),
             ),
@@ -180,6 +181,7 @@ class ReviewStep extends ConsumerWidget {
   }
 
   Future<void> _submitPlan(BuildContext context, WidgetRef ref) async {
+    final s = S.of(context);
     final notifier = ref.read(onboardingProvider.notifier);
     notifier
       ..setPlanSubmitting(true)
@@ -223,27 +225,23 @@ class ReviewStep extends ConsumerWidget {
       context.go('/dashboard');
     } catch (e) {
       notifier
-        ..setPlanError('Failed to create plan. Please try again.')
+        ..setPlanError(s.onboardingPlanCreateFailed)
         ..setPlanSubmitting(false);
     }
   }
 
   String _formatDate(DateTime date) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+    return '${date.day}/${date.month}/${date.year}';
   }
 
-  String _experienceLabel(String level) {
+  String _experienceLabel(BuildContext context, String level) {
     switch (level) {
       case 'BEGINNER':
-        return 'Beginner';
+        return S.of(context).onboardingExperienceBeginner;
       case 'INTERMEDIATE':
-        return 'Intermediate';
+        return S.of(context).onboardingExperienceIntermediate;
       case 'ADVANCED':
-        return 'Advanced';
+        return S.of(context).onboardingExperienceAdvanced;
       default:
         return level;
     }

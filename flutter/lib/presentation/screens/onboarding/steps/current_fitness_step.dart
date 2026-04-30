@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/vdot_calculator.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
 
@@ -71,7 +72,7 @@ class _CurrentFitnessStepState extends ConsumerState<CurrentFitnessStep> {
           ),
           const SizedBox(height: 24),
           Text(
-            'What\'s your current fitness?',
+            S.of(context).onboardingCurrentFitnessTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -79,7 +80,7 @@ class _CurrentFitnessStepState extends ConsumerState<CurrentFitnessStep> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Enter a recent race time or let us estimate from your data.',
+            S.of(context).onboardingCurrentFitnessSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -93,7 +94,7 @@ class _CurrentFitnessStepState extends ConsumerState<CurrentFitnessStep> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Calibration Distance',
+                    S.of(context).onboardingCalibrationDistance,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -124,7 +125,7 @@ class _CurrentFitnessStepState extends ConsumerState<CurrentFitnessStep> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Your Time',
+                    S.of(context).onboardingYourTime,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -135,8 +136,8 @@ class _CurrentFitnessStepState extends ConsumerState<CurrentFitnessStep> {
                       Expanded(
                         child: TextFormField(
                           controller: _hoursController,
-                          decoration: const InputDecoration(
-                            labelText: 'Hours',
+                          decoration: InputDecoration(
+                            labelText: S.of(context).onboardingHours,
                             isDense: true,
                           ),
                           keyboardType: TextInputType.number,
@@ -147,8 +148,8 @@ class _CurrentFitnessStepState extends ConsumerState<CurrentFitnessStep> {
                       Expanded(
                         child: TextFormField(
                           controller: _minutesController,
-                          decoration: const InputDecoration(
-                            labelText: 'Min',
+                          decoration: InputDecoration(
+                            labelText: S.of(context).onboardingMinutes,
                             isDense: true,
                           ),
                           keyboardType: TextInputType.number,
@@ -159,8 +160,8 @@ class _CurrentFitnessStepState extends ConsumerState<CurrentFitnessStep> {
                       Expanded(
                         child: TextFormField(
                           controller: _secondsController,
-                          decoration: const InputDecoration(
-                            labelText: 'Sec',
+                          decoration: InputDecoration(
+                            labelText: S.of(context).onboardingSeconds,
                             isDense: true,
                           ),
                           keyboardType: TextInputType.number,
@@ -190,7 +191,7 @@ class _CurrentFitnessStepState extends ConsumerState<CurrentFitnessStep> {
                           _updateCalibration(notifier, effectiveVO2max);
                         },
                         icon: const Icon(Icons.auto_fix_high, size: 16),
-                        label: const Text('Use predicted time'),
+                        label: Text(S.of(context).onboardingUsePredictedTime),
                       ),
                     ),
                   ],

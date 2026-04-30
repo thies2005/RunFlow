@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/profile_models.dart';
+import 'package:runflow_flutter/domain/entities/profile_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 
 class HrZoneEditorScreen extends ConsumerStatefulWidget {
@@ -51,11 +52,11 @@ class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
   String? _validateZones() {
     for (int i = 0; i < 6; i++) {
       if (_zones[i] != null && _zones[i]! <= 0) {
-        return 'Zone ${i + 1} must be a positive value';
+        return S.of(context).hrZoneMustBePositive(i + 1);
       }
       if (i > 0 && _zones[i] != null && _zones[i - 1] != null) {
         if (_zones[i]! <= _zones[i - 1]!) {
-          return 'Zone ${i + 1} max must be greater than Zone $i max';
+          return S.of(context).hrZoneMustBeGreater(i + 1, i);
         }
       }
     }
@@ -85,14 +86,14 @@ class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('HR Zones updated')),
+          SnackBar(content: Text(S.of(context).hrZonesUpdated)),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update: $e')),
+          SnackBar(content: Text(S.of(context).hrZonesFailed(e.toString()))),
         );
       }
     } finally {
@@ -106,7 +107,7 @@ class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('HR Zones'),
+        title: Text(S.of(context).profileHrZones),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -121,7 +122,7 @@ class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
                         color: AppColors.onPrimary,
                       ),
                     )
-                  : const Text('Save'),
+                  : Text(S.of(context).actionSave),
             ),
           ),
         ],
@@ -130,7 +131,7 @@ class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Define your heart rate zone boundaries. Each zone max must be greater than the previous zone.',
+            S.of(context).hrZonesDescription,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -150,7 +151,7 @@ class _HrZoneEditorScreenState extends ConsumerState<HrZoneEditorScreen> {
             ),
           const SizedBox(height: 16),
           Text(
-            'Zone 7 (Neuromuscular): Everything above Zone 6',
+            S.of(context).hrZone7Note,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
               fontStyle: FontStyle.italic,
@@ -186,20 +187,20 @@ class _HrZoneSlider extends StatelessWidget {
     AppColors.error,
   ];
 
-  static const _zoneLabels = [
-    'Zone 1 (Recovery)',
-    'Zone 2 (Aerobic)',
-    'Zone 3 (Tempo)',
-    'Zone 4 (Threshold)',
-    'Zone 5 (VO2max)',
-    'Zone 6 (Anaerobic)',
-  ];
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final zoneColor = _zoneColors[index];
-    final zoneLabel = _zoneLabels[index];
+    final s = S.of(context);
+    final zoneLabels = [
+      s.hrZone1,
+      s.hrZone2,
+      s.hrZone3,
+      s.hrZone4,
+      s.hrZone5,
+      s.hrZone6,
+    ];
+    final zoneLabel = zoneLabels[index];
     final effectiveValue = value?.toDouble() ?? (prevValue ?? 60) + 30.0;
     final minVal = (prevValue ?? 60) + 1.0;
     final maxVal = maxValue != null ? maxValue!.toDouble() : 220.0;
@@ -229,7 +230,7 @@ class _HrZoneSlider extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  'Up to ${value ?? '—'} bpm',
+                  s.hrZoneUpTo(value?.toString() ?? '—'),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,

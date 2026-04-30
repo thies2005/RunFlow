@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 
 final nutritionTargetsProvider =
@@ -18,11 +18,11 @@ final nutritionTargetsProvider =
   } catch (_) {
     final prefs = await SharedPreferences.getInstance();
     return NutritionTargets(
-      calories: prefs.getInt('nutrition_target_calories') ?? 2000,
-      protein: prefs.getInt('nutrition_target_protein') ?? 150,
-      carbs: prefs.getInt('nutrition_target_carbs') ?? 300,
-      fat: prefs.getInt('nutrition_target_fat') ?? 80,
-      water: prefs.getDouble('nutrition_target_water') ?? 3.0,
+      calories: prefs.getInt('nutrition_target_calories') ?? NutritionTargets.defaults.calories,
+      protein: prefs.getInt('nutrition_target_protein') ?? NutritionTargets.defaults.protein,
+      carbs: prefs.getInt('nutrition_target_carbs') ?? NutritionTargets.defaults.carbs,
+      fat: prefs.getInt('nutrition_target_fat') ?? NutritionTargets.defaults.fat,
+      water: prefs.getDouble('nutrition_target_water') ?? NutritionTargets.defaults.water,
     );
   }
 });

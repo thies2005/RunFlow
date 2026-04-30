@@ -2,7 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
-import 'package:runflow_flutter/data/models/profile_models.dart';
+import 'package:runflow_flutter/data/models/profile_models.dart' as data;
+import 'package:runflow_flutter/domain/entities/profile_entities.dart';
 import 'package:runflow_flutter/data/repositories/profile_repository_impl.dart';
 
 class MockDio extends Mock implements Dio {}
@@ -11,7 +12,7 @@ void main() {
   late MockDio mockDio;
   late ProfileRepositoryImpl repository;
 
-  final testProfile = UserProfile(
+  final testProfile = data.UserProfile(
     id: 'user-1',
     email: 'test@example.com',
     name: 'Test User',
@@ -100,7 +101,7 @@ void main() {
           weight: 76.0,
           hrMax: 190,
         );
-        final UserProfile updatedProfile =
+        final data.UserProfile updatedProfile =
             testProfile.copyWith(name: 'Updated Name', weight: 76.0, hrMax: 190);
 
         when(() => mockDio.put(

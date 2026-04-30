@@ -2,10 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
+import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/activity_models.dart';
 import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/recording_models.dart';
+import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
 
 class ActivityRepositoryImpl implements ActivityRepository {
@@ -14,10 +15,10 @@ class ActivityRepositoryImpl implements ActivityRepository {
   final Dio dio;
 
   @override
-  Future<ActivitiesResponse> listActivities({
+  Future<domain.ActivitiesResponse> listActivities({
     int limit = 50,
     int offset = 0,
-    ActivityType? type,
+    domain.ActivityType? type,
   }) async {
     try {
       final queryParameters = <String, dynamic>{
@@ -33,7 +34,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
       );
       return ActivitiesResponse.fromJson(
         response.data as Map<String, dynamic>,
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -45,7 +46,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
   }
 
   @override
-  Future<Activity> getActivity(String id) async {
+  Future<domain.Activity> getActivity(String id) async {
     try {
       final response = await dio.get('${ApiConstants.activitiesPath}/$id');
       final payload = unwrapPayload(
@@ -54,7 +55,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
       );
       return Activity.fromJson(
         payload,
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -66,7 +67,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
   }
 
   @override
-  Future<Activity> updateActivity(String id, {String? name, ActivityType? type, String? trainingType}) async {
+  Future<domain.Activity> updateActivity(String id, {String? name, domain.ActivityType? type, String? trainingType}) async {
     try {
       final body = <String, dynamic>{};
       if (name != null) body['name'] = name;
@@ -81,7 +82,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
         Map<String, dynamic>.from(response.data as Map),
         const ['activity'],
       );
-      return Activity.fromJson(payload);
+      return Activity.fromJson(payload).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -93,7 +94,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
   }
 
   @override
-  Future<Activity> createActivity(RecordedWorkout workout) async {
+  Future<domain.Activity> createActivity(domain.RecordedWorkout workout) async {
     try {
       final List<double>? timeStream = workout.gpsPoints.isNotEmpty
           ? List.generate(
@@ -107,29 +108,29 @@ class ActivityRepositoryImpl implements ActivityRepository {
 
       final List<List<double>>? latlngStream = workout.gpsPoints.isNotEmpty
           ? workout.gpsPoints
-              .map((GpsPoint p) => <double>[p.latitude, p.longitude])
+              .map((p) => <double>[p.latitude, p.longitude])
               .toList()
           : null;
 
       final List<double>? altitudeStream = workout.gpsPoints
-              .any((GpsPoint p) => p.altitude != null)
+              .any((p) => p.altitude != null)
           ? workout.gpsPoints
-              .map((GpsPoint p) => p.altitude ?? 0.0)
+              .map((p) => p.altitude ?? 0.0)
               .toList()
           : null;
 
       final List<double>? hrStream = workout.hrSamples.isNotEmpty
-          ? workout.hrSamples.map((HrSample h) => h.heartRate.toDouble()).toList()
+          ? workout.hrSamples.map((h) => h.heartRate.toDouble()).toList()
           : null;
 
       final List<double>? velocityStream = workout.gpsPoints.isNotEmpty
-          ? workout.gpsPoints.map((GpsPoint p) => p.speed).toList()
+          ? workout.gpsPoints.map((p) => p.speed).toList()
           : null;
 
       final List<double>? cadenceStream = workout.gpsPoints.isNotEmpty
           ? workout.gpsPoints
-              .where((GpsPoint p) => p.speed > 0)
-              .map((GpsPoint p) => (p.speed * 2.5).clamp(0.0, 250.0).toDouble())
+              .where((p) => p.speed > 0)
+              .map((p) => (p.speed * 2.5).clamp(0.0, 250.0).toDouble())
               .toList()
           : null;
 
@@ -168,7 +169,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
         Map<String, dynamic>.from(response.data as Map),
         const ['activity'],
       );
-      return Activity.fromJson(payload);
+      return Activity.fromJson(payload).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -180,7 +181,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
   }
 
   @override
-  Future<Activity> createManualActivity({
+  Future<domain.Activity> createManualActivity({
     required String name,
     required DateTime date,
     required String type,
@@ -207,7 +208,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
         Map<String, dynamic>.from(response.data as Map),
         const ['activity'],
       );
-      return Activity.fromJson(payload);
+      return Activity.fromJson(payload).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -219,7 +220,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
   }
 
   @override
-  Future<AiActivityFeedback> getAiFeedback(String activityId) async {
+  Future<domain.AiActivityFeedback> getAiFeedback(String activityId) async {
     try {
       final response = await dio.get(
         '/ai/activity-feedback',
@@ -230,7 +231,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
           response.data as Map<String, dynamic>,
           const ['feedback'],
         ),
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -242,7 +243,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
   }
 
   @override
-  Future<AiActivityFeedback> generateAiFeedback(String activityId) async {
+  Future<domain.AiActivityFeedback> generateAiFeedback(String activityId) async {
     try {
       final response = await dio.post(
         '/ai/activity-feedback',
@@ -253,7 +254,7 @@ class ActivityRepositoryImpl implements ActivityRepository {
           response.data as Map<String, dynamic>,
           const ['feedback'],
         ),
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException

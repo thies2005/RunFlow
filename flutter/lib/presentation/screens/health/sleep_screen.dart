@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/data/models/health_vitals_models.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
 
 class SleepScreen extends ConsumerWidget {
@@ -15,7 +16,7 @@ class SleepScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sleep'),
+        title: Text(S.of(context).healthSleep),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -23,7 +24,7 @@ class SleepScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.sync, color: AppColors.primary),
-            tooltip: 'Sync from Health Connect',
+            tooltip: S.of(context).vitalsSyncFromHc,
             onPressed: () =>
                 ref.read(sleepProvider.notifier).refresh(),
           ),
@@ -72,7 +73,7 @@ class _SleepContent extends StatelessWidget {
     final deepPct = stagesTotal > 0 ? sleep.deepMinutes / stagesTotal : 0.0;
     final remPct = stagesTotal > 0 ? sleep.remMinutes / stagesTotal : 0.0;
     final lightPct = stagesTotal > 0 ? sleep.lightMinutes / stagesTotal : 0.0;
-    final sleepQuality = _sleepQuality(totalMin.toDouble());
+    final sleepQuality = _sleepQuality(context, totalMin.toDouble());
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -115,7 +116,7 @@ class _SleepContent extends StatelessWidget {
           if (sleep.lastSynced != null)
             Center(
               child: Text(
-                'Synced from Health Connect · ${_fmtTime(sleep.lastSynced!)}',
+                S.of(context).sleepSynced(_fmtTime(sleep.lastSynced!)),
                 style: theme.textTheme.bodySmall
                     ?.copyWith(color: AppColors.onSurfaceVariant),
               ),
@@ -125,11 +126,12 @@ class _SleepContent extends StatelessWidget {
     );
   }
 
-  (String, Color) _sleepQuality(double minutes) {
-    if (minutes >= 480) return ('Excellent', AppColors.success);
-    if (minutes >= 420) return ('Good', AppColors.success);
-    if (minutes >= 360) return ('Fair', AppColors.warning);
-    return ('Poor', AppColors.error);
+  (String, Color) _sleepQuality(BuildContext context, double minutes) {
+    final s = S.of(context);
+    if (minutes >= 480) return (s.sleepExcellent, AppColors.success);
+    if (minutes >= 420) return (s.sleepGoodQuality, AppColors.success);
+    if (minutes >= 360) return (s.sleepFair, AppColors.warning);
+    return (s.sleepPoor, AppColors.error);
   }
 }
 
@@ -176,7 +178,7 @@ class _SleepSummaryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Last Night',
+                Text(S.of(context).sleepLastNight,
                     style: theme.textTheme.bodySmall
                         ?.copyWith(color: AppColors.onSurfaceVariant)),
                 Row(
@@ -250,7 +252,7 @@ class _SleepStagesCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Sleep Stages',
+          Text(S.of(context).sleepStages,
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 16),
@@ -277,11 +279,11 @@ class _SleepStagesCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _StageRow('Deep', deepMinutes, deepPct, AppColors.primary),
+          _StageRow(S.of(context).sleepDeep, deepMinutes, deepPct, AppColors.primary),
           const SizedBox(height: 6),
-          _StageRow('REM', remMinutes, remPct, AppColors.peaked),
+          _StageRow(S.of(context).sleepRem, remMinutes, remPct, AppColors.peaked),
           const SizedBox(height: 6),
-          _StageRow('Light', lightMinutes, lightPct,
+          _StageRow(S.of(context).sleepLight, lightMinutes, lightPct,
               AppColors.onSurfaceVariant.withValues(alpha: 0.6)),
         ],
       ),
@@ -336,7 +338,7 @@ class _SleepWeekChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Recent Sessions',
+          Text(S.of(context).sleepRecentSessions,
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
@@ -393,10 +395,10 @@ class _SleepAdviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final advice = hours >= 8
-        ? ('Great sleep! Keep it up.', Icons.star, AppColors.success)
+        ? (S.of(context).sleepGreatAdvice, Icons.star, AppColors.success)
         : hours >= 7
-            ? ('Good sleep. Try for 8h for optimal recovery.', Icons.check_circle, AppColors.warning)
-            : ('You\'re under-sleeping. Aim for 7–9 hours.', Icons.warning_amber_rounded, AppColors.error);
+            ? (S.of(context).sleepGoodAdvice, Icons.check_circle, AppColors.warning)
+            : (S.of(context).sleepPoorAdvice, Icons.warning_amber_rounded, AppColors.error);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -453,12 +455,12 @@ class _SleepConnectPromptState extends State<_SleepConnectPrompt> {
                   size: 40, color: AppColors.peaked),
             ),
             const SizedBox(height: 24),
-            Text('No Sleep Data',
+            Text(S.of(context).sleepNoDataTitle,
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             Text(
-              'Connect Health Connect or a compatible wearable to automatically import your sleep data.',
+              S.of(context).sleepNoDataMessage,
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: AppColors.onSurfaceVariant),
               textAlign: TextAlign.center,
@@ -482,14 +484,14 @@ class _SleepConnectPromptState extends State<_SleepConnectPrompt> {
                             CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.sync),
                 label: Text(
-                    _loading ? 'Connecting…' : 'Connect Health Connect'),
+                    _loading ? S.of(context).vitalsConnecting : S.of(context).vitalsConnectHc),
               ),
             ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => context.pop(),
-              child: const Text('Dismiss',
-                  style: TextStyle(color: AppColors.onSurfaceVariant)),
+              child: Text(S.of(context).healthDismiss,
+                  style: const TextStyle(color: AppColors.onSurfaceVariant)),
             ),
           ],
         ),

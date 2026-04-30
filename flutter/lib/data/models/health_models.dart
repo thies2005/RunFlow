@@ -226,11 +226,11 @@ class NutritionTargets {
   });
 
   factory NutritionTargets.fromJson(Map<String, dynamic> json) => NutritionTargets(
-        calories: ((json['dailyCalories'] ?? json['calories'] ?? 2500) as num).toInt(),
-        protein: ((json['protein'] ?? 0) as num).toInt(),
-        carbs: ((json['carbs'] ?? 0) as num).toInt(),
-        fat: ((json['fat'] ?? 0) as num).toInt(),
-        water: ((json['waterGoalMl'] ?? json['water'] ?? 2000) as num).toDouble(),
+        calories: ((json['dailyCalories'] ?? json['calories'] ?? NutritionTargets.defaults.calories) as num).toInt(),
+        protein: ((json['protein'] ?? NutritionTargets.defaults.protein) as num).toInt(),
+        carbs: ((json['carbs'] ?? NutritionTargets.defaults.carbs) as num).toInt(),
+        fat: ((json['fat'] ?? NutritionTargets.defaults.fat) as num).toInt(),
+        water: ((json['waterGoalMl'] ?? json['water'] ?? NutritionTargets.defaults.water) as num).toDouble(),
         proteinPercent: ((json['proteinPercent'] ?? 30) as num).toDouble(),
         carbsPercent: ((json['carbsPercent'] ?? 40) as num).toDouble(),
         fatsPercent: ((json['fatsPercent'] ?? 30) as num).toDouble(),
@@ -238,6 +238,14 @@ class NutritionTargets {
         exerciseCalorieFactor: ((json['exerciseCalorieFactor'] ?? 0.5) as num).toDouble(),
         exerciseCalorieSource: (json['exerciseCalorieSource'] ?? 'strava') as String,
       );
+
+  static const defaults = NutritionTargets(
+    calories: 2000,
+    protein: 150,
+    carbs: 300,
+    fat: 80,
+    water: 3.0,
+  );
 
   final int calories;
   final int protein;

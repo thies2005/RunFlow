@@ -2,7 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/data/models/health_models.dart' as data;
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/data/repositories/health_api_repository_impl.dart';
 
 class MockDio extends Mock implements Dio {}
@@ -70,11 +71,11 @@ void main() {
 
         final result = await repository.getNutritionTargets();
 
-        expect(result.calories, 2500.0);
-        expect(result.protein, 150.0);
-        expect(result.carbs, 300.0);
-        expect(result.fat, 80.0);
-        expect(result.water, 2.0);
+        expect(result.calories, NutritionTargets.defaults.calories);
+        expect(result.protein, NutritionTargets.defaults.protein);
+        expect(result.carbs, NutritionTargets.defaults.carbs);
+        expect(result.fat, NutritionTargets.defaults.fat);
+        expect(result.water, NutritionTargets.defaults.water);
       });
 
       test('throws ServerException on network error', () async {
@@ -143,7 +144,7 @@ void main() {
 
     group('NutritionTargets model', () {
       test('round-trip serialization', () {
-        const targets = NutritionTargets(
+        const targets = data.NutritionTargets(
           calories: 2200,
           protein: 140,
           carbs: 280,
@@ -151,7 +152,7 @@ void main() {
           water: 2.5,
         );
         final json = targets.toJson();
-        final restored = NutritionTargets.fromJson(
+        final restored = data.NutritionTargets.fromJson(
           Map<String, dynamic>.from(json),
         );
 

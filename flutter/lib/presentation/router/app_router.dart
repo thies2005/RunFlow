@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:runflow_flutter/data/models/auth_models.dart';
+import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/auth/login_screen.dart';
@@ -22,6 +22,8 @@ import 'package:runflow_flutter/presentation/screens/profile/hr_zone_editor_scre
 import 'package:runflow_flutter/presentation/screens/profile/settings_screen.dart';
 import 'package:runflow_flutter/presentation/screens/settings/about_screen.dart';
 import 'package:runflow_flutter/presentation/screens/settings/ai_settings_screen.dart';
+import 'package:runflow_flutter/presentation/screens/settings/api_key_screen.dart';
+import 'package:runflow_flutter/presentation/screens/settings/consent_management_screen.dart';
 import 'package:runflow_flutter/presentation/screens/settings/logs_screen.dart';
 import 'package:runflow_flutter/presentation/screens/chat/chat_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/health_screen.dart';
@@ -184,6 +186,16 @@ GoRouter createRouter(Ref ref) {
         path: '/settings/logs',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const LogsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/api-key',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ApiKeyScreen(),
+      ),
+      GoRoute(
+        path: '/settings/consent',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ConsentManagementScreen(),
       ),
       GoRoute(
         path: '/activities/:id',

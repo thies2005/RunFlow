@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 
 class SupplementsScreen extends ConsumerWidget {
@@ -16,7 +17,7 @@ class SupplementsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Supplements'),
+        title: Text(S.of(context).healthSupplements),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -72,12 +73,12 @@ class SupplementsScreen extends ConsumerWidget {
                             children: [
                               const Icon(Icons.medication_outlined, size: 52, color: AppColors.onSurfaceVariant),
                               const SizedBox(height: 12),
-                              Text('No supplements yet', style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.onSurfaceVariant)),
+                              Text(S.of(context).supplementsNoSupplements, style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.onSurfaceVariant)),
                               const SizedBox(height: 8),
                               FilledButton.icon(
                                 onPressed: () => _showAddSupplementDialog(context, ref),
                                 icon: const Icon(Icons.add),
-                                label: const Text('Add First Supplement'),
+                                 label: Text(S.of(context).supplementsAddFirst),
                               ),
                             ],
                           ),
@@ -89,11 +90,11 @@ class SupplementsScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => Center(child: Text('${S.of(context).actionError}: $e')),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('${S.of(context).actionError}: $e')),
       ),
     );
   }
@@ -128,27 +129,32 @@ class SupplementsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Add Supplement', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+              Text(S.of(ctx).supplementsAddTitle, style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 16),
-              TextField(controller: nameCtl, decoration: const InputDecoration(labelText: 'Supplement Name', prefixIcon: Icon(Icons.medication))),
+              TextField(controller: nameCtl, decoration: InputDecoration(labelText: S.of(ctx).supplementsName, prefixIcon: const Icon(Icons.medication))),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(child: TextField(controller: dosageCtl, decoration: const InputDecoration(labelText: 'Dosage (e.g. 500mg)'))),
+                  Expanded(child: TextField(controller: dosageCtl, decoration: InputDecoration(labelText: S.of(ctx).supplementsDosage))),
                   const SizedBox(width: 8),
-                  Expanded(child: TextField(controller: freqCtl, decoration: const InputDecoration(labelText: 'Frequency'))),
+                  Expanded(child: TextField(controller: freqCtl, decoration: InputDecoration(labelText: S.of(ctx).supplementsFrequency))),
                 ],
               ),
               const SizedBox(height: 12),
-              Text('Time of Day', style: Theme.of(ctx).textTheme.labelMedium?.copyWith(color: AppColors.onSurfaceVariant)),
+              Text(S.of(ctx).supplementsTimeOfDay, style: Theme.of(ctx).textTheme.labelMedium?.copyWith(color: AppColors.onSurfaceVariant)),
               const SizedBox(height: 8),
               Row(
-                children: ['Morning', 'Afternoon', 'Evening', 'Night'].map((t) => Padding(
+                children: [
+                  ('Morning', S.of(ctx).supplementsMorning),
+                  ('Afternoon', S.of(ctx).supplementsAfternoon),
+                  ('Evening', S.of(ctx).supplementsEvening),
+                  ('Night', S.of(ctx).supplementsNight),
+                ].map((e) => Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
-                    label: Text(t, style: const TextStyle(fontSize: 11)),
-                    selected: selectedTime == t,
-                    onSelected: (_) => setModalState(() => selectedTime = t),
+                    label: Text(e.$2, style: const TextStyle(fontSize: 11)),
+                    selected: selectedTime == e.$1,
+                    onSelected: (_) => setModalState(() => selectedTime = e.$1),
                     selectedColor: AppColors.primary,
                   ),
                 )).toList(),
@@ -168,7 +174,7 @@ class SupplementsScreen extends ConsumerWidget {
                     ref.read(supplementListProvider.notifier).add(supplement);
                     Navigator.pop(ctx);
                   },
-                  child: const Text('Add Supplement'),
+                  child: Text(S.of(ctx).supplementsAddTitle),
                 ),
               ),
             ],
@@ -229,11 +235,11 @@ class _TodayProgressCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '$taken/$total taken today',
+                S.of(context).supplementsTakenToday(taken, total),
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               Text(
-                total > 0 && taken == total ? '✅ All done!' : '${total - taken} remaining',
+                total > 0 && taken == total ? S.of(context).supplementsAllDone : S.of(context).supplementsRemainingCount(total - taken),
                 style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
               ),
             ],
@@ -266,7 +272,7 @@ class _SupplementCalendar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Weekly Calendar', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(S.of(context).supplementsWeeklyCalendar, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Row(
             children: days.map((day) {
@@ -414,7 +420,7 @@ class _SupplementAdherenceSection extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Weekly Adherence', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+              Text(S.of(context).supplementsWeeklyAdherence, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 12),
               ...analytics.supplements.map((s) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),

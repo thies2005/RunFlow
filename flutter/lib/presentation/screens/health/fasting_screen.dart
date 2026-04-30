@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 
 class FastingScreen extends ConsumerStatefulWidget {
@@ -85,7 +86,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fasting'),
+        title: Text(S.of(context).healthFasting),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
       ),
       body: fastingAsync.when(
@@ -121,7 +122,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                 const SizedBox(height: 16),
                 // Fasting presets
                 if (activeSession == null) ...[
-                  Text('Quick Start', style: theme.textTheme.labelMedium?.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                  Text(S.of(context).fastingQuickStart, style: theme.textTheme.labelMedium?.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   _FastingPresets(
                     onStart: (hours) => _startFasting(hours),
@@ -135,14 +136,14 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                 }),
                 const SizedBox(height: 16),
                 // History
-                Text('History', style: theme.textTheme.labelMedium?.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                Text(S.of(context).fastingHistoryTitle, style: theme.textTheme.labelMedium?.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 historyAsync.when(
                   data: (history) {
                     if (history.isEmpty) {
                       return Padding(
                         padding: const EdgeInsets.all(24),
-                        child: Center(child: Text('No fasting history', style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant))),
+                        child: Center(child: Text(S.of(context).fastingNoHistory, style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant))),
                       );
                     }
                     return Column(
@@ -163,7 +164,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                                     Text('${dur.inHours}h ${dur.inMinutes % 60}m',
                                         style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
                                     Text(
-                                      '${_fmtDate(session.startTime)} ${_fmtTime(session.startTime)} – ${session.endTime != null ? _fmtTime(session.endTime!) : "active"}',
+                                      '${_fmtDate(session.startTime)} ${_fmtTime(session.startTime)} – ${session.endTime != null ? _fmtTime(session.endTime!) : S.of(context).fastingActive}',
                                       style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
                                     ),
                                   ],
@@ -176,14 +177,14 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                     );
                   },
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Error: $e')),
+                  error: (e, _) => Center(child: Text('${S.of(context).actionError}: $e')),
                 ),
               ],
             ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('${S.of(context).actionError}: $e')),
       ),
     );
   }
@@ -258,7 +259,7 @@ class _FastingTimerCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      isActive ? '${(progressPct * 100).toInt()}% of ${targetHours.toInt()}h' : 'Not fasting',
+                      isActive ? S.of(context).fastingPctOfTarget((progressPct * 100).toInt(), targetHours.toInt()) : S.of(context).healthNotFasting,
                       style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
                     ),
                   ],
@@ -269,7 +270,7 @@ class _FastingTimerCard extends StatelessWidget {
           const SizedBox(height: 20),
           if (isActive && activeSession != null)
             Text(
-              'Started at ${fmtTime(activeSession!.startTime)}',
+              S.of(context).fastingStartedAt(fmtTime(activeSession!.startTime)),
               style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
             ),
           const SizedBox(height: 16),
@@ -279,13 +280,13 @@ class _FastingTimerCard extends StatelessWidget {
                 ? FilledButton.icon(
                     onPressed: onStop,
                     icon: const Icon(Icons.stop),
-                    label: const Text('Stop Fasting'),
+                    label: Text(S.of(context).fastingStopFasting),
                     style: FilledButton.styleFrom(backgroundColor: AppColors.error),
                   )
                 : FilledButton.icon(
                     onPressed: onStart,
                     icon: const Icon(Icons.play_arrow),
-                    label: const Text('Start Fasting'),
+                    label: Text(S.of(context).fastingStartFasting),
                     style: FilledButton.styleFrom(backgroundColor: AppColors.fatigued),
                   ),
           ),
@@ -303,10 +304,10 @@ class _FastingPresets extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final presets = [
-      ('12:12', '12 hours', 12),
-      ('16:8', '16 hours', 16),
-      ('18:6', '18 hours', 18),
-      ('20:4', '20 hours', 20),
+      ('12:12', S.of(context).fastingPresetHours(12), 12),
+      ('16:8', S.of(context).fastingPresetHours(16), 16),
+      ('18:6', S.of(context).fastingPresetHours(18), 18),
+      ('20:4', S.of(context).fastingPresetHours(20), 20),
     ];
     return Row(
       children: presets.map((p) => Expanded(
@@ -348,11 +349,11 @@ class _FastingStats extends StatelessWidget {
         final longestMin = history.map((s) => s.duration).reduce((a, b) => a > b ? a : b);
         return Row(
           children: [
-            Expanded(child: _StatsChip('Total Sessions', '${history.length}', AppColors.primary)),
+            Expanded(child: _StatsChip(S.of(context).fastingTotalSessions, '${history.length}', AppColors.primary)),
             const SizedBox(width: 10),
-            Expanded(child: _StatsChip('Average', fmtDuration(avgMin), AppColors.fatigued)),
+            Expanded(child: _StatsChip(S.of(context).fastingAverage, fmtDuration(avgMin), AppColors.fatigued)),
             const SizedBox(width: 10),
-            Expanded(child: _StatsChip('Longest', fmtDuration(longestMin), AppColors.success)),
+            Expanded(child: _StatsChip(S.of(context).fastingLongest, fmtDuration(longestMin), AppColors.success)),
           ],
         );
       },

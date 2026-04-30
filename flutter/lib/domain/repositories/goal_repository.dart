@@ -1,5 +1,5 @@
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 
 abstract class GoalRepository {
   Future<GoalsResponse> listGoals();
@@ -19,4 +19,6 @@ abstract class GoalRepository {
   });
 
   Future<Workout> updateWorkout(String id, UpdateWorkoutRequest request);
+
+  Future<void> reorderWorkout(String workoutId, DateTime newDate);
 }

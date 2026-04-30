@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
@@ -44,7 +45,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              _buildSliverAppBar(theme),
+              _buildSliverAppBar(context, theme),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 sliver: SliverList(
@@ -70,13 +71,13 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
     );
   }
 
-  Widget _buildSliverAppBar(ThemeData theme) {
+  Widget _buildSliverAppBar(BuildContext context, ThemeData theme) {
     return SliverAppBar(
       floating: true,
       snap: true,
       elevation: 0,
       title: Text(
-        'Health',
+        S.of(context).healthTitle,
         style: theme.textTheme.headlineSmall?.copyWith(
           fontWeight: FontWeight.w700,
           color: AppColors.onSurface,
@@ -86,12 +87,12 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
         IconButton(
           onPressed: () => context.push('/health/scan'),
           icon: const Icon(Icons.qr_code_scanner, color: AppColors.primary),
-          tooltip: 'Scan Barcode',
+          tooltip: S.of(context).healthScanBarcode,
         ),
         IconButton(
           onPressed: () => context.push('/health/ai-scan'),
           icon: const Icon(Icons.auto_awesome, color: AppColors.primary),
-          tooltip: 'AI Food Scan',
+          tooltip: S.of(context).healthAiFoodScan,
         ),
       ],
     );
@@ -156,7 +157,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Actions',
+          S.of(context).healthQuickActions,
           style: theme.textTheme.titleSmall?.copyWith(
             color: AppColors.onSurfaceVariant,
             fontWeight: FontWeight.w600,
@@ -168,7 +169,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
             children: [
               _QuickActionChip(
                 icon: Icons.qr_code_scanner,
-                label: 'Scan Food',
+                label: S.of(context).healthScanFood,
                 onTap: () async {
                   final result = await context.push<FoodItem?>('/health/scan');
                   if (result != null && context.mounted) {
@@ -186,7 +187,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       unawaited(ref.read(nutritionProvider(today).notifier).save(updated));
                     }
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added ${result.name}')),
+                      SnackBar(content: Text(S.of(context).healthAddedFood(result.name))),
                     );
                   }
                 },
@@ -194,7 +195,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
               const SizedBox(width: 8),
               _QuickActionChip(
                 icon: Icons.auto_awesome,
-                label: 'AI Scan',
+                label: S.of(context).healthAiScan,
                 onTap: () async {
                   final result = await context.push<FoodItem?>('/health/ai-scan');
                   if (result != null && context.mounted) {
@@ -212,7 +213,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       unawaited(ref.read(nutritionProvider(today).notifier).save(updated));
                     }
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added ${result.name}')),
+                      SnackBar(content: Text(S.of(context).healthAddedFood(result.name))),
                     );
                   }
                 },
@@ -220,7 +221,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
               const SizedBox(width: 8),
               _QuickActionChip(
                 icon: Icons.add,
-                label: 'Log Food',
+                label: S.of(context).healthLogFood,
                 onTap: () => context.push('/health/nutrition'),
               ),
             ],
@@ -250,26 +251,30 @@ class _SyncBanner extends ConsumerWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Synced with Health Connect',
+              S.of(context).healthSyncedWithHealthConnect,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () async {
-              await syncService.syncHistoricalHealth();
-              final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-              ref.invalidate(nutritionProvider(today));
-              ref.invalidate(supplementListProvider);
-              ref.invalidate(bodyMeasurementsProvider);
-              ref.invalidate(fastingProvider);
-            },
-            child: Text(
-              'Sync Now',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+          Semantics(
+            button: true,
+            label: S.of(context).actionSyncNow,
+            child: GestureDetector(
+              onTap: () async {
+                await syncService.syncHistoricalHealth();
+                final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+                ref.invalidate(nutritionProvider(today));
+                ref.invalidate(supplementListProvider);
+                ref.invalidate(bodyMeasurementsProvider);
+                ref.invalidate(fastingProvider);
+              },
+              child: Text(
+                S.of(context).actionSyncNow,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -299,33 +304,37 @@ class _DashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: AppColors.onSurface,
-                    fontWeight: FontWeight.w600,
+    return Semantics(
+      button: true,
+      label: '$title section',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: AppColors.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Icon(icon, size: 18, color: iconColor),
-              ],
-            ),
-            const SizedBox(height: 12),
-            child,
-          ],
+                  const Spacer(),
+                  Icon(icon, size: 18, color: iconColor),
+                ],
+              ),
+              const SizedBox(height: 12),
+              child,
+            ],
+          ),
         ),
       ),
     );
@@ -355,7 +364,7 @@ class _NoDataWidgetState extends State<_NoDataWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'No ${widget.label} data',
+          S.of(context).healthNoData(widget.label),
           style: theme.textTheme.bodySmall?.copyWith(
             color: AppColors.onSurfaceVariant,
           ),
@@ -364,32 +373,40 @@ class _NoDataWidgetState extends State<_NoDataWidget> {
         Row(
           children: [
             Expanded(
-              child: GestureDetector(
-                onTap: widget.onSync,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    'Connect',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+              child: Semantics(
+                button: true,
+                label: S.of(context).healthConnectLabel(widget.label),
+                child: GestureDetector(
+                  onTap: widget.onSync,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      S.of(context).healthConnect,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => setState(() => _dismissed = true),
-              child: Text(
-                'Dismiss',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
+            Semantics(
+              button: true,
+              label: S.of(context).healthDismiss,
+              child: GestureDetector(
+                onTap: () => setState(() => _dismissed = true),
+                child: Text(
+                  S.of(context).healthDismiss,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
                 ),
               ),
             ),
@@ -409,7 +426,7 @@ class _NutritionCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return _DashboardCard(
-      title: 'Nutrition',
+      title: S.of(context).healthNutrition,
       icon: Icons.restaurant_outlined,
       iconColor: AppColors.warning,
       onTap: () => context.push('/health/nutrition'),
@@ -429,7 +446,7 @@ class _NutritionCard extends ConsumerWidget {
                 ),
               ),
               Text(
-                'kcal eaten',
+                S.of(context).healthKcalEaten,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -458,7 +475,7 @@ class _NutritionCard extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => _NoDataWidget(
-          label: 'nutrition',
+          label: S.of(context).healthNutrition.toLowerCase(),
           onSync: () => ref.invalidate(nutritionProvider(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day))),
         ),
       ),
@@ -499,7 +516,7 @@ class _BodyCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return _DashboardCard(
-      title: 'Body',
+      title: S.of(context).healthBody,
       icon: Icons.trending_up,
       iconColor: AppColors.primary,
       onTap: () => context.push('/health/body'),
@@ -507,7 +524,7 @@ class _BodyCard extends ConsumerWidget {
         data: (measurements) {
           if (measurements.isEmpty) {
             return _NoDataWidget(
-              label: 'body',
+              label: S.of(context).healthBody.toLowerCase(),
               onSync: () => ref.invalidate(bodyMeasurementsProvider),
             );
           }
@@ -562,7 +579,7 @@ class _BodyCard extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => _NoDataWidget(
-          label: 'body',
+          label: S.of(context).healthBody.toLowerCase(),
           onSync: () => ref.invalidate(bodyMeasurementsProvider),
         ),
       ),
@@ -579,7 +596,7 @@ class _SupplementsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return _DashboardCard(
-      title: 'Supplements',
+      title: S.of(context).healthSupplements,
       icon: Icons.medication_outlined,
       iconColor: AppColors.success,
       onTap: () => context.push('/health/supplements'),
@@ -590,7 +607,7 @@ class _SupplementsCard extends ConsumerWidget {
           final total = supplements.length;
           if (total == 0) {
             return _NoDataWidget(
-              label: 'supplement',
+              label: S.of(context).healthSupplements.toLowerCase(),
               onSync: () => ref.invalidate(supplementListProvider),
             );
           }
@@ -606,7 +623,7 @@ class _SupplementsCard extends ConsumerWidget {
                 ),
               ),
               Text(
-                'items taken',
+                S.of(context).healthItemsTaken,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -626,7 +643,7 @@ class _SupplementsCard extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => _NoDataWidget(
-          label: 'supplement',
+          label: S.of(context).healthSupplements.toLowerCase(),
           onSync: () => ref.invalidate(supplementListProvider),
         ),
       ),
@@ -643,7 +660,7 @@ class _SleepCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sleepAsync = ref.watch(sleepProvider);
     return _DashboardCard(
-      title: 'Sleep',
+      title: S.of(context).healthSleep,
       icon: Icons.nightlight_round,
       iconColor: AppColors.peaked,
       onTap: () => context.push('/health/sleep'),
@@ -651,7 +668,7 @@ class _SleepCard extends ConsumerWidget {
         data: (sleep) {
           if (!sleep.hasData) {
             return _NoDataWidget(
-              label: 'sleep',
+              label: S.of(context).healthSleep.toLowerCase(),
               onSync: () => ref.invalidate(sleepProvider),
             );
           }
@@ -667,7 +684,7 @@ class _SleepCard extends ConsumerWidget {
                 ),
               ),
               Text(
-                'last night',
+                S.of(context).healthLastNight,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -684,7 +701,7 @@ class _SleepCard extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => _NoDataWidget(
-          label: 'sleep',
+          label: S.of(context).healthSleep.toLowerCase(),
           onSync: () => ref.invalidate(sleepProvider),
         ),
       ),
@@ -701,7 +718,7 @@ class _VitalsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vitalsAsync = ref.watch(vitalsProvider);
     return _DashboardCard(
-      title: 'Vitals',
+      title: S.of(context).healthVitals,
       icon: Icons.monitor_heart_outlined,
       iconColor: AppColors.error,
       onTap: () => context.push('/health/vitals'),
@@ -709,7 +726,7 @@ class _VitalsCard extends ConsumerWidget {
         data: (vitals) {
           if (!vitals.hasData) {
             return _NoDataWidget(
-              label: 'vitals',
+              label: S.of(context).healthVitalsLabel,
               onSync: () => ref.invalidate(vitalsProvider),
             );
           }
@@ -735,10 +752,10 @@ class _VitalsCard extends ConsumerWidget {
                 ),
               Text(
                 vitals.restingHeartRate != null
-                    ? 'resting HR'
+                    ? S.of(context).healthRestingHr
                     : vitals.hrv != null
-                        ? 'HRV'
-                        : 'vitals',
+                        ? S.of(context).healthHrv
+                        : S.of(context).healthVitalsLabel,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -757,7 +774,7 @@ class _VitalsCard extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => _NoDataWidget(
-          label: 'vitals',
+          label: S.of(context).healthVitalsLabel,
           onSync: () => ref.invalidate(vitalsProvider),
         ),
       ),
@@ -774,7 +791,7 @@ class _FastingCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final fastingAsync = ref.watch(fastingProvider);
     return _DashboardCard(
-      title: 'Fasting',
+      title: S.of(context).healthFasting,
       icon: Icons.timer_outlined,
       iconColor: AppColors.fatigued,
       onTap: () => context.push('/health/fasting'),
@@ -785,26 +802,30 @@ class _FastingCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Not fasting',
+                  S.of(context).healthNotFasting,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => context.push('/health/fasting'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.fatigued.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Start Fast',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.fatigued,
-                        fontWeight: FontWeight.w600,
+                Semantics(
+                  button: true,
+                  label: S.of(context).healthStartFast,
+                  child: GestureDetector(
+                    onTap: () => context.push('/health/fasting'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.fatigued.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        S.of(context).healthStartFast,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.fatigued,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -826,7 +847,7 @@ class _FastingCard extends ConsumerWidget {
                 ),
               ),
               Text(
-                'Active fast',
+                S.of(context).healthActiveFast,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -860,32 +881,34 @@ class _QuickActionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: AppColors.primary),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: AppColors.onSurface,
-                fontWeight: FontWeight.w500,
+    return Semantics(
+      button: true,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppColors.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 import 'package:runflow_flutter/presentation/screens/profile/settings_screen.dart';
 
@@ -69,6 +71,13 @@ void main() {
           settingsProvider.overrideWith(() => fakeSettings),
         ],
         child: const MaterialApp(
+          localizationsDelegates: [
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: S.supportedLocales,
           home: SettingsScreen(),
         ),
       );

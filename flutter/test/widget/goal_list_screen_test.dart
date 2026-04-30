@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 import 'package:runflow_flutter/presentation/screens/goals/goal_list_screen.dart';
 
@@ -116,9 +118,7 @@ void main() {
               () => _FakeGoalsNotifier(AsyncValue.data(testGoals)),
             ),
           ],
-          child: const MaterialApp(
-            home: GoalListScreen(),
-          ),
+          child: _localizedApp(const GoalListScreen()),
         ),
       );
       await tester.pumpAndSettle();
@@ -140,9 +140,7 @@ void main() {
               () => _FakeGoalsNotifier(const AsyncValue.data(emptyResponse)),
             ),
           ],
-          child: const MaterialApp(
-            home: GoalListScreen(),
-          ),
+          child: _localizedApp(const GoalListScreen()),
         ),
       );
       await tester.pumpAndSettle();
@@ -163,9 +161,7 @@ void main() {
               ),
             ),
           ],
-          child: const MaterialApp(
-            home: GoalListScreen(),
-          ),
+          child: _localizedApp(const GoalListScreen()),
         ),
       );
       await tester.pumpAndSettle();
@@ -182,9 +178,7 @@ void main() {
               () => _FakeGoalsNotifier(const AsyncValue.loading()),
             ),
           ],
-          child: const MaterialApp(
-            home: GoalListScreen(),
-          ),
+          child: _localizedApp(const GoalListScreen()),
         ),
       );
       await tester.pump();
@@ -200,9 +194,7 @@ void main() {
               () => _FakeGoalsNotifier(AsyncValue.data(testGoals)),
             ),
           ],
-          child: const MaterialApp(
-            home: GoalListScreen(),
-          ),
+          child: _localizedApp(const GoalListScreen()),
         ),
       );
       await tester.pumpAndSettle();
@@ -219,9 +211,7 @@ void main() {
               () => _FakeGoalsNotifier(AsyncValue.data(testGoals)),
             ),
           ],
-          child: const MaterialApp(
-            home: GoalListScreen(),
-          ),
+          child: _localizedApp(const GoalListScreen()),
         ),
       );
       await tester.pumpAndSettle();
@@ -238,9 +228,7 @@ void main() {
               () => _FakeGoalsNotifier(AsyncValue.data(testGoals)),
             ),
           ],
-          child: const MaterialApp(
-            home: GoalListScreen(),
-          ),
+          child: _localizedApp(const GoalListScreen()),
         ),
       );
       await tester.pumpAndSettle();
@@ -248,4 +236,17 @@ void main() {
       expect(find.text('1/2 workouts'), findsOneWidget);
     });
   });
+}
+
+Widget _localizedApp(Widget home) {
+  return MaterialApp(
+    localizationsDelegates: const [
+      S.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: S.supportedLocales,
+    home: home,
+  );
 }

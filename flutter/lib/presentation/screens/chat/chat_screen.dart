@@ -4,7 +4,8 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/chat_models.dart';
+import 'package:runflow_flutter/domain/entities/chat_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
 
 final currentSessionIdProvider = NotifierProvider<CurrentSessionIdNotifier, String?>(
@@ -20,12 +21,12 @@ class CurrentSessionIdNotifier extends Notifier<String?> {
   }
 }
 
-String _formatTimeAgo(DateTime dateTime) {
+String _formatTimeAgo(DateTime dateTime, S s) {
   final diff = DateTime.now().difference(dateTime);
-  if (diff.inMinutes < 1) return 'just now';
-  if (diff.inHours < 1) return '${diff.inMinutes}m ago';
-  if (diff.inDays < 1) return '${diff.inHours}h ago';
-  if (diff.inDays < 7) return '${diff.inDays}d ago';
+  if (diff.inMinutes < 1) return s.chatJustNow;
+  if (diff.inHours < 1) return s.chatMinutesAgo(diff.inMinutes);
+  if (diff.inDays < 1) return s.chatHoursAgo(diff.inHours);
+  if (diff.inDays < 7) return s.chatDaysAgo(diff.inDays);
   return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
 }
 
@@ -41,11 +42,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
 
-  static const _suggestedPrompts = [
-    "What's my current fitness level?",
-    'Suggest a workout for today',
-    'How should I taper for my race?',
-    'Analyze my recent training',
+  List<String> _suggestedPrompts(S s) => [
+    s.chatPromptFitnessLevel,
+    s.chatPromptWorkoutToday,
+    s.chatPromptTaper,
+    s.chatPromptAnalyzeTraining,
   ];
 
   @override
@@ -83,6 +84,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final sessionId = ref.watch(currentSessionIdProvider);
     final theme = Theme.of(context);
+    final s = S.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -90,7 +92,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        title: const Text('AI Coach'),
+        title: Text(s.chatAiCoach),
         actions: [
           IconButton(
             icon: const Icon(Icons.history),
@@ -104,7 +106,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       body: sessionId != null
           ? _buildChatBody(sessionId, theme)
-          : _buildEmptyState(theme),
+          : _buildEmptyState(theme, s),
     );
   }
 
@@ -171,6 +173,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildSuggestionsInChat(ThemeData theme, String sessionId) {
+    final s = S.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
@@ -182,7 +185,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Ask your AI Coach',
+            s.chatAskYourCoach,
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -191,7 +194,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: _suggestedPrompts.map((prompt) {
+            children: _suggestedPrompts(s).map((prompt) {
               return ActionChip(
                 label: Text(prompt),
                 onPressed: () {
@@ -282,8 +285,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               enabled: !chatState.isStreaming,
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => _sendMessage(sessionId),
-              decoration: const InputDecoration(
-                hintText: 'Ask your AI coach...',
+              decoration: InputDecoration(
+                hintText: S.of(context).chatAskCoachHint,
                 border: InputBorder.none,
               ),
               maxLines: 4,
@@ -310,7 +313,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme) {
+  Widget _buildEmptyState(ThemeData theme, S s) {
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
@@ -324,14 +327,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Your AI Running Coach',
+              s.chatYourAiRunningCoach,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Get personalized training advice, workout suggestions, and race strategy based on your data.',
+              s.chatIntroDescription,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -342,7 +345,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               spacing: 8,
               runSpacing: 8,
               alignment: WrapAlignment.center,
-              children: _suggestedPrompts.map((prompt) {
+              children: _suggestedPrompts(s).map((prompt) {
                 return ActionChip(
                   label: Text(prompt),
                   onPressed: () => _startSessionWithPrompt(prompt),
@@ -353,7 +356,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             FilledButton.icon(
               onPressed: _createNewSession,
               icon: const Icon(Icons.add),
-              label: const Text('New Chat'),
+              label: Text(s.chatNewChat),
             ),
           ],
         ),
@@ -368,14 +371,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           const Icon(Icons.error_outline, size: 48, color: AppColors.error),
           const SizedBox(height: 16),
-          Text('Something went wrong',
+          Text(S.of(context).statusError,
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           FilledButton(
             onPressed: () => ref
                 .read(chatMessagesProvider(sessionId).notifier)
                 .refresh(),
-            child: const Text('Retry'),
+            child: Text(S.of(context).actionRetry),
           ),
         ],
       ),
@@ -390,7 +393,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create session: $e')),
+          SnackBar(content: Text(S.of(context).chatFailedToCreateSession(e.toString()))),
         );
       }
     }
@@ -406,7 +409,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to start session: $e')),
+          SnackBar(content: Text(S.of(context).chatFailedToStartSession(e.toString()))),
         );
       }
     }
@@ -474,7 +477,7 @@ class _MessageBubble extends StatelessWidget {
               ),
             const SizedBox(height: 4),
             Text(
-              _formatTimeAgo(message.createdAt),
+              _formatTimeAgo(message.createdAt, S.of(context)),
               style: theme.textTheme.labelSmall?.copyWith(
                 color: isUser
                     ? theme.colorScheme.onPrimary.withValues(alpha: 0.7)
@@ -580,7 +583,7 @@ class _SessionsSheet extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Chat History',
+                    S.of(context).chatChatHistory,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   IconButton(
@@ -594,8 +597,8 @@ class _SessionsSheet extends ConsumerWidget {
               child: sessionsAsync.when(
                 data: (sessions) {
                   if (sessions.isEmpty) {
-                    return const Center(
-                      child: Text('No chat sessions yet'),
+                    return Center(
+                      child: Text(S.of(context).chatNoSessions),
                     );
                   }
                   return ListView.builder(
@@ -610,7 +613,7 @@ class _SessionsSheet extends ConsumerWidget {
                 loading: () =>
                     const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(
-                  child: Text('Error: $e'),
+                  child: Text('${S.of(context).actionError}: $e'),
                 ),
               ),
             ),
@@ -641,17 +644,17 @@ class _SessionTile extends ConsumerWidget {
         return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Delete Chat'),
+            title: Text(S.of(context).chatDeleteChat),
             content: Text(
-                'Are you sure you want to delete "${session.title}"?'),
+                S.of(context).chatDeleteConfirm(session.title)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text(S.of(context).actionCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Delete'),
+                child: Text(S.of(context).actionDelete),
               ),
             ],
           ),
@@ -666,7 +669,7 @@ class _SessionTile extends ConsumerWidget {
       },
       child: ListTile(
         title: Text(session.title),
-        subtitle: Text(_formatTimeAgo(session.updatedAt)),
+        subtitle: Text(_formatTimeAgo(session.updatedAt, S.of(context))),
         leading: const Icon(Icons.chat_bubble_outline),
         onTap: () {
           ref.read(currentSessionIdProvider.notifier).set(session.id);

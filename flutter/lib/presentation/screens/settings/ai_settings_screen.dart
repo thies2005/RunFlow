@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/ai_settings_providers.dart';
 
 class AiSettingsScreen extends ConsumerStatefulWidget {
@@ -48,7 +49,7 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Coach Settings'),
+        title: Text(S.of(context).settingsAiSettings),
       ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
@@ -57,7 +58,7 @@ class _AiSettingsScreenState extends ConsumerState<AiSettingsScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'Configure your AI coaching experience and control data access.',
+              S.of(context).aiSettingsDesc,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -140,6 +141,7 @@ class _MasterToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -165,13 +167,13 @@ class _MasterToggle extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'AI Features',
+                    l10n.aiFeatures,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
-                    'Toggle all AI coaching and analysis features',
+                    l10n.aiFeaturesDesc,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -218,6 +220,7 @@ class _ApiKeySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -229,7 +232,7 @@ class _ApiKeySection extends StatelessWidget {
               const Icon(Icons.key, size: 18, color: Color(0xFF9C27B0)),
               const SizedBox(width: 8),
               Text(
-                'API Key (Optional)',
+                l10n.aiApiKeyOptional,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -238,7 +241,7 @@ class _ApiKeySection extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Add your own OpenAI-compatible API key for unlimited usage',
+            l10n.aiApiKeyDesc,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -287,8 +290,8 @@ class _ApiKeySection extends StatelessWidget {
           const SizedBox(height: 12),
           TextField(
             controller: baseUrlController,
-            decoration: const InputDecoration(
-              labelText: 'Base URL',
+            decoration: InputDecoration(
+              labelText: l10n.aiBaseUrl,
               hintText: 'https://api.openai.com/v1',
             ),
             onChanged: (v) => notifier.setCustomBaseUrl(v),
@@ -298,10 +301,10 @@ class _ApiKeySection extends StatelessWidget {
             controller: apiKeyController,
             obscureText: obscureApiKey,
             decoration: InputDecoration(
-              labelText: 'API Key',
+              labelText: l10n.settingsApiKey,
               hintText: settings.hasCustomApiKey
                   ? '••••••••••••••••'
-                  : 'Enter API key',
+                  : l10n.aiEnterApiKey,
               suffixIcon: IconButton(
                 icon: Icon(
                   obscureApiKey ? Icons.visibility : Icons.visibility_off,
@@ -314,8 +317,8 @@ class _ApiKeySection extends StatelessWidget {
           const SizedBox(height: 12),
           TextField(
             controller: modelController,
-            decoration: const InputDecoration(
-              labelText: 'Model',
+            decoration: InputDecoration(
+              labelText: l10n.aiModel,
               hintText: 'gpt-4o-mini',
             ),
             onChanged: (v) => notifier.setCustomModel(v),
@@ -332,7 +335,7 @@ class _ApiKeySection extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.bolt),
-              label: Text(isTesting ? 'Testing...' : 'Test API Key'),
+              label: Text(isTesting ? l10n.aiTesting : l10n.aiTestApiKey),
             ),
           ),
           if (testResult != null) ...[
@@ -358,8 +361,8 @@ class _ApiKeySection extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     testResult == 'success'
-                        ? 'API key works!'
-                        : 'API key test failed',
+                        ? l10n.aiKeyWorks
+                        : l10n.aiKeyTestFailed,
                     style: TextStyle(
                       color: testResult == 'success'
                           ? AppColors.success
@@ -377,9 +380,9 @@ class _ApiKeySection extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => notifier.removeApiKey(),
-                child: const Text(
-                  'Remove API key',
-                  style: TextStyle(color: AppColors.error, fontSize: 12),
+                child: Text(
+                  l10n.aiRemoveApiKey,
+                  style: const TextStyle(color: AppColors.error, fontSize: 12),
                 ),
               ),
             ),
@@ -418,62 +421,66 @@ class _DataAccessSection extends StatelessWidget {
   final AiSettingsState settings;
   final AiSettings notifier;
 
-  static const _options = [
-    _DataAccessOption(
-      key: 'accessFitnessMetrics',
-      title: 'Fitness Metrics',
-      subtitle: 'CTL, ATL, TSB (training load & form)',
-    ),
-    _DataAccessOption(
-      key: 'accessActivityHistory',
-      title: 'Recent Activity',
-      subtitle: 'Your recent runs, distances, and times (Last 20)',
-    ),
-    _DataAccessOption(
-      key: 'accessHeartRateData',
-      title: 'Heart Rate Data',
-      subtitle: 'HR zones, average & max HR',
-    ),
-    _DataAccessOption(
-      key: 'accessGoals',
-      title: 'Goals & Races',
-      subtitle: 'Your race goals and targets',
-    ),
-    _DataAccessOption(
-      key: 'accessTrainingPlan',
-      title: 'Training Plan',
-      subtitle: 'Scheduled workouts and progress',
-    ),
-    _DataAccessOption(
-      key: 'accessPerformance',
-      title: 'Performance',
-      subtitle: 'VDOT and race predictions',
-    ),
-    _DataAccessOption(
-      key: 'accessBiometrics',
-      title: 'Biometrics',
-      subtitle: 'Weight, height, age',
-    ),
-    _DataAccessOption(
-      key: 'accessAllActivities',
-      title: 'All Activity History',
-      subtitle: 'Allow AI to search older activities when needed',
-    ),
-    _DataAccessOption(
-      key: 'accessActivityLogs',
-      title: 'Activity Logs',
-      subtitle: 'Allows AI to see recent runs and workouts',
-    ),
-    _DataAccessOption(
-      key: 'accessNutritionLogs',
-      title: 'Nutrition Logs',
-      subtitle: 'Allows AI to see macros and log meals',
-    ),
-  ];
+  List<_DataAccessOption> _buildOptions(S l10n) {
+    return [
+      _DataAccessOption(
+        key: 'accessFitnessMetrics',
+        title: l10n.aiFitnessMetrics,
+        subtitle: l10n.aiFitnessMetricsDesc,
+      ),
+      _DataAccessOption(
+        key: 'accessActivityHistory',
+        title: l10n.aiRecentActivity,
+        subtitle: l10n.aiRecentActivityDesc,
+      ),
+      _DataAccessOption(
+        key: 'accessHeartRateData',
+        title: l10n.aiHeartRateData,
+        subtitle: l10n.aiHeartRateDataDesc,
+      ),
+      _DataAccessOption(
+        key: 'accessGoals',
+        title: l10n.aiGoalsRaces,
+        subtitle: l10n.aiGoalsRacesDesc,
+      ),
+      _DataAccessOption(
+        key: 'accessTrainingPlan',
+        title: l10n.aiTrainingPlan,
+        subtitle: l10n.aiTrainingPlanDesc,
+      ),
+      _DataAccessOption(
+        key: 'accessPerformance',
+        title: l10n.aiPerformance,
+        subtitle: l10n.aiPerformanceDesc,
+      ),
+      _DataAccessOption(
+        key: 'accessBiometrics',
+        title: l10n.aiBiometrics,
+        subtitle: l10n.aiBiometricsDesc,
+      ),
+      _DataAccessOption(
+        key: 'accessAllActivities',
+        title: l10n.aiAllActivityHistory,
+        subtitle: l10n.aiAllActivityHistoryDesc,
+      ),
+      _DataAccessOption(
+        key: 'accessActivityLogs',
+        title: l10n.aiActivityLogs,
+        subtitle: l10n.aiActivityLogsDesc,
+      ),
+      _DataAccessOption(
+        key: 'accessNutritionLogs',
+        title: l10n.aiNutritionLogs,
+        subtitle: l10n.aiNutritionLogsDesc,
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
+    final options = _buildOptions(l10n);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -484,7 +491,7 @@ class _DataAccessSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Data Access',
+                  l10n.aiDataAccess,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -492,20 +499,20 @@ class _DataAccessSection extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => notifier.enableAllAccess(),
-                child: const Text('Enable All'),
+                child: Text(l10n.aiEnableAll),
               ),
               TextButton(
                 onPressed: () => notifier.disableAllAccess(),
-                child: const Text(
-                  'Disable All',
-                  style: TextStyle(color: AppColors.onSurfaceVariant),
+                child: Text(
+                  l10n.aiDisableAll,
+                  style: const TextStyle(color: AppColors.onSurfaceVariant),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            'Choose what data the AI coach can access',
+            l10n.aiDataAccessDesc,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -513,7 +520,7 @@ class _DataAccessSection extends StatelessWidget {
           const SizedBox(height: 8),
           Card(
             child: Column(
-              children: _options.map((option) {
+              children: options.map((option) {
                 return SwitchListTile(
                   title: Text(option.title),
                   subtitle: Text(
@@ -597,16 +604,17 @@ class _FeedbackModeSection extends StatelessWidget {
   final AiSettingsState settings;
   final AiSettings notifier;
 
-  static const _modes = [
-    (value: 'verbose', label: 'Verbose', description: 'Detailed analysis'),
-    (value: 'concise', label: 'Concise', description: 'Brief feedback'),
-    (value: 'off', label: 'Off', description: 'No automatic feedback'),
-    (value: 'auto', label: 'Automatic', description: 'After each sync'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
+
+    final modes = [
+      (value: 'verbose', label: l10n.aiVerbose, description: l10n.aiVerboseDesc),
+      (value: 'concise', label: l10n.aiConcise, description: l10n.aiConciseDesc),
+      (value: 'off', label: l10n.aiOff, description: l10n.aiOffDesc),
+      (value: 'auto', label: l10n.aiAutomatic, description: l10n.aiAutomaticDesc),
+    ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -614,14 +622,14 @@ class _FeedbackModeSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Activity Feedback',
+            l10n.aiActivityFeedback,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'When should AI analyze your activities?',
+            l10n.aiActivityFeedbackDesc,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -630,7 +638,7 @@ class _FeedbackModeSection extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: _modes.map((mode) {
+            children: modes.map((mode) {
               final selected = settings.feedbackMode == mode.value;
               return ChoiceChip(
                 label: Column(
@@ -675,6 +683,7 @@ class _CustomPromptSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = S.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -685,7 +694,7 @@ class _CustomPromptSection extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Custom Instructions',
+                  l10n.aiCustomInstructions,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -700,7 +709,7 @@ class _CustomPromptSection extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Add context about your training (e.g., injuries, preferences)',
+            l10n.aiCustomInstructionsDesc,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -709,9 +718,8 @@ class _CustomPromptSection extends StatelessWidget {
           TextField(
             controller: controller,
             maxLines: 4,
-            decoration: const InputDecoration(
-              hintText:
-                  'I\'m recovering from a knee injury and should avoid high-intensity work...',
+            decoration: InputDecoration(
+              hintText: l10n.aiCustomInstructionsHint,
               alignLabelWithHint: true,
             ),
             onChanged: (v) => notifier.setCustomPrompt(v),

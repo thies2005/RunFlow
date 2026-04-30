@@ -1,5 +1,5 @@
-import 'package:runflow_flutter/data/models/analytics_models.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/analytics_entities.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 
 abstract class AnalyticsRepository {
   Future<AnalyticsStats> getStats();

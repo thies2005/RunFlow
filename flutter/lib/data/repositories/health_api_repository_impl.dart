@@ -1,10 +1,11 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
+import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/health_api_repository.dart';
 
 class HealthApiRepositoryImpl implements HealthApiRepository {
@@ -13,11 +14,11 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   final Dio dio;
 
   @override
-  Future<void> syncNutritionLog(NutritionLog log) async {
+  Future<void> syncNutritionLog(domain.NutritionLog log) async {
     try {
       await dio.post(
         ApiConstants.nutritionLogPath,
-        data: log.toJson(),
+        data: log.toData().toJson(),
       );
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to sync nutrition log.');
@@ -25,7 +26,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<List<FoodItem>> searchFood(String query) async {
+  Future<List<domain.FoodItem>> searchFood(String query) async {
     try {
       final response = await dio.get(
         ApiConstants.nutritionSearchPath,
@@ -35,14 +36,14 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       if (data is List) {
         return data
             .map((dynamic item) =>
-                FoodItem.fromJson(item as Map<String, dynamic>))
+                FoodItem.fromJson(item as Map<String, dynamic>).toDomain())
             .toList();
       }
       final map = data as Map<String, dynamic>;
       final foods = map['foods'] as List<dynamic>? ?? [];
       return foods
           .map((dynamic item) =>
-              FoodItem.fromJson(item as Map<String, dynamic>))
+              FoodItem.fromJson(item as Map<String, dynamic>).toDomain())
           .toList();
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to search food.');
@@ -50,7 +51,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<FoodItem?> scanBarcode(String code) async {
+  Future<domain.FoodItem?> scanBarcode(String code) async {
     try {
       final response = await dio.get(
         ApiConstants.nutritionScanPath,
@@ -60,7 +61,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       if (data == null) return null;
       if (data is Map<String, dynamic>) {
         final foodData = data['food'] as Map<String, dynamic>? ?? data;
-        return FoodItem.fromJson(foodData);
+        return FoodItem.fromJson(foodData).toDomain();
       }
       return null;
     } on DioException catch (e) {
@@ -70,19 +71,22 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<FoodItem?> aiScanImage(String imagePath) async {
+  Future<domain.FoodItem?> aiScanImage(String imagePath) async {
     try {
-      final bytes = await File(imagePath).readAsBytes();
-      final base64String = base64Encode(bytes);
+      final filename = imagePath.split(Platform.pathSeparator).last;
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(imagePath, filename: filename),
+      });
       final response = await dio.post(
         ApiConstants.nutritionAiScanPath,
-        data: {'imageBase64': base64String},
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
       );
       final data = response.data;
       if (data == null) return null;
       if (data is Map<String, dynamic>) {
         final foodData = data['food'] as Map<String, dynamic>? ?? data;
-        return FoodItem.fromJson(foodData);
+        return FoodItem.fromJson(foodData).toDomain();
       }
       return null;
     } on DioException catch (e) {
@@ -92,21 +96,21 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<List<Supplement>> getSupplements() async {
+  Future<List<domain.Supplement>> getSupplements() async {
     try {
       final response = await dio.get(ApiConstants.supplementsPath);
       final data = response.data;
       if (data is List) {
         return data
             .map((dynamic item) =>
-                Supplement.fromJson(item as Map<String, dynamic>))
+                Supplement.fromJson(item as Map<String, dynamic>).toDomain())
             .toList();
       }
       final map = data as Map<String, dynamic>;
       final supplements = map['supplements'] as List<dynamic>? ?? [];
       return supplements
           .map((dynamic item) =>
-              Supplement.fromJson(item as Map<String, dynamic>))
+              Supplement.fromJson(item as Map<String, dynamic>).toDomain())
           .toList();
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get supplements.');
@@ -114,11 +118,11 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<void> saveSupplementRemote(Supplement supplement) async {
+  Future<void> saveSupplementRemote(domain.Supplement supplement) async {
     try {
       await dio.post(
         ApiConstants.supplementsPath,
-        data: supplement.toJson(),
+        data: supplement.toData().toJson(),
       );
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to save supplement.');
@@ -126,7 +130,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<void> syncFasting(FastingSession session) async {
+  Future<void> syncFasting(domain.FastingSession session) async {
     try {
       if (session.isActive) {
         await dio.post(
@@ -151,7 +155,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<void> syncBodyMeasurement(BodyMeasurement measurement) async {
+  Future<void> syncBodyMeasurement(domain.BodyMeasurement measurement) async {
     try {
       final dateStr = measurement.date.toIso8601String().split('T').first;
       await dio.post(
@@ -171,19 +175,19 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<List<BodyMeasurement>> getBodyMeasurements() async {
+  Future<List<domain.BodyMeasurement>> getBodyMeasurements() async {
     try {
       final response = await dio.get(ApiConstants.bodyCompositionPath);
       final data = response.data;
       if (data is List) {
         return data
-            .map((dynamic item) => _parseBodyMeasurement(item as Map<String, dynamic>))
+            .map((dynamic item) => _parseBodyMeasurement(item as Map<String, dynamic>).toDomain())
             .toList();
       }
       final map = data as Map<String, dynamic>;
       final measurements = map['measurements'] as List<dynamic>? ?? map['data'] as List<dynamic>? ?? [];
       return measurements
-          .map((dynamic item) => _parseBodyMeasurement(item as Map<String, dynamic>))
+          .map((dynamic item) => _parseBodyMeasurement(item as Map<String, dynamic>).toDomain())
           .toList();
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get body measurements.');
@@ -244,33 +248,27 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<NutritionTargets> getNutritionTargets() async {
+  Future<domain.NutritionTargets> getNutritionTargets() async {
     try {
       final response = await dio.get(ApiConstants.nutritionTargetPath);
       final data = response.data;
       if (data is Map<String, dynamic>) {
         final targetData =
             data['target'] as Map<String, dynamic>? ?? data;
-        return NutritionTargets.fromJson(targetData);
+        return NutritionTargets.fromJson(targetData).toDomain();
       }
-      return const NutritionTargets(
-        calories: 2500,
-        protein: 150,
-        carbs: 300,
-        fat: 80,
-        water: 2.0,
-      );
+      return NutritionTargets.defaults.toDomain();
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get nutrition targets.');
     }
   }
 
   @override
-  Future<void> setNutritionTargets(NutritionTargets targets) async {
+  Future<void> setNutritionTargets(domain.NutritionTargets targets) async {
     try {
       await dio.post(
         ApiConstants.nutritionTargetPath,
-        data: targets.toJson(),
+        data: targets.toData().toJson(),
       );
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to set nutrition targets.');
@@ -278,7 +276,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<DailyHealthLog> getDailyHealth(DateTime date) async {
+  Future<domain.DailyHealthLog> getDailyHealth(DateTime date) async {
     try {
       final dateStr = date.toIso8601String().split('T').first;
       final response = await dio.get(
@@ -305,7 +303,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
           meta: envelope['meta'] != null
               ? DailyHealthMeta.fromJson(envelope['meta'] as Map<String, dynamic>)
               : null,
-        );
+        ).toDomain();
       }
       dailyHealthData['date'] = dailyHealthData['date'] ?? dateStr;
       dailyHealthData['id'] = dailyHealthData['id'] ?? 0;
@@ -321,7 +319,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       if (envelope.containsKey('meta')) {
         dailyHealthData['meta'] = envelope['meta'];
       }
-      return DailyHealthLog.fromJson(dailyHealthData);
+      return DailyHealthLog.fromJson(dailyHealthData).toDomain();
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get daily health.');
     }
@@ -361,7 +359,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<NutritionAnalytics> getNutritionAnalytics(DateTime startDate, DateTime endDate) async {
+  Future<domain.NutritionAnalytics> getNutritionAnalytics(DateTime startDate, DateTime endDate) async {
     try {
       final response = await dio.get(
         ApiConstants.nutritionAnalyticsPath,
@@ -370,14 +368,14 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
           'endDate': endDate.toIso8601String().split('T').first,
         },
       );
-      return NutritionAnalytics.fromJson(response.data as Map<String, dynamic>);
+      return NutritionAnalytics.fromJson(response.data as Map<String, dynamic>).toDomain();
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get nutrition analytics.');
     }
   }
 
   @override
-  Future<SupplementAnalytics> getSupplementAnalytics() async {
+  Future<domain.SupplementAnalytics> getSupplementAnalytics() async {
     try {
       final response = await dio.get(ApiConstants.supplementsAnalyticsPath);
       final data = response.data as Map<String, dynamic>;
@@ -401,14 +399,14 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
         totalTaken: (data['totalTaken'] as num?)?.toInt() ?? 0,
         totalDays: (data['totalDays'] as num?)?.toInt() ?? 0,
         supplements: supplements,
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get supplement analytics.');
     }
   }
 
   @override
-  Future<HealthHistory> getHealthHistory(String range) async {
+  Future<domain.HealthHistory> getHealthHistory(String range) async {
     try {
       final response = await dio.get(
         ApiConstants.healthHistoryPath,
@@ -432,9 +430,51 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
         }
       }
 
-      return HealthHistory(steps: stepsPoints, weight: weightPoints);
+      return HealthHistory(steps: stepsPoints, weight: weightPoints).toDomain();
     } on DioException catch (e) {
       throw _mapException(e, 'Failed to get health history.');
+    }
+  }
+
+  @override
+  Future<domain.AiMealSuggestion> getMealSuggestion({
+    required double remainingCalories,
+    required double remainingProtein,
+    required double remainingCarbs,
+    required double remainingFats,
+  }) async {
+    try {
+      final response = await dio.post(
+        ApiConstants.nutritionSuggestPath,
+        data: {
+          'remainingCalories': remainingCalories,
+          'remainingProtein': remainingProtein,
+          'remainingCarbs': remainingCarbs,
+          'remainingFats': remainingFats,
+        },
+      );
+      final data = response.data as Map<String, dynamic>;
+      final items = (data['items'] as List<dynamic>? ?? [])
+          .map((item) => domain.AiMealItem(
+                name: item['name'] as String? ?? '',
+                calories: (item['calories'] as num?)?.toDouble() ?? 0,
+                protein: (item['protein'] as num?)?.toDouble() ?? 0,
+                carbs: (item['carbs'] as num?)?.toDouble() ?? 0,
+                fats: (item['fats'] as num?)?.toDouble() ?? 0,
+                servingSize: item['servingSize'] as String?,
+              ))
+          .toList();
+      return domain.AiMealSuggestion(
+        suggestionName: data['suggestionName'] as String? ?? '',
+        reasoning: data['reasoning'] as String? ?? '',
+        items: items,
+        totalCalories: (data['totalCalories'] as num?)?.toDouble() ?? 0,
+        totalProtein: (data['totalProtein'] as num?)?.toDouble() ?? 0,
+        totalCarbs: (data['totalCarbs'] as num?)?.toDouble() ?? 0,
+        totalFats: (data['totalFats'] as num?)?.toDouble() ?? 0,
+      );
+    } on DioException catch (e) {
+      throw _mapException(e, 'Failed to get meal suggestion.');
     }
   }
 

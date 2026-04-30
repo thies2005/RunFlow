@@ -4,9 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 
 class BodyScreen extends ConsumerWidget {
@@ -19,7 +20,7 @@ class BodyScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Body'),
+        title: Text(S.of(context).healthBody),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -40,11 +41,11 @@ class BodyScreen extends ConsumerWidget {
                 children: [
                   const Icon(Icons.monitor_weight_outlined, size: 64, color: AppColors.onSurfaceVariant),
                   const SizedBox(height: 16),
-                  Text('No measurements yet', style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.onSurfaceVariant)),
+                  Text(S.of(context).bodyNoMeasurements, style: theme.textTheme.bodyLarge?.copyWith(color: AppColors.onSurfaceVariant)),
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: () => _showAddDialog(context, ref),
-                    child: const Text('Add First Measurement'),
+                    child: Text(S.of(context).bodyAddFirstMeasurement),
                   ),
                 ],
               ),
@@ -83,7 +84,7 @@ class BodyScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('${S.of(context).actionError}: $e')),
       ),
     );
   }
@@ -110,24 +111,24 @@ class BodyScreen extends ConsumerWidget {
             children: [
               Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.onSurfaceVariant, borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 20),
-              Text('Log Measurement', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+              Text(S.of(ctx).bodyLogMeasurement, style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 16),
               Row(children: [
-                Expanded(child: TextField(controller: weightCtl, decoration: const InputDecoration(labelText: 'Weight (kg)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(child: TextField(controller: weightCtl, decoration: InputDecoration(labelText: S.of(ctx).bodyWeightKg), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(controller: bfCtl, decoration: const InputDecoration(labelText: 'Body Fat (%)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(child: TextField(controller: bfCtl, decoration: InputDecoration(labelText: S.of(ctx).bodyFatPct), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
               ]),
               const SizedBox(height: 10),
               Row(children: [
-                Expanded(child: TextField(controller: waistCtl, decoration: const InputDecoration(labelText: 'Waist (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(child: TextField(controller: waistCtl, decoration: InputDecoration(labelText: S.of(ctx).bodyWaistCm), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(controller: chestCtl, decoration: const InputDecoration(labelText: 'Chest (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(child: TextField(controller: chestCtl, decoration: InputDecoration(labelText: S.of(ctx).bodyChestCm), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
               ]),
               const SizedBox(height: 10),
               Row(children: [
-                Expanded(child: TextField(controller: hipsCtl, decoration: const InputDecoration(labelText: 'Hips (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(child: TextField(controller: hipsCtl, decoration: InputDecoration(labelText: S.of(ctx).bodyHipsCm), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(controller: armsCtl, decoration: const InputDecoration(labelText: 'Arms (cm)'), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
+                Expanded(child: TextField(controller: armsCtl, decoration: InputDecoration(labelText: S.of(ctx).bodyArmsCm), keyboardType: const TextInputType.numberWithOptions(decimal: true))),
               ]),
               const SizedBox(height: 20),
               SizedBox(
@@ -154,7 +155,7 @@ class BodyScreen extends ConsumerWidget {
                     if (!ctx.mounted) return;
                     Navigator.pop(ctx);
                   },
-                  child: const Text('Save'),
+                  child: Text(S.of(ctx).actionSave),
                 ),
               ),
             ],
@@ -186,11 +187,11 @@ class _StatsRow extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: _StatCard(label: 'Weight', value: '${latest.weight.toStringAsFixed(1)} kg',
+            Expanded(child: _StatCard(label: S.of(context).bodyWeightLabel, value: '${latest.weight.toStringAsFixed(1)} kg',
               diff: prev != null ? '${weightDiff > 0 ? '+' : ''}${weightDiff.toStringAsFixed(1)} kg' : null,
               diffPositive: weightDiff < 0)),
             const SizedBox(width: 10),
-            Expanded(child: _StatCard(label: 'Body Fat', value: '${latest.bodyFat.toStringAsFixed(1)}%',
+            Expanded(child: _StatCard(label: S.of(context).bodyFatLabel, value: '${latest.bodyFat.toStringAsFixed(1)}%',
               diff: prev != null ? '${bfDiff > 0 ? '+' : ''}${bfDiff.toStringAsFixed(1)}%' : null,
               diffPositive: bfDiff < 0)),
           ],
@@ -200,19 +201,19 @@ class _StatsRow extends StatelessWidget {
           Row(
             children: [
               if (latest.waist != null)
-                Expanded(child: _StatCard(label: 'Waist', value: '${latest.waist!.toStringAsFixed(1)} cm')),
+                Expanded(child: _StatCard(label: S.of(context).bodyWaist, value: '${latest.waist!.toStringAsFixed(1)} cm')),
               if (latest.waist != null && latest.chest != null)
                 const SizedBox(width: 10),
               if (latest.chest != null)
-                Expanded(child: _StatCard(label: 'Chest', value: '${latest.chest!.toStringAsFixed(1)} cm')),
+                Expanded(child: _StatCard(label: S.of(context).bodyChest, value: '${latest.chest!.toStringAsFixed(1)} cm')),
               if ((latest.waist != null || latest.chest != null) && latest.hips != null)
                 const SizedBox(width: 10),
               if (latest.hips != null)
-                Expanded(child: _StatCard(label: 'Hips', value: '${latest.hips!.toStringAsFixed(1)} cm')),
+                Expanded(child: _StatCard(label: S.of(context).bodyHips, value: '${latest.hips!.toStringAsFixed(1)} cm')),
               if ((latest.waist != null || latest.chest != null || latest.hips != null) && latest.arms != null)
                 const SizedBox(width: 10),
               if (latest.arms != null)
-                Expanded(child: _StatCard(label: 'Arms', value: '${latest.arms!.toStringAsFixed(1)} cm')),
+                Expanded(child: _StatCard(label: S.of(context).bodyArms, value: '${latest.arms!.toStringAsFixed(1)} cm')),
             ],
           ),
         ],
@@ -260,7 +261,7 @@ class _BmiCard extends ConsumerWidget {
     final profileHeight = ref.watch(profileProvider).value?.height;
     final height = (profileHeight ?? 175.0) / 100.0;
     final bmi = weight / (height * height);
-    final category = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : 'Obese';
+    final category = bmi < 18.5 ? S.of(context).bodyUnderweight : bmi < 25 ? S.of(context).bodyNormal : bmi < 30 ? S.of(context).bodyOverweight : S.of(context).bodyObese;
     final color = bmi < 18.5 ? AppColors.warning : bmi < 25 ? AppColors.success : bmi < 30 ? AppColors.fatigued : AppColors.error;
 
     return Container(
@@ -272,7 +273,7 @@ class _BmiCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('BMI', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                Text(S.of(context).bodyBmi, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Text(bmi.toStringAsFixed(1), style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700, color: color)),
                 Text(category, style: theme.textTheme.bodySmall?.copyWith(color: color)),
@@ -315,7 +316,7 @@ class _WeightChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Weight Trend', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(S.of(context).bodyWeightTrend, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           SizedBox(
             height: 160,
@@ -360,7 +361,7 @@ class _BodyFatChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Body Fat Trend', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(S.of(context).bodyFatTrend, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           SizedBox(
             height: 140,
@@ -429,15 +430,15 @@ class _CircumferenceChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Circumferences', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(S.of(context).bodyCircumferences, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 12,
             children: [
-              if (waistSpots.isNotEmpty) _chartLegend(AppColors.primary, 'Waist'),
-              if (chestSpots.isNotEmpty) _chartLegend(AppColors.success, 'Chest'),
-              if (hipsSpots.isNotEmpty) _chartLegend(AppColors.peaked, 'Hips'),
-              if (armsSpots.isNotEmpty) _chartLegend(AppColors.warning, 'Arms'),
+              if (waistSpots.isNotEmpty) _chartLegend(AppColors.primary, S.of(context).bodyWaist),
+              if (chestSpots.isNotEmpty) _chartLegend(AppColors.success, S.of(context).bodyChest),
+              if (hipsSpots.isNotEmpty) _chartLegend(AppColors.peaked, S.of(context).bodyHips),
+              if (armsSpots.isNotEmpty) _chartLegend(AppColors.warning, S.of(context).bodyArms),
             ],
           ),
           const SizedBox(height: 12),
@@ -498,7 +499,7 @@ class _HistorySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('History', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant)),
+        Text(S.of(context).bodyHistory, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600, color: AppColors.onSurfaceVariant)),
         const SizedBox(height: 8),
         ...sorted.reversed.take(10).map((m) => Container(
           margin: const EdgeInsets.only(bottom: 8),
@@ -512,7 +513,7 @@ class _HistorySection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${m.weight.toStringAsFixed(1)} kg · ${m.bodyFat.toStringAsFixed(1)}% bf',
+                    Text('${m.weight.toStringAsFixed(1)} kg · ${m.bodyFat.toStringAsFixed(1)}% ${S.of(context).bodyBfShort}',
                         style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
                     Text(_fmt(m.date), style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant)),
                   ],
@@ -526,13 +527,13 @@ class _HistorySection extends StatelessWidget {
                     alignment: WrapAlignment.end,
                     children: [
                       if (m.waist != null)
-                        Text('W:${m.waist!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
+                        Text('${S.of(context).bodyWaistShort}:${m.waist!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
                       if (m.chest != null)
-                        Text('C:${m.chest!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
+                        Text('${S.of(context).bodyChestShort}:${m.chest!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
                       if (m.hips != null)
-                        Text('H:${m.hips!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
+                        Text('${S.of(context).bodyHipsShort}:${m.hips!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
                       if (m.arms != null)
-                        Text('A:${m.arms!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
+                        Text('${S.of(context).bodyArmsShort}:${m.arms!.toStringAsFixed(1)}', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 11)),
                     ],
                   ),
                 ),

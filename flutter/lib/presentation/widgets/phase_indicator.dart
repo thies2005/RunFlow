@@ -53,23 +53,26 @@ class PhaseIndicator extends StatelessWidget {
                       children: phases.map((phase) {
                         final width = totalWidth * phase.fraction;
                         final isCurrent = phase.phase == currentPhase;
-                        return GestureDetector(
-                          child: Container(
-                            width: width,
-                            color: isCurrent
-                                ? phase.color
-                                : phase.color.withValues(alpha: 0.3),
-                            child: Center(
-                              child: Text(
-                                phase.label,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: isCurrent
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
-                                  color: isCurrent
-                                      ? AppColors.onPrimary
-                                      : AppColors.onSurfaceVariant,
+                        return Semantics(
+                          label: '${phase.label} phase',
+                          child: GestureDetector(
+                            child: Container(
+                              width: width,
+                              color: isCurrent
+                                  ? phase.color
+                                  : phase.color.withValues(alpha: 0.3),
+                              child: Center(
+                                child: Text(
+                                  phase.label,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: isCurrent
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: isCurrent
+                                        ? AppColors.onPrimary
+                                        : AppColors.onSurfaceVariant,
+                                  ),
                                 ),
                               ),
                             ),

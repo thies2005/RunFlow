@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({required this.navigationShell, super.key});
@@ -8,6 +9,7 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
@@ -18,36 +20,36 @@ class AppShell extends StatelessWidget {
             initialLocation: index == navigationShell.currentIndex,
           );
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: const Icon(Icons.dashboard),
+            label: s.navDashboard,
           ),
           NavigationDestination(
-            icon: Icon(Icons.calendar_today_outlined),
-            selectedIcon: Icon(Icons.calendar_today),
-            label: 'Plan',
+            icon: const Icon(Icons.calendar_today_outlined),
+            selectedIcon: const Icon(Icons.calendar_today),
+            label: s.navPlan,
           ),
           NavigationDestination(
-            icon: Icon(Icons.fiber_manual_record_outlined),
-            selectedIcon: Icon(Icons.fiber_manual_record),
-            label: 'Record',
+            icon: const Icon(Icons.fiber_manual_record_outlined),
+            selectedIcon: const Icon(Icons.fiber_manual_record),
+            label: s.navRecord,
           ),
           NavigationDestination(
-            icon: Icon(Icons.monitor_heart_outlined),
-            selectedIcon: Icon(Icons.monitor_heart),
-            label: 'Health',
+            icon: const Icon(Icons.monitor_heart_outlined),
+            selectedIcon: const Icon(Icons.monitor_heart),
+            label: s.navHealth,
           ),
           NavigationDestination(
-            icon: Icon(Icons.directions_run_outlined),
-            selectedIcon: Icon(Icons.directions_run),
-            label: 'Activities',
+            icon: const Icon(Icons.directions_run_outlined),
+            selectedIcon: const Icon(Icons.directions_run),
+            label: s.navActivities,
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Athlete',
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: s.navAthlete,
           ),
         ],
       ),

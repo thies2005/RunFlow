@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 
 part 'race_detection_providers.g.dart';

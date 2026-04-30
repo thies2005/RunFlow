@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/vdot_calculator.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
 
@@ -76,7 +77,7 @@ class _GoalTimeStepState extends ConsumerState<GoalTimeStep> {
           ),
           const SizedBox(height: 24),
           Text(
-            'What\'s your goal time?',
+            S.of(context).onboardingGoalTimeTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -84,7 +85,7 @@ class _GoalTimeStepState extends ConsumerState<GoalTimeStep> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Set your target finish time for race day.',
+            S.of(context).onboardingGoalTimeSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -98,7 +99,7 @@ class _GoalTimeStepState extends ConsumerState<GoalTimeStep> {
                 child: Column(
                   children: [
                     Text(
-                      'Your Projected Goal Time',
+                      S.of(context).onboardingProjectedGoalTime,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -113,7 +114,7 @@ class _GoalTimeStepState extends ConsumerState<GoalTimeStep> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'VDOT improvement: +${projection.improvementPercent.toStringAsFixed(1)}%',
+                      S.of(context).onboardingVdotImprovement(projection.improvementPercent.toStringAsFixed(1)),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.success,
                       ),
@@ -125,7 +126,7 @@ class _GoalTimeStepState extends ConsumerState<GoalTimeStep> {
                           child: Column(
                             children: [
                               Text(
-                                'Conservative',
+                                S.of(context).onboardingConservative,
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: AppColors.onSurfaceVariant,
                                 ),
@@ -144,7 +145,7 @@ class _GoalTimeStepState extends ConsumerState<GoalTimeStep> {
                           child: Column(
                             children: [
                               Text(
-                                'Optimal',
+                                S.of(context).onboardingOptimal,
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: AppColors.onSurfaceVariant,
                                 ),
@@ -191,14 +192,14 @@ class _GoalTimeStepState extends ConsumerState<GoalTimeStep> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'No prediction available yet',
+                      S.of(context).onboardingNoPrediction,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Complete the fitness calibration or sync activities to get a goal time prediction.',
+                      S.of(context).onboardingNoPredictionSubtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),

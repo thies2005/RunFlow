@@ -1,4 +1,4 @@
-import 'package:runflow_flutter/data/models/analytics_models.dart';
+import 'package:runflow_flutter/domain/entities/analytics_entities.dart';
 
 class TestAnalyticsData {
   TestAnalyticsData._();

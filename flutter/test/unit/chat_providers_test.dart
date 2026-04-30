@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runflow_flutter/data/models/chat_models.dart';
+import 'package:runflow_flutter/domain/entities/chat_entities.dart';
 import 'package:runflow_flutter/domain/repositories/chat_repository.dart';
 import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
 

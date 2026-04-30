@@ -32,9 +32,9 @@ class ApiConstants {
   static String chatSessionMessagesPath(String id) =>
       '/chat/sessions/$id/messages';
 
-  static String get aiChatSessionsUrl => '$fullApiUrl/ai/chat/sessions';
-  static String get aiChatHistoryUrl => '$fullApiUrl/ai/chat/history';
-  static String get aiChatStreamUrl => '$fullApiUrl/ai/chat';
+  static String get aiChatSessionsUrl => '$baseUrl/api/ai/chat/sessions';
+  static String get aiChatHistoryUrl => '$baseUrl/api/ai/chat/history';
+  static String get aiChatStreamUrl => '$baseUrl/api/ai/chat';
 
   static const String nutritionLogPath = '/health/nutrition/log';
   static const String nutritionSearchPath = '/health/nutrition/search';
@@ -50,6 +50,13 @@ class ApiConstants {
   static const String healthDailyPath = '/health/daily';
   static const String supplementsPath = '/health/supplements';
   static const String supplementsAnalyticsPath = '/health/supplements/analytics';
+  static const String apiKeyPath = '/settings/api-key';
+  static const String verifyEmailPath = '/auth/verify-email';
+  static const String resendVerificationPath = '/auth/resend-verification';
+  static const String consentCheckPath = '/user/consent/check';
+  static const String consentPath = '/user/consent';
+  static const String nutritionSuggestPath = '/health/nutrition/suggest';
+  static const String workoutReorderPath = '/workouts/reorder';
 }
 
 class AppConstants {

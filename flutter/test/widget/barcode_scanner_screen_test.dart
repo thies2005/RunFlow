@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/screens/health/barcode_scanner_screen.dart';
 
@@ -36,6 +38,13 @@ void main() {
             barcodeScanProvider.overrideWith(() => _FakeBarcodeScanData(null)),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: BarcodeScannerScreen(),
           ),
         ),
@@ -54,6 +63,13 @@ void main() {
             barcodeScanProvider.overrideWith(() => _FakeBarcodeScanData(null)),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: BarcodeScannerScreen(),
           ),
         ),
@@ -71,6 +87,13 @@ void main() {
             barcodeScanProvider.overrideWith(() => _FakeBarcodeScanLoading()),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: BarcodeScannerScreen(),
           ),
         ),
@@ -91,6 +114,13 @@ void main() {
             barcodeScanProvider.overrideWith(() => _FakeBarcodeScanError()),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: BarcodeScannerScreen(),
           ),
         ),
@@ -98,7 +128,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Network Error'), findsOneWidget);
-      expect(find.text('Try Again'), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
     });
   });
 }

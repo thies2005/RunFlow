@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/data/repositories/goal_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/goal_repository.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
@@ -37,6 +37,12 @@ class Goals extends _$Goals {
   Future<void> deleteGoal(String id) async {
     final repo = ref.read(goalRepositoryProvider);
     await repo.deleteGoal(id);
+    await refresh();
+  }
+
+  Future<void> reorderWorkout(String workoutId, DateTime newDate) async {
+    final repo = ref.read(goalRepositoryProvider);
+    await repo.reorderWorkout(workoutId, newDate);
     await refresh();
   }
 }

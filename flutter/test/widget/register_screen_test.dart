@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/data/datasources/remote/dio_client.dart';
-import 'package:runflow_flutter/data/models/auth_models.dart';
+import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/auth/register_screen.dart';
 import 'package:runflow_flutter/services/auth_service_impl.dart';
@@ -128,6 +130,13 @@ class _TestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: const [
+        S.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: S.supportedLocales,
       home: Scaffold(
         body: ProviderScope(
           overrides: [
@@ -173,7 +182,7 @@ class _FakeAuthRepository implements AuthRepository {
   Future<void> restoreSession() async {}
 
   @override
-  Future<LoginResponse> register({
+  Future<void> register({
     required String email,
     required String password,
     required String name,
@@ -183,4 +192,13 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> forgotPassword(String email) async {}
+
+  @override
+  Future<void> verifyEmail(String email, String code) async {}
+
+  @override
+  Future<void> resendVerification(String email) async {}
+
+  @override
+  Future<bool> checkEmailVerified() async => true;
 }

@@ -2,8 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/data/models/dashboard_models.dart' as data;
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/data/repositories/goal_repository_impl.dart';
 
 class MockDio extends Mock implements Dio {}
@@ -12,11 +13,11 @@ void main() {
   late MockDio mockDio;
   late GoalRepositoryImpl repository;
 
-  final testGoal = Goal(
+  final testGoal = data.Goal(
     id: 'goal-1',
     userId: 'user-1',
     name: 'Marathon PR',
-    raceType: RaceType.marathon,
+    raceType: data.RaceType.marathon,
     raceDate: DateTime(2024, 10, 15),
     targetTime: 10800,
     weeklyMileageGoal: 60.0,
@@ -237,11 +238,11 @@ void main() {
 
     group('listWorkouts', () {
       test('success - returns WorkoutsResponse', () async {
-        final workout = Workout(
+        final workout = data.Workout(
           id: 'w1',
           goalId: 'goal-1',
           scheduledDate: DateTime(2024, 6, 16),
-          workoutType: WorkoutType.long,
+          workoutType: data.WorkoutType.long,
           description: 'Long Run',
           targetDistance: 18000.0,
           targetPace: 360.0,
@@ -309,11 +310,11 @@ void main() {
 
     group('updateWorkout', () {
       test('success - sends UpdateWorkoutRequest and returns Workout', () async {
-        final workout = Workout(
+        final workout = data.Workout(
           id: 'w1',
           goalId: 'goal-1',
           scheduledDate: DateTime(2024, 6, 16),
-          workoutType: WorkoutType.long,
+          workoutType: data.WorkoutType.long,
           description: 'Long Run',
           targetDistance: 18000.0,
           targetPace: 360.0,

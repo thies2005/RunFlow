@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/screens/goals/goal_setup_wizard.dart';
 
 void main() {
@@ -9,9 +11,7 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: GoalSetupWizard(),
-          ),
+          child: _TestApp(),
         ),
       );
       await tester.pumpAndSettle();
@@ -28,9 +28,7 @@ void main() {
     testWidgets('has close button in app bar', (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: GoalSetupWizard(),
-          ),
+          child: _TestApp(),
         ),
       );
       await tester.pumpAndSettle();
@@ -41,9 +39,7 @@ void main() {
     testWidgets('has Next button on first step', (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: GoalSetupWizard(),
-          ),
+          child: _TestApp(),
         ),
       );
       await tester.pumpAndSettle();
@@ -55,9 +51,7 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: GoalSetupWizard(),
-          ),
+          child: _TestApp(),
         ),
       );
       await tester.pumpAndSettle();
@@ -73,9 +67,7 @@ void main() {
     testWidgets('navigates through all steps', (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: GoalSetupWizard(),
-          ),
+          child: _TestApp(),
         ),
       );
       await tester.pumpAndSettle();
@@ -106,9 +98,7 @@ void main() {
     testWidgets('can go back to previous step', (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: GoalSetupWizard(),
-          ),
+          child: _TestApp(),
         ),
       );
       await tester.pumpAndSettle();
@@ -128,9 +118,7 @@ void main() {
     testWidgets('shows progress indicators', (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: GoalSetupWizard(),
-          ),
+          child: _TestApp(),
         ),
       );
       await tester.pumpAndSettle();
@@ -141,9 +129,7 @@ void main() {
     testWidgets('allows race type selection', (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: GoalSetupWizard(),
-          ),
+          child: _TestApp(),
         ),
       );
       await tester.pumpAndSettle();
@@ -154,4 +140,22 @@ void main() {
       expect(find.byIcon(Icons.check), findsOneWidget);
     });
   });
+}
+
+class _TestApp extends StatelessWidget {
+  const _TestApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+       localizationsDelegates: [
+        S.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: S.supportedLocales,
+      home: GoalSetupWizard(),
+    );
+  }
 }

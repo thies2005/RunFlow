@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:runflow_flutter/data/models/chat_models.dart';
+import 'package:runflow_flutter/domain/entities/chat_entities.dart';
 import 'package:runflow_flutter/data/repositories/chat_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/chat_repository.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';

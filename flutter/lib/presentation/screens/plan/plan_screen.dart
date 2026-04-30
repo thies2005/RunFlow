@@ -5,9 +5,10 @@ import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 
 class PlanScreen extends ConsumerWidget {
@@ -38,14 +39,22 @@ class PlanScreen extends ConsumerWidget {
   }
 }
 
-class _PlanContent extends ConsumerWidget {
+class _PlanContent extends ConsumerStatefulWidget {
   const _PlanContent({required this.goal});
 
   final Goal goal;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PlanContent> createState() => _PlanContentState();
+}
+
+class _PlanContentState extends ConsumerState<_PlanContent> {
+  bool _reorderMode = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final goal = widget.goal;
     final daysUntilRace = goal.raceDate.difference(DateTime.now()).inDays;
     final completedWorkouts = goal.workouts.where((w) => w.isCompleted).length;
     final totalWorkouts = goal.workouts.length;
@@ -62,10 +71,21 @@ class _PlanContent extends ConsumerWidget {
       appBar: AppBar(
         title: Text(goal.name),
         actions: [
+          if (!_reorderMode)
+            IconButton(
+              icon: const Icon(Icons.reorder),
+              onPressed: () => setState(() => _reorderMode = true),
+              tooltip: S.of(context).planReorderWorkouts,
+            ),
+          if (_reorderMode)
+            TextButton(
+              onPressed: () => setState(() => _reorderMode = false),
+              child: Text(S.of(context).actionDone),
+            ),
           IconButton(
             icon: const Icon(Icons.list),
             onPressed: () => context.go('/goals/${goal.id}'),
-            tooltip: 'Goal details',
+            tooltip: S.of(context).planGoalDetailsTooltip,
           ),
         ],
       ),
@@ -104,7 +124,7 @@ class _PlanContent extends ConsumerWidget {
                       ),
                       const Spacer(),
                       Text(
-                        daysUntilRace > 0 ? '$daysUntilRace days to go' : 'Race day!',
+                        daysUntilRace > 0 ? S.of(context).planDaysToGo(daysUntilRace) : S.of(context).planRaceDay,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: daysUntilRace > 0 ? AppColors.onSurfaceVariant : AppColors.primary,
                           fontWeight: FontWeight.w500,
@@ -126,7 +146,7 @@ class _PlanContent extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              'workouts done',
+                              S.of(context).planWorkoutsDone,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: AppColors.onSurfaceVariant,
                               ),
@@ -165,11 +185,24 @@ class _PlanContent extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'Training Plan',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    S.of(context).planTrainingPlanTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (_reorderMode)
+                  Text(
+                    S.of(context).planDragWorkoutsToReorder,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -180,7 +213,7 @@ class _PlanContent extends ConsumerWidget {
                 padding: const EdgeInsets.all(24),
                 child: Center(
                   child: Text(
-                    'No workouts scheduled yet',
+                    S.of(context).planNoWorkoutsScheduled,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -188,6 +221,8 @@ class _PlanContent extends ConsumerWidget {
                 ),
               ),
             )
+          else if (_reorderMode)
+            _buildReorderableList(sortedDates, workoutsByDate)
           else
             ...sortedDates.map((date) {
               final dayWorkouts = workoutsByDate[date]!;
@@ -202,7 +237,7 @@ class _PlanContent extends ConsumerWidget {
                     child: Row(
                       children: [
                         Text(
-                          _formatDateHeader(date),
+                          _formatDateHeader(context, date),
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: isToday ? AppColors.primary : (isPast ? AppColors.onSurfaceVariant : theme.textTheme.bodyMedium?.color),
                             fontWeight: isToday ? FontWeight.w600 : FontWeight.w500,
@@ -217,7 +252,7 @@ class _PlanContent extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              'TODAY',
+                              S.of(context).planToday,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: AppColors.onPrimary,
                                 fontWeight: FontWeight.w600,
@@ -243,14 +278,103 @@ class _PlanContent extends ConsumerWidget {
     );
   }
 
+  Widget _buildReorderableList(
+    List<DateTime> sortedDates,
+    Map<DateTime, List<Workout>> workoutsByDate,
+  ) {
+    final theme = Theme.of(context);
+    final allWorkouts = <Workout>[];
+    for (final date in sortedDates) {
+      allWorkouts.addAll(workoutsByDate[date]!);
+    }
+
+    return ReorderableListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: allWorkouts.length,
+      onReorder: (oldIndex, newIndex) {
+        if (newIndex > oldIndex) newIndex--;
+        if (oldIndex == newIndex) return;
+
+        setState(() {
+          final workout = allWorkouts.removeAt(oldIndex);
+          allWorkouts.insert(newIndex, workout);
+        });
+
+        final reorderedIds = allWorkouts.map((w) => w.id).toList();
+        _persistReorder(reorderedIds, sortedDates);
+      },
+      proxyDecorator: (child, index, animation) {
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) {
+            final double scale = 1.0 + (animation.value * 0.05);
+            return Transform.scale(
+              scale: scale,
+              child: Opacity(opacity: 0.9, child: child),
+            );
+          },
+          child: child,
+        );
+      },
+      itemBuilder: (context, index) {
+        final workout = allWorkouts[index];
+        return Card(
+          key: ValueKey(workout.id),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: ListTile(
+            leading: const Icon(Icons.drag_handle, color: AppColors.onSurfaceVariant),
+            title: Text(
+              workout.description,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              '${formatDistance(workout.targetDistance)} · ${formatPace(workout.targetPace)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _persistReorder(
+    List<String> workoutIds,
+    List<DateTime> sortedDates,
+  ) async {
+    final workoutsPerDate = sortedDates.length;
+    if (workoutsPerDate == 0) return;
+
+    for (var i = 0; i < workoutIds.length; i++) {
+      final dateIndex = (i * workoutsPerDate / workoutIds.length).floor();
+      final targetDate = dateIndex < sortedDates.length
+          ? sortedDates[dateIndex]
+          : sortedDates.last;
+      try {
+        await ref
+            .read(goalsProvider.notifier)
+            .reorderWorkout(workoutIds[i], targetDate);
+      } catch (e) {
+        logger.error('[PlanScreen] Reorder failed for ${workoutIds[i]}: $e');
+      }
+    }
+  }
+
   bool _isToday(DateTime date) {
     final now = DateTime.now();
     return date.year == now.year && date.month == now.month && date.day == now.day;
   }
 
-  String _formatDateHeader(DateTime date) {
-    final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  String _formatDateHeader(BuildContext context, DateTime date) {
+    final s = S.of(context);
+    final weekdays = [s.dayMon, s.dayTue, s.dayWed, s.dayThu, s.dayFri, s.daySat, s.daySun];
+    final months = [s.monthJan, s.monthFeb, s.monthMar, s.monthApr, s.monthMay, s.monthJun, s.monthJul, s.monthAug, s.monthSep, s.monthOct, s.monthNov, s.monthDec];
     return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';
   }
 }
@@ -305,7 +429,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            _workoutLabel(),
+                            _workoutLabel(context),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: color,
                               fontWeight: FontWeight.w600,
@@ -315,7 +439,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
                         if (workout.isCompleted) ...[
                           const SizedBox(width: 8),
                           Text(
-                            'Completed',
+                             S.of(context).statusCompleted,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: AppColors.success,
                               fontWeight: FontWeight.w500,
@@ -377,7 +501,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.edit),
-              title: const Text('Edit Workout'),
+              title: Text(S.of(context).planEditWorkoutTitle),
               onTap: () {
                 Navigator.pop(ctx);
                 _showEditModal(context, ref);
@@ -386,7 +510,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
             if (!workout.isCompleted)
               ListTile(
                 leading: const Icon(Icons.play_arrow),
-                title: const Text('Start Workout'),
+                title: Text(S.of(context).planStartWorkoutAction),
                 onTap: () {
                   Navigator.pop(ctx);
                   context.push('/record?workoutId=${workout.id}');
@@ -395,7 +519,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
             if (!workout.isCompleted)
               ListTile(
                 leading: const Icon(Icons.check),
-                title: const Text('Mark Complete'),
+                title: Text(S.of(context).planMarkComplete),
                 onTap: () async {
                   Navigator.pop(ctx);
                   try {
@@ -469,15 +593,16 @@ class _PlanWorkoutCard extends ConsumerWidget {
     };
   }
 
-  String _workoutLabel() {
+  String _workoutLabel(BuildContext context) {
+    final s = S.of(context);
     return switch (workout.workoutType) {
-      WorkoutType.easy => 'Easy',
-      WorkoutType.long => 'Long',
-      WorkoutType.tempo => 'Tempo',
-      WorkoutType.interval => 'Interval',
-      WorkoutType.recovery => 'Recovery',
-      WorkoutType.race => 'Race',
-      WorkoutType.other => 'Other',
+      WorkoutType.easy => s.workoutTypeEasy,
+      WorkoutType.long => s.workoutTypeLong,
+      WorkoutType.tempo => s.workoutTypeTempo,
+      WorkoutType.interval => s.workoutTypeInterval,
+      WorkoutType.recovery => s.workoutTypeRecovery,
+      WorkoutType.race => s.workoutTypeRace,
+      WorkoutType.other => s.workoutTypeOther,
     };
   }
 }
@@ -491,7 +616,7 @@ class _NoPlanState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Plan')),
+      appBar: AppBar(title: Text(S.of(context).navPlan)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -501,12 +626,12 @@ class _NoPlanState extends StatelessWidget {
               const Icon(Icons.calendar_today_outlined, size: 64, color: AppColors.onSurfaceVariant),
               const SizedBox(height: 16),
               Text(
-                'No Active Plan',
+                S.of(context).planNoActivePlan,
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
-                'Create a training goal to get your personalized plan.',
+                S.of(context).planCreateTrainingGoal,
                 style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
@@ -514,7 +639,7 @@ class _NoPlanState extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onCreateGoal,
                 icon: const Icon(Icons.add),
-                label: const Text('Create Goal'),
+                label: Text(S.of(context).planCreateGoal),
               ),
             ],
           ),
@@ -534,7 +659,7 @@ class _PlanError extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Plan')),
+      appBar: AppBar(title: Text(S.of(context).navPlan)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -543,11 +668,11 @@ class _PlanError extends StatelessWidget {
             children: [
               Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
               const SizedBox(height: 16),
-              Text('Something went wrong', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text(S.of(context).statusError, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Text(message, style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant), textAlign: TextAlign.center),
               const SizedBox(height: 24),
-              FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh), label: const Text('Retry')),
+              FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh), label: Text(S.of(context).actionRetry)),
             ],
           ),
         ),
@@ -563,7 +688,7 @@ class _PlanSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Theme.of(context).colorScheme.surfaceContainerHighest;
     return Scaffold(
-      appBar: AppBar(title: const Text('Plan')),
+      appBar: AppBar(title: Text(S.of(context).navPlan)),
       body: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
@@ -687,13 +812,13 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Edit Workout',
+              S.of(context).planEditWorkoutTitle,
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<WorkoutType>(
               initialValue: _selectedType,
-              decoration: const InputDecoration(labelText: 'Workout Type'),
+              decoration: InputDecoration(labelText: S.of(context).planWorkoutType),
               items: WorkoutType.values.map((type) => DropdownMenuItem(
                 value: type,
                 child: Text(type.name.toUpperCase()),
@@ -705,18 +830,18 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
             const SizedBox(height: 12),
             TextField(
               controller: _descController,
-              decoration: const InputDecoration(labelText: 'Description'),
+              decoration: InputDecoration(labelText: S.of(context).planDescription),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _distanceController,
-              decoration: const InputDecoration(labelText: 'Target Distance (km)'),
+              decoration: InputDecoration(labelText: S.of(context).planTargetDistanceKm),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _durationController,
-              decoration: const InputDecoration(labelText: 'Target Duration (min)'),
+              decoration: InputDecoration(labelText: S.of(context).planTargetDurationMin),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
@@ -732,7 +857,7 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
                     workoutType: _selectedType,
                   ));
                 },
-                child: const Text('Save'),
+                child: Text(S.of(context).actionSave),
               ),
             ),
           ],

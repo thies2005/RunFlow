@@ -6,7 +6,9 @@ import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
+import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/chat_models.dart';
+import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/chat_repository.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
@@ -18,11 +20,12 @@ class ChatRepositoryImpl implements ChatRepository {
   static const _maxCachedMessagesPerSession = 100;
   static const _maxCachedSessionList = 20;
 
-  final Map<String, List<ChatMessage>> _messagesCache = {};
-  final List<ChatSession> _sessionsCache = [];
+  final Map<String, List<domain.ChatMessage>> _messagesCache = {};
+  final List<domain.ChatSession> _sessionsCache = [];
   CancelToken? _activeToken;
+  CancelToken? _activeGetMessagesToken;
 
-  List<ChatMessage> _capMessages(List<ChatMessage> messages) {
+  List<domain.ChatMessage> _capMessages(List<domain.ChatMessage> messages) {
     if (messages.length <= _maxCachedMessagesPerSession) return messages;
     return messages.sublist(messages.length - _maxCachedMessagesPerSession);
   }
@@ -34,19 +37,20 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<List<ChatSession>> listSessions() async {
+  Future<List<domain.ChatSession>> listSessions() async {
     try {
       final response = await dio.get(ApiConstants.aiChatSessionsUrl);
       final sessions = unwrapList(
         response.data as Map<String, dynamic>,
         const ['sessions'],
       ).map(ChatSession.fromJson).toList();
+      final domainSessions = sessions.map((s) => s.toDomain()).toList();
       _sessionsCache
         ..clear()
-        ..addAll(sessions.length > _maxCachedSessionList
-            ? sessions.sublist(0, _maxCachedSessionList)
-            : sessions);
-      return sessions;
+        ..addAll(domainSessions.length > _maxCachedSessionList
+            ? domainSessions.sublist(0, _maxCachedSessionList)
+            : domainSessions);
+      return domainSessions;
     } on DioException catch (e) {
       logger.error('[ChatRepositoryImpl] listSessions failed: $e');
       if (_sessionsCache.isNotEmpty) return List.unmodifiable(_sessionsCache);
@@ -59,14 +63,14 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<ChatSession> createSession() async {
+  Future<domain.ChatSession> createSession() async {
     try {
       final response = await dio.post(ApiConstants.aiChatSessionsUrl);
       final payload = unwrapPayload(
         response.data as Map<String, dynamic>,
         const ['session'],
       );
-      return ChatSession.fromJson(payload);
+      return ChatSession.fromJson(payload).toDomain();
     } on DioException catch (e) {
       logger.error('[ChatRepositoryImpl] createSession failed: $e');
       throw e.error is AppException
@@ -82,20 +86,24 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Future<List<ChatMessage>> getMessages(String sessionId) async {
+  Future<List<domain.ChatMessage>> getMessages(String sessionId) async {
     try {
+      _activeGetMessagesToken?.cancel();
+      final getMessagesToken = CancelToken();
+      _activeGetMessagesToken = getMessagesToken;
       final response = await dio.get(
         ApiConstants.aiChatHistoryUrl,
         queryParameters: {'sessionId': sessionId},
-        cancelToken: CancelToken(),
+        cancelToken: getMessagesToken,
       );
       final messages = unwrapList(
         response.data as Map<String, dynamic>,
         const ['messages'],
       ).map(ChatMessage.fromJson).toList();
-      _messagesCache[sessionId] = _capMessages(messages);
+      final domainMessages = messages.map((m) => m.toDomain()).toList();
+      _messagesCache[sessionId] = _capMessages(domainMessages);
       _evictMessagesCache();
-      return messages;
+      return domainMessages;
     } on DioException catch (e) {
       logger.error('[ChatRepositoryImpl] getMessages failed: $e');
       if (_messagesCache.containsKey(sessionId)) {
@@ -175,6 +183,12 @@ class ChatRepositoryImpl implements ChatRepository {
   void cancelStreaming() {
     _activeToken?.cancel();
     _activeToken = null;
+    _activeGetMessagesToken?.cancel();
+    _activeGetMessagesToken = null;
+  }
+
+  void dispose() {
+    cancelStreaming();
   }
 
   @override

@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/manual_activity_sheet.dart';
 
@@ -44,7 +45,7 @@ class _ActivityListScreenState extends ConsumerState<ActivityListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Activities'),
+        title: Text(S.of(context).activitiesTitle),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(activitiesProvider.notifier).refresh(),
@@ -113,7 +114,7 @@ class _FilterChips extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
-              label: const Text('All'),
+              label: Text(S.of(context).activitiesAll),
               selected: selectedType == null,
               onSelected: (_) {
                 ref.read(activitiesProvider.notifier).filterByType(null);
@@ -303,14 +304,14 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No activities yet',
+              S.of(context).activitiesNoActivities,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Activities will appear here after you sync with Strava.',
+              S.of(context).activitiesSyncMessage,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -348,7 +349,7 @@ class _ActivityListError extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Something went wrong',
+              S.of(context).statusError,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -365,7 +366,7 @@ class _ActivityListError extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+               label: Text(S.of(context).actionRetry),
             ),
           ],
         ),

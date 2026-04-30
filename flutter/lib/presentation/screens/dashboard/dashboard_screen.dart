@@ -5,12 +5,14 @@ import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/race_countdown_card.dart';
 import 'package:runflow_flutter/presentation/widgets/training_status_card.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
+import 'package:runflow_flutter/presentation/widgets/unverified_email_banner.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -21,7 +23,7 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('RunFlow'),
+        title: Text(S.of(context).dashboardTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.sync),
@@ -57,6 +59,7 @@ class _DashboardContent extends ConsumerWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 24),
       children: [
+        const UnverifiedEmailBanner(),
         _StatsCard(stats: data.stats, syncStatus: data.syncStatus),
         const SizedBox(height: 16),
         const RaceCountdownCard(),
@@ -97,7 +100,7 @@ class _StatsCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    'This Week',
+                    S.of(context).dashboardThisWeek,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -114,16 +117,16 @@ class _StatsCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _StatItem(
-                    label: 'Weekly Mileage',
+                  child:                   _StatItem(
+                    label: S.of(context).dashboardWeeklyMileage,
                     value: '${stats.currentWeekMileage.toStringAsFixed(1)} km',
                     icon: Icons.straighten,
                     color: AppColors.primary,
                   ),
                 ),
                 Expanded(
-                  child: _StatItem(
-                    label: 'Activities',
+                  child:                   _StatItem(
+                    label: S.of(context).dashboardActivities,
                     value: '${syncStatus.totalActivities}',
                     icon: Icons.directions_run,
                     color: AppColors.success,
@@ -135,16 +138,16 @@ class _StatsCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _StatItem(
-                    label: 'VO2max',
+                  child:                   _StatItem(
+                    label: S.of(context).dashboardVo2max,
                     value: stats.effectiveVO2max.toStringAsFixed(1),
                     icon: Icons.favorite,
                     color: AppColors.error,
                   ),
                 ),
                 Expanded(
-                  child: _StatItem(
-                    label: 'TSB',
+                  child:                   _StatItem(
+                    label: S.of(context).dashboardTsb,
                     value: stats.tsb.toStringAsFixed(1),
                     icon: Icons.battery_charging_full,
                     color: _tsbColor(stats.tsb),
@@ -156,16 +159,16 @@ class _StatsCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _StatItem(
-                    label: 'CTL (Fitness)',
+                  child:                   _StatItem(
+                    label: S.of(context).dashboardCtl,
                     value: stats.ctl.toStringAsFixed(1),
                     icon: Icons.trending_up,
                     color: AppColors.success,
                   ),
                 ),
                 Expanded(
-                  child: _StatItem(
-                    label: 'ATL (Fatigue)',
+                  child:                   _StatItem(
+                    label: S.of(context).dashboardAtl,
                     value: stats.atl.toStringAsFixed(1),
                     icon: Icons.trending_down,
                     color: AppColors.fatigued,
@@ -263,7 +266,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      workout.isCompleted ? 'Completed' : "Today's Workout",
+                      workout.isCompleted ? S.of(context).statusCompleted : S.of(context).dashboardTodayWorkout,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: workout.isCompleted ? AppColors.success : AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -275,7 +278,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.swap_horiz, size: 20),
                       onPressed: () => _showWorkoutSwitcher(context, ref),
-                      tooltip: 'Switch workout',
+                      tooltip: S.of(context).dashboardSwitchWorkoutTooltip,
                       color: AppColors.onSurfaceVariant,
                     ),
                   const Icon(
@@ -327,7 +330,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _StatItem(
-                      label: 'Target Distance',
+                      label: S.of(context).targetDistance,
                       value: '${(workout.targetDistance / 1000).toStringAsFixed(1)} km',
                       icon: Icons.straighten,
                       color: AppColors.primary,
@@ -335,7 +338,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
                   ),
                   Expanded(
                     child: _StatItem(
-                      label: 'Target Pace',
+                      label: S.of(context).targetPace,
                       value: formatPace(workout.targetPace),
                       icon: Icons.speed,
                       color: AppColors.success,
@@ -367,7 +370,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
 
     if (pendingWorkouts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No pending workouts available')),
+        SnackBar(content: Text(S.of(context).dashboardNoPendingWorkouts)),
       );
       return;
     }
@@ -397,14 +400,14 @@ class _TodayWorkoutCard extends ConsumerWidget {
             ref.invalidate(dashboardProvider);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Workout updated')),
+                SnackBar(content: Text(S.of(context).dashboardWorkoutUpdated)),
               );
             }
           } catch (e) {
             logger.log('Failed to switch workout: $e');
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to update: $e')),
+                SnackBar(content: Text(S.of(context).dashboardFailedToUpdate(e.toString()))),
               );
             }
           }
@@ -417,28 +420,28 @@ class _TodayWorkoutCard extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Start ${workout.description}?'),
+        title: Text(S.of(context).dashboardStartQuestion(workout.description)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('${workout.workoutType.name.toUpperCase()} · ${(workout.targetDistance / 1000).toStringAsFixed(1)} km'),
-            if (workout.targetPace > 0) Text('Target Pace: ${formatPace(workout.targetPace)}'),
+            if (workout.targetPace > 0) Text(S.of(context).dashboardTargetPaceLabel(formatPace(workout.targetPace))),
             const SizedBox(height: 12),
-            const Text('This will start recording your workout with GPS tracking.'),
+            Text(S.of(context).dashboardGpsTrackingInfo),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(S.of(context).actionCancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               context.push('/record?workoutId=${workout.id}');
             },
-            child: const Text('Start Workout'),
+            child: Text(S.of(context).dashboardStartWorkout),
           ),
         ],
       ),
@@ -489,14 +492,14 @@ class _WorkoutSwitcherSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Switch Workout',
+            S.of(context).dashboardSwitchWorkout,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Select a different workout to replace today\'s workout',
+            S.of(context).dashboardSelectWorkoutHint,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -565,7 +568,7 @@ class _RecentActivitiesSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Recent Activities',
+            S.of(context).dashboardRecentActivities,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -578,7 +581,7 @@ class _RecentActivitiesSection extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Center(
                 child: Text(
-                  'No activities yet',
+                  S.of(context).dashboardNoActivities,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -674,8 +677,8 @@ class _SyncStatusCard extends ConsumerWidget {
                 children: [
                   Text(
                     syncStatus.syncInProgress
-                        ? 'Syncing...'
-                        : 'Last synced',
+                        ? S.of(context).statusSyncing
+                        : S.of(context).statusLastSynced,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -698,7 +701,7 @@ class _SyncStatusCard extends ConsumerWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.sync, size: 18),
-              label: Text(syncStatus.syncInProgress ? 'Syncing' : 'Sync Now'),
+              label: Text(syncStatus.syncInProgress ? S.of(context).statusSyncing : S.of(context).dashboardSyncNow),
             ),
           ],
         ),
@@ -733,7 +736,7 @@ class _DashboardError extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Something went wrong',
+              S.of(context).statusError,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -750,7 +753,7 @@ class _DashboardError extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(S.of(context).actionRetry),
             ),
           ],
         ),

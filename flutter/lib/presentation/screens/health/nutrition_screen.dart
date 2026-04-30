@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
+import 'package:runflow_flutter/domain/entities/meal_suggestion_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
+import 'package:runflow_flutter/presentation/providers/meal_suggestion_providers.dart';
 import 'package:runflow_flutter/presentation/providers/nutrition_targets_provider.dart';
+import 'package:runflow_flutter/presentation/widgets/ai_meal_suggestion_sheet.dart';
 import 'package:runflow_flutter/presentation/widgets/circular_gauge.dart';
 
 class NutritionScreen extends ConsumerWidget {
@@ -18,7 +22,7 @@ class NutritionScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nutrition'),
+        title: Text(S.of(context).healthNutrition),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -27,12 +31,17 @@ class NutritionScreen extends ConsumerWidget {
           IconButton(
             onPressed: () => _showTargetsDialog(context, ref),
             icon: const Icon(Icons.settings_outlined, color: AppColors.onSurfaceVariant),
-            tooltip: 'Set Targets',
+            tooltip: S.of(context).nutritionSetTargets,
+          ),
+          IconButton(
+            onPressed: () => _showMealSuggestion(context, ref),
+            icon: const Icon(Icons.auto_awesome, color: AppColors.primary),
+            tooltip: S.of(context).nutritionAiMealSuggestion,
           ),
           IconButton(
             onPressed: () => context.push('/health/scan'),
             icon: const Icon(Icons.qr_code_scanner, color: AppColors.primary),
-            tooltip: 'Scan Barcode',
+            tooltip: S.of(context).healthScanBarcode,
           ),
         ],
       ),
@@ -40,8 +49,7 @@ class NutritionScreen extends ConsumerWidget {
         data: (nutrition) {
           final targetsAsync = ref.watch(nutritionTargetsProvider);
           final targets = targetsAsync.asData?.value ??
-              const NutritionTargets(
-                  calories: 2000, protein: 150, carbs: 300, fat: 80, water: 3.0);
+              NutritionTargets.defaults;
           return _NutritionContent(
               nutrition: nutrition, ref: ref, today: today, targets: targets);
         },
@@ -50,11 +58,11 @@ class NutritionScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Error: $e', style: theme.textTheme.bodyMedium),
+              Text('${S.of(context).actionError}: $e', style: theme.textTheme.bodyMedium),
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: () => ref.invalidate(nutritionProvider(today)),
-                child: const Text('Retry'),
+                child: Text(S.of(context).actionRetry),
               ),
             ],
           ),
@@ -65,7 +73,7 @@ class NutritionScreen extends ConsumerWidget {
           (n) => _showAddFoodDialog(context, ref, n),
         ),
         icon: const Icon(Icons.add),
-        label: const Text('Add Food'),
+        label: Text(S.of(context).nutritionAddFood),
         backgroundColor: AppColors.primary,
       ),
     );
@@ -74,8 +82,7 @@ class NutritionScreen extends ConsumerWidget {
   void _showTargetsDialog(BuildContext context, WidgetRef ref) {
     final targetsAsync = ref.read(nutritionTargetsProvider);
     final targets = targetsAsync.asData?.value ??
-        const NutritionTargets(
-            calories: 2000, protein: 150, carbs: 300, fat: 80, water: 3.0);
+        NutritionTargets.defaults;
     final calCtl = TextEditingController(text: targets.calories.toString());
     final proteinCtl =
         TextEditingController(text: targets.protein.toString());
@@ -111,7 +118,7 @@ class NutritionScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Text('Nutrition Targets',
+            Text(S.of(context).nutritionTargetsTitle,
                 style: Theme.of(ctx)
                     .textTheme
                     .titleLarge
@@ -119,8 +126,8 @@ class NutritionScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             TextField(
                 controller: calCtl,
-                decoration: const InputDecoration(
-                    labelText: 'Calories (kcal)'),
+                decoration: InputDecoration(
+                    labelText: S.of(context).nutritionCaloriesKcal),
                 keyboardType: TextInputType.number),
             const SizedBox(height: 10),
             Row(
@@ -128,15 +135,15 @@ class NutritionScreen extends ConsumerWidget {
                 Expanded(
                     child: TextField(
                         controller: proteinCtl,
-                        decoration: const InputDecoration(
-                            labelText: 'Protein (g)'),
+                        decoration: InputDecoration(
+                            labelText: S.of(context).nutritionProteinG),
                         keyboardType: TextInputType.number)),
                 const SizedBox(width: 8),
                 Expanded(
                     child: TextField(
                         controller: carbsCtl,
-                        decoration: const InputDecoration(
-                            labelText: 'Carbs (g)'),
+                        decoration: InputDecoration(
+                            labelText: S.of(context).nutritionCarbsG),
                         keyboardType: TextInputType.number)),
               ],
             ),
@@ -147,14 +154,14 @@ class NutritionScreen extends ConsumerWidget {
                     child: TextField(
                         controller: fatCtl,
                         decoration:
-                            const InputDecoration(labelText: 'Fat (g)'),
+                            InputDecoration(labelText: S.of(context).nutritionFatG),
                         keyboardType: TextInputType.number)),
                 const SizedBox(width: 8),
                 Expanded(
                     child: TextField(
                         controller: waterCtl,
-                        decoration: const InputDecoration(
-                            labelText: 'Water (L)'),
+                        decoration: InputDecoration(
+                            labelText: S.of(context).nutritionWaterL),
                         keyboardType: TextInputType.number)),
               ],
             ),
@@ -176,7 +183,7 @@ class NutritionScreen extends ConsumerWidget {
                   updateNutritionTargets(ref, newTargets);
                   Navigator.pop(ctx);
                 },
-                child: const Text('Save'),
+                child: Text(S.of(context).actionSave),
               ),
             ),
           ],
@@ -188,6 +195,47 @@ class NutritionScreen extends ConsumerWidget {
       carbsCtl.dispose();
       fatCtl.dispose();
       waterCtl.dispose();
+    });
+  }
+
+  void _showMealSuggestion(BuildContext context, WidgetRef ref) {
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final nutrition = ref.read(nutritionProvider(today)).asData?.value;
+    final targets = ref.read(nutritionTargetsProvider).asData?.value ?? NutritionTargets.defaults;
+
+    if (nutrition == null) return;
+
+    final remainingCalories = (targets.calories - nutrition.calories).clamp(0.0, double.infinity);
+    final remainingProtein = (targets.protein - nutrition.protein).clamp(0.0, double.infinity);
+    final remainingCarbs = (targets.carbs - nutrition.carbs).clamp(0.0, double.infinity);
+    final remainingFats = (targets.fat - nutrition.fat).clamp(0.0, double.infinity);
+
+    ref.read(mealSuggestionProvider.notifier).reset();
+
+    showModalBottomSheet<AiMealSuggestion>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AiMealSuggestionSheet(
+        remainingCalories: remainingCalories,
+        remainingProtein: remainingProtein,
+        remainingCarbs: remainingCarbs,
+        remainingFats: remainingFats,
+      ),
+    ).then((suggestion) {
+      if (suggestion != null) {
+        final updated = nutrition.copyWith(
+          calories: nutrition.calories + suggestion.totalCalories,
+          protein: nutrition.protein + suggestion.totalProtein,
+          carbs: nutrition.carbs + suggestion.totalCarbs,
+          fat: nutrition.fat + suggestion.totalFats,
+        );
+        ref.read(nutritionProvider(today).notifier).save(updated);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(S.of(context).nutritionMealLogged)),
+        );
+      }
     });
   }
 
@@ -225,23 +273,23 @@ class NutritionScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Text('Add Food', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+            Text(S.of(context).nutritionAddFood, style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
-            TextField(controller: nameCtl, decoration: const InputDecoration(labelText: 'Food Name', prefixIcon: Icon(Icons.restaurant))),
+            TextField(controller: nameCtl, decoration: InputDecoration(labelText: S.of(context).nutritionFoodName, prefixIcon: const Icon(Icons.restaurant))),
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: TextField(controller: calCtl, decoration: const InputDecoration(labelText: 'Calories'), keyboardType: TextInputType.number)),
+                Expanded(child: TextField(controller: calCtl, decoration: InputDecoration(labelText: S.of(context).nutritionCaloriesKcal), keyboardType: TextInputType.number)),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(controller: proteinCtl, decoration: const InputDecoration(labelText: 'Protein (g)'), keyboardType: TextInputType.number)),
+                Expanded(child: TextField(controller: proteinCtl, decoration: InputDecoration(labelText: S.of(context).nutritionProteinG), keyboardType: TextInputType.number)),
               ],
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: TextField(controller: carbsCtl, decoration: const InputDecoration(labelText: 'Carbs (g)'), keyboardType: TextInputType.number)),
+                Expanded(child: TextField(controller: carbsCtl, decoration: InputDecoration(labelText: S.of(context).nutritionCarbsG), keyboardType: TextInputType.number)),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(controller: fatCtl, decoration: const InputDecoration(labelText: 'Fat (g)'), keyboardType: TextInputType.number)),
+                Expanded(child: TextField(controller: fatCtl, decoration: InputDecoration(labelText: S.of(context).nutritionFatG), keyboardType: TextInputType.number)),
               ],
             ),
             const SizedBox(height: 16),
@@ -260,7 +308,7 @@ class NutritionScreen extends ConsumerWidget {
                       }
                     },
                     icon: const Icon(Icons.qr_code_scanner),
-                    label: const Text('Scan'),
+                    label: Text(S.of(context).nutritionScan),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -277,7 +325,7 @@ class NutritionScreen extends ConsumerWidget {
                       }
                     },
                     icon: const Icon(Icons.auto_awesome),
-                    label: const Text('AI Scan'),
+                    label: Text(S.of(context).healthAiFoodScan),
                   ),
                 ),
               ],
@@ -296,7 +344,7 @@ class NutritionScreen extends ConsumerWidget {
                   ref.read(nutritionProvider(today).notifier).save(updated);
                   Navigator.pop(ctx);
                 },
-                child: const Text('Add'),
+                child: Text(S.of(context).actionAdd),
               ),
             ),
           ],
@@ -340,29 +388,29 @@ class _NutritionContent extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              CircularGauge(value: nutrition.protein, label: 'Protein (g)', maxValue: targets.protein.toDouble(), color: AppColors.success),
-              CircularGauge(value: nutrition.carbs, label: 'Carbs (g)', maxValue: targets.carbs.toDouble(), color: AppColors.warning),
-              CircularGauge(value: nutrition.fat, label: 'Fat (g)', maxValue: targets.fat.toDouble(), color: AppColors.fatigued),
+              CircularGauge(value: nutrition.protein, label: S.of(context).nutritionProteinG, maxValue: targets.protein.toDouble(), color: AppColors.success),
+              CircularGauge(value: nutrition.carbs, label: S.of(context).nutritionCarbsG, maxValue: targets.carbs.toDouble(), color: AppColors.warning),
+              CircularGauge(value: nutrition.fat, label: S.of(context).nutritionFatG, maxValue: targets.fat.toDouble(), color: AppColors.fatigued),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              CircularGauge(value: nutrition.water, label: 'Water (L)', maxValue: targets.water, color: AppColors.peaked),
+              CircularGauge(value: nutrition.water, label: S.of(context).nutritionWaterL, maxValue: targets.water, color: AppColors.peaked),
             ],
           ),
           const SizedBox(height: 20),
           // Macro breakdown
           _SectionCard(
-            title: 'Macro Breakdown',
+            title: S.of(context).nutritionMacroBreakdown,
             child: Column(
               children: [
-                _MacroBar(label: 'Protein', percent: proteinPct, grams: nutrition.protein, color: AppColors.success),
+                _MacroBar(label: S.of(context).nutritionProteinG, percent: proteinPct, grams: nutrition.protein, color: AppColors.success),
                 const SizedBox(height: 8),
-                _MacroBar(label: 'Carbs', percent: carbsPct, grams: nutrition.carbs, color: AppColors.warning),
+                _MacroBar(label: S.of(context).nutritionCarbs, percent: carbsPct, grams: nutrition.carbs, color: AppColors.warning),
                 const SizedBox(height: 8),
-                _MacroBar(label: 'Fat', percent: fatPct, grams: nutrition.fat, color: AppColors.fatigued),
+                _MacroBar(label: S.of(context).nutritionFatLabel, percent: fatPct, grams: nutrition.fat, color: AppColors.fatigued),
               ],
             ),
           ),
@@ -425,7 +473,7 @@ class _CalorieRing extends StatelessWidget {
               Text('kcal eaten', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant)),
               const SizedBox(height: 4),
               Text(
-                '${(goal - nutrition.calories).clamp(0, goal).toInt()} kcal remaining',
+                S.of(context).nutritionKcalRemaining((goal - nutrition.calories).clamp(0, goal).toInt()),
                 style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primary),
               ),
             ],
@@ -488,7 +536,7 @@ class _WaterTracker extends StatelessWidget {
     final theme = Theme.of(context);
     final glasses = (currentWater / 0.25).floor();
     return _SectionCard(
-      title: 'Water Intake',
+      title: S.of(context).nutritionWaterIntake,
       trailing: Text(
         '${currentWater.toStringAsFixed(2)}L / ${waterGoal.toStringAsFixed(1)}L',
         style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
@@ -519,10 +567,10 @@ class _NutritionTrendsSection extends ConsumerWidget {
       data: (analytics) {
         if (analytics.dailyData.isEmpty) return const SizedBox.shrink();
         return _SectionCard(
-          title: '7-Day Calories',
+          title: S.of(context).nutrition7DayCalories,
           trailing: analytics.macroAdherenceScore > 0
               ? Text(
-                  '${analytics.macroAdherenceScore.toStringAsFixed(0)}% adherence',
+                  S.of(context).nutritionAdherence(analytics.macroAdherenceScore.toStringAsFixed(0)),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: analytics.macroAdherenceScore >= 80 ? AppColors.success : AppColors.warning,
                   ),

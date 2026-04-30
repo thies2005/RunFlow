@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runflow_flutter/data/models/chat_models.dart';
+import 'package:runflow_flutter/domain/entities/chat_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
 import 'package:runflow_flutter/presentation/screens/chat/chat_screen.dart';
 
@@ -93,6 +95,13 @@ void main() {
                 .overrideWith(() => _FakeSessionId(null)),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: ChatScreen(),
           ),
         ),
@@ -114,6 +123,13 @@ void main() {
                 .overrideWith(() => _FakeSessionId(null)),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: ChatScreen(),
           ),
         ),
@@ -143,6 +159,13 @@ void main() {
             ),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: ChatScreen(),
           ),
         ),
@@ -170,6 +193,13 @@ void main() {
             ),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: ChatScreen(),
           ),
         ),
@@ -191,6 +221,13 @@ void main() {
                 .overrideWith(() => _FakeSessionId(null)),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: ChatScreen(),
           ),
         ),
@@ -220,6 +257,13 @@ void main() {
             ),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: ChatScreen(),
           ),
         ),

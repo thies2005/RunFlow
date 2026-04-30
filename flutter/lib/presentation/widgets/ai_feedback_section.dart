@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
+import 'package:runflow_flutter/domain/entities/ai_feedback_entities.dart';
 import 'package:runflow_flutter/presentation/providers/ai_feedback_providers.dart';
 
 class AiFeedbackSection extends ConsumerWidget {

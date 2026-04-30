@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
 
@@ -73,12 +74,12 @@ class _OnboardingWizardScreenState
                   if (step.index > 0 || onboarding.currentPlanSubStep.index > 0)
                     TextButton(
                       onPressed: _handleBack,
-                      child: const Text('Back'),
+                      child: Text(S.of(context).actionBack),
                     )
                   else
                     TextButton(
                       onPressed: _completeOnboarding,
-                      child: const Text('Skip'),
+                      child: Text(S.of(context).actionSkip),
                     ),
                   const Spacer(),
                   if (step == OnboardingStep.planSetup)
@@ -235,7 +236,7 @@ class _SyncDataStepState extends ConsumerState<_SyncDataStep> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Import your history',
+            S.of(context).onboardingImportHistory,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -243,7 +244,7 @@ class _SyncDataStepState extends ConsumerState<_SyncDataStep> {
           ),
           const SizedBox(height: 8),
           Text(
-            'RunFlow needs your activity history to start your adaptive training plan.',
+            S.of(context).onboardingImportHistorySubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -259,7 +260,7 @@ class _SyncDataStepState extends ConsumerState<_SyncDataStep> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Activities found',
+                        S.of(context).onboardingActivitiesFound,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -275,7 +276,7 @@ class _SyncDataStepState extends ConsumerState<_SyncDataStep> {
                   if (onboarding.isSyncing) ...[
                     const SizedBox(height: 12),
                     Text(
-                      'Syncing active... this might take a minute.',
+                      S.of(context).onboardingSyncingActive,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF2196F3),
                       ),
@@ -289,17 +290,17 @@ class _SyncDataStepState extends ConsumerState<_SyncDataStep> {
             const SizedBox(height: 20),
             DropdownButtonFormField<String>(
               initialValue: onboarding.importRange,
-              decoration: const InputDecoration(
-                labelText: 'Import Range',
+              decoration: InputDecoration(
+                labelText: S.of(context).onboardingImportRange,
               ),
-              items: const [
-                DropdownMenuItem(value: '1_MONTH', child: Text('Last Month')),
+              items: [
+                DropdownMenuItem(value: '1_MONTH', child: Text(S.of(context).onboardingLastMonth)),
                 DropdownMenuItem(
-                    value: '3_MONTHS', child: Text('Last 3 Months')),
+                    value: '3_MONTHS', child: Text(S.of(context).onboardingLastThreeMonths)),
                 DropdownMenuItem(
-                    value: '6_MONTHS', child: Text('Last 6 Months')),
-                DropdownMenuItem(value: '1_YEAR', child: Text('Last Year')),
-                DropdownMenuItem(value: 'ALL', child: Text('All History')),
+                    value: '6_MONTHS', child: Text(S.of(context).onboardingLastSixMonths)),
+                DropdownMenuItem(value: '1_YEAR', child: Text(S.of(context).onboardingLastYear)),
+                DropdownMenuItem(value: 'ALL', child: Text(S.of(context).onboardingAllHistory)),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -321,9 +322,9 @@ class _SyncDataStepState extends ConsumerState<_SyncDataStep> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Start Import',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                child: Text(
+                  S.of(context).onboardingStartImport,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -341,10 +342,10 @@ class _SyncDataStepState extends ConsumerState<_SyncDataStep> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(
-                onboarding.hasSynced ? 'Analyze Data' : 'Continue without data',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+                child: Text(
+                 onboarding.hasSynced ? S.of(context).onboardingAnalyzeData : S.of(context).onboardingContinueWithoutData,
+                 style: const TextStyle(fontWeight: FontWeight.w600),
+               ),
             ),
           ),
           const SizedBox(height: 32),
@@ -380,7 +381,7 @@ class _AnalyzeProfileStep extends ConsumerWidget {
         children: [
           const SizedBox(height: 24),
           Text(
-            'Your Running Profile',
+            S.of(context).onboardingRunningProfile,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -388,7 +389,7 @@ class _AnalyzeProfileStep extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Based on your synced activity data',
+            S.of(context).onboardingRunningProfileSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -414,14 +415,14 @@ class _AnalyzeProfileStep extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'No activity data yet',
+                      S.of(context).onboardingNoActivityDataYet,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'We\'ll use default values to get you started.',
+                      S.of(context).onboardingDefaultValuesMessage,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -446,11 +447,11 @@ class _AnalyzeProfileStep extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Build My Plan',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
+               child: Text(
+                 S.of(context).onboardingBuildMyPlan,
+                 style: const TextStyle(fontWeight: FontWeight.w600),
+               ),
+             ),
           ),
           const SizedBox(height: 32),
         ],
@@ -685,7 +686,7 @@ class _PlanStepNavButtons extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _nextLabel(subStep),
+                      _nextLabel(context, subStep),
                       style: const TextStyle(
                           fontWeight: FontWeight.w600),
                     ),
@@ -700,35 +701,35 @@ class _PlanStepNavButtons extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               height: 40,
-              child: TextButton(
-                onPressed: () => notifier.previousPlanSubStep(),
-                child: const Text('Back'),
+                child: TextButton(
+                  onPressed: () => notifier.previousPlanSubStep(),
+                  child: Text(S.of(context).actionBack),
+                ),
               ),
-            ),
           ],
         ],
       ),
     );
   }
 
-  String _nextLabel(PlanSubStep step) {
+  String _nextLabel(BuildContext context, PlanSubStep step) {
     switch (step) {
       case PlanSubStep.experienceLevel:
-        return 'Next';
+        return S.of(context).actionNext;
       case PlanSubStep.raceGoal:
-        return 'Next';
+        return S.of(context).actionNext;
       case PlanSubStep.currentFitness:
-        return 'Next';
+        return S.of(context).actionNext;
       case PlanSubStep.goalTime:
-        return 'Next';
+        return S.of(context).actionNext;
       case PlanSubStep.trainingVolume:
-        return 'Next';
+        return S.of(context).actionNext;
       case PlanSubStep.trainingSchedule:
-        return 'Next';
+        return S.of(context).actionNext;
       case PlanSubStep.heartRateProfile:
-        return 'Review Plan';
+        return S.of(context).onboardingReviewPlan;
       case PlanSubStep.review:
-        return 'Generate';
+        return S.of(context).onboardingGenerate;
     }
   }
 }

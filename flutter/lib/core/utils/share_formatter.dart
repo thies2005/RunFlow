@@ -1,6 +1,6 @@
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 
 String formatShareText(Activity activity) {
   final typeLabel = activityTypeLabel(activity.type);

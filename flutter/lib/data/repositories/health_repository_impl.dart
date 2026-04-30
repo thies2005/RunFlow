@@ -1,5 +1,7 @@
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
+import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/health_repository.dart';
 
 class HealthRepositoryImpl implements HealthRepository {
@@ -8,38 +10,42 @@ class HealthRepositoryImpl implements HealthRepository {
   final AppDatabase database;
 
   @override
-  Future<NutritionLog> getNutritionLog(DateTime date) async {
-    return database.getNutritionLogByDate(date);
+  Future<domain.NutritionLog> getNutritionLog(DateTime date) async {
+    final log = await database.getNutritionLogByDate(date);
+    return log.toDomain();
   }
 
   @override
-  Future<void> saveNutritionLog(NutritionLog log) async {
-    await database.updateNutritionLog(log);
+  Future<void> saveNutritionLog(domain.NutritionLog log) async {
+    await database.updateNutritionLog(log.toData());
   }
 
   @override
-  Future<List<FoodItem>> getFoodItems() async {
-    return database.getAllFoodItems();
+  Future<List<domain.FoodItem>> getFoodItems() async {
+    final items = await database.getAllFoodItems();
+    return items.map((i) => i.toDomain()).toList();
   }
 
   @override
-  Future<List<FoodItem>> searchFoodItems(String query) async {
-    return database.searchFoodItems(query);
+  Future<List<domain.FoodItem>> searchFoodItems(String query) async {
+    final items = await database.searchFoodItems(query);
+    return items.map((i) => i.toDomain()).toList();
   }
 
   @override
-  Future<void> saveFoodItem(FoodItem item) async {
-    await database.insertFoodItem(item);
+  Future<void> saveFoodItem(domain.FoodItem item) async {
+    await database.insertFoodItem(item.toData());
   }
 
   @override
-  Future<List<Supplement>> getSupplements() async {
-    return database.getAllSupplements();
+  Future<List<domain.Supplement>> getSupplements() async {
+    final supplements = await database.getAllSupplements();
+    return supplements.map((s) => s.toDomain()).toList();
   }
 
   @override
-  Future<void> saveSupplement(Supplement supplement) async {
-    await database.insertSupplement(supplement);
+  Future<void> saveSupplement(domain.Supplement supplement) async {
+    await database.insertSupplement(supplement.toData());
   }
 
   @override
@@ -52,23 +58,24 @@ class HealthRepositoryImpl implements HealthRepository {
   }
 
   @override
-  Future<List<BodyMeasurement>> getBodyMeasurements({
+  Future<List<domain.BodyMeasurement>> getBodyMeasurements({
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    return database.getBodyMeasurements(
+    final measurements = await database.getBodyMeasurements(
       startDate: startDate,
       endDate: endDate,
     );
+    return measurements.map((m) => m.toDomain()).toList();
   }
 
   @override
-  Future<void> saveBodyMeasurement(BodyMeasurement measurement) async {
-    await database.insertBodyMeasurement(measurement);
+  Future<void> saveBodyMeasurement(domain.BodyMeasurement measurement) async {
+    await database.insertBodyMeasurement(measurement.toData());
   }
 
   @override
-  Future<FastingSession> startFasting() async {
+  Future<domain.FastingSession> startFasting() async {
     final now = DateTime.now();
     final session = FastingSession(
       id: 0,
@@ -77,11 +84,11 @@ class HealthRepositoryImpl implements HealthRepository {
       isActive: true,
     );
     final id = await database.insertFastingSession(session);
-    return session.copyWith(id: id);
+    return session.copyWith(id: id).toDomain();
   }
 
   @override
-  Future<FastingSession> stopFasting() async {
+  Future<domain.FastingSession> stopFasting() async {
     final active = await database.getActiveFastingSession();
     if (active == null) {
       throw Exception('No active fasting session');
@@ -94,16 +101,18 @@ class HealthRepositoryImpl implements HealthRepository {
       isActive: false,
     );
     await database.updateFastingSession(stopped);
-    return stopped;
+    return stopped.toDomain();
   }
 
   @override
-  Future<FastingSession?> getActiveFasting() async {
-    return database.getActiveFastingSession();
+  Future<domain.FastingSession?> getActiveFasting() async {
+    final session = await database.getActiveFastingSession();
+    return session?.toDomain();
   }
 
   @override
-  Future<List<FastingSession>> getFastingHistory() async {
-    return database.getFastingHistory();
+  Future<List<domain.FastingSession>> getFastingHistory() async {
+    final history = await database.getFastingHistory();
+    return history.map((s) => s.toDomain()).toList();
   }
 }

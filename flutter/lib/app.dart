@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/main.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 import 'package:runflow_flutter/presentation/router/app_router.dart';
 import 'package:runflow_flutter/presentation/widgets/offline_banner.dart';
+import 'package:runflow_flutter/presentation/widgets/consent_banner.dart';
 
 class RunFlowApp extends ConsumerStatefulWidget {
   const RunFlowApp({super.key});
@@ -38,6 +41,13 @@ class _RunFlowAppState extends ConsumerState<RunFlowApp> {
     return MaterialApp.router(
       title: 'RunFlow',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        S.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: S.supportedLocales,
       theme: buildLightTheme(),
       darkTheme: buildDarkTheme(),
       themeMode: switch (settings.themeMode) {
@@ -47,11 +57,13 @@ class _RunFlowAppState extends ConsumerState<RunFlowApp> {
       },
       routerConfig: router,
       builder: (context, child) {
-        return Column(
-          children: [
-            const OfflineBanner(),
-            Expanded(child: child ?? const SizedBox.shrink()),
-          ],
+        return ConsentBanner(
+          child: Column(
+            children: [
+              const OfflineBanner(),
+              Expanded(child: child ?? const SizedBox.shrink()),
+            ],
+          ),
         );
       },
     );

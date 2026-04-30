@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
-import 'package:runflow_flutter/data/models/chat_models.dart';
+import 'package:runflow_flutter/domain/entities/chat_entities.dart';
 import 'package:runflow_flutter/data/repositories/chat_repository_impl.dart';
 
 void main() {

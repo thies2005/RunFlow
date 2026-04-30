@@ -1,8 +1,10 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/data/repositories/health_api_repository_impl.dart';
 
 class MockDio extends Mock implements Dio {}
@@ -209,6 +211,100 @@ void main() {
           () => repository.scanBarcode('123'),
           throwsA(isA<ServerException>()),
         );
+      });
+    });
+
+    group('aiScanImage', () {
+      test('sends FormData with image file', () async {
+        final tempDir = await Directory.systemTemp.createTemp();
+        final tempFile = File('${tempDir.path}/test_image.jpg');
+        await tempFile.writeAsBytes([1, 2, 3, 4, 5]);
+
+        when(() => mockDio.post(
+              any(),
+              data: any(named: 'data'),
+              options: any(named: 'options'),
+            )).thenAnswer((_) async => Response<dynamic>(
+              requestOptions: RequestOptions(path: ''),
+              statusCode: 200,
+              data: {
+                'food': {
+                  'id': 20,
+                  'name': 'Scanned Meal',
+                  'calories': 500.0,
+                  'protein': 30.0,
+                  'carbs': 50.0,
+                  'fat': 15.0,
+                  'servingSize': 250.0,
+                },
+              },
+            ));
+
+        final result = await repository.aiScanImage(tempFile.path);
+
+        expect(result, isNotNull);
+        expect(result!.name, 'Scanned Meal');
+
+        final captured = verify(() => mockDio.post(
+              '/health/nutrition/ai-scan',
+              data: captureAny(named: 'data'),
+              options: any(named: 'options'),
+            )).captured;
+
+        expect(captured.first, isA<FormData>());
+
+        await tempDir.delete(recursive: true);
+      });
+
+      test('returns null when not found (404)', () async {
+        final tempDir = await Directory.systemTemp.createTemp();
+        final tempFile = File('${tempDir.path}/test_image.jpg');
+        await tempFile.writeAsBytes([1, 2, 3]);
+
+        when(() => mockDio.post(
+              any(),
+              data: any(named: 'data'),
+              options: any(named: 'options'),
+            )).thenThrow(DioException(
+              requestOptions: RequestOptions(path: ''),
+              response: Response<dynamic>(
+                requestOptions: RequestOptions(path: ''),
+                statusCode: 404,
+              ),
+              type: DioExceptionType.badResponse,
+            ));
+
+        final result = await repository.aiScanImage(tempFile.path);
+
+        expect(result, isNull);
+
+        await tempDir.delete(recursive: true);
+      });
+
+      test('throws ServerException on non-404 error', () async {
+        final tempDir = await Directory.systemTemp.createTemp();
+        final tempFile = File('${tempDir.path}/test_image.jpg');
+        await tempFile.writeAsBytes([1, 2, 3]);
+
+        when(() => mockDio.post(
+              any(),
+              data: any(named: 'data'),
+              options: any(named: 'options'),
+            )).thenThrow(DioException(
+              requestOptions: RequestOptions(path: ''),
+              response: Response<dynamic>(
+                requestOptions: RequestOptions(path: ''),
+                statusCode: 500,
+              ),
+              type: DioExceptionType.badResponse,
+            ));
+
+        expect(
+          () => repository.aiScanImage(tempFile.path),
+          throwsA(isA<ServerException>()),
+        );
+
+        await tempDir.delete(recursive: true);
       });
     });
 

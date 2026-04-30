@@ -103,6 +103,9 @@ class DeduplicationInterceptor extends Interceptor {
         .map((e) => '${e.key}=${e.value}')
         .toList()
       ..sort();
+    if (params.isEmpty) {
+      return '${options.method}:${options.uri}';
+    }
     return '${options.method}:${options.uri}?${params.join('&')}';
   }
 }

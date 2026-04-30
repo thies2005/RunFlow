@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 
 class StartupScreen extends StatefulWidget {
   const StartupScreen({super.key});
@@ -63,7 +64,7 @@ class _StartupScreenState extends State<StartupScreen>
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'RunFlow',
+                  S.of(context).appTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: AppColors.onPrimary,
@@ -72,7 +73,7 @@ class _StartupScreenState extends State<StartupScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your Running Performance Dashboard',
+                  S.of(context).startupSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/data/repositories/health_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/health_repository.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';

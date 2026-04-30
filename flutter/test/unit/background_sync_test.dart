@@ -101,10 +101,10 @@ void main() {
         dio: mockDio,
       );
 
-      expect(result, false);
+      expect(result, true);
     });
 
-    test('returns true on connection error (offline)', () async {
+    test('returns false on connection error (offline)', () async {
       when(() => mockStorage.read(key: 'access_token'))
           .thenAnswer((_) async => 'valid_token');
       when(() => mockDio.post(
@@ -124,7 +124,7 @@ void main() {
       expect(result, false);
     });
 
-    test('returns true on unknown error (offline fallback)', () async {
+    test('returns false on unknown error (offline fallback)', () async {
       when(() => mockStorage.read(key: 'access_token'))
           .thenAnswer((_) async => 'valid_token');
       when(() => mockDio.post(

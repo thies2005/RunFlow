@@ -1,13 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/data/models/health_vitals_models.dart';
 import 'package:runflow_flutter/data/repositories/health_api_repository_impl.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 import 'package:runflow_flutter/presentation/screens/health/health_screen.dart';
@@ -130,6 +132,13 @@ void main() {
         ProviderScope(
           overrides: defaultOverrides().cast(),
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: HealthScreen(),
           ),
         ),
@@ -144,6 +153,13 @@ void main() {
         ProviderScope(
           overrides: defaultOverrides().cast(),
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: HealthScreen(),
           ),
         ),
@@ -158,6 +174,13 @@ void main() {
         ProviderScope(
           overrides: defaultOverrides().cast(),
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: HealthScreen(),
           ),
         ),
@@ -172,6 +195,13 @@ void main() {
         ProviderScope(
           overrides: defaultOverrides().cast(),
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: HealthScreen(),
           ),
         ),
@@ -187,6 +217,13 @@ void main() {
         ProviderScope(
           overrides: defaultOverrides().cast(),
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: HealthScreen(),
           ),
         ),
@@ -202,6 +239,13 @@ void main() {
         ProviderScope(
           overrides: defaultOverrides().cast(),
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: HealthScreen(),
           ),
         ),
@@ -219,6 +263,13 @@ void main() {
         ProviderScope(
           overrides: defaultOverrides().cast(),
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: HealthScreen(),
           ),
         ),

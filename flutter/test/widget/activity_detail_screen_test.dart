@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/ai_feedback_entities.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/ai_feedback_providers.dart';
 import 'package:runflow_flutter/presentation/screens/activities/activity_detail_screen.dart';
@@ -38,6 +40,13 @@ void main() {
                 .overrideWith(() => _FakeAiFeedback(activityId)),
           ],
           child: MaterialApp(
+            localizationsDelegates: const [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: ActivityDetailScreen(activityId: activityId),
           ),
         ),
@@ -74,6 +83,13 @@ void main() {
             ),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: ActivityDetailScreen(activityId: 'bad-id'),
           ),
         ),
@@ -92,6 +108,13 @@ void main() {
                 .overrideWithValue(const AsyncValue.loading()),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: ActivityDetailScreen(activityId: 'loading-id'),
           ),
         ),

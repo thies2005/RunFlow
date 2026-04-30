@@ -3,7 +3,9 @@ import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/data/auth/refresh_session.dart';
+import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/auth_models.dart';
+import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
 import 'package:runflow_flutter/services/auth_service.dart';
 
@@ -17,7 +19,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthService authService;
 
   @override
-  Future<LoginResponse> loginWithStravaCode(
+  Future<domain.LoginResponse> loginWithStravaCode(
     String code, {
     String? redirectUri,
   }) async {
@@ -37,7 +39,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       await authService.storeUser(loginResponse.user);
 
-      return loginResponse;
+      return loginResponse.toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -49,7 +51,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<LoginResponse> loginWithEmail({
+  Future<domain.LoginResponse> loginWithEmail({
     required String email,
     required String password,
   }) async {
@@ -66,7 +68,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       await authService.storeUser(loginResponse.user);
 
-      return loginResponse;
+      return loginResponse.toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -196,13 +198,58 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> verifyEmail(String email, String code) async {
+    try {
+      await dio.post(
+        ApiConstants.verifyEmailPath,
+        data: {'email': email, 'code': code},
+      );
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : AuthException(
+              message: 'Email verification failed.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
+  @override
+  Future<void> resendVerification(String email) async {
+    try {
+      await dio.post(
+        ApiConstants.resendVerificationPath,
+        data: {'email': email},
+      );
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : AuthException(
+              message: 'Failed to resend verification email.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
+  @override
+  Future<bool> checkEmailVerified() async {
+    try {
+      final user = await getCurrentUser();
+      return user?.emailVerified ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
   Future<bool> isLoggedIn() async {
     return authService.isLoggedIn;
   }
 
   @override
-  Future<User?> getCurrentUser() async {
-    return authService.getUser();
+  Future<domain.User?> getCurrentUser() async {
+    final user = await authService.getUser();
+    return user?.toDomain();
   }
 
   @override

@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
+import 'package:runflow_flutter/domain/entities/ai_feedback_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 
 part 'ai_feedback_providers.g.dart';

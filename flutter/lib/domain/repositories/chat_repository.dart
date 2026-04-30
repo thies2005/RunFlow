@@ -1,4 +1,4 @@
-import 'package:runflow_flutter/data/models/chat_models.dart';
+import 'package:runflow_flutter/domain/entities/chat_entities.dart';
 
 abstract class ChatRepository {
   Future<List<ChatSession>> listSessions();

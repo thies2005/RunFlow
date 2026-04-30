@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runflow_flutter/data/models/activity_models.dart';
-import 'package:runflow_flutter/data/models/ai_feedback_models.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/recording_models.dart';
+import 'package:runflow_flutter/domain/entities/activity_entities.dart';
+import 'package:runflow_flutter/domain/entities/ai_feedback_entities.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/recording_entities.dart';
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 

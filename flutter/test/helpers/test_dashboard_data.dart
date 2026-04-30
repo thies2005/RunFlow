@@ -1,5 +1,5 @@
-import 'package:runflow_flutter/data/models/auth_models.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/auth_entities.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 
 class TestDashboardData {
   TestDashboardData._();

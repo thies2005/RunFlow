@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/presentation/screens/auth/verification_sheet.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -50,14 +52,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
 
       if (mounted) {
-        context.go('/dashboard');
+        final email = _emailController.text.trim();
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => VerificationSheet(email: email),
+        ).then((verified) {
+          if (mounted) {
+            context.go('/dashboard');
+          }
+        }).ignore();
       }
     } catch (e) {
       if (mounted) {
         final msg = e.toString();
         final userMessage = msg.contains('409') || msg.contains('already exists')
-            ? 'An account with this email already exists.'
-            : 'Registration failed. Please try again.';
+            ? S.of(context).authAccountExists
+            : S.of(context).authRegistrationFailedMsg;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(userMessage)),
         );
@@ -80,7 +91,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: S.of(context).authBackTooltip,
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/login'),
         ),
@@ -102,7 +113,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Create Account',
+                    S.of(context).authCreateAccount,
                     style: theme.textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.primary,
@@ -111,7 +122,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign up to get started with RunFlow',
+                    S.of(context).authSignUpSubtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -152,14 +163,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       controller: _nameController,
       enabled: !_isLoading,
       textCapitalization: TextCapitalization.words,
-      decoration: const InputDecoration(
-        labelText: 'Name',
-        hintText: 'Your name',
-        prefixIcon: Icon(Icons.person_outlined),
+      decoration: InputDecoration(
+        labelText: S.of(context).authName,
+        hintText: S.of(context).authNameHint,
+        prefixIcon: const Icon(Icons.person_outlined),
       ),
       validator: (String? value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Please enter your name.';
+          return S.of(context).authNameRequired;
         }
         return null;
       },
@@ -172,17 +183,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       keyboardType: TextInputType.emailAddress,
       autocorrect: false,
       enabled: !_isLoading,
-      decoration: const InputDecoration(
-        labelText: 'Email',
-        hintText: 'you@example.com',
-        prefixIcon: Icon(Icons.email_outlined),
+      decoration: InputDecoration(
+        labelText: S.of(context).authEmail,
+        hintText: S.of(context).authEmailHint,
+        prefixIcon: const Icon(Icons.email_outlined),
       ),
       validator: (String? value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Please enter your email.';
+          return S.of(context).authEmailRequired;
         }
         if (!_emailRegex.hasMatch(value.trim())) {
-          return 'Please enter a valid email address.';
+          return S.of(context).authInvalidEmail;
         }
         return null;
       },
@@ -195,10 +206,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       obscureText: _obscurePassword,
       enabled: !_isLoading,
       decoration: InputDecoration(
-        labelText: 'Password',
+        labelText: S.of(context).authPassword,
         prefixIcon: const Icon(Icons.lock_outlined),
         suffixIcon: IconButton(
-          tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+          tooltip: _obscurePassword ? S.of(context).authShowPassword : S.of(context).authHidePassword,
           icon: Icon(
             _obscurePassword ? Icons.visibility_off : Icons.visibility,
           ),
@@ -209,10 +220,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       ),
       validator: (String? value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter a password.';
+          return S.of(context).authPasswordRequired;
         }
         if (value.length < 8) {
-          return 'Password must be at least 8 characters.';
+          return S.of(context).authPasswordMinChars;
         }
         return null;
       },
@@ -225,10 +236,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       obscureText: _obscureConfirmPassword,
       enabled: !_isLoading,
       decoration: InputDecoration(
-        labelText: 'Confirm Password',
+        labelText: S.of(context).authConfirmPassword,
         prefixIcon: const Icon(Icons.lock_outlined),
         suffixIcon: IconButton(
-          tooltip: _obscureConfirmPassword ? 'Show password' : 'Hide password',
+          tooltip: _obscureConfirmPassword ? S.of(context).authShowPassword : S.of(context).authHidePassword,
           icon: Icon(
             _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
           ),
@@ -239,10 +250,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       ),
       validator: (String? value) {
         if (value == null || value.isEmpty) {
-          return 'Please confirm your password.';
+          return S.of(context).authConfirmPasswordRequired;
         }
         if (value != _passwordController.text) {
-          return 'Passwords do not match.';
+          return S.of(context).authPasswordsNoMatch;
         }
         return null;
       },
@@ -258,7 +269,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      child: const Text('Create Account'),
+      child: Text(S.of(context).authCreateAccount),
     );
   }
 
@@ -289,16 +300,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Already have an account? ',
+          S.of(context).authAlreadyHaveAccount,
           style: TextStyle(color: colorScheme.onSurfaceVariant),
         ),
-        GestureDetector(
-          onTap: _isLoading ? null : () => context.go('/login'),
-          child: Text(
-            'Sign In',
-            style: TextStyle(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w600,
+        Semantics(
+          button: true,
+          label: S.of(context).authSignInSemantic,
+          child: GestureDetector(
+            onTap: _isLoading ? null : () => context.go('/login'),
+            child: Text(
+              S.of(context).authSignIn,
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),

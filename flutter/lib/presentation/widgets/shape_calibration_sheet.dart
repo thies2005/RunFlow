@@ -6,7 +6,7 @@ import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/core/utils/vdot.dart';
 import 'package:runflow_flutter/data/models/calibration_models.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/providers/calibration_providers.dart';

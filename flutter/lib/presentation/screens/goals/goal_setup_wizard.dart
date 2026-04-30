@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 
 class GoalSetupWizard extends ConsumerStatefulWidget {
@@ -49,7 +51,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         final now = DateTime.now();
         if (_selectedDate.isBefore(DateTime(now.year, now.month, now.day))) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please select a future race date')),
+            SnackBar(content: Text(S.of(context).goalWizardFutureRaceDate)),
           );
           return false;
         }
@@ -119,7 +121,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
           _isSubmitting = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create goal: $e')),
+          SnackBar(content: Text(S.of(context).goalWizardCreateFailed(e.toString()))),
         );
       }
     }
@@ -129,7 +131,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Goal'),
+        title: Text(S.of(context).goalWizardNewGoal),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.go('/goals'),
@@ -269,7 +271,7 @@ class _NavigationButtons extends StatelessWidget {
             Expanded(
               child: OutlinedButton(
                 onPressed: onPrevious,
-                child: const Text('Back'),
+                child: Text(S.of(context).actionBack),
               ),
             ),
           if (currentStep > 0) const SizedBox(width: 12),
@@ -285,7 +287,7 @@ class _NavigationButtons extends StatelessWidget {
                         color: AppColors.onPrimary,
                       ),
                     )
-                  : Text(isLastStep ? 'Create Goal' : 'Next'),
+                  : Text(isLastStep ? S.of(context).planCreateGoal : S.of(context).actionNext),
             ),
           ),
         ],
@@ -317,14 +319,14 @@ class _NameStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Name & Race Type',
+            S.of(context).goalWizardNameRaceType,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Give your goal a name and select the type of race you\'re training for.',
+            S.of(context).goalWizardNameRaceTypeDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -334,21 +336,21 @@ class _NameStep extends StatelessWidget {
             key: formKey,
             child: TextFormField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Goal Name',
-                hintText: 'e.g. Berlin Marathon 2025',
+              decoration: InputDecoration(
+                labelText: S.of(context).goalWizardGoalName,
+                hintText: S.of(context).goalWizardGoalNameHint,
               ),
               textCapitalization: TextCapitalization.words,
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Goal name is required';
-                if (v.trim().length < 2) return 'At least 2 characters';
+                if (v == null || v.trim().isEmpty) return S.of(context).goalWizardGoalNameRequired;
+                if (v.trim().length < 2) return S.of(context).goalWizardGoalNameMinChars;
                 return null;
               },
             ),
           ),
           const SizedBox(height: 24),
           Text(
-            'Race Type',
+            S.of(context).goalWizardRaceTypeLabel,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -426,7 +428,7 @@ class _RaceTypeOption extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Distance: ${_formatRaceDistance(type)}',
+                      S.of(context).goalWizardRaceDistance(_formatRaceDistance(type)),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -466,14 +468,14 @@ class _DateStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Race Date',
+            S.of(context).goalWizardRaceDateTitle,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'When is your target race day?',
+            S.of(context).goalWizardRaceDateDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -485,7 +487,7 @@ class _DateStep extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    _formatDate(selectedDate),
+                    _formatDate(context, selectedDate),
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.primary,
@@ -507,7 +509,7 @@ class _DateStep extends StatelessWidget {
                         }
                       },
                       icon: const Icon(Icons.calendar_today),
-                      label: const Text('Select Date'),
+                      label: Text(S.of(context).goalWizardSelectDate),
                     ),
                   ),
                 ],
@@ -528,7 +530,7 @@ class _DateStep extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '${selectedDate.difference(DateTime.now()).inDays} days from now',
+                      S.of(context).goalWizardDaysFromNow(selectedDate.difference(DateTime.now()).inDays),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -543,10 +545,10 @@ class _DateStep extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      S.of(context).monthJanuary, S.of(context).monthFebruary, S.of(context).monthMarch, S.of(context).monthApril, S.of(context).monthMay, S.of(context).monthJune,
+      S.of(context).monthJuly, S.of(context).monthAugust, S.of(context).monthSeptember, S.of(context).monthOctober, S.of(context).monthNovember, S.of(context).monthDecember,
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -577,21 +579,21 @@ class _TargetTimeStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Target Time',
+            S.of(context).goalWizardTargetTimeTitle,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Set a target finish time for your race. This is optional.',
+            S.of(context).goalWizardTargetTimeDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 24),
           SwitchListTile(
-            title: const Text('Set a target time'),
+            title: Text(S.of(context).goalWizardSetTargetTime),
             value: hasTargetTime,
             onChanged: onHasTargetTimeChanged,
             contentPadding: EdgeInsets.zero,
@@ -603,8 +605,8 @@ class _TargetTimeStep extends StatelessWidget {
                 Expanded(
                   child: TextFormField(
                     controller: hoursController,
-                    decoration: const InputDecoration(
-                      labelText: 'Hours',
+                    decoration: InputDecoration(
+                      labelText: S.of(context).goalWizardHours,
                       hintText: '0',
                     ),
                     keyboardType: TextInputType.number,
@@ -623,8 +625,8 @@ class _TargetTimeStep extends StatelessWidget {
                 Expanded(
                   child: TextFormField(
                     controller: minutesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Minutes',
+                    decoration: InputDecoration(
+                      labelText: S.of(context).goalWizardMinutes,
                       hintText: '0',
                     ),
                     keyboardType: TextInputType.number,
@@ -643,8 +645,8 @@ class _TargetTimeStep extends StatelessWidget {
                 Expanded(
                   child: TextFormField(
                     controller: secondsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Seconds',
+                    decoration: InputDecoration(
+                      labelText: S.of(context).goalWizardSecondsLabel,
                       hintText: '0',
                     ),
                     keyboardType: TextInputType.number,
@@ -687,14 +689,14 @@ class _PlanConfigStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Training Plan',
+            S.of(context).goalWizardTrainingPlanTitle,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Configure your training plan preferences.',
+            S.of(context).goalWizardTrainingPlanDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -712,7 +714,7 @@ class _PlanConfigStep extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Runs per week',
+                          S.of(context).goalWizardRunsPerWeek,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
@@ -752,7 +754,7 @@ class _PlanConfigStep extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Weekly mileage goal',
+                          S.of(context).goalWizardWeeklyMileageGoal,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
@@ -792,14 +794,14 @@ class _PlanConfigStep extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Plan duration',
+                          S.of(context).goalWizardPlanDuration,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
                       Text(
-                        '$planWeeks weeks',
+                        S.of(context).goalWizardWeeksCount(planWeeks),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.primary,
@@ -812,7 +814,7 @@ class _PlanConfigStep extends StatelessWidget {
                     min: 4,
                     max: 24,
                     divisions: 20,
-                    label: '$planWeeks weeks',
+                    label: S.of(context).goalWizardWeeksCount(planWeeks),
                     onChanged: (value) => onPlanWeeksChanged(value.round()),
                   ),
                 ],
@@ -854,14 +856,14 @@ class _ReviewStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Review',
+            S.of(context).goalWizardReviewTitle,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Review your goal details before creating.',
+            S.of(context).goalWizardReviewDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -874,46 +876,46 @@ class _ReviewStep extends StatelessWidget {
                 children: [
                   _ReviewRow(
                     icon: Icons.flag,
-                    label: 'Goal Name',
-                    value: name.isEmpty ? 'Not set' : name,
+                    label: S.of(context).goalWizardGoalNameLabel,
+                    value: name.isEmpty ? S.of(context).goalWizardNotSet : name,
                   ),
                   const Divider(height: 24),
                   _ReviewRow(
                     icon: Icons.directions_run,
-                    label: 'Race Type',
+                    label: S.of(context).goalWizardRaceTypeLabel,
                     value: raceTypeLabel(raceType),
                   ),
                   const Divider(height: 24),
                   _ReviewRow(
                     icon: Icons.event,
-                    label: 'Race Date',
-                    value: _formatDate(raceDate),
+                    label: S.of(context).goalWizardRaceDateLabel,
+                    value: _formatDate(context, raceDate),
                   ),
                   if (targetTime != null) ...[
                     const Divider(height: 24),
                     _ReviewRow(
                       icon: Icons.timer,
-                      label: 'Target Time',
-                      value: _formatDuration(targetTime!),
+                      label: S.of(context).goalWizardTargetTimeLabel,
+                      value: formatDuration(targetTime!),
                     ),
                   ],
                   const Divider(height: 24),
                   _ReviewRow(
                     icon: Icons.directions_run,
-                    label: 'Runs per Week',
+                    label: S.of(context).goalWizardRunsPerWeekLabel,
                     value: '$runsPerWeek',
                   ),
                   const Divider(height: 24),
                   _ReviewRow(
                     icon: Icons.straighten,
-                    label: 'Weekly Mileage',
+                    label: S.of(context).goalWizardWeeklyMileageLabel,
                     value: '${weeklyMileageGoal.toStringAsFixed(0)} km',
                   ),
                   const Divider(height: 24),
                   _ReviewRow(
                     icon: Icons.calendar_month,
-                    label: 'Plan Duration',
-                    value: '$planWeeks weeks',
+                    label: S.of(context).goalWizardPlanDurationLabel,
+                    value: S.of(context).goalWizardWeeksCount(planWeeks),
                   ),
                 ],
               ),
@@ -924,22 +926,12 @@ class _ReviewStep extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      S.of(context).monthJan, S.of(context).monthFeb, S.of(context).monthMar, S.of(context).monthApr, S.of(context).monthMay, S.of(context).monthJun,
+      S.of(context).monthJul, S.of(context).monthAug, S.of(context).monthSep, S.of(context).monthOct, S.of(context).monthNov, S.of(context).monthDec,
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
-  String _formatDuration(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-    if (hours > 0) {
-      return '${hours}h ${minutes}m ${secs}s';
-    }
-    return '${minutes}m ${secs}s';
   }
 }
 

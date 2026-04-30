@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/ai_settings_providers.dart';
 import 'package:runflow_flutter/presentation/screens/settings/ai_settings_screen.dart';
 
@@ -88,6 +90,13 @@ void main() {
           aiSettingsProvider.overrideWith(() => fakeSettings),
         ],
         child: const MaterialApp(
+          localizationsDelegates: [
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: S.supportedLocales,
           home: AiSettingsScreen(),
         ),
       );
@@ -97,7 +106,7 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('AI Coach Settings'), findsOneWidget);
+      expect(find.text('AI Settings'), findsOneWidget);
     });
 
     testWidgets('renders AI Features master toggle', (tester) async {
@@ -141,6 +150,13 @@ void main() {
             aiSettingsProvider.overrideWith(() => fakeSettings),
           ],
           child: const MaterialApp(
+            localizationsDelegates: [
+              S.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: S.supportedLocales,
             home: AiSettingsScreen(),
           ),
         ),

@@ -24,7 +24,7 @@ Future<bool> performBackgroundSync({
     return true;
   } on DioException catch (e) {
     final statusCode = e.response?.statusCode;
-    if (statusCode == 401) return false;
+    if (statusCode == 401) return true;
     if (statusCode != null && statusCode >= 500) return false;
     return false;
   } catch (_) {

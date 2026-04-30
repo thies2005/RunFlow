@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 
 class BarcodeScannerScreen extends ConsumerStatefulWidget {
   const BarcodeScannerScreen({super.key});
@@ -71,9 +72,9 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Scan Barcode'),
+          title: Text(S.of(context).healthScanBarcode),
           leading: IconButton(
-            tooltip: 'Close',
+            tooltip: S.of(context).actionClose,
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.of(context).pop(),
           ),
@@ -126,14 +127,14 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Camera Permission Required',
+              S.of(context).scanCameraRequired,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Please grant camera permission to scan barcodes.',
+              S.of(context).scanCameraMessage,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -145,7 +146,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
                 _scannerController.start();
               },
               icon: const Icon(Icons.settings),
-              label: const Text('Open Settings'),
+              label: Text(S.of(context).scanOpenSettings),
             ),
           ],
         ),
@@ -168,7 +169,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Point camera at a barcode',
+                  S.of(context).scanPointCamera,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -201,14 +202,14 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Barcode Not Found',
+              S.of(context).scanNotFound,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'This barcode is not in our database. Try adding the food manually.',
+              S.of(context).scanNotFoundMessage,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -220,12 +221,12 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
               children: [
                 OutlinedButton(
                   onPressed: _resetScanner,
-                  child: const Text('Scan Again'),
+                  child: Text(S.of(context).scanAgain),
                 ),
                 const SizedBox(width: 12),
                 FilledButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Add Manually'),
+                  child: Text(S.of(context).scanAddManually),
                 ),
               ],
             ),
@@ -250,7 +251,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
           if (food.barcode != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Barcode: ${food.barcode}',
+              S.of(context).scanBarcodeValue(food.barcode!),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -258,7 +259,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
           ],
           const SizedBox(height: 4),
           Text(
-            'Serving: ${food.servingSize.toStringAsFixed(0)}g',
+            S.of(context).scanServing(food.servingSize.toStringAsFixed(0)),
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -267,7 +268,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NutrientChip(label: 'Cal', value: food.calories, color: AppColors.primary),
+              _NutrientChip(label: S.of(context).scanCal, value: food.calories, color: AppColors.primary),
               _NutrientChip(label: 'Protein', value: food.protein, color: AppColors.success),
               _NutrientChip(label: 'Carbs', value: food.carbs, color: AppColors.warning),
               _NutrientChip(label: 'Fat', value: food.fat, color: AppColors.fatigued),
@@ -279,7 +280,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: _resetScanner,
-                  child: const Text('Scan Again'),
+                  child: Text(S.of(context).scanAgain),
                 ),
               ),
               const SizedBox(width: 12),
@@ -287,7 +288,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
                 child: FilledButton.icon(
                   onPressed: () => _addToNutritionLog(food),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add to Log'),
+                  label: Text(S.of(context).scanAddToLog),
                 ),
               ),
             ],
@@ -310,14 +311,14 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Network Error',
+            S.of(context).scanNetworkError,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Could not look up this barcode. Check your connection and try again.',
+            S.of(context).scanNetworkErrorMessage,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -326,7 +327,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _resetScanner,
-            child: const Text('Try Again'),
+            child: Text(S.of(context).actionRetry),
           ),
         ],
       ),
@@ -359,7 +360,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Added ${food.name} to nutrition log'),
+        content: Text(S.of(context).scanAddedToLog(food.name)),
         behavior: SnackBarBehavior.floating,
       ),
     );

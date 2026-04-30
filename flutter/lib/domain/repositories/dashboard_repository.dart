@@ -1,8 +1,6 @@
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 
 abstract class DashboardRepository {
-  bool get isCacheStale;
-
   Future<DashboardResponse> fetchDashboard();
 
   Future<SyncResult> triggerSync();

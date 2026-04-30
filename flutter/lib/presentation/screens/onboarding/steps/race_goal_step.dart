@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
 
 class RaceGoalStep extends ConsumerStatefulWidget {
@@ -53,7 +54,7 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
           ),
           const SizedBox(height: 24),
           Text(
-            'What\'s your target race?',
+            S.of(context).onboardingTargetRaceTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -61,7 +62,7 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Choose your race distance and when you plan to compete.',
+            S.of(context).onboardingTargetRaceSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -75,7 +76,7 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Race Name',
+                    S.of(context).onboardingRaceName,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -83,9 +84,9 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      hintText: 'e.g., Berlin Marathon 2026',
-                      prefixIcon: Icon(Icons.edit, size: 20),
+                    decoration: InputDecoration(
+                      hintText: S.of(context).onboardingRaceNameHint,
+                      prefixIcon: const Icon(Icons.edit, size: 20),
                     ),
                     onChanged: (value) {
                       ref.read(onboardingProvider.notifier).setGoalName(value);
@@ -93,7 +94,7 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Race Distance',
+                    S.of(context).onboardingRaceDistance,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -120,7 +121,7 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Race Date',
+                          S.of(context).onboardingRaceDate,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -151,7 +152,7 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Plan Start Date',
+                          S.of(context).onboardingPlanStartDate,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -182,13 +183,13 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Plan Duration',
+                        S.of(context).onboardingPlanDuration,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
                       ),
                       Text(
-                        '${onboarding.computedPlanWeeks} weeks',
+                        S.of(context).onboardingWeeksCount(onboarding.computedPlanWeeks),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.primary,
@@ -207,10 +208,6 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
   }
 
   String _formatDate(DateTime date) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

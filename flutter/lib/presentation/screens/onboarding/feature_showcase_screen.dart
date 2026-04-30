@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FeatureShowcaseScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> {
   final _controller = PageController();
   int _currentPage = 0;
 
-  static const _pages = _featurePages;
+  List<_FeaturePageData> get _pages => _featurePages(context);
 
   @override
   void dispose() {
@@ -47,7 +48,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> {
               child: TextButton(
                 onPressed: () => _finish(),
                 child: Text(
-                  'Skip',
+                  S.of(context).showcaseSkip,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -101,8 +102,8 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> {
                   ),
                   child: Text(
                     _currentPage == _pages.length - 1
-                        ? 'Get Started'
-                        : 'Continue',
+                        ? S.of(context).showcaseGetStarted
+                        : S.of(context).showcaseContinue,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.onPrimary,
@@ -136,7 +137,7 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> {
 }
 
 class _FeaturePageData {
-  const _FeaturePageData({
+  _FeaturePageData({
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -151,60 +152,63 @@ class _FeaturePageData {
   final Color accentColor;
 }
 
-const _featurePages = <_FeaturePageData>[
-  _FeaturePageData(
-    icon: Icons.fiber_manual_record,
-    title: 'Record Your Runs',
-    subtitle: 'GPS tracking with real-time metrics and voice coaching',
-    features: [
-      'GPS distance, pace & elevation tracking',
-      'Real-time heart rate via BLE sensors',
-      'Voice coach with pace alerts',
-      'Automatic cadence & stride analysis',
-      'Post-run summary with save & share',
-    ],
-    accentColor: AppColors.primary,
-  ),
-  _FeaturePageData(
-    icon: Icons.analytics,
-    title: 'Analyse Performance',
-    subtitle: 'Deep insights into your fitness with advanced metrics',
-    features: [
-      'VDOT score & race predictions',
-      'Fitness (CTL), Fatigue (ATL) & Form (TSB)',
-      'Heart rate zone analysis',
-      'Pace & elevation charts per activity',
-      'Marathon shape indicator',
-    ],
-    accentColor: AppColors.peaked,
-  ),
-  _FeaturePageData(
-    icon: Icons.auto_awesome,
-    title: 'AI Food Tracking',
-    subtitle: 'Snap a photo to instantly log your nutrition',
-    features: [
-      'AI-powered food recognition from photos',
-      'Barcode scanning for packaged foods',
-      'Calorie & macro tracking (P/C/F)',
-      'Water intake monitoring',
-      '7-day nutrition trends & analytics',
-    ],
-    accentColor: AppColors.success,
-  ),
-  _FeaturePageData(
-    icon: Icons.calendar_today,
-    title: 'Adaptive Training Plans',
-    subtitle: 'Personalized plans that adapt to your fitness level',
-    features: [
-      'Goal-based plans for any race distance',
-      'Auto-calibrated from your recent runs',
-      'Easy, tempo, interval & long run types',
-      'Flexible weekly scheduling',
-      'Progressive overload with build/peak/taper',
-    ],
-    accentColor: AppColors.warning,
-  ),
-];
+List<_FeaturePageData> _featurePages(BuildContext context) {
+  final l = S.of(context);
+  return [
+    _FeaturePageData(
+      icon: Icons.fiber_manual_record,
+      title: l.showcaseRecordTitle,
+      subtitle: l.showcaseRecordSubtitle,
+      features: [
+        l.showcaseRecordFeature1,
+        l.showcaseRecordFeature2,
+        l.showcaseRecordFeature3,
+        l.showcaseRecordFeature4,
+        l.showcaseRecordFeature5,
+      ],
+      accentColor: AppColors.primary,
+    ),
+    _FeaturePageData(
+      icon: Icons.analytics,
+      title: l.showcaseAnalyticsTitle,
+      subtitle: l.showcaseAnalyticsSubtitle,
+      features: [
+        l.showcaseAnalyticsFeature1,
+        l.showcaseAnalyticsFeature2,
+        l.showcaseAnalyticsFeature3,
+        l.showcaseAnalyticsFeature4,
+        l.showcaseAnalyticsFeature5,
+      ],
+      accentColor: AppColors.peaked,
+    ),
+    _FeaturePageData(
+      icon: Icons.auto_awesome,
+      title: l.showcaseAiTitle,
+      subtitle: l.showcaseAiSubtitle,
+      features: [
+        l.showcaseAiFeature1,
+        l.showcaseAiFeature2,
+        l.showcaseAiFeature3,
+        l.showcaseAiFeature4,
+        l.showcaseAiFeature5,
+      ],
+      accentColor: AppColors.success,
+    ),
+    _FeaturePageData(
+      icon: Icons.calendar_today,
+      title: l.showcasePlansTitle,
+      subtitle: l.showcasePlansSubtitle,
+      features: [
+        l.showcasePlansFeature1,
+        l.showcasePlansFeature2,
+        l.showcasePlansFeature3,
+        l.showcasePlansFeature4,
+        l.showcasePlansFeature5,
+      ],
+      accentColor: AppColors.warning,
+    ),
+  ];
+}
 
 class _FeaturePage extends StatelessWidget {
   const _FeaturePage({required this.page});

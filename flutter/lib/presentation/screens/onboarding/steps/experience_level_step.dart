@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
 
 class ExperienceLevelStep extends ConsumerWidget {
@@ -32,7 +33,7 @@ class ExperienceLevelStep extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'What\'s your running experience?',
+            S.of(context).onboardingRunningExperienceTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -40,7 +41,7 @@ class ExperienceLevelStep extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'This helps us calibrate your training plan intensity.',
+            S.of(context).onboardingRunningExperienceSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -50,7 +51,7 @@ class ExperienceLevelStep extends ConsumerWidget {
           ...[
             _ExperienceCard(
               title: 'Beginner',
-              subtitle: 'New to running or less than 6 months',
+              subtitle: S.of(context).onboardingExperienceBeginnerSubtitle,
               icon: Icons.directions_walk,
               color: const Color(0xFF4CAF50),
               isSelected: current == 'BEGINNER',
@@ -61,7 +62,7 @@ class ExperienceLevelStep extends ConsumerWidget {
             const SizedBox(height: 12),
             _ExperienceCard(
               title: 'Intermediate',
-              subtitle: 'Running regularly for 6+ months',
+              subtitle: S.of(context).onboardingExperienceIntermediateSubtitle,
               icon: Icons.directions_run,
               color: const Color(0xFF2196F3),
               isSelected: current == 'INTERMEDIATE',
@@ -72,7 +73,7 @@ class ExperienceLevelStep extends ConsumerWidget {
             const SizedBox(height: 12),
             _ExperienceCard(
               title: 'Advanced',
-              subtitle: 'Experienced runner with race history',
+              subtitle: S.of(context).onboardingExperienceAdvancedSubtitle,
               icon: Icons.emoji_events,
               color: const Color(0xFFFF9800),
               isSelected: current == 'ADVANCED',

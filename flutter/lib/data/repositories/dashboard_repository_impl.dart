@@ -2,26 +2,19 @@ import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
+import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/dashboard_repository.dart';
 
 class DashboardRepositoryImpl implements DashboardRepository {
   DashboardRepositoryImpl({required this.dio});
 
   final Dio dio;
-  DashboardResponse? _cachedDashboard;
-  DateTime? _cachedAt;
-
-  static const _cacheTtl = Duration(minutes: 5);
+  domain.DashboardResponse? _cachedDashboard;
 
   @override
-  bool get isCacheStale {
-    if (_cachedDashboard == null || _cachedAt == null) return true;
-    return DateTime.now().difference(_cachedAt!) > _cacheTtl;
-  }
-
-  @override
-  Future<DashboardResponse> fetchDashboard() async {
+  Future<domain.DashboardResponse> fetchDashboard() async {
     try {
       final response = await dio.get(ApiConstants.dashboardPath);
       final result = DashboardResponse.fromJson(
@@ -29,9 +22,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
           response.data as Map<String, dynamic>,
           const ['dashboard'],
         ),
-      );
+      ).toDomain();
       _cachedDashboard = result;
-      _cachedAt = DateTime.now();
       return result;
     } on DioException catch (e) {
       if (_cachedDashboard != null) return _cachedDashboard!;
@@ -45,7 +37,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<SyncResult> triggerSync() async {
+  Future<domain.SyncResult> triggerSync() async {
     try {
       final response = await dio.post(ApiConstants.syncPath);
       return SyncResult.fromJson(
@@ -53,7 +45,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
           response.data as Map<String, dynamic>,
           const ['syncResult', 'sync'],
         ),
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -65,7 +57,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<SyncStatus> getSyncStatus() async {
+  Future<domain.SyncStatus> getSyncStatus() async {
     try {
       final response = await dio.get(ApiConstants.syncPath);
       return SyncStatus.fromJson(
@@ -73,7 +65,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
           response.data as Map<String, dynamic>,
           const ['syncStatus', 'sync'],
         ),
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException

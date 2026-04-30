@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/vdot.dart';
-import 'package:runflow_flutter/data/models/analytics_models.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/analytics_entities.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/circular_gauge.dart';
@@ -12,6 +12,7 @@ import 'package:runflow_flutter/presentation/widgets/charts/combined_analytics_c
 import 'package:runflow_flutter/presentation/widgets/charts/hr_zone_distribution_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/metric_card.dart';
 import 'package:runflow_flutter/presentation/widgets/shape_calibration_sheet.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/widgets/training_paces_card.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
@@ -27,7 +28,7 @@ class AnalyticsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analytics'),
+        title: Text(S.of(context).analyticsTitle),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -109,7 +110,7 @@ class _SummaryCardsRow extends StatelessWidget {
             children: [
               Expanded(
                 child: MetricCard(
-                  label: 'VDOT',
+                  label: S.of(context).analyticsVdot,
                   value: stats.currentVdot?.toStringAsFixed(1) ?? '--',
                   icon: Icons.speed,
                   color: AppColors.primary,
@@ -120,7 +121,7 @@ class _SummaryCardsRow extends StatelessWidget {
                 child: MetricCard(
                   label: 'CTL',
                   value: stats.ctl.toStringAsFixed(1),
-                  subtitle: 'Fitness',
+                  subtitle: S.of(context).analyticsFitness,
                   icon: Icons.trending_up,
                   color: AppColors.success,
                 ),
@@ -134,7 +135,7 @@ class _SummaryCardsRow extends StatelessWidget {
                 child: MetricCard(
                   label: 'ATL',
                   value: stats.atl.toStringAsFixed(1),
-                  subtitle: 'Fatigue',
+                  subtitle: S.of(context).analyticsFatigue,
                   icon: Icons.trending_down,
                   color: AppColors.fatigued,
                 ),
@@ -144,7 +145,7 @@ class _SummaryCardsRow extends StatelessWidget {
                 child: MetricCard(
                   label: 'TSB',
                   value: stats.tsb.toStringAsFixed(1),
-                  subtitle: 'Form',
+                  subtitle: S.of(context).analyticsForm,
                   icon: Icons.battery_charging_full,
                   color: _tsbColor(stats.tsb),
                 ),
@@ -173,8 +174,9 @@ class _FormIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final status = tsbStatus(tsb);
-    final color = _statusColor(status);
+    final rawStatus = tsbStatus(tsb);
+    final localizedStatus = _localizedStatus(context);
+    final color = _statusColor(rawStatus);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -193,14 +195,14 @@ class _FormIndicator extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Training Form: $status',
+                S.of(context).analyticsTrainingForm(localizedStatus),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
             Text(
-              'TSB ${tsb.toStringAsFixed(1)}',
+              S.of(context).analyticsTsbValue(tsb.toStringAsFixed(1)),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -209,6 +211,14 @@ class _FormIndicator extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _localizedStatus(BuildContext context) {
+    if (tsb >= 25) return S.of(context).tsbPeaked;
+    if (tsb >= 5) return S.of(context).tsbFresh;
+    if (tsb >= -10) return S.of(context).tsbNeutral;
+    if (tsb >= -30) return S.of(context).tsbFatigued;
+    return S.of(context).tsbVeryFatigued;
   }
 
   Color _statusColor(String status) {
@@ -245,7 +255,7 @@ class _DateRangeSelector extends ConsumerWidget {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: Text(days == 365 ? '1Y' : '${days}D'),
+                label: Text(days == 365 ? S.of(context).analyticsDateRange1Y : S.of(context).analyticsDateRangeDays(days)),
                 selected: isSelected,
                 onSelected: (_) {
                   ref.read(selectedDateRangeProvider.notifier).setDays(days);
@@ -275,7 +285,7 @@ class _FitnessChart extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Center(
             child: Text(
-              'No history data available',
+              S.of(context).analyticsNoHistory,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -315,7 +325,7 @@ class _FitnessChart extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Fitness Trend',
+              S.of(context).analyticsFitnessTrend,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -500,7 +510,7 @@ class _RacePredictionsCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Race Predictions',
+                  S.of(context).analyticsRacePredictions,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -587,7 +597,7 @@ class _MarathonShapeSection extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Marathon Shape',
+                   S.of(context).analyticsMarathonShape,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -604,7 +614,7 @@ class _MarathonShapeSection extends StatelessWidget {
                     builder: (_) => const ShapeCalibrationSheet(),
                   ),
                   icon: const Icon(Icons.tune, size: 18),
-                  label: const Text('Calibrate'),
+                  label: Text(S.of(context).analyticsCalibrate),
                 ),
               ],
             ),
@@ -612,7 +622,7 @@ class _MarathonShapeSection extends StatelessWidget {
             Center(
               child: CircularGauge(
                 value: shape,
-                label: 'Shape Score',
+                label: S.of(context).analyticsShapeScore,
                 color: AppColors.primary,
               ),
             ),
@@ -633,7 +643,7 @@ class _WeeklyMileageCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: MetricCard(
-        label: 'Weekly Mileage',
+         label: S.of(context).analyticsWeeklyMileageLabel,
         value: '${stats.currentWeekMileage.toStringAsFixed(1)} km',
         icon: Icons.straighten,
         color: AppColors.primary,
@@ -705,7 +715,7 @@ class _AnalyticsError extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Something went wrong',
+                S.of(context).statusError,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -722,7 +732,7 @@ class _AnalyticsError extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(S.of(context).actionRetry),
               ),
             ],
           ),

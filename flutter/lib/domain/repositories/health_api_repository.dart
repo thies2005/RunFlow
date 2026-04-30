@@ -1,4 +1,5 @@
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
+import 'package:runflow_flutter/domain/entities/meal_suggestion_entities.dart';
 
 abstract class HealthApiRepository {
   Future<void> syncNutritionLog(NutritionLog log);
@@ -20,4 +21,10 @@ abstract class HealthApiRepository {
   Future<NutritionAnalytics> getNutritionAnalytics(DateTime startDate, DateTime endDate);
   Future<SupplementAnalytics> getSupplementAnalytics();
   Future<HealthHistory> getHealthHistory(String range);
+  Future<AiMealSuggestion> getMealSuggestion({
+    required double remainingCalories,
+    required double remainingProtein,
+    required double remainingCarbs,
+    required double remainingFats,
+  });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -49,7 +50,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to send reset email. Please try again.';
+          _errorMessage = S.of(context).authFailedToSendReset;
           _isLoading = false;
         });
       }
@@ -67,7 +68,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         backgroundColor: colorScheme.surface,
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: S.of(context).authBackTooltip,
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/login'),
         ),
@@ -96,7 +97,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          'Check Your Email',
+          S.of(context).authCheckYourEmail,
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: colorScheme.primary,
@@ -105,7 +106,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'If an account exists for ${_emailController.text.trim()}, you will receive a password reset link.',
+          S.of(context).authResetEmailSent(_emailController.text.trim()),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),
@@ -120,7 +121,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: const Text('Back to Sign In'),
+          child: Text(S.of(context).authBackToSignIn),
         ),
       ],
     );
@@ -140,7 +141,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Reset Password',
+            S.of(context).authResetPassword,
             style: theme.textTheme.headlineLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: colorScheme.primary,
@@ -149,7 +150,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Enter your email and we\'ll send you a link to reset your password.',
+            S.of(context).authResetInstructions,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
@@ -161,17 +162,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             keyboardType: TextInputType.emailAddress,
             autocorrect: false,
             enabled: !_isLoading,
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              hintText: 'you@example.com',
-              prefixIcon: Icon(Icons.email_outlined),
+            decoration: InputDecoration(
+              labelText: S.of(context).authEmailLabel,
+              hintText: S.of(context).authEmailHint,
+              prefixIcon: const Icon(Icons.email_outlined),
             ),
             validator: (String? value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter your email.';
+                return S.of(context).authEmailRequired;
               }
               if (!_emailRegex.hasMatch(value.trim())) {
-                return 'Please enter a valid email address.';
+                return S.of(context).authInvalidEmail;
               }
               return null;
             },
@@ -185,7 +186,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Send Reset Link'),
+            child: Text(S.of(context).authSendResetLink),
           ),
           if (_errorMessage != null) ...[
             const SizedBox(height: 16),
@@ -218,16 +219,20 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Remember your password? ',
+                S.of(context).authRememberPassword,
                 style: TextStyle(color: colorScheme.onSurfaceVariant),
               ),
-              GestureDetector(
-                onTap: _isLoading ? null : () => context.go('/login'),
-                child: Text(
-                  'Sign In',
-                  style: TextStyle(
-                    color: colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+              Semantics(
+                button: true,
+                label: S.of(context).authSignInSemantic,
+                child: GestureDetector(
+                  onTap: _isLoading ? null : () => context.go('/login'),
+                  child: Text(
+                    S.of(context).authSignIn,
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

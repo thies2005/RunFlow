@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/data/datasources/remote/dio_client.dart';
-import 'package:runflow_flutter/data/models/analytics_models.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/analytics_entities.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/analytics/analytics_screen.dart';
@@ -52,9 +54,7 @@ void main() {
             selectedDateRangeProvider.overrideWith(() => _FakeDateRange()),
             racePredictionsProvider.overrideWith((ref) async => {}),
           ],
-          child: const MaterialApp(
-            home: AnalyticsScreen(),
-          ),
+          child: _localizedApp(const AnalyticsScreen()),
         ),
       );
       await pumpAnimated(tester);
@@ -77,9 +77,7 @@ void main() {
             selectedDateRangeProvider.overrideWith(() => _FakeDateRange()),
             racePredictionsProvider.overrideWith((ref) async => {}),
           ],
-          child: const MaterialApp(
-            home: AnalyticsScreen(),
-          ),
+          child: _localizedApp(const AnalyticsScreen()),
         ),
       );
       await pumpAnimated(tester);
@@ -101,9 +99,7 @@ void main() {
             selectedDateRangeProvider.overrideWith(() => _FakeDateRange()),
             racePredictionsProvider.overrideWith((ref) async => {}),
           ],
-          child: const MaterialApp(
-            home: AnalyticsScreen(),
-          ),
+          child: _localizedApp(const AnalyticsScreen()),
         ),
       );
       await tester.pump();
@@ -125,9 +121,7 @@ void main() {
             selectedDateRangeProvider.overrideWith(() => _FakeDateRange()),
             racePredictionsProvider.overrideWith((ref) async => {}),
           ],
-          child: const MaterialApp(
-            home: AnalyticsScreen(),
-          ),
+          child: _localizedApp(const AnalyticsScreen()),
         ),
       );
       await tester.pumpAndSettle();
@@ -149,9 +143,7 @@ void main() {
             selectedDateRangeProvider.overrideWith(() => _FakeDateRange()),
             racePredictionsProvider.overrideWith((ref) async => {}),
           ],
-          child: const MaterialApp(
-            home: AnalyticsScreen(),
-          ),
+          child: _localizedApp(const AnalyticsScreen()),
         ),
       );
       await pumpAnimated(tester);
@@ -181,9 +173,7 @@ void main() {
             selectedDateRangeProvider.overrideWith(() => _FakeDateRange()),
             racePredictionsProvider.overrideWith((ref) async => {}),
           ],
-          child: const MaterialApp(
-            home: AnalyticsScreen(),
-          ),
+          child: _localizedApp(const AnalyticsScreen()),
         ),
       );
       await pumpAnimated(tester);
@@ -199,6 +189,19 @@ void main() {
       expect(target, findsOneWidget);
     });
   });
+}
+
+Widget _localizedApp(Widget home) {
+  return MaterialApp(
+    localizationsDelegates: const [
+      S.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: S.supportedLocales,
+    home: home,
+  );
 }
 
 class _FakeDateRange extends SelectedDateRange {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 
@@ -30,7 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _loginWithStrava() async {
     if (!AppConstants.isStravaConfigured) {
       setState(() {
-        _errorMessage = 'Strava sign-in is not configured for this build.';
+        _errorMessage = S.of(context).authStravaNotConfigured;
       });
       return;
     }
@@ -82,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _errorMessage = 'Please enter email and password.');
+      setState(() => _errorMessage = S.of(context).authEnterEmailPassword);
       return;
     }
 
@@ -113,15 +114,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   String _userFriendlyMessage(Object error) {
     final msg = error.toString();
     if (msg.contains('401') || msg.contains('Unauthorized')) {
-      return 'Invalid credentials. Please try again.';
+      return S.of(context).authInvalidCredentials;
     }
     if (msg.contains('network') || msg.contains('connection')) {
-      return 'Network error. Please check your connection.';
+      return S.of(context).authNetworkError;
     }
     if (msg.contains('cancelled')) {
-      return 'Login was cancelled.';
+      return S.of(context).authLoginCancelled;
     }
-    return 'Login failed. Please try again.';
+    return S.of(context).authLoginFailed;
   }
 
   @override
@@ -147,7 +148,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'RunFlow',
+                  S.of(context).appTitle,
                   style: theme.textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.primary,
@@ -156,7 +157,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your running performance dashboard',
+                  S.of(context).authYourRunningDashboard,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -197,7 +198,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return FilledButton.icon(
       onPressed: _isLoading || !isAvailable ? null : _loginWithStrava,
       icon: const Icon(Icons.link),
-      label: Text(isAvailable ? 'Continue with Strava' : 'Strava Unavailable'),
+      label: Text(isAvailable ? S.of(context).authContinueWithStrava : S.of(context).authStravaUnavailable),
       style: FilledButton.styleFrom(
         backgroundColor: const Color(0xFFFC4C02),
         foregroundColor: Colors.white,
@@ -218,7 +219,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'OR',
+            S.of(context).authOr,
             style: TextStyle(
               color: colorScheme.onSurfaceVariant,
               fontSize: 12,
@@ -238,10 +239,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       keyboardType: TextInputType.emailAddress,
       autocorrect: false,
       enabled: !_isLoading,
-      decoration: const InputDecoration(
-        labelText: 'Email',
-        hintText: 'you@example.com',
-        prefixIcon: Icon(Icons.email_outlined),
+      decoration: InputDecoration(
+        labelText: S.of(context).authEmail,
+        hintText: S.of(context).authEmailHint,
+        prefixIcon: const Icon(Icons.email_outlined),
       ),
     );
   }
@@ -252,7 +253,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: _obscurePassword,
       enabled: !_isLoading,
       decoration: InputDecoration(
-        labelText: 'Password',
+        labelText: S.of(context).authPassword,
         prefixIcon: const Icon(Icons.lock_outlined),
         suffixIcon: IconButton(
           icon: Icon(
@@ -276,7 +277,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      child: const Text('Sign In'),
+      child: Text(S.of(context).authSignIn),
     );
   }
 

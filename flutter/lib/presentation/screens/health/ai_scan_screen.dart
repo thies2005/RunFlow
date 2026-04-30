@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 
 class AiScanScreen extends ConsumerStatefulWidget {
   const AiScanScreen({super.key});
@@ -38,9 +39,9 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
           children: [
             const Icon(Icons.auto_awesome, size: 48, color: AppColors.primary),
             const SizedBox(height: 16),
-            Text('AI Food Scanner', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+            Text(S.of(context).healthAiFoodScan, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            Text('Choose an image to scan with AI.',
+            Text(S.of(context).aiScanChooseImage,
                 style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant)),
             const SizedBox(height: 24),
             Row(
@@ -103,7 +104,7 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
       if (mounted) {
         setState(() => _scanning = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to analyze image.')),
+          SnackBar(content: Text(S.of(context).aiScanFailed)),
         );
       }
     }
@@ -116,7 +117,7 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Food Scanner'),
+        title: Text(S.of(context).healthAiFoodScan),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
@@ -140,7 +141,7 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
               error: (err, _) => Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text('Error: $err', style: const TextStyle(color: AppColors.error)),
+                  child: Text('${S.of(context).actionError}: $err', style: const TextStyle(color: AppColors.error)),
                 ),
               ),
             ),
@@ -148,13 +149,13 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('AI is analyzing your meal...', style: TextStyle(color: AppColors.onSurfaceVariant)),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(S.of(context).aiScanAnalyzing, style: const TextStyle(color: AppColors.onSurfaceVariant)),
         ],
       ),
     );
@@ -169,18 +170,18 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
           children: [
             const Icon(Icons.search_off, size: 48, color: AppColors.warning),
             const SizedBox(height: 12),
-            Text('Could not identify food', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            Text(S.of(context).aiScanNotFound, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text('The AI could not confidently identify nutritional info. Please try another photo or add manually.',
+            Text(S.of(context).aiScanNotFoundMessage,
                 style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant),
                 textAlign: TextAlign.center),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                OutlinedButton(onPressed: _showSourcePicker, child: const Text('Try Again')),
+                OutlinedButton(onPressed: _showSourcePicker, child: Text(S.of(context).actionRetry)),
                 const SizedBox(width: 12),
-                FilledButton(onPressed: () => context.pop(), child: const Text('Cancel')),
+                FilledButton(onPressed: () => context.pop(), child: Text(S.of(context).actionCancel)),
               ],
             ),
           ],
@@ -197,23 +198,23 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
         children: [
           Text(food.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          Text('Serving: ${food.servingSize}g', style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant)),
+          Text(S.of(context).aiScanServing(food.servingSize.toString()), style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant)),
           const SizedBox(height: 24),
-          Text('Nutrition Facts', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+          Text(S.of(context).aiScanNutritionFacts, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _MacroBox(label: 'Calories', value: food.calories, color: AppColors.primary)),
+              Expanded(child: _MacroBox(label: S.of(context).nutritionCaloriesKcal, value: food.calories, color: AppColors.primary)),
               const SizedBox(width: 8),
-              Expanded(child: _MacroBox(label: 'Protein', value: food.protein, color: AppColors.peaked)),
+              Expanded(child: _MacroBox(label: S.of(context).nutritionProteinG, value: food.protein, color: AppColors.peaked)),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: _MacroBox(label: 'Carbs', value: food.carbs, color: AppColors.warning)),
+              Expanded(child: _MacroBox(label: S.of(context).nutritionCarbs, value: food.carbs, color: AppColors.warning)),
               const SizedBox(width: 8),
-              Expanded(child: _MacroBox(label: 'Fat', value: food.fat, color: AppColors.error)),
+              Expanded(child: _MacroBox(label: S.of(context).nutritionFatLabel, value: food.fat, color: AppColors.error)),
             ],
           ),
           const SizedBox(height: 32),
@@ -221,7 +222,7 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
             width: double.infinity,
             child: FilledButton(
               onPressed: () => Navigator.of(context).pop(food),
-              child: const Text('Add Food'),
+              child: Text(S.of(context).nutritionAddFood),
             ),
           ),
         ],

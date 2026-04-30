@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/data/models/race_models.dart';
 import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
 import 'package:runflow_flutter/presentation/providers/race_providers.dart';
@@ -31,7 +32,7 @@ class _RaceResultScreenState extends ConsumerState<RaceResultScreen> {
 
     if (flowState.isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Race Result')),
+        appBar: AppBar(title: Text(S.of(context).raceResultTitle)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -48,10 +49,11 @@ class _RaceResultScreenState extends ConsumerState<RaceResultScreen> {
   }
 
   String _appBarTitle(RaceResultMode mode) {
+    final l = S.of(context);
     return switch (mode) {
-      RaceResultMode.suggest => 'Link Your Race Result',
-      RaceResultMode.pick => 'Select Your Race Run',
-      RaceResultMode.review => 'Race Result',
+      RaceResultMode.suggest => l.raceResultLinkTitle,
+      RaceResultMode.pick => l.raceResultPickTitle,
+      RaceResultMode.review => l.raceResultTitle,
     };
   }
 
@@ -109,7 +111,7 @@ class _SuggestModeContent extends ConsumerWidget {
                     const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'We found a run near your race date!',
+                       S.of(context).raceResultFoundRun,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w500,
@@ -133,7 +135,7 @@ class _SuggestModeContent extends ConsumerWidget {
                   notifier.setMode(RaceResultMode.review);
                 },
                 icon: const Icon(Icons.check_circle, size: 18),
-                label: const Text("Yes, that's my race!"),
+                label: Text(S.of(context).raceResultYesMyRace),
               ),
             ),
             const SizedBox(height: 8),
@@ -141,13 +143,13 @@ class _SuggestModeContent extends ConsumerWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () => notifier.setMode(RaceResultMode.pick),
-                child: const Text('Pick a different run'),
+                child: Text(S.of(context).raceResultPickDifferent),
               ),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text("I didn't race / Skip for now"),
+              child: Text(S.of(context).raceResultDidntRace),
             ),
           ],
         ),
@@ -166,7 +168,7 @@ class _SuggestModeContent extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'No matching run found near your race date.',
+            S.of(context).raceResultNoMatchingRun,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -177,7 +179,7 @@ class _SuggestModeContent extends ConsumerWidget {
             width: double.infinity,
             child: FilledButton(
               onPressed: () => notifier.setMode(RaceResultMode.pick),
-              child: const Text('Select your race run'),
+              child: Text(S.of(context).raceResultSelectRaceRun),
             ),
           ),
           const SizedBox(height: 8),
@@ -185,7 +187,7 @@ class _SuggestModeContent extends ConsumerWidget {
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Skip for now'),
+              child: Text(S.of(context).raceResultDidntRace),
             ),
           ),
         ],
@@ -212,7 +214,7 @@ class _PickModeContent extends ConsumerWidget {
       child: Column(
         children: [
           Text(
-            'Select the activity that corresponds to your race.',
+            S.of(context).raceResultSelectActivity,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -233,14 +235,14 @@ class _PickModeContent extends ConsumerWidget {
                   onPressed: state.selectedActivityId != null
                       ? () => notifier.setMode(RaceResultMode.review)
                       : null,
-                  child: const Text('Continue'),
+                  child: Text(S.of(context).actionContinue),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => notifier.setMode(RaceResultMode.suggest),
-                  child: const Text('Back'),
+                  child: Text(S.of(context).actionBack),
                 ),
               ),
             ],
@@ -268,7 +270,7 @@ class _ActivityPickerList extends ConsumerWidget {
 
     return dashboardAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => const Center(child: Text('Failed to load activities')),
+      error: (_, _) => Center(child: Text(S.of(context).raceResultFailedToLoadActivities)),
       data: (data) {
         final activities = data.recentActivities
             .where((a) => a.type == ActivityType.run)
@@ -276,7 +278,7 @@ class _ActivityPickerList extends ConsumerWidget {
             .toList();
 
         if (activities.isEmpty) {
-          return const Center(child: Text('No activities found'));
+          return Center(child: Text(S.of(context).raceResultNoActivities));
         }
 
         return Column(
@@ -434,7 +436,7 @@ class _ReviewModeContentState extends ConsumerState<_ReviewModeContent> {
             children: [
               Expanded(
                 child: _TimeInput(
-                  label: 'Actual Time',
+                       label: S.of(context).raceResultActualTime,
                   initialSeconds: _actualTime,
                   onChanged: (v) => _actualTime = v,
                 ),
@@ -442,7 +444,7 @@ class _ReviewModeContentState extends ConsumerState<_ReviewModeContent> {
               const SizedBox(width: 12),
               Expanded(
                 child: _TimeInput(
-                  label: 'Chip Time',
+                   label: S.of(context).raceResultChipTime,
                   initialSeconds: _chipTime,
                   onChanged: (v) => _chipTime = v,
                 ),
@@ -478,7 +480,7 @@ class _ReviewModeContentState extends ConsumerState<_ReviewModeContent> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
+                   child: Text(S.of(context).actionCancel),
                 ),
               ),
               const SizedBox(width: 8),
@@ -503,8 +505,8 @@ class _ReviewModeContentState extends ConsumerState<_ReviewModeContent> {
                             Navigator.of(context).pop();
                           } else if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Failed to save race result'),
+                              SnackBar(
+                                content: Text(S.of(context).raceResultFailedToSave),
                               ),
                             );
                           }
@@ -517,7 +519,7 @@ class _ReviewModeContentState extends ConsumerState<_ReviewModeContent> {
                         )
                       : const Icon(Icons.check_circle, size: 18),
                   label: Text(
-                    widget.state.isSaving ? 'Saving...' : 'Complete & Archive',
+                    widget.state.isSaving ? S.of(context).raceResultSaving : S.of(context).raceResultCompleteArchive,
                   ),
                 ),
               ),
@@ -566,7 +568,7 @@ class _TimeComparisonCard extends ConsumerWidget {
           child: Column(
             children: [
               Text(
-                'Race Result',
+                 S.of(context).raceResultTitle,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -577,7 +579,7 @@ class _TimeComparisonCard extends ConsumerWidget {
                   Expanded(
                     child: _TimeBlock(
                       icon: Icons.flag,
-                      label: 'Goal Time',
+                       label: S.of(context).raceResultGoalTime,
                       value: _formatTime(targetTime),
                       color: const Color(0xFF7C4DFF),
                     ),
@@ -585,7 +587,7 @@ class _TimeComparisonCard extends ConsumerWidget {
                   Expanded(
                     child: _TimeBlock(
                       icon: Icons.emoji_events,
-                      label: 'Actual Time',
+                      label: S.of(context).raceResultActualTime,
                       value: _formatTime(actualTime!),
                       color: AppColors.primary,
                     ),
@@ -615,8 +617,8 @@ class _TimeComparisonCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          'Difference',
+                         Text(
+                           S.of(context).raceResultDifference,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: AppColors.onSurfaceVariant,
                             fontSize: 10,
@@ -897,7 +899,7 @@ class _ExpandableDetails extends StatelessWidget {
                   const Icon(Icons.edit, size: 16, color: AppColors.primary),
                   const SizedBox(width: 8),
                   Text(
-                    'Race Details',
+                    S.of(context).raceResultDetails,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),
@@ -926,7 +928,7 @@ class _ExpandableDetails extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _NumberField(
-                          label: 'Overall Place',
+                           label: S.of(context).raceResultOverallPlace,
                           value: placementOverall,
                           onChanged: onPlacementOverallChanged,
                         ),
@@ -934,7 +936,7 @@ class _ExpandableDetails extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _NumberField(
-                          label: 'Gender Place',
+                           label: S.of(context).raceResultGenderPlace,
                           value: placementGender,
                           onChanged: onPlacementGenderChanged,
                         ),
@@ -946,7 +948,7 @@ class _ExpandableDetails extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _NumberField(
-                          label: 'Age Group Place',
+                           label: S.of(context).raceResultAgeGroupPlace,
                           value: placementAgeGroup,
                           onChanged: onPlacementAgeGroupChanged,
                         ),
@@ -954,9 +956,9 @@ class _ExpandableDetails extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _TextField(
-                          label: 'Age Group',
-                          value: ageGroup,
-                          hint: 'e.g. M30-34',
+                           label: S.of(context).raceResultAgeGroup,
+                           value: ageGroup,
+                           hint: S.of(context).raceResultAgeGroupHint,
                           onChanged: onAgeGroupChanged,
                         ),
                       ),
@@ -964,7 +966,7 @@ class _ExpandableDetails extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   _NumberField(
-                    label: 'Total Finishers',
+                    label: S.of(context).raceResultTotalFinishers,
                     value: totalFinishers,
                     onChanged: onTotalFinishersChanged,
                   ),
@@ -973,9 +975,9 @@ class _ExpandableDetails extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _TextField(
-                          label: 'Weather',
-                          value: weatherConditions,
-                          hint: 'e.g. 15C, sunny',
+                           label: S.of(context).raceResultWeather,
+                           value: weatherConditions,
+                           hint: S.of(context).raceResultWeatherHint,
                           onChanged: onWeatherConditionsChanged,
                         ),
                       ),
@@ -1111,7 +1113,7 @@ class _RpeSlider extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'How did it feel? (RPE $value)',
+          S.of(context).raceResultHowDidItFeel(value),
           style: theme.textTheme.labelSmall?.copyWith(
             color: AppColors.onSurfaceVariant,
           ),
@@ -1127,15 +1129,15 @@ class _RpeSlider extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Easy',
+             Text(
+               S.of(context).raceResultEasy,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
                 fontSize: 10,
               ),
             ),
-            Text(
-              'Hard',
+             Text(
+               S.of(context).raceResultHard,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
                 fontSize: 10,
@@ -1179,9 +1181,9 @@ class _NotesFieldState extends State<_NotesField> {
   @override
   Widget build(BuildContext context) {
     return TextField(
-      decoration: const InputDecoration(
-        labelText: 'Notes',
-        hintText: 'How did the race go?',
+      decoration: InputDecoration(
+         labelText: S.of(context).raceResultNotes,
+         hintText: S.of(context).raceResultNotesHint,
         isDense: true,
       ),
       controller: _controller,
@@ -1215,7 +1217,7 @@ class _TrainingCompletionCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Training Summary',
+                 S.of(context).raceResultTrainingSummary,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -1233,7 +1235,7 @@ class _TrainingCompletionCard extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        'workouts completed',
+                         S.of(context).raceResultWorkoutsCompleted,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -1256,7 +1258,7 @@ class _TrainingCompletionCard extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        'completion rate',
+                         S.of(context).raceResultCompletionRate,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -1330,8 +1332,8 @@ class _ActivityCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        _formatDate(activity.startDate),
+                       Text(
+                        _formatDate(context, activity.startDate),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -1347,19 +1349,19 @@ class _ActivityCard extends StatelessWidget {
                 Expanded(
                   child: _InfoBlock(
                     value: formatDistance(activity.distance),
-                    label: 'distance',
+                     label: S.of(context).distance,
                   ),
                 ),
                 Expanded(
                   child: _InfoBlock(
                     value: formatDuration(activity.movingTime),
-                    label: 'time',
+                     label: S.of(context).raceResultTimeLabel,
                   ),
                 ),
                 Expanded(
                   child: _InfoBlock(
                     value: pace != null ? formatPace(pace) : '-',
-                    label: 'pace',
+                     label: S.of(context).raceResultPaceLabel,
                   ),
                 ),
               ],
@@ -1370,21 +1372,22 @@ class _ActivityCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
+    final l = S.of(context);
     final months = [
       '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
+      l.monthJan,
+      l.monthFeb,
+      l.monthMar,
+      l.monthApr,
+      l.monthMay,
+      l.monthJun,
+      l.monthJul,
+      l.monthAug,
+      l.monthSep,
+      l.monthOct,
+      l.monthNov,
+      l.monthDec,
     ];
     return '${months[date.month]} ${date.day}, ${date.year}';
   }

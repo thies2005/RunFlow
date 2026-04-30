@@ -1,6 +1,6 @@
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/services/health_connect_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
-import 'package:runflow_flutter/data/models/recording_models.dart';
+import 'package:runflow_flutter/domain/entities/recording_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
+import 'package:runflow_flutter/presentation/widgets/runflow_map.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/services/workout_recording_service.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {
@@ -56,7 +58,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                   const Icon(Icons.error_outline, size: 48, color: AppColors.error),
                   const SizedBox(height: 16),
                   Text(
-                    'Recording Error',
+                    S.of(context).recordRecordingError,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -75,7 +77,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                       ref.invalidate(recordingStatusProvider);
                     },
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    label: Text(S.of(context).actionRetry),
                   ),
                   const SizedBox(height: 12),
                   TextButton(
@@ -83,7 +85,7 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
                       ref.read(recordingServiceProvider).discardRecording();
                       ref.invalidate(recordingStatusProvider);
                     },
-                    child: const Text('Reset'),
+                    child: Text(S.of(context).actionReset),
                   ),
                 ],
               ),
@@ -140,8 +142,8 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
     final bool hasPermission = await service.requestPermissions();
     if (!hasPermission && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Location permission is required to record'),
+        SnackBar(
+          content: Text(S.of(context).recordLocationPermissionRequired),
         ),
       );
       return;
@@ -192,13 +194,13 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
           _lastWorkout = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Workout saved!')),
+          SnackBar(content: Text(S.of(context).recordWorkoutSaved)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e')),
+          SnackBar(content: Text(S.of(context).recordFailedToSaveError(e.toString()))),
         );
       }
     }
@@ -239,11 +241,11 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Connected to $deviceName')),
+          SnackBar(content: Text(S.of(context).recordConnectedTo(deviceName))),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to connect')),
+          SnackBar(content: Text(S.of(context).recordFailedToConnect)),
         );
       }
     }
@@ -275,14 +277,14 @@ class _IdleView extends StatelessWidget {
           children: [
             const SizedBox(height: 48),
             Text(
-              'Ready to record',
+              S.of(context).recordReadyToRecord,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Tap the button to start your workout',
+              S.of(context).recordTapToStart,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -295,32 +297,36 @@ class _IdleView extends StatelessWidget {
               onConnectDevice: onConnectDevice,
             ),
             const SizedBox(height: 32),
-            GestureDetector(
-              onTap: onStart,
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 24,
-                      spreadRadius: 4,
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.fiber_manual_record,
-                  size: 64,
-                  color: AppColors.onPrimary,
+            Semantics(
+              button: true,
+              label: S.of(context).recordStartRecording,
+              child: GestureDetector(
+                onTap: onStart,
+                child: Container(
+                  width: 180,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primary,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 24,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.fiber_manual_record,
+                    size: 64,
+                    color: AppColors.onPrimary,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              'START',
+              S.of(context).recordStart,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w700,
@@ -373,8 +379,8 @@ class _BleConnectionCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     bleState.value != null
-                        ? 'Connected: ${bleState.value!.name}'
-                        : 'No HR sensor paired',
+                        ? S.of(context).recordConnectedTo(bleState.value!.name)
+                        : S.of(context).recordNoHrSensor,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: bleState.value != null
                               ? AppColors.success
@@ -387,7 +393,7 @@ class _BleConnectionCard extends ConsumerWidget {
                     onPressed: () {
                       ref.read(bleConnectionProvider.notifier).disconnect();
                     },
-                    child: const Text('Disconnect'),
+                    child: Text(S.of(context).recordDisconnect),
                   )
                 else
                   FilledButton.tonal(
@@ -398,7 +404,7 @@ class _BleConnectionCard extends ConsumerWidget {
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Scan'),
+                        : Text(S.of(context).recordScan),
                   ),
               ],
             ),
@@ -445,10 +451,13 @@ class _RecordingView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<RecordingMetrics> metricsAsync =
         ref.watch(recordingMetricsProvider);
+    final List<GpsPoint> gpsPoints =
+        ref.read(recordingServiceProvider).gpsPoints;
 
     return metricsAsync.when(
       loading: () => _RecordingContent(
         metrics: const RecordingMetrics(),
+        gpsPoints: gpsPoints,
         onPause: onPause,
         onStop: onStop,
         coachEnabled: coachEnabled,
@@ -456,6 +465,7 @@ class _RecordingView extends ConsumerWidget {
       ),
       error: (Object e, StackTrace st) => _RecordingContent(
         metrics: const RecordingMetrics(),
+        gpsPoints: gpsPoints,
         onPause: onPause,
         onStop: onStop,
         coachEnabled: coachEnabled,
@@ -463,6 +473,7 @@ class _RecordingView extends ConsumerWidget {
       ),
       data: (RecordingMetrics metrics) => _RecordingContent(
         metrics: metrics,
+        gpsPoints: gpsPoints,
         onPause: onPause,
         onStop: onStop,
         coachEnabled: coachEnabled,
@@ -475,6 +486,7 @@ class _RecordingView extends ConsumerWidget {
 class _RecordingContent extends StatelessWidget {
   const _RecordingContent({
     required this.metrics,
+    required this.gpsPoints,
     required this.onPause,
     required this.onStop,
     this.coachEnabled = false,
@@ -482,6 +494,7 @@ class _RecordingContent extends StatelessWidget {
   });
 
   final RecordingMetrics metrics;
+  final List<GpsPoint> gpsPoints;
   final VoidCallback onPause;
   final VoidCallback onStop;
   final bool coachEnabled;
@@ -496,27 +509,38 @@ class _RecordingContent extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 24),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              height: 200,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                        Icons.map, size: 48, color: AppColors.onSurfaceVariant),
-                    SizedBox(height: 8),
-                    Text(
-                      'Map coming soon',
-                      style: TextStyle(color: AppColors.onSurfaceVariant),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: gpsPoints.isNotEmpty
+                  ? RunFlowMap(
+                      gpsPoints: gpsPoints,
+                      followUser: true,
+                      height: 200,
+                    )
+                  : Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.gps_fixed,
+                                size: 48, color: AppColors.onSurfaceVariant),
+                            const SizedBox(height: 8),
+                            Text(
+                              S.of(context).recordWaitingForGps,
+                              style:
+                                  const TextStyle(color: AppColors.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-              ),
             ),
             const SizedBox(height: 24),
             Padding(
@@ -526,12 +550,16 @@ class _RecordingContent extends StatelessWidget {
                   _GpsIndicator(accuracy: metrics.gpsAccuracy),
                   const Spacer(),
                   if (onToggleCoach != null)
-                    GestureDetector(
-                      onTap: onToggleCoach,
-                      child: Icon(
-                        coachEnabled ? Icons.record_voice_over : Icons.voice_over_off,
-                        size: 20,
-                        color: coachEnabled ? AppColors.primary : AppColors.onSurfaceVariant,
+                    Semantics(
+                      button: true,
+                      label: coachEnabled ? S.of(context).recordDisableVoiceCoach : S.of(context).recordEnableVoiceCoach,
+                      child: GestureDetector(
+                        onTap: onToggleCoach,
+                        child: Icon(
+                          coachEnabled ? Icons.record_voice_over : Icons.voice_over_off,
+                          size: 20,
+                          color: coachEnabled ? AppColors.primary : AppColors.onSurfaceVariant,
+                        ),
                       ),
                     ),
                 ],
@@ -550,7 +578,7 @@ class _RecordingContent extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'distance',
+                      S.of(context).distance,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: AppColors.onSurfaceVariant,
                       ),
@@ -562,7 +590,7 @@ class _RecordingContent extends StatelessWidget {
                         children: [
                           Expanded(
                             child: _MetricCard(
-                              label: 'Pace',
+                              label: S.of(context).pace,
                               value: formatPace(
                                   metrics.currentPaceSecondsPerKm),
                               icon: Icons.speed,
@@ -572,7 +600,7 @@ class _RecordingContent extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _MetricCard(
-                              label: 'Duration',
+                              label: S.of(context).duration,
                               value:
                                   formatDurationClock(metrics.durationSeconds),
                               icon: Icons.timer,
@@ -589,7 +617,7 @@ class _RecordingContent extends StatelessWidget {
                         children: [
                           Expanded(
                             child: _MetricCard(
-                              label: 'HR',
+                              label: S.of(context).heartRate,
                               value: metrics.currentHr > 0
                                   ? '${metrics.currentHr}'
                                   : '--',
@@ -600,7 +628,7 @@ class _RecordingContent extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _MetricCard(
-                              label: 'Cadence',
+                              label: S.of(context).cadence,
                               value: metrics.cadence > 0
                                   ? '${metrics.cadence.round()} spm'
                                   : '--',
@@ -618,7 +646,7 @@ class _RecordingContent extends StatelessWidget {
                         children: [
                           Expanded(
                             child: _MetricCard(
-                              label: 'Avg Pace',
+                              label: S.of(context).avgPace,
                               value: metrics.averageSpeedMps > 0.5
                                   ? formatPace(
                                       1000 / metrics.averageSpeedMps)
@@ -630,7 +658,7 @@ class _RecordingContent extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _MetricCard(
-                              label: 'Elevation',
+                              label: S.of(context).elevation,
                               value: metrics.totalElevation > 0
                                   ? '${metrics.totalElevation.round()} m'
                                   : '--',
@@ -650,36 +678,44 @@ class _RecordingContent extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  GestureDetector(
-                    onTap: onStop,
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.error,
-                      ),
-                      child: const Icon(
-                        Icons.stop,
-                        size: 32,
-                        color: AppColors.onPrimary,
+                  Semantics(
+                    button: true,
+                    label: S.of(context).recordStopRecording,
+                    child: GestureDetector(
+                      onTap: onStop,
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.error,
+                        ),
+                        child: const Icon(
+                          Icons.stop,
+                          size: 32,
+                          color: AppColors.onPrimary,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 32),
-                  GestureDetector(
-                    onTap: onPause,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.onSurface,
-                      ),
-                      child: const Icon(
-                        Icons.pause,
-                        size: 40,
-                        color: AppColors.oledBlack,
+                  Semantics(
+                    button: true,
+                    label: S.of(context).recordPauseRecording,
+                    child: GestureDetector(
+                      onTap: onPause,
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.onSurface,
+                        ),
+                        child: const Icon(
+                          Icons.pause,
+                          size: 40,
+                          color: AppColors.oledBlack,
+                        ),
                       ),
                     ),
                   ),
@@ -768,7 +804,7 @@ class _GpsIndicator extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         Text(
-          accuracy > 0 ? 'GPS ${accuracy.round()}m' : 'GPS searching...',
+          accuracy > 0 ? S.of(context).recordGpsAccuracy(accuracy.round()) : S.of(context).recordGpsSearching,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -812,7 +848,7 @@ class _PausedView extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'Paused',
+                S.of(context).statusPaused,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AppColors.warning,
@@ -822,36 +858,44 @@ class _PausedView extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GestureDetector(
-                    onTap: onStop,
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.error,
-                      ),
-                      child: const Icon(
-                        Icons.stop,
-                        size: 32,
-                        color: AppColors.onPrimary,
+                  Semantics(
+                    button: true,
+                    label: S.of(context).recordStopRecording,
+                    child: GestureDetector(
+                      onTap: onStop,
+                      child: Container(
+                        width: 64,
+                        height: 64,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.error,
+                        ),
+                        child: const Icon(
+                          Icons.stop,
+                          size: 32,
+                          color: AppColors.onPrimary,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 48),
-                  GestureDetector(
-                    onTap: onResume,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary,
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow,
-                        size: 44,
-                        color: AppColors.onPrimary,
+                  Semantics(
+                    button: true,
+                    label: S.of(context).recordResumeRecording,
+                    child: GestureDetector(
+                      onTap: onResume,
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primary,
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow,
+                          size: 44,
+                          color: AppColors.onPrimary,
+                        ),
                       ),
                     ),
                   ),
@@ -902,7 +946,7 @@ class _SummaryView extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Workout Complete',
+                      S.of(context).recordWorkoutComplete,
                       style: theme.textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -927,13 +971,13 @@ class _SummaryView extends StatelessWidget {
                   child: Column(
                     children: [
                       _SummaryRow(
-                        label: 'Duration',
+                        label: S.of(context).duration,
                         value: formatDuration(workout.durationSeconds),
                         icon: Icons.timer,
                       ),
                       const SizedBox(height: 16),
                       _SummaryRow(
-                        label: 'Avg Pace',
+                        label: S.of(context).avgPace,
                         value: avgPace != null
                             ? formatPace(avgPace)
                             : '--:-- /km',
@@ -941,7 +985,7 @@ class _SummaryView extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       _SummaryRow(
-                        label: 'Avg Speed',
+                        label: S.of(context).avgSpeed,
                         value: workout.averageSpeed != null
                             ? '${(workout.averageSpeed! * 3.6).toStringAsFixed(1)} km/h'
                             : '--',
@@ -950,7 +994,7 @@ class _SummaryView extends StatelessWidget {
                       if (workout.maxSpeed != null) ...[
                         const SizedBox(height: 16),
                         _SummaryRow(
-                          label: 'Max Speed',
+                          label: S.of(context).maxSpeed,
                           value:
                               '${(workout.maxSpeed! * 3.6).toStringAsFixed(1)} km/h',
                           icon: Icons.trending_up,
@@ -960,7 +1004,7 @@ class _SummaryView extends StatelessWidget {
                           workout.averageHr != null) ...[
                         const SizedBox(height: 16),
                         _SummaryRow(
-                          label: 'Avg HR',
+                          label: S.of(context).avgHr,
                           value: '${workout.averageHr!.round()} bpm',
                           icon: Icons.favorite,
                         ),
@@ -968,7 +1012,7 @@ class _SummaryView extends StatelessWidget {
                       if (workout.maxHr != null) ...[
                         const SizedBox(height: 16),
                         _SummaryRow(
-                          label: 'Max HR',
+                          label: S.of(context).maxHr,
                           value: '${workout.maxHr} bpm',
                           icon: Icons.favorite_border,
                         ),
@@ -976,7 +1020,7 @@ class _SummaryView extends StatelessWidget {
                       if (workout.averageCadence != null) ...[
                         const SizedBox(height: 16),
                         _SummaryRow(
-                          label: 'Avg Cadence',
+                          label: S.of(context).avgCadence,
                           value: '${workout.averageCadence!.round()} spm',
                           icon: Icons.directions_walk,
                         ),
@@ -984,14 +1028,14 @@ class _SummaryView extends StatelessWidget {
                       if (workout.totalElevation != null) ...[
                         const SizedBox(height: 16),
                         _SummaryRow(
-                          label: 'Elevation',
+                          label: S.of(context).elevation,
                           value: '${workout.totalElevation!.round()} m',
                           icon: Icons.terrain,
                         ),
                       ],
                       const SizedBox(height: 16),
                       _SummaryRow(
-                        label: 'GPS Points',
+                        label: S.of(context).gpsPoints,
                         value: '${workout.gpsPoints.length}',
                         icon: Icons.gps_fixed,
                       ),
@@ -1010,7 +1054,7 @@ class _SummaryView extends StatelessWidget {
                         side: const BorderSide(color: AppColors.error),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('Discard'),
+                      child: Text(S.of(context).actionDiscard),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -1020,7 +1064,7 @@ class _SummaryView extends StatelessWidget {
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      child: const Text('Save'),
+                      child: Text(S.of(context).actionSave),
                     ),
                   ),
                 ],

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runflow_flutter/data/models/auth_models.dart';
-import 'package:runflow_flutter/data/models/profile_models.dart';
+import 'package:runflow_flutter/domain/entities/auth_entities.dart';
+import 'package:runflow_flutter/domain/entities/profile_entities.dart';
+import 'package:runflow_flutter/domain/entities/settings_entities.dart';
 import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
 import 'package:runflow_flutter/domain/repositories/profile_repository.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 import 'package:runflow_flutter/presentation/screens/profile/profile_screen.dart';
@@ -70,6 +73,15 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> forgotPassword(String email) async {}
+
+  @override
+  Future<void> verifyEmail(String email, String code) async {}
+
+  @override
+  Future<void> resendVerification(String email) async {}
+
+  @override
+  Future<bool> checkEmailVerified() async => true;
 }
 
 class _FakeProfileRepository implements ProfileRepository {
@@ -82,6 +94,19 @@ class _FakeProfileRepository implements ProfileRepository {
   Future<UserProfile> updateProfile(UpdateProfileRequest request) async {
     throw UnimplementedError();
   }
+
+  @override
+  Future<ApiKeyInfo> getApiKeyInfo() async {
+    return const ApiKeyInfo(hasKey: false);
+  }
+
+  @override
+  Future<GeneratedApiKey> generateApiKey({String name = 'My API Key'}) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> revokeApiKey() async {}
 }
 
 void main() {
@@ -103,6 +128,13 @@ void main() {
           settingsProvider.overrideWith(() => _FakeSettingsNotifier()),
         ],
         child: const MaterialApp(
+          localizationsDelegates: [
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: S.supportedLocales,
           home: ProfileScreen(),
         ),
       );

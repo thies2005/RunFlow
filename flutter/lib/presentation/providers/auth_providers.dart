@@ -9,7 +9,7 @@ import 'package:runflow_flutter/data/interceptors/deduplication_interceptor.dart
 import 'package:runflow_flutter/data/interceptors/error_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/refresh_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/retry_interceptor.dart';
-import 'package:runflow_flutter/data/models/auth_models.dart';
+import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 import 'package:runflow_flutter/data/repositories/auth_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
@@ -35,16 +35,26 @@ AuthService authServiceImpl(Ref ref) {
   return AuthServiceImpl();
 }
 
+final deduplicationInterceptorProvider =
+    Provider<DeduplicationInterceptor>((ref) {
+  final interceptor = DeduplicationInterceptor();
+  ref.onDispose(() {
+    interceptor.close();
+  });
+  return interceptor;
+});
+
 @Riverpod(keepAlive: true)
 DioClient dioClient(Ref ref) {
   final authService = ref.watch(authServiceImplProvider);
+  final deduplicationInterceptor = ref.watch(deduplicationInterceptorProvider);
   final dio = Dio();
 
   final client = DioClient(dio: dio);
 
   dio.interceptors.addAll([
     ConnectivityInterceptor(),
-    DeduplicationInterceptor(),
+    deduplicationInterceptor,
     AuthInterceptor(authService: authService),
     RefreshInterceptor(authService: authService, dio: dio),
     RetryInterceptor(dio: dio),
@@ -114,6 +124,7 @@ class AuthState extends _$AuthState {
       final recordingService = ref.read(recordingServiceProvider);
       recordingService.discardRecording();
       await recordingService.disconnectHeartRateMonitor();
+      ref.read(deduplicationInterceptorProvider).close();
       final repo = ref.read(authRepositoryProvider);
       await repo.logout();
       AppDatabase.instance.close();

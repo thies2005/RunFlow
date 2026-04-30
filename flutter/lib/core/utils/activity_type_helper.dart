@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 
 IconData activityTypeIcon(ActivityType type) {
   switch (type) {

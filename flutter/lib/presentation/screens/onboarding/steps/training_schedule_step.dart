@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
 
 class TrainingScheduleStep extends ConsumerStatefulWidget {
@@ -14,14 +15,14 @@ class TrainingScheduleStep extends ConsumerStatefulWidget {
 class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
   bool _showAdvanced = false;
 
-  static const _dayNames = [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
+  List<String> _dayNames(S s) => [
+    s.daySunday,
+    s.dayMonday,
+    s.dayTuesday,
+    s.dayWednesday,
+    s.dayThursday,
+    s.dayFriday,
+    s.daySaturday,
   ];
 
   @override
@@ -50,7 +51,7 @@ class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Training phases',
+            S.of(context).onboardingTrainingPhases,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -58,7 +59,7 @@ class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Customize your build, peak, and taper weeks.',
+            S.of(context).onboardingTrainingPhasesSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -71,21 +72,21 @@ class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
               child: Column(
                 children: [
                   _PhaseSlider(
-                    label: 'Build Weeks',
+                    label: S.of(context).onboardingBuildWeeks,
                     value: onboarding.buildWeeks.toDouble(),
                     color: const Color(0xFF4CAF50),
                     onChanged: (v) => notifier.setBuildWeeks(v.round()),
                   ),
                   const SizedBox(height: 12),
                   _PhaseSlider(
-                    label: 'Peak Weeks',
+                    label: S.of(context).onboardingPeakWeeks,
                     value: onboarding.peakWeeks.toDouble(),
                     color: const Color(0xFFFF9800),
                     onChanged: (v) => notifier.setPeakWeeks(v.round()),
                   ),
                   const SizedBox(height: 12),
                   _PhaseSlider(
-                    label: 'Taper Weeks',
+                    label: S.of(context).onboardingTaperWeeks,
                     value: onboarding.taperWeeks.toDouble(),
                     color: const Color(0xFF2196F3),
                     onChanged: (v) => notifier.setTaperWeeks(v.round()),
@@ -95,7 +96,10 @@ class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
-                        'Total: ${onboarding.buildWeeks + onboarding.peakWeeks + onboarding.taperWeeks} / ${onboarding.computedPlanWeeks} weeks',
+                        S.of(context).onboardingPhasesTotal(
+                          onboarding.buildWeeks + onboarding.peakWeeks + onboarding.taperWeeks,
+                          onboarding.computedPlanWeeks,
+                        ),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -115,8 +119,8 @@ class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
             ),
             label: Text(
               _showAdvanced
-                  ? 'Hide day scheduling'
-                  : 'Customize training days',
+                  ? S.of(context).onboardingHideDayScheduling
+                  : S.of(context).onboardingCustomizeTrainingDays,
             ),
           ),
           if (_showAdvanced) ...[
@@ -127,7 +131,7 @@ class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Long Run Day',
+                      S.of(context).onboardingLongRunDay,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -143,7 +147,7 @@ class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
                       items: List.generate(7, (i) {
                         return DropdownMenuItem(
                           value: i,
-                          child: Text(_dayNames[i]),
+                          child: Text(_dayNames(S.of(context))[i]),
                         );
                       }),
                       onChanged: (v) {
@@ -152,7 +156,7 @@ class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Quality Workout Day',
+                      S.of(context).onboardingQualityWorkoutDay,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -168,7 +172,7 @@ class _TrainingScheduleStepState extends ConsumerState<TrainingScheduleStep> {
                       items: List.generate(7, (i) {
                         return DropdownMenuItem(
                           value: i,
-                          child: Text(_dayNames[i]),
+                          child: Text(_dayNames(S.of(context))[i]),
                         );
                       }),
                       onChanged: (v) {

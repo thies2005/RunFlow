@@ -2,8 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
+import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/goal_repository.dart';
 
 class GoalRepositoryImpl implements GoalRepository {
@@ -12,12 +14,12 @@ class GoalRepositoryImpl implements GoalRepository {
   final Dio dio;
 
   @override
-  Future<GoalsResponse> listGoals() async {
+  Future<domain.GoalsResponse> listGoals() async {
     try {
       final response = await dio.get(ApiConstants.goalsPath);
       return GoalsResponse.fromJson(
         response.data as Map<String, dynamic>,
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -29,18 +31,18 @@ class GoalRepositoryImpl implements GoalRepository {
   }
 
   @override
-  Future<Goal> createGoal(CreateGoalRequest request) async {
+  Future<domain.Goal> createGoal(domain.CreateGoalRequest request) async {
     try {
       final response = await dio.post(
         ApiConstants.goalsPath,
-        data: request.toJson(),
+        data: request.toData().toJson(),
       );
       return Goal.fromJson(
         unwrapPayload(
           Map<String, dynamic>.from(response.data as Map),
           const ['goal'],
         ),
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -52,7 +54,7 @@ class GoalRepositoryImpl implements GoalRepository {
   }
 
   @override
-  Future<Goal> getGoal(String id) async {
+  Future<domain.Goal> getGoal(String id) async {
     try {
       final response = await dio.get('${ApiConstants.goalsPath}/$id');
       return Goal.fromJson(
@@ -60,7 +62,7 @@ class GoalRepositoryImpl implements GoalRepository {
           Map<String, dynamic>.from(response.data as Map),
           const ['goal'],
         ),
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -72,18 +74,18 @@ class GoalRepositoryImpl implements GoalRepository {
   }
 
   @override
-  Future<Goal> updateGoal(String id, UpdateGoalRequest request) async {
+  Future<domain.Goal> updateGoal(String id, domain.UpdateGoalRequest request) async {
     try {
       final response = await dio.put(
         '${ApiConstants.goalsPath}/$id',
-        data: request.toJson(),
+        data: request.toData().toJson(),
       );
       return Goal.fromJson(
         unwrapPayload(
           Map<String, dynamic>.from(response.data as Map),
           const ['goal'],
         ),
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -111,7 +113,7 @@ class GoalRepositoryImpl implements GoalRepository {
   }
 
   @override
-  Future<WorkoutsResponse> listWorkouts({
+  Future<domain.WorkoutsResponse> listWorkouts({
     String? goalId,
     DateTime? weekStart,
     DateTime? weekEnd,
@@ -132,7 +134,7 @@ class GoalRepositoryImpl implements GoalRepository {
       );
       return WorkoutsResponse.fromJson(
         response.data as Map<String, dynamic>,
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -144,20 +146,40 @@ class GoalRepositoryImpl implements GoalRepository {
   }
 
   @override
-  Future<Workout> updateWorkout(String id, UpdateWorkoutRequest request) async {
+  Future<domain.Workout> updateWorkout(String id, domain.UpdateWorkoutRequest request) async {
     try {
       final response = await dio.patch(
         '${ApiConstants.workoutsPath}/$id',
-        data: request.toJson(),
+        data: request.toData().toJson(),
       );
       return Workout.fromJson(
         response.data as Map<String, dynamic>,
-      );
+      ).toDomain();
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(
               message: 'Failed to update workout.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
+  @override
+  Future<void> reorderWorkout(String workoutId, DateTime newDate) async {
+    try {
+      await dio.patch(
+        ApiConstants.workoutReorderPath,
+        data: {
+          'workoutId': workoutId,
+          'newDate': newDate.toIso8601String(),
+        },
+      );
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : ServerException(
+              message: 'Failed to reorder workout.',
               statusCode: e.response?.statusCode,
             );
     }

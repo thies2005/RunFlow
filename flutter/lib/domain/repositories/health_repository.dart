@@ -1,4 +1,4 @@
-import 'package:runflow_flutter/data/models/health_models.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 
 abstract class HealthRepository {
   Future<NutritionLog> getNutritionLog(DateTime date);

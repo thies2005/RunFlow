@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/data/models/health_vitals_models.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
 
 class VitalsScreen extends ConsumerWidget {
@@ -16,7 +17,7 @@ class VitalsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vitals'),
+        title: Text(S.of(context).healthVitals),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -24,7 +25,7 @@ class VitalsScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.sync, color: AppColors.primary),
-            tooltip: 'Sync from Health Connect',
+            tooltip: S.of(context).vitalsSyncFromHc,
             onPressed: () => ref.read(vitalsProvider.notifier).refresh(),
           ),
         ],
@@ -68,11 +69,11 @@ class _VitalsContent extends StatelessWidget {
               Expanded(
                 child: _VitalCard(
                   icon: Icons.favorite,
-                  label: 'Resting HR',
+                  label: S.of(context).vitalsRestingHr,
                   value: vitals.restingHeartRate!.toInt().toString(),
                   unit: 'bpm',
                   color: AppColors.error,
-                  subtext: _hrCategory(vitals.restingHeartRate!),
+                  subtext: _hrCategory(context, vitals.restingHeartRate!),
                 ),
               ),
             if (vitals.restingHeartRate != null && vitals.hrv != null)
@@ -85,7 +86,7 @@ class _VitalsContent extends StatelessWidget {
                   value: vitals.hrv!.toStringAsFixed(0),
                   unit: 'ms',
                   color: AppColors.success,
-                  subtext: _hrvCategory(vitals.hrv!),
+                  subtext: _hrvCategory(context, vitals.hrv!),
                 ),
               ),
           ]),
@@ -93,11 +94,11 @@ class _VitalsContent extends StatelessWidget {
             const SizedBox(height: 10),
             _VitalCard(
               icon: Icons.air,
-              label: 'Blood Oxygen (SpO2)',
+              label: S.of(context).vitalsBloodOxygen,
                   value: vitals.spo2!.toStringAsFixed(1),
               unit: '%',
               color: AppColors.peaked,
-              subtext: vitals.spo2! >= 95 ? 'Normal' : 'Low — see a doctor',
+              subtext: vitals.spo2! >= 95 ? S.of(context).vitalsNormal : S.of(context).vitalsLowSeeDoctor,
             ),
           ],
           const SizedBox(height: 16),
@@ -115,7 +116,7 @@ class _VitalsContent extends StatelessWidget {
           if (vitals.lastSynced != null)
             Center(
               child: Text(
-                'Synced from Health Connect · ${_fmtTime(vitals.lastSynced!)}',
+                S.of(context).vitalsSynced(_fmtTime(vitals.lastSynced!)),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -126,19 +127,21 @@ class _VitalsContent extends StatelessWidget {
     );
   }
 
-  String _hrCategory(double hr) {
-    if (hr < 50) return 'Athletic';
-    if (hr < 60) return 'Excellent';
-    if (hr < 70) return 'Good';
-    if (hr < 80) return 'Average';
-    return 'Above average';
+  String _hrCategory(BuildContext context, double hr) {
+    final s = S.of(context);
+    if (hr < 50) return s.vitalsAthletic;
+    if (hr < 60) return s.vitalsExcellent;
+    if (hr < 70) return s.vitalsGood;
+    if (hr < 80) return s.vitalsAverage;
+    return s.vitalsAboveAverage;
   }
 
-  String _hrvCategory(double hrv) {
-    if (hrv > 70) return 'Excellent recovery';
-    if (hrv > 50) return 'Good recovery';
-    if (hrv > 30) return 'Moderate';
-    return 'Low — consider rest';
+  String _hrvCategory(BuildContext context, double hrv) {
+    final s = S.of(context);
+    if (hrv > 70) return s.vitalsExcellentRecovery;
+    if (hrv > 50) return s.vitalsGoodRecovery;
+    if (hrv > 30) return s.vitalsModerate;
+    return s.vitalsLowConsiderRest;
   }
 
   String _fmtTime(DateTime t) =>
@@ -242,7 +245,7 @@ class _HrTrendChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('7-Day Resting HR',
+          Text(S.of(context).vitals7DayRestingHr,
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
@@ -338,7 +341,7 @@ class _HrvTrendChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('7-Day HRV Trend',
+          Text(S.of(context).vitals7DayHrvTrend,
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
@@ -438,12 +441,12 @@ class _ConnectPromptState extends State<_ConnectPrompt> {
                   size: 40, color: AppColors.error),
             ),
             const SizedBox(height: 24),
-            Text('Connect Health Data',
+            Text(S.of(context).vitalsConnectTitle,
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             Text(
-              'Sync resting heart rate, HRV, and SpO₂ directly from Health Connect on your Android device.',
+              S.of(context).vitalsConnectMessage,
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: AppColors.onSurfaceVariant),
               textAlign: TextAlign.center,
@@ -465,14 +468,14 @@ class _ConnectPromptState extends State<_ConnectPrompt> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.sync),
-                label: Text(_loading ? 'Connecting…' : 'Connect Health Connect'),
+                label: Text(_loading ? S.of(context).vitalsConnecting : S.of(context).vitalsConnectHc),
               ),
             ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => context.pop(),
-              child: const Text('Dismiss',
-                  style: TextStyle(color: AppColors.onSurfaceVariant)),
+              child: Text(S.of(context).healthDismiss,
+                  style: const TextStyle(color: AppColors.onSurfaceVariant)),
             ),
           ],
         ),

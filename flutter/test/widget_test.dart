@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/app.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/data/datasources/remote/dio_client.dart';
-import 'package:runflow_flutter/data/models/auth_models.dart';
+import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

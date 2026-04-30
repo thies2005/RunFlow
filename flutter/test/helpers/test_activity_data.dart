@@ -1,5 +1,5 @@
-import 'package:runflow_flutter/data/models/activity_models.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/activity_entities.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 
 class TestActivityData {
   TestActivityData._();

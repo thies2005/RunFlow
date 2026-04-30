@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/vdot_calculator.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
 
 class HeartRateProfileStep extends ConsumerStatefulWidget {
@@ -84,7 +85,7 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Heart rate profile',
+            S.of(context).onboardingHeartRateProfile,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -92,7 +93,7 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Optional: Set your HR zones for training guidance.',
+            S.of(context).onboardingHeartRateProfileSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -109,9 +110,9 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
                       Expanded(
                         child: TextFormField(
                           controller: _maxHrController,
-                          decoration: const InputDecoration(
-                            labelText: 'Max HR',
-                            prefixIcon: Icon(Icons.trending_up, size: 20),
+                          decoration: InputDecoration(
+                            labelText: S.of(context).onboardingMaxHr,
+                            prefixIcon: const Icon(Icons.trending_up, size: 20),
                           ),
                           keyboardType: TextInputType.number,
                           onChanged: (v) {
@@ -125,10 +126,10 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
                       Expanded(
                         child: TextFormField(
                           controller: _restHrController,
-                          decoration: const InputDecoration(
-                            labelText: 'Resting HR',
+                          decoration: InputDecoration(
+                            labelText: S.of(context).onboardingRestingHr,
                             prefixIcon:
-                                Icon(Icons.hotel, size: 20),
+                                const Icon(Icons.hotel, size: 20),
                           ),
                           keyboardType: TextInputType.number,
                           onChanged: (v) {
@@ -142,10 +143,10 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _weightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Weight (kg)',
+                    decoration: InputDecoration(
+                      labelText: S.of(context).onboardingWeight,
                       prefixIcon:
-                          Icon(Icons.monitor_weight, size: 20),
+                          const Icon(Icons.monitor_weight, size: 20),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                         decimal: true),
@@ -156,7 +157,7 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Threshold Values',
+                    S.of(context).onboardingThresholdValues,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -165,12 +166,12 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
                   TextFormField(
                     controller: _thresholdHrController,
                     decoration: InputDecoration(
-                      labelText: 'LTHR (bpm)',
+                      labelText: S.of(context).onboardingLthr,
                       prefixIcon:
                           const Icon(Icons.favorite_border, size: 20),
                       hintText: _lthr > 0
-                          ? 'Auto: $_lthr'
-                          : 'Threshold HR',
+                          ? S.of(context).onboardingAutoLthr(_lthr)
+                          : S.of(context).onboardingThresholdHr,
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (v) {
@@ -185,8 +186,8 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
                       Expanded(
                         child: TextFormField(
                           controller: _thresholdPaceMinController,
-                          decoration: const InputDecoration(
-                            labelText: 'Threshold Pace Min',
+                          decoration: InputDecoration(
+                            labelText: S.of(context).onboardingThresholdPaceMin,
                           ),
                           keyboardType: TextInputType.number,
                           onChanged: (v) => _updateThresholdPace(notifier),
@@ -196,8 +197,8 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
                       Expanded(
                         child: TextFormField(
                           controller: _thresholdPaceSecController,
-                          decoration: const InputDecoration(
-                            labelText: 'Sec',
+                          decoration: InputDecoration(
+                            labelText: S.of(context).onboardingSeconds,
                           ),
                           keyboardType: TextInputType.number,
                           onChanged: (v) => _updateThresholdPace(notifier),
@@ -218,7 +219,7 @@ class _HeartRateProfileStepState extends ConsumerState<HeartRateProfileStep> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Calculated Zones (from LTHR: $_lthr)',
+                      S.of(context).onboardingCalculatedZones(_lthr),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),

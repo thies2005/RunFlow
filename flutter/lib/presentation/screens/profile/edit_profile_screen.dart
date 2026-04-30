@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
-import 'package:runflow_flutter/data/models/auth_models.dart';
-import 'package:runflow_flutter/data/models/profile_models.dart';
+import 'package:runflow_flutter/domain/entities/auth_entities.dart';
+import 'package:runflow_flutter/domain/entities/profile_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -94,14 +95,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       await ref.read(profileProvider.notifier).updateProfile(request);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated')),
+          SnackBar(content: Text(S.of(context).editProfileUpdated)),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update: $e')),
+          SnackBar(content: Text(S.of(context).editProfileFailed(e.toString()))),
         );
       }
     } finally {
@@ -127,7 +128,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text(S.of(context).athleteEditProfile),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -142,7 +143,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         color: AppColors.onPrimary,
                       ),
                     )
-                  : const Text('Save'),
+                  : Text(S.of(context).actionSave),
             ),
           ),
         ],
@@ -154,13 +155,13 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           children: [
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                prefixIcon: Icon(Icons.person_outline),
+              decoration: InputDecoration(
+                labelText: S.of(context).editProfileName,
+                prefixIcon: const Icon(Icons.person_outline),
               ),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Name is required';
-                if (v.trim().length < 2) return 'At least 2 characters';
+                if (v == null || v.trim().isEmpty) return S.of(context).editProfileNameRequired;
+                if (v.trim().length < 2) return S.of(context).editProfileNameMinChars;
                 return null;
               },
             ),
@@ -168,9 +169,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             DropdownButtonFormField<Sex>(
               key: ValueKey(_selectedSex),
               initialValue: _selectedSex,
-              decoration: const InputDecoration(
-                labelText: 'Sex',
-                prefixIcon: Icon(Icons.wc),
+              decoration: InputDecoration(
+                labelText: S.of(context).editProfileSex,
+                prefixIcon: const Icon(Icons.wc),
               ),
               items: Sex.values.map((sex) {
                 return DropdownMenuItem(
@@ -189,7 +190,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               title: Text(
                 _birthDate != null
                     ? '${_birthDate!.day}/${_birthDate!.month}/${_birthDate!.year}'
-                    : 'Select birth date',
+                    : S.of(context).editProfileSelectBirthDate,
                 style: theme.textTheme.bodyMedium,
               ),
               trailing: const Icon(Icons.chevron_right),
@@ -198,7 +199,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             const Divider(),
             const SizedBox(height: 8),
             Text(
-              'Body Metrics',
+              S.of(context).editProfileBodyMetrics,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.onSurfaceVariant,
@@ -207,38 +208,38 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _weightController,
-              decoration: const InputDecoration(
-                labelText: 'Weight (kg)',
-                prefixIcon: Icon(Icons.monitor_weight_outlined),
+              decoration: InputDecoration(
+                labelText: S.of(context).editProfileWeightKg,
+                prefixIcon: const Icon(Icons.monitor_weight_outlined),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (v) {
                 if (v == null || v.isEmpty) return null;
                 final val = double.tryParse(v);
-                if (val == null) return 'Enter a valid number';
-                if (val <= 0 || val > 500) return 'Enter a valid weight';
+                if (val == null) return S.of(context).editProfileEnterValidNumber;
+                if (val <= 0 || val > 500) return S.of(context).editProfileEnterValidWeight;
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _heightController,
-              decoration: const InputDecoration(
-                labelText: 'Height (cm)',
-                prefixIcon: Icon(Icons.height),
+              decoration: InputDecoration(
+                labelText: S.of(context).editProfileHeightCm,
+                prefixIcon: const Icon(Icons.height),
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               validator: (v) {
                 if (v == null || v.isEmpty) return null;
                 final val = double.tryParse(v);
-                if (val == null) return 'Enter a valid number';
-                if (val < 50 || val > 300) return 'Enter a valid height (50-300 cm)';
+                if (val == null) return S.of(context).editProfileEnterValidNumber;
+                if (val < 50 || val > 300) return S.of(context).editProfileEnterValidHeight;
                 return null;
               },
             ),
             const SizedBox(height: 24),
             Text(
-              'Heart Rate',
+              S.of(context).editProfileHeartRate,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.onSurfaceVariant,
@@ -247,48 +248,48 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _hrMaxController,
-              decoration: const InputDecoration(
-                labelText: 'Max HR (bpm)',
-                prefixIcon: Icon(Icons.favorite_outline),
+              decoration: InputDecoration(
+                labelText: S.of(context).editProfileMaxHr,
+                prefixIcon: const Icon(Icons.favorite_outline),
               ),
               keyboardType: TextInputType.number,
               validator: (v) {
                 if (v == null || v.isEmpty) return null;
                 final val = int.tryParse(v);
-                if (val == null) return 'Enter a valid number';
-                if (val < 30 || val > 250) return 'Enter a valid HR (30-250)';
+                if (val == null) return S.of(context).editProfileEnterValidNumber;
+                if (val < 30 || val > 250) return S.of(context).editProfileEnterValidHr(30, 250);
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _hrRestController,
-              decoration: const InputDecoration(
-                labelText: 'Resting HR (bpm)',
-                prefixIcon: Icon(Icons.favorite_border),
+              decoration: InputDecoration(
+                labelText: S.of(context).editProfileRestingHr,
+                prefixIcon: const Icon(Icons.favorite_border),
               ),
               keyboardType: TextInputType.number,
               validator: (v) {
                 if (v == null || v.isEmpty) return null;
                 final val = int.tryParse(v);
-                if (val == null) return 'Enter a valid number';
-                if (val < 20 || val > 150) return 'Enter a valid HR (20-150)';
+                if (val == null) return S.of(context).editProfileEnterValidNumber;
+                if (val < 20 || val > 150) return S.of(context).editProfileEnterValidHr(20, 150);
                 return null;
               },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _thresholdHrController,
-              decoration: const InputDecoration(
-                labelText: 'Threshold HR (bpm)',
-                prefixIcon: Icon(Icons.monitor_heart_outlined),
+              decoration: InputDecoration(
+                labelText: S.of(context).editProfileThresholdHr,
+                prefixIcon: const Icon(Icons.monitor_heart_outlined),
               ),
               keyboardType: TextInputType.number,
               validator: (v) {
                 if (v == null || v.isEmpty) return null;
                 final val = int.tryParse(v);
-                if (val == null) return 'Enter a valid number';
-                if (val < 30 || val > 250) return 'Enter a valid HR (30-250)';
+                if (val == null) return S.of(context).editProfileEnterValidNumber;
+                if (val < 30 || val > 250) return S.of(context).editProfileEnterValidHr(30, 250);
                 return null;
               },
             ),

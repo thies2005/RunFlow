@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 
 class GoalListScreen extends ConsumerWidget {
@@ -15,7 +16,7 @@ class GoalListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Goals'),
+        title: Text(S.of(context).goalList),
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(goalsProvider.notifier).refresh(),
@@ -56,12 +57,12 @@ class _GoalListContent extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 80),
       children: [
         if (activeGoals.isNotEmpty) ...[
-          const _SectionHeader(title: 'Active Goals'),
+          _SectionHeader(title: S.of(context).goalActiveGoals),
           ...activeGoals.map((goal) => _GoalCard(goal: goal)),
         ],
         if (completedGoals.isNotEmpty) ...[
           const SizedBox(height: 16),
-          const _SectionHeader(title: 'Completed Goals'),
+          _SectionHeader(title: S.of(context).goalCompletedGoals),
           ...completedGoals.map((goal) => _GoalCard(goal: goal, isCompleted: true)),
         ],
       ],
@@ -166,10 +167,10 @@ class _GoalCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     isCompleted
-                        ? 'Completed'
+                        ? S.of(context).statusCompleted
                         : daysUntilRace > 0
-                            ? '$daysUntilRace days to go'
-                            : 'Race day!',
+                            ? S.of(context).goalDaysToGoShort(daysUntilRace)
+                            : S.of(context).planRaceDay,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: daysUntilRace > 0 || isCompleted
                           ? AppColors.onSurfaceVariant
@@ -179,7 +180,7 @@ class _GoalCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '$completedWorkouts/$totalWorkouts workouts',
+                    S.of(context).goalWorkoutsCount(completedWorkouts, totalWorkouts),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -225,14 +226,14 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No goals yet',
+              S.of(context).goalNoGoals,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Create a training goal to start your journey to race day.',
+              S.of(context).goalCreateSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -270,7 +271,7 @@ class _GoalListError extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Something went wrong',
+              S.of(context).statusError,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -287,7 +288,7 @@ class _GoalListError extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(S.of(context).actionRetry),
             ),
           ],
         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/vdot_calculator.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
 
 class TrainingVolumeStep extends ConsumerWidget {
@@ -33,7 +34,7 @@ class TrainingVolumeStep extends ConsumerWidget {
         ),
           const SizedBox(height: 24),
           Text(
-            'How much do you want to train?',
+            S.of(context).onboardingTrainingVolumeTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -41,7 +42,7 @@ class TrainingVolumeStep extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Set your weekly training volume and frequency.',
+            S.of(context).onboardingTrainingVolumeSubtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
@@ -53,26 +54,26 @@ class TrainingVolumeStep extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _VolumeSlider(
-                    icon: Icons.directions_run,
-                    label: 'Runs per week',
+                   _VolumeSlider(
+                     icon: Icons.directions_run,
+                     label: S.of(context).onboardingRunsPerWeek,
                     value: onboarding.runsPerWeek.toDouble(),
                     min: 2,
                     max: 7,
                     divisions: 5,
-                    displayValue: '${onboarding.runsPerWeek}',
+                     displayValue: S.of(context).onboardingRunsPerWeekCount(onboarding.runsPerWeek),
                     onChanged: (v) => notifier.setRunsPerWeek(v.round()),
                   ),
                   const SizedBox(height: 16),
                   _VolumeSlider(
                     icon: Icons.straighten,
-                    label: 'Weekly mileage',
+                     label: S.of(context).onboardingWeeklyMileage,
                     value: onboarding.weeklyMileage,
                     min: 10,
                     max: 120,
                     divisions: 22,
                     displayValue:
-                        '${onboarding.weeklyMileage.toStringAsFixed(0)} km',
+                        '${onboarding.weeklyMileage.toStringAsFixed(0)} ${S.of(context).kmUnit}',
                     onChanged: (v) {
                       notifier.setWeeklyMileage(v);
                       final maxLongRun = calculateDefaultMaxLongRunKm(
@@ -85,13 +86,13 @@ class TrainingVolumeStep extends ConsumerWidget {
                   const SizedBox(height: 16),
                   _VolumeSlider(
                     icon: Icons.route,
-                    label: 'Long run cap',
+                     label: S.of(context).onboardingLongRunCap,
                     value: onboarding.maxLongRunKm,
                     min: 6,
                     max: 40,
                     divisions: 34,
                     displayValue:
-                        '${onboarding.maxLongRunKm.toStringAsFixed(0)} km',
+                        '${onboarding.maxLongRunKm.toStringAsFixed(0)} ${S.of(context).kmUnit}',
                     onChanged: (v) => notifier.setMaxLongRunKm(v),
                   ),
                 ],

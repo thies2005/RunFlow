@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runflow_flutter/data/models/dashboard_models.dart';
-import 'package:runflow_flutter/data/models/goal_models.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/domain/repositories/goal_repository.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 
@@ -47,6 +47,11 @@ class _FakeGoalRepository implements GoalRepository {
     return goal.workouts.firstWhere((w) => w.id == id).copyWith(
           isCompleted: request.isCompleted ?? false,
         );
+  }
+
+  @override
+  Future<void> reorderWorkout(String workoutId, DateTime newDate) async {
+    throw UnimplementedError();
   }
 }
 

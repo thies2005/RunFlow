@@ -1,4 +1,4 @@
-import 'package:runflow_flutter/data/models/auth_models.dart';
+import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 
 abstract class AuthRepository {
   Future<LoginResponse> loginWithStravaCode(String code, {String? redirectUri});
@@ -25,4 +25,10 @@ abstract class AuthRepository {
   });
 
   Future<void> forgotPassword(String email);
+
+  Future<void> verifyEmail(String email, String code);
+
+  Future<void> resendVerification(String email);
+
+  Future<bool> checkEmailVerified();
 }

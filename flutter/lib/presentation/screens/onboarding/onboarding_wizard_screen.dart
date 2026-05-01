@@ -6,6 +6,7 @@ import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
+import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
 
 import 'package:runflow_flutter/presentation/widgets/sync_platform_selector.dart';
 import 'package:shared_preferences/shared_preferences.dart';

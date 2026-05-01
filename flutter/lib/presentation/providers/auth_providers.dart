@@ -93,6 +93,7 @@ class AuthState extends _$AuthState {
       final repo = ref.read(authRepositoryProvider);
       final response = await repo.loginWithStravaCode(code, redirectUri: redirectUri);
       state = AsyncValue.data(response.user);
+      ref.read(healthSyncServiceProvider).startAutoSync();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -110,6 +111,7 @@ class AuthState extends _$AuthState {
         password: password,
       );
       state = AsyncValue.data(response.user);
+      ref.read(healthSyncServiceProvider).startAutoSync();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -148,6 +150,7 @@ class AuthState extends _$AuthState {
       );
       final user = await repo.getCurrentUser();
       state = AsyncValue.data(user);
+      ref.read(healthSyncServiceProvider).startAutoSync();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }

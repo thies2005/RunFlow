@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
+import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -256,6 +258,9 @@ class _SyncPlatformSelectorState extends ConsumerState<SyncPlatformSelector> {
 
       final activities = await service.readActivities();
       if (activities.isNotEmpty) {
+        try {
+          await ref.read(healthSyncServiceProvider).syncHistoricalHealth();
+        } catch (_) {}
         setState(() => _healthConnectSynced = true);
         widget.onPlatformConnected?.call('health-connect');
       } else {

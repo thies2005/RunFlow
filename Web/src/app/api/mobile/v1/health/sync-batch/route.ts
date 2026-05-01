@@ -13,6 +13,7 @@ interface BatchHealthData {
     date: string;
     steps?: number;
     weight?: number;
+    activeCalories?: number;
 }
 
 interface BatchSyncRequest {
@@ -91,14 +92,14 @@ export async function POST(request: NextRequest) {
 
         await prisma.$transaction(async (tx) => {
             for (const entry of recordsToSync) {
-                const { date, steps, weight } = entry;
+                const { date, steps, weight, activeCalories } = entry;
 
                 if (!date) continue;
 
                 const dayKey = toUtcDayKey(date);
                 const dateObj = parseUtcDayKey(dayKey);
 
-                if (steps == null && weight == null) continue;
+                if (steps == null && weight == null && activeCalories == null) continue;
 
                 await upsertDailyHealthLog({
                     db: tx,
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest) {
                     source: weight != null && stravaFallbackUsed && dayKey === toUtcDayKey(new Date()) ? 'strava' : 'health_connect',
                     steps: steps ?? undefined,
                     weight,
+                    activeCalories,
                 });
 
                 syncedCount++;

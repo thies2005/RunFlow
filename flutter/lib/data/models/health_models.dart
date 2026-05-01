@@ -61,13 +61,31 @@ sealed class Supplement with _$Supplement {
   }) = _Supplement;
   const Supplement._();
 
-  factory Supplement.fromJson(Map<String, dynamic> json) =>
-      _$SupplementFromJson(json);
+  factory Supplement.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    if (rawId is String) {
+      return Supplement(
+        id: 0,
+        serverId: rawId,
+        name: json['name'] as String,
+        amount: _parseSupplementAmount(json['amount']),
+        unit: json['unit'] as String? ?? 'mg',
+        timeOfDay: json['timeOfDay'] as String? ?? 'MORNING',
+        daysOfWeek: _parseDaysOfWeek(json['daysOfWeek']),
+        isActive: json['isActive'] as bool? ?? true,
+        stackId: json['stackId'] as String?,
+        order: (json['order'] as num?)?.toInt() ?? 0,
+        dosage: json['dosage'] as String? ?? '',
+        frequency: json['frequency'] as String? ?? 'Daily',
+      );
+    }
+    return _$SupplementFromJson(json);
+  }
 
   @override
   Map<String, dynamic> toJson() => {
-    if (id != 0) 'id': id,
-    if (serverId != null) 'serverId': serverId,
+    if (serverId != null) 'id': serverId,
+    if (serverId == null && id != 0) 'id': id,
     'name': name,
     'amount': amount,
     'unit': unit,

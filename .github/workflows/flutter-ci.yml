@@ -96,12 +96,12 @@ jobs:
       - name: Rename APK
         run: |
           mv build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/RunFlow-${{ steps.version.outputs.tag }}.apk
+             build/app/outputs/flutter-apk/RunFlow-beta-latest.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
+          tag_name: beta
           name: ${{ steps.version.outputs.name }}
           body: |
             ## RunFlow Beta Build
@@ -116,5 +116,5 @@ jobs:
             > **Note:** This is a beta release. Expect potential instability.
           prerelease: true
           files: |
-            flutter/build/app/outputs/flutter-apk/RunFlow-${{ steps.version.outputs.tag }}.apk
+            flutter/build/app/outputs/flutter-apk/RunFlow-beta-latest.apk
             flutter/build/app/outputs/bundle/release/app-release.aab

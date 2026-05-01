@@ -7,8 +7,9 @@ on:
     branches: [main]
 
 jobs:
-  flutter:
+  test:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     defaults:
@@ -38,11 +39,68 @@ jobs:
           name: flutter-coverage
           path: flutter/coverage/lcov.info
 
+  build-beta:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    defaults:
+      run:
+        working-directory: flutter
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Generate version tag
+        id: version
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date +%Y%m%d-%H%M)
+          echo "tag=beta-${TIMESTAMP}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "name=Beta ${TIMESTAMP} (${SHORT_SHA})" >> $GITHUB_OUTPUT
+
       - name: Build release APK
         run: flutter build apk --release --dart-define=STRAVA_CLIENT_ID=193995
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v5
+      - name: Rename APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/RunFlow-${{ steps.version.outputs.tag }}.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: runflow-release-apk
-          path: flutter/build/app/outputs/flutter-apk/app-release.apk
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.name }}
+          body: |
+            ## RunFlow Beta Build
+
+            **Commit:** `${{ github.sha }}`
+            **Branch:** `${{ github.ref_name }}`
+            **Built:** ${{ github.event.head_commit.timestamp }}
+
+            ### Installation
+            Download the APK below and install on your Android device. You may need to enable "Install from unknown sources" in your device settings.
+
+            > **Note:** This is a beta release. Expect potential instability.
+          prerelease: true
+          files: |
+            flutter/build/app/outputs/flutter-apk/RunFlow-${{ steps.version.outputs.tag }}.apk

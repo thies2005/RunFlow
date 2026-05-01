@@ -77,8 +77,21 @@ jobs:
           echo "tag=beta-${TIMESTAMP}-${SHORT_SHA}" >> $GITHUB_OUTPUT
           echo "name=Beta ${TIMESTAMP} (${SHORT_SHA})" >> $GITHUB_OUTPUT
 
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Create key.properties
+        run: |
+          echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=upload-keystore.jks" >> android/key.properties
+
       - name: Build release APK
         run: flutter build apk --release --dart-define=STRAVA_CLIENT_ID=193995
+
+      - name: Build release AAB
+        run: flutter build appbundle --release --dart-define=STRAVA_CLIENT_ID=193995
 
       - name: Rename APK
         run: |
@@ -104,3 +117,4 @@ jobs:
           prerelease: true
           files: |
             flutter/build/app/outputs/flutter-apk/RunFlow-${{ steps.version.outputs.tag }}.apk
+            flutter/build/app/outputs/bundle/release/app-release.aab

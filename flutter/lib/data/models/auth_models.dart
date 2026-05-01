@@ -71,6 +71,8 @@ sealed class User with _$User {
     double? vdotCorrectionFactor,
     @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)
     DateTime? lastSyncAt,
+    @JsonKey(fromJson: emailVerifiedFromJson)
+    bool? emailVerified,
   }) = _User;
   const User._();
 
@@ -108,4 +110,12 @@ String? sexToJson(Sex? value) {
     Sex.other => compatibilitySexToJson(CompatibilitySex.other),
     null => null,
   };
+}
+
+bool? emailVerifiedFromJson(Object? value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  if (value is String) return value.isNotEmpty;
+  if (value is DateTime) return true;
+  return null;
 }

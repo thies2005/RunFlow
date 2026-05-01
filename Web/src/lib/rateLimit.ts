@@ -154,7 +154,7 @@ export async function checkRateLimitAsync(
 }
 
 export const RATE_LIMITS = {
-    sync: { limit: 5, windowSeconds: 60, prefix: 'sync' },
+    sync: { limit: 10, windowSeconds: 60, prefix: 'sync' },
     activities: { limit: 30, windowSeconds: 60, prefix: 'activities' },
     settings: { limit: 10, windowSeconds: 60, prefix: 'settings' },
     webhooks: { limit: 100, windowSeconds: 60, prefix: 'webhooks' },

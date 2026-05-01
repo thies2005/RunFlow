@@ -79,6 +79,9 @@ class HealthSyncService {
     for (int i = 0; i < daysToSync; i++) {
       final date = DateTime.now().subtract(Duration(days: i));
       await syncDailyHealth(date);
+      if (i < daysToSync - 1) {
+        await Future.delayed(const Duration(seconds: 2));
+      }
     }
   }
 

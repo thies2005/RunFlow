@@ -6,6 +6,42 @@ import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 
+const _timeOfDayOrder = ['MORNING', 'Morning', 'NOON', 'Afternoon', 'EVENING', 'Evening', 'NIGHT', 'Night'];
+
+int _sortTimeOfDay(String time) {
+  final idx = _timeOfDayOrder.indexOf(time);
+  return idx >= 0 ? idx : 99;
+}
+
+String _timeOfDayLabel(String time) {
+  return switch (time.toUpperCase()) {
+    'MORNING' => 'Morning',
+    'NOON' => 'Afternoon',
+    'AFTERNOON' => 'Afternoon',
+    'EVENING' => 'Evening',
+    'NIGHT' => 'Night',
+    _ => time,
+  };
+}
+
+IconData _timeOfDayIcon(String time) {
+  return switch (time.toUpperCase()) {
+    'MORNING' => Icons.wb_sunny_outlined,
+    'NOON' || 'AFTERNOON' => Icons.wb_cloudy_outlined,
+    'EVENING' => Icons.wb_twilight,
+    'NIGHT' => Icons.nightlight_outlined,
+    _ => Icons.medication_outlined,
+  };
+}
+
+String _currentTimeOfDaySlot() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'MORNING';
+  if (hour < 17) return 'NOON';
+  if (hour < 21) return 'EVENING';
+  return 'NIGHT';
+}
+
 class SupplementsScreen extends ConsumerWidget {
   const SupplementsScreen({super.key});
 
@@ -36,6 +72,7 @@ class SupplementsScreen extends ConsumerWidget {
           return takenAsync.when(
             data: (takenIds) {
               final takenCount = active.where((s) => takenIds.contains(s.serverId ?? s.id.toString())).length;
+              final nextSupplement = _findNextSupplement(active, takenIds);
               return SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 child: Column(
@@ -43,19 +80,23 @@ class SupplementsScreen extends ConsumerWidget {
                   children: [
                     _TodayProgressCard(taken: takenCount, total: active.length),
                     const SizedBox(height: 16),
-                    _SupplementCalendar(supplements: supplements, takenIds: takenIds),
-                    const SizedBox(height: 16),
-                    if (active.isNotEmpty) ...[
-                      _SectionHeader('Active · ${active.length}'),
-                      const SizedBox(height: 8),
-                      ...active.map((s) => _SupplementTile(
-                        supplement: s,
-                        isTaken: takenIds.contains(s.serverId ?? s.id.toString()),
-                        onToggle: () => ref.read(supplementListProvider.notifier).toggle(s.id),
-                      )),
+                    if (nextSupplement != null) ...[
+                      _NextSupplementCard(
+                        supplement: nextSupplement,
+                        onTake: () => ref.read(supplementListProvider.notifier).toggle(nextSupplement.id),
+                      ),
                       const SizedBox(height: 16),
                     ],
+                    _SupplementCalendar(supplements: supplements, takenIds: takenIds),
+                    const SizedBox(height: 16),
+                    if (active.isNotEmpty)
+                      _GroupedSupplementList(
+                        supplements: active,
+                        takenIds: takenIds,
+                        onToggle: (id) => ref.read(supplementListProvider.notifier).toggle(id),
+                      ),
                     if (inactive.isNotEmpty) ...[
+                      const SizedBox(height: 8),
                       _SectionHeader('Inactive · ${inactive.length}'),
                       const SizedBox(height: 8),
                       ...inactive.map((s) => _SupplementTile(
@@ -63,7 +104,6 @@ class SupplementsScreen extends ConsumerWidget {
                         isTaken: false,
                         onToggle: () => ref.read(supplementListProvider.notifier).toggle(s.id),
                       )),
-                      const SizedBox(height: 16),
                     ],
                     if (supplements.isEmpty)
                       Center(
@@ -78,7 +118,7 @@ class SupplementsScreen extends ConsumerWidget {
                               FilledButton.icon(
                                 onPressed: () => _showAddSupplementDialog(context, ref),
                                 icon: const Icon(Icons.add),
-                                 label: Text(S.of(context).supplementsAddFirst),
+                                label: Text(S.of(context).supplementsAddFirst),
                               ),
                             ],
                           ),
@@ -99,11 +139,31 @@ class SupplementsScreen extends ConsumerWidget {
     );
   }
 
+  Supplement? _findNextSupplement(List<Supplement> active, Set<String> takenIds) {
+    final currentSlot = _currentTimeOfDaySlot();
+    final currentOrder = _sortTimeOfDay(currentSlot);
+
+    final untaken = active.where((s) => !takenIds.contains(s.serverId ?? s.id.toString())).toList();
+    if (untaken.isEmpty) return null;
+
+    untaken.sort((a, b) {
+      final aOrder = _sortTimeOfDay(a.timeOfDay);
+      final bOrder = _sortTimeOfDay(b.timeOfDay);
+      final aDist = aOrder < currentOrder ? aOrder + _timeOfDayOrder.length : aOrder;
+      final bDist = bOrder < currentOrder ? bOrder + _timeOfDayOrder.length : bOrder;
+      final cmp = aDist.compareTo(bDist);
+      if (cmp != 0) return cmp;
+      return a.order.compareTo(b.order);
+    });
+
+    return untaken.first;
+  }
+
   void _showAddSupplementDialog(BuildContext context, WidgetRef ref) {
     final nameCtl = TextEditingController();
     final dosageCtl = TextEditingController();
     final freqCtl = TextEditingController();
-    String selectedTime = 'Morning';
+    String selectedTime = 'MORNING';
 
     showModalBottomSheet(
       context: context,
@@ -143,20 +203,18 @@ class SupplementsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               Text(S.of(ctx).supplementsTimeOfDay, style: Theme.of(ctx).textTheme.labelMedium?.copyWith(color: AppColors.onSurfaceVariant)),
               const SizedBox(height: 8),
-              Row(
+              Wrap(
+                spacing: 8,
                 children: [
-                  ('Morning', S.of(ctx).supplementsMorning),
-                  ('Afternoon', S.of(ctx).supplementsAfternoon),
-                  ('Evening', S.of(ctx).supplementsEvening),
-                  ('Night', S.of(ctx).supplementsNight),
-                ].map((e) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(e.$2, style: const TextStyle(fontSize: 11)),
-                    selected: selectedTime == e.$1,
-                    onSelected: (_) => setModalState(() => selectedTime = e.$1),
-                    selectedColor: AppColors.primary,
-                  ),
+                  ('MORNING', S.of(ctx).supplementsMorning),
+                  ('NOON', S.of(ctx).supplementsAfternoon),
+                  ('EVENING', S.of(ctx).supplementsEvening),
+                  ('NIGHT', S.of(ctx).supplementsNight),
+                ].map((e) => ChoiceChip(
+                  label: Text(e.$2, style: const TextStyle(fontSize: 11)),
+                  selected: selectedTime == e.$1,
+                  onSelected: (_) => setModalState(() => selectedTime = e.$1),
+                  selectedColor: AppColors.primary,
                 )).toList(),
               ),
               const SizedBox(height: 20),
@@ -169,6 +227,7 @@ class SupplementsScreen extends ConsumerWidget {
                       name: nameCtl.text,
                       dosage: dosageCtl.text,
                       frequency: freqCtl.text.isEmpty ? selectedTime : freqCtl.text,
+                      timeOfDay: selectedTime,
                       isActive: true,
                     );
                     ref.read(supplementListProvider.notifier).add(supplement);
@@ -186,6 +245,185 @@ class SupplementsScreen extends ConsumerWidget {
       dosageCtl.dispose();
       freqCtl.dispose();
     });
+  }
+}
+
+class _NextSupplementCard extends StatelessWidget {
+  const _NextSupplementCard({required this.supplement, required this.onTake});
+  final Supplement supplement;
+  final VoidCallback onTake;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary.withValues(alpha: 0.12), AppColors.primary.withValues(alpha: 0.04)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primary.withValues(alpha: 0.12),
+            ),
+            child: Icon(
+              _timeOfDayIcon(supplement.timeOfDay),
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Next up',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  supplement.name,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                if (supplement.dosage.isNotEmpty)
+                  Text(
+                    '${supplement.dosage} · ${_timeOfDayLabel(supplement.timeOfDay)}',
+                    style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: onTake,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Take', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GroupedSupplementList extends StatelessWidget {
+  const _GroupedSupplementList({
+    required this.supplements,
+    required this.takenIds,
+    required this.onToggle,
+  });
+
+  final List<Supplement> supplements;
+  final Set<String> takenIds;
+  final void Function(int id) onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final groups = <String, List<Supplement>>{};
+    for (final s in supplements) {
+      final label = _timeOfDayLabel(s.timeOfDay);
+      groups.putIfAbsent(label, () => []).add(s);
+    }
+
+    final sortedKeys = groups.keys.toList()
+      ..sort((a, b) {
+        final aKey = groups[a]!.first.timeOfDay;
+        final bKey = groups[b]!.first.timeOfDay;
+        return _sortTimeOfDay(aKey).compareTo(_sortTimeOfDay(bKey));
+      });
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final key in sortedKeys) ...[
+          _TimeGroupHeader(
+            label: key,
+            icon: _timeOfDayIcon(groups[key]!.first.timeOfDay),
+            count: groups[key]!.length,
+            takenCount: groups[key]!.where((s) => takenIds.contains(s.serverId ?? s.id.toString())).length,
+          ),
+          const SizedBox(height: 8),
+          for (final s in groups[key]!..sort((a, b) => a.order.compareTo(b.order)))
+            _SupplementTile(
+              supplement: s,
+              isTaken: takenIds.contains(s.serverId ?? s.id.toString()),
+              onToggle: () => onToggle(s.id),
+            ),
+          const SizedBox(height: 16),
+        ],
+      ],
+    );
+  }
+}
+
+class _TimeGroupHeader extends StatelessWidget {
+  const _TimeGroupHeader({
+    required this.label,
+    required this.icon,
+    required this.count,
+    required this.takenCount,
+  });
+
+  final String label;
+  final IconData icon;
+  final int count;
+  final int takenCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: takenCount == count && count > 0
+                  ? AppColors.success.withValues(alpha: 0.15)
+                  : AppColors.onSurfaceVariant.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '$takenCount/$count',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: takenCount == count && count > 0 ? AppColors.success : AppColors.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -259,7 +497,6 @@ class _SupplementCalendar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final now = DateTime.now();
-    // Build last 7 days
     final days = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
     final dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -338,7 +575,7 @@ class _SupplementTile extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
@@ -349,8 +586,8 @@ class _SupplementTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isTaken
@@ -359,16 +596,17 @@ class _SupplementTile extends StatelessWidget {
             ),
             child: Icon(
               Icons.medication,
-              size: 20,
+              size: 22,
               color: isTaken ? AppColors.success : AppColors.onSurfaceVariant,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(supplement.name, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
                 Text(
                   '${supplement.dosage} · ${supplement.frequency}',
                   style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),

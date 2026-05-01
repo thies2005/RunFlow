@@ -19,7 +19,7 @@ abstract class HealthApiRepository {
   Future<void> updateWater(DateTime date, double amount);
   Future<void> toggleSupplementLog(String supplementId, DateTime date, bool taken);
   Future<NutritionAnalytics> getNutritionAnalytics(DateTime startDate, DateTime endDate);
-  Future<SupplementAnalytics> getSupplementAnalytics();
+  Future<SupplementAnalytics> getSupplementAnalytics(DateTime startDate, DateTime endDate);
   Future<HealthHistory> getHealthHistory(String range);
   Future<AiMealSuggestion> getMealSuggestion({
     required double remainingCalories,

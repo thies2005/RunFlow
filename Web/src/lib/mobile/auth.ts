@@ -137,7 +137,7 @@ export async function getAuthenticatedUser(
             // Verify user exists in database
             const user = await prisma.user.findUnique({
                 where: { id: payload.userId },
-                select: { id: true, email: true, name: true, image: true }
+                select: { id: true, email: true, name: true, image: true, emailVerified: true }
             });
 
             if (user) {
@@ -231,7 +231,7 @@ export async function exchangeStravaCodeForTokens(
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
-    user: { id: string; name: string | null; email: string | null; image: string | null };
+    user: { id: string; name: string | null; email: string | null; image: string | null; emailVerified: Date | null };
 } | { error: string }> {
     try {
         if (!process.env.STRAVA_CLIENT_ID || !process.env.STRAVA_CLIENT_SECRET) {
@@ -275,7 +275,7 @@ export async function exchangeStravaCodeForTokens(
         // First try: Find by User.stravaId (mobile-created users)
         let user = await prisma.user.findUnique({
             where: { stravaId },
-            select: { id: true, name: true, email: true, image: true }
+            select: { id: true, name: true, email: true, image: true, emailVerified: true }
         });
 
         // Second try: Find by Account.providerAccountId (web-created users via NextAuth)
@@ -288,7 +288,7 @@ export async function exchangeStravaCodeForTokens(
                 select: {
                     userId: true,
                     user: {
-                        select: { id: true, name: true, email: true, image: true }
+                        select: { id: true, name: true, email: true, image: true, emailVerified: true }
                     }
                 }
             });
@@ -316,7 +316,7 @@ export async function exchangeStravaCodeForTokens(
                     stravaRefreshToken: encryptToken(refresh_token),
                     stravaTokenExpiry: new Date(expires_at * 1000)
                 },
-                select: { id: true, name: true, email: true, image: true }
+                select: { id: true, name: true, email: true, image: true, emailVerified: true }
             });
 
             // Create Account record for NextAuth compatibility

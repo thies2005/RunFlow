@@ -400,7 +400,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'0dc9223c0d9a0ca422aec6568170833c62dc194f';
+String _$supplementListHash() => r'dba4d29f94b8ff9914d87f4927f775b600281b92';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();
@@ -636,7 +636,7 @@ final class SupplementAnalyticsProvider
 }
 
 String _$supplementAnalyticsHash() =>
-    r'b884a426f028ab559dfbcdc27dfe0856dd645f8d';
+    r'650d90d703c575a28b43de55433688a350170bb6';
 
 @ProviderFor(healthHistory)
 final healthHistoryProvider = HealthHistoryFamily._();

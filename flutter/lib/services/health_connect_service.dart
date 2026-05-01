@@ -30,7 +30,6 @@ class HealthConnectServiceImpl implements HealthConnectService {
     HealthDataType.WORKOUT,
     HealthDataType.HEART_RATE,
     HealthDataType.RESTING_HEART_RATE,
-    HealthDataType.HEART_RATE_VARIABILITY_SDNN,
     HealthDataType.BLOOD_OXYGEN,
     HealthDataType.SLEEP_SESSION,
     HealthDataType.SLEEP_DEEP,
@@ -70,7 +69,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
     try {
       await _ensureConfigured();
       return await _health.requestAuthorization(_permissionTypes,
-          permissions: [HealthDataAccess.READ, HealthDataAccess.WRITE]);
+          permissions: _permissionTypes.map((_) => HealthDataAccess.READ).toList());
     } catch (e) {
       logger.error('[HealthConnect] Permission request failed: $e');
       return false;
@@ -208,11 +207,6 @@ class HealthConnectServiceImpl implements HealthConnectService {
           endTime: now,
         ),
         _health.getHealthDataFromTypes(
-          types: [HealthDataType.HEART_RATE_VARIABILITY_SDNN],
-          startTime: sevenDaysAgo,
-          endTime: now,
-        ),
-        _health.getHealthDataFromTypes(
           types: [HealthDataType.BLOOD_OXYGEN],
           startTime: sevenDaysAgo,
           endTime: now,
@@ -220,23 +214,15 @@ class HealthConnectServiceImpl implements HealthConnectService {
       ]);
 
       final restingHrData = results[0];
-      final hrvData = results[1];
-      final spo2Data = results[2];
+      final spo2Data = results[1];
 
       double? restingHr;
-      double? hrv;
       double? spo2;
 
       if (restingHrData.isNotEmpty) {
         restingHrData.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
         final v = restingHrData.first.value;
         if (v is NumericHealthValue) restingHr = v.numericValue.toDouble();
-      }
-
-      if (hrvData.isNotEmpty) {
-        hrvData.sort((a, b) => b.dateFrom.compareTo(a.dateFrom));
-        final v = hrvData.first.value;
-        if (v is NumericHealthValue) hrv = v.numericValue.toDouble();
       }
 
       if (spo2Data.isNotEmpty) {
@@ -255,27 +241,13 @@ class HealthConnectServiceImpl implements HealthConnectService {
         }
       }
 
-      final hrvTrend = <DateTime, double>{};
-      for (final point in hrvData) {
-        final v = point.value;
-        if (v is NumericHealthValue) {
-          final day =
-              DateTime(point.dateFrom.year, point.dateFrom.month, point.dateFrom.day);
-          if (hrvTrend.containsKey(day)) {
-            hrvTrend[day] = (hrvTrend[day]! + v.numericValue.toDouble()) / 2;
-          } else {
-            hrvTrend[day] = v.numericValue.toDouble();
-          }
-        }
-      }
-
       return VitalsData(
         restingHeartRate: restingHr,
-        hrv: hrv,
+        hrv: null,
         spo2: spo2,
         lastSynced: DateTime.now(),
         hrTrend: hrTrend,
-        hrvTrend: hrvTrend,
+        hrvTrend: {},
       );
     } catch (e) {
       logger.error('[HealthConnect] readVitals failed: $e');

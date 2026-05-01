@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
@@ -26,6 +27,16 @@ class ActivityDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(S.of(context).activityDetailTitle),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/activities');
+            }
+          },
+        ),
       ),
       body: activityAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

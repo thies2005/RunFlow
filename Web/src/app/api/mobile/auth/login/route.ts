@@ -55,13 +55,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Return tokens and user info
         return NextResponse.json({
             accessToken: result.accessToken,
             refreshToken: result.refreshToken,
             expiresIn: result.expiresIn,
             tokenType: 'Bearer',
-            user: result.user
+            user: {
+                id: result.user.id,
+                name: result.user.name,
+                email: result.user.email,
+                image: result.user.image,
+                emailVerified: result.user.emailVerified
+            }
         }, { headers: rateLimitHeaders(rateLimitResult) });
 
     } catch (error) {

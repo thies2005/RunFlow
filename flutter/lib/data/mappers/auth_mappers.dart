@@ -23,6 +23,7 @@ extension UserMapper on User {
         height: height,
         vdotCorrectionFactor: vdotCorrectionFactor,
         lastSyncAt: lastSyncAt,
+        emailVerified: emailVerified,
       );
 }
 
@@ -40,6 +41,7 @@ extension DomainUserMapper on domain.User {
         height: height,
         vdotCorrectionFactor: vdotCorrectionFactor,
         lastSyncAt: lastSyncAt,
+        emailVerified: emailVerified,
       );
 }
 

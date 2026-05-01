@@ -1079,7 +1079,7 @@ as String,
 /// @nodoc
 mixin _$User {
 
- String get id; String? get email; String? get name; String? get image;@JsonKey(fromJson: sexFromJson, toJson: sexToJson) Sex? get sex;@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? get birthDate; int? get hrMax; int? get hrRest; double? get weight; double? get height; double? get vdotCorrectionFactor;@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? get lastSyncAt;
+ String get id; String? get email; String? get name; String? get image;@JsonKey(fromJson: sexFromJson, toJson: sexToJson) Sex? get sex;@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? get birthDate; int? get hrMax; int? get hrRest; double? get weight; double? get height; double? get vdotCorrectionFactor;@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? get lastSyncAt;@JsonKey(fromJson: emailVerifiedFromJson) bool? get emailVerified;
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1092,16 +1092,16 @@ $UserCopyWith<User> get copyWith => _$UserCopyWithImpl<User>(this as User, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.image, image) || other.image == image)&&(identical(other.sex, sex) || other.sex == sex)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.hrMax, hrMax) || other.hrMax == hrMax)&&(identical(other.hrRest, hrRest) || other.hrRest == hrRest)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.height, height) || other.height == height)&&(identical(other.vdotCorrectionFactor, vdotCorrectionFactor) || other.vdotCorrectionFactor == vdotCorrectionFactor)&&(identical(other.lastSyncAt, lastSyncAt) || other.lastSyncAt == lastSyncAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is User&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.image, image) || other.image == image)&&(identical(other.sex, sex) || other.sex == sex)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.hrMax, hrMax) || other.hrMax == hrMax)&&(identical(other.hrRest, hrRest) || other.hrRest == hrRest)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.height, height) || other.height == height)&&(identical(other.vdotCorrectionFactor, vdotCorrectionFactor) || other.vdotCorrectionFactor == vdotCorrectionFactor)&&(identical(other.lastSyncAt, lastSyncAt) || other.lastSyncAt == lastSyncAt)&&(identical(other.emailVerified, emailVerified) || other.emailVerified == emailVerified));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,name,image,sex,birthDate,hrMax,hrRest,weight,height,vdotCorrectionFactor,lastSyncAt);
+int get hashCode => Object.hash(runtimeType,id,email,name,image,sex,birthDate,hrMax,hrRest,weight,height,vdotCorrectionFactor,lastSyncAt,emailVerified);
 
 @override
 String toString() {
-  return 'User(id: $id, email: $email, name: $name, image: $image, sex: $sex, birthDate: $birthDate, hrMax: $hrMax, hrRest: $hrRest, weight: $weight, height: $height, vdotCorrectionFactor: $vdotCorrectionFactor, lastSyncAt: $lastSyncAt)';
+  return 'User(id: $id, email: $email, name: $name, image: $image, sex: $sex, birthDate: $birthDate, hrMax: $hrMax, hrRest: $hrRest, weight: $weight, height: $height, vdotCorrectionFactor: $vdotCorrectionFactor, lastSyncAt: $lastSyncAt, emailVerified: $emailVerified)';
 }
 
 
@@ -1112,7 +1112,7 @@ abstract mixin class $UserCopyWith<$Res>  {
   factory $UserCopyWith(User value, $Res Function(User) _then) = _$UserCopyWithImpl;
 @useResult
 $Res call({
- String id, String? email, String? name, String? image,@JsonKey(fromJson: sexFromJson, toJson: sexToJson) Sex? sex,@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? birthDate, int? hrMax, int? hrRest, double? weight, double? height, double? vdotCorrectionFactor,@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? lastSyncAt
+ String id, String? email, String? name, String? image,@JsonKey(fromJson: sexFromJson, toJson: sexToJson) Sex? sex,@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? birthDate, int? hrMax, int? hrRest, double? weight, double? height, double? vdotCorrectionFactor,@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? lastSyncAt,@JsonKey(fromJson: emailVerifiedFromJson) bool? emailVerified
 });
 
 
@@ -1129,7 +1129,7 @@ class _$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = freezed,Object? name = freezed,Object? image = freezed,Object? sex = freezed,Object? birthDate = freezed,Object? hrMax = freezed,Object? hrRest = freezed,Object? weight = freezed,Object? height = freezed,Object? vdotCorrectionFactor = freezed,Object? lastSyncAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = freezed,Object? name = freezed,Object? image = freezed,Object? sex = freezed,Object? birthDate = freezed,Object? hrMax = freezed,Object? hrRest = freezed,Object? weight = freezed,Object? height = freezed,Object? vdotCorrectionFactor = freezed,Object? lastSyncAt = freezed,Object? emailVerified = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -1143,7 +1143,8 @@ as int?,weight: freezed == weight ? _self.weight : weight // ignore: cast_nullab
 as double?,height: freezed == height ? _self.height : height // ignore: cast_nullable_to_non_nullable
 as double?,vdotCorrectionFactor: freezed == vdotCorrectionFactor ? _self.vdotCorrectionFactor : vdotCorrectionFactor // ignore: cast_nullable_to_non_nullable
 as double?,lastSyncAt: freezed == lastSyncAt ? _self.lastSyncAt : lastSyncAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,emailVerified: freezed == emailVerified ? _self.emailVerified : emailVerified // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 
@@ -1225,10 +1226,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? email,  String? name,  String? image, @JsonKey(fromJson: sexFromJson, toJson: sexToJson)  Sex? sex, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? birthDate,  int? hrMax,  int? hrRest,  double? weight,  double? height,  double? vdotCorrectionFactor, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? lastSyncAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? email,  String? name,  String? image, @JsonKey(fromJson: sexFromJson, toJson: sexToJson)  Sex? sex, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? birthDate,  int? hrMax,  int? hrRest,  double? weight,  double? height,  double? vdotCorrectionFactor, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? lastSyncAt, @JsonKey(fromJson: emailVerifiedFromJson)  bool? emailVerified)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.email,_that.name,_that.image,_that.sex,_that.birthDate,_that.hrMax,_that.hrRest,_that.weight,_that.height,_that.vdotCorrectionFactor,_that.lastSyncAt);case _:
+return $default(_that.id,_that.email,_that.name,_that.image,_that.sex,_that.birthDate,_that.hrMax,_that.hrRest,_that.weight,_that.height,_that.vdotCorrectionFactor,_that.lastSyncAt,_that.emailVerified);case _:
   return orElse();
 
 }
@@ -1246,10 +1247,10 @@ return $default(_that.id,_that.email,_that.name,_that.image,_that.sex,_that.birt
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? email,  String? name,  String? image, @JsonKey(fromJson: sexFromJson, toJson: sexToJson)  Sex? sex, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? birthDate,  int? hrMax,  int? hrRest,  double? weight,  double? height,  double? vdotCorrectionFactor, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? lastSyncAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? email,  String? name,  String? image, @JsonKey(fromJson: sexFromJson, toJson: sexToJson)  Sex? sex, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? birthDate,  int? hrMax,  int? hrRest,  double? weight,  double? height,  double? vdotCorrectionFactor, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? lastSyncAt, @JsonKey(fromJson: emailVerifiedFromJson)  bool? emailVerified)  $default,) {final _that = this;
 switch (_that) {
 case _User():
-return $default(_that.id,_that.email,_that.name,_that.image,_that.sex,_that.birthDate,_that.hrMax,_that.hrRest,_that.weight,_that.height,_that.vdotCorrectionFactor,_that.lastSyncAt);}
+return $default(_that.id,_that.email,_that.name,_that.image,_that.sex,_that.birthDate,_that.hrMax,_that.hrRest,_that.weight,_that.height,_that.vdotCorrectionFactor,_that.lastSyncAt,_that.emailVerified);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1263,10 +1264,10 @@ return $default(_that.id,_that.email,_that.name,_that.image,_that.sex,_that.birt
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? email,  String? name,  String? image, @JsonKey(fromJson: sexFromJson, toJson: sexToJson)  Sex? sex, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? birthDate,  int? hrMax,  int? hrRest,  double? weight,  double? height,  double? vdotCorrectionFactor, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? lastSyncAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? email,  String? name,  String? image, @JsonKey(fromJson: sexFromJson, toJson: sexToJson)  Sex? sex, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? birthDate,  int? hrMax,  int? hrRest,  double? weight,  double? height,  double? vdotCorrectionFactor, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson)  DateTime? lastSyncAt, @JsonKey(fromJson: emailVerifiedFromJson)  bool? emailVerified)?  $default,) {final _that = this;
 switch (_that) {
 case _User() when $default != null:
-return $default(_that.id,_that.email,_that.name,_that.image,_that.sex,_that.birthDate,_that.hrMax,_that.hrRest,_that.weight,_that.height,_that.vdotCorrectionFactor,_that.lastSyncAt);case _:
+return $default(_that.id,_that.email,_that.name,_that.image,_that.sex,_that.birthDate,_that.hrMax,_that.hrRest,_that.weight,_that.height,_that.vdotCorrectionFactor,_that.lastSyncAt,_that.emailVerified);case _:
   return null;
 
 }
@@ -1278,7 +1279,7 @@ return $default(_that.id,_that.email,_that.name,_that.image,_that.sex,_that.birt
 @JsonSerializable()
 
 class _User extends User {
-  const _User({required this.id, this.email, this.name, this.image, @JsonKey(fromJson: sexFromJson, toJson: sexToJson) this.sex, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) this.birthDate, this.hrMax, this.hrRest, this.weight, this.height, this.vdotCorrectionFactor, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) this.lastSyncAt}): super._();
+  const _User({required this.id, this.email, this.name, this.image, @JsonKey(fromJson: sexFromJson, toJson: sexToJson) this.sex, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) this.birthDate, this.hrMax, this.hrRest, this.weight, this.height, this.vdotCorrectionFactor, @JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) this.lastSyncAt, @JsonKey(fromJson: emailVerifiedFromJson) this.emailVerified}): super._();
   factory _User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
 
 @override final  String id;
@@ -1293,6 +1294,7 @@ class _User extends User {
 @override final  double? height;
 @override final  double? vdotCorrectionFactor;
 @override@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) final  DateTime? lastSyncAt;
+@override@JsonKey(fromJson: emailVerifiedFromJson) final  bool? emailVerified;
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
@@ -1307,16 +1309,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.image, image) || other.image == image)&&(identical(other.sex, sex) || other.sex == sex)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.hrMax, hrMax) || other.hrMax == hrMax)&&(identical(other.hrRest, hrRest) || other.hrRest == hrRest)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.height, height) || other.height == height)&&(identical(other.vdotCorrectionFactor, vdotCorrectionFactor) || other.vdotCorrectionFactor == vdotCorrectionFactor)&&(identical(other.lastSyncAt, lastSyncAt) || other.lastSyncAt == lastSyncAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _User&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.image, image) || other.image == image)&&(identical(other.sex, sex) || other.sex == sex)&&(identical(other.birthDate, birthDate) || other.birthDate == birthDate)&&(identical(other.hrMax, hrMax) || other.hrMax == hrMax)&&(identical(other.hrRest, hrRest) || other.hrRest == hrRest)&&(identical(other.weight, weight) || other.weight == weight)&&(identical(other.height, height) || other.height == height)&&(identical(other.vdotCorrectionFactor, vdotCorrectionFactor) || other.vdotCorrectionFactor == vdotCorrectionFactor)&&(identical(other.lastSyncAt, lastSyncAt) || other.lastSyncAt == lastSyncAt)&&(identical(other.emailVerified, emailVerified) || other.emailVerified == emailVerified));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,name,image,sex,birthDate,hrMax,hrRest,weight,height,vdotCorrectionFactor,lastSyncAt);
+int get hashCode => Object.hash(runtimeType,id,email,name,image,sex,birthDate,hrMax,hrRest,weight,height,vdotCorrectionFactor,lastSyncAt,emailVerified);
 
 @override
 String toString() {
-  return 'User(id: $id, email: $email, name: $name, image: $image, sex: $sex, birthDate: $birthDate, hrMax: $hrMax, hrRest: $hrRest, weight: $weight, height: $height, vdotCorrectionFactor: $vdotCorrectionFactor, lastSyncAt: $lastSyncAt)';
+  return 'User(id: $id, email: $email, name: $name, image: $image, sex: $sex, birthDate: $birthDate, hrMax: $hrMax, hrRest: $hrRest, weight: $weight, height: $height, vdotCorrectionFactor: $vdotCorrectionFactor, lastSyncAt: $lastSyncAt, emailVerified: $emailVerified)';
 }
 
 
@@ -1327,7 +1329,7 @@ abstract mixin class _$UserCopyWith<$Res> implements $UserCopyWith<$Res> {
   factory _$UserCopyWith(_User value, $Res Function(_User) _then) = __$UserCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? email, String? name, String? image,@JsonKey(fromJson: sexFromJson, toJson: sexToJson) Sex? sex,@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? birthDate, int? hrMax, int? hrRest, double? weight, double? height, double? vdotCorrectionFactor,@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? lastSyncAt
+ String id, String? email, String? name, String? image,@JsonKey(fromJson: sexFromJson, toJson: sexToJson) Sex? sex,@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? birthDate, int? hrMax, int? hrRest, double? weight, double? height, double? vdotCorrectionFactor,@JsonKey(fromJson: flexibleDateTimeFromJson, toJson: dateTimeToJson) DateTime? lastSyncAt,@JsonKey(fromJson: emailVerifiedFromJson) bool? emailVerified
 });
 
 
@@ -1344,7 +1346,7 @@ class __$UserCopyWithImpl<$Res>
 
 /// Create a copy of User
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = freezed,Object? name = freezed,Object? image = freezed,Object? sex = freezed,Object? birthDate = freezed,Object? hrMax = freezed,Object? hrRest = freezed,Object? weight = freezed,Object? height = freezed,Object? vdotCorrectionFactor = freezed,Object? lastSyncAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = freezed,Object? name = freezed,Object? image = freezed,Object? sex = freezed,Object? birthDate = freezed,Object? hrMax = freezed,Object? hrRest = freezed,Object? weight = freezed,Object? height = freezed,Object? vdotCorrectionFactor = freezed,Object? lastSyncAt = freezed,Object? emailVerified = freezed,}) {
   return _then(_User(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -1358,7 +1360,8 @@ as int?,weight: freezed == weight ? _self.weight : weight // ignore: cast_nullab
 as double?,height: freezed == height ? _self.height : height // ignore: cast_nullable_to_non_nullable
 as double?,vdotCorrectionFactor: freezed == vdotCorrectionFactor ? _self.vdotCorrectionFactor : vdotCorrectionFactor // ignore: cast_nullable_to_non_nullable
 as double?,lastSyncAt: freezed == lastSyncAt ? _self.lastSyncAt : lastSyncAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,emailVerified: freezed == emailVerified ? _self.emailVerified : emailVerified // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 

@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
                 id: user.id,
                 email: user.email,
                 name: user.name,
-                image: user.image
+                image: user.image,
+                emailVerified: user.emailVerified
             }
         }, { headers: rateLimitHeaders(rateLimitResult) });
 

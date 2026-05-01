@@ -375,9 +375,15 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<domain.SupplementAnalytics> getSupplementAnalytics() async {
+  Future<domain.SupplementAnalytics> getSupplementAnalytics(DateTime startDate, DateTime endDate) async {
     try {
-      final response = await dio.get(ApiConstants.supplementsAnalyticsPath);
+      final response = await dio.get(
+        ApiConstants.supplementsAnalyticsPath,
+        queryParameters: {
+          'startDate': startDate.toIso8601String().split('T').first,
+          'endDate': endDate.toIso8601String().split('T').first,
+        },
+      );
       final data = response.data as Map<String, dynamic>;
 
       final mostMissed = data['mostMissed'] as List<dynamic>? ?? [];

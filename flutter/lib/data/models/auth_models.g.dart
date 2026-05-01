@@ -67,6 +67,7 @@ _User _$UserFromJson(Map<String, dynamic> json) => _User(
   height: (json['height'] as num?)?.toDouble(),
   vdotCorrectionFactor: (json['vdotCorrectionFactor'] as num?)?.toDouble(),
   lastSyncAt: flexibleDateTimeFromJson(json['lastSyncAt']),
+  emailVerified: emailVerifiedFromJson(json['emailVerified']),
 );
 
 Map<String, dynamic> _$UserToJson(_User instance) => <String, dynamic>{
@@ -82,6 +83,7 @@ Map<String, dynamic> _$UserToJson(_User instance) => <String, dynamic>{
   'height': instance.height,
   'vdotCorrectionFactor': instance.vdotCorrectionFactor,
   'lastSyncAt': dateTimeToJson(instance.lastSyncAt),
+  'emailVerified': instance.emailVerified,
 };
 
 _ApiError _$ApiErrorFromJson(Map<String, dynamic> json) => _ApiError(

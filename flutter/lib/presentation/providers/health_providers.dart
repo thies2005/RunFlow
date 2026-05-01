@@ -113,6 +113,8 @@ class SupplementList extends _$SupplementList {
       final currentlyTaken = existingLog?.taken ?? false;
       await apiRepo.toggleSupplementLog(supplementId, today, !currentlyTaken);
       ref.invalidate(dailyHealthProvider(today));
+      ref.invalidate(takenSupplementIdsProvider);
+      ref.invalidate(supplementAnalyticsProvider);
     } catch (e) {
       logger.error('[SupplementList] Toggle supplement failed: $e');
     }
@@ -226,7 +228,9 @@ Future<NutritionAnalytics> nutritionAnalytics(Ref ref) async {
 Future<SupplementAnalytics> supplementAnalytics(Ref ref) async {
   try {
     final apiRepo = ref.read(healthApiRepositoryProvider);
-    return apiRepo.getSupplementAnalytics();
+    final now = DateTime.now();
+    final startDate = now.subtract(const Duration(days: 7));
+    return apiRepo.getSupplementAnalytics(startDate, now);
   } catch (_) {
     return const SupplementAnalytics();
   }

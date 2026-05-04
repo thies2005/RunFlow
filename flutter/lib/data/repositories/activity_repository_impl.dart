@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
-import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/data/datasources/local/local_activity_datasource.dart';
 import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/activity_models.dart';

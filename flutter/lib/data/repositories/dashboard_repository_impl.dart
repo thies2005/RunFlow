@@ -29,7 +29,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         ),
       ).toDomain();
       _cachedDashboard = result;
-      _persistCache(result);
+      await _persistCache(result);
       return result;
     } on DioException catch (e) {
       if (_cachedDashboard != null) return _cachedDashboard!;

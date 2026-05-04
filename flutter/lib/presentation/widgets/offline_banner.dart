@@ -13,7 +13,10 @@ class OfflineBanner extends ConsumerWidget {
     if (isOnline) return const SizedBox.shrink();
 
     final pendingAsync = ref.watch(pendingSyncCountProvider);
-    final pendingCount = pendingAsync.valueOrNull ?? 0;
+    final pendingCount = pendingAsync.maybeWhen(
+      data: (v) => v,
+      orElse: () => 0,
+    );
 
     final message = pendingCount > 0
         ? 'You are offline. $pendingCount activit${pendingCount == 1 ? 'y' : 'ies'} will sync when you\'re back online.'

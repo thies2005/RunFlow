@@ -120,6 +120,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  void clearLocalSession() {
+    authService.clearAll();
+  }
+
+  @override
   Future<void> register({
     required String email,
     required String password,

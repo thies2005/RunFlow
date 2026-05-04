@@ -6,10 +6,15 @@ import 'package:runflow_flutter/data/auth/refresh_session.dart';
 import 'package:runflow_flutter/services/auth_service.dart';
 
 class RefreshInterceptor extends QueuedInterceptor {
-  RefreshInterceptor({required this.authService, required this.dio});
+  RefreshInterceptor({
+    required this.authService,
+    required this.dio,
+    this.onSessionExpired,
+  });
 
   final AuthService authService;
   final Dio dio;
+  final void Function()? onSessionExpired;
 
   Completer<String?>? _refreshCompleter;
 
@@ -39,6 +44,7 @@ class RefreshInterceptor extends QueuedInterceptor {
 
       final newAccessToken = refreshedToken;
       if (newAccessToken == null || newAccessToken.isEmpty) {
+        onSessionExpired?.call();
         handler.next(err);
         return;
       }

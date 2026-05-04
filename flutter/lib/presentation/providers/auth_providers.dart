@@ -56,7 +56,13 @@ DioClient dioClient(Ref ref) {
     ConnectivityInterceptor(),
     deduplicationInterceptor,
     AuthInterceptor(authService: authService),
-    RefreshInterceptor(authService: authService, dio: dio),
+    RefreshInterceptor(
+      authService: authService,
+      dio: dio,
+      onSessionExpired: () {
+        ref.read(authStateProvider.notifier).forceLogout();
+      },
+    ),
     RetryInterceptor(dio: dio),
     ErrorInterceptor(),
   ]);
@@ -133,6 +139,12 @@ class AuthState extends _$AuthState {
     } finally {
       state = const AsyncValue.data(null);
     }
+  }
+
+  void forceLogout() {
+    final repo = ref.read(authRepositoryProvider);
+    repo.clearLocalSession();
+    state = const AsyncValue.data(null);
   }
 
   Future<void> register({

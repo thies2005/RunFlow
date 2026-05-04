@@ -25,11 +25,8 @@ Future<String?> refreshSession({
       refreshToken: refreshResponse.refreshToken,
     );
     return refreshResponse.accessToken;
-  } on DioException catch (error) {
-    if (error.response?.statusCode == 401) {
-      return null;
-    }
-    rethrow;
+  } on DioException catch (_) {
+    return null;
   }
 }
 

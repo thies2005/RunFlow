@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/core/utils/connectivity_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/domain/entities/recording_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
@@ -184,6 +185,8 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
     final workout = _lastWorkout;
     if (workout == null) return;
 
+    final isOnline = ref.read(isOnlineProvider);
+
     try {
       final repo = ref.read(activityRepositoryProvider);
       await repo.createActivity(workout);
@@ -194,7 +197,13 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
           _lastWorkout = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(S.of(context).recordWorkoutSaved)),
+          SnackBar(
+            content: Text(
+              isOnline
+                  ? S.of(context).recordWorkoutSaved
+                  : 'Activity saved offline. Will sync when you\'re back online.',
+            ),
+          ),
         );
       }
     } catch (e) {

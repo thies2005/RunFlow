@@ -9,6 +9,54 @@ part of 'activity_providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(localActivityDatasource)
+final localActivityDatasourceProvider = LocalActivityDatasourceProvider._();
+
+final class LocalActivityDatasourceProvider
+    extends
+        $FunctionalProvider<
+          LocalActivityDatasource,
+          LocalActivityDatasource,
+          LocalActivityDatasource
+        >
+    with $Provider<LocalActivityDatasource> {
+  LocalActivityDatasourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'localActivityDatasourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$localActivityDatasourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<LocalActivityDatasource> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  LocalActivityDatasource create(Ref ref) {
+    return localActivityDatasource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LocalActivityDatasource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LocalActivityDatasource>(value),
+    );
+  }
+}
+
+String _$localActivityDatasourceHash() =>
+    r'c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0';
+
 @ProviderFor(activityRepository)
 final activityRepositoryProvider = ActivityRepositoryProvider._();
 
@@ -55,7 +103,89 @@ final class ActivityRepositoryProvider
 }
 
 String _$activityRepositoryHash() =>
-    r'b4b7a9bb15fbdda492449c41f91bfd621a6f7e6e';
+    r'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
+
+@ProviderFor(offlineSyncService)
+final offlineSyncServiceProvider = OfflineSyncServiceProvider._();
+
+final class OfflineSyncServiceProvider
+    extends
+        $FunctionalProvider<
+          OfflineSyncService,
+          OfflineSyncService,
+          OfflineSyncService
+        >
+    with $Provider<OfflineSyncService> {
+  OfflineSyncServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'offlineSyncServiceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$offlineSyncServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<OfflineSyncService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  OfflineSyncService create(Ref ref) {
+    return offlineSyncService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(OfflineSyncService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<OfflineSyncService>(value),
+    );
+  }
+}
+
+String _$offlineSyncServiceHash() =>
+    r'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1';
+
+@ProviderFor(pendingSyncCount)
+final pendingSyncCountProvider = PendingSyncCountProvider._();
+
+final class PendingSyncCountProvider
+    extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
+    with $FutureModifier<int>, $FutureProvider<int> {
+  PendingSyncCountProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pendingSyncCountProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pendingSyncCountHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<int> create(Ref ref) {
+    return pendingSyncCount(ref);
+  }
+}
+
+String _$pendingSyncCountHash() =>
+    r'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2';
 
 @ProviderFor(Activities)
 final activitiesProvider = ActivitiesProvider._();
@@ -112,12 +242,12 @@ final class ActivityDetailProvider
     required ActivityDetailFamily super.from,
     required String super.argument,
   }) : super(
-         retry: null,
-         name: r'activityDetailProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+          retry: null,
+          name: r'activityDetailProvider',
+          isAutoDispose: true,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$activityDetailHash();

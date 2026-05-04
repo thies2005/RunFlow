@@ -2,11 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/data/datasources/local/app_database.dart';
+import 'package:runflow_flutter/data/datasources/local/local_activity_datasource.dart';
 import 'package:runflow_flutter/data/interceptors/auth_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/error_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/refresh_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/retry_interceptor.dart';
 import 'package:runflow_flutter/services/auth_service_impl.dart';
+import 'package:runflow_flutter/services/offline_sync_service.dart';
 import 'package:workmanager/workmanager.dart';
 
 Future<bool> performBackgroundSync({
@@ -16,6 +19,14 @@ Future<bool> performBackgroundSync({
   try {
     final accessToken = await storage.read(key: 'access_token');
     if (accessToken == null || accessToken.isEmpty) return true;
+
+    try {
+      final localDs = LocalActivityDatasource(database: AppDatabase.instance);
+      final offlineSync = OfflineSyncService(localDatasource: localDs, dio: dio);
+      await offlineSync.flushPendingSync();
+    } catch (e) {
+      logger.warning('[BackgroundSync] Failed to flush pending activities: $e');
+    }
 
     await dio.post(
       ApiConstants.syncPath,

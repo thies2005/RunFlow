@@ -20,11 +20,57 @@ class AppDatabase {
 
   Database? _db;
 
-  static const int _currentVersion = 2;
+  static const int _currentVersion = 3;
 
   static final Map<int, void Function(Database)> _migrations = {
     1: (Database db) {
       _addColumnIfNotExists(db, 'supplements', 'server_id', 'TEXT');
+    },
+    2: (Database db) {
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS activities (
+          id TEXT PRIMARY KEY,
+          local_id TEXT NOT NULL UNIQUE,
+          strava_id TEXT NOT NULL DEFAULT '',
+          type TEXT NOT NULL,
+          name TEXT NOT NULL,
+          start_date INTEGER NOT NULL,
+          distance REAL NOT NULL DEFAULT 0,
+          moving_time INTEGER NOT NULL DEFAULT 0,
+          average_speed REAL,
+          average_hr REAL,
+          max_hr INTEGER,
+          average_cadence REAL,
+          has_heartrate INTEGER NOT NULL DEFAULT 0,
+          total_elevation REAL NOT NULL DEFAULT 0,
+          trimp REAL,
+          running_tss REAL,
+          estimated_vdot REAL,
+          training_type TEXT,
+          hr_zone_1_time INTEGER NOT NULL DEFAULT 0,
+          hr_zone_2_time INTEGER NOT NULL DEFAULT 0,
+          hr_zone_3_time INTEGER NOT NULL DEFAULT 0,
+          hr_zone_4_time INTEGER NOT NULL DEFAULT 0,
+          hr_zone_5_time INTEGER NOT NULL DEFAULT 0,
+          calories REAL,
+          streams_json TEXT,
+          is_synced INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        )
+      ''');
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS pending_sync (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          entity_type TEXT NOT NULL,
+          local_id TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          retry_count INTEGER NOT NULL DEFAULT 0,
+          max_retries INTEGER NOT NULL DEFAULT 5,
+          created_at INTEGER NOT NULL,
+          last_attempt_at INTEGER
+        )
+      ''');
     },
   };
 
@@ -154,6 +200,50 @@ class AppDatabase {
         waist REAL,
         hips REAL,
         notes TEXT
+      )
+    ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS activities (
+        id TEXT PRIMARY KEY,
+        local_id TEXT NOT NULL UNIQUE,
+        strava_id TEXT NOT NULL DEFAULT '',
+        type TEXT NOT NULL,
+        name TEXT NOT NULL,
+        start_date INTEGER NOT NULL,
+        distance REAL NOT NULL DEFAULT 0,
+        moving_time INTEGER NOT NULL DEFAULT 0,
+        average_speed REAL,
+        average_hr REAL,
+        max_hr INTEGER,
+        average_cadence REAL,
+        has_heartrate INTEGER NOT NULL DEFAULT 0,
+        total_elevation REAL NOT NULL DEFAULT 0,
+        trimp REAL,
+        running_tss REAL,
+        estimated_vdot REAL,
+        training_type TEXT,
+        hr_zone_1_time INTEGER NOT NULL DEFAULT 0,
+        hr_zone_2_time INTEGER NOT NULL DEFAULT 0,
+        hr_zone_3_time INTEGER NOT NULL DEFAULT 0,
+        hr_zone_4_time INTEGER NOT NULL DEFAULT 0,
+        hr_zone_5_time INTEGER NOT NULL DEFAULT 0,
+        calories REAL,
+        streams_json TEXT,
+        is_synced INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      )
+    ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS pending_sync (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_type TEXT NOT NULL,
+        local_id TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        retry_count INTEGER NOT NULL DEFAULT 0,
+        max_retries INTEGER NOT NULL DEFAULT 5,
+        created_at INTEGER NOT NULL,
+        last_attempt_at INTEGER
       )
     ''');
   }

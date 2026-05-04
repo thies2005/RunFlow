@@ -172,4 +172,7 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<bool> checkEmailVerified() async => true;
+
+  @override
+  void clearLocalSession() {}
 }

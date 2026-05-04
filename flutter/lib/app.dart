@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/core/utils/connectivity_helper.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/main.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
@@ -25,6 +26,7 @@ class _RunFlowAppState extends ConsumerState<RunFlowApp> {
   void initState() {
     super.initState();
     _deepLinkSubscription = initDeepLinks(ref.read(routerProvider));
+    ref.read(connectivitySyncListenerProvider);
   }
 
   @override

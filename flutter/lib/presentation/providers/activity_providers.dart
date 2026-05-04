@@ -1,15 +1,38 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/data/datasources/local/local_activity_datasource.dart';
 import 'package:runflow_flutter/data/repositories/activity_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/presentation/providers/health_providers.dart';
+import 'package:runflow_flutter/services/offline_sync_service.dart';
 
 part 'activity_providers.g.dart';
 
 @Riverpod(keepAlive: true)
+LocalActivityDatasource localActivityDatasource(Ref ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return LocalActivityDatasource(database: db);
+}
+
+@Riverpod(keepAlive: true)
 ActivityRepository activityRepository(Ref ref) {
   final client = ref.watch(dioClientProvider);
-  return ActivityRepositoryImpl(dio: client.dio);
+  final localDs = ref.watch(localActivityDatasourceProvider);
+  return ActivityRepositoryImpl(dio: client.dio, localDatasource: localDs);
+}
+
+@Riverpod(keepAlive: true)
+OfflineSyncService offlineSyncService(Ref ref) {
+  final client = ref.watch(dioClientProvider);
+  final localDs = ref.watch(localActivityDatasourceProvider);
+  return OfflineSyncService(localDatasource: localDs, dio: client.dio);
+}
+
+@riverpod
+Future<int> pendingSyncCount(Ref ref) async {
+  final localDs = ref.watch(localActivityDatasourceProvider);
+  return localDs.getPendingSyncCount();
 }
 
 @riverpod

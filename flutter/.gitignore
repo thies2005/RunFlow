@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 
+# Test artifacts
+test/golden/failures/
+
 # IntelliJ related
 *.iml
 *.ipr

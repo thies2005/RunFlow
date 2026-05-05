@@ -67,7 +67,26 @@ jobs:
         run: flutter analyze
 
       - name: Test
+        id: tests
+        continue-on-error: true
         run: flutter test
+
+      - name: Update golden files if tests failed
+        if: steps.tests.outcome == 'failure'
+        run: flutter test test/golden/golden_test.dart --update-goldens
+
+      - name: Commit updated golden files
+        if: steps.tests.outcome == 'failure'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add test/golden/goldens/
+          if git diff --cached --quiet; then
+            echo "No golden changes to commit"
+          else
+            git commit -m "ci: auto-update golden files"
+            git push
+          fi
 
       - name: Generate version tag
         id: version

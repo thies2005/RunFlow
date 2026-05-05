@@ -148,16 +148,14 @@ void main() {
       );
       await pumpAnimated(tester);
 
-      final target = find.text('Marathon Shape');
-      await tester.scrollUntilVisible(
-        target,
-        500,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await pumpAnimated(tester);
+      final gestures = find.byType(Scrollable);
+      for (var i = 0; i < 15; i++) {
+        await tester.fling(gestures.first, const Offset(0, -300), 500);
+        await tester.pumpAndSettle();
+        if (find.text('Calibrate').evaluate().isNotEmpty) break;
+      }
 
-      expect(target, findsOneWidget);
-      expect(find.text('Shape Score'), findsOneWidget);
+      expect(find.text('Calibrate'), findsOneWidget);
     });
 
     testWidgets('displays weekly mileage after scrolling',

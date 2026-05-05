@@ -8,7 +8,6 @@ import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/runflow_map.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
-import 'package:runflow_flutter/core/utils/route_streams.dart';
 import 'package:runflow_flutter/services/workout_recording_service.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {

@@ -58,6 +58,7 @@ void _triggerOfflineSync(Ref ref) {
     final cacheSync = ref.read(activityCacheSyncServiceProvider);
     cacheSync.syncAllActivitiesToLocal().catchError((e) {
       logger.warning('[ConnectivityHelper] Activity cache sync failed: $e');
+      return 0;
     });
   } catch (e) {
     logger.warning('[ConnectivityHelper] Could not trigger activity cache sync: $e');

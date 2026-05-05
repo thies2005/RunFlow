@@ -2,11 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/domain/entities/settings_entities.dart';
 import 'package:runflow_flutter/data/repositories/profile_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/profile_repository.dart';
+import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 
 final apiKeyRepositoryProvider = Provider<ProfileRepository>((ref) {
   final client = ref.watch(dioClientProvider);
-  return ProfileRepositoryImpl(dio: client.dio);
+  final cache = ref.read(cacheDatasourceProvider);
+  return ProfileRepositoryImpl(dio: client.dio, cacheDatasource: cache);
 });
 
 final apiKeyInfoProvider = FutureProvider<ApiKeyInfo?>((ref) async {

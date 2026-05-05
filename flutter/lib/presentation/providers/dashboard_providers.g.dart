@@ -55,7 +55,7 @@ final class DashboardRepositoryProvider
 }
 
 String _$dashboardRepositoryHash() =>
-    r'6da9003930acdebbc7a428c41b653b2325379d10';
+    r'd2b8a02ad093bc5da2d8b4d78700e314bccddbac';
 
 @ProviderFor(Dashboard)
 final dashboardProvider = DashboardProvider._();
@@ -68,7 +68,7 @@ final class DashboardProvider
         argument: null,
         retry: null,
         name: r'dashboardProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -81,7 +81,7 @@ final class DashboardProvider
   Dashboard create() => Dashboard();
 }
 
-String _$dashboardHash() => r'41dab65972e0613c76bb3fb72d59a494fbcff371';
+String _$dashboardHash() => r'e49909f6718baab2296285655979ce294c168baf';
 
 abstract class _$Dashboard extends $AsyncNotifier<DashboardResponse> {
   FutureOr<DashboardResponse> build();

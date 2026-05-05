@@ -7,10 +7,13 @@ import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/data/repositories/goal_repository_impl.dart';
 
+import '../helpers/fake_cache_datasource.dart';
+
 class MockDio extends Mock implements Dio {}
 
 void main() {
   late MockDio mockDio;
+  late FakeCacheDatasource fakeCacheDs;
   late GoalRepositoryImpl repository;
 
   final testGoal = data.Goal(
@@ -36,7 +39,8 @@ void main() {
 
   setUp(() {
     mockDio = MockDio();
-    repository = GoalRepositoryImpl(dio: mockDio);
+    fakeCacheDs = FakeCacheDatasource();
+    repository = GoalRepositoryImpl(dio: mockDio, cacheDatasource: fakeCacheDs);
   });
 
   group('GoalRepositoryImpl', () {
@@ -62,7 +66,7 @@ void main() {
 
         expect(
           () => repository.listGoals(),
-          throwsA(isA<ServerException>()),
+          throwsA(isA<DioException>()),
         );
       });
     });
@@ -151,7 +155,7 @@ void main() {
 
         expect(
           () => repository.getGoal('nonexistent'),
-          throwsA(isA<ServerException>()),
+          throwsA(isA<DioException>()),
         );
       });
     });

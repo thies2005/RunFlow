@@ -90,6 +90,8 @@ sealed class Supplement with _$Supplement {
     'isActive': isActive,
     if (stackId != null) 'stackId': stackId,
     if (order != 0) 'order': order,
+    'dosage': dosage,
+    'frequency': frequency,
   };
 }
 

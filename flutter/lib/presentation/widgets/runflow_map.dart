@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:runflow_flutter/core/utils/route_streams.dart';
 import 'package:runflow_flutter/domain/entities/recording_entities.dart';
 
 class RunFlowMap extends StatefulWidget {
@@ -280,7 +279,7 @@ class _RunFlowMapState extends State<RunFlowMap> {
             if (markers.isNotEmpty)
               MarkerLayer(markers: markers),
             if (widget.showAttribution)
-              RichAttributionWidget(
+              const RichAttributionWidget(
                 attributions: [
                   TextSourceAttribution('OpenStreetMap contributors'),
                 ],

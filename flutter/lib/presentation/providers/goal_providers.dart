@@ -3,7 +3,7 @@ import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/data/repositories/goal_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/goal_repository.dart';
-import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
+
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 

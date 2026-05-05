@@ -7,12 +7,15 @@ import 'package:runflow_flutter/data/models/dashboard_models.dart' as data;
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/data/repositories/activity_repository_impl.dart';
 
+import '../helpers/fake_cache_datasource.dart';
+
 class MockDio extends Mock implements Dio {}
 class MockLocalActivityDatasource extends Mock implements LocalActivityDatasource {}
 
 void main() {
   late MockDio mockDio;
   late MockLocalActivityDatasource mockLocalDs;
+  late FakeCacheDatasource fakeCacheDs;
   late ActivityRepositoryImpl repository;
 
   final testActivity = data.Activity(
@@ -46,7 +49,8 @@ void main() {
   setUp(() {
     mockDio = MockDio();
     mockLocalDs = MockLocalActivityDatasource();
-    repository = ActivityRepositoryImpl(dio: mockDio, localDatasource: mockLocalDs);
+    fakeCacheDs = FakeCacheDatasource();
+    repository = ActivityRepositoryImpl(dio: mockDio, localDatasource: mockLocalDs, cacheDatasource: fakeCacheDs);
 
     when(() => mockLocalDs.upsertServerActivities(any())).thenAnswer((_) async {});
     when(() => mockLocalDs.getUnsyncedActivities()).thenAnswer((_) async => []);

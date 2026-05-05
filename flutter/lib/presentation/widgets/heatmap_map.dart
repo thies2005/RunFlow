@@ -66,7 +66,7 @@ class HeatmapMap extends StatelessWidget {
             ),
             PolylineLayer(polylines: polylines),
             if (showAttribution)
-              RichAttributionWidget(
+              const RichAttributionWidget(
                 attributions: [
                   TextSourceAttribution('OpenStreetMap contributors'),
                 ],

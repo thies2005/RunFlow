@@ -1,5 +1,4 @@
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
-import 'package:sqlite3/sqlite3.dart';
 
 class CachedJson {
   const CachedJson({required this.data, required this.updatedAt});

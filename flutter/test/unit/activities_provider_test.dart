@@ -70,6 +70,10 @@ class FakeActivityRepository implements ActivityRepository {
   Future<Activity> updateActivity(String id,
           {String? name, ActivityType? type, String? trainingType}) =>
       throw UnimplementedError();
+
+  @override
+  Future<List<Activity>> listActivitiesWithRoutes({DateTime? since}) =>
+      throw UnimplementedError();
 }
 
 class ListActivitiesCall {

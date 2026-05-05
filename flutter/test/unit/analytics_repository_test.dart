@@ -1,18 +1,21 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/data/repositories/analytics_repository_impl.dart';
+
+import '../helpers/fake_cache_datasource.dart';
 
 class MockDio extends Mock implements Dio {}
 
 void main() {
   late MockDio mockDio;
+  late FakeCacheDatasource fakeCacheDs;
   late AnalyticsRepositoryImpl repository;
 
   setUp(() {
     mockDio = MockDio();
-    repository = AnalyticsRepositoryImpl(dio: mockDio);
+    fakeCacheDs = FakeCacheDatasource();
+    repository = AnalyticsRepositoryImpl(dio: mockDio, cacheDatasource: fakeCacheDs);
   });
 
   group('AnalyticsRepositoryImpl', () {
@@ -81,7 +84,7 @@ void main() {
 
         expect(
           () => repository.getStats(),
-          throwsA(isA<ServerException>()),
+          throwsA(isA<DioException>()),
         );
       });
     });
@@ -203,7 +206,7 @@ void main() {
             startDate: DateTime(2024, 1, 1),
             endDate: DateTime(2024, 1, 31),
           ),
-          throwsA(isA<ServerException>()),
+          throwsA(isA<DioException>()),
         );
       });
     });

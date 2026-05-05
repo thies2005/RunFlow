@@ -54,7 +54,7 @@ final class ProfileRepositoryProvider
   }
 }
 
-String _$profileRepositoryHash() => r'd6caaafae3d1d665280c6ac41babeb309680b1de';
+String _$profileRepositoryHash() => r'0d54f7297ec0293a8427e0e78290171f7885c02c';
 
 @ProviderFor(Profile)
 final profileProvider = ProfileProvider._();

@@ -26,11 +26,11 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                _RangeChip(label: '30d', days: 30),
+                _rangeChip(label: '30d', days: 30),
                 const SizedBox(width: 8),
-                _RangeChip(label: '90d', days: 90),
+                _rangeChip(label: '90d', days: 90),
                 const SizedBox(width: 8),
-                _RangeChip(label: '1Y', days: 365),
+                _rangeChip(label: '1Y', days: 365),
               ],
             ),
           ),
@@ -57,7 +57,7 @@ class _HeatmapScreenState extends ConsumerState<HeatmapScreen> {
     );
   }
 
-  Widget _RangeChip({required String label, required int days}) {
+  Widget _rangeChip({required String label, required int days}) {
     final isSelected = _selectedDays == days;
     return ChoiceChip(
       label: Text(label),

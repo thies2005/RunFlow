@@ -6,7 +6,6 @@ import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/route_streams.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
-import 'package:runflow_flutter/domain/entities/recording_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/ai_feedback_section.dart';

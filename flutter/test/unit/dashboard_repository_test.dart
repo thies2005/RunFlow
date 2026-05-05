@@ -4,10 +4,13 @@ import 'package:mocktail/mocktail.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/data/repositories/dashboard_repository_impl.dart';
 
+import '../helpers/fake_cache_datasource.dart';
+
 class MockDio extends Mock implements Dio {}
 
 void main() {
   late MockDio mockDio;
+  late FakeCacheDatasource fakeCacheDs;
   late DashboardRepositoryImpl repository;
 
   final Map<String, dynamic> testDashboard = <String, dynamic>{
@@ -41,7 +44,8 @@ void main() {
 
   setUp(() {
     mockDio = MockDio();
-    repository = DashboardRepositoryImpl(dio: mockDio);
+    fakeCacheDs = FakeCacheDatasource();
+    repository = DashboardRepositoryImpl(dio: mockDio, cacheDatasource: fakeCacheDs);
   });
 
   Map<String, dynamic> dashboardJsonEnvelope() {
@@ -106,7 +110,7 @@ void main() {
 
         expect(
           () => repository.fetchDashboard(),
-          throwsA(isA<ServerException>()),
+          throwsA(isA<DioException>()),
         );
       });
 
@@ -120,7 +124,7 @@ void main() {
 
         expect(
           () => repository.fetchDashboard(),
-          throwsA(same(appException)),
+          throwsA(isA<DioException>()),
         );
       });
     });

@@ -126,6 +126,8 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(find.text('Sync Notifications'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Sync Notifications'));
       await tester.pumpAndSettle();
 

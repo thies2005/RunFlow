@@ -132,6 +132,13 @@ void main() {
 
       await pumpDetail(tester, testActivity: testActivity);
 
+      await tester.dragUntilVisible(
+        find.text('TEMPO'),
+        find.byType(Scrollable).first,
+        const Offset(0, -50),
+      );
+      await tester.pumpAndSettle();
+
       expect(find.text('TEMPO'), findsOneWidget);
     });
 
@@ -141,6 +148,13 @@ void main() {
       );
 
       await pumpDetail(tester, testActivity: testActivity);
+
+      await tester.dragUntilVisible(
+        find.text('52.5'),
+        find.byType(Scrollable).first,
+        const Offset(0, -50),
+      );
+      await tester.pumpAndSettle();
 
       expect(find.text('52.5'), findsOneWidget);
     });

@@ -55,7 +55,7 @@ final class AnalyticsRepositoryProvider
 }
 
 String _$analyticsRepositoryHash() =>
-    r'3c7408e5bab83156606ba89fe70d7b35757a4fef';
+    r'2d715fb3f326d3afa94c4397445a2bb6cc89ef45';
 
 @ProviderFor(analyticsStats)
 final analyticsStatsProvider = AnalyticsStatsProvider._();
@@ -74,7 +74,7 @@ final class AnalyticsStatsProvider
         argument: null,
         retry: null,
         name: r'analyticsStatsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -94,7 +94,7 @@ final class AnalyticsStatsProvider
   }
 }
 
-String _$analyticsStatsHash() => r'ae603bae173c1b509c2ad3deb49463b4d1d023cc';
+String _$analyticsStatsHash() => r'1e9225468ce8d0d707720fcf199e8a19f36c648c';
 
 @ProviderFor(analyticsHistory)
 final analyticsHistoryProvider = AnalyticsHistoryFamily._();

@@ -6,10 +6,13 @@ import 'package:runflow_flutter/data/models/profile_models.dart' as data;
 import 'package:runflow_flutter/domain/entities/profile_entities.dart';
 import 'package:runflow_flutter/data/repositories/profile_repository_impl.dart';
 
+import '../helpers/fake_cache_datasource.dart';
+
 class MockDio extends Mock implements Dio {}
 
 void main() {
   late MockDio mockDio;
+  late FakeCacheDatasource fakeCacheDs;
   late ProfileRepositoryImpl repository;
 
   final testProfile = data.UserProfile(
@@ -37,7 +40,8 @@ void main() {
 
   setUp(() {
     mockDio = MockDio();
-    repository = ProfileRepositoryImpl(dio: mockDio);
+    fakeCacheDs = FakeCacheDatasource();
+    repository = ProfileRepositoryImpl(dio: mockDio, cacheDatasource: fakeCacheDs);
   });
 
   group('ProfileRepositoryImpl', () {
@@ -75,7 +79,7 @@ void main() {
 
         expect(
           () => repository.getProfile(),
-          throwsA(isA<ServerException>()),
+          throwsA(isA<DioException>()),
         );
       });
 
@@ -89,7 +93,7 @@ void main() {
 
         expect(
           () => repository.getProfile(),
-          throwsA(same(appException)),
+          throwsA(isA<DioException>()),
         );
       });
     });

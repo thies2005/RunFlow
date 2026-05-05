@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/route_streams.dart';
-import 'package:runflow_flutter/domain/entities/recording_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/runflow_map.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';

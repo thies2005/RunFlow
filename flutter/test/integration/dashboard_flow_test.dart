@@ -8,9 +8,12 @@ import 'package:runflow_flutter/data/models/auth_models.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/repositories/dashboard_repository_impl.dart';
 
+import '../helpers/fake_cache_datasource.dart';
+
 void main() {
   group('Dashboard flow integration', () {
     late Dio dio;
+    late FakeCacheDatasource fakeCacheDs;
     late DashboardRepositoryImpl repository;
 
     final testDashboard = DashboardResponse(
@@ -60,7 +63,8 @@ void main() {
 
     setUp(() {
       dio = Dio(BaseOptions(baseUrl: ApiConstants.fullApiUrl));
-      repository = DashboardRepositoryImpl(dio: dio);
+      fakeCacheDs = FakeCacheDatasource();
+      repository = DashboardRepositoryImpl(dio: dio, cacheDatasource: fakeCacheDs);
     });
 
     test('fetch caches dashboard data', () async {
@@ -90,6 +94,7 @@ void main() {
         stats: testDashboard.stats.copyWith(marathonShape: 99.0),
       );
       dio.httpClientAdapter = _DashboardSuccessAdapter(updatedDashboard);
+      await fakeCacheDs.clearAll();
 
       final second = await repository.fetchDashboard();
       expect(second.stats.marathonShape, 99.0);

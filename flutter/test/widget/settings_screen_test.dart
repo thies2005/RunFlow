@@ -183,6 +183,8 @@ void main() {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(find.text('Chat Notifications'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Chat Notifications'));
       await tester.pumpAndSettle();
 

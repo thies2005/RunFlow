@@ -57,6 +57,48 @@ final class LocalActivityDatasourceProvider
 String _$localActivityDatasourceHash() =>
     r'b7aabd2c553b117b5f15735242ff40a88aebbaf6';
 
+@ProviderFor(cacheDatasource)
+final cacheDatasourceProvider = CacheDatasourceProvider._();
+
+final class CacheDatasourceProvider
+    extends
+        $FunctionalProvider<CacheDatasource, CacheDatasource, CacheDatasource>
+    with $Provider<CacheDatasource> {
+  CacheDatasourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cacheDatasourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cacheDatasourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<CacheDatasource> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  CacheDatasource create(Ref ref) {
+    return cacheDatasource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CacheDatasource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CacheDatasource>(value),
+    );
+  }
+}
+
+String _$cacheDatasourceHash() => r'0ca315f4ec3eb3db64b0b204ccba0c96b0b424e1';
+
 @ProviderFor(activityRepository)
 final activityRepositoryProvider = ActivityRepositoryProvider._();
 
@@ -103,7 +145,7 @@ final class ActivityRepositoryProvider
 }
 
 String _$activityRepositoryHash() =>
-    r'f986cdec6f07e0987f87bdb3be395246288de9ac';
+    r'e6491ce0c8a6b9d8c2932abfc5fb62a81c3e5e58';
 
 @ProviderFor(offlineSyncService)
 final offlineSyncServiceProvider = OfflineSyncServiceProvider._();
@@ -152,6 +194,54 @@ final class OfflineSyncServiceProvider
 
 String _$offlineSyncServiceHash() =>
     r'bde848ab3e073bf8ea95c408278c0290fc8b8602';
+
+@ProviderFor(activityCacheSyncService)
+final activityCacheSyncServiceProvider = ActivityCacheSyncServiceProvider._();
+
+final class ActivityCacheSyncServiceProvider
+    extends
+        $FunctionalProvider<
+          ActivityCacheSyncService,
+          ActivityCacheSyncService,
+          ActivityCacheSyncService
+        >
+    with $Provider<ActivityCacheSyncService> {
+  ActivityCacheSyncServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'activityCacheSyncServiceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$activityCacheSyncServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<ActivityCacheSyncService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ActivityCacheSyncService create(Ref ref) {
+    return activityCacheSyncService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ActivityCacheSyncService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ActivityCacheSyncService>(value),
+    );
+  }
+}
+
+String _$activityCacheSyncServiceHash() =>
+    r'6e76ab55f08651dd893e3214a4c5735eef5bf055';
 
 @ProviderFor(pendingSyncCount)
 final pendingSyncCountProvider = PendingSyncCountProvider._();

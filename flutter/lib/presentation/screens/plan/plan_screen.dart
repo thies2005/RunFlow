@@ -67,26 +67,58 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
     }
     final sortedDates = workoutsByDate.keys.toList()..sort();
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) GoRouter.of(context).go('/dashboard');
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(goal.name),
         actions: [
           if (!_reorderMode)
-            IconButton(
-              icon: const Icon(Icons.reorder),
+            FilledButton.tonal(
               onPressed: () => setState(() => _reorderMode = true),
-              tooltip: S.of(context).planReorderWorkouts,
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.swap_vert, size: 18),
+                const SizedBox(width: 4),
+                Text(S.of(context).planReorderWorkouts, style: const TextStyle(fontSize: 13)),
+              ]),
+            ),
+          if (!_reorderMode)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: OutlinedButton(
+                onPressed: () => context.go('/goals/${goal.id}'),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.info_outline, size: 16),
+                  const SizedBox(width: 4),
+                  Text(S.of(context).planGoalDetailsTooltip, style: const TextStyle(fontSize: 13)),
+                ]),
+              ),
+            ),
+          if (!_reorderMode)
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _confirmDelete();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'delete',
+                  child: ListTile(
+                    leading: const Icon(Icons.delete_outline, color: AppColors.error),
+                    title: Text(S.of(context).actionDelete),
+                  ),
+                ),
+              ],
             ),
           if (_reorderMode)
             TextButton(
               onPressed: () => setState(() => _reorderMode = false),
               child: Text(S.of(context).actionDone),
             ),
-          IconButton(
-            icon: const Icon(Icons.list),
-            onPressed: () => context.go('/goals/${goal.id}'),
-            tooltip: S.of(context).planGoalDetailsTooltip,
-          ),
         ],
       ),
       body: RefreshIndicator(
@@ -274,6 +306,42 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
             }),
         ],
       ),
+      ),
+      ),
+    );
+  }
+
+  void _confirmDelete() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(S.of(context).goalDeleteTitle),
+        content: Text(S.of(context).goalDeleteConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(S.of(context).actionCancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              try {
+                await ref.read(goalsProvider.notifier).deleteGoal(widget.goal.id);
+                if (mounted) context.go('/dashboard');
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.of(context).goalDeleteFailed(e.toString()))),
+                  );
+                }
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: Text(S.of(context).actionDelete),
+          ),
+        ],
       ),
     );
   }
@@ -817,7 +885,7 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<WorkoutType>(
-              initialValue: _selectedType,
+              value: _selectedType,
               decoration: InputDecoration(labelText: S.of(context).planWorkoutType),
               items: WorkoutType.values.map((type) => DropdownMenuItem(
                 value: type,

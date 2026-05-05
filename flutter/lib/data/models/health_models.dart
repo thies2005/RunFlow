@@ -241,6 +241,7 @@ class NutritionTargets {
     this.waterGoalMl = 2000,
     this.exerciseCalorieFactor = 0.5,
     this.exerciseCalorieSource = 'strava',
+    this.waterTrackingEnabled = false,
   });
 
   factory NutritionTargets.fromJson(Map<String, dynamic> json) => NutritionTargets(
@@ -248,13 +249,16 @@ class NutritionTargets {
         protein: ((json['protein'] ?? NutritionTargets.defaults.protein) as num).toInt(),
         carbs: ((json['carbs'] ?? NutritionTargets.defaults.carbs) as num).toInt(),
         fat: ((json['fat'] ?? NutritionTargets.defaults.fat) as num).toInt(),
-        water: ((json['waterGoalMl'] ?? json['water'] ?? NutritionTargets.defaults.water) as num).toDouble(),
+        water: json.containsKey('water')
+            ? ((json['water'] ?? NutritionTargets.defaults.water) as num).toDouble()
+            : (((json['waterGoalMl'] ?? (NutritionTargets.defaults.waterGoalMl)) as num).toDouble() / 1000),
         proteinPercent: ((json['proteinPercent'] ?? 30) as num).toDouble(),
         carbsPercent: ((json['carbsPercent'] ?? 40) as num).toDouble(),
         fatsPercent: ((json['fatsPercent'] ?? 30) as num).toDouble(),
         waterGoalMl: ((json['waterGoalMl'] ?? 2000) as num).toInt(),
         exerciseCalorieFactor: ((json['exerciseCalorieFactor'] ?? 0.5) as num).toDouble(),
         exerciseCalorieSource: (json['exerciseCalorieSource'] ?? 'strava') as String,
+        waterTrackingEnabled: json['waterTrackingEnabled'] as bool? ?? false,
       );
 
   static const defaults = NutritionTargets(
@@ -262,7 +266,7 @@ class NutritionTargets {
     protein: 150,
     carbs: 300,
     fat: 80,
-    water: 3.0,
+    water: 2.5,
   );
 
   final int calories;
@@ -276,6 +280,7 @@ class NutritionTargets {
   final int waterGoalMl;
   final double exerciseCalorieFactor;
   final String exerciseCalorieSource;
+  final bool waterTrackingEnabled;
 
   Map<String, dynamic> toJson() => {
         'calories': calories,
@@ -283,6 +288,7 @@ class NutritionTargets {
         'carbs': carbs,
         'fat': fat,
         'water': water,
+        'waterTrackingEnabled': waterTrackingEnabled,
       };
 
   NutritionTargets copyWith({
@@ -297,6 +303,7 @@ class NutritionTargets {
     int? waterGoalMl,
     double? exerciseCalorieFactor,
     String? exerciseCalorieSource,
+    bool? waterTrackingEnabled,
   }) {
     return NutritionTargets(
       calories: calories ?? this.calories,
@@ -310,6 +317,7 @@ class NutritionTargets {
       waterGoalMl: waterGoalMl ?? this.waterGoalMl,
       exerciseCalorieFactor: exerciseCalorieFactor ?? this.exerciseCalorieFactor,
       exerciseCalorieSource: exerciseCalorieSource ?? this.exerciseCalorieSource,
+      waterTrackingEnabled: waterTrackingEnabled ?? this.waterTrackingEnabled,
     );
   }
 
@@ -325,6 +333,7 @@ class NutritionTargets {
         waterGoalMl: waterGoalMl,
         exerciseCalorieFactor: exerciseCalorieFactor,
         exerciseCalorieSource: exerciseCalorieSource,
+        waterTrackingEnabled: waterTrackingEnabled,
       );
 }
 

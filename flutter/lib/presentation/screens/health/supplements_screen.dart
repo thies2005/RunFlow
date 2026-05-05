@@ -81,10 +81,7 @@ class SupplementsScreen extends ConsumerWidget {
                     _TodayProgressCard(taken: takenCount, total: active.length),
                     const SizedBox(height: 16),
                     if (nextSupplement != null) ...[
-                      _NextSupplementCard(
-                        supplement: nextSupplement,
-                        onTake: () => ref.read(supplementListProvider.notifier).toggle(nextSupplement.id),
-                      ),
+                      _buildNextPrompt(context, ref, nextSupplement, active, takenIds),
                       const SizedBox(height: 16),
                     ],
                     _SupplementCalendar(supplements: supplements, takenIds: takenIds),
@@ -157,6 +154,32 @@ class SupplementsScreen extends ConsumerWidget {
     });
 
     return untaken.first;
+  }
+
+  Widget _buildNextPrompt(BuildContext context, WidgetRef ref, Supplement nextSupplement, List<Supplement> active, Set<String> takenIds) {
+    if (nextSupplement.stackId != null) {
+      final stackUntaken = active
+          .where((s) =>
+              s.stackId == nextSupplement.stackId &&
+              s.timeOfDay == nextSupplement.timeOfDay &&
+              !takenIds.contains(s.serverId ?? s.id.toString()))
+          .toList();
+      if (stackUntaken.length > 1) {
+        return _NextStackCard(
+          stackName: nextSupplement.stackId!,
+          supplements: stackUntaken,
+          onTakeAll: () {
+            for (final s in stackUntaken) {
+              ref.read(supplementListProvider.notifier).toggle(s.id);
+            }
+          },
+        );
+      }
+    }
+    return _NextSupplementCard(
+      supplement: nextSupplement,
+      onTake: () => ref.read(supplementListProvider.notifier).toggle(nextSupplement.id),
+    );
   }
 
   void _showAddSupplementDialog(BuildContext context, WidgetRef ref) {
@@ -324,6 +347,218 @@ class _NextSupplementCard extends StatelessWidget {
   }
 }
 
+class _NextStackCard extends StatelessWidget {
+  const _NextStackCard({
+    required this.stackName,
+    required this.supplements,
+    required this.onTakeAll,
+  });
+
+  final String stackName;
+  final List<Supplement> supplements;
+  final VoidCallback onTakeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary.withValues(alpha: 0.12), AppColors.primary.withValues(alpha: 0.04)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primary.withValues(alpha: 0.12),
+            ),
+            child: Icon(
+              Icons.layers,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Next up',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  stackName,
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  '${supplements.length} supplements · ${_timeOfDayLabel(supplements.first.timeOfDay)}',
+                  style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: onTakeAll,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Take All', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StackCard extends StatefulWidget {
+  const _StackCard({
+    required this.stackName,
+    required this.supplements,
+    required this.takenIds,
+    required this.onToggle,
+    required this.onTakeAll,
+  });
+
+  final String stackName;
+  final List<Supplement> supplements;
+  final Set<String> takenIds;
+  final void Function(int id) onToggle;
+  final void Function(List<Supplement>) onTakeAll;
+
+  @override
+  State<_StackCard> createState() => _StackCardState();
+}
+
+class _StackCardState extends State<_StackCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final takenCount = widget.supplements
+        .where((s) => widget.takenIds.contains(s.serverId ?? s.id.toString()))
+        .length;
+    final total = widget.supplements.length;
+    final allTaken = takenCount == total;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+        border: allTaken
+            ? Border.all(color: AppColors.success.withValues(alpha: 0.3))
+            : null,
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            borderRadius: BorderRadius.vertical(
+              top: const Radius.circular(16),
+              bottom: Radius.circular(_expanded ? 0 : 16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: allTaken
+                          ? AppColors.success.withValues(alpha: 0.15)
+                          : AppColors.primary.withValues(alpha: 0.1),
+                    ),
+                    child: Icon(
+                      Icons.layers,
+                      size: 22,
+                      color: allTaken ? AppColors.success : AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.stackName,
+                          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '$takenCount/$total taken',
+                          style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!allTaken)
+                    TextButton(
+                      onPressed: () => widget.onTakeAll(widget.supplements
+                          .where((s) => !widget.takenIds.contains(s.serverId ?? s.id.toString()))
+                          .toList()),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        minimumSize: Size.zero,
+                      ),
+                      child: Text(
+                        'Take All',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    color: AppColors.onSurfaceVariant,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_expanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+              child: Column(
+                children: widget.supplements
+                    .map((s) => _SupplementTile(
+                          supplement: s,
+                          isTaken: widget.takenIds.contains(s.serverId ?? s.id.toString()),
+                          onToggle: () => widget.onToggle(s.id),
+                        ))
+                    .toList(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class _GroupedSupplementList extends StatelessWidget {
   const _GroupedSupplementList({
     required this.supplements,
@@ -337,8 +572,19 @@ class _GroupedSupplementList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final groups = <String, List<Supplement>>{};
+    final stacked = <String, List<Supplement>>{};
+    final unstacked = <Supplement>[];
+
     for (final s in supplements) {
+      if (s.stackId != null) {
+        stacked.putIfAbsent(s.stackId!, () => []).add(s);
+      } else {
+        unstacked.add(s);
+      }
+    }
+
+    final groups = <String, List<Supplement>>{};
+    for (final s in unstacked) {
       final label = _timeOfDayLabel(s.timeOfDay);
       groups.putIfAbsent(label, () => []).add(s);
     }
@@ -353,6 +599,20 @@ class _GroupedSupplementList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        for (final entry in stacked.entries) ...[
+          _StackCard(
+            stackName: entry.key,
+            supplements: entry.value,
+            takenIds: takenIds,
+            onToggle: onToggle,
+            onTakeAll: (supps) {
+              final untaken = supps.where((s) => !takenIds.contains(s.serverId ?? s.id.toString()));
+              for (final s in untaken) {
+                onToggle(s.id);
+              }
+            },
+          ),
+        ],
         for (final key in sortedKeys) ...[
           _TimeGroupHeader(
             label: key,

@@ -49,6 +49,16 @@ class Settings extends _$Settings {
   static const _aiShareActivitiesKey = 'settings_ai_share_activities';
   static const _aiShareHealthDataKey = 'settings_ai_share_health_data';
   static const _aiShareGoalsKey = 'settings_ai_share_goals';
+  static const _workoutReminderHourKey = 'settings_workout_reminder_hour';
+  static const _workoutReminderMinuteKey = 'settings_workout_reminder_minute';
+  static const _supplementMorningHourKey = 'settings_supplement_morning_hour';
+  static const _supplementMorningMinuteKey = 'settings_supplement_morning_minute';
+  static const _supplementAfternoonHourKey = 'settings_supplement_afternoon_hour';
+  static const _supplementAfternoonMinuteKey = 'settings_supplement_afternoon_minute';
+  static const _supplementEveningHourKey = 'settings_supplement_evening_hour';
+  static const _supplementEveningMinuteKey = 'settings_supplement_evening_minute';
+  static const _supplementNightHourKey = 'settings_supplement_night_hour';
+  static const _supplementNightMinuteKey = 'settings_supplement_night_minute';
 
   @override
   AppSettings build() {
@@ -68,6 +78,16 @@ class Settings extends _$Settings {
       aiShareActivities: prefs.getBool(_aiShareActivitiesKey) ?? true,
       aiShareHealthData: prefs.getBool(_aiShareHealthDataKey) ?? true,
       aiShareGoals: prefs.getBool(_aiShareGoalsKey) ?? true,
+      workoutReminderHour: prefs.getInt(_workoutReminderHourKey) ?? 7,
+      workoutReminderMinute: prefs.getInt(_workoutReminderMinuteKey) ?? 0,
+      supplementMorningHour: prefs.getInt(_supplementMorningHourKey) ?? 8,
+      supplementMorningMinute: prefs.getInt(_supplementMorningMinuteKey) ?? 0,
+      supplementAfternoonHour: prefs.getInt(_supplementAfternoonHourKey) ?? 13,
+      supplementAfternoonMinute: prefs.getInt(_supplementAfternoonMinuteKey) ?? 0,
+      supplementEveningHour: prefs.getInt(_supplementEveningHourKey) ?? 18,
+      supplementEveningMinute: prefs.getInt(_supplementEveningMinuteKey) ?? 0,
+      supplementNightHour: prefs.getInt(_supplementNightHourKey) ?? 21,
+      supplementNightMinute: prefs.getInt(_supplementNightMinuteKey) ?? 0,
     );
   }
 
@@ -124,6 +144,41 @@ class Settings extends _$Settings {
     await prefs.setBool(_aiShareGoalsKey, value);
     state = state.copyWith(aiShareGoals: value);
   }
+
+  Future<void> setWorkoutReminderTime(int hour, int minute) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_workoutReminderHourKey, hour);
+    await prefs.setInt(_workoutReminderMinuteKey, minute);
+    state = state.copyWith(workoutReminderHour: hour, workoutReminderMinute: minute);
+  }
+
+  Future<void> setSupplementMorningTime(int hour, int minute) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_supplementMorningHourKey, hour);
+    await prefs.setInt(_supplementMorningMinuteKey, minute);
+    state = state.copyWith(supplementMorningHour: hour, supplementMorningMinute: minute);
+  }
+
+  Future<void> setSupplementAfternoonTime(int hour, int minute) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_supplementAfternoonHourKey, hour);
+    await prefs.setInt(_supplementAfternoonMinuteKey, minute);
+    state = state.copyWith(supplementAfternoonHour: hour, supplementAfternoonMinute: minute);
+  }
+
+  Future<void> setSupplementEveningTime(int hour, int minute) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_supplementEveningHourKey, hour);
+    await prefs.setInt(_supplementEveningMinuteKey, minute);
+    state = state.copyWith(supplementEveningHour: hour, supplementEveningMinute: minute);
+  }
+
+  Future<void> setSupplementNightTime(int hour, int minute) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_supplementNightHourKey, hour);
+    await prefs.setInt(_supplementNightMinuteKey, minute);
+    state = state.copyWith(supplementNightHour: hour, supplementNightMinute: minute);
+  }
 }
 
 class AppSettings {
@@ -137,6 +192,16 @@ class AppSettings {
     this.aiShareActivities = true,
     this.aiShareHealthData = true,
     this.aiShareGoals = true,
+    this.workoutReminderHour = 7,
+    this.workoutReminderMinute = 0,
+    this.supplementMorningHour = 8,
+    this.supplementMorningMinute = 0,
+    this.supplementAfternoonHour = 13,
+    this.supplementAfternoonMinute = 0,
+    this.supplementEveningHour = 18,
+    this.supplementEveningMinute = 0,
+    this.supplementNightHour = 21,
+    this.supplementNightMinute = 0,
   });
 
   final UnitSystem unitSystem;
@@ -148,6 +213,16 @@ class AppSettings {
   final bool aiShareActivities;
   final bool aiShareHealthData;
   final bool aiShareGoals;
+  final int workoutReminderHour;
+  final int workoutReminderMinute;
+  final int supplementMorningHour;
+  final int supplementMorningMinute;
+  final int supplementAfternoonHour;
+  final int supplementAfternoonMinute;
+  final int supplementEveningHour;
+  final int supplementEveningMinute;
+  final int supplementNightHour;
+  final int supplementNightMinute;
 
   AppSettings copyWith({
     UnitSystem? unitSystem,
@@ -159,6 +234,16 @@ class AppSettings {
     bool? aiShareActivities,
     bool? aiShareHealthData,
     bool? aiShareGoals,
+    int? workoutReminderHour,
+    int? workoutReminderMinute,
+    int? supplementMorningHour,
+    int? supplementMorningMinute,
+    int? supplementAfternoonHour,
+    int? supplementAfternoonMinute,
+    int? supplementEveningHour,
+    int? supplementEveningMinute,
+    int? supplementNightHour,
+    int? supplementNightMinute,
   }) {
     return AppSettings(
       unitSystem: unitSystem ?? this.unitSystem,
@@ -170,6 +255,16 @@ class AppSettings {
       aiShareActivities: aiShareActivities ?? this.aiShareActivities,
       aiShareHealthData: aiShareHealthData ?? this.aiShareHealthData,
       aiShareGoals: aiShareGoals ?? this.aiShareGoals,
+      workoutReminderHour: workoutReminderHour ?? this.workoutReminderHour,
+      workoutReminderMinute: workoutReminderMinute ?? this.workoutReminderMinute,
+      supplementMorningHour: supplementMorningHour ?? this.supplementMorningHour,
+      supplementMorningMinute: supplementMorningMinute ?? this.supplementMorningMinute,
+      supplementAfternoonHour: supplementAfternoonHour ?? this.supplementAfternoonHour,
+      supplementAfternoonMinute: supplementAfternoonMinute ?? this.supplementAfternoonMinute,
+      supplementEveningHour: supplementEveningHour ?? this.supplementEveningHour,
+      supplementEveningMinute: supplementEveningMinute ?? this.supplementEveningMinute,
+      supplementNightHour: supplementNightHour ?? this.supplementNightHour,
+      supplementNightMinute: supplementNightMinute ?? this.supplementNightMinute,
     );
   }
 }

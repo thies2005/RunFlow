@@ -7,7 +7,6 @@ import 'package:runflow_flutter/domain/entities/analytics_entities.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
-import 'package:runflow_flutter/presentation/widgets/circular_gauge.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/combined_analytics_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/hr_zone_distribution_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/metric_card.dart';
@@ -111,7 +110,7 @@ class _SummaryCardsRow extends StatelessWidget {
               Expanded(
                 child: MetricCard(
                   label: S.of(context).analyticsVdot,
-                  value: stats.currentVdot?.toStringAsFixed(1) ?? '--',
+                  value: (stats.currentVdot ?? stats.effectiveVO2max).toStringAsFixed(1),
                   icon: Icons.speed,
                   color: AppColors.primary,
                 ),
@@ -619,12 +618,34 @@ class _MarathonShapeSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Center(
-              child: CircularGauge(
-                value: shape,
-                label: S.of(context).analyticsShapeScore,
-                color: AppColors.primary,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: (shape / 100).clamp(0.0, 1.0),
+                minHeight: 24,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                valueColor: AlwaysStoppedAnimation(
+                  shape >= 80 ? AppColors.success : shape >= 50 ? AppColors.primary : AppColors.warning,
+                ),
               ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${shape.toStringAsFixed(0)}%',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  S.of(context).analyticsShapeScore,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

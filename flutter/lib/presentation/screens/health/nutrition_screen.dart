@@ -48,8 +48,11 @@ class NutritionScreen extends ConsumerWidget {
       body: nutritionAsync.when(
         data: (nutrition) {
           final targetsAsync = ref.watch(nutritionTargetsProvider);
-          final targets = targetsAsync.asData?.value ??
+          final rawTargets = targetsAsync.asData?.value ??
               NutritionTargets.defaults;
+          final targets = rawTargets.water > 20
+              ? rawTargets.copyWith(water: rawTargets.water / 1000)
+              : rawTargets;
           return _NutritionContent(
               nutrition: nutrition, ref: ref, today: today, targets: targets);
         },
@@ -81,14 +84,18 @@ class NutritionScreen extends ConsumerWidget {
 
   void _showTargetsDialog(BuildContext context, WidgetRef ref) {
     final targetsAsync = ref.read(nutritionTargetsProvider);
-    final targets = targetsAsync.asData?.value ??
+    final rawTargets = targetsAsync.asData?.value ??
         NutritionTargets.defaults;
+    final targets = rawTargets.water > 20
+        ? rawTargets.copyWith(water: rawTargets.water / 1000)
+        : rawTargets;
     final calCtl = TextEditingController(text: targets.calories.toString());
     final proteinCtl =
         TextEditingController(text: targets.protein.toString());
     final carbsCtl = TextEditingController(text: targets.carbs.toString());
     final fatCtl = TextEditingController(text: targets.fat.toString());
     final waterCtl = TextEditingController(text: targets.water.toString());
+    var waterTrackingEnabled = targets.waterTrackingEnabled;
 
     showModalBottomSheet(
       context: context,
@@ -99,95 +106,109 @@ class NutritionScreen extends ConsumerWidget {
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 24, right: 24, top: 24,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.onSurfaceVariant,
-                  borderRadius: BorderRadius.circular(2),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 24, right: 24, top: 24,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.onSurfaceVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(S.of(context).nutritionTargetsTitle,
-                style: Theme.of(ctx)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            TextField(
-                controller: calCtl,
-                decoration: InputDecoration(
-                    labelText: S.of(context).nutritionCaloriesKcal),
-                keyboardType: TextInputType.number),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                    child: TextField(
-                        controller: proteinCtl,
-                        decoration: InputDecoration(
-                            labelText: S.of(context).nutritionProteinG),
-                        keyboardType: TextInputType.number)),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: carbsCtl,
-                        decoration: InputDecoration(
-                            labelText: S.of(context).nutritionCarbsG),
-                        keyboardType: TextInputType.number)),
+                const SizedBox(height: 20),
+                Text(S.of(context).nutritionTargetsTitle,
+                    style: Theme.of(ctx)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 16),
+                TextField(
+                    controller: calCtl,
+                    decoration: InputDecoration(
+                        labelText: S.of(context).nutritionCaloriesKcal),
+                    keyboardType: TextInputType.number),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                        child: TextField(
+                            controller: proteinCtl,
+                            decoration: InputDecoration(
+                                labelText: S.of(context).nutritionProteinG),
+                            keyboardType: TextInputType.number)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                        child: TextField(
+                            controller: carbsCtl,
+                            decoration: InputDecoration(
+                                labelText: S.of(context).nutritionCarbsG),
+                            keyboardType: TextInputType.number)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                        child: TextField(
+                            controller: fatCtl,
+                            decoration:
+                                InputDecoration(labelText: S.of(context).nutritionFatG),
+                            keyboardType: TextInputType.number)),
+                    if (waterTrackingEnabled) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: TextField(
+                              controller: waterCtl,
+                              decoration: InputDecoration(
+                                  labelText: S.of(context).nutritionWaterL),
+                              keyboardType: TextInputType.number)),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SwitchListTile(
+                  title: const Text('Track Water'),
+                  value: waterTrackingEnabled,
+                  onChanged: (val) => setDialogState(() => waterTrackingEnabled = val),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      final newTargets = NutritionTargets(
+                        calories:
+                            int.tryParse(calCtl.text) ?? targets.calories,
+                        protein: int.tryParse(proteinCtl.text) ??
+                            targets.protein,
+                        carbs: int.tryParse(carbsCtl.text) ?? targets.carbs,
+                        fat: int.tryParse(fatCtl.text) ?? targets.fat,
+                        water: double.tryParse(waterCtl.text) ??
+                            targets.water,
+                        waterTrackingEnabled: waterTrackingEnabled,
+                      );
+                      updateNutritionTargets(ref, newTargets);
+                      Navigator.pop(ctx);
+                    },
+                    child: Text(S.of(context).actionSave),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                    child: TextField(
-                        controller: fatCtl,
-                        decoration:
-                            InputDecoration(labelText: S.of(context).nutritionFatG),
-                        keyboardType: TextInputType.number)),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: TextField(
-                        controller: waterCtl,
-                        decoration: InputDecoration(
-                            labelText: S.of(context).nutritionWaterL),
-                        keyboardType: TextInputType.number)),
-              ],
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () {
-                  final newTargets = NutritionTargets(
-                    calories:
-                        int.tryParse(calCtl.text) ?? targets.calories,
-                    protein: int.tryParse(proteinCtl.text) ??
-                        targets.protein,
-                    carbs: int.tryParse(carbsCtl.text) ?? targets.carbs,
-                    fat: int.tryParse(fatCtl.text) ?? targets.fat,
-                    water: double.tryParse(waterCtl.text) ??
-                        targets.water,
-                  );
-                  updateNutritionTargets(ref, newTargets);
-                  Navigator.pop(ctx);
-                },
-                child: Text(S.of(context).actionSave),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     ).whenComplete(() {
       calCtl.dispose();
@@ -394,12 +415,13 @@ class _NutritionContent extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              CircularGauge(value: nutrition.water, label: S.of(context).nutritionWaterL, maxValue: targets.water, color: AppColors.peaked),
-            ],
-          ),
+          if (targets.waterTrackingEnabled)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                CircularGauge(value: nutrition.water, label: S.of(context).nutritionWaterL, maxValue: targets.water, color: AppColors.peaked),
+              ],
+            ),
           const SizedBox(height: 20),
           // Macro breakdown
           _SectionCard(
@@ -415,16 +437,17 @@ class _NutritionContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Water tracker
-          _WaterTracker(
-            currentWater: nutrition.water,
-            waterGoal: targets.water,
-            onAdd: () {
-              final updated = nutrition.copyWith(water: nutrition.water + 0.25);
-              ref.read(nutritionProvider(today).notifier).save(updated);
-            },
-          ),
-          const SizedBox(height: 12),
+          if (targets.waterTrackingEnabled) ...[
+            _WaterTracker(
+              currentWater: nutrition.water,
+              waterGoal: targets.water,
+              onAdd: () {
+                final updated = nutrition.copyWith(water: nutrition.water + 0.25);
+                ref.read(nutritionProvider(today).notifier).save(updated);
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
           // 7-day trends
           _NutritionTrendsSection(),
         ],

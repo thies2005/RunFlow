@@ -60,6 +60,8 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       bodyAsync: bodyAsync,
                     ),
                     const SizedBox(height: 20),
+                    _QuickTakeCard(),
+                    const SizedBox(height: 20),
                     _buildQuickActions(context),
                   ]),
                 ),
@@ -165,68 +167,68 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
           ),
         ),
         const SizedBox(height: 12),
-          Row(
-            children: [
-              _QuickActionChip(
-                icon: Icons.qr_code_scanner,
-                label: S.of(context).healthScanFood,
-                onTap: () async {
-                  final result = await context.push<FoodItem?>('/health/scan');
-                  if (result != null && context.mounted) {
-                    final today = DateTime.now();
-                    final asyncLog = ref.read(nutritionProvider(today));
-                    NutritionLog? currentLog;
-                    asyncLog.whenData((log) => currentLog = log);
-                    if (currentLog != null) {
-                      final updated = currentLog!.copyWith(
-                        calories: currentLog!.calories + result.calories,
-                        protein: currentLog!.protein + result.protein,
-                        carbs: currentLog!.carbs + result.carbs,
-                        fat: currentLog!.fat + result.fat,
-                      );
-                      unawaited(ref.read(nutritionProvider(today).notifier).save(updated));
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(S.of(context).healthAddedFood(result.name))),
+        Row(
+          children: [
+            _QuickActionChip(
+              icon: Icons.qr_code_scanner,
+              label: S.of(context).healthScanFood,
+              onTap: () async {
+                final result = await context.push<FoodItem?>('/health/scan');
+                if (result != null && context.mounted) {
+                  final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+                  final asyncLog = ref.read(nutritionProvider(today));
+                  NutritionLog? currentLog;
+                  asyncLog.whenData((log) => currentLog = log);
+                  if (currentLog != null) {
+                    final updated = currentLog!.copyWith(
+                      calories: currentLog!.calories + result.calories,
+                      protein: currentLog!.protein + result.protein,
+                      carbs: currentLog!.carbs + result.carbs,
+                      fat: currentLog!.fat + result.fat,
                     );
+                    unawaited(ref.read(nutritionProvider(today).notifier).save(updated));
                   }
-                },
-              ),
-              const SizedBox(width: 8),
-              _QuickActionChip(
-                icon: Icons.auto_awesome,
-                label: S.of(context).healthAiScan,
-                onTap: () async {
-                  final result = await context.push<FoodItem?>('/health/ai-scan');
-                  if (result != null && context.mounted) {
-                    final today = DateTime.now();
-                    final asyncLog = ref.read(nutritionProvider(today));
-                    NutritionLog? currentLog;
-                    asyncLog.whenData((log) => currentLog = log);
-                    if (currentLog != null) {
-                      final updated = currentLog!.copyWith(
-                        calories: currentLog!.calories + result.calories,
-                        protein: currentLog!.protein + result.protein,
-                        carbs: currentLog!.carbs + result.carbs,
-                        fat: currentLog!.fat + result.fat,
-                      );
-                      unawaited(ref.read(nutritionProvider(today).notifier).save(updated));
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(S.of(context).healthAddedFood(result.name))),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.of(context).healthAddedFood(result.name))),
+                  );
+                }
+              },
+            ),
+            const SizedBox(width: 8),
+            _QuickActionChip(
+              icon: Icons.auto_awesome,
+              label: S.of(context).healthAiScan,
+              onTap: () async {
+                final result = await context.push<FoodItem?>('/health/ai-scan');
+                if (result != null && context.mounted) {
+                  final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+                  final asyncLog = ref.read(nutritionProvider(today));
+                  NutritionLog? currentLog;
+                  asyncLog.whenData((log) => currentLog = log);
+                  if (currentLog != null) {
+                    final updated = currentLog!.copyWith(
+                      calories: currentLog!.calories + result.calories,
+                      protein: currentLog!.protein + result.protein,
+                      carbs: currentLog!.carbs + result.carbs,
+                      fat: currentLog!.fat + result.fat,
                     );
+                    unawaited(ref.read(nutritionProvider(today).notifier).save(updated));
                   }
-                },
-              ),
-              const SizedBox(width: 8),
-              _QuickActionChip(
-                icon: Icons.add,
-                label: S.of(context).healthLogFood,
-                onTap: () => context.push('/health/nutrition'),
-              ),
-            ],
-          ),
-        ],
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.of(context).healthAddedFood(result.name))),
+                  );
+                }
+              },
+            ),
+            const SizedBox(width: 8),
+            _QuickActionChip(
+              icon: Icons.add,
+              label: S.of(context).healthLogFood,
+              onTap: () => context.push('/health/nutrition'),
+            ),
+          ],
+        ),
+      ],
       );
     }
   }
@@ -603,8 +605,9 @@ class _SupplementsCard extends ConsumerWidget {
       child: supplementsAsync.when(
         data: (supplements) {
           final active = supplements.where((s) => s.isActive).toList();
-          final taken = active.length;
-          final total = supplements.length;
+          final takenIds = ref.watch(takenSupplementIdsProvider).valueOrNull ?? {};
+          final taken = active.where((s) => takenIds.contains(s.serverId ?? s.id.toString())).length;
+          final total = active.length;
           if (total == 0) {
             return _NoDataWidget(
               label: S.of(context).healthSupplements.toLowerCase(),
@@ -909,6 +912,155 @@ class _QuickActionChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+String _currentTimeOfDaySlot() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'MORNING';
+  if (hour < 17) return 'NOON';
+  if (hour < 21) return 'EVENING';
+  return 'NIGHT';
+}
+
+class _QuickTakeCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final supplementsAsync = ref.watch(supplementListProvider);
+    final takenAsync = ref.watch(takenSupplementIdsProvider);
+    final theme = Theme.of(context);
+
+    return supplementsAsync.when(
+      data: (supplements) {
+        final active = supplements.where((s) => s.isActive).toList();
+        return takenAsync.when(
+          data: (takenIds) {
+            final untaken = active
+                .where((s) => !takenIds.contains(s.serverId ?? s.id.toString()))
+                .toList();
+            if (untaken.isEmpty) return const SizedBox.shrink();
+
+            final currentSlot = _currentTimeOfDaySlot();
+            final slotUntaken = untaken
+                .where((s) => s.timeOfDay.toUpperCase() == currentSlot)
+                .toList();
+            if (slotUntaken.isEmpty) return const SizedBox.shrink();
+
+            final next = slotUntaken.first;
+
+            if (next.stackId != null) {
+              final stackUntaken = active
+                  .where((s) =>
+                      s.stackId == next.stackId &&
+                      s.timeOfDay == next.timeOfDay &&
+                      !takenIds.contains(s.serverId ?? s.id.toString()))
+                  .toList();
+              if (stackUntaken.length > 1) {
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.1),
+                        AppColors.primary.withValues(alpha: 0.04),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.layers, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              next.stackId!,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              '${stackUntaken.length} supplements',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      FilledButton(
+                        onPressed: () {
+                          for (final s in stackUntaken) {
+                            ref.read(supplementListProvider.notifier).toggle(s.id);
+                          }
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Text('Take All',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            }
+
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.1),
+                    AppColors.primary.withValues(alpha: 0.04),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.medication, color: AppColors.primary, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      next.name,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  FilledButton(
+                    onPressed: () =>
+                        ref.read(supplementListProvider.notifier).toggle(next.id),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Take',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+            );
+          },
+          loading: () => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

@@ -117,7 +117,7 @@ class SettingsScreen extends ConsumerWidget {
                     style: theme.textTheme.bodyMedium,
                   ),
                   subtitle: Text(
-                     S.of(context).settingsWorkoutRemindersSubtitle,
+                    '${settings.workoutReminderHour.toString().padLeft(2, '0')}:${settings.workoutReminderMinute.toString().padLeft(2, '0')}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
@@ -129,6 +129,31 @@ class SettingsScreen extends ConsumerWidget {
                         .setWorkoutReminders(value);
                   },
                 ),
+                if (settings.workoutReminders)
+                  ListTile(
+                    leading: const Icon(Icons.access_time, size: 20),
+                    title: Text(
+                      'Reminder Time',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    trailing: Text(
+                      '${settings.workoutReminderHour.toString().padLeft(2, '0')}:${settings.workoutReminderMinute.toString().padLeft(2, '0')}',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay(
+                          hour: settings.workoutReminderHour,
+                          minute: settings.workoutReminderMinute,
+                        ),
+                      );
+                      if (time != null) {
+                        ref.read(settingsProvider.notifier).setWorkoutReminderTime(time.hour, time.minute);
+                      }
+                    },
+                  ),
+                const Divider(height: 1),
                 SwitchListTile(
                   title: Text(
                      S.of(context).settingsSupplementReminders,
@@ -147,6 +172,93 @@ class SettingsScreen extends ConsumerWidget {
                         .setSupplementReminders(value);
                   },
                 ),
+                if (settings.supplementReminders) ...[
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.wb_sunny_outlined, size: 20),
+                    title: Text('Morning', style: theme.textTheme.bodySmall),
+                    trailing: Text(
+                      '${settings.supplementMorningHour.toString().padLeft(2, '0')}:${settings.supplementMorningMinute.toString().padLeft(2, '0')}',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay(
+                          hour: settings.supplementMorningHour,
+                          minute: settings.supplementMorningMinute,
+                        ),
+                      );
+                      if (time != null) {
+                        ref.read(settingsProvider.notifier).setSupplementMorningTime(time.hour, time.minute);
+                      }
+                    },
+                  ),
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.wb_twilight, size: 20),
+                    title: Text('Afternoon', style: theme.textTheme.bodySmall),
+                    trailing: Text(
+                      '${settings.supplementAfternoonHour.toString().padLeft(2, '0')}:${settings.supplementAfternoonMinute.toString().padLeft(2, '0')}',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay(
+                          hour: settings.supplementAfternoonHour,
+                          minute: settings.supplementAfternoonMinute,
+                        ),
+                      );
+                      if (time != null) {
+                        ref.read(settingsProvider.notifier).setSupplementAfternoonTime(time.hour, time.minute);
+                      }
+                    },
+                  ),
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.bedtime_outlined, size: 20),
+                    title: Text('Evening', style: theme.textTheme.bodySmall),
+                    trailing: Text(
+                      '${settings.supplementEveningHour.toString().padLeft(2, '0')}:${settings.supplementEveningMinute.toString().padLeft(2, '0')}',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay(
+                          hour: settings.supplementEveningHour,
+                          minute: settings.supplementEveningMinute,
+                        ),
+                      );
+                      if (time != null) {
+                        ref.read(settingsProvider.notifier).setSupplementEveningTime(time.hour, time.minute);
+                      }
+                    },
+                  ),
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.nightlight_outlined, size: 20),
+                    title: Text('Night', style: theme.textTheme.bodySmall),
+                    trailing: Text(
+                      '${settings.supplementNightHour.toString().padLeft(2, '0')}:${settings.supplementNightMinute.toString().padLeft(2, '0')}',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay(
+                          hour: settings.supplementNightHour,
+                          minute: settings.supplementNightMinute,
+                        ),
+                      );
+                      if (time != null) {
+                        ref.read(settingsProvider.notifier).setSupplementNightTime(time.hour, time.minute);
+                      }
+                    },
+                  ),
+                ],
+                const Divider(height: 1),
                 SwitchListTile(
                   title: Text(
                      S.of(context).settingsSyncNotifications,

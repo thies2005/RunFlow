@@ -645,6 +645,7 @@ class NutritionTargets {
     this.waterGoalMl = 2000,
     this.exerciseCalorieFactor = 0.5,
     this.exerciseCalorieSource = 'strava',
+    this.waterTrackingEnabled = false,
   });
 
   static const defaults = NutritionTargets(
@@ -652,13 +653,14 @@ class NutritionTargets {
     protein: 150,
     carbs: 300,
     fat: 80,
-    water: 3.0,
+    water: 2.5,
     proteinPercent: 0.30,
     carbsPercent: 0.45,
     fatsPercent: 0.25,
-    waterGoalMl: 3000,
+    waterGoalMl: 2500,
     exerciseCalorieFactor: 0.5,
     exerciseCalorieSource: 'strava',
+    waterTrackingEnabled: false,
   );
 
   final int calories;
@@ -672,6 +674,7 @@ class NutritionTargets {
   final int waterGoalMl;
   final double exerciseCalorieFactor;
   final String exerciseCalorieSource;
+  final bool waterTrackingEnabled;
 
   NutritionTargets copyWith({
     int? calories,
@@ -685,6 +688,7 @@ class NutritionTargets {
     int? waterGoalMl,
     double? exerciseCalorieFactor,
     String? exerciseCalorieSource,
+    bool? waterTrackingEnabled,
   }) {
     return NutritionTargets(
       calories: calories ?? this.calories,
@@ -698,6 +702,7 @@ class NutritionTargets {
       waterGoalMl: waterGoalMl ?? this.waterGoalMl,
       exerciseCalorieFactor: exerciseCalorieFactor ?? this.exerciseCalorieFactor,
       exerciseCalorieSource: exerciseCalorieSource ?? this.exerciseCalorieSource,
+      waterTrackingEnabled: waterTrackingEnabled ?? this.waterTrackingEnabled,
     );
   }
 
@@ -716,7 +721,8 @@ class NutritionTargets {
           fatsPercent == other.fatsPercent &&
           waterGoalMl == other.waterGoalMl &&
           exerciseCalorieFactor == other.exerciseCalorieFactor &&
-          exerciseCalorieSource == other.exerciseCalorieSource;
+          exerciseCalorieSource == other.exerciseCalorieSource &&
+          waterTrackingEnabled == other.waterTrackingEnabled;
 
   @override
   int get hashCode => Object.hashAll([
@@ -731,6 +737,7 @@ class NutritionTargets {
         waterGoalMl,
         exerciseCalorieFactor,
         exerciseCalorieSource,
+        waterTrackingEnabled,
       ]);
 }
 

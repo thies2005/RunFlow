@@ -17,7 +17,31 @@ AnalyticsRepository analyticsRepository(Ref ref) {
 @riverpod
 Future<AnalyticsStats> analyticsStats(Ref ref) async {
   final repo = ref.read(analyticsRepositoryProvider);
-  return repo.getStats();
+  final stats = await repo.getStats();
+
+  if (stats.atl == 0 || stats.ctl == 0) {
+    final now = DateTime.now();
+    final endDate = DateTime(now.year, now.month, now.day);
+    final startDate = endDate.subtract(const Duration(days: 30));
+    try {
+      final history = await repo.getHistory(
+        startDate: startDate,
+        endDate: endDate,
+      );
+      if (history.isNotEmpty) {
+        final latest = history.last.metrics;
+        return stats.copyWith(
+          atl: stats.atl == 0 ? latest.atl : stats.atl,
+          ctl: stats.ctl == 0 ? latest.ctl : stats.ctl,
+          tsb: (stats.atl == 0 || stats.ctl == 0)
+              ? latest.tsb
+              : stats.tsb,
+        );
+      }
+    } catch (_) {}
+  }
+
+  return stats;
 }
 
 @riverpod
@@ -47,7 +71,7 @@ class SelectedDateRange extends _$SelectedDateRange {
 @riverpod
 Future<Map<String, Duration>> racePredictions(Ref ref) async {
   final stats = ref.watch(analyticsStatsProvider).value;
-  final vdot = stats?.currentVdot;
+  final vdot = stats?.currentVdot ?? stats?.effectiveVO2max;
   if (vdot == null) return {};
 
   return {

@@ -24,12 +24,15 @@ class Goals extends _$Goals {
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     final repo = ref.read(goalRepositoryProvider);
-    state = await AsyncValue.guard(repo.listGoals);
+    final result = await AsyncValue.guard(repo.listGoals);
+    if (!ref.mounted) return;
+    state = result;
   }
 
   Future<Goal> createGoal(CreateGoalRequest request) async {
     final repo = ref.read(goalRepositoryProvider);
     final goal = await repo.createGoal(request);
+    if (!ref.mounted) return goal;
     await refresh();
     return goal;
   }
@@ -37,12 +40,14 @@ class Goals extends _$Goals {
   Future<void> deleteGoal(String id) async {
     final repo = ref.read(goalRepositoryProvider);
     await repo.deleteGoal(id);
+    if (!ref.mounted) return;
     await refresh();
   }
 
   Future<void> reorderWorkout(String workoutId, DateTime newDate) async {
     final repo = ref.read(goalRepositoryProvider);
     await repo.reorderWorkout(workoutId, newDate);
+    if (!ref.mounted) return;
     await refresh();
   }
 }

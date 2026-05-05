@@ -17,6 +17,8 @@ abstract class NotificationService {
     required String body,
     required DateTime scheduledDate,
   });
+  Future<void> cancelAllNotifications();
+  Future<void> cancelNotification(int id);
 }
 
 class NotificationServiceImpl implements NotificationService {
@@ -138,6 +140,26 @@ class NotificationServiceImpl implements NotificationService {
       );
     } catch (e) {
       logger.error('[NotificationServiceImpl] Schedule notification failed: $e');
+    }
+  }
+
+  @override
+  Future<void> cancelAllNotifications() async {
+    if (!_initialized) return;
+    try {
+      await _plugin.cancelAll();
+    } catch (e) {
+      logger.error('[NotificationServiceImpl] Cancel all notifications failed: $e');
+    }
+  }
+
+  @override
+  Future<void> cancelNotification(int id) async {
+    if (!_initialized) return;
+    try {
+      await _plugin.cancel(id);
+    } catch (e) {
+      logger.error('[NotificationServiceImpl] Cancel notification failed: $e');
     }
   }
 

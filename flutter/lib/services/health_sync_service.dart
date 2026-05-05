@@ -4,6 +4,7 @@ import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/data/repositories/health_api_repository_impl.dart';
 import 'package:runflow_flutter/services/health_connect_service.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart' show BodyMeasurement;
 
 class HealthSyncService {
   HealthSyncService({
@@ -82,6 +83,23 @@ class HealthSyncService {
       if (i < daysToSync - 1) {
         await Future.delayed(const Duration(seconds: 2));
       }
+    }
+    await syncWeight();
+  }
+
+  Future<void> syncWeight() async {
+    try {
+      final weight = await _healthConnect.readLatestWeight();
+      if (weight != null) {
+        await _apiRepo.syncBodyMeasurement(BodyMeasurement(
+          id: 0,
+          weight: weight,
+          date: DateTime.now(),
+          bodyFat: 0,
+        ));
+      }
+    } catch (e) {
+      logger.error('[HealthSyncService] Weight sync failed: $e');
     }
   }
 

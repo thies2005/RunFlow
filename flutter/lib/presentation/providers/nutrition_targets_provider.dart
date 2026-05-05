@@ -14,6 +14,7 @@ final nutritionTargetsProvider =
     await prefs.setInt('nutrition_target_carbs', targets.carbs);
     await prefs.setInt('nutrition_target_fat', targets.fat);
     await prefs.setDouble('nutrition_target_water', targets.water);
+    await prefs.setBool('nutrition_water_tracking_enabled', targets.waterTrackingEnabled);
     return targets;
   } catch (_) {
     final prefs = await SharedPreferences.getInstance();
@@ -23,6 +24,7 @@ final nutritionTargetsProvider =
       carbs: prefs.getInt('nutrition_target_carbs') ?? NutritionTargets.defaults.carbs,
       fat: prefs.getInt('nutrition_target_fat') ?? NutritionTargets.defaults.fat,
       water: prefs.getDouble('nutrition_target_water') ?? NutritionTargets.defaults.water,
+      waterTrackingEnabled: prefs.getBool('nutrition_water_tracking_enabled') ?? false,
     );
   }
 });
@@ -35,6 +37,7 @@ Future<void> updateNutritionTargets(
   await prefs.setInt('nutrition_target_carbs', targets.carbs);
   await prefs.setInt('nutrition_target_fat', targets.fat);
   await prefs.setDouble('nutrition_target_water', targets.water);
+  await prefs.setBool('nutrition_water_tracking_enabled', targets.waterTrackingEnabled);
   try {
     final apiRepo = ref.read(healthApiRepositoryProvider);
     await apiRepo.setNutritionTargets(targets);

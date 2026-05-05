@@ -11,7 +11,9 @@ import 'package:runflow_flutter/presentation/screens/auth/forgot_password_screen
 import 'package:runflow_flutter/presentation/screens/dashboard/dashboard_screen.dart';
 import 'package:runflow_flutter/presentation/screens/activities/activity_detail_screen.dart';
 import 'package:runflow_flutter/presentation/screens/activities/activity_list_screen.dart';
+import 'package:runflow_flutter/presentation/screens/activities/activity_route_screen.dart';
 import 'package:runflow_flutter/presentation/screens/analytics/analytics_screen.dart';
+import 'package:runflow_flutter/presentation/screens/analytics/heatmap_screen.dart';
 import 'package:runflow_flutter/presentation/screens/goals/goal_list_screen.dart';
 import 'package:runflow_flutter/presentation/screens/plan/plan_screen.dart';
 import 'package:runflow_flutter/presentation/screens/goals/goal_detail_screen.dart';
@@ -114,6 +116,11 @@ GoRouter createRouter(Ref ref) {
         builder: (context, state) => const AnalyticsScreen(),
       ),
       GoRoute(
+        path: '/analytics/heatmap',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const HeatmapScreen(),
+      ),
+      GoRoute(
         path: '/goals',
         builder: (context, state) => const GoalListScreen(),
       ),
@@ -206,6 +213,14 @@ GoRouter createRouter(Ref ref) {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return ActivityDetailScreen(activityId: id);
+        },
+      ),
+      GoRoute(
+        path: '/activities/:id/route',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ActivityRouteScreen(activityId: id);
         },
       ),
       GoRoute(

@@ -2,7 +2,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/domain/entities/profile_entities.dart';
 import 'package:runflow_flutter/data/repositories/profile_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/profile_repository.dart';
+import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 part 'profile_providers.g.dart';
@@ -10,7 +12,8 @@ part 'profile_providers.g.dart';
 @Riverpod(keepAlive: true)
 ProfileRepository profileRepository(Ref ref) {
   final client = ref.watch(dioClientProvider);
-  return ProfileRepositoryImpl(dio: client.dio);
+  final cache = ref.read(cacheDatasourceProvider);
+  return ProfileRepositoryImpl(dio: client.dio, cacheDatasource: cache);
 }
 
 @riverpod

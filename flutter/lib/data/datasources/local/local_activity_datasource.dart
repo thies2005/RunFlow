@@ -330,6 +330,32 @@ class LocalActivityDatasource {
     }
   }
 
+  Future<List<Activity>> getLocalActivitiesWithRoutes({DateTime? since}) async {
+    final db = await _db.database;
+    final where = since != null
+        ? 'WHERE streams_json IS NOT NULL AND start_date >= ?'
+        : 'WHERE streams_json IS NOT NULL';
+    final args = since != null ? [since.millisecondsSinceEpoch] : <Object?>[];
+    final rows = db.select(
+      'SELECT * FROM activities $where ORDER BY start_date DESC',
+      args,
+    );
+    return rows.map(_rowToActivity).toList();
+  }
+
+  Future<void> pruneSyncedActivitiesMissingFromServer(Set<String> serverIds) async {
+    final db = await _db.database;
+    final rows = db.select(
+      'SELECT id FROM activities WHERE is_synced = 1',
+    );
+    for (final row in rows) {
+      final id = row['id'] as String;
+      if (!serverIds.contains(id)) {
+        db.execute('DELETE FROM activities WHERE id = ? AND is_synced = 1', [id]);
+      }
+    }
+  }
+
   Row? _getByLocalIdSync(Database db, String localId) {
     final rows = db.select('SELECT local_id FROM activities WHERE local_id = ?', [localId]);
     return rows.isEmpty ? null : rows.first;

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/core/utils/route_streams.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/recording_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
@@ -69,13 +70,52 @@ class _ActivityDetailContent extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         _HeaderSection(activity: activity),
-        if (_hasLatLngStreams(activity))
+        if (activityHasRoute(activity))
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: RunFlowMap(
-              gpsPoints: _parseLatLngStreams(activity),
-              height: 220,
-              showMarkers: true,
+            child: Stack(
+              children: [
+                RunFlowMap(
+                  gpsPoints: gpsPointsFromStreams(activity),
+                  height: 220,
+                  showMarkers: true,
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Material(
+                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(20),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () => context.push('/activities/${activity.id}/route'),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Icon(Icons.fullscreen, size: 20),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Container(
+              height: 100,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text(
+                  'No route data available for this activity.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
             ),
           ),
         const SizedBox(height: 16),
@@ -159,38 +199,6 @@ class _ActivityDetailContent extends StatelessWidget {
      );
    }
 
-  bool _hasLatLngStreams(Activity activity) {
-    final streams = activity.streams;
-    if (streams == null) return false;
-    final latlng = streams['latlng'];
-    if (latlng is! List || latlng.isEmpty) return false;
-    return true;
-  }
-
-  List<GpsPoint> _parseLatLngStreams(Activity activity) {
-    final latlng = activity.streams?['latlng'];
-    if (latlng is! List) return const [];
-    final points = <GpsPoint>[];
-    for (var i = 0; i < latlng.length; i++) {
-      final pair = latlng[i];
-      if (pair is List && pair.length >= 2) {
-        final lat = (pair[0] as num).toDouble();
-        final lng = (pair[1] as num).toDouble();
-        if (lat != 0.0 || lng != 0.0) {
-          points.add(GpsPoint(
-            latitude: lat,
-            longitude: lng,
-            speed: 0,
-            timestamp: DateTime.fromMillisecondsSinceEpoch(
-              activity.startDate.millisecondsSinceEpoch +
-                  (i * 1000),
-            ),
-          ));
-        }
-      }
-    }
-    return points;
-  }
 }
 
 class _HeaderSection extends StatelessWidget {

@@ -8,6 +8,7 @@ import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/runflow_map.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
+import 'package:runflow_flutter/core/utils/route_streams.dart';
 import 'package:runflow_flutter/services/workout_recording_service.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {
@@ -492,7 +493,7 @@ class _RecordingView extends ConsumerWidget {
   }
 }
 
-class _RecordingContent extends StatelessWidget {
+class _RecordingContent extends StatefulWidget {
   const _RecordingContent({
     required this.metrics,
     required this.gpsPoints,
@@ -510,7 +511,20 @@ class _RecordingContent extends StatelessWidget {
   final VoidCallback? onToggleCoach;
 
   @override
+  State<_RecordingContent> createState() => _RecordingContentState();
+}
+
+class _RecordingContentState extends State<_RecordingContent> {
+  bool _isMapExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final metrics = widget.metrics;
+    final gpsPoints = widget.gpsPoints;
+    final onPause = widget.onPause;
+    final onStop = widget.onStop;
+    final coachEnabled = widget.coachEnabled;
+    final onToggleCoach = widget.onToggleCoach;
     final ThemeData theme = Theme.of(context);
 
     return Scaffold(
@@ -519,15 +533,48 @@ class _RecordingContent extends StatelessWidget {
           children: [
             const SizedBox(height: 24),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: gpsPoints.isNotEmpty
-                  ? RunFlowMap(
-                      gpsPoints: gpsPoints,
-                      followUser: true,
-                      height: 200,
-                    )
-                  : Container(
-                      height: 200,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    if (gpsPoints.isNotEmpty)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        height: _isMapExpanded
+                            ? MediaQuery.of(context).size.height * 0.55
+                            : 200,
+                        child: Stack(
+                          children: [
+                            RunFlowMap(
+                              gpsPoints: gpsPoints,
+                              followUser: !_isMapExpanded,
+                              height: double.infinity,
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Material(
+                                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
+                                borderRadius: BorderRadius.circular(20),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: () => setState(() => _isMapExpanded = !_isMapExpanded),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(6),
+                                    child: Icon(
+                                      _isMapExpanded ? Icons.fullscreen_exit : Icons.fullscreen,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        height: 200,
                       decoration: BoxDecoration(
                         color: Theme.of(context)
                             .colorScheme
@@ -550,8 +597,10 @@ class _RecordingContent extends StatelessWidget {
                         ),
                       ),
                     ),
-            ),
-            const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -963,7 +1012,17 @@ class _SummaryView extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
+              if (workout.gpsPoints.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: RunFlowMap(
+                    gpsPoints: workout.gpsPoints,
+                    autoFitBounds: true,
+                    height: 180,
+                    showMarkers: true,
+                  ),
+                ),
+              const SizedBox(height: 16),
               Center(
                 child: Text(
                   formatDistance(workout.distanceMeters),

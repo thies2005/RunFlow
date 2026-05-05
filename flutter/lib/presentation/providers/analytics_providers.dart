@@ -3,7 +3,9 @@ import 'package:runflow_flutter/domain/entities/analytics_entities.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/data/repositories/analytics_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/analytics_repository.dart';
+import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/core/utils/vdot.dart';
 
 part 'analytics_providers.g.dart';
@@ -11,10 +13,11 @@ part 'analytics_providers.g.dart';
 @Riverpod(keepAlive: true)
 AnalyticsRepository analyticsRepository(Ref ref) {
   final client = ref.watch(dioClientProvider);
-  return AnalyticsRepositoryImpl(dio: client.dio);
+  final cache = ref.read(cacheDatasourceProvider);
+  return AnalyticsRepositoryImpl(dio: client.dio, cacheDatasource: cache);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<AnalyticsStats> analyticsStats(Ref ref) async {
   final repo = ref.read(analyticsRepositoryProvider);
   final stats = await repo.getStats();

@@ -28,4 +28,6 @@ abstract class ActivityRepository {
   Future<AiActivityFeedback> getAiFeedback(String activityId);
 
   Future<AiActivityFeedback> generateAiFeedback(String activityId);
+
+  Future<List<Activity>> listActivitiesWithRoutes({DateTime? since});
 }

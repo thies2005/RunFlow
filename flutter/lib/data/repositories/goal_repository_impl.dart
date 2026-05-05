@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/core/constants/cache_keys.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
+import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
 import 'package:runflow_flutter/data/models/goal_models.dart';
@@ -9,25 +14,29 @@ import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/goal_repository.dart';
 
 class GoalRepositoryImpl implements GoalRepository {
-  GoalRepositoryImpl({required this.dio});
+  GoalRepositoryImpl({required this.dio, required this.cacheDatasource});
 
   final Dio dio;
+  final CacheDatasource cacheDatasource;
 
   @override
   Future<domain.GoalsResponse> listGoals() async {
-    try {
-      final response = await dio.get(ApiConstants.goalsPath);
-      return GoalsResponse.fromJson(
-        response.data as Map<String, dynamic>,
-      ).toDomain();
-    } on DioException catch (e) {
-      throw e.error is AppException
-          ? e.error as AppException
-          : ServerException(
-              message: 'Failed to load goals.',
-              statusCode: e.response?.statusCode,
-            );
-    }
+    return _cacheFirst<domain.GoalsResponse>(
+      cacheKey: CacheKeys.goals,
+      fetch: _fetchGoalsFromApi,
+      decode: (json) => GoalsResponse.fromJson(
+        jsonDecode(json) as Map<String, dynamic>,
+      ).toDomain(),
+      encode: (resp) => jsonEncode(resp.toData().toJson()),
+      maxAge: const Duration(minutes: 15),
+    );
+  }
+
+  Future<domain.GoalsResponse> _fetchGoalsFromApi() async {
+    final response = await dio.get(ApiConstants.goalsPath);
+    return GoalsResponse.fromJson(
+      response.data as Map<String, dynamic>,
+    ).toDomain();
   }
 
   @override
@@ -37,6 +46,7 @@ class GoalRepositoryImpl implements GoalRepository {
         ApiConstants.goalsPath,
         data: request.toData().toJson(),
       );
+      await cacheDatasource.remove(CacheKeys.goals);
       return Goal.fromJson(
         unwrapPayload(
           Map<String, dynamic>.from(response.data as Map),
@@ -55,22 +65,25 @@ class GoalRepositoryImpl implements GoalRepository {
 
   @override
   Future<domain.Goal> getGoal(String id) async {
-    try {
-      final response = await dio.get('${ApiConstants.goalsPath}/$id');
-      return Goal.fromJson(
-        unwrapPayload(
-          Map<String, dynamic>.from(response.data as Map),
-          const ['goal'],
-        ),
-      ).toDomain();
-    } on DioException catch (e) {
-      throw e.error is AppException
-          ? e.error as AppException
-          : ServerException(
-              message: 'Failed to load goal.',
-              statusCode: e.response?.statusCode,
-            );
-    }
+    return _cacheFirst<domain.Goal>(
+      cacheKey: '${CacheKeys.goalPrefix}$id',
+      fetch: () => _fetchGoalFromApi(id),
+      decode: (json) => Goal.fromJson(
+        jsonDecode(json) as Map<String, dynamic>,
+      ).toDomain(),
+      encode: (goal) => jsonEncode(goal.toData().toJson()),
+      maxAge: const Duration(minutes: 15),
+    );
+  }
+
+  Future<domain.Goal> _fetchGoalFromApi(String id) async {
+    final response = await dio.get('${ApiConstants.goalsPath}/$id');
+    return Goal.fromJson(
+      unwrapPayload(
+        Map<String, dynamic>.from(response.data as Map),
+        const ['goal'],
+      ),
+    ).toDomain();
   }
 
   @override
@@ -80,6 +93,8 @@ class GoalRepositoryImpl implements GoalRepository {
         '${ApiConstants.goalsPath}/$id',
         data: request.toData().toJson(),
       );
+      await cacheDatasource.remove(CacheKeys.goals);
+      await cacheDatasource.remove('${CacheKeys.goalPrefix}$id');
       return Goal.fromJson(
         unwrapPayload(
           Map<String, dynamic>.from(response.data as Map),
@@ -101,6 +116,8 @@ class GoalRepositoryImpl implements GoalRepository {
     try {
       final response = await dio.delete('${ApiConstants.goalsPath}/$id');
       final data = response.data as Map<String, dynamic>;
+      await cacheDatasource.remove(CacheKeys.goals);
+      await cacheDatasource.remove('${CacheKeys.goalPrefix}$id');
       return data['success'] as bool? ?? true;
     } on DioException catch (e) {
       throw e.error is AppException
@@ -183,5 +200,39 @@ class GoalRepositoryImpl implements GoalRepository {
               statusCode: e.response?.statusCode,
             );
     }
+  }
+
+  Future<T> _cacheFirst<T>({
+    required String cacheKey,
+    required Future<T> Function() fetch,
+    required T Function(String) decode,
+    required String Function(T) encode,
+    Duration maxAge = const Duration(minutes: 15),
+  }) async {
+    final cached = await cacheDatasource.get(cacheKey);
+    if (cached != null && !cacheDatasource.isExpired(cached, maxAge)) {
+      unawaited(_refreshInBackground(cacheKey, fetch, encode));
+      return decode(cached.data);
+    }
+
+    try {
+      final result = await fetch();
+      await cacheDatasource.set(cacheKey, encode(result));
+      return result;
+    } on DioException catch (_) {
+      if (cached != null) return decode(cached.data);
+      rethrow;
+    }
+  }
+
+  Future<void> _refreshInBackground<T>(
+    String key,
+    Future<T> Function() fetch,
+    String Function(T) encode,
+  ) async {
+    try {
+      final result = await fetch();
+      await cacheDatasource.set(key, encode(result));
+    } catch (_) {}
   }
 }

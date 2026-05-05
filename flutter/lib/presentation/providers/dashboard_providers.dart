@@ -2,17 +2,20 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/data/repositories/dashboard_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/dashboard_repository.dart';
+import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 
 part 'dashboard_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 DashboardRepository dashboardRepository(Ref ref) {
   final client = ref.watch(dioClientProvider);
-  return DashboardRepositoryImpl(dio: client.dio);
+  final cache = ref.read(cacheDatasourceProvider);
+  return DashboardRepositoryImpl(dio: client.dio, cacheDatasource: cache);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class Dashboard extends _$Dashboard {
   @override
   Future<DashboardResponse> build() async {

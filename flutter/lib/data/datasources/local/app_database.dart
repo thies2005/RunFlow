@@ -20,7 +20,7 @@ class AppDatabase {
 
   Database? _db;
 
-  static const int _currentVersion = 3;
+  static const int _currentVersion = 4;
 
   static final Map<int, void Function(Database)> _migrations = {
     1: (Database db) {
@@ -69,6 +69,15 @@ class AppDatabase {
           max_retries INTEGER NOT NULL DEFAULT 5,
           created_at INTEGER NOT NULL,
           last_attempt_at INTEGER
+        )
+      ''');
+    },
+    3: (Database db) {
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS api_cache (
+          key TEXT PRIMARY KEY,
+          data TEXT NOT NULL,
+          updated_at INTEGER NOT NULL
         )
       ''');
     },
@@ -244,6 +253,13 @@ class AppDatabase {
         max_retries INTEGER NOT NULL DEFAULT 5,
         created_at INTEGER NOT NULL,
         last_attempt_at INTEGER
+      )
+    ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS api_cache (
+        key TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
       )
     ''');
   }

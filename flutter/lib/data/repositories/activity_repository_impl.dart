@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/core/constants/cache_keys.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
+import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/data/datasources/local/local_activity_datasource.dart';
 import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/activity_models.dart';
@@ -14,10 +18,12 @@ class ActivityRepositoryImpl implements ActivityRepository {
   ActivityRepositoryImpl({
     required this.dio,
     required this.localDatasource,
+    required this.cacheDatasource,
   });
 
   final Dio dio;
   final LocalActivityDatasource localDatasource;
+  final CacheDatasource cacheDatasource;
 
   @override
   Future<domain.ActivitiesResponse> listActivities({
@@ -262,18 +268,32 @@ class ActivityRepositoryImpl implements ActivityRepository {
 
   @override
   Future<domain.AiActivityFeedback> getAiFeedback(String activityId) async {
+    final cacheKey = '${CacheKeys.aiFeedbackPrefix}$activityId';
     try {
       final response = await dio.get(
         '/ai/activity-feedback',
         queryParameters: {'activityId': activityId},
       );
-      return AiActivityFeedback.fromJson(
+      final result = AiActivityFeedback.fromJson(
         unwrapPayload(
           response.data as Map<String, dynamic>,
           const ['feedback'],
         ),
       ).toDomain();
+      await cacheDatasource.set(
+        cacheKey,
+        jsonEncode(result.toData().toJson()),
+      );
+      return result;
     } on DioException catch (e) {
+      final cached = await cacheDatasource.get(cacheKey);
+      if (cached != null) {
+        try {
+          return AiActivityFeedback.fromJson(
+            jsonDecode(cached.data) as Map<String, dynamic>,
+          ).toDomain();
+        } catch (_) {}
+      }
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(
@@ -285,17 +305,23 @@ class ActivityRepositoryImpl implements ActivityRepository {
 
   @override
   Future<domain.AiActivityFeedback> generateAiFeedback(String activityId) async {
+    final cacheKey = '${CacheKeys.aiFeedbackPrefix}$activityId';
     try {
       final response = await dio.post(
         '/ai/activity-feedback',
         data: {'activityId': activityId, 'regenerate': true},
       );
-      return AiActivityFeedback.fromJson(
+      final result = AiActivityFeedback.fromJson(
         unwrapPayload(
           response.data as Map<String, dynamic>,
           const ['feedback'],
         ),
       ).toDomain();
+      await cacheDatasource.set(
+        cacheKey,
+        jsonEncode(result.toData().toJson()),
+      );
+      return result;
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -304,6 +330,13 @@ class ActivityRepositoryImpl implements ActivityRepository {
               statusCode: e.response?.statusCode,
             );
     }
+  }
+
+  @override
+  Future<List<domain.Activity>> listActivitiesWithRoutes({DateTime? since}) async {
+    final local = await localDatasource.getLocalActivitiesWithRoutes(since: since);
+    if (local.isNotEmpty) return local;
+    return [];
   }
 
   Future<domain.ActivitiesResponse> _listFromLocal({

@@ -1,14 +1,17 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/vdot.dart';
 import 'package:runflow_flutter/domain/entities/analytics_entities.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
+import 'package:runflow_flutter/presentation/providers/heatmap_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/combined_analytics_chart.dart';
 import 'package:runflow_flutter/presentation/widgets/charts/hr_zone_distribution_chart.dart';
+import 'package:runflow_flutter/presentation/widgets/heatmap_map.dart';
 import 'package:runflow_flutter/presentation/widgets/metric_card.dart';
 import 'package:runflow_flutter/presentation/widgets/shape_calibration_sheet.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
@@ -71,6 +74,8 @@ class AnalyticsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               const CombinedAnalyticsChart(),
+              const SizedBox(height: 16),
+              const _HeatmapSection(),
               const SizedBox(height: 16),
               const _HrZoneDistributionSection(),
               const SizedBox(height: 16),
@@ -1007,6 +1012,54 @@ class _AnalyticsSkeleton extends StatelessWidget {
         height: height,
         color: color,
       ),
+    );
+  }
+}
+
+class _HeatmapSection extends ConsumerWidget {
+  const _HeatmapSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedDays = ref.watch(selectedDateRangeProvider);
+    final routesAsync = ref.watch(heatmapRoutesProvider(days: selectedDays));
+
+    return routesAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (routes) {
+        if (routes.isEmpty) return const SizedBox.shrink();
+
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Your Running Heatmap',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.fullscreen, size: 20),
+                      onPressed: () => context.push('/analytics/heatmap'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                HeatmapMap(routes: routes, height: 280),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

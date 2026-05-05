@@ -1,36 +1,43 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
+import 'package:runflow_flutter/core/constants/cache_keys.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
+import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/data/mappers/mappers.dart';
 import 'package:runflow_flutter/data/models/profile_models.dart';
 import 'package:runflow_flutter/domain/entities/entities.dart' as domain;
 import 'package:runflow_flutter/domain/repositories/profile_repository.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
-  ProfileRepositoryImpl({required this.dio});
+  ProfileRepositoryImpl({required this.dio, required this.cacheDatasource});
 
   final Dio dio;
+  final CacheDatasource cacheDatasource;
 
   @override
   Future<domain.UserProfile> getProfile() async {
-    try {
-      final response = await dio.get(ApiConstants.userProfilePath);
-      final payload = unwrapPayload(
-        Map<String, dynamic>.from(response.data as Map),
-        const ['user'],
-      );
-      return UserProfile.fromJson(
-        payload,
-      ).toDomain();
-    } on DioException catch (e) {
-      throw e.error is AppException
-          ? e.error as AppException
-          : ServerException(
-              message: 'Failed to load profile.',
-              statusCode: e.response?.statusCode,
-            );
-    }
+    return _cacheFirst<domain.UserProfile>(
+      cacheKey: CacheKeys.userProfile,
+      fetch: _fetchProfileFromApi,
+      decode: (json) => UserProfile.fromJson(
+        jsonDecode(json) as Map<String, dynamic>,
+      ).toDomain(),
+      encode: (profile) => jsonEncode(profile.toData().toJson()),
+      maxAge: const Duration(hours: 1),
+    );
+  }
+
+  Future<domain.UserProfile> _fetchProfileFromApi() async {
+    final response = await dio.get(ApiConstants.userProfilePath);
+    final payload = unwrapPayload(
+      Map<String, dynamic>.from(response.data as Map),
+      const ['user'],
+    );
+    return UserProfile.fromJson(payload).toDomain();
   }
 
   @override
@@ -44,9 +51,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
         Map<String, dynamic>.from(response.data as Map),
         const ['user'],
       );
-      return UserProfile.fromJson(
-        payload,
-      ).toDomain();
+      final result = UserProfile.fromJson(payload).toDomain();
+      await cacheDatasource.set(
+        CacheKeys.userProfile,
+        jsonEncode(result.toData().toJson()),
+      );
+      return result;
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -124,5 +134,39 @@ class ProfileRepositoryImpl implements ProfileRepository {
               statusCode: e.response?.statusCode,
             );
     }
+  }
+
+  Future<T> _cacheFirst<T>({
+    required String cacheKey,
+    required Future<T> Function() fetch,
+    required T Function(String) decode,
+    required String Function(T) encode,
+    Duration maxAge = const Duration(minutes: 15),
+  }) async {
+    final cached = await cacheDatasource.get(cacheKey);
+    if (cached != null && !cacheDatasource.isExpired(cached, maxAge)) {
+      unawaited(_refreshInBackground(cacheKey, fetch, encode));
+      return decode(cached.data);
+    }
+
+    try {
+      final result = await fetch();
+      await cacheDatasource.set(cacheKey, encode(result));
+      return result;
+    } on DioException catch (_) {
+      if (cached != null) return decode(cached.data);
+      rethrow;
+    }
+  }
+
+  Future<void> _refreshInBackground<T>(
+    String key,
+    Future<T> Function() fetch,
+    String Function(T) encode,
+  ) async {
+    try {
+      final result = await fetch();
+      await cacheDatasource.set(key, encode(result));
+    } catch (_) {}
   }
 }

@@ -4,7 +4,9 @@ import 'package:runflow_flutter/data/datasources/local/local_activity_datasource
 import 'package:runflow_flutter/data/repositories/activity_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
+import 'package:runflow_flutter/services/activity_cache_sync_service.dart';
 import 'package:runflow_flutter/services/offline_sync_service.dart';
 
 part 'activity_providers.g.dart';
@@ -16,10 +18,16 @@ LocalActivityDatasource localActivityDatasource(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
+CacheDatasource cacheDatasource(Ref ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return CacheDatasource(database: db);
+}
+
+@Riverpod(keepAlive: true)
 ActivityRepository activityRepository(Ref ref) {
   final client = ref.watch(dioClientProvider);
   final localDs = ref.watch(localActivityDatasourceProvider);
-  return ActivityRepositoryImpl(dio: client.dio, localDatasource: localDs);
+  return ActivityRepositoryImpl(dio: client.dio, localDatasource: localDs, cacheDatasource: ref.read(cacheDatasourceProvider));
 }
 
 @Riverpod(keepAlive: true)
@@ -27,6 +35,14 @@ OfflineSyncService offlineSyncService(Ref ref) {
   final client = ref.watch(dioClientProvider);
   final localDs = ref.watch(localActivityDatasourceProvider);
   return OfflineSyncService(localDatasource: localDs, dio: client.dio);
+}
+
+@Riverpod(keepAlive: true)
+ActivityCacheSyncService activityCacheSyncService(Ref ref) {
+  final client = ref.watch(dioClientProvider);
+  final localDs = ref.watch(localActivityDatasourceProvider);
+  final cache = ref.watch(cacheDatasourceProvider);
+  return ActivityCacheSyncService(dio: client.dio, localDatasource: localDs, cacheDatasource: cache);
 }
 
 @riverpod

@@ -3,11 +3,13 @@ import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
+import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/data/datasources/local/local_activity_datasource.dart';
 import 'package:runflow_flutter/data/interceptors/auth_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/error_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/refresh_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/retry_interceptor.dart';
+import 'package:runflow_flutter/services/activity_cache_sync_service.dart';
 import 'package:runflow_flutter/services/auth_service_impl.dart';
 import 'package:runflow_flutter/services/offline_sync_service.dart';
 import 'package:workmanager/workmanager.dart';
@@ -20,12 +22,25 @@ Future<bool> performBackgroundSync({
     final accessToken = await storage.read(key: 'access_token');
     if (accessToken == null || accessToken.isEmpty) return true;
 
+    final localDs = LocalActivityDatasource(database: AppDatabase.instance);
+
     try {
-      final localDs = LocalActivityDatasource(database: AppDatabase.instance);
       final offlineSync = OfflineSyncService(localDatasource: localDs, dio: dio);
       await offlineSync.flushPendingSync();
     } catch (e) {
       logger.warning('[BackgroundSync] Failed to flush pending activities: $e');
+    }
+
+    try {
+      final cacheDatasource = CacheDatasource(database: AppDatabase.instance);
+      final cacheSync = ActivityCacheSyncService(
+        dio: dio,
+        localDatasource: localDs,
+        cacheDatasource: cacheDatasource,
+      );
+      await cacheSync.syncAllActivitiesToLocal();
+    } catch (e) {
+      logger.warning('[BackgroundSync] Activity cache sync failed: $e');
     }
 
     await dio.post(

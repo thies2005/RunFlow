@@ -53,4 +53,13 @@ void _triggerOfflineSync(Ref ref) {
   } catch (e) {
     logger.warning('[ConnectivityHelper] Could not trigger offline sync: $e');
   }
+
+  try {
+    final cacheSync = ref.read(activityCacheSyncServiceProvider);
+    cacheSync.syncAllActivitiesToLocal().catchError((e) {
+      logger.warning('[ConnectivityHelper] Activity cache sync failed: $e');
+    });
+  } catch (e) {
+    logger.warning('[ConnectivityHelper] Could not trigger activity cache sync: $e');
+  }
 }

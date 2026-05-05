@@ -63,26 +63,22 @@ sealed class Supplement with _$Supplement {
 
   factory Supplement.fromJson(Map<String, dynamic> json) {
     final rawId = json['id'];
-    if (rawId is String) {
-      return Supplement(
-        id: 0,
-        serverId: rawId,
-        name: json['name'] as String,
-        amount: _parseSupplementAmount(json['amount']),
-        unit: json['unit'] as String? ?? 'mg',
-        timeOfDay: json['timeOfDay'] as String? ?? 'MORNING',
-        daysOfWeek: _parseDaysOfWeek(json['daysOfWeek']),
-        isActive: json['isActive'] as bool? ?? true,
-        stackId: json['stackId'] as String?,
-        order: (json['order'] as num?)?.toInt() ?? 0,
-        dosage: json['dosage'] as String? ?? '',
-        frequency: json['frequency'] as String? ?? 'Daily',
-      );
-    }
-    return _$SupplementFromJson(json);
+    return Supplement(
+      id: rawId is num ? rawId.toInt() : 0,
+      serverId: rawId is String ? rawId : json['serverId'] as String?,
+      name: json['name'] as String? ?? '',
+      amount: _parseSupplementAmount(json['amount']),
+      unit: json['unit'] as String? ?? 'mg',
+      timeOfDay: json['timeOfDay'] as String? ?? 'MORNING',
+      daysOfWeek: _parseDaysOfWeek(json['daysOfWeek']),
+      isActive: json['isActive'] as bool? ?? true,
+      stackId: json['stackId'] as String?,
+      order: (json['order'] as num?)?.toInt() ?? 0,
+      dosage: json['dosage'] as String? ?? '',
+      frequency: json['frequency'] as String? ?? 'Daily',
+    );
   }
 
-  @override
   Map<String, dynamic> toJson() => {
     if (serverId != null) 'id': serverId,
     if (serverId == null && id != 0) 'id': id,

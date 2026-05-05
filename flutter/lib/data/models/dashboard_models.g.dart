@@ -19,7 +19,7 @@ _AnalyticsStats _$AnalyticsStatsFromJson(Map<String, dynamic> json) =>
       tsb: _parseDouble(json['tsb']),
       workloadRatio: _parseDouble(json['workloadRatio']),
       easyTrimp: _parseDouble(json['easyTrimp']),
-      hrMax: (json['hrMax'] as num).toInt(),
+      hrMax: json['hrMax'] == null ? 0 : _parseIntSafe(json['hrMax']),
     );
 
 Map<String, dynamic> _$AnalyticsStatsToJson(_AnalyticsStats instance) =>
@@ -138,11 +138,11 @@ _Workout _$WorkoutFromJson(Map<String, dynamic> json) => _Workout(
   goalId: json['goalId'] as String,
   scheduledDate: DateTime.parse(json['scheduledDate'] as String),
   workoutType: workoutTypeFromJson(json['workoutType']),
-  description: json['description'] as String,
-  targetDistance: (json['targetDistance'] as num).toDouble(),
-  targetPace: (json['targetPace'] as num).toDouble(),
-  targetDuration: (json['targetDuration'] as num).toInt(),
-  isCompleted: json['isCompleted'] as bool,
+  description: json['description'] as String? ?? '',
+  targetDistance: (json['targetDistance'] as num?)?.toDouble() ?? 0.0,
+  targetPace: (json['targetPace'] as num?)?.toDouble() ?? 0.0,
+  targetDuration: (json['targetDuration'] as num?)?.toInt() ?? 0,
+  isCompleted: json['isCompleted'] as bool? ?? false,
   completedAt: json['completedAt'] == null
       ? null
       : DateTime.parse(json['completedAt'] as String),
@@ -165,19 +165,19 @@ Map<String, dynamic> _$WorkoutToJson(_Workout instance) => <String, dynamic>{
 
 _Goal _$GoalFromJson(Map<String, dynamic> json) => _Goal(
   id: json['id'] as String,
-  userId: json['userId'] as String,
+  userId: json['userId'] as String? ?? '',
   name: json['name'] as String,
   raceType: $enumDecode(_$RaceTypeEnumMap, json['raceType']),
   raceDate: DateTime.parse(json['raceDate'] as String),
   targetTime: (json['targetTime'] as num?)?.toInt(),
   weeklyMileageGoal: (json['weeklyMileageGoal'] as num?)?.toDouble(),
-  planWeeks: (json['planWeeks'] as num).toInt(),
-  runsPerWeek: (json['runsPerWeek'] as num).toInt(),
-  longRunDay: (json['longRunDay'] as num).toInt(),
-  workoutDay: (json['workoutDay'] as num).toInt(),
+  planWeeks: (json['planWeeks'] as num?)?.toInt() ?? 12,
+  runsPerWeek: (json['runsPerWeek'] as num?)?.toInt() ?? 4,
+  longRunDay: (json['longRunDay'] as num?)?.toInt() ?? 0,
+  workoutDay: (json['workoutDay'] as num?)?.toInt() ?? 3,
   currentVdot: (json['currentVdot'] as num?)?.toDouble(),
   predictedTime: (json['predictedTime'] as num?)?.toInt(),
-  isActive: json['isActive'] as bool,
+  isActive: json['isActive'] as bool? ?? true,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
   completedAt: json['completedAt'] == null

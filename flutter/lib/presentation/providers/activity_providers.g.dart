@@ -55,7 +55,7 @@ final class LocalActivityDatasourceProvider
 }
 
 String _$localActivityDatasourceHash() =>
-    r'c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0';
+    r'b7aabd2c553b117b5f15735242ff40a88aebbaf6';
 
 @ProviderFor(activityRepository)
 final activityRepositoryProvider = ActivityRepositoryProvider._();
@@ -103,7 +103,7 @@ final class ActivityRepositoryProvider
 }
 
 String _$activityRepositoryHash() =>
-    r'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0';
+    r'f986cdec6f07e0987f87bdb3be395246288de9ac';
 
 @ProviderFor(offlineSyncService)
 final offlineSyncServiceProvider = OfflineSyncServiceProvider._();
@@ -151,7 +151,7 @@ final class OfflineSyncServiceProvider
 }
 
 String _$offlineSyncServiceHash() =>
-    r'b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1';
+    r'bde848ab3e073bf8ea95c408278c0290fc8b8602';
 
 @ProviderFor(pendingSyncCount)
 final pendingSyncCountProvider = PendingSyncCountProvider._();
@@ -184,8 +184,7 @@ final class PendingSyncCountProvider
   }
 }
 
-String _$pendingSyncCountHash() =>
-    r'c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2';
+String _$pendingSyncCountHash() => r'e83d56f215b98aa17fc5559675763ef1598cdef8';
 
 @ProviderFor(Activities)
 final activitiesProvider = ActivitiesProvider._();
@@ -242,12 +241,12 @@ final class ActivityDetailProvider
     required ActivityDetailFamily super.from,
     required String super.argument,
   }) : super(
-          retry: null,
-          name: r'activityDetailProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+         retry: null,
+         name: r'activityDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$activityDetailHash();

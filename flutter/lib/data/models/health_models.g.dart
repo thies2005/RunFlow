@@ -54,39 +54,6 @@ Map<String, dynamic> _$FoodItemToJson(_FoodItem instance) => <String, dynamic>{
   'barcode': instance.barcode,
 };
 
-_Supplement _$SupplementFromJson(Map<String, dynamic> json) => _Supplement(
-  id: (json['id'] as num).toInt(),
-  serverId: json['serverId'] as String?,
-  name: json['name'] as String,
-  amount: json['amount'] == null ? 0 : _parseSupplementAmount(json['amount']),
-  unit: json['unit'] as String? ?? 'mg',
-  timeOfDay: json['timeOfDay'] as String? ?? 'MORNING',
-  daysOfWeek: json['daysOfWeek'] == null
-      ? const []
-      : _parseDaysOfWeek(json['daysOfWeek']),
-  isActive: json['isActive'] as bool? ?? true,
-  stackId: json['stackId'] as String?,
-  order: (json['order'] as num?)?.toInt() ?? 0,
-  dosage: json['dosage'] as String? ?? '',
-  frequency: json['frequency'] as String? ?? 'Daily',
-);
-
-Map<String, dynamic> _$SupplementToJson(_Supplement instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'serverId': instance.serverId,
-      'name': instance.name,
-      'amount': instance.amount,
-      'unit': instance.unit,
-      'timeOfDay': instance.timeOfDay,
-      'daysOfWeek': _serializeDaysOfWeek(instance.daysOfWeek),
-      'isActive': instance.isActive,
-      'stackId': instance.stackId,
-      'order': instance.order,
-      'dosage': instance.dosage,
-      'frequency': instance.frequency,
-    };
-
 _SupplementStack _$SupplementStackFromJson(Map<String, dynamic> json) =>
     _SupplementStack(
       id: (json['id'] as num).toInt(),

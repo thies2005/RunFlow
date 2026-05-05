@@ -570,7 +570,6 @@ as String?,
 
 }
 
-
 /// @nodoc
 mixin _$Supplement {
 
@@ -581,8 +580,6 @@ mixin _$Supplement {
 @pragma('vm:prefer-inline')
 $SupplementCopyWith<Supplement> get copyWith => _$SupplementCopyWithImpl<Supplement>(this as Supplement, _$identity);
 
-  /// Serializes this Supplement to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -590,7 +587,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is Supplement&&(identical(other.id, id) || other.id == id)&&(identical(other.serverId, serverId) || other.serverId == serverId)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.timeOfDay, timeOfDay) || other.timeOfDay == timeOfDay)&&const DeepCollectionEquality().equals(other.daysOfWeek, daysOfWeek)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.stackId, stackId) || other.stackId == stackId)&&(identical(other.order, order) || other.order == order)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.frequency, frequency) || other.frequency == frequency));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,serverId,name,amount,unit,timeOfDay,const DeepCollectionEquality().hash(daysOfWeek),isActive,stackId,order,dosage,frequency);
 
@@ -770,11 +767,11 @@ return $default(_that.id,_that.serverId,_that.name,_that.amount,_that.unit,_that
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _Supplement extends Supplement {
   const _Supplement({required this.id, this.serverId, required this.name, @JsonKey(name: 'amount', fromJson: _parseSupplementAmount) this.amount = 0, @JsonKey(name: 'unit') this.unit = 'mg', @JsonKey(name: 'timeOfDay') this.timeOfDay = 'MORNING', @JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) final  List<int> daysOfWeek = const [], this.isActive = true, @JsonKey(name: 'stackId') this.stackId, this.order = 0, @JsonKey(name: 'dosage') this.dosage = '', @JsonKey(name: 'frequency') this.frequency = 'Daily'}): _daysOfWeek = daysOfWeek,super._();
-  factory _Supplement.fromJson(Map<String, dynamic> json) => _$SupplementFromJson(json);
+  
 
 @override final  int id;
 @override final  String? serverId;
@@ -801,17 +798,14 @@ class _Supplement extends Supplement {
 @pragma('vm:prefer-inline')
 _$SupplementCopyWith<_Supplement> get copyWith => __$SupplementCopyWithImpl<_Supplement>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$SupplementToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _Supplement&&(identical(other.id, id) || other.id == id)&&(identical(other.serverId, serverId) || other.serverId == serverId)&&(identical(other.name, name) || other.name == name)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.timeOfDay, timeOfDay) || other.timeOfDay == timeOfDay)&&const DeepCollectionEquality().equals(other._daysOfWeek, _daysOfWeek)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.stackId, stackId) || other.stackId == stackId)&&(identical(other.order, order) || other.order == order)&&(identical(other.dosage, dosage) || other.dosage == dosage)&&(identical(other.frequency, frequency) || other.frequency == frequency));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,serverId,name,amount,unit,timeOfDay,const DeepCollectionEquality().hash(_daysOfWeek),isActive,stackId,order,dosage,frequency);
 

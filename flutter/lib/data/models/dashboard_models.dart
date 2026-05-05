@@ -26,6 +26,12 @@ double? _parseDoubleNullable(dynamic value) {
   return _parseDouble(value);
 }
 
+int _parseIntSafe(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? 0;
+  return 0;
+}
+
 enum ActivityType {
   @JsonValue('RUN')
   run,
@@ -80,7 +86,7 @@ sealed class AnalyticsStats with _$AnalyticsStats {
     @JsonKey(fromJson: _parseDouble) required double tsb,
     @JsonKey(fromJson: _parseDouble) required double workloadRatio,
     @JsonKey(fromJson: _parseDouble) required double easyTrimp,
-    required int hrMax,
+    @JsonKey(fromJson: _parseIntSafe) @Default(0) int hrMax,
   }) = _AnalyticsStats;
   const AnalyticsStats._();
 
@@ -156,11 +162,11 @@ sealed class Workout with _$Workout {
     required DateTime scheduledDate,
     @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson)
     required WorkoutType workoutType,
-    required String description,
-    required double targetDistance,
-    required double targetPace,
-    required int targetDuration,
-    required bool isCompleted,
+    @Default('') String description,
+    @Default(0.0) double targetDistance,
+    @Default(0.0) double targetPace,
+    @Default(0) int targetDuration,
+    @Default(false) bool isCompleted,
     required DateTime? completedAt,
     required String? activityId,
   }) = _Workout;
@@ -174,19 +180,19 @@ sealed class Workout with _$Workout {
 sealed class Goal with _$Goal {
   const factory Goal({
     required String id,
-    required String userId,
+    @Default('') String userId,
     required String name,
     required RaceType raceType,
     required DateTime raceDate,
     required int? targetTime,
     required double? weeklyMileageGoal,
-    required int planWeeks,
-    required int runsPerWeek,
-    required int longRunDay,
-    required int workoutDay,
+    @Default(12) int planWeeks,
+    @Default(4) int runsPerWeek,
+    @Default(0) int longRunDay,
+    @Default(3) int workoutDay,
     required double? currentVdot,
     required int? predictedTime,
-    required bool isActive,
+    @Default(true) bool isActive,
     required DateTime createdAt,
     required DateTime updatedAt,
     required DateTime? completedAt,

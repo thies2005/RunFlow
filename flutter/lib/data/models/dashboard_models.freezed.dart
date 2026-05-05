@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AnalyticsStats {
 
-@JsonKey(fromJson: _parseDouble) double get currentWeekMileage;@JsonKey(fromJson: _parseDouble) double get effectiveVO2max;@JsonKey(fromJson: _parseDouble) double get rawVO2max;@JsonKey(fromJson: _parseDouble) double get vdotCorrectionFactor;@JsonKey(fromJson: _parseDouble) double get marathonShape;@JsonKey(fromJson: _parseDoubleNullable) double? get currentVdot;@JsonKey(fromJson: _parseDouble) double get ctl;@JsonKey(fromJson: _parseDouble) double get atl;@JsonKey(fromJson: _parseDouble) double get tsb;@JsonKey(fromJson: _parseDouble) double get workloadRatio;@JsonKey(fromJson: _parseDouble) double get easyTrimp; int get hrMax;
+@JsonKey(fromJson: _parseDouble) double get currentWeekMileage;@JsonKey(fromJson: _parseDouble) double get effectiveVO2max;@JsonKey(fromJson: _parseDouble) double get rawVO2max;@JsonKey(fromJson: _parseDouble) double get vdotCorrectionFactor;@JsonKey(fromJson: _parseDouble) double get marathonShape;@JsonKey(fromJson: _parseDoubleNullable) double? get currentVdot;@JsonKey(fromJson: _parseDouble) double get ctl;@JsonKey(fromJson: _parseDouble) double get atl;@JsonKey(fromJson: _parseDouble) double get tsb;@JsonKey(fromJson: _parseDouble) double get workloadRatio;@JsonKey(fromJson: _parseDouble) double get easyTrimp;@JsonKey(fromJson: _parseIntSafe) int get hrMax;
 /// Create a copy of AnalyticsStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $AnalyticsStatsCopyWith<$Res>  {
   factory $AnalyticsStatsCopyWith(AnalyticsStats value, $Res Function(AnalyticsStats) _then) = _$AnalyticsStatsCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(fromJson: _parseDouble) double currentWeekMileage,@JsonKey(fromJson: _parseDouble) double effectiveVO2max,@JsonKey(fromJson: _parseDouble) double rawVO2max,@JsonKey(fromJson: _parseDouble) double vdotCorrectionFactor,@JsonKey(fromJson: _parseDouble) double marathonShape,@JsonKey(fromJson: _parseDoubleNullable) double? currentVdot,@JsonKey(fromJson: _parseDouble) double ctl,@JsonKey(fromJson: _parseDouble) double atl,@JsonKey(fromJson: _parseDouble) double tsb,@JsonKey(fromJson: _parseDouble) double workloadRatio,@JsonKey(fromJson: _parseDouble) double easyTrimp, int hrMax
+@JsonKey(fromJson: _parseDouble) double currentWeekMileage,@JsonKey(fromJson: _parseDouble) double effectiveVO2max,@JsonKey(fromJson: _parseDouble) double rawVO2max,@JsonKey(fromJson: _parseDouble) double vdotCorrectionFactor,@JsonKey(fromJson: _parseDouble) double marathonShape,@JsonKey(fromJson: _parseDoubleNullable) double? currentVdot,@JsonKey(fromJson: _parseDouble) double ctl,@JsonKey(fromJson: _parseDouble) double atl,@JsonKey(fromJson: _parseDouble) double tsb,@JsonKey(fromJson: _parseDouble) double workloadRatio,@JsonKey(fromJson: _parseDouble) double easyTrimp,@JsonKey(fromJson: _parseIntSafe) int hrMax
 });
 
 
@@ -161,7 +161,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _parseDouble)  double currentWeekMileage, @JsonKey(fromJson: _parseDouble)  double effectiveVO2max, @JsonKey(fromJson: _parseDouble)  double rawVO2max, @JsonKey(fromJson: _parseDouble)  double vdotCorrectionFactor, @JsonKey(fromJson: _parseDouble)  double marathonShape, @JsonKey(fromJson: _parseDoubleNullable)  double? currentVdot, @JsonKey(fromJson: _parseDouble)  double ctl, @JsonKey(fromJson: _parseDouble)  double atl, @JsonKey(fromJson: _parseDouble)  double tsb, @JsonKey(fromJson: _parseDouble)  double workloadRatio, @JsonKey(fromJson: _parseDouble)  double easyTrimp,  int hrMax)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _parseDouble)  double currentWeekMileage, @JsonKey(fromJson: _parseDouble)  double effectiveVO2max, @JsonKey(fromJson: _parseDouble)  double rawVO2max, @JsonKey(fromJson: _parseDouble)  double vdotCorrectionFactor, @JsonKey(fromJson: _parseDouble)  double marathonShape, @JsonKey(fromJson: _parseDoubleNullable)  double? currentVdot, @JsonKey(fromJson: _parseDouble)  double ctl, @JsonKey(fromJson: _parseDouble)  double atl, @JsonKey(fromJson: _parseDouble)  double tsb, @JsonKey(fromJson: _parseDouble)  double workloadRatio, @JsonKey(fromJson: _parseDouble)  double easyTrimp, @JsonKey(fromJson: _parseIntSafe)  int hrMax)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AnalyticsStats() when $default != null:
 return $default(_that.currentWeekMileage,_that.effectiveVO2max,_that.rawVO2max,_that.vdotCorrectionFactor,_that.marathonShape,_that.currentVdot,_that.ctl,_that.atl,_that.tsb,_that.workloadRatio,_that.easyTrimp,_that.hrMax);case _:
@@ -182,7 +182,7 @@ return $default(_that.currentWeekMileage,_that.effectiveVO2max,_that.rawVO2max,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _parseDouble)  double currentWeekMileage, @JsonKey(fromJson: _parseDouble)  double effectiveVO2max, @JsonKey(fromJson: _parseDouble)  double rawVO2max, @JsonKey(fromJson: _parseDouble)  double vdotCorrectionFactor, @JsonKey(fromJson: _parseDouble)  double marathonShape, @JsonKey(fromJson: _parseDoubleNullable)  double? currentVdot, @JsonKey(fromJson: _parseDouble)  double ctl, @JsonKey(fromJson: _parseDouble)  double atl, @JsonKey(fromJson: _parseDouble)  double tsb, @JsonKey(fromJson: _parseDouble)  double workloadRatio, @JsonKey(fromJson: _parseDouble)  double easyTrimp,  int hrMax)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(fromJson: _parseDouble)  double currentWeekMileage, @JsonKey(fromJson: _parseDouble)  double effectiveVO2max, @JsonKey(fromJson: _parseDouble)  double rawVO2max, @JsonKey(fromJson: _parseDouble)  double vdotCorrectionFactor, @JsonKey(fromJson: _parseDouble)  double marathonShape, @JsonKey(fromJson: _parseDoubleNullable)  double? currentVdot, @JsonKey(fromJson: _parseDouble)  double ctl, @JsonKey(fromJson: _parseDouble)  double atl, @JsonKey(fromJson: _parseDouble)  double tsb, @JsonKey(fromJson: _parseDouble)  double workloadRatio, @JsonKey(fromJson: _parseDouble)  double easyTrimp, @JsonKey(fromJson: _parseIntSafe)  int hrMax)  $default,) {final _that = this;
 switch (_that) {
 case _AnalyticsStats():
 return $default(_that.currentWeekMileage,_that.effectiveVO2max,_that.rawVO2max,_that.vdotCorrectionFactor,_that.marathonShape,_that.currentVdot,_that.ctl,_that.atl,_that.tsb,_that.workloadRatio,_that.easyTrimp,_that.hrMax);}
@@ -199,7 +199,7 @@ return $default(_that.currentWeekMileage,_that.effectiveVO2max,_that.rawVO2max,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _parseDouble)  double currentWeekMileage, @JsonKey(fromJson: _parseDouble)  double effectiveVO2max, @JsonKey(fromJson: _parseDouble)  double rawVO2max, @JsonKey(fromJson: _parseDouble)  double vdotCorrectionFactor, @JsonKey(fromJson: _parseDouble)  double marathonShape, @JsonKey(fromJson: _parseDoubleNullable)  double? currentVdot, @JsonKey(fromJson: _parseDouble)  double ctl, @JsonKey(fromJson: _parseDouble)  double atl, @JsonKey(fromJson: _parseDouble)  double tsb, @JsonKey(fromJson: _parseDouble)  double workloadRatio, @JsonKey(fromJson: _parseDouble)  double easyTrimp,  int hrMax)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(fromJson: _parseDouble)  double currentWeekMileage, @JsonKey(fromJson: _parseDouble)  double effectiveVO2max, @JsonKey(fromJson: _parseDouble)  double rawVO2max, @JsonKey(fromJson: _parseDouble)  double vdotCorrectionFactor, @JsonKey(fromJson: _parseDouble)  double marathonShape, @JsonKey(fromJson: _parseDoubleNullable)  double? currentVdot, @JsonKey(fromJson: _parseDouble)  double ctl, @JsonKey(fromJson: _parseDouble)  double atl, @JsonKey(fromJson: _parseDouble)  double tsb, @JsonKey(fromJson: _parseDouble)  double workloadRatio, @JsonKey(fromJson: _parseDouble)  double easyTrimp, @JsonKey(fromJson: _parseIntSafe)  int hrMax)?  $default,) {final _that = this;
 switch (_that) {
 case _AnalyticsStats() when $default != null:
 return $default(_that.currentWeekMileage,_that.effectiveVO2max,_that.rawVO2max,_that.vdotCorrectionFactor,_that.marathonShape,_that.currentVdot,_that.ctl,_that.atl,_that.tsb,_that.workloadRatio,_that.easyTrimp,_that.hrMax);case _:
@@ -214,7 +214,7 @@ return $default(_that.currentWeekMileage,_that.effectiveVO2max,_that.rawVO2max,_
 @JsonSerializable()
 
 class _AnalyticsStats extends AnalyticsStats {
-  const _AnalyticsStats({@JsonKey(fromJson: _parseDouble) required this.currentWeekMileage, @JsonKey(fromJson: _parseDouble) required this.effectiveVO2max, @JsonKey(fromJson: _parseDouble) required this.rawVO2max, @JsonKey(fromJson: _parseDouble) required this.vdotCorrectionFactor, @JsonKey(fromJson: _parseDouble) required this.marathonShape, @JsonKey(fromJson: _parseDoubleNullable) required this.currentVdot, @JsonKey(fromJson: _parseDouble) required this.ctl, @JsonKey(fromJson: _parseDouble) required this.atl, @JsonKey(fromJson: _parseDouble) required this.tsb, @JsonKey(fromJson: _parseDouble) required this.workloadRatio, @JsonKey(fromJson: _parseDouble) required this.easyTrimp, required this.hrMax}): super._();
+  const _AnalyticsStats({@JsonKey(fromJson: _parseDouble) required this.currentWeekMileage, @JsonKey(fromJson: _parseDouble) required this.effectiveVO2max, @JsonKey(fromJson: _parseDouble) required this.rawVO2max, @JsonKey(fromJson: _parseDouble) required this.vdotCorrectionFactor, @JsonKey(fromJson: _parseDouble) required this.marathonShape, @JsonKey(fromJson: _parseDoubleNullable) required this.currentVdot, @JsonKey(fromJson: _parseDouble) required this.ctl, @JsonKey(fromJson: _parseDouble) required this.atl, @JsonKey(fromJson: _parseDouble) required this.tsb, @JsonKey(fromJson: _parseDouble) required this.workloadRatio, @JsonKey(fromJson: _parseDouble) required this.easyTrimp, @JsonKey(fromJson: _parseIntSafe) this.hrMax = 0}): super._();
   factory _AnalyticsStats.fromJson(Map<String, dynamic> json) => _$AnalyticsStatsFromJson(json);
 
 @override@JsonKey(fromJson: _parseDouble) final  double currentWeekMileage;
@@ -228,7 +228,7 @@ class _AnalyticsStats extends AnalyticsStats {
 @override@JsonKey(fromJson: _parseDouble) final  double tsb;
 @override@JsonKey(fromJson: _parseDouble) final  double workloadRatio;
 @override@JsonKey(fromJson: _parseDouble) final  double easyTrimp;
-@override final  int hrMax;
+@override@JsonKey(fromJson: _parseIntSafe) final  int hrMax;
 
 /// Create a copy of AnalyticsStats
 /// with the given fields replaced by the non-null parameter values.
@@ -263,7 +263,7 @@ abstract mixin class _$AnalyticsStatsCopyWith<$Res> implements $AnalyticsStatsCo
   factory _$AnalyticsStatsCopyWith(_AnalyticsStats value, $Res Function(_AnalyticsStats) _then) = __$AnalyticsStatsCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(fromJson: _parseDouble) double currentWeekMileage,@JsonKey(fromJson: _parseDouble) double effectiveVO2max,@JsonKey(fromJson: _parseDouble) double rawVO2max,@JsonKey(fromJson: _parseDouble) double vdotCorrectionFactor,@JsonKey(fromJson: _parseDouble) double marathonShape,@JsonKey(fromJson: _parseDoubleNullable) double? currentVdot,@JsonKey(fromJson: _parseDouble) double ctl,@JsonKey(fromJson: _parseDouble) double atl,@JsonKey(fromJson: _parseDouble) double tsb,@JsonKey(fromJson: _parseDouble) double workloadRatio,@JsonKey(fromJson: _parseDouble) double easyTrimp, int hrMax
+@JsonKey(fromJson: _parseDouble) double currentWeekMileage,@JsonKey(fromJson: _parseDouble) double effectiveVO2max,@JsonKey(fromJson: _parseDouble) double rawVO2max,@JsonKey(fromJson: _parseDouble) double vdotCorrectionFactor,@JsonKey(fromJson: _parseDouble) double marathonShape,@JsonKey(fromJson: _parseDoubleNullable) double? currentVdot,@JsonKey(fromJson: _parseDouble) double ctl,@JsonKey(fromJson: _parseDouble) double atl,@JsonKey(fromJson: _parseDouble) double tsb,@JsonKey(fromJson: _parseDouble) double workloadRatio,@JsonKey(fromJson: _parseDouble) double easyTrimp,@JsonKey(fromJson: _parseIntSafe) int hrMax
 });
 
 
@@ -1363,18 +1363,18 @@ return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_tha
 @JsonSerializable()
 
 class _Workout extends Workout {
-  const _Workout({required this.id, required this.goalId, required this.scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) required this.workoutType, required this.description, required this.targetDistance, required this.targetPace, required this.targetDuration, required this.isCompleted, required this.completedAt, required this.activityId}): super._();
+  const _Workout({required this.id, required this.goalId, required this.scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) required this.workoutType, this.description = '', this.targetDistance = 0.0, this.targetPace = 0.0, this.targetDuration = 0, this.isCompleted = false, required this.completedAt, required this.activityId}): super._();
   factory _Workout.fromJson(Map<String, dynamic> json) => _$WorkoutFromJson(json);
 
 @override final  String id;
 @override final  String goalId;
 @override final  DateTime scheduledDate;
 @override@JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) final  WorkoutType workoutType;
-@override final  String description;
-@override final  double targetDistance;
-@override final  double targetPace;
-@override final  int targetDuration;
-@override final  bool isCompleted;
+@override@JsonKey() final  String description;
+@override@JsonKey() final  double targetDistance;
+@override@JsonKey() final  double targetPace;
+@override@JsonKey() final  int targetDuration;
+@override@JsonKey() final  bool isCompleted;
 @override final  DateTime? completedAt;
 @override final  String? activityId;
 
@@ -1657,23 +1657,23 @@ return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_
 @JsonSerializable()
 
 class _Goal extends Goal {
-  const _Goal({required this.id, required this.userId, required this.name, required this.raceType, required this.raceDate, required this.targetTime, required this.weeklyMileageGoal, required this.planWeeks, required this.runsPerWeek, required this.longRunDay, required this.workoutDay, required this.currentVdot, required this.predictedTime, required this.isActive, required this.createdAt, required this.updatedAt, required this.completedAt, final  List<Workout> workouts = const []}): _workouts = workouts,super._();
+  const _Goal({required this.id, this.userId = '', required this.name, required this.raceType, required this.raceDate, required this.targetTime, required this.weeklyMileageGoal, this.planWeeks = 12, this.runsPerWeek = 4, this.longRunDay = 0, this.workoutDay = 3, required this.currentVdot, required this.predictedTime, this.isActive = true, required this.createdAt, required this.updatedAt, required this.completedAt, final  List<Workout> workouts = const []}): _workouts = workouts,super._();
   factory _Goal.fromJson(Map<String, dynamic> json) => _$GoalFromJson(json);
 
 @override final  String id;
-@override final  String userId;
+@override@JsonKey() final  String userId;
 @override final  String name;
 @override final  RaceType raceType;
 @override final  DateTime raceDate;
 @override final  int? targetTime;
 @override final  double? weeklyMileageGoal;
-@override final  int planWeeks;
-@override final  int runsPerWeek;
-@override final  int longRunDay;
-@override final  int workoutDay;
+@override@JsonKey() final  int planWeeks;
+@override@JsonKey() final  int runsPerWeek;
+@override@JsonKey() final  int longRunDay;
+@override@JsonKey() final  int workoutDay;
 @override final  double? currentVdot;
 @override final  int? predictedTime;
-@override final  bool isActive;
+@override@JsonKey() final  bool isActive;
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
 @override final  DateTime? completedAt;

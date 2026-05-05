@@ -1,22 +1,23 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// This file was manually created to match Riverpod codegen patterns.
-// Run `dart run build_runner build --delete-conflicting-outputs` to regenerate properly.
 
 part of 'health_sync_providers.dart';
 
-String _$healthSyncStateHash() => r'manually_added_health_sync_state';
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
 @ProviderFor(HealthSyncState)
 final healthSyncStateProvider = HealthSyncStateProvider._();
 
-typedef HealthSyncStateValue = ({
-  bool isSyncing,
-  DateTime? lastSyncTime,
-  String? error
-});
-
 final class HealthSyncStateProvider
-    extends $NotifierProvider<HealthSyncState, HealthSyncStateValue> {
+    extends
+        $NotifierProvider<
+          HealthSyncState,
+          ({String? error, bool isSyncing, DateTime? lastSyncTime})
+        > {
   HealthSyncStateProvider._()
     : super(
         from: null,
@@ -35,25 +36,43 @@ final class HealthSyncStateProvider
   @override
   HealthSyncState create() => HealthSyncState();
 
-  Override overrideWithValue(HealthSyncStateValue value) {
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(
+    ({String? error, bool isSyncing, DateTime? lastSyncTime}) value,
+  ) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<HealthSyncStateValue>(value),
+      providerOverride:
+          $SyncValueProvider<
+            ({String? error, bool isSyncing, DateTime? lastSyncTime})
+          >(value),
     );
   }
 }
 
-abstract class _$HealthSyncState extends $Notifier<HealthSyncStateValue> {
-  HealthSyncStateValue build();
+String _$healthSyncStateHash() => r'e03be9c6468f06437cf9dce71916a187bf68cac2';
+
+abstract class _$HealthSyncState
+    extends
+        $Notifier<({String? error, bool isSyncing, DateTime? lastSyncTime})> {
+  ({String? error, bool isSyncing, DateTime? lastSyncTime}) build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<HealthSyncStateValue, HealthSyncStateValue>;
+    final ref =
+        this.ref
+            as $Ref<
+              ({String? error, bool isSyncing, DateTime? lastSyncTime}),
+              ({String? error, bool isSyncing, DateTime? lastSyncTime})
+            >;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<HealthSyncStateValue, HealthSyncStateValue>,
-              HealthSyncStateValue,
+              AnyNotifier<
+                ({String? error, bool isSyncing, DateTime? lastSyncTime}),
+                ({String? error, bool isSyncing, DateTime? lastSyncTime})
+              >,
+              ({String? error, bool isSyncing, DateTime? lastSyncTime}),
               Object?,
               Object?
             >;

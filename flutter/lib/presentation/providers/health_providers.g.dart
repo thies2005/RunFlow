@@ -400,7 +400,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'dba4d29f94b8ff9914d87f4927f775b600281b92';
+String _$supplementListHash() => r'7e8fbcc14cb1ce3c4d0c7e32cdfd57fbaf9c967a';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();
@@ -886,7 +886,7 @@ final class StackRenameMapProvider
   }
 }
 
-String _$stackRenameMapHash() => r'manually_added_stack_rename_map';
+String _$stackRenameMapHash() => r'1b7107f04c2a1f4e1be35f72d75cd918191c6673';
 
 abstract class _$StackRenameMap extends $Notifier<Map<String, String>> {
   Map<String, String> build();

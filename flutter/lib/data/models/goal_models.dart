@@ -7,7 +7,7 @@ part 'goal_models.g.dart';
 @Freezed(copyWith: true)
 sealed class GoalsResponse with _$GoalsResponse {
   const factory GoalsResponse({
-    required List<Goal> goals,
+    @Default([]) List<Goal> goals,
   }) = _GoalsResponse;
   const GoalsResponse._();
 
@@ -18,7 +18,7 @@ sealed class GoalsResponse with _$GoalsResponse {
 @Freezed(copyWith: true)
 sealed class WorkoutsResponse with _$WorkoutsResponse {
   const factory WorkoutsResponse({
-    required List<Workout> workouts,
+    @Default([]) List<Workout> workouts,
   }) = _WorkoutsResponse;
   const WorkoutsResponse._();
 

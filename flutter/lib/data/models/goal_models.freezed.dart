@@ -203,11 +203,11 @@ return $default(_that.goals);case _:
 @JsonSerializable()
 
 class _GoalsResponse extends GoalsResponse {
-  const _GoalsResponse({required final  List<Goal> goals}): _goals = goals,super._();
+  const _GoalsResponse({final  List<Goal> goals = const []}): _goals = goals,super._();
   factory _GoalsResponse.fromJson(Map<String, dynamic> json) => _$GoalsResponseFromJson(json);
 
  final  List<Goal> _goals;
-@override List<Goal> get goals {
+@override@JsonKey() List<Goal> get goals {
   if (_goals is EqualUnmodifiableListView) return _goals;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_goals);
@@ -466,11 +466,11 @@ return $default(_that.workouts);case _:
 @JsonSerializable()
 
 class _WorkoutsResponse extends WorkoutsResponse {
-  const _WorkoutsResponse({required final  List<Workout> workouts}): _workouts = workouts,super._();
+  const _WorkoutsResponse({final  List<Workout> workouts = const []}): _workouts = workouts,super._();
   factory _WorkoutsResponse.fromJson(Map<String, dynamic> json) => _$WorkoutsResponseFromJson(json);
 
  final  List<Workout> _workouts;
-@override List<Workout> get workouts {
+@override@JsonKey() List<Workout> get workouts {
   if (_workouts is EqualUnmodifiableListView) return _workouts;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_workouts);

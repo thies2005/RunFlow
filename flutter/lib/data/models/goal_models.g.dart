@@ -8,9 +8,11 @@ part of 'goal_models.dart';
 
 _GoalsResponse _$GoalsResponseFromJson(Map<String, dynamic> json) =>
     _GoalsResponse(
-      goals: (json['goals'] as List<dynamic>)
-          .map((e) => Goal.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      goals:
+          (json['goals'] as List<dynamic>?)
+              ?.map((e) => Goal.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$GoalsResponseToJson(_GoalsResponse instance) =>
@@ -18,9 +20,11 @@ Map<String, dynamic> _$GoalsResponseToJson(_GoalsResponse instance) =>
 
 _WorkoutsResponse _$WorkoutsResponseFromJson(Map<String, dynamic> json) =>
     _WorkoutsResponse(
-      workouts: (json['workouts'] as List<dynamic>)
-          .map((e) => Workout.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      workouts:
+          (json['workouts'] as List<dynamic>?)
+              ?.map((e) => Workout.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$WorkoutsResponseToJson(_WorkoutsResponse instance) =>

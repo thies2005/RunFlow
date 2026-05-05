@@ -94,7 +94,7 @@ final class AnalyticsStatsProvider
   }
 }
 
-String _$analyticsStatsHash() => r'750b829f261f0389ebf86b64a75fe3aaa26c0be5';
+String _$analyticsStatsHash() => r'ae603bae173c1b509c2ad3deb49463b4d1d023cc';
 
 @ProviderFor(analyticsHistory)
 final analyticsHistoryProvider = AnalyticsHistoryFamily._();
@@ -264,4 +264,4 @@ final class RacePredictionsProvider
   }
 }
 
-String _$racePredictionsHash() => r'5ffaea24a78f3fa5b8c3e2a517350786b5a2ffe0';
+String _$racePredictionsHash() => r'f4551a668caa85de81fb7226f5944af65dbc18cb';

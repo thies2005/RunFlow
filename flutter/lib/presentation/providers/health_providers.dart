@@ -133,9 +133,35 @@ class SupplementList extends _$SupplementList {
   }
 
   Future<void> takeAll(List<int> ids) async {
+    final apiRepo = ref.read(healthApiRepositoryProvider);
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+
+    Set<String> alreadyTaken = {};
+    try {
+      final daily = await ref.read(dailyHealthProvider(today).future);
+      alreadyTaken = daily.supplementLogs
+          .where((log) => log.taken)
+          .map((log) => log.supplementId)
+          .toSet();
+    } catch (_) {}
+
     for (final id in ids) {
-      await toggle(id);
+      try {
+        final supplement =
+            state.value?.where((s) => s.id == id).firstOrNull;
+        if (supplement == null) continue;
+        final supplementId = supplement.serverId ?? id.toString();
+        if (alreadyTaken.contains(supplementId)) continue;
+        await apiRepo.toggleSupplementLog(supplementId, today, true);
+        alreadyTaken.add(supplementId);
+      } catch (e) {
+        logger.error('[SupplementList] Take all toggle failed for id $id: $e');
+      }
     }
+
+    ref.invalidate(dailyHealthProvider(today));
+    ref.invalidate(takenSupplementIdsProvider);
+    ref.invalidate(supplementAnalyticsProvider);
   }
 }
 

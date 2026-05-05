@@ -639,7 +639,7 @@ class _MarathonShapeSection extends ConsumerWidget {
             historyAsync.when(
               data: (history) {
                 if (history.isEmpty) {
-                  return _buildEmptyChart(theme);
+                  return _buildEmptyChart(context, theme);
                 }
                 return _buildShapeChart(context, theme, history, shape);
               },
@@ -647,7 +647,7 @@ class _MarathonShapeSection extends ConsumerWidget {
                 height: 200,
                 child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
               ),
-              error: (_, _) => _buildEmptyChart(theme),
+              error: (_, _) => _buildEmptyChart(context, theme),
             ),
           ],
         ),
@@ -655,7 +655,7 @@ class _MarathonShapeSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyChart(ThemeData theme) {
+  Widget _buildEmptyChart(BuildContext context, ThemeData theme) {
     return SizedBox(
       height: 200,
       child: Center(

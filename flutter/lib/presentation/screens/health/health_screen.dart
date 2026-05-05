@@ -242,10 +242,10 @@ class _SyncBanner extends ConsumerWidget {
     final syncState = ref.watch(healthSyncStateProvider);
 
     String statusText;
-    Widget? trailing;
+    Widget trailing;
     if (syncState.isSyncing) {
       statusText = S.of(context).healthSyncedWithHealthConnect;
-      trailing = SizedBox(
+      trailing = const SizedBox(
         width: 16,
         height: 16,
         child: CircularProgressIndicator(
@@ -258,7 +258,7 @@ class _SyncBanner extends ConsumerWidget {
       trailing = Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline, size: 14, color: AppColors.error),
+          const Icon(Icons.error_outline, size: 14, color: AppColors.error),
           const SizedBox(width: 6),
           GestureDetector(
             onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
@@ -312,7 +312,7 @@ class _SyncBanner extends ConsumerWidget {
       child: Row(
         children: [
           syncState.isSyncing
-              ? SizedBox(
+              ? const SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
@@ -330,7 +330,7 @@ class _SyncBanner extends ConsumerWidget {
               ),
             ),
           ),
-          if (trailing != null) trailing,
+          trailing,
         ],
       ),
     );

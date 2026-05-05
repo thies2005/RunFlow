@@ -80,13 +80,48 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
       final response = await dio.post(
         ApiConstants.nutritionAiScanPath,
         data: formData,
-        options: Options(contentType: 'multipart/form-data'),
+        options: Options(
+          contentType: 'multipart/form-data',
+          receiveTimeout: const Duration(seconds: 60),
+          sendTimeout: const Duration(seconds: 30),
+        ),
       );
       final data = response.data;
       if (data == null) return null;
       if (data is Map<String, dynamic>) {
-        final foodData = data['food'] as Map<String, dynamic>? ?? data;
-        return FoodItem.fromJson(foodData).toDomain();
+        // The AI scan endpoint returns a different format than FoodItem:
+        // { mealName, items, totalCalories, totalProtein, totalCarbs, totalFats, ... }
+        // We need to map it to a FoodItem manually.
+        if (data.containsKey('food')) {
+          final foodData = data['food'] as Map<String, dynamic>;
+          return FoodItem.fromJson(foodData).toDomain();
+        }
+        // Handle AI scan response format
+        final name = data['mealName'] as String? ?? 'Scanned Food';
+        final totalCalories = (data['totalCalories'] as num?)?.toDouble() ?? 0;
+        final totalProtein = (data['totalProtein'] as num?)?.toDouble() ?? 0;
+        final totalCarbs = (data['totalCarbs'] as num?)?.toDouble() ?? 0;
+        final totalFats = (data['totalFats'] as num?)?.toDouble() ?? 0;
+        // Estimate serving size from total grams of items
+        double servingGrams = 0;
+        if (data['items'] is List) {
+          for (final item in data['items'] as List) {
+            if (item is Map<String, dynamic>) {
+              servingGrams += (item['estimatedGrams'] as num?)?.toDouble() ?? 0;
+            }
+          }
+        }
+        if (servingGrams <= 0) servingGrams = 100;
+
+        return domain.FoodItem(
+          id: 0,
+          name: name,
+          calories: totalCalories,
+          protein: totalProtein,
+          carbs: totalCarbs,
+          fat: totalFats,
+          servingSize: servingGrams,
+        );
       }
       return null;
     } on DioException catch (e) {

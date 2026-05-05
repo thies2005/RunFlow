@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -94,6 +95,21 @@ class _FakeHealthConnectService implements HealthConnectService {
 
 void main() {
   group('HealthScreen', () {
+    setUpAll(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      // Mock SharedPreferences for _FastingCard
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/shared_preferences'),
+        (MethodCall methodCall) async {
+          if (methodCall.method == 'getAll') {
+            return <String, Object>{};
+          }
+          return null;
+        },
+      );
+    });
+
     List<Object> defaultOverrides() {
       return [
           // ignore: deprecated_member_use
@@ -231,7 +247,8 @@ void main() {
       await pumpHealth(tester);
 
       expect(find.text('Fasting'), findsOneWidget);
-      expect(find.text('Not fasting'), findsOneWidget);
+      expect(find.text('16:8'), findsOneWidget);
+      expect(find.text('Eating window'), findsOneWidget);
     });
 
     testWidgets('renders Quick Actions section', (WidgetTester tester) async {
@@ -251,6 +268,10 @@ void main() {
         ),
       );
       await pumpHealth(tester);
+
+      // Scroll down to reveal Quick Actions below the dashboard cards
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('Quick Actions'), findsOneWidget);
       expect(find.text('Scan Food'), findsOneWidget);

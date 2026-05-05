@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -134,6 +135,20 @@ Widget buildTestWidget({double water = 1.0}) {
 
 void main() {
   group('Water Tracking', () {
+    setUpAll(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
+      // Mock SharedPreferences for _FastingCard
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/shared_preferences'),
+        (MethodCall methodCall) async {
+          if (methodCall.method == 'getAll') {
+            return <String, Object>{};
+          }
+          return null;
+        },
+      );
+    });
     Future<void> pumpHealth(WidgetTester tester) async {
       for (var i = 0; i < 8; i++) {
         await tester.pump(const Duration(milliseconds: 250));
@@ -208,6 +223,10 @@ void main() {
         (WidgetTester tester) async {
       await tester.pumpWidget(buildTestWidget());
       await pumpHealth(tester);
+
+      // Scroll down to reveal Quick Actions below the dashboard cards
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('Scan Food'), findsOneWidget);
       expect(find.text('Log Food'), findsOneWidget);

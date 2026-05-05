@@ -292,17 +292,11 @@ final class DailyHealthFamily extends $Family
   String toString() => r'dailyHealthProvider';
 }
 
-@ProviderFor(takenSupplementIds)
+@ProviderFor(TakenSupplementIds)
 final takenSupplementIdsProvider = TakenSupplementIdsProvider._();
 
 final class TakenSupplementIdsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<Set<String>>,
-          Set<String>,
-          FutureOr<Set<String>>
-        >
-    with $FutureModifier<Set<String>>, $FutureProvider<Set<String>> {
+    extends $AsyncNotifierProvider<TakenSupplementIds, Set<String>> {
   TakenSupplementIdsProvider._()
     : super(
         from: null,
@@ -319,18 +313,29 @@ final class TakenSupplementIdsProvider
 
   @$internal
   @override
-  $FutureProviderElement<Set<String>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<Set<String>> create(Ref ref) {
-    return takenSupplementIds(ref);
-  }
+  TakenSupplementIds create() => TakenSupplementIds();
 }
 
 String _$takenSupplementIdsHash() =>
-    r'0d43d53a82eb7e2ac2c782c8a8959c9cff463275';
+    r'97c81f49e050dc785cc29d56cc0a6f91e820c67d';
+
+abstract class _$TakenSupplementIds extends $AsyncNotifier<Set<String>> {
+  FutureOr<Set<String>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<Set<String>>, Set<String>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<Set<String>>, Set<String>>,
+              AsyncValue<Set<String>>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
 
 @ProviderFor(Fasting)
 final fastingProvider = FastingProvider._();
@@ -400,7 +405,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'7e8fbcc14cb1ce3c4d0c7e32cdfd57fbaf9c967a';
+String _$supplementListHash() => r'167e9ab9800478d2d6b82f546ac1e740eb1b1f97';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();

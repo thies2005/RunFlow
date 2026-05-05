@@ -58,15 +58,32 @@ double estimateTime(double vdot, double distanceMeters) {
 }
 
 double _initialTimeEstimate(double vdot, double distanceMeters) {
-  final vo2 = vdot *
-      (0.8 +
-          0.1894393 * exp(-0.012778 * 30) +
-          0.2989558 * exp(-0.1932605 * 30));
+  // Use a distance-dependent typical race time to estimate %VO2max.
+  // Short races use higher %VO2max, marathons use lower.
+  // Approximate typical race times for initial guess:
+  // 5K ≈ 20min, 10K ≈ 42min, HM ≈ 95min, Marathon ≈ 200min
+  double typicalTime;
+  if (distanceMeters <= 5000) {
+    typicalTime = 20.0;
+  } else if (distanceMeters <= 10000) {
+    typicalTime = 42.0;
+  } else if (distanceMeters <= 21097.5) {
+    typicalTime = 95.0;
+  } else {
+    typicalTime = 200.0;
+  }
+
+  final pctVo2 = _pctVo2max(typicalTime);
+  final vo2 = vdot * pctVo2;
+
+  final discriminant = 0.182258 * 0.182258 - 4 * 0.000104 * (-4.60 - vo2);
+  if (discriminant < 0) return distanceMeters / 200; // fallback
 
   final velocity = (-0.182258 +
-          sqrt(0.182258 * 0.182258 - 4 * 0.000104 * (-4.60 - vo2))) /
+          sqrt(discriminant)) /
       (2 * 0.000104);
 
+  if (velocity <= 0) return distanceMeters / 200; // fallback
   return distanceMeters / velocity;
 }
 

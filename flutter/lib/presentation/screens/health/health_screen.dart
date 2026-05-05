@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
@@ -840,12 +841,49 @@ class _VitalsCard extends ConsumerWidget {
 
 // ─── Fasting Card ─────────────────────────────────────────────────────────────
 
-class _FastingCard extends ConsumerWidget {
+class _FastingCard extends ConsumerStatefulWidget {
   const _FastingCard();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FastingCard> createState() => _FastingCardState();
+}
+
+class _FastingCardState extends ConsumerState<_FastingCard> {
+  double _targetHours = 16.0;
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTargetHours();
+    // Refresh every minute to update the fasting status
+    _refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadTargetHours() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _targetHours = prefs.getDouble('fasting_target_hours') ?? 16.0;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final fastingAsync = ref.watch(fastingProvider);
+    final theme = Theme.of(context);
+    final eatingHours = (24 - _targetHours).toInt();
+    final fastingHoursInt = _targetHours.toInt();
+
     return _DashboardCard(
       title: S.of(context).healthFasting,
       icon: Icons.timer_outlined,
@@ -853,59 +891,83 @@ class _FastingCard extends ConsumerWidget {
       onTap: () => context.push('/health/fasting'),
       child: fastingAsync.when(
         data: (session) {
-          if (session == null) {
+          if (session != null) {
+            // Active fast
+            final elapsed = DateTime.now().difference(session.startTime);
+            final h = elapsed.inHours;
+            final m = (elapsed.inMinutes % 60).toString().padLeft(2, '0');
+            final targetDuration = Duration(hours: _targetHours.toInt());
+            final remaining = targetDuration - elapsed;
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  S.of(context).healthNotFasting,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                  '${h}h ${m}m',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.fatigued,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Semantics(
-                  button: true,
-                  label: S.of(context).healthStartFast,
-                  child: GestureDetector(
-                    onTap: () => context.push('/health/fasting'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.fatigued.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        S.of(context).healthStartFast,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.fatigued,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                const SizedBox(height: 2),
+                if (remaining.isNegative)
+                  Text(
+                    '🎉 Goal reached!',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                else
+                  Text(
+                    '${remaining.inHours}h ${(remaining.inMinutes % 60).toString().padLeft(2, '0')}m to eat',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                ),
               ],
             );
           }
-          final elapsed = DateTime.now().difference(session.startTime);
-          final h = elapsed.inHours;
-          final m = (elapsed.inMinutes % 60).toString().padLeft(2, '0');
+
+          // Not fasting – show schedule info
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${h}h ${m}m',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                '$fastingHoursInt:$eatingHours',
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AppColors.fatigued,
                 ),
               ),
+              const SizedBox(height: 2),
               Text(
-                S.of(context).healthActiveFast,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                'Eating window',
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Semantics(
+                button: true,
+                label: S.of(context).healthStartFast,
+                child: GestureDetector(
+                  onTap: () => context.push('/health/fasting'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.fatigued.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      S.of(context).healthStartFast,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppColors.fatigued,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

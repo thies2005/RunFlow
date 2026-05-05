@@ -52,16 +52,34 @@ Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
 }
 
 @riverpod
-Future<Set<String>> takenSupplementIds(Ref ref) async {
-  final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-  try {
-    final daily = await ref.read(dailyHealthProvider(today).future);
-    return daily.supplementLogs
-        .where((log) => log.taken)
-        .map((log) => log.supplementId)
-        .toSet();
-  } catch (_) {
-    return {};
+class TakenSupplementIds extends _$TakenSupplementIds {
+  @override
+  Future<Set<String>> build() async {
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    try {
+      final daily = await ref.read(dailyHealthProvider(today).future);
+      return daily.supplementLogs
+          .where((log) => log.taken)
+          .map((log) => log.supplementId)
+          .toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  void optimisticAdd(String supplementId) {
+    final current = state.value ?? {};
+    state = AsyncValue.data({...current, supplementId});
+  }
+
+  void optimisticRemove(String supplementId) {
+    final current = state.value ?? {};
+    state = AsyncValue.data({...current}..remove(supplementId));
+  }
+
+  void optimisticAddAll(Iterable<String> supplementIds) {
+    final current = state.value ?? {};
+    state = AsyncValue.data({...current, ...supplementIds});
   }
 }
 
@@ -112,12 +130,23 @@ class SupplementList extends _$SupplementList {
           .where((log) => log.supplementId == supplementId)
           .firstOrNull;
       final currentlyTaken = existingLog?.taken ?? false;
+
+      // Optimistically update the taken IDs
+      final takenNotifier = ref.read(takenSupplementIdsProvider.notifier);
+      if (currentlyTaken) {
+        takenNotifier.optimisticRemove(supplementId);
+      } else {
+        takenNotifier.optimisticAdd(supplementId);
+      }
+
       await apiRepo.toggleSupplementLog(supplementId, today, !currentlyTaken);
       ref.invalidate(dailyHealthProvider(today));
       ref.invalidate(takenSupplementIdsProvider);
       ref.invalidate(supplementAnalyticsProvider);
     } catch (e) {
       logger.error('[SupplementList] Toggle supplement failed: $e');
+      // Revert optimistic update on failure
+      ref.invalidate(takenSupplementIdsProvider);
     }
   }
 
@@ -144,6 +173,16 @@ class SupplementList extends _$SupplementList {
           .map((log) => log.supplementId)
           .toSet();
     } catch (_) {}
+
+    // Optimistically update the taken IDs for all supplements being taken
+    final optimisticIds = <String>[];
+    for (final id in ids) {
+      final supplement = state.value?.where((s) => s.id == id).firstOrNull;
+      if (supplement == null) continue;
+      final supplementId = supplement.serverId ?? id.toString();
+      optimisticIds.add(supplementId);
+    }
+    ref.read(takenSupplementIdsProvider.notifier).optimisticAddAll(optimisticIds);
 
     for (final id in ids) {
       try {

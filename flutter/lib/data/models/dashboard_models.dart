@@ -13,6 +13,12 @@ double _parseDouble(dynamic value) {
     return double.tryParse(value) ?? 0.0;
   }
   if (value is Map) {
+    // Handle marathon shape object: { shape, mileageScore, ... }
+    if (value.containsKey('shape')) {
+      final shape = value['shape'];
+      if (shape is num) return shape.toDouble();
+      if (shape is String) return double.tryParse(shape) ?? 0.0;
+    }
     // Handle case where server returns a map with a value property
     final val = value['value'] ?? value['\$numberDouble'] ?? value.values.first;
     if (val is num) return val.toDouble();

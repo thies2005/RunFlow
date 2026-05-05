@@ -681,7 +681,21 @@ class _MarathonShapeSection extends ConsumerWidget {
 
     for (var i = 0; i < history.length; i++) {
       final ctl = history[i].metrics.ctl;
-      final estimatedShape = currentCtl > 0 ? (currentShape / currentCtl) * ctl : currentShape;
+      // Use a more realistic shape estimation: shape scales with CTL but with
+      // diminishing returns. If CTL is zero or very small, shape is minimal.
+      // The relationship is: estimatedShape = currentShape * (ctl / currentCtl)
+      // but dampened so it doesn't exceed 100 or produce huge values.
+      double estimatedShape;
+      if (currentCtl > 1 && ctl > 0) {
+        // Use ratio but cap it at 1.2x to prevent overshoot
+        final ratio = (ctl / currentCtl).clamp(0.0, 1.5);
+        estimatedShape = currentShape * ratio;
+      } else if (ctl > 0) {
+        // If currentCtl is near zero, estimate based on CTL alone
+        estimatedShape = (ctl / 80.0 * 100).clamp(0.0, 100.0);
+      } else {
+        estimatedShape = 0;
+      }
       shapeSpots.add(FlSpot(i.toDouble(), estimatedShape.clamp(0.0, 100.0)));
       final estimatedVo2 = ctl > 0 ? 30 + (ctl / 2) : stats.effectiveVO2max;
       vo2Spots.add(FlSpot(i.toDouble(), estimatedVo2));

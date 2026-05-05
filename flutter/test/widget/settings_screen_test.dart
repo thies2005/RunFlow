@@ -17,6 +17,7 @@ class _FakeSettingsNotifier extends Settings {
   final List<bool> setWorkoutRemindersCalls = [];
   final List<bool> setSupplementRemindersCalls = [];
   final List<bool> setChatNotificationsCalls = [];
+  final List<bool> setSyncNotificationsCalls = [];
 
   @override
   AppSettings get state => _state;
@@ -57,6 +58,12 @@ class _FakeSettingsNotifier extends Settings {
   Future<void> setChatNotifications(bool value) async {
     setChatNotificationsCalls.add(value);
     state = _state.copyWith(chatNotifications: value);
+  }
+
+  @override
+  Future<void> setSyncNotifications(bool value) async {
+    setSyncNotificationsCalls.add(value);
+    state = _state.copyWith(syncNotifications: value);
   }
 }
 

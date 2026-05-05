@@ -157,7 +157,7 @@ class NotificationServiceImpl implements NotificationService {
   Future<void> cancelNotification(int id) async {
     if (!_initialized) return;
     try {
-      await _plugin.cancel(id);
+      await _plugin.cancel(id: id);
     } catch (e) {
       logger.error('[NotificationServiceImpl] Cancel notification failed: $e');
     }

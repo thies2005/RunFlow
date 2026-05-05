@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -149,7 +151,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       );
                       if (time != null) {
-                        ref.read(settingsProvider.notifier).setWorkoutReminderTime(time.hour, time.minute);
+                        unawaited(ref.read(settingsProvider.notifier).setWorkoutReminderTime(time.hour, time.minute));
                       }
                     },
                   ),
@@ -190,7 +192,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       );
                       if (time != null) {
-                        ref.read(settingsProvider.notifier).setSupplementMorningTime(time.hour, time.minute);
+                        unawaited(ref.read(settingsProvider.notifier).setSupplementMorningTime(time.hour, time.minute));
                       }
                     },
                   ),
@@ -211,7 +213,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       );
                       if (time != null) {
-                        ref.read(settingsProvider.notifier).setSupplementAfternoonTime(time.hour, time.minute);
+                        unawaited(ref.read(settingsProvider.notifier).setSupplementAfternoonTime(time.hour, time.minute));
                       }
                     },
                   ),
@@ -232,7 +234,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       );
                       if (time != null) {
-                        ref.read(settingsProvider.notifier).setSupplementEveningTime(time.hour, time.minute);
+                        unawaited(ref.read(settingsProvider.notifier).setSupplementEveningTime(time.hour, time.minute));
                       }
                     },
                   ),
@@ -253,7 +255,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       );
                       if (time != null) {
-                        ref.read(settingsProvider.notifier).setSupplementNightTime(time.hour, time.minute);
+                        unawaited(ref.read(settingsProvider.notifier).setSupplementNightTime(time.hour, time.minute));
                       }
                     },
                   ),

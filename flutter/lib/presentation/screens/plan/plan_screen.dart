@@ -885,7 +885,7 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<WorkoutType>(
-              value: _selectedType,
+              initialValue: _selectedType,
               decoration: InputDecoration(labelText: S.of(context).planWorkoutType),
               items: WorkoutType.values.map((type) => DropdownMenuItem(
                 value: type,

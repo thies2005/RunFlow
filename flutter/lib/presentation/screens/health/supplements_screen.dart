@@ -381,7 +381,7 @@ class _NextStackCard extends StatelessWidget {
               shape: BoxShape.circle,
               color: AppColors.primary.withValues(alpha: 0.12),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.layers,
               color: AppColors.primary,
               size: 24,
@@ -521,7 +521,7 @@ class _StackCardState extends State<_StackCard> {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         minimumSize: Size.zero,
                       ),
-                      child: Text(
+                      child: const Text(
                         'Take All',
                         style: TextStyle(
                           color: AppColors.primary,

@@ -605,7 +605,7 @@ class _SupplementsCard extends ConsumerWidget {
       child: supplementsAsync.when(
         data: (supplements) {
           final active = supplements.where((s) => s.isActive).toList();
-          final takenIds = ref.watch(takenSupplementIdsProvider).valueOrNull ?? {};
+          final takenIds = ref.watch(takenSupplementIdsProvider).value ?? {};
           final taken = active.where((s) => takenIds.contains(s.serverId ?? s.id.toString())).length;
           final total = active.length;
           if (total == 0) {
@@ -973,7 +973,7 @@ class _QuickTakeCard extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.layers, color: AppColors.primary, size: 20),
+                      const Icon(Icons.layers, color: AppColors.primary, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -1030,7 +1030,7 @@ class _QuickTakeCard extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.medication, color: AppColors.primary, size: 20),
+                  const Icon(Icons.medication, color: AppColors.primary, size: 20),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(

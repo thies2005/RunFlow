@@ -91,6 +91,7 @@ class SupplementsScreen extends ConsumerWidget {
                         supplements: active,
                         takenIds: takenIds,
                         onToggle: (id) => ref.read(supplementListProvider.notifier).toggle(id),
+                        onTakeAll: (ids) => ref.read(supplementListProvider.notifier).takeAll(ids),
                       ),
                     if (inactive.isNotEmpty) ...[
                       const SizedBox(height: 8),
@@ -165,13 +166,14 @@ class SupplementsScreen extends ConsumerWidget {
               !takenIds.contains(s.serverId ?? s.id.toString()))
           .toList();
       if (stackUntaken.length > 1) {
+        final renameMap = ref.watch(stackRenameMapProvider);
         return _NextStackCard(
-          stackName: nextSupplement.stackId!,
+          stackName: renameMap[nextSupplement.stackId!] ?? nextSupplement.stackId!,
           supplements: stackUntaken,
           onTakeAll: () {
-            for (final s in stackUntaken) {
-              ref.read(supplementListProvider.notifier).toggle(s.id);
-            }
+            ref.read(supplementListProvider.notifier).takeAll(
+              stackUntaken.map((s) => s.id).toList(),
+            );
           },
         );
       }
@@ -428,7 +430,7 @@ class _NextStackCard extends StatelessWidget {
   }
 }
 
-class _StackCard extends StatefulWidget {
+class _StackCard extends ConsumerStatefulWidget {
   const _StackCard({
     required this.stackName,
     required this.supplements,
@@ -444,15 +446,49 @@ class _StackCard extends StatefulWidget {
   final void Function(List<Supplement>) onTakeAll;
 
   @override
-  State<_StackCard> createState() => _StackCardState();
+  ConsumerState<_StackCard> createState() => _StackCardState();
 }
 
-class _StackCardState extends State<_StackCard> {
+class _StackCardState extends ConsumerState<_StackCard> {
   bool _expanded = false;
+
+  void _showRenameDialog() {
+    final currentName = ref.read(stackRenameMapProvider)[widget.stackName] ?? widget.stackName;
+    final ctl = TextEditingController(text: currentName);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Rename Stack'),
+        content: TextField(
+          controller: ctl,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Stack name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final newName = ctl.text.trim();
+              if (newName.isNotEmpty) {
+                ref.read(stackRenameMapProvider.notifier).rename(widget.stackName, newName);
+              }
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final renameMap = ref.watch(stackRenameMapProvider);
+    final displayName = renameMap[widget.stackName] ?? widget.stackName;
     final takenCount = widget.supplements
         .where((s) => widget.takenIds.contains(s.serverId ?? s.id.toString()))
         .length;
@@ -501,7 +537,7 @@ class _StackCardState extends State<_StackCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.stackName,
+                          displayName,
                           style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 2),
@@ -510,6 +546,15 @@ class _StackCardState extends State<_StackCard> {
                           style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
                         ),
                       ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    onPressed: _showRenameDialog,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    style: IconButton.styleFrom(
+                      foregroundColor: AppColors.onSurfaceVariant,
                     ),
                   ),
                   if (!allTaken)
@@ -564,11 +609,13 @@ class _GroupedSupplementList extends StatelessWidget {
     required this.supplements,
     required this.takenIds,
     required this.onToggle,
+    required this.onTakeAll,
   });
 
   final List<Supplement> supplements;
   final Set<String> takenIds;
   final void Function(int id) onToggle;
+  final void Function(List<int> ids) onTakeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -607,9 +654,7 @@ class _GroupedSupplementList extends StatelessWidget {
             onToggle: onToggle,
             onTakeAll: (supps) {
               final untaken = supps.where((s) => !takenIds.contains(s.serverId ?? s.id.toString()));
-              for (final s in untaken) {
-                onToggle(s.id);
-              }
+              onTakeAll(untaken.map((s) => s.id).toList());
             },
           ),
         ],

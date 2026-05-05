@@ -173,7 +173,7 @@ class _ProfileMenuSection extends ConsumerWidget {
         _MenuTile(
           icon: Icons.directions_run_outlined,
           title: S.of(context).activitiesTitle,
-          onTap: () => context.go('/activities'),
+          onTap: () => context.push('/activities'),
         ),
         _MenuTile(
           icon: Icons.edit_outlined,

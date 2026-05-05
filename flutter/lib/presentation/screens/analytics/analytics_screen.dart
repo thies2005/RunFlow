@@ -576,15 +576,17 @@ class _PredictionRow extends StatelessWidget {
   }
 }
 
-class _MarathonShapeSection extends StatelessWidget {
+class _MarathonShapeSection extends ConsumerWidget {
   const _MarathonShapeSection({required this.stats});
 
   final AnalyticsStats stats;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final shape = stats.marathonShape;
+    final selectedDays = ref.watch(selectedDateRangeProvider);
+    final historyAsync = ref.watch(analyticsHistoryProvider(days: selectedDays));
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -596,7 +598,7 @@ class _MarathonShapeSection extends StatelessWidget {
             Row(
               children: [
                 Text(
-                   S.of(context).analyticsMarathonShape,
+                  S.of(context).analyticsMarathonShape,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -617,39 +619,200 @@ class _MarathonShapeSection extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: (shape / 100).clamp(0.0, 1.0),
-                minHeight: 24,
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                valueColor: AlwaysStoppedAnimation(
-                  shape >= 80 ? AppColors.success : shape >= 50 ? AppColors.primary : AppColors.warning,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                _shapeLegendItem(AppColors.primary, S.of(context).analyticsMarathonShape),
+                const SizedBox(width: 16),
+                _shapeLegendItem(const Color(0xFFF59E0B), 'VO2max'),
+                const SizedBox(width: 16),
                 Text(
                   '${shape.toStringAsFixed(0)}%',
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: shape >= 80 ? AppColors.success : shape >= 50 ? AppColors.primary : AppColors.warning,
                     fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  S.of(context).analyticsShapeScore,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            historyAsync.when(
+              data: (history) {
+                if (history.isEmpty) {
+                  return _buildEmptyChart(theme);
+                }
+                return _buildShapeChart(context, theme, history, shape);
+              },
+              loading: () => const SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              ),
+              error: (_, _) => _buildEmptyChart(theme),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildEmptyChart(ThemeData theme) {
+    return SizedBox(
+      height: 200,
+      child: Center(
+        child: Text(
+          S.of(context).analyticsNoHistory,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: AppColors.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShapeChart(BuildContext context, ThemeData theme, List<FitnessHistory> history, double currentShape) {
+    final shapeSpots = <FlSpot>[];
+    final vo2Spots = <FlSpot>[];
+    final currentCtl = stats.ctl;
+
+    for (var i = 0; i < history.length; i++) {
+      final ctl = history[i].metrics.ctl;
+      final estimatedShape = currentCtl > 0 ? (currentShape / currentCtl) * ctl : currentShape;
+      shapeSpots.add(FlSpot(i.toDouble(), estimatedShape.clamp(0.0, 100.0)));
+      final estimatedVo2 = ctl > 0 ? 30 + (ctl / 2) : stats.effectiveVO2max;
+      vo2Spots.add(FlSpot(i.toDouble(), estimatedVo2));
+    }
+
+    final allY = [...shapeSpots.map((e) => e.y), ...vo2Spots.map((e) => e.y)];
+    final minY = allY.reduce((a, b) => a < b ? a : b) - 5;
+    final maxY = allY.reduce((a, b) => a > b ? a : b) + 5;
+
+    return SizedBox(
+      height: 220,
+      child: LineChart(
+        LineChartData(
+          minY: minY,
+          maxY: maxY,
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipItems: (spots) {
+                return spots.map((spot) {
+                  final color = spot.barIndex == 0
+                      ? AppColors.primary
+                      : const Color(0xFFF59E0B);
+                  return LineTooltipItem(
+                    spot.y.toStringAsFixed(1),
+                    TextStyle(color: color, fontWeight: FontWeight.w600),
+                  );
+                }).toList();
+              },
+            ),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: AppColors.onSurfaceVariant.withValues(alpha: 0.1),
+              strokeWidth: 1,
+            ),
+          ),
+          titlesData: FlTitlesData(
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                getTitlesWidget: (value, meta) => Text(
+                  value.toStringAsFixed(0),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: (history.length / 5).ceilToDouble(),
+                getTitlesWidget: (value, meta) {
+                  final index = value.toInt();
+                  if (index < 0 || index >= history.length) {
+                    return const SizedBox.shrink();
+                  }
+                  final date = history[index].date;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      '${date.day}/${date.month}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          lineBarsData: [
+            LineChartBarData(
+              spots: shapeSpots,
+              isCurved: true,
+              preventCurveOverShooting: true,
+              color: AppColors.primary,
+              barWidth: 2,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                color: AppColors.primary.withValues(alpha: 0.08),
+              ),
+            ),
+            LineChartBarData(
+              spots: vo2Spots,
+              isCurved: true,
+              preventCurveOverShooting: true,
+              color: const Color(0xFFF59E0B),
+              barWidth: 2,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _shapeLegendItem(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 3,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: color,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }

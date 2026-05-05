@@ -238,8 +238,70 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
 class _SyncBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final syncService = ref.watch(healthSyncServiceProvider);
     final theme = Theme.of(context);
+    final syncState = ref.watch(healthSyncStateProvider);
+
+    String statusText;
+    Widget? trailing;
+    if (syncState.isSyncing) {
+      statusText = S.of(context).healthSyncedWithHealthConnect;
+      trailing = SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: AppColors.primary,
+        ),
+      );
+    } else if (syncState.error != null) {
+      statusText = S.of(context).healthSyncedWithHealthConnect;
+      trailing = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.error_outline, size: 14, color: AppColors.error),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
+            child: Text(
+              S.of(context).actionSyncNow,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      );
+    } else if (syncState.lastSyncTime != null) {
+      final diff = DateTime.now().difference(syncState.lastSyncTime!);
+      final mins = diff.inMinutes;
+      statusText = mins < 1
+          ? S.of(context).healthSyncedWithHealthConnect
+          : S.of(context).healthSyncedWithHealthConnect;
+      trailing = GestureDetector(
+        onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
+        child: Text(
+          S.of(context).actionSyncNow,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    } else {
+      statusText = S.of(context).healthSyncedWithHealthConnect;
+      trailing = GestureDetector(
+        onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
+        child: Text(
+          S.of(context).actionSyncNow,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -249,37 +311,26 @@ class _SyncBanner extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.sync, size: 16, color: AppColors.primary),
+          syncState.isSyncing
+              ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                )
+              : const Icon(Icons.sync, size: 16, color: AppColors.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              S.of(context).healthSyncedWithHealthConnect,
+              statusText,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
             ),
           ),
-          Semantics(
-            button: true,
-            label: S.of(context).actionSyncNow,
-            child: GestureDetector(
-              onTap: () async {
-                await syncService.syncHistoricalHealth();
-                final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-                ref.invalidate(nutritionProvider(today));
-                ref.invalidate(supplementListProvider);
-                ref.invalidate(bodyMeasurementsProvider);
-                ref.invalidate(fastingProvider);
-              },
-              child: Text(
-                S.of(context).actionSyncNow,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
+          if (trailing != null) trailing,
         ],
       ),
     );
@@ -569,13 +620,15 @@ class _BodyCard extends ConsumerWidget {
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
-              const SizedBox(height: 8),
-              Text(
-                '${latest.bodyFat.toStringAsFixed(1)}% body fat',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.peaked,
+              if (latest.bodyFat >= 0) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '${latest.bodyFat.toStringAsFixed(1)}% body fat',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.peaked,
+                  ),
                 ),
-              ),
+              ],
             ],
           );
         },
@@ -980,7 +1033,7 @@ class _QuickTakeCard extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              next.stackId!,
+                              ref.watch(stackRenameMapProvider)[next.stackId!] ?? next.stackId!,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -996,9 +1049,9 @@ class _QuickTakeCard extends ConsumerWidget {
                       ),
                       FilledButton(
                         onPressed: () {
-                          for (final s in stackUntaken) {
-                            ref.read(supplementListProvider.notifier).toggle(s.id);
-                          }
+                          ref.read(supplementListProvider.notifier).takeAll(
+                            stackUntaken.map((s) => s.id).toList(),
+                          );
                         },
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,

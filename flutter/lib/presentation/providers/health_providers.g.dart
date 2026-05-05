@@ -853,3 +853,55 @@ abstract class _$AiScan extends $Notifier<AsyncValue<FoodItem?>> {
     element.handleCreate(ref, build);
   }
 }
+
+@ProviderFor(StackRenameMap)
+final stackRenameMapProvider = StackRenameMapProvider._();
+
+final class StackRenameMapProvider
+    extends $NotifierProvider<StackRenameMap, Map<String, String>> {
+  StackRenameMapProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'stackRenameMapProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$stackRenameMapHash();
+
+  @$internal
+  @override
+  StackRenameMap create() => StackRenameMap();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<String, String> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<String, String>>(value),
+    );
+  }
+}
+
+String _$stackRenameMapHash() => r'manually_added_stack_rename_map';
+
+abstract class _$StackRenameMap extends $Notifier<Map<String, String>> {
+  Map<String, String> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<Map<String, String>, Map<String, String>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Map<String, String>, Map<String, String>>,
+              Map<String, String>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}

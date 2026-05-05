@@ -163,7 +163,7 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
         data: {
           'dateStr': dateStr,
           'weight': measurement.weight,
-          'bodyFat': measurement.bodyFat,
+          if (measurement.bodyFat >= 0) 'bodyFat': measurement.bodyFat,
           if (measurement.chest != null) 'chest': measurement.chest,
           if (measurement.waist != null) 'waist': measurement.waist,
           if (measurement.hips != null) 'hips': measurement.hips,

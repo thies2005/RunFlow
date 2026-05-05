@@ -35,7 +35,7 @@ class GoalListScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/goals/new'),
+        onPressed: () => context.push('/goals/new'),
         child: const Icon(Icons.add),
       ),
     );
@@ -111,7 +111,7 @@ class _GoalCard extends StatelessWidget {
           ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
           : null,
       child: InkWell(
-        onTap: () => context.go('/goals/${goal.id}'),
+        onTap: () => context.push('/goals/${goal.id}'),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),

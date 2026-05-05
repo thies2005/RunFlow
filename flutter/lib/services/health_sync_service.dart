@@ -77,6 +77,10 @@ class HealthSyncService {
   }
 
   Future<void> syncHistoricalHealth({int daysToSync = 7}) async {
+    final available = await _healthConnect.isAvailable();
+    if (!available) {
+      throw Exception('Health Connect not available');
+    }
     for (int i = 0; i < daysToSync; i++) {
       final date = DateTime.now().subtract(Duration(days: i));
       await syncDailyHealth(date);
@@ -95,7 +99,7 @@ class HealthSyncService {
           id: 0,
           weight: weight,
           date: DateTime.now(),
-          bodyFat: 0,
+          bodyFat: -1,
         ));
       }
     } catch (e) {

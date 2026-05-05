@@ -172,7 +172,7 @@ class HealthConnectServiceImpl implements HealthConnectService {
     try {
       await _ensureConfigured();
       final now = DateTime.now();
-      final start = now.subtract(const Duration(days: 30));
+      final start = now.subtract(const Duration(days: 180));
       final data = await _health.getHealthDataFromTypes(
         types: [HealthDataType.WEIGHT],
         startTime: start,

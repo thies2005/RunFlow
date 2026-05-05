@@ -7,6 +7,7 @@ import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
+import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 import 'package:runflow_flutter/presentation/widgets/race_countdown_card.dart';
@@ -55,12 +56,18 @@ class _DashboardContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final analyticsStats = ref.watch(analyticsStatsProvider).value;
+    final effectiveStats = data.stats.copyWith(
+      ctl: analyticsStats?.ctl ?? data.stats.ctl,
+      atl: analyticsStats?.atl ?? data.stats.atl,
+      tsb: analyticsStats?.tsb ?? data.stats.tsb,
+    );
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         const UnverifiedEmailBanner(),
-        _StatsCard(stats: data.stats, syncStatus: data.syncStatus),
+        _StatsCard(stats: effectiveStats, syncStatus: data.syncStatus),
         const SizedBox(height: 16),
         const RaceCountdownCard(),
         const SizedBox(height: 16),

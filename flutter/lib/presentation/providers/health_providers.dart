@@ -7,6 +7,7 @@ import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/data/repositories/health_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/health_repository.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 part 'health_providers.g.dart';
 
@@ -129,6 +130,12 @@ class SupplementList extends _$SupplementList {
       await repo.saveSupplement(supplement);
     }
     ref.invalidateSelf();
+  }
+
+  Future<void> takeAll(List<int> ids) async {
+    for (final id in ids) {
+      await toggle(id);
+    }
   }
 }
 
@@ -295,5 +302,48 @@ class AiScan extends _$AiScan {
 
   void reset() {
     state = const AsyncValue.data(null);
+  }
+}
+
+@Riverpod(keepAlive: true)
+class StackRenameMap extends _$StackRenameMap {
+  static const _key = 'stack_rename_map';
+
+  @override
+  Map<String, String> build() {
+    _loadFromPrefs();
+    return {};
+  }
+
+  Future<void> _loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final entries = prefs.getStringList(_key) ?? [];
+    final map = <String, String>{};
+    for (final entry in entries) {
+      final parts = entry.split('||');
+      if (parts.length == 2) {
+        map[parts[0]] = parts[1];
+      }
+    }
+    state = map;
+  }
+
+  Future<void> rename(String stackId, String newName) async {
+    final prefs = await SharedPreferences.getInstance();
+    final updated = Map<String, String>.from(state);
+    if (newName.isEmpty || newName == stackId) {
+      updated.remove(stackId);
+    } else {
+      updated[stackId] = newName;
+    }
+    state = updated;
+    await prefs.setStringList(
+      _key,
+      updated.entries.map((e) => '${e.key}||${e.value}').toList(),
+    );
+  }
+
+  String displayName(String stackId) {
+    return state[stackId] ?? stackId;
   }
 }

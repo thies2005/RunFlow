@@ -29,7 +29,7 @@ class PlanScreen extends ConsumerWidget {
         
         if (activeGoal == null) {
           return _NoPlanState(
-            onCreateGoal: () => context.go('/goals/new'),
+            onCreateGoal: () => context.push('/goals/new'),
           );
         }
         
@@ -67,12 +67,7 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
     }
     final sortedDates = workoutsByDate.keys.toList()..sort();
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) GoRouter.of(context).go('/dashboard');
-      },
-      child: Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: Text(goal.name),
         actions: [
@@ -89,7 +84,7 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: OutlinedButton(
-                onPressed: () => context.go('/goals/${goal.id}'),
+                onPressed: () => context.push('/goals/${goal.id}'),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   const Icon(Icons.info_outline, size: 16),
                   const SizedBox(width: 4),
@@ -305,7 +300,6 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
               );
             }),
         ],
-      ),
       ),
       ),
     );

@@ -42,3 +42,10 @@ class ConnectivityInterceptor extends Interceptor {
     handler.next(err);
   }
 }
+
+class NoOpConnectivityInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    handler.next(options);
+  }
+}

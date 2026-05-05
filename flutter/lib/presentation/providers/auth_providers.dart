@@ -35,6 +35,10 @@ AuthService authServiceImpl(Ref ref) {
   return AuthServiceImpl();
 }
 
+final connectivityInterceptorProvider = Provider<Interceptor>((ref) {
+  return ConnectivityInterceptor();
+});
+
 final deduplicationInterceptorProvider =
     Provider<DeduplicationInterceptor>((ref) {
   final interceptor = DeduplicationInterceptor();
@@ -53,7 +57,7 @@ DioClient dioClient(Ref ref) {
   final client = DioClient(dio: dio);
 
   dio.interceptors.addAll([
-    ConnectivityInterceptor(),
+    ref.watch(connectivityInterceptorProvider),
     deduplicationInterceptor,
     AuthInterceptor(authService: authService),
     RefreshInterceptor(

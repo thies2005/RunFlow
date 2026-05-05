@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:runflow_flutter/data/interceptors/connectivity_interceptor.dart';
 import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 import 'package:runflow_flutter/domain/entities/chat_entities.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
@@ -171,27 +171,6 @@ class _FakeNutritionNotifier extends NutritionNotifier {
 }
 
 void main() {
-  setUpAll(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('dev.fluttercommunity.plus/connectivity'),
-          (MethodCall methodCall) async {
-        if (methodCall.method == 'check') {
-          return <String>['wifi'];
-        }
-        return null;
-      },
-        );
-  });
-
-  tearDownAll(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('dev.fluttercommunity.plus/connectivity'),
-          null,
-        );
-  });
-
   group('Golden Tests', () {
     testWidgets('ChatScreen golden - empty state', (tester) async {
       await tester.pumpWidget(
@@ -292,6 +271,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            connectivityInterceptorProvider
+                .overrideWithValue(NoOpConnectivityInterceptor()),
             dashboardProvider.overrideWith(() => _FakeDashboard()),
             currentUserProvider.overrideWithValue(
               const User(

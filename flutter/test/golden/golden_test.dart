@@ -274,6 +274,7 @@ void main() {
             connectivityInterceptorProvider
                 .overrideWithValue(NoOpConnectivityInterceptor()),
             dashboardProvider.overrideWith(() => _FakeDashboard()),
+            analyticsStatsProvider.overrideWith((ref) async => testStats),
             currentUserProvider.overrideWithValue(
               const User(
                 id: 'user1',

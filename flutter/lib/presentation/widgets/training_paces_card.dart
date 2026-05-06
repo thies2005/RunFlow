@@ -18,7 +18,7 @@ class TrainingPacesCard extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (stats) {
-        final vdot = stats.currentVdot ?? stats.effectiveVO2max;
+        final vdot = stats.effectiveVO2max;
         if (vdot <= 0) return const SizedBox.shrink();
 
         final maxHr = stats.hrMax;

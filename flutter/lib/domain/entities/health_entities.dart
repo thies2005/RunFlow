@@ -175,6 +175,8 @@ class Supplement {
   final String dosage;
   final String frequency;
 
+  String get uniqueId => serverId ?? id.toString();
+
   Supplement copyWith({
     int? id,
     String? serverId,
@@ -553,6 +555,120 @@ class FastingSession {
         endTime,
         duration,
         isActive,
+      );
+}
+
+class FastingSchedule {
+  const FastingSchedule({
+    this.fastingStartHour = 20,
+    this.fastingStartMinute = 0,
+    this.fastingEndHour = 12,
+    this.fastingEndMinute = 0,
+    this.targetHours = 16.0,
+    this.isEnabled = false,
+  });
+
+  final int fastingStartHour;
+  final int fastingStartMinute;
+  final int fastingEndHour;
+  final int fastingEndMinute;
+  final double targetHours;
+  final bool isEnabled;
+
+  int get eatingHours => (24 - targetHours).toInt();
+  int get fastingHoursInt => targetHours.toInt();
+
+  DateTime get _now => DateTime.now();
+
+  DateTime get todayFastingStart => DateTime(
+        _now.year, _now.month, _now.day, fastingStartHour, fastingStartMinute,
+      );
+
+  DateTime get todayFastingEnd => DateTime(
+        _now.year, _now.month, _now.day, fastingEndHour, fastingEndMinute,
+      );
+
+  DateTime get nextFastingStart {
+    final start = todayFastingStart;
+    if (_now.isBefore(start)) return start;
+    return start.add(const Duration(days: 1));
+  }
+
+  DateTime get nextEatingStart {
+    final end = todayFastingEnd;
+    if (_now.isBefore(end)) return end;
+    return end.add(const Duration(days: 1));
+  }
+
+  bool get isCurrentlyInFastingWindow {
+    if (!isEnabled) return false;
+    final nowMin = _now.hour * 60 + _now.minute;
+    final startMin = fastingStartHour * 60 + fastingStartMinute;
+    final endMin = fastingEndHour * 60 + fastingEndMinute;
+    if (startMin > endMin) {
+      return nowMin >= startMin || nowMin < endMin;
+    }
+    return nowMin >= startMin && nowMin < endMin;
+  }
+
+  Duration get timeToNextPhase {
+    if (isCurrentlyInFastingWindow) {
+      final nowMin = _now.hour * 60 + _now.minute;
+      final endMin = fastingEndHour * 60 + fastingEndMinute;
+      int diffMin;
+      if (nowMin < endMin) {
+        diffMin = endMin - nowMin;
+      } else {
+        diffMin = (24 * 60 - nowMin) + endMin;
+      }
+      return Duration(minutes: diffMin);
+    }
+    final nowMin = _now.hour * 60 + _now.minute;
+    final startMin = fastingStartHour * 60 + fastingStartMinute;
+    int diffMin;
+    if (nowMin < startMin) {
+      diffMin = startMin - nowMin;
+    } else {
+      diffMin = (24 * 60 - nowMin) + startMin;
+    }
+    return Duration(minutes: diffMin);
+  }
+
+  FastingSchedule copyWith({
+    int? fastingStartHour,
+    int? fastingStartMinute,
+    int? fastingEndHour,
+    int? fastingEndMinute,
+    double? targetHours,
+    bool? isEnabled,
+  }) {
+    return FastingSchedule(
+      fastingStartHour: fastingStartHour ?? this.fastingStartHour,
+      fastingStartMinute: fastingStartMinute ?? this.fastingStartMinute,
+      fastingEndHour: fastingEndHour ?? this.fastingEndHour,
+      fastingEndMinute: fastingEndMinute ?? this.fastingEndMinute,
+      targetHours: targetHours ?? this.targetHours,
+      isEnabled: isEnabled ?? this.isEnabled,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'fastingStartHour': fastingStartHour,
+        'fastingStartMinute': fastingStartMinute,
+        'fastingEndHour': fastingEndHour,
+        'fastingEndMinute': fastingEndMinute,
+        'targetHours': targetHours,
+        'isEnabled': isEnabled,
+      };
+
+  factory FastingSchedule.fromJson(Map<String, dynamic> json) =>
+      FastingSchedule(
+        fastingStartHour: json['fastingStartHour'] as int? ?? 20,
+        fastingStartMinute: json['fastingStartMinute'] as int? ?? 0,
+        fastingEndHour: json['fastingEndHour'] as int? ?? 12,
+        fastingEndMinute: json['fastingEndMinute'] as int? ?? 0,
+        targetHours: (json['targetHours'] as num?)?.toDouble() ?? 16.0,
+        isEnabled: json['isEnabled'] as bool? ?? false,
       );
 }
 

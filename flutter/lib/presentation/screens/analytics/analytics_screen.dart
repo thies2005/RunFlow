@@ -115,7 +115,7 @@ class _SummaryCardsRow extends StatelessWidget {
               Expanded(
                 child: MetricCard(
                   label: S.of(context).analyticsVdot,
-                  value: (stats.currentVdot ?? stats.effectiveVO2max).toStringAsFixed(1),
+                  value: stats.effectiveVO2max.toStringAsFixed(1),
                   icon: Icons.speed,
                   color: AppColors.primary,
                 ),

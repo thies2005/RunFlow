@@ -74,8 +74,8 @@ class SelectedDateRange extends _$SelectedDateRange {
 @riverpod
 Future<Map<String, Duration>> racePredictions(Ref ref) async {
   final stats = ref.watch(analyticsStatsProvider).value;
-  final vdot = stats?.currentVdot ?? stats?.effectiveVO2max;
-  if (vdot == null) return {};
+  final vdot = stats?.effectiveVO2max;
+  if (vdot == null || vdot <= 0) return {};
 
   return {
     '5K': Duration(

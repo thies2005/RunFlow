@@ -32,11 +32,13 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
         child: RefreshIndicator(
           onRefresh: () async {
             final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+            ref.invalidate(dailyHealthProvider(today));
             ref.invalidate(nutritionProvider(today));
             ref.invalidate(supplementListProvider);
             ref.invalidate(bodyMeasurementsProvider);
             ref.invalidate(fastingProvider);
             await Future.wait([
+              ref.read(dailyHealthProvider(today).future),
               ref.read(nutritionProvider(today).future),
               ref.read(supplementListProvider.future),
               ref.read(bodyMeasurementsProvider.future),
@@ -849,16 +851,16 @@ class _FastingCard extends ConsumerStatefulWidget {
 }
 
 class _FastingCardState extends ConsumerState<_FastingCard> {
-  double _targetHours = 16.0;
   Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _loadTargetHours();
-    // Refresh every minute to update the fasting status
     _refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (mounted) setState(() {});
+      if (mounted) {
+        _checkAutoStartStop();
+        setState(() {});
+      }
     });
   }
 
@@ -868,11 +870,24 @@ class _FastingCardState extends ConsumerState<_FastingCard> {
     super.dispose();
   }
 
-  Future<void> _loadTargetHours() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _targetHours = prefs.getDouble('fasting_target_hours') ?? 16.0;
+  void _checkAutoStartStop() {
+    final schedule = ref.read(fastingScheduleNotifierProvider);
+    if (!schedule.isEnabled) return;
+
+    final activeAsync = ref.read(fastingProvider);
+    final activeSession = activeAsync.value;
+    final prefs = SharedPreferences.getInstance();
+
+    if (schedule.isCurrentlyInFastingWindow && activeSession == null) {
+      ref.read(fastingProvider.notifier).start();
+      prefs.then((p) => p.setBool('fasting_auto_started', true));
+    } else if (!schedule.isCurrentlyInFastingWindow && activeSession != null) {
+      prefs.then((p) {
+        final autoStarted = p.getBool('fasting_auto_started') ?? false;
+        if (autoStarted) {
+          ref.read(fastingProvider.notifier).stop();
+          p.remove('fasting_auto_started');
+        }
       });
     }
   }
@@ -880,9 +895,8 @@ class _FastingCardState extends ConsumerState<_FastingCard> {
   @override
   Widget build(BuildContext context) {
     final fastingAsync = ref.watch(fastingProvider);
+    final schedule = ref.watch(fastingScheduleNotifierProvider);
     final theme = Theme.of(context);
-    final eatingHours = (24 - _targetHours).toInt();
-    final fastingHoursInt = _targetHours.toInt();
 
     return _DashboardCard(
       title: S.of(context).healthFasting,
@@ -892,11 +906,10 @@ class _FastingCardState extends ConsumerState<_FastingCard> {
       child: fastingAsync.when(
         data: (session) {
           if (session != null) {
-            // Active fast
             final elapsed = DateTime.now().difference(session.startTime);
             final h = elapsed.inHours;
             final m = (elapsed.inMinutes % 60).toString().padLeft(2, '0');
-            final targetDuration = Duration(hours: _targetHours.toInt());
+            final targetDuration = Duration(hours: schedule.targetHours.toInt());
             final remaining = targetDuration - elapsed;
 
             return Column(
@@ -912,7 +925,7 @@ class _FastingCardState extends ConsumerState<_FastingCard> {
                 const SizedBox(height: 2),
                 if (remaining.isNegative)
                   Text(
-                    '🎉 Goal reached!',
+                    S.of(context).fastingGoalReached,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppColors.success,
                       fontWeight: FontWeight.w600,
@@ -929,25 +942,38 @@ class _FastingCardState extends ConsumerState<_FastingCard> {
             );
           }
 
-          // Not fasting – show schedule info
+          if (schedule.isEnabled) {
+            final inFasting = schedule.isCurrentlyInFastingWindow;
+            final timeToNext = schedule.timeToNextPhase;
+            final h = timeToNext.inHours;
+            final m = (timeToNext.inMinutes % 60).toString().padLeft(2, '0');
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${schedule.fastingHoursInt}:${schedule.eatingHours}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.fatigued,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  inFasting
+                      ? S.of(context).fastingNextEatIn('$h:$m')
+                      : S.of(context).fastingNextFastIn('$h:$m'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            );
+          }
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '$fastingHoursInt:$eatingHours',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.fatigued,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Eating window',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 6),
               Semantics(
                 button: true,
                 label: S.of(context).healthStartFast,
@@ -1112,7 +1138,7 @@ class _QuickTakeCard extends ConsumerWidget {
                       FilledButton(
                         onPressed: () {
                           ref.read(supplementListProvider.notifier).takeAll(
-                            stackUntaken.map((s) => s.id).toList(),
+                            stackUntaken.map((s) => s.uniqueId).toList(),
                           );
                         },
                         style: FilledButton.styleFrom(
@@ -1157,7 +1183,7 @@ class _QuickTakeCard extends ConsumerWidget {
                   ),
                   FilledButton(
                     onPressed: () =>
-                        ref.read(supplementListProvider.notifier).toggle(next.id),
+                        ref.read(supplementListProvider.notifier).toggle(next.uniqueId),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

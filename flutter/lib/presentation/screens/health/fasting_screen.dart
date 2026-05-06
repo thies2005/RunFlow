@@ -19,7 +19,6 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
   Timer? _timer;
   Duration _elapsed = Duration.zero;
   bool _timerStarted = false;
-  double _targetHours = 16.0;
 
   @override
   void dispose() {
@@ -30,23 +29,13 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
   @override
   void initState() {
     super.initState();
-    _loadTargetHours();
     _startTimerFromProvider();
   }
 
-  Future<void> _loadTargetHours() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _targetHours = prefs.getDouble('fasting_target_hours') ?? 16.0;
-      });
-    }
-  }
-
   void _startFasting(int targetHours) {
-    final prefs = SharedPreferences.getInstance();
-    prefs.then((p) => p.setDouble('fasting_target_hours', targetHours.toDouble()));
-    setState(() => _targetHours = targetHours.toDouble());
+    final scheduleNotifier = ref.read(fastingScheduleNotifierProvider.notifier);
+    final current = ref.read(fastingScheduleNotifierProvider);
+    scheduleNotifier.save(current.copyWith(targetHours: targetHours.toDouble()));
     ref.read(fastingProvider.notifier).start();
   }
 
@@ -105,14 +94,13 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Active timer card
                 _FastingTimerCard(
                   activeSession: activeSession,
                   elapsed: _elapsed,
                   fmtDuration: _fmtDuration,
                   fmtTime: _fmtTime,
-                  targetHours: _targetHours,
-                  onStart: () => _startFasting(_targetHours.toInt()),
+                  targetHours: ref.watch(fastingScheduleNotifierProvider).targetHours,
+                  onStart: () => _startFasting(ref.read(fastingScheduleNotifierProvider).targetHours.toInt()),
                   onStop: () {
                     _timer?.cancel();
                     _timer = null;
@@ -120,8 +108,9 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                // Fasting presets
                 if (activeSession == null) ...[
+                  _FastingScheduleSection(),
+                  const SizedBox(height: 16),
                   Text(S.of(context).fastingQuickStart, style: theme.textTheme.labelMedium?.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   _FastingPresets(
@@ -380,6 +369,172 @@ class _StatsChip extends StatelessWidget {
           Text(value, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, color: color)),
           Text(label, style: theme.textTheme.labelSmall?.copyWith(color: AppColors.onSurfaceVariant, fontSize: 9), textAlign: TextAlign.center),
         ],
+      ),
+    );
+  }
+}
+
+class _FastingScheduleSection extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_FastingScheduleSection> createState() =>
+      _FastingScheduleSectionState();
+}
+
+class _FastingScheduleSectionState
+    extends ConsumerState<_FastingScheduleSection> {
+  late TimeOfDay _fastingStartTime;
+  late TimeOfDay _eatingStartTime;
+  bool _initialized = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final schedule = ref.watch(fastingScheduleNotifierProvider);
+    if (!_initialized) {
+      _fastingStartTime = TimeOfDay(
+        hour: schedule.fastingStartHour,
+        minute: schedule.fastingStartMinute,
+      );
+      _eatingStartTime = TimeOfDay(
+        hour: schedule.fastingEndHour,
+        minute: schedule.fastingEndMinute,
+      );
+      _initialized = true;
+    }
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: schedule.isEnabled
+              ? AppColors.fatigued.withValues(alpha: 0.3)
+              : Colors.transparent,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Daily Schedule',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Switch(
+                value: schedule.isEnabled,
+                activeColor: AppColors.fatigued,
+                onChanged: (val) {
+                  ref.read(fastingScheduleNotifierProvider.notifier).save(
+                        schedule.copyWith(isEnabled: val),
+                      );
+                },
+              ),
+            ],
+          ),
+          if (schedule.isEnabled) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _TimePickerTile(
+                    label: 'Fast starts',
+                    time: _fastingStartTime,
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: _fastingStartTime,
+                      );
+                      if (picked != null) {
+                        setState(() => _fastingStartTime = picked);
+                        ref.read(fastingScheduleNotifierProvider.notifier).save(
+                              schedule.copyWith(
+                                fastingStartHour: picked.hour,
+                                fastingStartMinute: picked.minute,
+                              ),
+                            );
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _TimePickerTile(
+                    label: 'Eating starts',
+                    time: _eatingStartTime,
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: _eatingStartTime,
+                      );
+                      if (picked != null) {
+                        setState(() => _eatingStartTime = picked);
+                        ref.read(fastingScheduleNotifierProvider.notifier).save(
+                              schedule.copyWith(
+                                fastingEndHour: picked.hour,
+                                fastingEndMinute: picked.minute,
+                              ),
+                            );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TimePickerTile extends StatelessWidget {
+  const _TimePickerTile({
+    required this.label,
+    required this.time,
+    required this.onTap,
+  });
+
+  final String label;
+  final TimeOfDay time;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.fatigued,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

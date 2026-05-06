@@ -35,16 +35,16 @@ List<RaceCountdownData> raceCountdown(Ref ref) {
         final totalWorkouts = goal.workouts.length;
 
         final stats = data.stats;
-        final currentVdot = stats.currentVdot ?? stats.effectiveVO2max;
+        final vo2max = stats.effectiveVO2max;
 
         int? projectedTimeSeconds;
         double? projectedVdot;
-        if (currentVdot > 0 && daysToRace > 0) {
+        if (vo2max > 0 && daysToRace > 0) {
           final distance = raceTypeDistance(goal.raceType);
-          final basePrediction = racePrediction(currentVdot, distance);
+          final basePrediction = racePrediction(vo2max, distance);
           if (basePrediction > 0) {
             final fitnessGain = 0.3 * log(1 + weeksToRace) / log(2);
-            projectedVdot = min(currentVdot + fitnessGain, currentVdot + 5.0);
+            projectedVdot = min(vo2max + fitnessGain, vo2max + 5.0);
             projectedTimeSeconds =
                 (racePrediction(projectedVdot, distance) * 60).round();
           }

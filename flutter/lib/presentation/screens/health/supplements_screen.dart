@@ -100,7 +100,7 @@ class SupplementsScreen extends ConsumerWidget {
                       ...inactive.map((s) => _SupplementTile(
                         supplement: s,
                         isTaken: false,
-                        onToggle: () => ref.read(supplementListProvider.notifier).toggle(s.id),
+                        onToggle: () => ref.read(supplementListProvider.notifier).toggle(s.uniqueId),
                       )),
                     ],
                     if (supplements.isEmpty)
@@ -172,7 +172,7 @@ class SupplementsScreen extends ConsumerWidget {
           supplements: stackUntaken,
           onTakeAll: () {
             ref.read(supplementListProvider.notifier).takeAll(
-              stackUntaken.map((s) => s.id).toList(),
+              stackUntaken.map((s) => s.uniqueId).toList(),
             );
           },
         );
@@ -180,7 +180,7 @@ class SupplementsScreen extends ConsumerWidget {
     }
     return _NextSupplementCard(
       supplement: nextSupplement,
-      onTake: () => ref.read(supplementListProvider.notifier).toggle(nextSupplement.id),
+      onTake: () => ref.read(supplementListProvider.notifier).toggle(nextSupplement.uniqueId),
     );
   }
 
@@ -442,7 +442,7 @@ class _StackCard extends ConsumerStatefulWidget {
   final String stackName;
   final List<Supplement> supplements;
   final Set<String> takenIds;
-  final void Function(int id) onToggle;
+  final void Function(String id) onToggle;
   final void Function(List<Supplement>) onTakeAll;
 
   @override
@@ -593,7 +593,7 @@ class _StackCardState extends ConsumerState<_StackCard> {
                     .map((s) => _SupplementTile(
                           supplement: s,
                           isTaken: widget.takenIds.contains(s.serverId ?? s.id.toString()),
-                          onToggle: () => widget.onToggle(s.id),
+                          onToggle: () => widget.onToggle(s.uniqueId),
                         ))
                     .toList(),
               ),
@@ -614,8 +614,8 @@ class _GroupedSupplementList extends StatelessWidget {
 
   final List<Supplement> supplements;
   final Set<String> takenIds;
-  final void Function(int id) onToggle;
-  final void Function(List<int> ids) onTakeAll;
+  final void Function(String id) onToggle;
+  final void Function(List<String> ids) onTakeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -654,7 +654,7 @@ class _GroupedSupplementList extends StatelessWidget {
             onToggle: onToggle,
             onTakeAll: (supps) {
               final untaken = supps.where((s) => !takenIds.contains(s.serverId ?? s.id.toString()));
-              onTakeAll(untaken.map((s) => s.id).toList());
+              onTakeAll(untaken.map((s) => s.uniqueId).toList());
             },
           ),
         ],
@@ -670,7 +670,7 @@ class _GroupedSupplementList extends StatelessWidget {
             _SupplementTile(
               supplement: s,
               isTaken: takenIds.contains(s.serverId ?? s.id.toString()),
-              onToggle: () => onToggle(s.id),
+              onToggle: () => onToggle(s.uniqueId),
             ),
           const SizedBox(height: 16),
         ],

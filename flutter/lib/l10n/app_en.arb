@@ -441,6 +441,15 @@
   "fastingPctOfTarget": "{percent}% of {hours}h",
   "@fastingPctOfTarget": { "placeholders": { "percent": { "type": "int" }, "hours": { "type": "int" } } },
   "fastingActive": "active",
+  "fastingGoalReached": "Goal reached!",
+  "fastingNextEatIn": "Eating in {time}",
+  "@fastingNextEatIn": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "fastingNextFastIn": "Next fast in {time}",
+  "@fastingNextFastIn": {
+    "placeholders": { "time": { "type": "String" } }
+  },
 
   "scanCameraRequired": "Camera Permission Required",
   "scanCameraMessage": "Please grant camera permission to scan barcodes.",

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 
 import 'package:runflow_flutter/core/utils/logger.dart';
@@ -47,8 +48,17 @@ Future<List<BodyMeasurement>> bodyMeasurements(Ref ref) async {
 
 @Riverpod(keepAlive: true)
 Future<DailyHealthLog> dailyHealth(Ref ref, DateTime date) async {
-  final apiRepo = ref.read(healthApiRepositoryProvider);
-  return apiRepo.getDailyHealth(date);
+  try {
+    final apiRepo = ref.read(healthApiRepositoryProvider);
+    return apiRepo.getDailyHealth(date);
+  } catch (_) {
+    return DailyHealthLog(
+      id: 0,
+      date: date,
+      supplementLogs: [],
+      foodLogs: [],
+    );
+  }
 }
 
 @riverpod
@@ -107,6 +117,36 @@ class Fasting extends _$Fasting {
 }
 
 @Riverpod(keepAlive: true)
+class FastingScheduleNotifier extends _$FastingScheduleNotifier {
+  static const _key = 'fasting_schedule';
+
+  @override
+  FastingSchedule build() {
+    _load();
+    return const FastingSchedule();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = prefs.getString(_key);
+    if (json != null) {
+      try {
+        state = FastingSchedule.fromJson(
+          jsonDecode(json) as Map<String, dynamic>,
+        );
+      } catch (_) {}
+    }
+  }
+
+  Future<void> save(FastingSchedule schedule) async {
+    state = schedule;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, jsonEncode(schedule.toJson()));
+    await prefs.setDouble('fasting_target_hours', schedule.targetHours);
+  }
+}
+
+@Riverpod(keepAlive: true)
 class SupplementList extends _$SupplementList {
   @override
   Future<List<Supplement>> build() async {
@@ -119,33 +159,33 @@ class SupplementList extends _$SupplementList {
     }
   }
 
-  Future<void> toggle(int id) async {
+  Future<void> toggle(String supplementId) async {
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-      final supplement = state.value?.where((s) => s.id == id).firstOrNull;
-      final supplementId = supplement?.serverId ?? id.toString();
+      final supplement = state.value?.where(
+        (s) => s.uniqueId == supplementId,
+      ).firstOrNull;
+      final resolvedId = supplement?.serverId ?? supplementId;
       final daily = await ref.read(dailyHealthProvider(today).future);
       final existingLog = daily.supplementLogs
-          .where((log) => log.supplementId == supplementId)
+          .where((log) => log.supplementId == resolvedId)
           .firstOrNull;
       final currentlyTaken = existingLog?.taken ?? false;
 
-      // Optimistically update the taken IDs
       final takenNotifier = ref.read(takenSupplementIdsProvider.notifier);
       if (currentlyTaken) {
-        takenNotifier.optimisticRemove(supplementId);
+        takenNotifier.optimisticRemove(resolvedId);
       } else {
-        takenNotifier.optimisticAdd(supplementId);
+        takenNotifier.optimisticAdd(resolvedId);
       }
 
-      await apiRepo.toggleSupplementLog(supplementId, today, !currentlyTaken);
+      await apiRepo.toggleSupplementLog(resolvedId, today, !currentlyTaken);
       ref.invalidate(dailyHealthProvider(today));
       ref.invalidate(takenSupplementIdsProvider);
       ref.invalidate(supplementAnalyticsProvider);
     } catch (e) {
       logger.error('[SupplementList] Toggle supplement failed: $e');
-      // Revert optimistic update on failure
       ref.invalidate(takenSupplementIdsProvider);
     }
   }
@@ -161,7 +201,7 @@ class SupplementList extends _$SupplementList {
     ref.invalidateSelf();
   }
 
-  Future<void> takeAll(List<int> ids) async {
+  Future<void> takeAll(List<String> supplementIds) async {
     final apiRepo = ref.read(healthApiRepositoryProvider);
     final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
@@ -174,27 +214,29 @@ class SupplementList extends _$SupplementList {
           .toSet();
     } catch (_) {}
 
-    // Optimistically update the taken IDs for all supplements being taken
     final optimisticIds = <String>[];
-    for (final id in ids) {
-      final supplement = state.value?.where((s) => s.id == id).firstOrNull;
+    for (final sid in supplementIds) {
+      final supplement = state.value?.where(
+        (s) => s.uniqueId == sid,
+      ).firstOrNull;
       if (supplement == null) continue;
-      final supplementId = supplement.serverId ?? id.toString();
-      optimisticIds.add(supplementId);
+      final resolvedId = supplement.serverId ?? sid;
+      optimisticIds.add(resolvedId);
     }
     ref.read(takenSupplementIdsProvider.notifier).optimisticAddAll(optimisticIds);
 
-    for (final id in ids) {
+    for (final sid in supplementIds) {
       try {
-        final supplement =
-            state.value?.where((s) => s.id == id).firstOrNull;
+        final supplement = state.value?.where(
+          (s) => s.uniqueId == sid,
+        ).firstOrNull;
         if (supplement == null) continue;
-        final supplementId = supplement.serverId ?? id.toString();
-        if (alreadyTaken.contains(supplementId)) continue;
-        await apiRepo.toggleSupplementLog(supplementId, today, true);
-        alreadyTaken.add(supplementId);
+        final resolvedId = supplement.serverId ?? sid;
+        if (alreadyTaken.contains(resolvedId)) continue;
+        await apiRepo.toggleSupplementLog(resolvedId, today, true);
+        alreadyTaken.add(resolvedId);
       } catch (e) {
-        logger.error('[SupplementList] Take all toggle failed for id $id: $e');
+        logger.error('[SupplementList] Take all toggle failed for id $sid: $e');
       }
     }
 
@@ -373,6 +415,7 @@ class AiScan extends _$AiScan {
 @Riverpod(keepAlive: true)
 class StackRenameMap extends _$StackRenameMap {
   static const _key = 'stack_rename_map';
+  bool _loaded = false;
 
   @override
   Map<String, String> build() {
@@ -391,9 +434,11 @@ class StackRenameMap extends _$StackRenameMap {
       }
     }
     state = map;
+    _loaded = true;
   }
 
   Future<void> rename(String stackId, String newName) async {
+    if (!_loaded) await _loadFromPrefs();
     final prefs = await SharedPreferences.getInstance();
     final updated = Map<String, String>.from(state);
     if (newName.isEmpty || newName == stackId) {

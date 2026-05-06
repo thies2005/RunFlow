@@ -39,8 +39,19 @@ sealed class FoodItem with _$FoodItem {
   }) = _FoodItem;
   const FoodItem._();
 
-  factory FoodItem.fromJson(Map<String, dynamic> json) =>
-      _$FoodItemFromJson(json);
+  factory FoodItem.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    return FoodItem(
+      id: rawId is num ? rawId.toInt() : int.tryParse(rawId?.toString() ?? '') ?? 0,
+      name: json['name'] as String? ?? '',
+      calories: (json['calories'] as num?)?.toDouble() ?? 0,
+      protein: (json['protein'] as num?)?.toDouble() ?? 0,
+      carbs: (json['carbs'] as num?)?.toDouble() ?? 0,
+      fat: (json['fat'] as num?)?.toDouble() ?? 0,
+      servingSize: (json['servingSize'] as num?)?.toDouble() ?? 0,
+      barcode: json['barcode'] as String?,
+    );
+  }
 }
 
 @Freezed(copyWith: true)

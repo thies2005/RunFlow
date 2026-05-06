@@ -141,7 +141,7 @@ void main() {
       expect(find.textContaining('/km'), findsWidgets);
     });
 
-    testWidgets('uses currentVdot over effectiveVO2max', (tester) async {
+    testWidgets('uses effectiveVO2max for paces', (tester) async {
       const statsWithVdot = AnalyticsStats(
         currentWeekMileage: 42.5,
         effectiveVO2max: 52.3,
@@ -159,7 +159,7 @@ void main() {
       await tester.pumpWidget(buildTestWidget(statsWithVdot));
       await tester.pumpAndSettle();
 
-      expect(find.text('VDOT 55.0'), findsOneWidget);
+      expect(find.text('VDOT 52.3'), findsOneWidget);
     });
 
     testWidgets('shows dash when hrMax is zero', (tester) async {

@@ -38,7 +38,7 @@ class _FakeSupplementList extends SupplementList {
   Future<List<Supplement>> build() => SynchronousFuture(_items);
 
   @override
-  Future<void> toggle(int id) async {}
+  Future<void> toggle(String id) async {}
 
   @override
   Future<void> add(Supplement supplement) async {}
@@ -49,7 +49,6 @@ class _FakeFasting extends Fasting {
 
   final FastingSession? _session;
 
-  @override
   @override
   Future<FastingSession?> build() => SynchronousFuture(_session);
 

@@ -64,16 +64,16 @@ class NutritionLog {
 
   @override
   int get hashCode => Object.hashAll([
-        id,
-        date,
-        calories,
-        protein,
-        carbs,
-        fat,
-        water,
-        notes,
-        createdAt,
-      ]);
+    id,
+    date,
+    calories,
+    protein,
+    carbs,
+    fat,
+    water,
+    notes,
+    createdAt,
+  ]);
 }
 
 class FoodItem {
@@ -135,15 +135,15 @@ class FoodItem {
 
   @override
   int get hashCode => Object.hashAll([
-        id,
-        name,
-        calories,
-        protein,
-        carbs,
-        fat,
-        servingSize,
-        barcode,
-      ]);
+    id,
+    name,
+    calories,
+    protein,
+    carbs,
+    fat,
+    servingSize,
+    barcode,
+  ]);
 }
 
 class Supplement {
@@ -227,19 +227,19 @@ class Supplement {
 
   @override
   int get hashCode => Object.hash(
-        id,
-        serverId,
-        name,
-        amount,
-        unit,
-        timeOfDay,
-        Object.hashAll(daysOfWeek),
-        isActive,
-        stackId,
-        order,
-        dosage,
-        frequency,
-      );
+    id,
+    serverId,
+    name,
+    amount,
+    unit,
+    timeOfDay,
+    Object.hashAll(daysOfWeek),
+    isActive,
+    stackId,
+    order,
+    dosage,
+    frequency,
+  );
 }
 
 class SupplementStack {
@@ -280,12 +280,8 @@ class SupplementStack {
           isActive == other.isActive;
 
   @override
-  int get hashCode => Object.hash(
-        id,
-        name,
-        Object.hashAll(supplements),
-        isActive,
-      );
+  int get hashCode =>
+      Object.hash(id, name, Object.hashAll(supplements), isActive);
 }
 
 class DailyHealthLog {
@@ -352,16 +348,16 @@ class DailyHealthLog {
 
   @override
   int get hashCode => Object.hash(
-        id,
-        date,
-        steps,
-        weight,
-        waterIntake,
-        exerciseCalories,
-        Object.hashAll(supplementLogs),
-        Object.hashAll(foodLogs),
-        meta,
-      );
+    id,
+    date,
+    steps,
+    weight,
+    waterIntake,
+    exerciseCalories,
+    Object.hashAll(supplementLogs),
+    Object.hashAll(foodLogs),
+    meta,
+  );
 }
 
 class SupplementLog {
@@ -375,11 +371,7 @@ class SupplementLog {
   final DateTime date;
   final bool taken;
 
-  SupplementLog copyWith({
-    String? supplementId,
-    DateTime? date,
-    bool? taken,
-  }) {
+  SupplementLog copyWith({String? supplementId, DateTime? date, bool? taken}) {
     return SupplementLog(
       supplementId: supplementId ?? this.supplementId,
       date: date ?? this.date,
@@ -397,11 +389,7 @@ class SupplementLog {
           taken == other.taken;
 
   @override
-  int get hashCode => Object.hash(
-        supplementId,
-        date,
-        taken,
-      );
+  int get hashCode => Object.hash(supplementId, date, taken);
 }
 
 class FoodLogEntry {
@@ -468,28 +456,24 @@ class FoodLogEntry {
 
   @override
   int get hashCode => Object.hashAll([
-        id,
-        mealType,
-        name,
-        quantity,
-        calories,
-        protein,
-        carbs,
-        fats,
-        foodItemId,
-      ]);
+    id,
+    mealType,
+    name,
+    quantity,
+    calories,
+    protein,
+    carbs,
+    fats,
+    foodItemId,
+  ]);
 }
 
 class DailyHealthMeta {
-  const DailyHealthMeta({
-    this.hasStepHistory = false,
-  });
+  const DailyHealthMeta({this.hasStepHistory = false});
 
   final bool hasStepHistory;
 
-  DailyHealthMeta copyWith({
-    bool? hasStepHistory,
-  }) {
+  DailyHealthMeta copyWith({bool? hasStepHistory}) {
     return DailyHealthMeta(
       hasStepHistory: hasStepHistory ?? this.hasStepHistory,
     );
@@ -549,13 +533,7 @@ class FastingSession {
           isActive == other.isActive;
 
   @override
-  int get hashCode => Object.hash(
-        id,
-        startTime,
-        endTime,
-        duration,
-        isActive,
-      );
+  int get hashCode => Object.hash(id, startTime, endTime, duration, isActive);
 }
 
 class FastingSchedule {
@@ -567,6 +545,16 @@ class FastingSchedule {
     this.targetHours = 16.0,
     this.isEnabled = false,
   });
+
+  factory FastingSchedule.fromJson(Map<String, dynamic> json) =>
+      FastingSchedule(
+        fastingStartHour: json['fastingStartHour'] as int? ?? 20,
+        fastingStartMinute: json['fastingStartMinute'] as int? ?? 0,
+        fastingEndHour: json['fastingEndHour'] as int? ?? 12,
+        fastingEndMinute: json['fastingEndMinute'] as int? ?? 0,
+        targetHours: (json['targetHours'] as num?)?.toDouble() ?? 16.0,
+        isEnabled: json['isEnabled'] as bool? ?? false,
+      );
 
   final int fastingStartHour;
   final int fastingStartMinute;
@@ -581,12 +569,20 @@ class FastingSchedule {
   DateTime get _now => DateTime.now();
 
   DateTime get todayFastingStart => DateTime(
-        _now.year, _now.month, _now.day, fastingStartHour, fastingStartMinute,
-      );
+    _now.year,
+    _now.month,
+    _now.day,
+    fastingStartHour,
+    fastingStartMinute,
+  );
 
   DateTime get todayFastingEnd => DateTime(
-        _now.year, _now.month, _now.day, fastingEndHour, fastingEndMinute,
-      );
+    _now.year,
+    _now.month,
+    _now.day,
+    fastingEndHour,
+    fastingEndMinute,
+  );
 
   DateTime get nextFastingStart {
     final start = todayFastingStart;
@@ -653,23 +649,13 @@ class FastingSchedule {
   }
 
   Map<String, dynamic> toJson() => {
-        'fastingStartHour': fastingStartHour,
-        'fastingStartMinute': fastingStartMinute,
-        'fastingEndHour': fastingEndHour,
-        'fastingEndMinute': fastingEndMinute,
-        'targetHours': targetHours,
-        'isEnabled': isEnabled,
-      };
-
-  factory FastingSchedule.fromJson(Map<String, dynamic> json) =>
-      FastingSchedule(
-        fastingStartHour: json['fastingStartHour'] as int? ?? 20,
-        fastingStartMinute: json['fastingStartMinute'] as int? ?? 0,
-        fastingEndHour: json['fastingEndHour'] as int? ?? 12,
-        fastingEndMinute: json['fastingEndMinute'] as int? ?? 0,
-        targetHours: (json['targetHours'] as num?)?.toDouble() ?? 16.0,
-        isEnabled: json['isEnabled'] as bool? ?? false,
-      );
+    'fastingStartHour': fastingStartHour,
+    'fastingStartMinute': fastingStartMinute,
+    'fastingEndHour': fastingEndHour,
+    'fastingEndMinute': fastingEndMinute,
+    'targetHours': targetHours,
+    'isEnabled': isEnabled,
+  };
 }
 
 class BodyMeasurement {
@@ -736,16 +722,16 @@ class BodyMeasurement {
 
   @override
   int get hashCode => Object.hashAll([
-        id,
-        date,
-        weight,
-        bodyFat,
-        chest,
-        waist,
-        hips,
-        arms,
-        notes,
-      ]);
+    id,
+    date,
+    weight,
+    bodyFat,
+    chest,
+    waist,
+    hips,
+    arms,
+    notes,
+  ]);
 }
 
 class NutritionTargets {
@@ -816,8 +802,10 @@ class NutritionTargets {
       carbsPercent: carbsPercent ?? this.carbsPercent,
       fatsPercent: fatsPercent ?? this.fatsPercent,
       waterGoalMl: waterGoalMl ?? this.waterGoalMl,
-      exerciseCalorieFactor: exerciseCalorieFactor ?? this.exerciseCalorieFactor,
-      exerciseCalorieSource: exerciseCalorieSource ?? this.exerciseCalorieSource,
+      exerciseCalorieFactor:
+          exerciseCalorieFactor ?? this.exerciseCalorieFactor,
+      exerciseCalorieSource:
+          exerciseCalorieSource ?? this.exerciseCalorieSource,
       waterTrackingEnabled: waterTrackingEnabled ?? this.waterTrackingEnabled,
     );
   }
@@ -842,19 +830,19 @@ class NutritionTargets {
 
   @override
   int get hashCode => Object.hashAll([
-        calories,
-        protein,
-        carbs,
-        fat,
-        water,
-        proteinPercent,
-        carbsPercent,
-        fatsPercent,
-        waterGoalMl,
-        exerciseCalorieFactor,
-        exerciseCalorieSource,
-        waterTrackingEnabled,
-      ]);
+    calories,
+    protein,
+    carbs,
+    fat,
+    water,
+    proteinPercent,
+    carbsPercent,
+    fatsPercent,
+    waterGoalMl,
+    exerciseCalorieFactor,
+    exerciseCalorieSource,
+    waterTrackingEnabled,
+  ]);
 }
 
 class NutritionAnalytics {
@@ -891,10 +879,10 @@ class NutritionAnalytics {
 
   @override
   int get hashCode => Object.hash(
-        macroAdherenceScore,
-        Object.hashAll(dailyData),
-        Object.hashAll(micronutrients),
-      );
+    macroAdherenceScore,
+    Object.hashAll(dailyData),
+    Object.hashAll(micronutrients),
+  );
 }
 
 class DailyNutrition {
@@ -940,13 +928,7 @@ class DailyNutrition {
           fats == other.fats;
 
   @override
-  int get hashCode => Object.hash(
-        date,
-        calories,
-        protein,
-        carbs,
-        fats,
-      );
+  int get hashCode => Object.hash(date, calories, protein, carbs, fats);
 }
 
 class MicronutrientSummary {
@@ -987,12 +969,7 @@ class MicronutrientSummary {
           dailyValuePercent == other.dailyValuePercent;
 
   @override
-  int get hashCode => Object.hash(
-        name,
-        amount,
-        unit,
-        dailyValuePercent,
-      );
+  int get hashCode => Object.hash(name, amount, unit, dailyValuePercent);
 }
 
 class SupplementAnalytics {
@@ -1049,14 +1026,14 @@ class SupplementAnalytics {
 
   @override
   int get hashCode => Object.hash(
-        overallAdherence,
-        avgDailyDoses,
-        totalSupplements,
-        totalScheduled,
-        totalTaken,
-        totalDays,
-        Object.hashAll(supplements),
-      );
+    overallAdherence,
+    avgDailyDoses,
+    totalSupplements,
+    totalScheduled,
+    totalTaken,
+    totalDays,
+    Object.hashAll(supplements),
+  );
 }
 
 class SupplementAdherence {
@@ -1097,19 +1074,11 @@ class SupplementAdherence {
           totalDays == other.totalDays;
 
   @override
-  int get hashCode => Object.hash(
-        name,
-        adherencePercent,
-        daysTaken,
-        totalDays,
-      );
+  int get hashCode => Object.hash(name, adherencePercent, daysTaken, totalDays);
 }
 
 class HealthHistory {
-  const HealthHistory({
-    this.steps = const [],
-    this.weight = const [],
-  });
+  const HealthHistory({this.steps = const [], this.weight = const []});
 
   final List<HealthHistoryPoint> steps;
   final List<HealthHistoryPoint> weight;
@@ -1133,25 +1102,17 @@ class HealthHistory {
           listEquals(weight, other.weight);
 
   @override
-  int get hashCode => Object.hash(
-        Object.hashAll(steps),
-        Object.hashAll(weight),
-      );
+  int get hashCode =>
+      Object.hash(Object.hashAll(steps), Object.hashAll(weight));
 }
 
 class HealthHistoryPoint {
-  const HealthHistoryPoint({
-    required this.date,
-    required this.value,
-  });
+  const HealthHistoryPoint({required this.date, required this.value});
 
   final DateTime date;
   final double value;
 
-  HealthHistoryPoint copyWith({
-    DateTime? date,
-    double? value,
-  }) {
+  HealthHistoryPoint copyWith({DateTime? date, double? value}) {
     return HealthHistoryPoint(
       date: date ?? this.date,
       value: value ?? this.value,
@@ -1167,8 +1128,5 @@ class HealthHistoryPoint {
           value == other.value;
 
   @override
-  int get hashCode => Object.hash(
-        date,
-        value,
-      );
+  int get hashCode => Object.hash(date, value);
 }

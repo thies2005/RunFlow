@@ -38,7 +38,7 @@ class _FakeSupplementList extends SupplementList {
   Future<List<Supplement>> build() => SynchronousFuture(_items);
 
   @override
-  Future<void> toggle(int id) async {}
+  Future<void> toggle(String id) async {}
 
   @override
   Future<void> add(Supplement supplement) async {}
@@ -247,8 +247,7 @@ void main() {
       await pumpHealth(tester);
 
       expect(find.text('Fasting'), findsOneWidget);
-      expect(find.text('16:8'), findsOneWidget);
-      expect(find.text('Eating window'), findsOneWidget);
+      expect(find.text('Start Fast'), findsOneWidget);
     });
 
     testWidgets('renders Quick Actions section', (WidgetTester tester) async {

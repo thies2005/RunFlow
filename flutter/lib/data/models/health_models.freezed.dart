@@ -292,7 +292,6 @@ as DateTime,
 
 }
 
-
 /// @nodoc
 mixin _$FoodItem {
 
@@ -303,8 +302,6 @@ mixin _$FoodItem {
 @pragma('vm:prefer-inline')
 $FoodItemCopyWith<FoodItem> get copyWith => _$FoodItemCopyWithImpl<FoodItem>(this as FoodItem, _$identity);
 
-  /// Serializes this FoodItem to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -312,7 +309,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is FoodItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.protein, protein) || other.protein == protein)&&(identical(other.carbs, carbs) || other.carbs == carbs)&&(identical(other.fat, fat) || other.fat == fat)&&(identical(other.servingSize, servingSize) || other.servingSize == servingSize)&&(identical(other.barcode, barcode) || other.barcode == barcode));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,name,calories,protein,carbs,fat,servingSize,barcode);
 
@@ -488,11 +485,11 @@ return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_th
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _FoodItem extends FoodItem {
   const _FoodItem({required this.id, required this.name, required this.calories, required this.protein, required this.carbs, required this.fat, required this.servingSize, this.barcode}): super._();
-  factory _FoodItem.fromJson(Map<String, dynamic> json) => _$FoodItemFromJson(json);
+  
 
 @override final  int id;
 @override final  String name;
@@ -509,17 +506,14 @@ class _FoodItem extends FoodItem {
 @pragma('vm:prefer-inline')
 _$FoodItemCopyWith<_FoodItem> get copyWith => __$FoodItemCopyWithImpl<_FoodItem>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$FoodItemToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _FoodItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.protein, protein) || other.protein == protein)&&(identical(other.carbs, carbs) || other.carbs == carbs)&&(identical(other.fat, fat) || other.fat == fat)&&(identical(other.servingSize, servingSize) || other.servingSize == servingSize)&&(identical(other.barcode, barcode) || other.barcode == barcode));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode => Object.hash(runtimeType,id,name,calories,protein,carbs,fat,servingSize,barcode);
 

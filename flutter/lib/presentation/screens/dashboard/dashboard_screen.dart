@@ -28,8 +28,26 @@ class DashboardScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.sync),
-            onPressed: () {
-              ref.read(dashboardProvider.notifier).triggerSync();
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              final success = await ref
+                  .read(dashboardProvider.notifier)
+                  .triggerSync();
+              if (context.mounted) {
+                messenger.hideCurrentSnackBar();
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? S.of(context).statusSyncing
+                          : S.of(context).statusError,
+                    ),
+                    duration: success
+                        ? const Duration(seconds: 2)
+                        : const Duration(seconds: 4),
+                  ),
+                );
+              }
             },
           ),
         ],

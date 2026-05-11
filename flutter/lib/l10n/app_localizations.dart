@@ -2461,6 +2461,24 @@ abstract class S {
   /// **'active'**
   String get fastingActive;
 
+  /// No description provided for @fastingGoalReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal reached!'**
+  String get fastingGoalReached;
+
+  /// No description provided for @fastingNextEatIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Eating in {time}'**
+  String fastingNextEatIn(String time);
+
+  /// No description provided for @fastingNextFastIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Next fast in {time}'**
+  String fastingNextFastIn(String time);
+
   /// No description provided for @scanCameraRequired.
   ///
   /// In en, this message translates to:

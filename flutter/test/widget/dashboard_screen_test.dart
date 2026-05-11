@@ -31,7 +31,7 @@ class _FakeDashboardNotifier extends Dashboard {
   Future<void> refresh() async {}
 
   @override
-  Future<void> triggerSync() async {}
+  Future<bool> triggerSync() async => true;
 }
 
 class _FakeAuthState extends AuthState {

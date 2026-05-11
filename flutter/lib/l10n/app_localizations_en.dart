@@ -1264,6 +1264,19 @@ class SEn extends S {
   String get fastingActive => 'active';
 
   @override
+  String get fastingGoalReached => 'Goal reached!';
+
+  @override
+  String fastingNextEatIn(String time) {
+    return 'Eating in $time';
+  }
+
+  @override
+  String fastingNextFastIn(String time) {
+    return 'Next fast in $time';
+  }
+
+  @override
   String get scanCameraRequired => 'Camera Permission Required';
 
   @override

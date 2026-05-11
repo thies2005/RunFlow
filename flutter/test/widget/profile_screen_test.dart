@@ -10,6 +10,7 @@ import 'package:runflow_flutter/domain/repositories/profile_repository.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/profile_providers.dart';
+import 'package:runflow_flutter/presentation/providers/strava_status_providers.dart';
 import 'package:runflow_flutter/presentation/screens/profile/profile_screen.dart';
 
 class _FakeAuthState extends AuthState {
@@ -32,6 +33,11 @@ class _FakeSettingsNotifier extends Settings {
   AppSettings build() => const AppSettings();
 }
 
+class _FakeStravaStatus extends StravaStatus {
+  @override
+  StravaStatusState build() => const StravaStatusState(isConnected: true);
+}
+
 class _FakeAuthRepository implements AuthRepository {
   @override
   Future<LoginResponse> loginWithEmail({
@@ -42,8 +48,10 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<LoginResponse> loginWithStravaCode(String code,
-      {String? redirectUri}) async {
+  Future<LoginResponse> loginWithStravaCode(
+    String code, {
+    String? redirectUri,
+  }) async {
     throw UnimplementedError();
   }
 
@@ -114,7 +122,6 @@ class _FakeProfileRepository implements ProfileRepository {
 
 void main() {
   group('ProfileScreen Delete Account', () {
-
     Widget createTestWidget() {
       const testUser = User(
         id: 'test-user',
@@ -123,12 +130,11 @@ void main() {
       );
       return ProviderScope(
         overrides: [
-          authStateProvider
-              .overrideWith(() => _FakeAuthState(testUser)),
+          authStateProvider.overrideWith(() => _FakeAuthState(testUser)),
           authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
-          profileRepositoryProvider
-              .overrideWithValue(_FakeProfileRepository()),
+          profileRepositoryProvider.overrideWithValue(_FakeProfileRepository()),
           settingsProvider.overrideWith(() => _FakeSettingsNotifier()),
+          stravaStatusProvider.overrideWith(() => _FakeStravaStatus()),
         ],
         child: const MaterialApp(
           localizationsDelegates: [

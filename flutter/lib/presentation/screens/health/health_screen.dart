@@ -18,11 +18,14 @@ class HealthScreen extends ConsumerStatefulWidget {
 }
 
 class _HealthScreenState extends ConsumerState<HealthScreen> {
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     final nutritionAsync = ref.watch(nutritionProvider(today));
     final supplementsAsync = ref.watch(supplementListProvider);
     final bodyAsync = ref.watch(bodyMeasurementsProvider);
@@ -31,7 +34,11 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+            final today = DateTime(
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+            );
             ref.invalidate(dailyHealthProvider(today));
             ref.invalidate(nutritionProvider(today));
             ref.invalidate(supplementListProvider);
@@ -116,13 +123,9 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: _NutritionCard(nutritionAsync: nutritionAsync),
-              ),
+              Expanded(child: _NutritionCard(nutritionAsync: nutritionAsync)),
               const SizedBox(width: 12),
-              Expanded(
-                child: _BodyCard(bodyAsync: bodyAsync),
-              ),
+              Expanded(child: _BodyCard(bodyAsync: bodyAsync)),
             ],
           ),
         ),
@@ -178,7 +181,11 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
               onTap: () async {
                 final result = await context.push<FoodItem?>('/health/scan');
                 if (result != null && context.mounted) {
-                  final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+                  final today = DateTime(
+                    DateTime.now().year,
+                    DateTime.now().month,
+                    DateTime.now().day,
+                  );
                   final asyncLog = ref.read(nutritionProvider(today));
                   NutritionLog? currentLog;
                   asyncLog.whenData((log) => currentLog = log);
@@ -189,10 +196,14 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       carbs: currentLog!.carbs + result.carbs,
                       fat: currentLog!.fat + result.fat,
                     );
-                    unawaited(ref.read(nutritionProvider(today).notifier).save(updated));
+                    unawaited(
+                      ref.read(nutritionProvider(today).notifier).save(updated),
+                    );
                   }
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(S.of(context).healthAddedFood(result.name))),
+                    SnackBar(
+                      content: Text(S.of(context).healthAddedFood(result.name)),
+                    ),
                   );
                 }
               },
@@ -204,7 +215,11 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
               onTap: () async {
                 final result = await context.push<FoodItem?>('/health/ai-scan');
                 if (result != null && context.mounted) {
-                  final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+                  final today = DateTime(
+                    DateTime.now().year,
+                    DateTime.now().month,
+                    DateTime.now().day,
+                  );
                   final asyncLog = ref.read(nutritionProvider(today));
                   NutritionLog? currentLog;
                   asyncLog.whenData((log) => currentLog = log);
@@ -215,10 +230,14 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       carbs: currentLog!.carbs + result.carbs,
                       fat: currentLog!.fat + result.fat,
                     );
-                    unawaited(ref.read(nutritionProvider(today).notifier).save(updated));
+                    unawaited(
+                      ref.read(nutritionProvider(today).notifier).save(updated),
+                    );
                   }
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(S.of(context).healthAddedFood(result.name))),
+                    SnackBar(
+                      content: Text(S.of(context).healthAddedFood(result.name)),
+                    ),
                   );
                 }
               },
@@ -232,9 +251,9 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
           ],
         ),
       ],
-      );
-    }
+    );
   }
+}
 
 // ─── Sync Banner ─────────────────────────────────────────────────────────────
 
@@ -513,7 +532,9 @@ class _NutritionCard extends ConsumerWidget {
                 child: LinearProgressIndicator(
                   value: pct,
                   minHeight: 6,
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   valueColor: const AlwaysStoppedAnimation(AppColors.warning),
                 ),
               ),
@@ -521,9 +542,21 @@ class _NutritionCard extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _MacroMini('P', '${nutrition.protein.toInt()}g', AppColors.success),
-                  _MacroMini('C', '${nutrition.carbs.toInt()}g', AppColors.warning),
-                  _MacroMini('F', '${nutrition.fat.toInt()}g', AppColors.fatigued),
+                  _MacroMini(
+                    'P',
+                    '${nutrition.protein.toInt()}g',
+                    AppColors.success,
+                  ),
+                  _MacroMini(
+                    'C',
+                    '${nutrition.carbs.toInt()}g',
+                    AppColors.warning,
+                  ),
+                  _MacroMini(
+                    'F',
+                    '${nutrition.fat.toInt()}g',
+                    AppColors.fatigued,
+                  ),
                 ],
               ),
             ],
@@ -532,7 +565,15 @@ class _NutritionCard extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => _NoDataWidget(
           label: S.of(context).healthNutrition.toLowerCase(),
-          onSync: () => ref.invalidate(nutritionProvider(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day))),
+          onSync: () => ref.invalidate(
+            nutritionProvider(
+              DateTime(
+                DateTime.now().year,
+                DateTime.now().month,
+                DateTime.now().day,
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -549,15 +590,19 @@ class _MacroMini extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: color,
-            )),
-        Text(label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.onSurfaceVariant,
-            )),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: AppColors.onSurfaceVariant),
+        ),
       ],
     );
   }
@@ -604,10 +649,12 @@ class _BodyCard extends ConsumerWidget {
                       color: AppColors.onSurface,
                     ),
                   ),
-                  Text(' kg',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      )),
+                  Text(
+                    ' kg',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(width: 6),
                   Icon(
                     isUp ? Icons.arrow_upward : Icons.arrow_downward,
@@ -627,9 +674,9 @@ class _BodyCard extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   '${latest.bodyFat.toStringAsFixed(1)}% body fat',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.peaked,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: AppColors.peaked),
                 ),
               ],
             ],
@@ -662,7 +709,9 @@ class _SupplementsCard extends ConsumerWidget {
         data: (supplements) {
           final active = supplements.where((s) => s.isActive).toList();
           final takenIds = ref.watch(takenSupplementIdsProvider).value ?? {};
-          final taken = active.where((s) => takenIds.contains(s.serverId ?? s.id.toString())).length;
+          final taken = active
+              .where((s) => takenIds.contains(s.serverId ?? s.id.toString()))
+              .length;
           final total = active.length;
           if (total == 0) {
             return _NoDataWidget(
@@ -693,7 +742,9 @@ class _SupplementsCard extends ConsumerWidget {
                 child: LinearProgressIndicator(
                   value: pct,
                   minHeight: 6,
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                   valueColor: const AlwaysStoppedAnimation(AppColors.success),
                 ),
               ),
@@ -813,8 +864,8 @@ class _VitalsCard extends ConsumerWidget {
                 vitals.restingHeartRate != null
                     ? S.of(context).healthRestingHr
                     : vitals.hrv != null
-                        ? S.of(context).healthHrv
-                        : S.of(context).healthVitalsLabel,
+                    ? S.of(context).healthHrv
+                    : S.of(context).healthVitalsLabel,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
@@ -871,7 +922,7 @@ class _FastingCardState extends ConsumerState<_FastingCard> {
   }
 
   void _checkAutoStartStop() {
-    final schedule = ref.read(fastingScheduleNotifierProvider);
+    final schedule = ref.read(fastingScheduleProvider);
     if (!schedule.isEnabled) return;
 
     final activeAsync = ref.read(fastingProvider);
@@ -895,7 +946,7 @@ class _FastingCardState extends ConsumerState<_FastingCard> {
   @override
   Widget build(BuildContext context) {
     final fastingAsync = ref.watch(fastingProvider);
-    final schedule = ref.watch(fastingScheduleNotifierProvider);
+    final schedule = ref.watch(fastingScheduleProvider);
     final theme = Theme.of(context);
 
     return _DashboardCard(
@@ -909,7 +960,9 @@ class _FastingCardState extends ConsumerState<_FastingCard> {
             final elapsed = DateTime.now().difference(session.startTime);
             final h = elapsed.inHours;
             final m = (elapsed.inMinutes % 60).toString().padLeft(2, '0');
-            final targetDuration = Duration(hours: schedule.targetHours.toInt());
+            final targetDuration = Duration(
+              hours: schedule.targetHours.toInt(),
+            );
             final remaining = targetDuration - elapsed;
 
             return Column(
@@ -1092,10 +1145,12 @@ class _QuickTakeCard extends ConsumerWidget {
 
             if (next.stackId != null) {
               final stackUntaken = active
-                  .where((s) =>
-                      s.stackId == next.stackId &&
-                      s.timeOfDay == next.timeOfDay &&
-                      !takenIds.contains(s.serverId ?? s.id.toString()))
+                  .where(
+                    (s) =>
+                        s.stackId == next.stackId &&
+                        s.timeOfDay == next.timeOfDay &&
+                        !takenIds.contains(s.serverId ?? s.id.toString()),
+                  )
                   .toList();
               if (stackUntaken.length > 1) {
                 return Container(
@@ -1110,18 +1165,27 @@ class _QuickTakeCard extends ConsumerWidget {
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.layers, color: AppColors.primary, size: 20),
+                      const Icon(
+                        Icons.layers,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              ref.watch(stackRenameMapProvider)[next.stackId!] ?? next.stackId!,
+                              ref.watch(
+                                    stackRenameMapProvider,
+                                  )[next.stackId!] ??
+                                  next.stackId!,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -1137,17 +1201,29 @@ class _QuickTakeCard extends ConsumerWidget {
                       ),
                       FilledButton(
                         onPressed: () {
-                          ref.read(supplementListProvider.notifier).takeAll(
-                            stackUntaken.map((s) => s.uniqueId).toList(),
-                          );
+                          ref
+                              .read(supplementListProvider.notifier)
+                              .takeAll(
+                                stackUntaken.map((s) => s.uniqueId).toList(),
+                              );
                         },
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                        child: const Text('Take All',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                        child: const Text(
+                          'Take All',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -1167,11 +1243,17 @@ class _QuickTakeCard extends ConsumerWidget {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.medication, color: AppColors.primary, size: 20),
+                  const Icon(
+                    Icons.medication,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -1182,15 +1264,26 @@ class _QuickTakeCard extends ConsumerWidget {
                     ),
                   ),
                   FilledButton(
-                    onPressed: () =>
-                        ref.read(supplementListProvider.notifier).toggle(next.uniqueId),
+                    onPressed: () => ref
+                        .read(supplementListProvider.notifier)
+                        .toggle(next.uniqueId),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    child: const Text('Take',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      'Take',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),

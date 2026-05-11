@@ -63,6 +63,13 @@ class DashboardRepositoryImpl implements DashboardRepository {
         ),
       ).toDomain();
     } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        return const domain.SyncResult(
+          success: true,
+          activitiesSynced: 0,
+          lastSyncAt: null,
+        );
+      }
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(

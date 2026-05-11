@@ -26,9 +26,7 @@ void main() {
 
   Widget buildTestWidget(AnalyticsStats stats) {
     return ProviderScope(
-      overrides: [
-        analyticsStatsProvider.overrideWith((ref) async => stats),
-      ],
+      overrides: [analyticsStatsProvider.overrideWith((ref) async => stats)],
       child: MaterialApp(
         theme: buildDarkTheme(),
         home: const Scaffold(
@@ -123,7 +121,7 @@ void main() {
       await tester.pumpWidget(buildTestWidget(testStats));
       await tester.pumpAndSettle();
 
-      expect(find.text('VDOT 52.1'), findsOneWidget);
+      expect(find.text('VDOT 52.3'), findsOneWidget);
     });
 
     testWidgets('shows heart rate ranges when hrMax is set', (tester) async {

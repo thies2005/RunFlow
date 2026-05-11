@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/data/repositories/dashboard_repository_impl.dart';
@@ -5,6 +7,7 @@ import 'package:runflow_flutter/domain/repositories/dashboard_repository.dart';
 
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
 
 part 'dashboard_providers.g.dart';
 
@@ -17,8 +20,13 @@ DashboardRepository dashboardRepository(Ref ref) {
 
 @Riverpod(keepAlive: true)
 class Dashboard extends _$Dashboard {
+  Timer? _syncPollTimer;
+
   @override
   Future<DashboardResponse> build() async {
+    ref.onDispose(() {
+      _syncPollTimer?.cancel();
+    });
     final repo = ref.read(dashboardRepositoryProvider);
     return repo.fetchDashboard();
   }
@@ -34,14 +42,30 @@ class Dashboard extends _$Dashboard {
     state = await AsyncValue.guard(repo.fetchDashboard);
   }
 
-  Future<void> triggerSync() async {
+  Future<bool> triggerSync() async {
     final repo = ref.read(dashboardRepositoryProvider);
     try {
       await repo.triggerSync();
+    } catch (e) {
+      logger.error('[Dashboard] Sync trigger failed: $e');
       await refresh();
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      return false;
     }
+    await refresh();
+    _startSyncPolling();
+    return true;
+  }
+
+  void _startSyncPolling() {
+    _syncPollTimer?.cancel();
+    _syncPollTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      final current = state.value;
+      if (current == null || !current.syncStatus.syncInProgress) {
+        timer.cancel();
+        return;
+      }
+      await refresh();
+    });
   }
 }
 

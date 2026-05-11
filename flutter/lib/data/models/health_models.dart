@@ -42,7 +42,9 @@ sealed class FoodItem with _$FoodItem {
   factory FoodItem.fromJson(Map<String, dynamic> json) {
     final rawId = json['id'];
     return FoodItem(
-      id: rawId is num ? rawId.toInt() : int.tryParse(rawId?.toString() ?? '') ?? 0,
+      id: rawId is num
+          ? rawId.toInt()
+          : int.tryParse(rawId?.toString() ?? '') ?? 0,
       name: json['name'] as String? ?? '',
       calories: (json['calories'] as num?)?.toDouble() ?? 0,
       protein: (json['protein'] as num?)?.toDouble() ?? 0,
@@ -52,6 +54,17 @@ sealed class FoodItem with _$FoodItem {
       barcode: json['barcode'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'calories': calories,
+    'protein': protein,
+    'carbs': carbs,
+    'fat': fat,
+    'servingSize': servingSize,
+    'barcode': barcode,
+  };
 }
 
 @Freezed(copyWith: true)
@@ -60,10 +73,18 @@ sealed class Supplement with _$Supplement {
     required int id,
     String? serverId,
     required String name,
-    @JsonKey(name: 'amount', fromJson: _parseSupplementAmount) @Default(0) double amount,
+    @JsonKey(name: 'amount', fromJson: _parseSupplementAmount)
+    @Default(0)
+    double amount,
     @JsonKey(name: 'unit') @Default('mg') String unit,
     @JsonKey(name: 'timeOfDay') @Default('MORNING') String timeOfDay,
-    @JsonKey(name: 'daysOfWeek', fromJson: _parseDaysOfWeek, toJson: _serializeDaysOfWeek) @Default([]) List<int> daysOfWeek,
+    @JsonKey(
+      name: 'daysOfWeek',
+      fromJson: _parseDaysOfWeek,
+      toJson: _serializeDaysOfWeek,
+    )
+    @Default([])
+    List<int> daysOfWeek,
     @Default(true) bool isActive,
     @JsonKey(name: 'stackId') String? stackId,
     @Default(0) int order,
@@ -113,11 +134,19 @@ double _parseSupplementAmount(dynamic value) {
 }
 
 List<int> _parseDaysOfWeek(dynamic value) {
-  if (value is List) return value.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0).toList();
+  if (value is List) {
+    return value
+        .map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0)
+        .toList();
+  }
   if (value is String && value.isNotEmpty) {
     try {
       final decoded = jsonDecode(value);
-      if (decoded is List) return decoded.map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0).toList();
+      if (decoded is List) {
+        return decoded
+            .map((e) => e is int ? e : int.tryParse(e.toString()) ?? 0)
+            .toList();
+      }
     } catch (e) {
       logger.error('[_parseDaysOfWeek] JSON decode failed: $e');
     }
@@ -194,9 +223,8 @@ sealed class FoodLogEntry with _$FoodLogEntry {
 
 @Freezed(copyWith: true)
 sealed class DailyHealthMeta with _$DailyHealthMeta {
-  const factory DailyHealthMeta({
-    @Default(false) bool hasStepHistory,
-  }) = _DailyHealthMeta;
+  const factory DailyHealthMeta({@Default(false) bool hasStepHistory}) =
+      _DailyHealthMeta;
   const DailyHealthMeta._();
 
   factory DailyHealthMeta.fromJson(Map<String, dynamic> json) =>
@@ -253,22 +281,35 @@ class NutritionTargets {
     this.waterTrackingEnabled = false,
   });
 
-  factory NutritionTargets.fromJson(Map<String, dynamic> json) => NutritionTargets(
-        calories: ((json['dailyCalories'] ?? json['calories'] ?? NutritionTargets.defaults.calories) as num).toInt(),
-        protein: ((json['protein'] ?? NutritionTargets.defaults.protein) as num).toInt(),
-        carbs: ((json['carbs'] ?? NutritionTargets.defaults.carbs) as num).toInt(),
-        fat: ((json['fat'] ?? NutritionTargets.defaults.fat) as num).toInt(),
-        water: json.containsKey('water')
-            ? ((json['water'] ?? NutritionTargets.defaults.water) as num).toDouble()
-            : (((json['waterGoalMl'] ?? (NutritionTargets.defaults.waterGoalMl)) as num).toDouble() / 1000),
-        proteinPercent: ((json['proteinPercent'] ?? 30) as num).toDouble(),
-        carbsPercent: ((json['carbsPercent'] ?? 40) as num).toDouble(),
-        fatsPercent: ((json['fatsPercent'] ?? 30) as num).toDouble(),
-        waterGoalMl: ((json['waterGoalMl'] ?? 2000) as num).toInt(),
-        exerciseCalorieFactor: ((json['exerciseCalorieFactor'] ?? 0.5) as num).toDouble(),
-        exerciseCalorieSource: (json['exerciseCalorieSource'] ?? 'strava') as String,
-        waterTrackingEnabled: json['waterTrackingEnabled'] as bool? ?? false,
-      );
+  factory NutritionTargets.fromJson(
+    Map<String, dynamic> json,
+  ) => NutritionTargets(
+    calories:
+        ((json['dailyCalories'] ??
+                    json['calories'] ??
+                    NutritionTargets.defaults.calories)
+                as num)
+            .toInt(),
+    protein: ((json['protein'] ?? NutritionTargets.defaults.protein) as num)
+        .toInt(),
+    carbs: ((json['carbs'] ?? NutritionTargets.defaults.carbs) as num).toInt(),
+    fat: ((json['fat'] ?? NutritionTargets.defaults.fat) as num).toInt(),
+    water: json.containsKey('water')
+        ? ((json['water'] ?? NutritionTargets.defaults.water) as num).toDouble()
+        : (((json['waterGoalMl'] ?? (NutritionTargets.defaults.waterGoalMl))
+                      as num)
+                  .toDouble() /
+              1000),
+    proteinPercent: ((json['proteinPercent'] ?? 30) as num).toDouble(),
+    carbsPercent: ((json['carbsPercent'] ?? 40) as num).toDouble(),
+    fatsPercent: ((json['fatsPercent'] ?? 30) as num).toDouble(),
+    waterGoalMl: ((json['waterGoalMl'] ?? 2000) as num).toInt(),
+    exerciseCalorieFactor: ((json['exerciseCalorieFactor'] ?? 0.5) as num)
+        .toDouble(),
+    exerciseCalorieSource:
+        (json['exerciseCalorieSource'] ?? 'strava') as String,
+    waterTrackingEnabled: json['waterTrackingEnabled'] as bool? ?? false,
+  );
 
   static const defaults = NutritionTargets(
     calories: 2000,
@@ -292,13 +333,13 @@ class NutritionTargets {
   final bool waterTrackingEnabled;
 
   Map<String, dynamic> toJson() => {
-        'calories': calories,
-        'protein': protein,
-        'carbs': carbs,
-        'fat': fat,
-        'water': water,
-        'waterTrackingEnabled': waterTrackingEnabled,
-      };
+    'calories': calories,
+    'protein': protein,
+    'carbs': carbs,
+    'fat': fat,
+    'water': water,
+    'waterTrackingEnabled': waterTrackingEnabled,
+  };
 
   NutritionTargets copyWith({
     int? calories,
@@ -324,26 +365,28 @@ class NutritionTargets {
       carbsPercent: carbsPercent ?? this.carbsPercent,
       fatsPercent: fatsPercent ?? this.fatsPercent,
       waterGoalMl: waterGoalMl ?? this.waterGoalMl,
-      exerciseCalorieFactor: exerciseCalorieFactor ?? this.exerciseCalorieFactor,
-      exerciseCalorieSource: exerciseCalorieSource ?? this.exerciseCalorieSource,
+      exerciseCalorieFactor:
+          exerciseCalorieFactor ?? this.exerciseCalorieFactor,
+      exerciseCalorieSource:
+          exerciseCalorieSource ?? this.exerciseCalorieSource,
       waterTrackingEnabled: waterTrackingEnabled ?? this.waterTrackingEnabled,
     );
   }
 
   NutritionTargets withComputedGrams() => NutritionTargets(
-        calories: calories,
-        protein: ((calories * proteinPercent / 100) / 4).round(),
-        carbs: ((calories * carbsPercent / 100) / 4).round(),
-        fat: ((calories * fatsPercent / 100) / 9).round(),
-        water: water,
-        proteinPercent: proteinPercent,
-        carbsPercent: carbsPercent,
-        fatsPercent: fatsPercent,
-        waterGoalMl: waterGoalMl,
-        exerciseCalorieFactor: exerciseCalorieFactor,
-        exerciseCalorieSource: exerciseCalorieSource,
-        waterTrackingEnabled: waterTrackingEnabled,
-      );
+    calories: calories,
+    protein: ((calories * proteinPercent / 100) / 4).round(),
+    carbs: ((calories * carbsPercent / 100) / 4).round(),
+    fat: ((calories * fatsPercent / 100) / 9).round(),
+    water: water,
+    proteinPercent: proteinPercent,
+    carbsPercent: carbsPercent,
+    fatsPercent: fatsPercent,
+    waterGoalMl: waterGoalMl,
+    exerciseCalorieFactor: exerciseCalorieFactor,
+    exerciseCalorieSource: exerciseCalorieSource,
+    waterTrackingEnabled: waterTrackingEnabled,
+  );
 }
 
 @Freezed(copyWith: true)

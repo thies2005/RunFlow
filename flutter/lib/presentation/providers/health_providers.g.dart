@@ -272,7 +272,7 @@ final class DailyHealthProvider
   }
 }
 
-String _$dailyHealthHash() => r'b79394cabda17982903a588495e5bb2bdcc02b43';
+String _$dailyHealthHash() => r'4495fc6b14904e25f17ca0e4a1743297fe631dfb';
 
 final class DailyHealthFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<DailyHealthLog>, DateTime> {
@@ -381,6 +381,59 @@ abstract class _$Fasting extends $AsyncNotifier<FastingSession?> {
   }
 }
 
+@ProviderFor(FastingScheduleNotifier)
+final fastingScheduleProvider = FastingScheduleNotifierProvider._();
+
+final class FastingScheduleNotifierProvider
+    extends $NotifierProvider<FastingScheduleNotifier, FastingSchedule> {
+  FastingScheduleNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'fastingScheduleProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$fastingScheduleNotifierHash();
+
+  @$internal
+  @override
+  FastingScheduleNotifier create() => FastingScheduleNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(FastingSchedule value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<FastingSchedule>(value),
+    );
+  }
+}
+
+String _$fastingScheduleNotifierHash() =>
+    r'36d1b81e0ed360a89aa3f4a0a8734b08dc321da6';
+
+abstract class _$FastingScheduleNotifier extends $Notifier<FastingSchedule> {
+  FastingSchedule build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<FastingSchedule, FastingSchedule>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<FastingSchedule, FastingSchedule>,
+              FastingSchedule,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(SupplementList)
 final supplementListProvider = SupplementListProvider._();
 
@@ -405,7 +458,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'167e9ab9800478d2d6b82f546ac1e740eb1b1f97';
+String _$supplementListHash() => r'b51a1ee22a8def615bb8767e0b17ecc8050efa40';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();
@@ -891,7 +944,7 @@ final class StackRenameMapProvider
   }
 }
 
-String _$stackRenameMapHash() => r'1b7107f04c2a1f4e1be35f72d75cd918191c6673';
+String _$stackRenameMapHash() => r'c4b0b45ca2f1cb22208bd0eac44cce88031eb238';
 
 abstract class _$StackRenameMap extends $Notifier<Map<String, String>> {
   Map<String, String> build();

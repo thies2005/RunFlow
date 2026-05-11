@@ -264,4 +264,4 @@ final class RacePredictionsProvider
   }
 }
 
-String _$racePredictionsHash() => r'f4551a668caa85de81fb7226f5944af65dbc18cb';
+String _$racePredictionsHash() => r'771ca5efa9334535f3351c0b48a397ff2cb9b7f7';

@@ -418,6 +418,15 @@
   "fastingPresetHours": "{hours} Stunden",
   "fastingPctOfTarget": "{percent}% von {hours}h",
   "fastingActive": "aktiv",
+  "fastingGoalReached": "Fastenziel erreicht!",
+  "fastingNextEatIn": "Nächstes Essensfenster in {time}",
+  "@fastingNextEatIn": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "fastingNextFastIn": "Nächstes Fastenfenster in {time}",
+  "@fastingNextFastIn": {
+    "placeholders": { "time": { "type": "String" } }
+  },
 
   "scanCameraRequired": "Kameraberechtigung erforderlich",
   "scanCameraMessage": "Bitte gewähren Sie die Kameraberechtigung zum Scannen von Barcodes.",

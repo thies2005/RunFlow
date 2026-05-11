@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/core/utils/logger.dart';
+import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/strava_status_providers.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 
@@ -82,7 +84,7 @@ class StravaAuthBanner extends ConsumerWidget {
         'redirect_uri': AppConstants.stravaRedirectUri,
         'response_type': 'code',
         'scope': 'read,activity:read_all',
-        'state': 'reconnect_${DateTime.now().millisecondsSinceEpoch}',
+        'state': 'flutter_${DateTime.now().millisecondsSinceEpoch}',
       });
 
       final result = await FlutterWebAuth2.authenticate(
@@ -93,18 +95,25 @@ class StravaAuthBanner extends ConsumerWidget {
       final code = Uri.parse(result).queryParameters['code'];
       if (code == null) return;
 
+      final authRepo = ref.read(authRepositoryProvider);
+      await authRepo.loginWithStravaCode(
+        code,
+        redirectUri: AppConstants.stravaRedirectUri,
+      );
+
       await ref.read(stravaStatusProvider.notifier).setConnected(true);
-      await ref.read(stravaStatusProvider.notifier).updateLastSync();
+      await ref.read(stravaStatusProvider.notifier).setAuthExpired(false);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Strava reconnected successfully')),
         );
       }
-    } catch (_) {
+    } catch (e) {
+      logger.error('[StravaAuthBanner] Reconnect failed: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reconnection cancelled')),
+          SnackBar(content: Text('Reconnection failed: $e')),
         );
       }
     }

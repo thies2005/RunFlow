@@ -32,28 +32,6 @@ Map<String, dynamic> _$NutritionLogToJson(_NutritionLog instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
     };
 
-_FoodItem _$FoodItemFromJson(Map<String, dynamic> json) => _FoodItem(
-  id: (json['id'] as num).toInt(),
-  name: json['name'] as String,
-  calories: (json['calories'] as num).toDouble(),
-  protein: (json['protein'] as num).toDouble(),
-  carbs: (json['carbs'] as num).toDouble(),
-  fat: (json['fat'] as num).toDouble(),
-  servingSize: (json['servingSize'] as num).toDouble(),
-  barcode: json['barcode'] as String?,
-);
-
-Map<String, dynamic> _$FoodItemToJson(_FoodItem instance) => <String, dynamic>{
-  'id': instance.id,
-  'name': instance.name,
-  'calories': instance.calories,
-  'protein': instance.protein,
-  'carbs': instance.carbs,
-  'fat': instance.fat,
-  'servingSize': instance.servingSize,
-  'barcode': instance.barcode,
-};
-
 _SupplementStack _$SupplementStackFromJson(Map<String, dynamic> json) =>
     _SupplementStack(
       id: (json['id'] as num).toInt(),

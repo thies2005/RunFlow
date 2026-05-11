@@ -20,7 +20,7 @@ class StravaStatus extends _$StravaStatus {
   Future<void> _loadState() async {
     final prefs = await SharedPreferences.getInstance();
     state = StravaStatusState(
-      isConnected: prefs.getBool(_connectedKey) ?? true,
+      isConnected: prefs.getBool(_connectedKey) ?? false,
       lastSyncAt: prefs.getString(_lastSyncKey) != null
           ? DateTime.tryParse(prefs.getString(_lastSyncKey)!)
           : null,
@@ -53,7 +53,7 @@ class StravaStatus extends _$StravaStatus {
       final client = ref.read(dioClientProvider);
       final response = await client.dio.get('/user/strava/status');
       final data = response.data as Map<String, dynamic>;
-      final connected = data['connected'] as bool? ?? true;
+      final connected = data['connected'] as bool? ?? false;
       final authExpired = data['authExpired'] as bool? ?? false;
       final lastSync = data['lastSyncAt'] as String?;
 
@@ -78,7 +78,7 @@ class StravaStatus extends _$StravaStatus {
 
 class StravaStatusState {
   const StravaStatusState({
-    this.isConnected = true,
+    this.isConnected = false,
     this.isAuthExpired = false,
     this.lastSyncAt,
   });

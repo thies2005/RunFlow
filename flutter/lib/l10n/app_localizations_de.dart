@@ -1274,6 +1274,19 @@ class SDe extends S {
   String get fastingActive => 'aktiv';
 
   @override
+  String get fastingGoalReached => 'Fastenziel erreicht!';
+
+  @override
+  String fastingNextEatIn(String time) {
+    return 'Nächstes Essensfenster in $time';
+  }
+
+  @override
+  String fastingNextFastIn(String time) {
+    return 'Nächstes Fastenfenster in $time';
+  }
+
+  @override
   String get scanCameraRequired => 'Kameraberechtigung erforderlich';
 
   @override

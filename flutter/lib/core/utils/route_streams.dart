@@ -13,8 +13,15 @@ bool activityHasRoute(Activity activity) {
 }
 
 List<GpsPoint> gpsPointsFromStreams(Activity activity) {
-  final latlng = activity.streams?['latlng'];
-  if (latlng is! List) return const [];
+  final streams = activity.streams;
+  if (streams == null) return const [];
+
+  final latlng = streams['latlng'];
+  if (latlng is! List || latlng.isEmpty) return const [];
+
+  final timeStream = streams['time'];
+  final altitudeStream = streams['altitude'];
+
   final points = <GpsPoint>[];
   for (var i = 0; i < latlng.length; i++) {
     final pair = latlng[i];
@@ -22,12 +29,25 @@ List<GpsPoint> gpsPointsFromStreams(Activity activity) {
       final lat = (pair[0] as num).toDouble();
       final lng = (pair[1] as num).toDouble();
       if (lat != 0.0 || lng != 0.0) {
+        final double? altitude;
+        if (altitudeStream is List && i < altitudeStream.length) {
+          altitude = (altitudeStream[i] as num?)?.toDouble();
+        } else {
+          altitude = null;
+        }
+        final int secondsElapsed;
+        if (timeStream is List && i < timeStream.length) {
+          secondsElapsed = (timeStream[i] as num).toInt();
+        } else {
+          secondsElapsed = i;
+        }
         points.add(GpsPoint(
           latitude: lat,
           longitude: lng,
+          altitude: altitude,
           speed: 0,
           timestamp: DateTime.fromMillisecondsSinceEpoch(
-            activity.startDate.millisecondsSinceEpoch + (i * 1000),
+            activity.startDate.millisecondsSinceEpoch + secondsElapsed * 1000,
           ),
         ));
       }

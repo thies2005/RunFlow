@@ -61,7 +61,7 @@ final class ChatSessionsProvider
         argument: null,
         retry: null,
         name: r'chatSessionsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -74,7 +74,7 @@ final class ChatSessionsProvider
   ChatSessions create() => ChatSessions();
 }
 
-String _$chatSessionsHash() => r'051db22ae462f863c24fbe0d7285a76247d308e3';
+String _$chatSessionsHash() => r'bbdd7b4b463cb19b23d3047b330f21e406ea9e36';
 
 abstract class _$ChatSessions extends $AsyncNotifier<List<ChatSession>> {
   FutureOr<List<ChatSession>> build();
@@ -217,7 +217,7 @@ final class ChatNotifierProvider
   }
 }
 
-String _$chatNotifierHash() => r'b9e56beb5567473482eb817d311bd8d1906b2b1b';
+String _$chatNotifierHash() => r'ab44ebd84fc0d09c39f127550e0c3ff96c32e5fd';
 
 abstract class _$ChatNotifier extends $Notifier<ChatState> {
   ChatState build();

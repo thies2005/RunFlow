@@ -121,7 +121,13 @@ class LocalActivityDatasource {
     final db = await _db.database;
     final now = DateTime.now().millisecondsSinceEpoch;
     if (enrichedActivity != null) {
-      final streamsJson = enrichedActivity.streams != null ? jsonEncode(enrichedActivity.streams) : null;
+      String? streamsJson = enrichedActivity.streams != null ? jsonEncode(enrichedActivity.streams) : null;
+      if (streamsJson == null) {
+        final existing = db.select('SELECT streams_json FROM activities WHERE local_id = ?', [localId]);
+        if (existing.isNotEmpty) {
+          streamsJson = existing.first['streams_json'] as String?;
+        }
+      }
       db.execute(
         'UPDATE activities SET id = ?, strava_id = ?, type = ?, name = ?, distance = ?, moving_time = ?, average_speed = ?, average_hr = ?, max_hr = ?, average_cadence = ?, has_heartrate = ?, total_elevation = ?, trimp = ?, running_tss = ?, estimated_vdot = ?, training_type = ?, hr_zone_1_time = ?, hr_zone_2_time = ?, hr_zone_3_time = ?, hr_zone_4_time = ?, hr_zone_5_time = ?, calories = ?, streams_json = ?, is_synced = 1, updated_at = ? WHERE local_id = ?',
         [
@@ -256,11 +262,13 @@ class LocalActivityDatasource {
     final db = await _db.database;
     for (final activity in activities) {
       final existing = db.select(
-        'SELECT local_id FROM activities WHERE id = ?',
+        'SELECT local_id, streams_json FROM activities WHERE id = ?',
         [activity.id],
       );
       final now = DateTime.now().millisecondsSinceEpoch;
-      final streamsJson = activity.streams != null ? jsonEncode(activity.streams) : null;
+      final streamsJson = activity.streams != null
+          ? jsonEncode(activity.streams)
+          : (existing.isNotEmpty ? existing.first['streams_json'] as String? : null);
       if (existing.isNotEmpty) {
         db.execute(
           'UPDATE activities SET strava_id = ?, type = ?, name = ?, start_date = ?, distance = ?, moving_time = ?, average_speed = ?, average_hr = ?, max_hr = ?, average_cadence = ?, has_heartrate = ?, total_elevation = ?, trimp = ?, running_tss = ?, estimated_vdot = ?, training_type = ?, hr_zone_1_time = ?, hr_zone_2_time = ?, hr_zone_3_time = ?, hr_zone_4_time = ?, hr_zone_5_time = ?, calories = ?, streams_json = ?, is_synced = 1, updated_at = ? WHERE id = ?',

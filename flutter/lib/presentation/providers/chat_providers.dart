@@ -12,7 +12,7 @@ ChatRepository chatRepository(Ref ref) {
   return ChatRepositoryImpl(dio: client.dio);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class ChatSessions extends _$ChatSessions {
   @override
   Future<List<ChatSession>> build() async {
@@ -82,8 +82,10 @@ class ChatNotifier extends _$ChatNotifier {
     } catch (e) {
       state = state.copyWith(error: e.toString());
     } finally {
-      state = state.copyWith(isStreaming: false);
-      ref.invalidate(chatMessagesProvider(sessionId));
+      if (ref.mounted) {
+        state = state.copyWith(isStreaming: false);
+        ref.invalidate(chatMessagesProvider(sessionId));
+      }
     }
   }
 }

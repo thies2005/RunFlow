@@ -40,7 +40,7 @@ class ReadinessRemoteDatasource {
         response.data as Map<String, dynamic>,
       );
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return null;
+      if (e.response?.statusCode == 404 || (e.response?.statusCode ?? 0) >= 500) return null;
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(
@@ -128,7 +128,7 @@ class ReadinessRemoteDatasource {
         response.data as Map<String, dynamic>,
       );
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return null;
+      if (e.response?.statusCode == 404 || (e.response?.statusCode ?? 0) >= 500) return null;
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(
@@ -192,7 +192,7 @@ class ReadinessRemoteDatasource {
         response.data as Map<String, dynamic>,
       );
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return null;
+      if (e.response?.statusCode == 404 || (e.response?.statusCode ?? 0) >= 500) return null;
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(

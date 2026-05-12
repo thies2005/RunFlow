@@ -178,8 +178,11 @@ class ActivityRepositoryImpl implements ActivityRepository {
         const ['activity'],
       );
       final serverActivity = Activity.fromJson(payload).toDomain();
-      await localDatasource.markActivitySynced(localId, serverActivity.id, serverActivity);
-      return serverActivity;
+      final preserved = serverActivity.streams != null
+          ? serverActivity
+          : serverActivity.copyWith(streams: localActivity.streams);
+      await localDatasource.markActivitySynced(localId, serverActivity.id, preserved);
+      return preserved;
     } on DioException catch (e) {
       if (e.error is OfflineException) {
         await localDatasource.enqueueSync('activity_create', localId, apiPayload);

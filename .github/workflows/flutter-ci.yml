@@ -93,8 +93,10 @@ jobs:
         run: |
           SHORT_SHA=$(git rev-parse --short HEAD)
           TIMESTAMP=$(date +%Y%m%d-%H%M)
+          COMMIT_MSG=$(git log -1 --pretty=%s | head -c 80 | tr '\n' ' ')
           echo "tag=beta-${TIMESTAMP}-${SHORT_SHA}" >> $GITHUB_OUTPUT
           echo "name=Beta ${TIMESTAMP} (${SHORT_SHA})" >> $GITHUB_OUTPUT
+          echo "commit_msg=${COMMIT_MSG}" >> $GITHUB_OUTPUT
 
       - name: Decode Keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
@@ -114,18 +116,20 @@ jobs:
 
       - name: Rename APK
         run: |
+          TAG="${{ steps.version.outputs.tag }}"
           mv build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/RunFlow-beta-latest.apk
+             build/app/outputs/flutter-apk/RunFlow-${TAG}.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: beta
+          tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.name }}
           body: |
             ## RunFlow Beta Build
 
             **Commit:** `${{ github.sha }}`
+            **Message:** ${{ steps.version.outputs.commit_msg }}
             **Branch:** `${{ github.ref_name }}`
             **Built:** ${{ github.event.head_commit.timestamp }}
 
@@ -135,5 +139,5 @@ jobs:
             > **Note:** This is a beta release. Expect potential instability.
           prerelease: true
           files: |
-            flutter/build/app/outputs/flutter-apk/RunFlow-beta-latest.apk
+            flutter/build/app/outputs/flutter-apk/RunFlow-${{ steps.version.outputs.tag }}.apk
             flutter/build/app/outputs/bundle/release/app-release.aab

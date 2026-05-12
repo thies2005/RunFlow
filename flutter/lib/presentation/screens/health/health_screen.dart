@@ -41,18 +41,11 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
               DateTime.now().month,
               DateTime.now().day,
             );
+            await ref.read(healthSyncStateProvider.notifier).syncNow();
             ref.invalidate(dailyHealthProvider(today));
-            ref.invalidate(nutritionProvider(today));
-            ref.invalidate(supplementListProvider);
-            ref.invalidate(bodyMeasurementsProvider);
-            ref.invalidate(fastingProvider);
             ref.invalidate(readinessProvider);
             await Future.wait([
               ref.read(dailyHealthProvider(today).future),
-              ref.read(nutritionProvider(today).future),
-              ref.read(supplementListProvider.future),
-              ref.read(bodyMeasurementsProvider.future),
-              ref.read(fastingProvider.future),
               ref.read(readinessProvider.future),
             ]);
           },
@@ -269,99 +262,109 @@ class _SyncBanner extends ConsumerWidget {
     final theme = Theme.of(context);
     final syncState = ref.watch(healthSyncStateProvider);
 
-    String statusText;
-    Widget trailing;
     if (syncState.isSyncing) {
-      statusText = S.of(context).healthSyncedWithHealthConnect;
-      trailing = const SizedBox(
-        width: 16,
-        height: 16,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: AppColors.primary,
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
         ),
-      );
-    } else if (syncState.error != null) {
-      statusText = S.of(context).healthSyncedWithHealthConnect;
-      trailing = Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.error_outline, size: 14, color: AppColors.error),
-          const SizedBox(width: 6),
-          GestureDetector(
-            onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
-            child: Text(
-              S.of(context).actionSyncNow,
-              style: theme.textTheme.labelSmall?.copyWith(
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
                 color: AppColors.primary,
-                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ],
-      );
-    } else if (syncState.lastSyncTime != null) {
-      final diff = DateTime.now().difference(syncState.lastSyncTime!);
-      final mins = diff.inMinutes;
-      statusText = mins < 1
-          ? S.of(context).healthSyncedWithHealthConnect
-          : S.of(context).healthSyncedWithHealthConnect;
-      trailing = GestureDetector(
-        onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
-        child: Text(
-          S.of(context).actionSyncNow,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
-    } else {
-      statusText = S.of(context).healthSyncedWithHealthConnect;
-      trailing = GestureDetector(
-        onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
-        child: Text(
-          S.of(context).actionSyncNow,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                S.of(context).healthSyncedWithHealthConnect,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          syncState.isSyncing
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
-                  ),
-                )
-              : const Icon(Icons.sync, size: 16, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              statusText,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.onSurfaceVariant,
+    if (syncState.error != null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline, size: 16, color: AppColors.error),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                S.of(context).healthSyncedWithHealthConnect,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.error,
+                ),
               ),
             ),
-          ),
-          trailing,
-        ],
-      ),
-    );
+            GestureDetector(
+              onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
+              child: Text(
+                S.of(context).actionSyncNow,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (syncState.lastSyncTime == null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.sync, size: 16, color: AppColors.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                S.of(context).healthSyncedWithHealthConnect,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
+              child: Text(
+                S.of(context).actionSyncNow,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }
 

@@ -12,6 +12,7 @@ import 'package:runflow_flutter/data/interceptors/retry_interceptor.dart';
 import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 import 'package:runflow_flutter/data/repositories/auth_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/auth_repository.dart';
+import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
 import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
 import 'package:runflow_flutter/services/auth_service.dart';
@@ -133,6 +134,7 @@ class AuthState extends _$AuthState {
       ref.invalidate(fcmServiceProvider);
       ref.read(healthSyncServiceProvider).stopAutoSync();
       ref.invalidate(healthSyncServiceProvider);
+      ref.invalidate(chatSessionsProvider);
       final recordingService = ref.read(recordingServiceProvider);
       recordingService.discardRecording();
       await recordingService.disconnectHeartRateMonitor();

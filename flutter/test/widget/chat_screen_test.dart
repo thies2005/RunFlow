@@ -55,6 +55,9 @@ class _FakeChatNotifier extends ChatNotifier {
 
   @override
   Future<void> sendMessage(String sessionId, String content) async {}
+
+  @override
+  void resetForNewSession() {}
 }
 
 class _FakeSessionId extends CurrentSessionIdNotifier {

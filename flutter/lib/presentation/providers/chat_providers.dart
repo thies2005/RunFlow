@@ -3,6 +3,7 @@ import 'package:runflow_flutter/domain/entities/chat_entities.dart';
 import 'package:runflow_flutter/data/repositories/chat_repository_impl.dart';
 import 'package:runflow_flutter/domain/repositories/chat_repository.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
+import 'package:runflow_flutter/presentation/screens/chat/chat_screen.dart';
 
 part 'chat_providers.g.dart';
 
@@ -57,33 +58,56 @@ class ChatMessages extends _$ChatMessages {
 
 @riverpod
 class ChatNotifier extends _$ChatNotifier {
+  String? _streamingSessionId;
+  ChatRepository? _repo;
+
   @override
   ChatState build() {
-    ref.onDispose(() {
-      final repo = ref.read(chatRepositoryProvider);
-      if (repo is ChatRepositoryImpl) {
-        repo.cancelStreaming();
+    _repo = ref.read(chatRepositoryProvider);
+    ref.listen(currentSessionIdProvider, (prev, next) {
+      if (prev != next && _streamingSessionId != null) {
+        _cancelCurrentStream();
+        state = const ChatState();
       }
     });
+    ref.onDispose(_cancelCurrentStream);
     return const ChatState();
   }
 
+  void _cancelCurrentStream() {
+    _streamingSessionId = null;
+    _repo?.cancelStreaming();
+  }
+
+  void resetForNewSession() {
+    if (_streamingSessionId != null) {
+      _cancelCurrentStream();
+      state = const ChatState();
+    }
+  }
+
   Future<void> sendMessage(String sessionId, String content) async {
-    final repo = ref.read(chatRepositoryProvider);
+    _cancelCurrentStream();
+    _streamingSessionId = sessionId;
+    final repo = _repo!;
 
     state = state.copyWith(isStreaming: true, streamingContent: '', error: '');
 
     try {
       await for (final chunk in repo.sendMessage(sessionId, content)) {
+        if (_streamingSessionId != sessionId) break;
         state = state.copyWith(
           streamingContent: state.streamingContent + chunk,
         );
       }
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      if (_streamingSessionId == sessionId) {
+        state = state.copyWith(error: e.toString());
+      }
     } finally {
-      if (ref.mounted) {
+      if (ref.mounted && _streamingSessionId == sessionId) {
         state = state.copyWith(isStreaming: false);
+        _streamingSessionId = null;
         ref.invalidate(chatMessagesProvider(sessionId));
       }
     }

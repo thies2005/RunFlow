@@ -180,6 +180,7 @@ class ChatRepositoryImpl implements ChatRepository {
     }
   }
 
+  @override
   void cancelStreaming() {
     _activeToken?.cancel();
     _activeToken = null;

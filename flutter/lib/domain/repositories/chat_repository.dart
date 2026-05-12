@@ -10,4 +10,6 @@ abstract class ChatRepository {
   Stream<String> sendMessage(String sessionId, String content);
 
   Future<bool> deleteSession(String sessionId);
+
+  void cancelStreaming();
 }

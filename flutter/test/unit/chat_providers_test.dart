@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:runflow_flutter/domain/entities/chat_entities.dart';
 import 'package:runflow_flutter/domain/repositories/chat_repository.dart';
 import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
+import 'package:runflow_flutter/presentation/screens/chat/chat_screen.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,6 +15,7 @@ class FakeChatRepository implements ChatRepository {
   Stream<String>? streamToReturn;
   bool deleteResult = true;
   Object? sendMessageError;
+  int cancelStreamingCalls = 0;
 
   final List<String> listSessionsCalls = [];
   final List<void Function()> createSessionCalls = [];
@@ -55,6 +57,11 @@ class FakeChatRepository implements ChatRepository {
   Future<bool> deleteSession(String sessionId) async {
     deleteSessionCalls.add(sessionId);
     return deleteResult;
+  }
+
+  @override
+  void cancelStreaming() {
+    cancelStreamingCalls++;
   }
 }
 
@@ -231,18 +238,26 @@ void main() {
   group('ChatNotifier', () {
     late FakeChatRepository fakeRepo;
     late ProviderContainer container;
+    late ProviderSubscription<ChatState> subscription;
 
     setUp(() {
       fakeRepo = FakeChatRepository();
       container = ProviderContainer(
         overrides: [
           chatRepositoryProvider.overrideWithValue(fakeRepo),
-          chatProvider.overrideWith(() => _TestChatNotifier()),
         ],
+      );
+      subscription = container.listen<ChatState>(
+        chatProvider,
+        (_, __) {},
+        fireImmediately: true,
       );
     });
 
-    tearDown(() {});
+    tearDown(() {
+      subscription.close();
+      container.dispose();
+    });
 
     test('sendMessage streams content chunks and updates state', () async {
       fakeRepo.streamToReturn = Stream.fromIterable(['Hel', 'lo!']);
@@ -271,10 +286,111 @@ void main() {
       expect(state.isStreaming, false);
       expect(state.error, contains('Server error'));
     });
-  });
-}
 
-class _TestChatNotifier extends ChatNotifier {
-  @override
-  ChatState build() => const ChatState();
+    test('sendMessage cancels previous stream when sending new message', () async {
+      final controller = StreamController<String>();
+      fakeRepo.streamToReturn = controller.stream;
+
+      final notifier = container.read(chatProvider.notifier);
+      // ignore: unawaited_futures
+      notifier.sendMessage('s1', 'first');
+
+      await Future.delayed(Duration.zero);
+
+      fakeRepo.streamToReturn = Stream.fromIterable(['B']);
+      await notifier.sendMessage('s2', 'second');
+
+      final state = container.read(chatProvider);
+      expect(state.streamingContent, 'B');
+      expect(fakeRepo.cancelStreamingCalls, greaterThanOrEqualTo(1));
+
+      await controller.close();
+    });
+
+    test('switching session cancels stream and resets state', () async {
+      final controller = StreamController<String>();
+      fakeRepo.streamToReturn = controller.stream;
+
+      final notifier = container.read(chatProvider.notifier);
+      // ignore: unawaited_futures
+      notifier.sendMessage('s1', 'hello');
+
+      await Future.delayed(Duration.zero);
+
+      container.read(currentSessionIdProvider.notifier).set('s2');
+
+      final state = container.read(chatProvider);
+      expect(state.isStreaming, false);
+      expect(state.streamingContent, '');
+      expect(state.error, '');
+      expect(fakeRepo.cancelStreamingCalls, greaterThanOrEqualTo(1));
+
+      await controller.close();
+    });
+
+    test('switching to same session does not reset state', () async {
+      container.read(currentSessionIdProvider.notifier).set('s1');
+
+      fakeRepo.streamToReturn = Stream.fromIterable(['Hello']);
+
+      final notifier = container.read(chatProvider.notifier);
+      await notifier.sendMessage('s1', 'hi');
+
+      container.read(currentSessionIdProvider.notifier).set('s1');
+
+      final state = container.read(chatProvider);
+      expect(state.streamingContent, 'Hello');
+    });
+
+    test('resetForNewSession clears active stream', () async {
+      final controller = StreamController<String>();
+      fakeRepo.streamToReturn = controller.stream;
+
+      final notifier = container.read(chatProvider.notifier);
+      // ignore: unawaited_futures
+      notifier.sendMessage('s1', 'hello');
+
+      await Future.delayed(Duration.zero);
+
+      notifier.resetForNewSession();
+
+      final state = container.read(chatProvider);
+      expect(state.isStreaming, false);
+      expect(state.streamingContent, '');
+      expect(fakeRepo.cancelStreamingCalls, greaterThanOrEqualTo(1));
+
+      await controller.close();
+    });
+
+    test('resetForNewSession is no-op when not streaming', () async {
+      final notifier = container.read(chatProvider.notifier);
+      notifier.resetForNewSession();
+
+      expect(fakeRepo.cancelStreamingCalls, 0);
+    });
+
+    test('stream loop breaks when session changes mid-stream', () async {
+      final controller = StreamController<String>();
+      fakeRepo.streamToReturn = controller.stream;
+
+      final notifier = container.read(chatProvider.notifier);
+      // ignore: unawaited_futures
+      notifier.sendMessage('s1', 'hello');
+
+      await Future.delayed(Duration.zero);
+      expect(container.read(chatProvider).isStreaming, true);
+
+      container.read(currentSessionIdProvider.notifier).set('s2');
+
+      controller.add('chunk1');
+      controller.add('chunk2');
+      await Future.delayed(Duration.zero);
+
+      final state = container.read(chatProvider);
+      expect(state.streamingContent, '');
+      expect(state.isStreaming, false);
+
+      await controller.close();
+    });
+  });
 }

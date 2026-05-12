@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/domain/entities/ai_feedback_entities.dart';
+import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/ai_feedback_providers.dart';
 
 class AiFeedbackSection extends ConsumerWidget {
@@ -16,7 +17,7 @@ class AiFeedbackSection extends ConsumerWidget {
 
     return feedbackAsync.when(
       loading: () => _buildLoadingState(context),
-      error: (_, _) => _buildEmptyState(context, ref),
+      error: (e, _) => _buildErrorState(context, ref, e.toString()),
       data: (feedback) {
         final hasContent = feedback.plannedComparison != null ||
             feedback.progressAnalysis != null ||
@@ -31,6 +32,7 @@ class AiFeedbackSection extends ConsumerWidget {
 
   Widget _buildLoadingState(BuildContext context) {
     final theme = Theme.of(context);
+    final s = S.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -42,7 +44,7 @@ class AiFeedbackSection extends ConsumerWidget {
                 const Icon(Icons.smart_toy, size: 18, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'AI Coach Feedback',
+                  s.aiCoachFeedback,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -60,9 +62,68 @@ class AiFeedbackSection extends ConsumerWidget {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'Loading...',
+                s.actionLoading,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, WidgetRef ref, String error) {
+    final theme = Theme.of(context);
+    final isGenerating = ref.watch(aiFeedbackProvider(activityId)).isLoading;
+    final s = S.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.error_outline, size: 18, color: AppColors.error),
+                const SizedBox(width: 8),
+                Text(
+                  s.aiAnalysisFailed,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              error.contains('429') ? s.aiRateLimited : s.aiFeedbackError,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.error,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isGenerating
+                    ? null
+                    : () {
+                        ref
+                            .read(aiFeedbackProvider(activityId).notifier)
+                            .generate(activityId);
+                      },
+                icon: isGenerating
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh, size: 16),
+                label: Text(
+                  isGenerating ? s.aiRetrying : s.aiTryAgain,
                 ),
               ),
             ),
@@ -75,6 +136,7 @@ class AiFeedbackSection extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isGenerating = ref.watch(aiFeedbackProvider(activityId)).isLoading;
+    final s = S.of(context);
 
     return Card(
       child: Padding(
@@ -87,7 +149,7 @@ class AiFeedbackSection extends ConsumerWidget {
                 const Icon(Icons.smart_toy, size: 18, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Text(
-                  'AI Coach Feedback',
+                  s.aiCoachFeedback,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -96,7 +158,7 @@ class AiFeedbackSection extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Get personalized analysis comparing this run to your planned workout and goals.',
+              s.aiFeedbackDescription,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -120,7 +182,7 @@ class AiFeedbackSection extends ConsumerWidget {
                       )
                     : const Icon(Icons.auto_awesome, size: 16),
                 label: Text(
-                  isGenerating ? 'Generating...' : 'Get AI Analysis',
+                  isGenerating ? s.aiGenerating : s.aiGetAnalysis,
                 ),
               ),
             ),
@@ -137,6 +199,7 @@ class AiFeedbackSection extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final isGenerating = ref.watch(aiFeedbackProvider(activityId)).isLoading;
+    final s = S.of(context);
 
     return Card(
       child: Padding(
@@ -150,7 +213,7 @@ class AiFeedbackSection extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'AI Coach Feedback',
+                    s.aiCoachFeedback,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -172,7 +235,7 @@ class AiFeedbackSection extends ConsumerWidget {
                         )
                       : const Icon(Icons.refresh, size: 14),
                   label: Text(
-                    isGenerating ? 'Regenerating...' : 'Regenerate',
+                    isGenerating ? s.aiRegenerating : s.aiRegenerate,
                     style: const TextStyle(fontSize: 12),
                   ),
                 ),
@@ -182,7 +245,7 @@ class AiFeedbackSection extends ConsumerWidget {
             if (feedback.plannedComparison != null)
               _FeedbackCard(
                 icon: Icons.calendar_today,
-                title: 'Vs Planned Workout',
+                title: s.aiVsPlannedWorkout,
                 content: feedback.plannedComparison!,
                 color: AppColors.primary,
               ),
@@ -190,7 +253,7 @@ class AiFeedbackSection extends ConsumerWidget {
               const SizedBox(height: 8),
               _FeedbackCard(
                 icon: Icons.trending_up,
-                title: 'Progress & Execution',
+                title: s.aiProgressExecution,
                 content: feedback.progressAnalysis!,
                 color: AppColors.success,
               ),
@@ -199,7 +262,7 @@ class AiFeedbackSection extends ConsumerWidget {
               const SizedBox(height: 8),
               _FeedbackCard(
                 icon: Icons.favorite,
-                title: 'Goal Trajectory',
+                title: s.aiGoalTrajectory,
                 content: feedback.goalTrajectory!,
                 color: AppColors.primary,
               ),
@@ -223,6 +286,15 @@ class _FeedbackCard extends StatelessWidget {
   final String title;
   final String content;
   final Color color;
+
+  String _cleanMarkdown(String text) {
+    var cleaned = text.replaceAll(RegExp(r'<think>[\s\S]*?<\/think>'), '');
+    final openThinkIndex = cleaned.indexOf('<think>');
+    if (openThinkIndex != -1) {
+      cleaned = cleaned.substring(0, openThinkIndex);
+    }
+    return cleaned.split('\n').map((line) => line.trimLeft()).join('\n');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -251,9 +323,12 @@ class _FeedbackCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           MarkdownBody(
-            data: content,
+            data: _cleanMarkdown(content),
             styleSheet: MarkdownStyleSheet(
               p: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+              listBullet: theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
             ),

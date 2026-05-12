@@ -549,6 +549,126 @@ class SDe extends S {
   }
 
   @override
+  String get chatCalorieSnap => 'Kalorien-Schnappschuss';
+
+  @override
+  String get chatPromptLibrary => 'Prompt-Bibliothek';
+
+  @override
+  String get chatMealLogged => 'Mahlzeit erfasst';
+
+  @override
+  String get chatStreamingError =>
+      'Antwort fehlgeschlagen. Bitte versuchen Sie es erneut.';
+
+  @override
+  String get chatRateLimited =>
+      'Die KI ist derzeit beschäftigt. Bitte versuchen Sie es in einem Moment erneut.';
+
+  @override
+  String get chatCategoryTraining => 'Training';
+
+  @override
+  String get chatCategoryRecovery => 'Regeneration';
+
+  @override
+  String get chatCategoryNutrition => 'Ernährung';
+
+  @override
+  String get chatCategoryPacing => 'Tempo';
+
+  @override
+  String get chatPromptTaperRace =>
+      'Wie sollte ich für mein bevorstehendes Rennen tapern?';
+
+  @override
+  String get chatPromptAnalyzeLoad =>
+      'Können Sie meine letzte Trainingsbelastung analysieren?';
+
+  @override
+  String get chatPromptPaceLongRun =>
+      'Welches Tempo sollte ich beim nächsten langen Lauf laufen?';
+
+  @override
+  String get chatPromptSleepPeak =>
+      'Wie viel Schlaf brauche ich im Peak-Training?';
+
+  @override
+  String get chatPromptOvertraining =>
+      'Was sind die Anzeichen von Übertraining?';
+
+  @override
+  String get chatPromptRecoveryMarathon =>
+      'Beste Regenerationsmethoden nach einem Marathon?';
+
+  @override
+  String get chatPromptEatBeforeLongRun =>
+      'Was sollte ich vor einem langen Lauf essen?';
+
+  @override
+  String get chatPromptFuelHalfMarathon =>
+      'Wie versorge ich mich während eines Halbmarathons?';
+
+  @override
+  String get chatPromptPostRunProtein => 'Protein-Empfehlungen nach dem Lauf?';
+
+  @override
+  String get chatPromptPredicted5k => 'Was ist mein prognostiziertes 5K-Tempo?';
+
+  @override
+  String get chatPromptHillyMarathon =>
+      'Wie pacing für einen hügeligen Marathon?';
+
+  @override
+  String get chatPromptNegativeSplits =>
+      'Sollte ich negative Splits verwenden?';
+
+  @override
+  String get aiCoachFeedback => 'KI-Coach-Feedback';
+
+  @override
+  String get aiAnalysisFailed => 'Analyse fehlgeschlagen';
+
+  @override
+  String get aiRateLimited =>
+      'Die KI analysiert gerade andere Läufe. Bitte versuchen Sie es in einem Moment erneut.';
+
+  @override
+  String get aiFeedbackError =>
+      'Beim Generieren Ihres Feedbacks ist ein Fehler aufgetreten.';
+
+  @override
+  String get aiTryAgain => 'Erneut versuchen';
+
+  @override
+  String get aiRetrying => 'Wird erneut versucht...';
+
+  @override
+  String get aiGetAnalysis => 'KI-Analyse abrufen';
+
+  @override
+  String get aiGenerating => 'Wird generiert...';
+
+  @override
+  String get aiFeedbackDescription =>
+      'Erhalten Sie eine personalisierte Analyse, die diesen Lauf mit Ihrem geplanten Training und Ihren Zielen vergleicht.';
+
+  @override
+  String get aiRegenerate => 'Regenerieren';
+
+  @override
+  String get aiRegenerating => 'Wird regeneriert...';
+
+  @override
+  String get aiVsPlannedWorkout => 'Vs. geplantes Training';
+
+  @override
+  String get aiProgressExecution => 'Fortschritt & Ausführung';
+
+  @override
+  String get aiGoalTrajectory => 'Zielverlauf';
+
+  @override
   String get activitiesTitle => 'Aktivitäten';
 
   @override

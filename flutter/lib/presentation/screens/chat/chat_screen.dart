@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/domain/entities/chat_entities.dart';
+import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/chat_providers.dart';
 
@@ -28,6 +29,15 @@ String _formatTimeAgo(DateTime dateTime, S s) {
   if (diff.inDays < 1) return s.chatHoursAgo(diff.inHours);
   if (diff.inDays < 7) return s.chatDaysAgo(diff.inDays);
   return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+}
+
+String _cleanChatContent(String content) {
+  var cleaned = content.replaceAll(RegExp(r'<think>[\s\S]*?<\/think>'), '');
+  final openThinkIndex = cleaned.indexOf('<think>');
+  if (openThinkIndex != -1) {
+    cleaned = cleaned.substring(0, openThinkIndex);
+  }
+  return cleaned;
 }
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -95,6 +105,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: Text(s.chatAiCoach),
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => context.push('/settings/ai'),
+          ),
+          IconButton(
             icon: const Icon(Icons.history),
             onPressed: () => _showSessionsDrawer(context),
           ),
@@ -128,6 +142,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             error: (e, _) => _buildErrorState(e.toString(), sessionId),
           ),
         ),
+        if (chatState.error.isNotEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: AppColors.error.withValues(alpha: 0.1),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, size: 16, color: AppColors.error),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    chatState.error.contains('429')
+                        ? S.of(context).chatRateLimited
+                        : S.of(context).chatStreamingError,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         _buildInputBar(sessionId, chatState, theme),
       ],
     );
@@ -210,7 +246,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildStreamingBubble(String content, ThemeData theme) {
-    if (content.isEmpty) {
+    final cleanedContent = _cleanChatContent(content);
+    if (cleanedContent.isEmpty) {
       return _TypingIndicator(theme: theme);
     }
     return Align(
@@ -234,7 +271,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             MarkdownBody(
-              data: content,
+              data: cleanedContent,
               styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
                 p: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface,
@@ -278,6 +315,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       child: Row(
         children: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            onPressed: () => _showPlusMenu(context, sessionId),
+          ),
           Expanded(
             child: TextField(
               controller: _messageController,
@@ -425,6 +466,141 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       builder: (context) => const _SessionsSheet(),
     );
   }
+
+  void _showPlusMenu(BuildContext context, String sessionId) {
+    final s = S.of(context);
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: Text(s.chatCalorieSnap),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/health/ai-scan').then((result) {
+                  if (result != null && result is FoodItem) {
+                    final msg = 'I just ate ${result.name}. It has ${result.calories.toStringAsFixed(0)} kcal (${result.protein.toStringAsFixed(0)}g protein, ${result.carbs.toStringAsFixed(0)}g carbs, ${result.fat.toStringAsFixed(0)}g fat).';
+                    _messageController.text = msg;
+                    _sendMessage(sessionId);
+                  }
+                });
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.book, color: AppColors.primary),
+              title: Text(s.chatPromptLibrary),
+              onTap: () {
+                Navigator.pop(context);
+                _showPromptLibrary(context, sessionId);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPromptLibrary(BuildContext context, String sessionId) {
+    final s = S.of(context);
+    final categories = {
+      s.chatCategoryTraining: [
+        s.chatPromptTaperRace,
+        s.chatPromptAnalyzeLoad,
+        s.chatPromptPaceLongRun,
+      ],
+      s.chatCategoryRecovery: [
+        s.chatPromptSleepPeak,
+        s.chatPromptOvertraining,
+        s.chatPromptRecoveryMarathon,
+      ],
+      s.chatCategoryNutrition: [
+        s.chatPromptEatBeforeLongRun,
+        s.chatPromptFuelHalfMarathon,
+        s.chatPromptPostRunProtein,
+      ],
+      s.chatCategoryPacing: [
+        s.chatPromptPredicted5k,
+        s.chatPromptHillyMarathon,
+        s.chatPromptNegativeSplits,
+      ],
+    };
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        minChildSize: 0.3,
+        expand: false,
+        builder: (context, scrollController) {
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      s.chatPromptLibrary,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: categories.entries.map((category) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            category.key,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ),
+                        ...category.value.map((prompt) => ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(prompt, style: Theme.of(context).textTheme.bodyMedium),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                              onTap: () {
+                                Navigator.pop(context);
+                                _messageController.text = prompt;
+                                _sendMessage(sessionId);
+                              },
+                            )),
+                        const Divider(),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _MessageBubble extends StatelessWidget {
@@ -436,6 +612,9 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.role == ChatMessageRole.user;
+    final cleanedContent = isUser ? message.content : _cleanChatContent(message.content);
+    final isMealLogged = cleanedContent.contains('<!-- MEAL_LOGGED_WIDGET -->');
+    final finalContent = cleanedContent.replaceAll('<!-- MEAL_LOGGED_WIDGET -->', '').trim();
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -461,18 +640,37 @@ class _MessageBubble extends StatelessWidget {
           children: [
             if (isUser)
               Text(
-                message.content,
+                finalContent,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onPrimary,
                 ),
               )
             else
               MarkdownBody(
-                data: message.content,
+                data: finalContent,
                 styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
                   p: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurface,
                   ),
+                ),
+              ),
+            if (isMealLogged)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.tertiaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.restaurant, color: theme.colorScheme.onTertiaryContainer),
+                    const SizedBox(width: 8),
+                    Text(S.of(context).chatMealLogged, style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onTertiaryContainer,
+                      fontWeight: FontWeight.bold,
+                    )),
+                  ],
                 ),
               ),
             const SizedBox(height: 4),

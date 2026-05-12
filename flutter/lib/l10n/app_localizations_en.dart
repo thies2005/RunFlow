@@ -542,6 +542,121 @@ class SEn extends S {
   }
 
   @override
+  String get chatCalorieSnap => 'Calorie Snap';
+
+  @override
+  String get chatPromptLibrary => 'Prompt Library';
+
+  @override
+  String get chatMealLogged => 'Meal Logged';
+
+  @override
+  String get chatStreamingError => 'Failed to get response. Please try again.';
+
+  @override
+  String get chatRateLimited =>
+      'The AI is currently busy. Please try again in a moment.';
+
+  @override
+  String get chatCategoryTraining => 'Training';
+
+  @override
+  String get chatCategoryRecovery => 'Recovery';
+
+  @override
+  String get chatCategoryNutrition => 'Nutrition';
+
+  @override
+  String get chatCategoryPacing => 'Pacing';
+
+  @override
+  String get chatPromptTaperRace => 'How should I taper for my upcoming race?';
+
+  @override
+  String get chatPromptAnalyzeLoad =>
+      'Can you analyze my recent training load?';
+
+  @override
+  String get chatPromptPaceLongRun =>
+      'What pace should I run my next long run?';
+
+  @override
+  String get chatPromptSleepPeak =>
+      'How much sleep do I need during peak training?';
+
+  @override
+  String get chatPromptOvertraining => 'What are the signs of overtraining?';
+
+  @override
+  String get chatPromptRecoveryMarathon =>
+      'Best recovery methods after a marathon?';
+
+  @override
+  String get chatPromptEatBeforeLongRun =>
+      'What should I eat before a long run?';
+
+  @override
+  String get chatPromptFuelHalfMarathon =>
+      'How to fuel during a half marathon?';
+
+  @override
+  String get chatPromptPostRunProtein => 'Post-run protein recommendations?';
+
+  @override
+  String get chatPromptPredicted5k => 'What is my predicted 5K pace?';
+
+  @override
+  String get chatPromptHillyMarathon => 'How to pace a hilly marathon?';
+
+  @override
+  String get chatPromptNegativeSplits => 'Should I use negative splits?';
+
+  @override
+  String get aiCoachFeedback => 'AI Coach Feedback';
+
+  @override
+  String get aiAnalysisFailed => 'Analysis Failed';
+
+  @override
+  String get aiRateLimited =>
+      'The AI is currently busy analyzing other runs. Please try again in a moment.';
+
+  @override
+  String get aiFeedbackError =>
+      'An error occurred while generating your feedback.';
+
+  @override
+  String get aiTryAgain => 'Try Again';
+
+  @override
+  String get aiRetrying => 'Retrying...';
+
+  @override
+  String get aiGetAnalysis => 'Get AI Analysis';
+
+  @override
+  String get aiGenerating => 'Generating...';
+
+  @override
+  String get aiFeedbackDescription =>
+      'Get personalized analysis comparing this run to your planned workout and goals.';
+
+  @override
+  String get aiRegenerate => 'Regenerate';
+
+  @override
+  String get aiRegenerating => 'Regenerating...';
+
+  @override
+  String get aiVsPlannedWorkout => 'Vs Planned Workout';
+
+  @override
+  String get aiProgressExecution => 'Progress & Execution';
+
+  @override
+  String get aiGoalTrajectory => 'Goal Trajectory';
+
+  @override
   String get activitiesTitle => 'Activities';
 
   @override

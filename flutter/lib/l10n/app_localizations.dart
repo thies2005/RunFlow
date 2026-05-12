@@ -1129,6 +1129,216 @@ abstract class S {
   /// **'Are you sure you want to delete \"{title}\"?'**
   String chatDeleteConfirm(String title);
 
+  /// No description provided for @chatCalorieSnap.
+  ///
+  /// In en, this message translates to:
+  /// **'Calorie Snap'**
+  String get chatCalorieSnap;
+
+  /// No description provided for @chatPromptLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt Library'**
+  String get chatPromptLibrary;
+
+  /// No description provided for @chatMealLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal Logged'**
+  String get chatMealLogged;
+
+  /// No description provided for @chatStreamingError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to get response. Please try again.'**
+  String get chatStreamingError;
+
+  /// No description provided for @chatRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI is currently busy. Please try again in a moment.'**
+  String get chatRateLimited;
+
+  /// No description provided for @chatCategoryTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Training'**
+  String get chatCategoryTraining;
+
+  /// No description provided for @chatCategoryRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery'**
+  String get chatCategoryRecovery;
+
+  /// No description provided for @chatCategoryNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get chatCategoryNutrition;
+
+  /// No description provided for @chatCategoryPacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pacing'**
+  String get chatCategoryPacing;
+
+  /// No description provided for @chatPromptTaperRace.
+  ///
+  /// In en, this message translates to:
+  /// **'How should I taper for my upcoming race?'**
+  String get chatPromptTaperRace;
+
+  /// No description provided for @chatPromptAnalyzeLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you analyze my recent training load?'**
+  String get chatPromptAnalyzeLoad;
+
+  /// No description provided for @chatPromptPaceLongRun.
+  ///
+  /// In en, this message translates to:
+  /// **'What pace should I run my next long run?'**
+  String get chatPromptPaceLongRun;
+
+  /// No description provided for @chatPromptSleepPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'How much sleep do I need during peak training?'**
+  String get chatPromptSleepPeak;
+
+  /// No description provided for @chatPromptOvertraining.
+  ///
+  /// In en, this message translates to:
+  /// **'What are the signs of overtraining?'**
+  String get chatPromptOvertraining;
+
+  /// No description provided for @chatPromptRecoveryMarathon.
+  ///
+  /// In en, this message translates to:
+  /// **'Best recovery methods after a marathon?'**
+  String get chatPromptRecoveryMarathon;
+
+  /// No description provided for @chatPromptEatBeforeLongRun.
+  ///
+  /// In en, this message translates to:
+  /// **'What should I eat before a long run?'**
+  String get chatPromptEatBeforeLongRun;
+
+  /// No description provided for @chatPromptFuelHalfMarathon.
+  ///
+  /// In en, this message translates to:
+  /// **'How to fuel during a half marathon?'**
+  String get chatPromptFuelHalfMarathon;
+
+  /// No description provided for @chatPromptPostRunProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Post-run protein recommendations?'**
+  String get chatPromptPostRunProtein;
+
+  /// No description provided for @chatPromptPredicted5k.
+  ///
+  /// In en, this message translates to:
+  /// **'What is my predicted 5K pace?'**
+  String get chatPromptPredicted5k;
+
+  /// No description provided for @chatPromptHillyMarathon.
+  ///
+  /// In en, this message translates to:
+  /// **'How to pace a hilly marathon?'**
+  String get chatPromptHillyMarathon;
+
+  /// No description provided for @chatPromptNegativeSplits.
+  ///
+  /// In en, this message translates to:
+  /// **'Should I use negative splits?'**
+  String get chatPromptNegativeSplits;
+
+  /// No description provided for @aiCoachFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Coach Feedback'**
+  String get aiCoachFeedback;
+
+  /// No description provided for @aiAnalysisFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis Failed'**
+  String get aiAnalysisFailed;
+
+  /// No description provided for @aiRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI is currently busy analyzing other runs. Please try again in a moment.'**
+  String get aiRateLimited;
+
+  /// No description provided for @aiFeedbackError.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while generating your feedback.'**
+  String get aiFeedbackError;
+
+  /// No description provided for @aiTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get aiTryAgain;
+
+  /// No description provided for @aiRetrying.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying...'**
+  String get aiRetrying;
+
+  /// No description provided for @aiGetAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Get AI Analysis'**
+  String get aiGetAnalysis;
+
+  /// No description provided for @aiGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating...'**
+  String get aiGenerating;
+
+  /// No description provided for @aiFeedbackDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Get personalized analysis comparing this run to your planned workout and goals.'**
+  String get aiFeedbackDescription;
+
+  /// No description provided for @aiRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get aiRegenerate;
+
+  /// No description provided for @aiRegenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerating...'**
+  String get aiRegenerating;
+
+  /// No description provided for @aiVsPlannedWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Vs Planned Workout'**
+  String get aiVsPlannedWorkout;
+
+  /// No description provided for @aiProgressExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress & Execution'**
+  String get aiProgressExecution;
+
+  /// No description provided for @aiGoalTrajectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal Trajectory'**
+  String get aiGoalTrajectory;
+
   /// No description provided for @activitiesTitle.
   ///
   /// In en, this message translates to:

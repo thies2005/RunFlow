@@ -176,6 +176,11 @@ class _ProfileMenuSection extends ConsumerWidget {
           onTap: () => context.push('/activities'),
         ),
         _MenuTile(
+          icon: Icons.auto_awesome,
+          title: S.of(context).chatAiCoach,
+          onTap: () => context.push('/chat'),
+        ),
+        _MenuTile(
           icon: Icons.edit_outlined,
           title: S.of(context).athleteEditProfile,
           onTap: () => context.push('/profile/edit'),

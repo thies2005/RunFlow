@@ -12,8 +12,11 @@ import 'package:runflow_flutter/data/interceptors/auth_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/error_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/refresh_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/retry_interceptor.dart';
+import 'package:runflow_flutter/data/repositories/activity_repository_impl.dart';
+import 'package:runflow_flutter/data/repositories/goal_repository_impl.dart';
 import 'package:runflow_flutter/domain/services/readiness/readiness_scoring_service.dart';
 import 'package:runflow_flutter/domain/services/readiness/trimp_service.dart';
+import 'package:runflow_flutter/domain/services/readiness/weekly_reconciliation_service.dart';
 import 'package:runflow_flutter/services/activity_cache_sync_service.dart';
 import 'package:runflow_flutter/services/auth_service_impl.dart';
 import 'package:runflow_flutter/services/health_connect_service.dart';
@@ -68,10 +71,17 @@ Future<bool> performBackgroundSync({
         final healthConnect = HealthConnectServiceImpl(health: Health());
         const scoringService = ReadinessScoringService();
         const trimpService = TrimpService();
+        final cacheDatasource = CacheDatasource(database: AppDatabase.instance);
+        final activityRepository = ActivityRepositoryImpl(
+          dio: dio,
+          localDatasource: localDs,
+          cacheDatasource: cacheDatasource,
+        );
         final orchestrator = ReadinessOrchestrator(
           healthConnect: healthConnect,
           scoringService: scoringService,
           trimpService: trimpService,
+          activityRepository: activityRepository,
         );
         try {
           final inputs = await orchestrator.collectInputs(maxHr: null, restingHr: null, age: null);
@@ -101,6 +111,89 @@ Future<bool> performBackgroundSync({
         } catch (e) {
           logger.warning('[BackgroundSync] Readiness computation failed: $e');
         }
+      }
+
+      // Weekly Reconciliation
+      try {
+        final now = DateTime.now();
+        if (now.weekday == DateTime.sunday || now.weekday == DateTime.monday) {
+          final daysSubtract = now.weekday == DateTime.sunday ? 6 : 7;
+          final weekStart = DateTime(now.year, now.month, now.day).subtract(Duration(days: daysSubtract));
+          final weekKey = _dateKey(weekStart);
+
+          final existingWeekly = await readinessLocal.getWeeklyRecord(weekKey);
+          if (existingWeekly == null) {
+            final goalRepo = GoalRepositoryImpl(dio: dio, cacheDatasource: CacheDatasource(database: AppDatabase.instance));
+            final weekEnd = weekStart.add(const Duration(days: 7));
+            
+            final workoutsRes = await goalRepo.listWorkouts(weekStart: weekStart, weekEnd: weekEnd);
+            double plannedLoad = 0;
+            const trimpService = TrimpService();
+            for (final w in workoutsRes.workouts) {
+              plannedLoad += trimpService.computeSessionTypeFallback(
+                durationSeconds: w.targetDuration, 
+                workoutType: w.workoutType.name, 
+                config: null,
+              );
+            }
+
+            final activitiesRes = await ActivityRepositoryImpl(dio: dio, localDatasource: localDs, cacheDatasource: CacheDatasource(database: AppDatabase.instance)).listActivities(limit: 100);
+            double actualLoad = 0;
+            for (final a in activitiesRes.activities) {
+              if (a.startDate.isAfter(weekStart) && a.startDate.isBefore(weekEnd)) {
+                actualLoad += a.trimp ?? trimpService.computeSessionTypeFallback(
+                  durationSeconds: a.movingTime, 
+                  workoutType: a.type.name, 
+                  config: null,
+                );
+              }
+            }
+
+            int? raceWeeks;
+            try {
+              final goalsRes = await goalRepo.listGoals();
+              if (goalsRes.goals.isNotEmpty) {
+                final activeGoal = goalsRes.goals.firstWhere((g) => g.isActive, orElse: () => goalsRes.goals.first);
+                raceWeeks = activeGoal.raceDate.difference(now).inDays ~/ 7;
+                if (raceWeeks < 0) raceWeeks = 0;
+              }
+            } catch (_) {}
+
+            final service = WeeklyReconciliationService();
+            final record = service.reconcile(
+              weekStartDate: weekStart,
+              plannedLoad: plannedLoad,
+              actualLoad: actualLoad,
+              adaptedLoad: 0,
+              raceWeeksRemaining: raceWeeks,
+            );
+
+            if (record != null) {
+              final model = WeeklyReconciliationRecordModel(
+                weekStartDate: weekKey,
+                plannedLoad: record.plannedLoad,
+                actualLoad: record.actualLoad,
+                adaptedLoad: record.adaptedLoad,
+                deficitPercent: record.deficitPercent,
+                surplusPercent: record.surplusPercent,
+                adjustmentDescription: record.adjustmentDescription,
+                isApplied: record.isApplied,
+                raceWeeksRemaining: record.raceWeeksRemaining,
+                requiresReview: record.requiresReview,
+                createdAt: record.createdAt.toIso8601String(),
+                syncedAt: null,
+              );
+              await readinessLocal.upsertWeeklyRecord(model);
+              await readinessLocal.enqueueSync(
+                entityType: 'weekly_reconciliation',
+                localId: weekKey,
+                payload: model.toJson(),
+              );
+            }
+          }
+        }
+      } catch (e) {
+        logger.warning('[BackgroundSync] Weekly reconciliation failed: $e');
       }
     } catch (e) {
       logger.warning('[BackgroundSync] Readiness sync failed: $e');

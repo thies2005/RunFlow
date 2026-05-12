@@ -11,6 +11,7 @@ import 'package:runflow_flutter/domain/services/readiness/trimp_service.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
+import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/services/readiness_orchestrator.dart';
 
 part 'readiness_providers.g.dart';
@@ -31,6 +32,7 @@ ReadinessOrchestrator readinessOrchestrator(Ref ref) {
     healthConnect: ref.watch(healthConnectServiceProvider),
     scoringService: ref.read(readinessScoringServiceProvider),
     trimpService: ref.read(trimpServiceProvider),
+    activityRepository: ref.read(activityRepositoryProvider),
   );
 }
 
@@ -48,6 +50,7 @@ Future<ReadinessRepository> readinessRepository(Ref ref) async {
 @riverpod
 class ReadinessNotifier extends _$ReadinessNotifier {
   bool _isRefreshing = false;
+  AdaptedWorkout? _adaptedWorkout;
 
   @override
   Future<DailyReadinessRecord?> build() async {
@@ -71,7 +74,7 @@ class ReadinessNotifier extends _$ReadinessNotifier {
 
   DailyReadinessRecord? get todayRecord => state.value;
 
-  AdaptedWorkout? get adaptedWorkout => null;
+  AdaptedWorkout? get adaptedWorkout => _adaptedWorkout;
 
   bool get isRefreshing => _isRefreshing;
 

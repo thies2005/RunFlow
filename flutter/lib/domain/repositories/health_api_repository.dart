@@ -5,7 +5,7 @@ abstract class HealthApiRepository {
   Future<void> syncNutritionLog(NutritionLog log);
   Future<List<FoodItem>> searchFood(String query);
   Future<FoodItem?> scanBarcode(String code);
-  Future<FoodItem?> aiScanImage(String imagePath);
+  Future<FoodItem?> aiScanImage(String imagePath, {String? context});
   Future<List<Supplement>> getSupplements();
   Future<void> saveSupplementRemote(Supplement supplement);
   Future<void> syncFasting(FastingSession session);

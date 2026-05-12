@@ -1,27 +1,43 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:runflow_flutter/domain/entities/activity_entities.dart';
 import 'package:runflow_flutter/domain/entities/readiness/readiness_entities.dart';
 import 'package:runflow_flutter/domain/services/readiness/readiness_scoring_service.dart';
 import 'package:runflow_flutter/domain/services/readiness/trimp_service.dart';
+import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
 import 'package:runflow_flutter/services/health_connect_service.dart';
 import 'package:runflow_flutter/services/readiness_orchestrator.dart';
 
 class MockHealthConnectService extends Mock implements HealthConnectService {}
+class MockActivityRepository extends Mock implements ActivityRepository {}
 
 void main() {
   late MockHealthConnectService mockHealth;
+  late MockActivityRepository mockActivityRepo;
   late ReadinessScoringService scoringService;
   late TrimpService trimpService;
   late ReadinessOrchestrator orchestrator;
 
   setUp(() {
     mockHealth = MockHealthConnectService();
+    mockActivityRepo = MockActivityRepository();
     scoringService = const ReadinessScoringService();
     trimpService = const TrimpService();
+    
+    when(() => mockActivityRepo.listActivities(limit: any(named: 'limit'), offset: any(named: 'offset')))
+        .thenAnswer((_) async => const ActivitiesResponse(
+              activities: [],
+              limit: 100,
+              offset: 0,
+              total: 0,
+              hasMore: false,
+            ));
+            
     orchestrator = ReadinessOrchestrator(
       healthConnect: mockHealth,
       scoringService: scoringService,
       trimpService: trimpService,
+      activityRepository: mockActivityRepo,
     );
   });
 
@@ -252,7 +268,7 @@ void main() {
 
       expect(inputs.sleep!.deepPercent, closeTo(20.0, 0.01));
       expect(inputs.sleep!.remPercent, closeTo(20.0, 0.01));
-      expect(inputs.sleep!.sleepEfficiency, 0.85);
+      expect(inputs.sleep!.sleepEfficiency, closeTo((96 + 96 + 200) / 480, 0.01));
     });
   });
 

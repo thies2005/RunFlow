@@ -396,11 +396,11 @@ class AiScan extends _$AiScan {
     return const AsyncValue.data(null);
   }
 
-  Future<void> scanImage(String imagePath) async {
+  Future<void> scanImage(String imagePath, {String? context}) async {
     state = const AsyncValue.loading();
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
-      final item = await apiRepo.aiScanImage(imagePath);
+      final item = await apiRepo.aiScanImage(imagePath, context: context);
       state = AsyncValue.data(item);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

@@ -19,7 +19,7 @@ void main() {
   late MockReadinessRemoteDatasource mockRemote;
   late ReadinessRepository repository;
 
-  final testDate = DateTime(2024, 6, 15);
+  final testDate = DateTime.utc(2024, 6, 15);
 
   const testDailyModel = DailyReadinessRecordModel(
     date: '2024-06-15',
@@ -48,7 +48,7 @@ void main() {
   final testBaselineEntity = ReadinessBaseline(
     rhrMedian30Day: 52.0,
     sleepAverage28Day: 7.5,
-    lastUpdated: DateTime(2024, 6, 15),
+    lastUpdated: DateTime.utc(2024, 6, 15),
   );
 
   const testAdaptedModel = AdaptedWorkoutModel(
@@ -82,7 +82,7 @@ void main() {
     readinessScore: 45.0,
     readinessState: ReadinessState.reduced,
     isAccepted: true,
-    createdAt: DateTime(2024, 6, 15, 8),
+    createdAt: DateTime.utc(2024, 6, 15, 8),
   );
 
   const testWeeklyModel = WeeklyReconciliationRecordModel(
@@ -98,7 +98,7 @@ void main() {
   );
 
   final testWeeklyEntity = WeeklyReconciliationRecord(
-    weekStartDate: DateTime(2024, 6, 10),
+    weekStartDate: DateTime.utc(2024, 6, 10),
     plannedLoad: 300.0,
     actualLoad: 250.0,
     adaptedLoad: 260.0,
@@ -106,7 +106,7 @@ void main() {
     surplusPercent: 0.0,
     isApplied: false,
     requiresReview: false,
-    createdAt: DateTime(2024, 6, 16),
+    createdAt: DateTime.utc(2024, 6, 16),
   );
 
   setUp(() {
@@ -216,7 +216,7 @@ void main() {
       test('updates local and remote', () async {
         final override = ReadinessOverride(
           state: OverrideState.harder,
-          overriddenAt: DateTime(2024, 6, 15),
+          overriddenAt: DateTime.utc(2024, 6, 15),
         );
 
         when(() => mockLocal.getDailyRecord('2024-06-15'))
@@ -237,7 +237,7 @@ void main() {
       test('enqueues sync on remote failure', () async {
         final override = ReadinessOverride(
           state: OverrideState.harder,
-          overriddenAt: DateTime(2024, 6, 15),
+          overriddenAt: DateTime.utc(2024, 6, 15),
         );
 
         when(() => mockLocal.getDailyRecord('2024-06-15'))
@@ -271,8 +271,8 @@ void main() {
             .thenAnswer((_) async => [testDailyModel]);
 
         final result = await repository.getHistory(
-          DateTime(2024, 6, 10),
-          DateTime(2024, 6, 15),
+          DateTime.utc(2024, 6, 10),
+          DateTime.utc(2024, 6, 15),
         );
 
         expect(result.length, 1);
@@ -396,7 +396,7 @@ void main() {
             .thenAnswer((_) async => null);
 
         final result =
-            await repository.getWeeklyRecord(DateTime(2024, 6, 10));
+            await repository.getWeeklyRecord(DateTime.utc(2024, 6, 10));
         expect(result, isNull);
       });
 
@@ -405,7 +405,7 @@ void main() {
             .thenAnswer((_) async => testWeeklyModel);
 
         final result =
-            await repository.getWeeklyRecord(DateTime(2024, 6, 10));
+            await repository.getWeeklyRecord(DateTime.utc(2024, 6, 10));
         expect(result, isNotNull);
         expect(result!.plannedLoad, 300.0);
       });

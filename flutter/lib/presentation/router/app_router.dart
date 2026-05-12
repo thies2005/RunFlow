@@ -141,6 +141,11 @@ GoRouter createRouter(Ref ref) {
         builder: (context, state) => const SupplementsScreen(),
       ),
       GoRoute(
+        path: '/health/readiness',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ReadinessDetailScreen(),
+      ),
+      GoRoute(
         path: '/health/body',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const BodyScreen(),

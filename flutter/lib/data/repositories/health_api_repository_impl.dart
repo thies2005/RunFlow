@@ -71,12 +71,16 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
-  Future<domain.FoodItem?> aiScanImage(String imagePath) async {
+  Future<domain.FoodItem?> aiScanImage(String imagePath, {String? context}) async {
     try {
       final filename = imagePath.split(Platform.pathSeparator).last;
-      final formData = FormData.fromMap({
+      final formFields = <String, dynamic>{
         'image': await MultipartFile.fromFile(imagePath, filename: filename),
-      });
+      };
+      if (context != null && context.isNotEmpty) {
+        formFields['context'] = context;
+      }
+      final formData = FormData.fromMap(formFields);
       final response = await dio.post(
         ApiConstants.nutritionAiScanPath,
         data: formData,

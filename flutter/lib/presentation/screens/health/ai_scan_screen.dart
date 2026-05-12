@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,14 +18,24 @@ class AiScanScreen extends ConsumerStatefulWidget {
 
 class _AiScanScreenState extends ConsumerState<AiScanScreen> {
   final _imagePicker = ImagePicker();
+  final _contextController = TextEditingController();
   String? _imagePath;
   bool _scanning = false;
+  double _portionMultiplier = 1.0;
+  FoodItem? _baseResult;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showSourcePicker();
     });
+  }
+
+  @override
+  void dispose() {
+    _contextController.dispose();
+    super.dispose();
   }
 
   Future<void> _showSourcePicker() async {
@@ -43,7 +54,29 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
             const SizedBox(height: 8),
             Text(S.of(context).aiScanChooseImage,
                 style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant)),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            // Additional context text field
+            TextField(
+              controller: _contextController,
+              decoration: InputDecoration(
+                hintText: 'Add details (e.g. "2 eggs, side of toast")',
+                hintStyle: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+                prefixIcon: const Icon(Icons.edit_note, size: 20),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                isDense: true,
+              ),
+              maxLines: 2,
+              textCapitalization: TextCapitalization.sentences,
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -83,6 +116,8 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
       setState(() {
         _imagePath = file.path;
         _scanning = true;
+        _portionMultiplier = 1.0;
+        _baseResult = null;
       });
       unawaited(_scanImage(file.path));
     } else {
@@ -94,10 +129,17 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
 
   Future<void> _scanImage(String path) async {
     try {
-      await ref.read(aiScanProvider.notifier).scanImage(path);
+      final contextText = _contextController.text.trim();
+      await ref.read(aiScanProvider.notifier).scanImage(
+        path,
+        context: contextText.isNotEmpty ? contextText : null,
+      );
       if (mounted) {
+        final result = ref.read(aiScanProvider).value;
         setState(() {
           _scanning = false;
+          _baseResult = result;
+          _portionMultiplier = 1.0;
         });
       }
     } catch (e) {
@@ -108,6 +150,18 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
         );
       }
     }
+  }
+
+  FoodItem? get _scaledResult {
+    if (_baseResult == null) return null;
+    if (_portionMultiplier == 1.0) return _baseResult;
+    return _baseResult!.copyWith(
+      calories: _baseResult!.calories * _portionMultiplier,
+      protein: _baseResult!.protein * _portionMultiplier,
+      carbs: _baseResult!.carbs * _portionMultiplier,
+      fat: _baseResult!.fat * _portionMultiplier,
+      servingSize: _baseResult!.servingSize * _portionMultiplier,
+    );
   }
 
   @override
@@ -133,7 +187,8 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
           ? _buildLoadingState()
           : asyncState.when(
               data: (item) {
-                if (item != null) return _buildResultArea(theme, item);
+                final scaled = _scaledResult;
+                if (scaled != null) return _buildResultArea(theme, scaled);
                 if (_imagePath != null) return _buildNotFound(theme);
                 return const SizedBox.shrink();
               },
@@ -156,6 +211,14 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
           const CircularProgressIndicator(),
           const SizedBox(height: 16),
           Text(S.of(context).aiScanAnalyzing, style: const TextStyle(color: AppColors.onSurfaceVariant)),
+          if (_contextController.text.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'With context: "${_contextController.text.trim()}"',
+              style: const TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ],
       ),
     );
@@ -196,10 +259,40 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Image preview
+          if (_imagePath != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: SizedBox(
+                height: 180,
+                width: double.infinity,
+                child: Image.file(
+                  File(_imagePath!),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: const Icon(Icons.image, size: 48, color: AppColors.onSurfaceVariant),
+                  ),
+                ),
+              ),
+            ),
+          if (_imagePath != null) const SizedBox(height: 16),
           Text(food.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
-          Text(S.of(context).aiScanServing(food.servingSize.toString()), style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant)),
-          const SizedBox(height: 24),
+          Text(S.of(context).aiScanServing(food.servingSize.toStringAsFixed(0)), style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant)),
+          const SizedBox(height: 20),
+
+          // Portion size slider
+          _PortionSlider(
+            multiplier: _portionMultiplier,
+            onChanged: (value) {
+              setState(() {
+                _portionMultiplier = value;
+              });
+            },
+          ),
+
+          const SizedBox(height: 20),
           Text(S.of(context).aiScanNutritionFacts, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Row(
@@ -217,13 +310,167 @@ class _AiScanScreenState extends ConsumerState<AiScanScreen> {
               Expanded(child: _MacroBox(label: S.of(context).nutritionFatLabel, value: food.fat, color: AppColors.error)),
             ],
           ),
+
+          // Additional context display
+          if (_contextController.text.trim().isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.edit_note, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _contextController.text.trim(),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: () => Navigator.of(context).pop(food),
+              onPressed: () => Navigator.of(context).pop(_scaledResult),
               child: Text(S.of(context).nutritionAddFood),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PortionSlider extends StatelessWidget {
+  const _PortionSlider({
+    required this.multiplier,
+    required this.onChanged,
+  });
+
+  final double multiplier;
+  final ValueChanged<double> onChanged;
+
+  String _portionLabel(double value) {
+    if (value <= 0.25) return '¼';
+    if (value <= 0.5) return '½';
+    if (value <= 0.75) return '¾';
+    if (value <= 1.0) return '1';
+    if (value <= 1.5) return '1½';
+    if (value <= 2.0) return '2';
+    if (value <= 2.5) return '2½';
+    return '3';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.tune, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Portion Size',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${_portionLabel(multiplier)} serving${multiplier > 1.0 ? 's' : ''}',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                '¼',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Expanded(
+                child: SliderTheme(
+                  data: SliderThemeData(
+                    activeTrackColor: AppColors.primary,
+                    inactiveTrackColor: AppColors.primary.withValues(alpha: 0.15),
+                    thumbColor: AppColors.primary,
+                    overlayColor: AppColors.primary.withValues(alpha: 0.12),
+                    trackHeight: 4,
+                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                  ),
+                  child: Slider(
+                    value: multiplier,
+                    min: 0.25,
+                    max: 3.0,
+                    divisions: 11,
+                    onChanged: onChanged,
+                  ),
+                ),
+              ),
+              Text(
+                '3',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          // Quick-select chips
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [0.5, 1.0, 1.5, 2.0].map((v) {
+              final selected = (multiplier - v).abs() < 0.01;
+              return ChoiceChip(
+                label: Text('${v == v.roundToDouble() ? v.toInt().toString() : v.toString()}×'),
+                selected: selected,
+                onSelected: (_) => onChanged(v),
+                labelStyle: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: selected ? Colors.white : AppColors.onSurfaceVariant,
+                ),
+                selectedColor: AppColors.primary,
+                backgroundColor: theme.colorScheme.surfaceContainerHigh,
+                side: BorderSide.none,
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+              );
+            }).toList(),
           ),
         ],
       ),

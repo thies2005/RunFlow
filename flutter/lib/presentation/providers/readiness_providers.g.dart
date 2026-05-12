@@ -212,7 +212,7 @@ final class ReadinessNotifierProvider
   ReadinessNotifier create() => ReadinessNotifier();
 }
 
-String _$readinessNotifierHash() => r'e15bad64113226d817b44118dcf72aabd0f58f01';
+String _$readinessNotifierHash() => r'96bace6ab1dbab745ad2cd8494cd195ff5f4972c';
 
 abstract class _$ReadinessNotifier
     extends $AsyncNotifier<DailyReadinessRecord?> {

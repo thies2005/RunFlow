@@ -892,7 +892,7 @@ final class AiScanProvider
   }
 }
 
-String _$aiScanHash() => r'2eb619ab76400490ab6db1fff958458f36cf7d56';
+String _$aiScanHash() => r'668de26fec7f4315a391e6cbe488ba44994cb280';
 
 abstract class _$AiScan extends $Notifier<AsyncValue<FoodItem?>> {
   AsyncValue<FoodItem?> build();

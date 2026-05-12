@@ -225,8 +225,6 @@ class ReadinessScoringService {
               (10 - subjective.stressLevel!)) /
           3;
       score = avg * 10;
-    } else if (hasExhaustion) {
-      score = (10 - subjective.exhaustionLevel!) * 10;
     } else {
       int count = 0;
       double sum = 0;

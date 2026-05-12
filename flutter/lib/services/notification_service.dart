@@ -4,7 +4,7 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 abstract class NotificationService {
-  Future<void> initialize();
+  Future<void> initialize({void Function(String? payload)? onNotificationTap});
   Future<void> showNotification({
     required int id,
     required String title,
@@ -19,6 +19,11 @@ abstract class NotificationService {
   });
   Future<void> cancelAllNotifications();
   Future<void> cancelNotification(int id);
+  Future<void> scheduleReadinessMorningNotification({
+    required DateTime scheduledTime,
+    int? readinessScore,
+    String? readinessState,
+  });
 }
 
 class NotificationServiceImpl implements NotificationService {
@@ -33,10 +38,15 @@ class NotificationServiceImpl implements NotificationService {
   static const String _channelDescription = 'Notifications for RunFlow app';
 
   bool _initialized = false;
+  void Function(String? payload)? _onNotificationTap;
 
   @override
-  Future<void> initialize() async {
+  Future<void> initialize({
+    void Function(String? payload)? onNotificationTap,
+  }) async {
     if (_initialized) return;
+
+    _onNotificationTap = onNotificationTap;
 
     try {
       tz_data.initializeTimeZones();
@@ -55,11 +65,18 @@ class NotificationServiceImpl implements NotificationService {
         iOS: iosSettings,
       );
 
-      await _plugin.initialize(settings: settings);
+      await _plugin.initialize(
+        settings: settings,
+        onDidReceiveNotificationResponse: _onNotificationResponse,
+      );
       _initialized = true;
     } catch (_) {
       _initialized = false;
     }
+  }
+
+  void _onNotificationResponse(NotificationResponse response) {
+    _onNotificationTap?.call(response.payload);
   }
 
   @override
@@ -160,6 +177,56 @@ class NotificationServiceImpl implements NotificationService {
       await _plugin.cancel(id: id);
     } catch (e) {
       logger.error('[NotificationServiceImpl] Cancel notification failed: $e');
+    }
+  }
+
+  @override
+  Future<void> scheduleReadinessMorningNotification({
+    required DateTime scheduledTime,
+    int? readinessScore,
+    String? readinessState,
+  }) async {
+    if (!_initialized) return;
+
+    try {
+      final body = readinessScore != null
+          ? 'Your readiness score is $readinessScore ($readinessState). Tap for details.'
+          : 'Tap to check your morning readiness.';
+      final id =
+          DateTime.now().millisecondsSinceEpoch.remainder(100000) + 100000;
+
+      const androidDetails = AndroidNotificationDetails(
+        _channelId,
+        _channelName,
+        channelDescription: _channelDescription,
+        importance: Importance.high,
+        priority: Priority.high,
+      );
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+      const details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      final tzDateTime = tz.TZDateTime.from(scheduledTime, tz.local);
+
+      await _plugin.zonedSchedule(
+        id: id,
+        title: 'Morning Readiness',
+        body: body,
+        scheduledDate: tzDateTime,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: '{"type": "readiness_morning_check"}',
+      );
+    } catch (e) {
+      logger.error(
+        '[NotificationServiceImpl] Schedule readiness notification failed: $e',
+      );
     }
   }
 

@@ -77,7 +77,7 @@ void main() {
             any(),
             data: any(named: 'data'),
             options: any(named: 'options'),
-          )).called(1);
+          )).called(greaterThanOrEqualTo(1));
     });
 
     test('returns true on 401 auth error', () async {
@@ -183,6 +183,53 @@ void main() {
       );
 
       expect(result, false);
+    });
+
+    test('readiness sync failure does not break background sync', () async {
+      when(() => mockStorage.read(key: 'access_token'))
+          .thenAnswer((_) async => 'valid_token');
+      when(() => mockDio.post(
+            any(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
+          )).thenAnswer((_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: <String, dynamic>{'success': true},
+          ));
+
+      final bool result = await performBackgroundSync(
+        storage: mockStorage,
+        dio: mockDio,
+      );
+
+      expect(result, true);
+    });
+
+    test('readiness sync runs alongside activity sync', () async {
+      when(() => mockStorage.read(key: 'access_token'))
+          .thenAnswer((_) async => 'valid_token');
+      when(() => mockDio.post(
+            any(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
+          )).thenAnswer((_) async => Response<dynamic>(
+            requestOptions: RequestOptions(path: ''),
+            statusCode: 200,
+            data: <String, dynamic>{'success': true},
+          ));
+
+      final bool result = await performBackgroundSync(
+        storage: mockStorage,
+        dio: mockDio,
+      );
+
+      expect(result, true);
+      verify(() => mockDio.post(
+            any(),
+            data: any(named: 'data'),
+            options: any(named: 'options'),
+          )).called(greaterThanOrEqualTo(1));
     });
   });
 }

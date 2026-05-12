@@ -28,6 +28,7 @@ import type { Supplement, SupplementStack, SupplementLog, NutritionLog, FoodScan
 import { getCurrentUtcDayKey, parseUtcDayKey } from '@/lib/health/dates';
 import { NutritionSummary } from './health/NutritionSummary';
 import { BodyMetricsCard } from './health/BodyMetricsCard';
+import ReadinessCard from './health/ReadinessCard';
 import { QuickActions } from './health/QuickActions';
 import { MealSection } from './health/MealSection';
 import { SupplementsSection } from './health/SupplementsSection';
@@ -423,6 +424,8 @@ export default function HealthView({ showHeader = true }: HealthViewProps) {
                                 onAdjustWater={(amount) => waterMutation.mutate(amount)}
                             />
                         )}
+
+                        <ReadinessCard />
 
                         <QuickActions
                             onOpenAiScan={() => setIsFoodScannerOpen(true)}

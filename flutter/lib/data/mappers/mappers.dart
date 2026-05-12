@@ -7,4 +7,5 @@ export 'dashboard_mappers.dart';
 export 'goal_mappers.dart';
 export 'health_mappers.dart';
 export 'profile_mappers.dart';
+export 'readiness_mappers.dart';
 export 'recording_mappers.dart';

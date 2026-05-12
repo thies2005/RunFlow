@@ -1,18 +1,30 @@
 import 'package:dio/dio.dart';
+import 'package:health/health.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/data/datasources/local/cache_datasource.dart';
 import 'package:runflow_flutter/data/datasources/local/local_activity_datasource.dart';
+import 'package:runflow_flutter/data/datasources/local/readiness_local_datasource.dart';
+import 'package:runflow_flutter/data/models/readiness/readiness_models.dart';
 import 'package:runflow_flutter/data/interceptors/auth_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/error_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/refresh_interceptor.dart';
 import 'package:runflow_flutter/data/interceptors/retry_interceptor.dart';
+import 'package:runflow_flutter/domain/services/readiness/readiness_scoring_service.dart';
+import 'package:runflow_flutter/domain/services/readiness/trimp_service.dart';
 import 'package:runflow_flutter/services/activity_cache_sync_service.dart';
 import 'package:runflow_flutter/services/auth_service_impl.dart';
+import 'package:runflow_flutter/services/health_connect_service.dart';
 import 'package:runflow_flutter/services/offline_sync_service.dart';
+import 'package:runflow_flutter/services/readiness_orchestrator.dart';
+import 'package:runflow_flutter/services/readiness_sync_service.dart';
 import 'package:workmanager/workmanager.dart';
+
+String _dateKey(DateTime dt) {
+  return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+}
 
 Future<bool> performBackgroundSync({
   required FlutterSecureStorage storage,
@@ -41,6 +53,57 @@ Future<bool> performBackgroundSync({
       await cacheSync.syncAllActivitiesToLocal();
     } catch (e) {
       logger.warning('[BackgroundSync] Activity cache sync failed: $e');
+    }
+
+    try {
+      final readinessDb = AppDatabase.instance;
+      await readinessDb.initialize();
+      final readinessLocal = ReadinessLocalDatasource(db: await readinessDb.database);
+      final readinessSync = ReadinessSyncService(localDatasource: readinessLocal, dio: dio);
+      await readinessSync.flushPendingSync();
+
+      final todayKey = _dateKey(DateTime.now());
+      final isStale = await readinessLocal.isRecordStale(todayKey);
+      if (isStale) {
+        final healthConnect = HealthConnectServiceImpl(health: Health());
+        const scoringService = ReadinessScoringService();
+        const trimpService = TrimpService();
+        final orchestrator = ReadinessOrchestrator(
+          healthConnect: healthConnect,
+          scoringService: scoringService,
+          trimpService: trimpService,
+        );
+        try {
+          final inputs = await orchestrator.collectInputs(maxHr: null, restingHr: null, age: null);
+          final result = await orchestrator.computeReadiness(inputs: inputs);
+          final record = DailyReadinessRecordModel(
+            date: todayKey,
+            compositeScore: result.compositeScore,
+            state: result.state.name,
+            confidence: result.confidence.name,
+            componentScores: result.componentScores
+                .map((c) => ComponentScoreModel(
+                      component: c.component.name,
+                      score: c.score,
+                      isAvailable: c.isAvailable,
+                      reason: c.reason,
+                    ))
+                .toList(),
+            reasons: result.reasons,
+            computedAt: DateTime.now().toIso8601String(),
+          );
+          await readinessLocal.upsertDailyRecord(record);
+          await readinessLocal.enqueueSync(
+            entityType: 'readiness_daily_record',
+            localId: todayKey,
+            payload: record.toJson(),
+          );
+        } catch (e) {
+          logger.warning('[BackgroundSync] Readiness computation failed: $e');
+        }
+      }
+    } catch (e) {
+      logger.warning('[BackgroundSync] Readiness sync failed: $e');
     }
 
     await dio.post(

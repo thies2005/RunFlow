@@ -430,7 +430,11 @@ export const ModelName = {
   PerformanceSummary: 'PerformanceSummary',
   SessionReplay: 'SessionReplay',
   DeviceToken: 'DeviceToken',
-  Release: 'Release'
+  Release: 'Release',
+  DailyReadinessRecord: 'DailyReadinessRecord',
+  ReadinessBaseline: 'ReadinessBaseline',
+  AdaptedWorkout: 'AdaptedWorkout',
+  WeeklyReconciliationRecord: 'WeeklyReconciliationRecord'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -446,7 +450,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release"
+    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3928,6 +3932,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    DailyReadinessRecord: {
+      payload: Prisma.$DailyReadinessRecordPayload<ExtArgs>
+      fields: Prisma.DailyReadinessRecordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DailyReadinessRecordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DailyReadinessRecordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload>
+        }
+        findFirst: {
+          args: Prisma.DailyReadinessRecordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DailyReadinessRecordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload>
+        }
+        findMany: {
+          args: Prisma.DailyReadinessRecordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload>[]
+        }
+        create: {
+          args: Prisma.DailyReadinessRecordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload>
+        }
+        createMany: {
+          args: Prisma.DailyReadinessRecordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DailyReadinessRecordCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload>[]
+        }
+        delete: {
+          args: Prisma.DailyReadinessRecordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload>
+        }
+        update: {
+          args: Prisma.DailyReadinessRecordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload>
+        }
+        deleteMany: {
+          args: Prisma.DailyReadinessRecordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DailyReadinessRecordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DailyReadinessRecordUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload>[]
+        }
+        upsert: {
+          args: Prisma.DailyReadinessRecordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyReadinessRecordPayload>
+        }
+        aggregate: {
+          args: Prisma.DailyReadinessRecordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDailyReadinessRecord>
+        }
+        groupBy: {
+          args: Prisma.DailyReadinessRecordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyReadinessRecordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DailyReadinessRecordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyReadinessRecordCountAggregateOutputType> | number
+        }
+      }
+    }
+    ReadinessBaseline: {
+      payload: Prisma.$ReadinessBaselinePayload<ExtArgs>
+      fields: Prisma.ReadinessBaselineFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ReadinessBaselineFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ReadinessBaselineFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload>
+        }
+        findFirst: {
+          args: Prisma.ReadinessBaselineFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ReadinessBaselineFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload>
+        }
+        findMany: {
+          args: Prisma.ReadinessBaselineFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload>[]
+        }
+        create: {
+          args: Prisma.ReadinessBaselineCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload>
+        }
+        createMany: {
+          args: Prisma.ReadinessBaselineCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ReadinessBaselineCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload>[]
+        }
+        delete: {
+          args: Prisma.ReadinessBaselineDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload>
+        }
+        update: {
+          args: Prisma.ReadinessBaselineUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload>
+        }
+        deleteMany: {
+          args: Prisma.ReadinessBaselineDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ReadinessBaselineUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ReadinessBaselineUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload>[]
+        }
+        upsert: {
+          args: Prisma.ReadinessBaselineUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ReadinessBaselinePayload>
+        }
+        aggregate: {
+          args: Prisma.ReadinessBaselineAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateReadinessBaseline>
+        }
+        groupBy: {
+          args: Prisma.ReadinessBaselineGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ReadinessBaselineGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ReadinessBaselineCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ReadinessBaselineCountAggregateOutputType> | number
+        }
+      }
+    }
+    AdaptedWorkout: {
+      payload: Prisma.$AdaptedWorkoutPayload<ExtArgs>
+      fields: Prisma.AdaptedWorkoutFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AdaptedWorkoutFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AdaptedWorkoutFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload>
+        }
+        findFirst: {
+          args: Prisma.AdaptedWorkoutFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AdaptedWorkoutFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload>
+        }
+        findMany: {
+          args: Prisma.AdaptedWorkoutFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload>[]
+        }
+        create: {
+          args: Prisma.AdaptedWorkoutCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload>
+        }
+        createMany: {
+          args: Prisma.AdaptedWorkoutCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AdaptedWorkoutCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload>[]
+        }
+        delete: {
+          args: Prisma.AdaptedWorkoutDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload>
+        }
+        update: {
+          args: Prisma.AdaptedWorkoutUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload>
+        }
+        deleteMany: {
+          args: Prisma.AdaptedWorkoutDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AdaptedWorkoutUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AdaptedWorkoutUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload>[]
+        }
+        upsert: {
+          args: Prisma.AdaptedWorkoutUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AdaptedWorkoutPayload>
+        }
+        aggregate: {
+          args: Prisma.AdaptedWorkoutAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAdaptedWorkout>
+        }
+        groupBy: {
+          args: Prisma.AdaptedWorkoutGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdaptedWorkoutGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AdaptedWorkoutCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AdaptedWorkoutCountAggregateOutputType> | number
+        }
+      }
+    }
+    WeeklyReconciliationRecord: {
+      payload: Prisma.$WeeklyReconciliationRecordPayload<ExtArgs>
+      fields: Prisma.WeeklyReconciliationRecordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WeeklyReconciliationRecordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WeeklyReconciliationRecordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload>
+        }
+        findFirst: {
+          args: Prisma.WeeklyReconciliationRecordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WeeklyReconciliationRecordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload>
+        }
+        findMany: {
+          args: Prisma.WeeklyReconciliationRecordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload>[]
+        }
+        create: {
+          args: Prisma.WeeklyReconciliationRecordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload>
+        }
+        createMany: {
+          args: Prisma.WeeklyReconciliationRecordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WeeklyReconciliationRecordCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload>[]
+        }
+        delete: {
+          args: Prisma.WeeklyReconciliationRecordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload>
+        }
+        update: {
+          args: Prisma.WeeklyReconciliationRecordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload>
+        }
+        deleteMany: {
+          args: Prisma.WeeklyReconciliationRecordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WeeklyReconciliationRecordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WeeklyReconciliationRecordUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload>[]
+        }
+        upsert: {
+          args: Prisma.WeeklyReconciliationRecordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeeklyReconciliationRecordPayload>
+        }
+        aggregate: {
+          args: Prisma.WeeklyReconciliationRecordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWeeklyReconciliationRecord>
+        }
+        groupBy: {
+          args: Prisma.WeeklyReconciliationRecordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WeeklyReconciliationRecordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WeeklyReconciliationRecordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WeeklyReconciliationRecordCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -4820,6 +5120,89 @@ export const ReleaseScalarFieldEnum = {
 export type ReleaseScalarFieldEnum = (typeof ReleaseScalarFieldEnum)[keyof typeof ReleaseScalarFieldEnum]
 
 
+export const DailyReadinessRecordScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  date: 'date',
+  compositeScore: 'compositeScore',
+  state: 'state',
+  confidence: 'confidence',
+  componentScores: 'componentScores',
+  reasons: 'reasons',
+  rhrJson: 'rhrJson',
+  sleepJson: 'sleepJson',
+  loadJson: 'loadJson',
+  subjectiveJson: 'subjectiveJson',
+  overrideJson: 'overrideJson',
+  computedAt: 'computedAt',
+  syncedAt: 'syncedAt',
+  maxHr: 'maxHr',
+  restingHr: 'restingHr',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DailyReadinessRecordScalarFieldEnum = (typeof DailyReadinessRecordScalarFieldEnum)[keyof typeof DailyReadinessRecordScalarFieldEnum]
+
+
+export const ReadinessBaselineScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  rhrMedian30Day: 'rhrMedian30Day',
+  sleepAverage28Day: 'sleepAverage28Day',
+  lastUpdated: 'lastUpdated',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ReadinessBaselineScalarFieldEnum = (typeof ReadinessBaselineScalarFieldEnum)[keyof typeof ReadinessBaselineScalarFieldEnum]
+
+
+export const AdaptedWorkoutScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  originalWorkoutId: 'originalWorkoutId',
+  date: 'date',
+  originalType: 'originalType',
+  adaptedType: 'adaptedType',
+  adaptationType: 'adaptationType',
+  originalTargetDistance: 'originalTargetDistance',
+  adaptedTargetDistance: 'adaptedTargetDistance',
+  originalTargetDuration: 'originalTargetDuration',
+  adaptedTargetDuration: 'adaptedTargetDuration',
+  originalTargetPace: 'originalTargetPace',
+  adaptedTargetPace: 'adaptedTargetPace',
+  reason: 'reason',
+  readinessScore: 'readinessScore',
+  readinessState: 'readinessState',
+  isAccepted: 'isAccepted',
+  createdAt: 'createdAt',
+  syncedAt: 'syncedAt'
+} as const
+
+export type AdaptedWorkoutScalarFieldEnum = (typeof AdaptedWorkoutScalarFieldEnum)[keyof typeof AdaptedWorkoutScalarFieldEnum]
+
+
+export const WeeklyReconciliationRecordScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  weekStartDate: 'weekStartDate',
+  plannedLoad: 'plannedLoad',
+  actualLoad: 'actualLoad',
+  adaptedLoad: 'adaptedLoad',
+  deficitPercent: 'deficitPercent',
+  surplusPercent: 'surplusPercent',
+  adjustmentDescription: 'adjustmentDescription',
+  isApplied: 'isApplied',
+  raceWeeksRemaining: 'raceWeeksRemaining',
+  requiresReview: 'requiresReview',
+  createdAt: 'createdAt',
+  syncedAt: 'syncedAt'
+} as const
+
+export type WeeklyReconciliationRecordScalarFieldEnum = (typeof WeeklyReconciliationRecordScalarFieldEnum)[keyof typeof WeeklyReconciliationRecordScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -5204,6 +5587,10 @@ export type GlobalOmitConfig = {
   sessionReplay?: Prisma.SessionReplayOmit
   deviceToken?: Prisma.DeviceTokenOmit
   release?: Prisma.ReleaseOmit
+  dailyReadinessRecord?: Prisma.DailyReadinessRecordOmit
+  readinessBaseline?: Prisma.ReadinessBaselineOmit
+  adaptedWorkout?: Prisma.AdaptedWorkoutOmit
+  weeklyReconciliationRecord?: Prisma.WeeklyReconciliationRecordOmit
 }
 
 /* Types for Logging */

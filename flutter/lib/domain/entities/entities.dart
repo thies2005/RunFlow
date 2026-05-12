@@ -9,5 +9,6 @@ export 'goal_entities.dart';
 export 'health_entities.dart';
 export 'meal_suggestion_entities.dart';
 export 'profile_entities.dart';
+export 'readiness/readiness_entities.dart';
 export 'recording_entities.dart';
 export 'settings_entities.dart';

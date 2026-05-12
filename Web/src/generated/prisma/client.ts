@@ -276,3 +276,23 @@ export type DeviceToken = Prisma.DeviceTokenModel
  * 
  */
 export type Release = Prisma.ReleaseModel
+/**
+ * Model DailyReadinessRecord
+ * 
+ */
+export type DailyReadinessRecord = Prisma.DailyReadinessRecordModel
+/**
+ * Model ReadinessBaseline
+ * 
+ */
+export type ReadinessBaseline = Prisma.ReadinessBaselineModel
+/**
+ * Model AdaptedWorkout
+ * 
+ */
+export type AdaptedWorkout = Prisma.AdaptedWorkoutModel
+/**
+ * Model WeeklyReconciliationRecord
+ * 
+ */
+export type WeeklyReconciliationRecord = Prisma.WeeklyReconciliationRecordModel

@@ -91,6 +91,10 @@ class _FakeHealthConnectService implements HealthConnectService {
   Future<VitalsData> readVitals() async => const VitalsData();
   @override
   Future<SleepData> readSleep() async => const SleepData();
+  @override
+  Future<Map<String, double>> readRestingHeartRateHistory(int days) async => {};
+  @override
+  Future<Map<String, SleepDayData>> readSleepHistory(int days) async => {};
 }
 
 void main() {

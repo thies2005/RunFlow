@@ -97,7 +97,11 @@ export const ModelName = {
   PerformanceSummary: 'PerformanceSummary',
   SessionReplay: 'SessionReplay',
   DeviceToken: 'DeviceToken',
-  Release: 'Release'
+  Release: 'Release',
+  DailyReadinessRecord: 'DailyReadinessRecord',
+  ReadinessBaseline: 'ReadinessBaseline',
+  AdaptedWorkout: 'AdaptedWorkout',
+  WeeklyReconciliationRecord: 'WeeklyReconciliationRecord'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -967,6 +971,89 @@ export const ReleaseScalarFieldEnum = {
 } as const
 
 export type ReleaseScalarFieldEnum = (typeof ReleaseScalarFieldEnum)[keyof typeof ReleaseScalarFieldEnum]
+
+
+export const DailyReadinessRecordScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  date: 'date',
+  compositeScore: 'compositeScore',
+  state: 'state',
+  confidence: 'confidence',
+  componentScores: 'componentScores',
+  reasons: 'reasons',
+  rhrJson: 'rhrJson',
+  sleepJson: 'sleepJson',
+  loadJson: 'loadJson',
+  subjectiveJson: 'subjectiveJson',
+  overrideJson: 'overrideJson',
+  computedAt: 'computedAt',
+  syncedAt: 'syncedAt',
+  maxHr: 'maxHr',
+  restingHr: 'restingHr',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DailyReadinessRecordScalarFieldEnum = (typeof DailyReadinessRecordScalarFieldEnum)[keyof typeof DailyReadinessRecordScalarFieldEnum]
+
+
+export const ReadinessBaselineScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  rhrMedian30Day: 'rhrMedian30Day',
+  sleepAverage28Day: 'sleepAverage28Day',
+  lastUpdated: 'lastUpdated',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ReadinessBaselineScalarFieldEnum = (typeof ReadinessBaselineScalarFieldEnum)[keyof typeof ReadinessBaselineScalarFieldEnum]
+
+
+export const AdaptedWorkoutScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  originalWorkoutId: 'originalWorkoutId',
+  date: 'date',
+  originalType: 'originalType',
+  adaptedType: 'adaptedType',
+  adaptationType: 'adaptationType',
+  originalTargetDistance: 'originalTargetDistance',
+  adaptedTargetDistance: 'adaptedTargetDistance',
+  originalTargetDuration: 'originalTargetDuration',
+  adaptedTargetDuration: 'adaptedTargetDuration',
+  originalTargetPace: 'originalTargetPace',
+  adaptedTargetPace: 'adaptedTargetPace',
+  reason: 'reason',
+  readinessScore: 'readinessScore',
+  readinessState: 'readinessState',
+  isAccepted: 'isAccepted',
+  createdAt: 'createdAt',
+  syncedAt: 'syncedAt'
+} as const
+
+export type AdaptedWorkoutScalarFieldEnum = (typeof AdaptedWorkoutScalarFieldEnum)[keyof typeof AdaptedWorkoutScalarFieldEnum]
+
+
+export const WeeklyReconciliationRecordScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  weekStartDate: 'weekStartDate',
+  plannedLoad: 'plannedLoad',
+  actualLoad: 'actualLoad',
+  adaptedLoad: 'adaptedLoad',
+  deficitPercent: 'deficitPercent',
+  surplusPercent: 'surplusPercent',
+  adjustmentDescription: 'adjustmentDescription',
+  isApplied: 'isApplied',
+  raceWeeksRemaining: 'raceWeeksRemaining',
+  requiresReview: 'requiresReview',
+  createdAt: 'createdAt',
+  syncedAt: 'syncedAt'
+} as const
+
+export type WeeklyReconciliationRecordScalarFieldEnum = (typeof WeeklyReconciliationRecordScalarFieldEnum)[keyof typeof WeeklyReconciliationRecordScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -8,7 +8,9 @@ import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
 import 'package:runflow_flutter/presentation/providers/health_sync_providers.dart';
+import 'package:runflow_flutter/presentation/providers/readiness_providers.dart';
 import 'package:runflow_flutter/presentation/providers/vitals_sleep_providers.dart';
+import 'package:runflow_flutter/presentation/widgets/health/readiness_card.dart';
 
 class HealthScreen extends ConsumerStatefulWidget {
   const HealthScreen({super.key});
@@ -44,12 +46,14 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
             ref.invalidate(supplementListProvider);
             ref.invalidate(bodyMeasurementsProvider);
             ref.invalidate(fastingProvider);
+            ref.invalidate(readinessProvider);
             await Future.wait([
               ref.read(dailyHealthProvider(today).future),
               ref.read(nutritionProvider(today).future),
               ref.read(supplementListProvider.future),
               ref.read(bodyMeasurementsProvider.future),
               ref.read(fastingProvider.future),
+              ref.read(readinessProvider.future),
             ]);
           },
           child: CustomScrollView(
@@ -61,6 +65,8 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 8),
+                    const ReadinessCard(),
+                    const SizedBox(height: 16),
                     _SyncBanner(),
                     const SizedBox(height: 20),
                     _buildDashboardGrid(

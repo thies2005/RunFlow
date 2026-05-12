@@ -18,6 +18,22 @@ abstract class HealthConnectService {
 
   // Sleep
   Future<SleepData> readSleep();
+
+  Future<Map<String, double>> readRestingHeartRateHistory(int days);
+  Future<Map<String, SleepDayData>> readSleepHistory(int days);
+}
+
+class SleepDayData {
+  final double totalMinutes;
+  final double deepMinutes;
+  final double remMinutes;
+  final double lightMinutes;
+  const SleepDayData({
+    required this.totalMinutes,
+    required this.deepMinutes,
+    required this.remMinutes,
+    required this.lightMinutes,
+  });
 }
 
 class HealthConnectServiceImpl implements HealthConnectService {
@@ -341,6 +357,124 @@ class HealthConnectServiceImpl implements HealthConnectService {
     } catch (e) {
       logger.error('[HealthConnect] readSleep failed: $e');
       return const SleepData();
+    }
+  }
+
+  @override
+  Future<Map<String, double>> readRestingHeartRateHistory(int days) async {
+    try {
+      await _ensureConfigured();
+      final now = DateTime.now();
+      final startTime = now.subtract(Duration(days: days));
+
+      final data = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.RESTING_HEART_RATE],
+        startTime: startTime,
+        endTime: now,
+      );
+
+      final byDate = <String, List<double>>{};
+      for (final point in data) {
+        final v = point.value;
+        if (v is NumericHealthValue) {
+          final key =
+              '${point.dateFrom.year}-${point.dateFrom.month.toString().padLeft(2, '0')}-${point.dateFrom.day.toString().padLeft(2, '0')}';
+          byDate.putIfAbsent(key, () => []).add(v.numericValue.toDouble());
+        }
+      }
+
+      final result = <String, double>{};
+      byDate.forEach((date, values) {
+        final avg = values.reduce((a, b) => a + b) / values.length;
+        result[date] = avg;
+      });
+      return result;
+    } catch (e) {
+      logger.error('[HealthConnect] readRestingHeartRateHistory failed: $e');
+      return {};
+    }
+  }
+
+  @override
+  Future<Map<String, SleepDayData>> readSleepHistory(int days) async {
+    try {
+      await _ensureConfigured();
+      final now = DateTime.now();
+      final startTime = now.subtract(Duration(days: days));
+
+      final results = await Future.wait([
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.SLEEP_SESSION],
+          startTime: startTime,
+          endTime: now,
+        ),
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.SLEEP_DEEP],
+          startTime: startTime,
+          endTime: now,
+        ),
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.SLEEP_REM],
+          startTime: startTime,
+          endTime: now,
+        ),
+        _health.getHealthDataFromTypes(
+          types: [HealthDataType.SLEEP_LIGHT],
+          startTime: startTime,
+          endTime: now,
+        ),
+      ]);
+
+      final sessions = results[0];
+      final deepData = results[1];
+      final remData = results[2];
+      final lightData = results[3];
+
+      final sessionByDate = <String, double>{};
+      for (final s in sessions) {
+        final key =
+            '${s.dateFrom.year}-${s.dateFrom.month.toString().padLeft(2, '0')}-${s.dateFrom.day.toString().padLeft(2, '0')}';
+        final dur = s.dateTo.difference(s.dateFrom).inMinutes.toDouble();
+        sessionByDate.update(key, (v) => v + dur, ifAbsent: () => dur);
+      }
+
+      final deepByDate = <String, double>{};
+      for (final p in deepData) {
+        final key =
+            '${p.dateFrom.year}-${p.dateFrom.month.toString().padLeft(2, '0')}-${p.dateFrom.day.toString().padLeft(2, '0')}';
+        final dur = p.dateTo.difference(p.dateFrom).inMinutes.toDouble();
+        deepByDate.update(key, (v) => v + dur, ifAbsent: () => dur);
+      }
+
+      final remByDate = <String, double>{};
+      for (final p in remData) {
+        final key =
+            '${p.dateFrom.year}-${p.dateFrom.month.toString().padLeft(2, '0')}-${p.dateFrom.day.toString().padLeft(2, '0')}';
+        final dur = p.dateTo.difference(p.dateFrom).inMinutes.toDouble();
+        remByDate.update(key, (v) => v + dur, ifAbsent: () => dur);
+      }
+
+      final lightByDate = <String, double>{};
+      for (final p in lightData) {
+        final key =
+            '${p.dateFrom.year}-${p.dateFrom.month.toString().padLeft(2, '0')}-${p.dateFrom.day.toString().padLeft(2, '0')}';
+        final dur = p.dateTo.difference(p.dateFrom).inMinutes.toDouble();
+        lightByDate.update(key, (v) => v + dur, ifAbsent: () => dur);
+      }
+
+      final result = <String, SleepDayData>{};
+      for (final entry in sessionByDate.entries) {
+        result[entry.key] = SleepDayData(
+          totalMinutes: entry.value,
+          deepMinutes: deepByDate[entry.key] ?? 0,
+          remMinutes: remByDate[entry.key] ?? 0,
+          lightMinutes: lightByDate[entry.key] ?? 0,
+        );
+      }
+      return result;
+    } catch (e) {
+      logger.error('[HealthConnect] readSleepHistory failed: $e');
+      return {};
     }
   }
 

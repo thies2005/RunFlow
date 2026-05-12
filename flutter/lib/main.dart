@@ -10,6 +10,7 @@ import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/presentation/providers/notification_providers.dart';
+import 'package:runflow_flutter/presentation/router/app_router.dart';
 import 'package:runflow_flutter/services/background_sync.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -59,7 +60,14 @@ Future<void> _initDatabase() async {
 Future<void> _initNotifications() async {
   try {
     final notificationService = container.read(notificationServiceProvider);
-    await notificationService.initialize();
+    await notificationService.initialize(
+      onNotificationTap: (payload) {
+        if (payload != null && payload.contains('readiness_morning_check')) {
+          final router = container.read(routerProvider);
+          router.go('/health/readiness');
+        }
+      },
+    );
   } catch (e, stackTrace) {
     logger.warning('Notification init failed: $e\n$stackTrace');
   }

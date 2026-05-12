@@ -73,6 +73,10 @@ model User {
   fastingSessions       FastingSession[]
   healthInsights        HealthInsight[]
   deviceTokens          DeviceToken[]
+  dailyReadinessRecords DailyReadinessRecord[]
+  readinessBaselines    ReadinessBaseline[]
+  adaptedWorkouts       AdaptedWorkout[]
+  weeklyReconciliationRecords WeeklyReconciliationRecord[]
 }
 
 model UserConsent {
@@ -983,4 +987,95 @@ model Release {
   notes       String?
 
   @@index([deployedAt])
+}
+
+model DailyReadinessRecord {
+  id              String    @id @default(cuid())
+  userId          String
+  date            DateTime  @map("_date")
+  compositeScore  Float     @default(0)
+  state           String    @default("unavailable")
+  confidence      String    @default("unavailable")
+  componentScores Json      @default("[]")
+  reasons         Json      @default("[]")
+  rhrJson         Json?
+  sleepJson       Json?
+  loadJson        Json?
+  subjectiveJson  Json?
+  overrideJson    Json?
+  computedAt      DateTime?
+  syncedAt        DateTime?
+  maxHr           Int?
+  restingHr       Int?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("daily_readiness_records")
+}
+
+model ReadinessBaseline {
+  id                String   @id @default(cuid())
+  userId            String
+  rhrMedian30Day    Float?
+  sleepAverage28Day Float?
+  lastUpdated       DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@map("readiness_baselines")
+}
+
+model AdaptedWorkout {
+  id                     String    @id @default(cuid())
+  userId                 String
+  originalWorkoutId      String
+  date                   DateTime
+  originalType           String
+  adaptedType            String
+  adaptationType         String
+  originalTargetDistance  Float     @default(0)
+  adaptedTargetDistance   Float?
+  originalTargetDuration Int       @default(0)
+  adaptedTargetDuration  Int?
+  originalTargetPace     Float     @default(0)
+  adaptedTargetPace      Float?
+  reason                 String    @default("")
+  readinessScore         Float     @default(0)
+  readinessState         String    @default("unavailable")
+  isAccepted             Boolean   @default(false)
+  createdAt              DateTime  @default(now())
+  syncedAt               DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, originalWorkoutId])
+  @@map("adapted_workouts")
+}
+
+model WeeklyReconciliationRecord {
+  id                    String    @id @default(cuid())
+  userId                String
+  weekStartDate         DateTime
+  plannedLoad           Float     @default(0)
+  actualLoad            Float     @default(0)
+  adaptedLoad           Float     @default(0)
+  deficitPercent        Float     @default(0)
+  surplusPercent        Float     @default(0)
+  adjustmentDescription String?
+  isApplied             Boolean   @default(false)
+  raceWeeksRemaining    Int?
+  requiresReview        Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+  syncedAt              DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStartDate])
+  @@map("weekly_reconciliation_records")
 }

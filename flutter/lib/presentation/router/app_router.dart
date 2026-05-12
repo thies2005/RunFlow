@@ -37,6 +37,7 @@ import 'package:runflow_flutter/presentation/screens/health/vitals_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/sleep_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/fasting_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/ai_scan_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/readiness_detail_screen.dart';
 import 'package:runflow_flutter/presentation/screens/onboarding/feature_showcase_screen.dart';
 import 'package:runflow_flutter/presentation/screens/startup/startup_screen.dart';
 import 'package:runflow_flutter/presentation/screens/record/record_screen.dart';
@@ -163,6 +164,11 @@ GoRouter createRouter(Ref ref) {
         path: '/health/ai-scan',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AiScanScreen(),
+      ),
+      GoRoute(
+        path: '/health/readiness',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ReadinessDetailScreen(),
       ),
       GoRoute(
         path: '/profile/edit',

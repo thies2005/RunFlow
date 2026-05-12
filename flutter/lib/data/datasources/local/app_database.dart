@@ -20,7 +20,7 @@ class AppDatabase {
 
   Database? _db;
 
-  static const int _currentVersion = 4;
+  static const int _currentVersion = 5;
 
   static final Map<int, void Function(Database)> _migrations = {
     1: (Database db) {
@@ -78,6 +78,73 @@ class AppDatabase {
           key TEXT PRIMARY KEY,
           data TEXT NOT NULL,
           updated_at INTEGER NOT NULL
+        )
+      ''');
+    },
+    4: (Database db) {
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS readiness_daily_records (
+          date TEXT PRIMARY KEY,
+          rhr_json TEXT,
+          sleep_json TEXT,
+          load_json TEXT,
+          subjective_json TEXT,
+          component_scores_json TEXT NOT NULL DEFAULT '[]',
+          composite_score REAL NOT NULL DEFAULT 0,
+          state TEXT NOT NULL DEFAULT 'unavailable',
+          confidence TEXT NOT NULL DEFAULT 'unavailable',
+          reasons_json TEXT NOT NULL DEFAULT '[]',
+          override_json TEXT,
+          computed_at INTEGER,
+          synced_at INTEGER,
+          max_hr INTEGER,
+          resting_hr INTEGER
+        )
+      ''');
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS readiness_baselines (
+          id INTEGER PRIMARY KEY CHECK (id = 1),
+          rhr_median_30_day REAL,
+          sleep_average_28_day REAL,
+          last_updated INTEGER NOT NULL
+        )
+      ''');
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS adapted_workouts (
+          id TEXT PRIMARY KEY,
+          original_workout_id TEXT NOT NULL,
+          date TEXT NOT NULL,
+          original_type TEXT NOT NULL,
+          adapted_type TEXT NOT NULL,
+          adaptation_type TEXT NOT NULL,
+          original_target_distance REAL NOT NULL,
+          adapted_target_distance REAL,
+          original_target_duration INTEGER NOT NULL,
+          adapted_target_duration INTEGER,
+          original_target_pace REAL NOT NULL,
+          adapted_target_pace REAL,
+          reason TEXT NOT NULL,
+          readiness_score REAL NOT NULL,
+          readiness_state TEXT NOT NULL,
+          is_accepted INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          synced_at INTEGER
+        )
+      ''');
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS weekly_reconciliation_records (
+          week_start_date TEXT PRIMARY KEY,
+          planned_load REAL NOT NULL DEFAULT 0,
+          actual_load REAL NOT NULL DEFAULT 0,
+          adapted_load REAL NOT NULL DEFAULT 0,
+          deficit_percent REAL NOT NULL DEFAULT 0,
+          surplus_percent REAL NOT NULL DEFAULT 0,
+          adjustment_description TEXT,
+          is_applied INTEGER NOT NULL DEFAULT 0,
+          race_weeks_remaining INTEGER,
+          requires_review INTEGER NOT NULL DEFAULT 0,
+          created_at INTEGER NOT NULL,
+          synced_at INTEGER
         )
       ''');
     },
@@ -260,6 +327,71 @@ class AppDatabase {
         key TEXT PRIMARY KEY,
         data TEXT NOT NULL,
         updated_at INTEGER NOT NULL
+      )
+    ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS readiness_daily_records (
+        date TEXT PRIMARY KEY,
+        rhr_json TEXT,
+        sleep_json TEXT,
+        load_json TEXT,
+        subjective_json TEXT,
+        component_scores_json TEXT NOT NULL DEFAULT '[]',
+        composite_score REAL NOT NULL DEFAULT 0,
+        state TEXT NOT NULL DEFAULT 'unavailable',
+        confidence TEXT NOT NULL DEFAULT 'unavailable',
+        reasons_json TEXT NOT NULL DEFAULT '[]',
+        override_json TEXT,
+        computed_at INTEGER,
+        synced_at INTEGER,
+        max_hr INTEGER,
+        resting_hr INTEGER
+      )
+    ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS readiness_baselines (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        rhr_median_30_day REAL,
+        sleep_average_28_day REAL,
+        last_updated INTEGER NOT NULL
+      )
+    ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS adapted_workouts (
+        id TEXT PRIMARY KEY,
+        original_workout_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        original_type TEXT NOT NULL,
+        adapted_type TEXT NOT NULL,
+        adaptation_type TEXT NOT NULL,
+        original_target_distance REAL NOT NULL,
+        adapted_target_distance REAL,
+        original_target_duration INTEGER NOT NULL,
+        adapted_target_duration INTEGER,
+        original_target_pace REAL NOT NULL,
+        adapted_target_pace REAL,
+        reason TEXT NOT NULL,
+        readiness_score REAL NOT NULL,
+        readiness_state TEXT NOT NULL,
+        is_accepted INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        synced_at INTEGER
+      )
+    ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS weekly_reconciliation_records (
+        week_start_date TEXT PRIMARY KEY,
+        planned_load REAL NOT NULL DEFAULT 0,
+        actual_load REAL NOT NULL DEFAULT 0,
+        adapted_load REAL NOT NULL DEFAULT 0,
+        deficit_percent REAL NOT NULL DEFAULT 0,
+        surplus_percent REAL NOT NULL DEFAULT 0,
+        adjustment_description TEXT,
+        is_applied INTEGER NOT NULL DEFAULT 0,
+        race_weeks_remaining INTEGER,
+        requires_review INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        synced_at INTEGER
       )
     ''');
   }

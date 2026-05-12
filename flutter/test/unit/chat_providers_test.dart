@@ -249,7 +249,7 @@ void main() {
       );
       subscription = container.listen<ChatState>(
         chatProvider,
-        (_, __) {},
+        (_, _) {},
         fireImmediately: true,
       );
     });

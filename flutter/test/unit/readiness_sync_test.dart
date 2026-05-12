@@ -34,7 +34,7 @@ void main() {
       });
 
       test('syncs readiness daily record and returns count', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 1,
           entityType: 'readiness_daily_record',
           localId: '2024-06-15',
@@ -62,7 +62,7 @@ void main() {
       });
 
       test('syncs baseline via PUT', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 2,
           entityType: 'readiness_baseline',
           localId: 'baseline',
@@ -90,7 +90,7 @@ void main() {
       });
 
       test('syncs adapted workout via POST', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 3,
           entityType: 'adapted_workout',
           localId: 'aw1',
@@ -118,7 +118,7 @@ void main() {
       });
 
       test('syncs weekly reconciliation via POST', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 4,
           entityType: 'weekly_reconciliation',
           localId: '2024-06-10',
@@ -146,7 +146,7 @@ void main() {
       });
 
       test('increments retry on sync failure', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 5,
           entityType: 'readiness_daily_record',
           localId: '2024-06-15',
@@ -171,7 +171,7 @@ void main() {
       });
 
       test('removes items at max retries', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 6,
           entityType: 'readiness_daily_record',
           localId: '2024-06-15',
@@ -194,7 +194,7 @@ void main() {
 
       test('syncs multiple items and returns total count', () async {
         final items = [
-          SyncQueueItem(
+          const SyncQueueItem(
             id: 10,
             entityType: 'readiness_daily_record',
             localId: '2024-06-14',
@@ -203,7 +203,7 @@ void main() {
             retryCount: 0,
             maxRetries: 5,
           ),
-          SyncQueueItem(
+          const SyncQueueItem(
             id: 11,
             entityType: 'readiness_daily_record',
             localId: '2024-06-15',

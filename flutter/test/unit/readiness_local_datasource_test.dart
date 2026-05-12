@@ -26,13 +26,13 @@ void main() {
     });
 
     test('upsert and get round-trip', () async {
-      final record = DailyReadinessRecordModel(
+      const record = DailyReadinessRecordModel(
         date: '2024-06-15',
-        rhr: const RhrMetricsModel(todayRhr: 52.0, baselineRhr: 55.0),
-        sleep: const SleepMetricsModel(totalDurationMinutes: 420.0),
-        load: const LoadMetricsModel(atl: 45.0, ctl: 55.0),
-        subjective: const SubjectiveInputModel(exhaustionLevel: 3),
-        componentScores: const [
+        rhr: RhrMetricsModel(todayRhr: 52.0, baselineRhr: 55.0),
+        sleep: SleepMetricsModel(totalDurationMinutes: 420.0),
+        load: LoadMetricsModel(atl: 45.0, ctl: 55.0),
+        subjective: SubjectiveInputModel(exhaustionLevel: 3),
+        componentScores: [
           ComponentScoreModel(
               component: 'hrr', score: 85.0, isAvailable: true),
         ],
@@ -62,9 +62,9 @@ void main() {
     });
 
     test('upsert replaces existing record', () async {
-      final record = DailyReadinessRecordModel(
+      const record = DailyReadinessRecordModel(
         date: '2024-06-15',
-        componentScores: const [],
+        componentScores: [],
         compositeScore: 50.0,
         state: 'moderate',
         confidence: 'partial',
@@ -72,9 +72,9 @@ void main() {
       );
       await datasource.upsertDailyRecord(record);
 
-      final updated = DailyReadinessRecordModel(
+      const updated = DailyReadinessRecordModel(
         date: '2024-06-15',
-        componentScores: const [],
+        componentScores: [],
         compositeScore: 80.0,
         state: 'excellent',
         confidence: 'full',
@@ -294,9 +294,9 @@ void main() {
     });
 
     test('returns true when computedAt is null', () async {
-      await datasource.upsertDailyRecord(DailyReadinessRecordModel(
+      await datasource.upsertDailyRecord(const DailyReadinessRecordModel(
         date: '2024-06-15',
-        componentScores: const [],
+        componentScores: [],
         compositeScore: 50.0,
         state: 'good',
         confidence: 'full',

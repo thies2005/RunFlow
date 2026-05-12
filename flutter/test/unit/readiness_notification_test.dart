@@ -38,7 +38,7 @@ void main() {
     });
 
     test('body text without readiness score', () {
-      final body = 'Tap to check your morning readiness.';
+      const body = 'Tap to check your morning readiness.';
       expect(body, 'Tap to check your morning readiness.');
     });
 

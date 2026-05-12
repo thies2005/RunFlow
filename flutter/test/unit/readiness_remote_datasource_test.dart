@@ -11,7 +11,7 @@ void main() {
   late MockDio mockDio;
   late ReadinessRemoteDatasource datasource;
 
-  final testDailyRecord = DailyReadinessRecordModel(
+  const testDailyRecord = DailyReadinessRecordModel(
     date: '2024-06-15',
     compositeScore: 75.0,
     state: 'good',
@@ -20,13 +20,13 @@ void main() {
     reasons: [],
   );
 
-  final testBaseline = ReadinessBaselineModel(
+  const testBaseline = ReadinessBaselineModel(
     rhrMedian30Day: 52.0,
     sleepAverage28Day: 7.5,
     lastUpdated: '2024-06-15T00:00:00.000Z',
   );
 
-  final testAdaptedWorkout = AdaptedWorkoutModel(
+  const testAdaptedWorkout = AdaptedWorkoutModel(
     id: 'aw1',
     originalWorkoutId: 'w1',
     date: '2024-06-15',
@@ -43,7 +43,7 @@ void main() {
     createdAt: '2024-06-15T08:00:00.000Z',
   );
 
-  final testWeeklyRecord = WeeklyReconciliationRecordModel(
+  const testWeeklyRecord = WeeklyReconciliationRecordModel(
     weekStartDate: '2024-06-10',
     plannedLoad: 300.0,
     actualLoad: 250.0,

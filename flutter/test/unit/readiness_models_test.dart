@@ -168,13 +168,13 @@ void main() {
 
   group('DailyReadinessRecordModel', () {
     test('round-trip serialization with nested objects', () {
-      final model = DailyReadinessRecordModel(
+      const model = DailyReadinessRecordModel(
         date: '2024-06-15',
-        rhr: const RhrMetricsModel(todayRhr: 52.0, baselineRhr: 55.0),
-        sleep: const SleepMetricsModel(totalDurationMinutes: 420.0),
-        load: const LoadMetricsModel(atl: 45.0),
-        subjective: const SubjectiveInputModel(exhaustionLevel: 3),
-        componentScores: const [
+        rhr: RhrMetricsModel(todayRhr: 52.0, baselineRhr: 55.0),
+        sleep: SleepMetricsModel(totalDurationMinutes: 420.0),
+        load: LoadMetricsModel(atl: 45.0),
+        subjective: SubjectiveInputModel(exhaustionLevel: 3),
+        componentScores: [
           ComponentScoreModel(
               component: 'hrr', score: 85.0, isAvailable: true),
           ComponentScoreModel(
@@ -184,7 +184,7 @@ void main() {
         state: 'good',
         confidence: 'full',
         reasons: ['RHR below baseline', 'Good sleep'],
-        readinessOverride: const ReadinessOverrideModel(
+        readinessOverride: ReadinessOverrideModel(
             state: 'none', overriddenAt: '2024-06-15T09:00:00.000'),
         computedAt: '2024-06-15T08:00:00.000',
         syncedAt: '2024-06-15T08:05:00.000',
@@ -214,7 +214,7 @@ void main() {
     });
 
     test('handles null optional fields', () {
-      final model = DailyReadinessRecordModel(
+      const model = DailyReadinessRecordModel(
         date: '2024-06-15',
         componentScores: [],
         compositeScore: 0,

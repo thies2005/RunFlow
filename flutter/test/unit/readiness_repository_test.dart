@@ -21,7 +21,7 @@ void main() {
 
   final testDate = DateTime(2024, 6, 15);
 
-  final testDailyModel = DailyReadinessRecordModel(
+  const testDailyModel = DailyReadinessRecordModel(
     date: '2024-06-15',
     compositeScore: 75.0,
     state: 'good',
@@ -39,7 +39,7 @@ void main() {
     reasons: [],
   );
 
-  final testBaselineModel = ReadinessBaselineModel(
+  const testBaselineModel = ReadinessBaselineModel(
     rhrMedian30Day: 52.0,
     sleepAverage28Day: 7.5,
     lastUpdated: '2024-06-15T00:00:00.000Z',
@@ -51,7 +51,7 @@ void main() {
     lastUpdated: DateTime(2024, 6, 15),
   );
 
-  final testAdaptedModel = AdaptedWorkoutModel(
+  const testAdaptedModel = AdaptedWorkoutModel(
     id: 'aw1',
     originalWorkoutId: 'w1',
     date: '2024-06-15',
@@ -85,7 +85,7 @@ void main() {
     createdAt: DateTime(2024, 6, 15, 8),
   );
 
-  final testWeeklyModel = WeeklyReconciliationRecordModel(
+  const testWeeklyModel = WeeklyReconciliationRecordModel(
     weekStartDate: '2024-06-10',
     plannedLoad: 300.0,
     actualLoad: 250.0,
@@ -117,13 +117,13 @@ void main() {
       remoteDatasource: mockRemote,
     );
 
-    registerFallbackValue(DailyReadinessRecordModel(
+    registerFallbackValue(const DailyReadinessRecordModel(
       date: '',
       componentScores: [],
       reasons: [],
     ));
-    registerFallbackValue(ReadinessBaselineModel(lastUpdated: ''));
-    registerFallbackValue(AdaptedWorkoutModel(
+    registerFallbackValue(const ReadinessBaselineModel(lastUpdated: ''));
+    registerFallbackValue(const AdaptedWorkoutModel(
       id: '',
       originalWorkoutId: '',
       date: '',
@@ -139,7 +139,7 @@ void main() {
       isAccepted: false,
       createdAt: '',
     ));
-    registerFallbackValue(WeeklyReconciliationRecordModel(
+    registerFallbackValue(const WeeklyReconciliationRecordModel(
       weekStartDate: '',
       createdAt: '',
     ));
@@ -460,7 +460,7 @@ void main() {
       });
 
       test('syncs pending daily record and marks completed', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 1,
           entityType: 'readiness_daily_record',
           localId: '2024-06-15',
@@ -484,7 +484,7 @@ void main() {
       });
 
       test('increments retry on sync failure', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 2,
           entityType: 'readiness_baseline',
           localId: 'baseline',
@@ -507,7 +507,7 @@ void main() {
       });
 
       test('skips items at max retries', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 3,
           entityType: 'readiness_daily_record',
           localId: '2024-06-15',
@@ -528,7 +528,7 @@ void main() {
       });
 
       test('syncs adapted workout entity type', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 4,
           entityType: 'adapted_workout',
           localId: 'aw1',
@@ -552,7 +552,7 @@ void main() {
       });
 
       test('syncs weekly reconciliation entity type', () async {
-        final item = SyncQueueItem(
+        const item = SyncQueueItem(
           id: 5,
           entityType: 'weekly_reconciliation',
           localId: '2024-06-10',

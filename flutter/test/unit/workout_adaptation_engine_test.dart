@@ -10,7 +10,7 @@ void main() {
     engine = WorkoutAdaptationEngine();
   });
 
-  Workout _makeWorkout({
+  Workout makeWorkout({
     WorkoutType type = WorkoutType.easy,
     double targetDistance = 10.0,
     int targetDuration = 60,
@@ -32,7 +32,7 @@ void main() {
     );
   }
 
-  ReadinessResult _makeReadiness(
+  ReadinessResult makeReadiness(
     ReadinessState state, {
     double score = 50.0,
   }) {
@@ -49,8 +49,8 @@ void main() {
   group('race protection', () {
     test('returns null during race week (raceWeeksRemaining = 0)', () {
       final result = engine.adapt(
-        workout: _makeWorkout(),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 0,
         goalId: 'g1',
       );
@@ -59,8 +59,8 @@ void main() {
 
     test('returns null on race day (raceWeeksRemaining = -1)', () {
       final result = engine.adapt(
-        workout: _makeWorkout(),
-        readinessResult: _makeReadiness(ReadinessState.reduced),
+        workout: makeWorkout(),
+        readinessResult: makeReadiness(ReadinessState.reduced),
         raceWeeksRemaining: -1,
         goalId: 'g1',
       );
@@ -74,8 +74,8 @@ void main() {
         ReadinessState.rest,
       ]) {
         final result = engine.adapt(
-          workout: _makeWorkout(type: WorkoutType.race),
-          readinessResult: _makeReadiness(state),
+          workout: makeWorkout(type: WorkoutType.race),
+          readinessResult: makeReadiness(state),
           raceWeeksRemaining: 10,
           goalId: 'g1',
         );
@@ -87,8 +87,8 @@ void main() {
   group('excellent and good readiness', () {
     test('returns null for excellent readiness', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.interval),
-        readinessResult: _makeReadiness(ReadinessState.excellent, score: 90),
+        workout: makeWorkout(type: WorkoutType.interval),
+        readinessResult: makeReadiness(ReadinessState.excellent, score: 90),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -97,8 +97,8 @@ void main() {
 
     test('returns null for good readiness', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.tempo),
-        readinessResult: _makeReadiness(ReadinessState.good, score: 70),
+        workout: makeWorkout(type: WorkoutType.tempo),
+        readinessResult: makeReadiness(ReadinessState.good, score: 70),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -109,8 +109,8 @@ void main() {
   group('moderate readiness', () {
     test('reduces interval distance by 20%', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -123,8 +123,8 @@ void main() {
 
     test('reduces tempo distance by 20%', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.tempo, targetDistance: 10.0),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(type: WorkoutType.tempo, targetDistance: 10.0),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -135,8 +135,8 @@ void main() {
 
     test('reduces long run distance by 15%', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.long, targetDistance: 20.0),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(type: WorkoutType.long, targetDistance: 20.0),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -148,8 +148,8 @@ void main() {
 
     test('does not change easy run', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.easy),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(type: WorkoutType.easy),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -158,8 +158,8 @@ void main() {
 
     test('does not change recovery run', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.recovery),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(type: WorkoutType.recovery),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -168,8 +168,8 @@ void main() {
 
     test('reduces other type duration by 15%', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.other, targetDuration: 60),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(type: WorkoutType.other, targetDuration: 60),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -181,12 +181,12 @@ void main() {
 
     test('keeps original duration unchanged for distance-based types', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.interval,
           targetDistance: 10.0,
           targetDuration: 60,
         ),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -198,12 +198,12 @@ void main() {
   group('reduced readiness', () {
     test('swaps interval to easy', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.interval,
           targetDistance: 10.0,
           targetDuration: 60,
         ),
-        readinessResult: _makeReadiness(ReadinessState.reduced),
+        readinessResult: makeReadiness(ReadinessState.reduced),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -217,8 +217,8 @@ void main() {
 
     test('swaps tempo to easy', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.tempo),
-        readinessResult: _makeReadiness(ReadinessState.reduced),
+        workout: makeWorkout(type: WorkoutType.tempo),
+        readinessResult: makeReadiness(ReadinessState.reduced),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -229,8 +229,8 @@ void main() {
 
     test('swaps long to easy', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.long),
-        readinessResult: _makeReadiness(ReadinessState.reduced),
+        workout: makeWorkout(type: WorkoutType.long),
+        readinessResult: makeReadiness(ReadinessState.reduced),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -241,11 +241,11 @@ void main() {
 
     test('caps duration at 45 minutes', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.interval,
           targetDuration: 90,
         ),
-        readinessResult: _makeReadiness(ReadinessState.reduced),
+        readinessResult: makeReadiness(ReadinessState.reduced),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -254,11 +254,11 @@ void main() {
 
     test('does not increase duration below 45 minute cap', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.interval,
           targetDuration: 30,
         ),
-        readinessResult: _makeReadiness(ReadinessState.reduced),
+        readinessResult: makeReadiness(ReadinessState.reduced),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -267,12 +267,12 @@ void main() {
 
     test('reduces easy run distance by 20%', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.easy,
           targetDistance: 10.0,
           targetDuration: 50,
         ),
-        readinessResult: _makeReadiness(ReadinessState.reduced),
+        readinessResult: makeReadiness(ReadinessState.reduced),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -284,12 +284,12 @@ void main() {
 
     test('reduces recovery run distance by 20%', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.recovery,
           targetDistance: 6.0,
           targetDuration: 40,
         ),
-        readinessResult: _makeReadiness(ReadinessState.reduced),
+        readinessResult: makeReadiness(ReadinessState.reduced),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -303,12 +303,12 @@ void main() {
   group('rest readiness', () {
     test('produces restOrReschedule adaptation type', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.long,
           targetDistance: 20.0,
           targetDuration: 120,
         ),
-        readinessResult: _makeReadiness(ReadinessState.rest),
+        readinessResult: makeReadiness(ReadinessState.rest),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -319,12 +319,12 @@ void main() {
 
     test('caps distance at 50% of original when below 3km threshold', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.easy,
           targetDistance: 4.0,
           targetDuration: 40,
         ),
-        readinessResult: _makeReadiness(ReadinessState.rest),
+        readinessResult: makeReadiness(ReadinessState.rest),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -333,12 +333,12 @@ void main() {
 
     test('caps distance at 3km when 50% exceeds 3km', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.long,
           targetDistance: 20.0,
           targetDuration: 120,
         ),
-        readinessResult: _makeReadiness(ReadinessState.rest),
+        readinessResult: makeReadiness(ReadinessState.rest),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -347,12 +347,12 @@ void main() {
 
     test('caps duration at 30 minutes', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.long,
           targetDistance: 20.0,
           targetDuration: 120,
         ),
-        readinessResult: _makeReadiness(ReadinessState.rest),
+        readinessResult: makeReadiness(ReadinessState.rest),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -361,12 +361,12 @@ void main() {
 
     test('does not increase duration below 30 minute cap', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.easy,
           targetDistance: 5.0,
           targetDuration: 20,
         ),
-        readinessResult: _makeReadiness(ReadinessState.rest),
+        readinessResult: makeReadiness(ReadinessState.rest),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -375,8 +375,8 @@ void main() {
 
     test('reason indicates rest/reschedule recommendation', () {
       final result = engine.adapt(
-        workout: _makeWorkout(),
-        readinessResult: _makeReadiness(ReadinessState.rest),
+        workout: makeWorkout(),
+        readinessResult: makeReadiness(ReadinessState.rest),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -386,8 +386,8 @@ void main() {
 
     test('preserves original type in AdaptedWorkout', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.interval),
-        readinessResult: _makeReadiness(ReadinessState.rest),
+        workout: makeWorkout(type: WorkoutType.interval),
+        readinessResult: makeReadiness(ReadinessState.rest),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -399,8 +399,8 @@ void main() {
   group('AdaptedWorkout fields', () {
     test('stores original and adapted types separately', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.tempo, targetDistance: 10.0),
-        readinessResult: _makeReadiness(ReadinessState.reduced),
+        workout: makeWorkout(type: WorkoutType.tempo, targetDistance: 10.0),
+        readinessResult: makeReadiness(ReadinessState.reduced),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -411,8 +411,8 @@ void main() {
 
     test('populates readiness score and state from result', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
-        readinessResult: _makeReadiness(ReadinessState.moderate, score: 55.0),
+        workout: makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
+        readinessResult: makeReadiness(ReadinessState.moderate, score: 55.0),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -422,8 +422,8 @@ void main() {
 
     test('sets isAccepted to false by default', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -432,8 +432,8 @@ void main() {
 
     test('sets syncedAt to null', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -443,8 +443,8 @@ void main() {
     test('sets createdAt to current time', () {
       final before = DateTime.now();
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(type: WorkoutType.interval, targetDistance: 10.0),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -455,8 +455,8 @@ void main() {
 
     test('generates deterministic id from workout id', () {
       final result = engine.adapt(
-        workout: _makeWorkout(id: 'workout_42', type: WorkoutType.interval, targetDistance: 10.0),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        workout: makeWorkout(id: 'workout_42', type: WorkoutType.interval, targetDistance: 10.0),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -464,7 +464,7 @@ void main() {
     });
 
     test('preserves original workout data without mutation', () {
-      final workout = _makeWorkout(
+      final workout = makeWorkout(
         type: WorkoutType.interval,
         targetDistance: 10.0,
         targetDuration: 60,
@@ -476,7 +476,7 @@ void main() {
 
       engine.adapt(
         workout: workout,
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -488,12 +488,12 @@ void main() {
 
     test('stores original distance and duration in adapted workout', () {
       final result = engine.adapt(
-        workout: _makeWorkout(
+        workout: makeWorkout(
           type: WorkoutType.interval,
           targetDistance: 10.0,
           targetDuration: 60,
         ),
-        readinessResult: _makeReadiness(ReadinessState.moderate),
+        readinessResult: makeReadiness(ReadinessState.moderate),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );
@@ -507,8 +507,8 @@ void main() {
   group('unavailable readiness', () {
     test('returns null for unavailable readiness state', () {
       final result = engine.adapt(
-        workout: _makeWorkout(type: WorkoutType.interval),
-        readinessResult: _makeReadiness(ReadinessState.unavailable),
+        workout: makeWorkout(type: WorkoutType.interval),
+        readinessResult: makeReadiness(ReadinessState.unavailable),
         raceWeeksRemaining: 10,
         goalId: 'g1',
       );

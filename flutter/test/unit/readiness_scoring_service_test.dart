@@ -17,7 +17,7 @@ void main() {
     test('improving RHR (negative delta) scores 85 + bonus', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 50, baselineRhr: 55, rhrDelta: -3),
+        rhr: const RhrMetrics(todayRhr: 50, baselineRhr: 55, rhrDelta: -3),
       );
       final result = service.score(inputs);
       final hrr = findComponent(result.componentScores, ReadinessComponent.hrr);
@@ -28,7 +28,7 @@ void main() {
     test('improving RHR bonus capped at 15', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 40, baselineRhr: 60, rhrDelta: -20),
+        rhr: const RhrMetrics(todayRhr: 40, baselineRhr: 60, rhrDelta: -20),
       );
       final result = service.score(inputs);
       final hrr = findComponent(result.componentScores, ReadinessComponent.hrr);
@@ -38,7 +38,7 @@ void main() {
     test('stable RHR (delta near zero) scores 75', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
       );
       final result = service.score(inputs);
       final hrr = findComponent(result.componentScores, ReadinessComponent.hrr);
@@ -48,7 +48,7 @@ void main() {
     test('declining RHR (positive delta) scores 75 - penalty', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 60, baselineRhr: 55, rhrDelta: 3),
+        rhr: const RhrMetrics(todayRhr: 60, baselineRhr: 55, rhrDelta: 3),
       );
       final result = service.score(inputs);
       final hrr = findComponent(result.componentScores, ReadinessComponent.hrr);
@@ -58,7 +58,7 @@ void main() {
     test('declining RHR penalty capped at 40', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 80, baselineRhr: 55, rhrDelta: 20),
+        rhr: const RhrMetrics(todayRhr: 80, baselineRhr: 55, rhrDelta: 20),
       );
       final result = service.score(inputs);
       final hrr = findComponent(result.componentScores, ReadinessComponent.hrr);
@@ -68,7 +68,7 @@ void main() {
     test('RHR without baseline scores 65', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55),
+        rhr: const RhrMetrics(todayRhr: 55),
       );
       final result = service.score(inputs);
       final hrr = findComponent(result.componentScores, ReadinessComponent.hrr);
@@ -79,8 +79,8 @@ void main() {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
         rhr: null,
-        sleep: SleepMetrics(totalDurationMinutes: 480),
-        load: LoadMetrics(workloadRatio: 1.0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480),
+        load: const LoadMetrics(workloadRatio: 1.0),
       );
       final result = service.score(inputs);
       final hrr = findComponent(result.componentScores, ReadinessComponent.hrr);
@@ -92,7 +92,7 @@ void main() {
     test('8+ hours sleep base score 85', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 500, deepPercent: 10, remPercent: 10),
+        sleep: const SleepMetrics(totalDurationMinutes: 500, deepPercent: 10, remPercent: 10),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -103,7 +103,7 @@ void main() {
     test('7-8 hours sleep base score 75', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 450, deepPercent: 10, remPercent: 10),
+        sleep: const SleepMetrics(totalDurationMinutes: 450, deepPercent: 10, remPercent: 10),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -113,7 +113,7 @@ void main() {
     test('6-7 hours sleep base score 60', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 390, deepPercent: 10, remPercent: 10),
+        sleep: const SleepMetrics(totalDurationMinutes: 390, deepPercent: 10, remPercent: 10),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -123,7 +123,7 @@ void main() {
     test('5-6 hours sleep base score 45', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 330, deepPercent: 10, remPercent: 10),
+        sleep: const SleepMetrics(totalDurationMinutes: 330, deepPercent: 10, remPercent: 10),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -133,7 +133,7 @@ void main() {
     test('under 5 hours sleep base score 30', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 270, deepPercent: 10, remPercent: 10),
+        sleep: const SleepMetrics(totalDurationMinutes: 270, deepPercent: 10, remPercent: 10),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -143,7 +143,7 @@ void main() {
     test('deep sleep >= 20% adds 5', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 480, deepPercent: 22, remPercent: 15),
+        sleep: const SleepMetrics(totalDurationMinutes: 480, deepPercent: 22, remPercent: 15),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -153,7 +153,7 @@ void main() {
     test('deep sleep >= 15% adds 2', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 480, deepPercent: 16, remPercent: 15),
+        sleep: const SleepMetrics(totalDurationMinutes: 480, deepPercent: 16, remPercent: 15),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -163,7 +163,7 @@ void main() {
     test('deep sleep < 10% subtracts 5', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 480, deepPercent: 8, remPercent: 15),
+        sleep: const SleepMetrics(totalDurationMinutes: 480, deepPercent: 8, remPercent: 15),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -173,7 +173,7 @@ void main() {
     test('REM >= 20% adds 3', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 480, deepPercent: 12, remPercent: 22),
+        sleep: const SleepMetrics(totalDurationMinutes: 480, deepPercent: 12, remPercent: 22),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -183,7 +183,7 @@ void main() {
     test('REM < 10% subtracts 3', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 480, deepPercent: 12, remPercent: 8),
+        sleep: const SleepMetrics(totalDurationMinutes: 480, deepPercent: 12, remPercent: 8),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -193,7 +193,7 @@ void main() {
     test('sleep score clamped to 0-100', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        sleep: SleepMetrics(totalDurationMinutes: 480, deepPercent: 25, remPercent: 25),
+        sleep: const SleepMetrics(totalDurationMinutes: 480, deepPercent: 25, remPercent: 25),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -203,8 +203,8 @@ void main() {
     test('null sleep is unavailable', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        load: LoadMetrics(workloadRatio: 1.0),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        load: const LoadMetrics(workloadRatio: 1.0),
       );
       final result = service.score(inputs);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
@@ -216,7 +216,7 @@ void main() {
     test('workload ratio < 0.8 scores 70 (undertrained)', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        load: LoadMetrics(workloadRatio: 0.6),
+        load: const LoadMetrics(workloadRatio: 0.6),
       );
       final result = service.score(inputs);
       final load = findComponent(result.componentScores, ReadinessComponent.load);
@@ -227,7 +227,7 @@ void main() {
     test('workload ratio 0.8-1.3 scores 90 (optimal)', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        load: LoadMetrics(workloadRatio: 1.0),
+        load: const LoadMetrics(workloadRatio: 1.0),
       );
       final result = service.score(inputs);
       final load = findComponent(result.componentScores, ReadinessComponent.load);
@@ -237,7 +237,7 @@ void main() {
     test('workload ratio 1.3-1.5 scores 65 (high)', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        load: LoadMetrics(workloadRatio: 1.4),
+        load: const LoadMetrics(workloadRatio: 1.4),
       );
       final result = service.score(inputs);
       final load = findComponent(result.componentScores, ReadinessComponent.load);
@@ -247,7 +247,7 @@ void main() {
     test('workload ratio 1.5-2.0 scores 45 (very high)', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        load: LoadMetrics(workloadRatio: 1.7),
+        load: const LoadMetrics(workloadRatio: 1.7),
       );
       final result = service.score(inputs);
       final load = findComponent(result.componentScores, ReadinessComponent.load);
@@ -257,7 +257,7 @@ void main() {
     test('workload ratio > 2.0 scores 25 (overreaching)', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        load: LoadMetrics(workloadRatio: 2.5),
+        load: const LoadMetrics(workloadRatio: 2.5),
       );
       final result = service.score(inputs);
       final load = findComponent(result.componentScores, ReadinessComponent.load);
@@ -267,7 +267,7 @@ void main() {
     test('no workload ratio but todayTrimp available scores 60', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        load: LoadMetrics(todayTrimp: 50),
+        load: const LoadMetrics(todayTrimp: 50),
       );
       final result = service.score(inputs);
       final load = findComponent(result.componentScores, ReadinessComponent.load);
@@ -278,8 +278,8 @@ void main() {
     test('null load metrics is unavailable', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        sleep: SleepMetrics(totalDurationMinutes: 480),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480),
       );
       final result = service.score(inputs);
       final load = findComponent(result.componentScores, ReadinessComponent.load);
@@ -291,19 +291,19 @@ void main() {
     test('all three fields available averages and maps to 0-100', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        subjective: SubjectiveInput(exhaustionLevel: 2, muscleSoreness: 3, stressLevel: 1),
+        subjective: const SubjectiveInput(exhaustionLevel: 2, muscleSoreness: 3, stressLevel: 1),
       );
       final result = service.score(inputs);
       final sub = findComponent(result.componentScores, ReadinessComponent.subjective);
       expect(sub.isAvailable, isTrue);
-      final avg = ((10 - 2) + (10 - 3) + (10 - 1)) / 3;
+      const avg = ((10 - 2) + (10 - 3) + (10 - 1)) / 3;
       expect(sub.score, closeTo(avg * 10, 0.01));
     });
 
     test('only exhaustionLevel uses it alone', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        subjective: SubjectiveInput(exhaustionLevel: 5),
+        subjective: const SubjectiveInput(exhaustionLevel: 5),
       );
       final result = service.score(inputs);
       final sub = findComponent(result.componentScores, ReadinessComponent.subjective);
@@ -313,7 +313,7 @@ void main() {
     test('all zeros produces max subjective score', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        subjective: SubjectiveInput(exhaustionLevel: 0, muscleSoreness: 0, stressLevel: 0),
+        subjective: const SubjectiveInput(exhaustionLevel: 0, muscleSoreness: 0, stressLevel: 0),
       );
       final result = service.score(inputs);
       final sub = findComponent(result.componentScores, ReadinessComponent.subjective);
@@ -323,7 +323,7 @@ void main() {
     test('all max (10) produces zero subjective score', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        subjective: SubjectiveInput(exhaustionLevel: 10, muscleSoreness: 10, stressLevel: 10),
+        subjective: const SubjectiveInput(exhaustionLevel: 10, muscleSoreness: 10, stressLevel: 10),
       );
       final result = service.score(inputs);
       final sub = findComponent(result.componentScores, ReadinessComponent.subjective);
@@ -333,8 +333,8 @@ void main() {
     test('null subjective is unavailable', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        sleep: SleepMetrics(totalDurationMinutes: 480),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480),
       );
       final result = service.score(inputs);
       final sub = findComponent(result.componentScores, ReadinessComponent.subjective);
@@ -344,7 +344,7 @@ void main() {
     test('subjective with only note is unavailable', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        subjective: SubjectiveInput(note: 'feeling ok'),
+        subjective: const SubjectiveInput(note: 'feeling ok'),
       );
       final result = service.score(inputs);
       final sub = findComponent(result.componentScores, ReadinessComponent.subjective);
@@ -356,14 +356,14 @@ void main() {
     test('weights are normalized for available components only', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        sleep: SleepMetrics(totalDurationMinutes: 480, deepPercent: 10, remPercent: 10),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480, deepPercent: 10, remPercent: 10),
       );
       final result = service.score(inputs);
       final hrr = findComponent(result.componentScores, ReadinessComponent.hrr);
       final sleep = findComponent(result.componentScores, ReadinessComponent.sleep);
 
-      final defaultCfg = const ReadinessScoringConfig();
+      const defaultCfg = ReadinessScoringConfig();
       final totalWeight = defaultCfg.hrrWeight + defaultCfg.sleepWeight;
       final normalizedHrr = defaultCfg.hrrWeight / totalWeight;
       final normalizedSleep = defaultCfg.sleepWeight / totalWeight;
@@ -375,10 +375,10 @@ void main() {
     test('all four components available uses full weights', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        sleep: SleepMetrics(totalDurationMinutes: 480, deepPercent: 10, remPercent: 10),
-        load: LoadMetrics(workloadRatio: 1.0),
-        subjective: SubjectiveInput(exhaustionLevel: 3, muscleSoreness: 3, stressLevel: 3),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480, deepPercent: 10, remPercent: 10),
+        load: const LoadMetrics(workloadRatio: 1.0),
+        subjective: const SubjectiveInput(exhaustionLevel: 3, muscleSoreness: 3, stressLevel: 3),
       );
       final result = service.score(inputs);
       expect(result.confidence, DataConfidence.full);
@@ -393,7 +393,7 @@ void main() {
       expect(load.isAvailable, isTrue);
       expect(sub.isAvailable, isTrue);
 
-      final cfg = const ReadinessScoringConfig();
+      const cfg = ReadinessScoringConfig();
       final totalW = cfg.hrrWeight + cfg.sleepWeight + cfg.loadWeight + cfg.subjectiveWeight;
       final expected = (hrr.score * cfg.hrrWeight +
               sleep.score * cfg.sleepWeight +
@@ -406,10 +406,10 @@ void main() {
     test('custom config weights are respected', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        sleep: SleepMetrics(totalDurationMinutes: 480, deepPercent: 10, remPercent: 10),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480, deepPercent: 10, remPercent: 10),
       );
-      final customConfig = const ReadinessScoringConfig(
+      const customConfig = ReadinessScoringConfig(
         hrrWeight: 1.0,
         sleepWeight: 0.0,
       );
@@ -423,10 +423,10 @@ void main() {
     test('4 available components → full confidence', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        sleep: SleepMetrics(totalDurationMinutes: 480),
-        load: LoadMetrics(workloadRatio: 1.0),
-        subjective: SubjectiveInput(exhaustionLevel: 3),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480),
+        load: const LoadMetrics(workloadRatio: 1.0),
+        subjective: const SubjectiveInput(exhaustionLevel: 3),
       );
       final result = service.score(inputs);
       expect(result.confidence, DataConfidence.full);
@@ -435,9 +435,9 @@ void main() {
     test('3 available components → partial confidence', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        sleep: SleepMetrics(totalDurationMinutes: 480),
-        load: LoadMetrics(workloadRatio: 1.0),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480),
+        load: const LoadMetrics(workloadRatio: 1.0),
       );
       final result = service.score(inputs);
       expect(result.confidence, DataConfidence.partial);
@@ -446,8 +446,8 @@ void main() {
     test('2 available components → estimated confidence', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        sleep: SleepMetrics(totalDurationMinutes: 480),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480),
       );
       final result = service.score(inputs);
       expect(result.confidence, DataConfidence.estimated);
@@ -456,7 +456,7 @@ void main() {
     test('1 available component → unavailable confidence', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
       );
       final result = service.score(inputs);
       expect(result.confidence, DataConfidence.unavailable);
@@ -476,10 +476,10 @@ void main() {
     test('score >= 80 → excellent', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 50, baselineRhr: 55, rhrDelta: -5),
-        sleep: SleepMetrics(totalDurationMinutes: 510, deepPercent: 22, remPercent: 22),
-        load: LoadMetrics(workloadRatio: 1.0),
-        subjective: SubjectiveInput(exhaustionLevel: 1, muscleSoreness: 1, stressLevel: 1),
+        rhr: const RhrMetrics(todayRhr: 50, baselineRhr: 55, rhrDelta: -5),
+        sleep: const SleepMetrics(totalDurationMinutes: 510, deepPercent: 22, remPercent: 22),
+        load: const LoadMetrics(workloadRatio: 1.0),
+        subjective: const SubjectiveInput(exhaustionLevel: 1, muscleSoreness: 1, stressLevel: 1),
       );
       final result = service.score(inputs);
       expect(result.state, ReadinessState.excellent);
@@ -488,10 +488,10 @@ void main() {
     test('score 65-79 → good', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
-        sleep: SleepMetrics(totalDurationMinutes: 450, deepPercent: 12, remPercent: 15),
-        load: LoadMetrics(workloadRatio: 1.0),
-        subjective: SubjectiveInput(exhaustionLevel: 3, muscleSoreness: 3, stressLevel: 3),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
+        sleep: const SleepMetrics(totalDurationMinutes: 450, deepPercent: 12, remPercent: 15),
+        load: const LoadMetrics(workloadRatio: 1.0),
+        subjective: const SubjectiveInput(exhaustionLevel: 3, muscleSoreness: 3, stressLevel: 3),
       );
       final result = service.score(inputs);
       expect(result.state, ReadinessState.good);
@@ -500,11 +500,11 @@ void main() {
     test('custom config thresholds override defaults', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
-        sleep: SleepMetrics(totalDurationMinutes: 450, deepPercent: 12, remPercent: 15),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
+        sleep: const SleepMetrics(totalDurationMinutes: 450, deepPercent: 12, remPercent: 15),
       );
       final defaultResult = service.score(inputs);
-      final customConfig = const ReadinessScoringConfig(
+      const customConfig = ReadinessScoringConfig(
         excellentThreshold: 60.0,
       );
       final customResult = service.score(inputs, config: customConfig);
@@ -516,10 +516,10 @@ void main() {
     test('excellent state → none', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 50, baselineRhr: 55, rhrDelta: -5),
-        sleep: SleepMetrics(totalDurationMinutes: 510, deepPercent: 22, remPercent: 22),
-        load: LoadMetrics(workloadRatio: 1.0),
-        subjective: SubjectiveInput(exhaustionLevel: 1, muscleSoreness: 1, stressLevel: 1),
+        rhr: const RhrMetrics(todayRhr: 50, baselineRhr: 55, rhrDelta: -5),
+        sleep: const SleepMetrics(totalDurationMinutes: 510, deepPercent: 22, remPercent: 22),
+        load: const LoadMetrics(workloadRatio: 1.0),
+        subjective: const SubjectiveInput(exhaustionLevel: 1, muscleSoreness: 1, stressLevel: 1),
       );
       final result = service.score(inputs);
       expect(result.adaptationType, AdaptationType.none);
@@ -528,10 +528,10 @@ void main() {
     test('good state → none', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
-        sleep: SleepMetrics(totalDurationMinutes: 450, deepPercent: 12, remPercent: 15),
-        load: LoadMetrics(workloadRatio: 1.0),
-        subjective: SubjectiveInput(exhaustionLevel: 3, muscleSoreness: 3, stressLevel: 3),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
+        sleep: const SleepMetrics(totalDurationMinutes: 450, deepPercent: 12, remPercent: 15),
+        load: const LoadMetrics(workloadRatio: 1.0),
+        subjective: const SubjectiveInput(exhaustionLevel: 3, muscleSoreness: 3, stressLevel: 3),
       );
       final result = service.score(inputs);
       expect(result.adaptationType, AdaptationType.none);
@@ -540,10 +540,10 @@ void main() {
     test('moderate state with high load → volumeReduction', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 58, baselineRhr: 55, rhrDelta: 2),
-        sleep: SleepMetrics(totalDurationMinutes: 390, deepPercent: 8, remPercent: 8),
-        load: LoadMetrics(workloadRatio: 1.7),
-        subjective: SubjectiveInput(exhaustionLevel: 5, muscleSoreness: 5, stressLevel: 5),
+        rhr: const RhrMetrics(todayRhr: 58, baselineRhr: 55, rhrDelta: 2),
+        sleep: const SleepMetrics(totalDurationMinutes: 390, deepPercent: 8, remPercent: 8),
+        load: const LoadMetrics(workloadRatio: 1.7),
+        subjective: const SubjectiveInput(exhaustionLevel: 5, muscleSoreness: 5, stressLevel: 5),
       );
       final result = service.score(inputs);
       expect(result.state, ReadinessState.moderate);
@@ -553,10 +553,10 @@ void main() {
     test('moderate state with normal load → intensityReduction', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 60, baselineRhr: 55, rhrDelta: 5),
-        sleep: SleepMetrics(totalDurationMinutes: 390, deepPercent: 8, remPercent: 8),
-        load: LoadMetrics(workloadRatio: 1.0),
-        subjective: SubjectiveInput(exhaustionLevel: 7, muscleSoreness: 7, stressLevel: 7),
+        rhr: const RhrMetrics(todayRhr: 60, baselineRhr: 55, rhrDelta: 5),
+        sleep: const SleepMetrics(totalDurationMinutes: 390, deepPercent: 8, remPercent: 8),
+        load: const LoadMetrics(workloadRatio: 1.0),
+        subjective: const SubjectiveInput(exhaustionLevel: 7, muscleSoreness: 7, stressLevel: 7),
       );
       final result = service.score(inputs);
       expect(result.state, ReadinessState.moderate);
@@ -566,10 +566,10 @@ void main() {
     test('reduced state → swapToEasy', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 65, baselineRhr: 55, rhrDelta: 10),
-        sleep: SleepMetrics(totalDurationMinutes: 270),
-        load: LoadMetrics(workloadRatio: 1.7),
-        subjective: SubjectiveInput(exhaustionLevel: 8, muscleSoreness: 8, stressLevel: 8),
+        rhr: const RhrMetrics(todayRhr: 65, baselineRhr: 55, rhrDelta: 10),
+        sleep: const SleepMetrics(totalDurationMinutes: 270),
+        load: const LoadMetrics(workloadRatio: 1.7),
+        subjective: const SubjectiveInput(exhaustionLevel: 8, muscleSoreness: 8, stressLevel: 8),
       );
       final result = service.score(inputs);
       expect(result.state, ReadinessState.reduced);
@@ -579,10 +579,10 @@ void main() {
     test('rest state → restOrReschedule', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 70, baselineRhr: 55, rhrDelta: 15),
-        sleep: SleepMetrics(totalDurationMinutes: 200),
-        load: LoadMetrics(workloadRatio: 2.5),
-        subjective: SubjectiveInput(exhaustionLevel: 10, muscleSoreness: 10, stressLevel: 10),
+        rhr: const RhrMetrics(todayRhr: 70, baselineRhr: 55, rhrDelta: 15),
+        sleep: const SleepMetrics(totalDurationMinutes: 200),
+        load: const LoadMetrics(workloadRatio: 2.5),
+        subjective: const SubjectiveInput(exhaustionLevel: 10, muscleSoreness: 10, stressLevel: 10),
       );
       final result = service.score(inputs);
       expect(result.state, ReadinessState.rest);
@@ -594,9 +594,9 @@ void main() {
     test('3 objective components score normally without subjective', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
-        sleep: SleepMetrics(totalDurationMinutes: 480),
-        load: LoadMetrics(workloadRatio: 1.0),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
+        sleep: const SleepMetrics(totalDurationMinutes: 480),
+        load: const LoadMetrics(workloadRatio: 1.0),
       );
       final result = service.score(inputs);
       expect(result.state, isNot(ReadinessState.unavailable));
@@ -607,8 +607,8 @@ void main() {
     test('subjective unavailable does not cause unavailable result', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
-        sleep: SleepMetrics(totalDurationMinutes: 480),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0),
+        sleep: const SleepMetrics(totalDurationMinutes: 480),
       );
       final result = service.score(inputs);
       expect(result.state, isNot(ReadinessState.unavailable));
@@ -619,10 +619,10 @@ void main() {
     test('available components include reasons', () {
       final inputs = ReadinessInputs(
         date: DateTime(2025, 1, 1),
-        rhr: RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
-        sleep: SleepMetrics(totalDurationMinutes: 480),
-        load: LoadMetrics(workloadRatio: 1.0),
-        subjective: SubjectiveInput(exhaustionLevel: 3, muscleSoreness: 3, stressLevel: 3),
+        rhr: const RhrMetrics(todayRhr: 55, baselineRhr: 55, rhrDelta: 0.5),
+        sleep: const SleepMetrics(totalDurationMinutes: 480),
+        load: const LoadMetrics(workloadRatio: 1.0),
+        subjective: const SubjectiveInput(exhaustionLevel: 3, muscleSoreness: 3, stressLevel: 3),
       );
       final result = service.score(inputs);
       expect(result.reasons, isNotEmpty);

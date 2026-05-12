@@ -24,16 +24,17 @@ abstract class HealthConnectService {
 }
 
 class SleepDayData {
-  final double totalMinutes;
-  final double deepMinutes;
-  final double remMinutes;
-  final double lightMinutes;
   const SleepDayData({
     required this.totalMinutes,
     required this.deepMinutes,
     required this.remMinutes,
     required this.lightMinutes,
   });
+
+  final double totalMinutes;
+  final double deepMinutes;
+  final double remMinutes;
+  final double lightMinutes;
 }
 
 class HealthConnectServiceImpl implements HealthConnectService {

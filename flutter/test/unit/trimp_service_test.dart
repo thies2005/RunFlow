@@ -29,7 +29,7 @@ void main() {
         maxHr: 190,
         restingHr: 50,
       );
-      final hrReserve = (150 - 50) / (190 - 50);
+      const hrReserve = (150 - 50) / (190 - 50);
       expect(hrReserve, closeTo(0.7143, 0.001));
       final expected = 60.0 * hrReserve * 0.64 * exp(1.92 * hrReserve);
       expect(trimp, closeTo(expected, 0.01));
@@ -43,7 +43,7 @@ void main() {
         restingHr: 50,
         sex: 'female',
       );
-      final hrReserve = (150 - 50) / (190 - 50);
+      const hrReserve = (150 - 50) / (190 - 50);
       final expected = 60.0 * hrReserve * 0.64 * exp(1.67 * hrReserve);
       expect(trimp, closeTo(expected, 0.01));
     });
@@ -127,7 +127,7 @@ void main() {
     });
 
     test('custom config multipliers are used', () {
-      final customConfig = const TrimpConfig(
+      const customConfig = TrimpConfig(
         sessionTypeMultipliers: {'custom': 2.5},
       );
       final trimp = service.computeSessionTypeFallback(
@@ -249,14 +249,14 @@ void main() {
     test('single value computes correctly', () {
       final values = [100.0];
       final atl = service.computeAtl(values);
-      final factor = 1 / 7.0;
+      const factor = 1 / 7.0;
       expect(atl, closeTo(0 * (1 - factor) + 100 * factor, 0.01));
     });
 
     test('7-day decay matches expected formula', () {
       final values = List.generate(7, (_) => 100.0);
       final atl = service.computeAtl(values);
-      final factor = 1 / 7.0;
+      const factor = 1 / 7.0;
       double expected = 0;
       for (final trimp in values) {
         expected = expected * (1 - factor) + trimp * factor;
@@ -265,10 +265,10 @@ void main() {
     });
 
     test('custom decay config', () {
-      final customConfig = const TrimpConfig(atlDecayDays: 5);
+      const customConfig = TrimpConfig(atlDecayDays: 5);
       final values = List.generate(10, (_) => 100.0);
       final atl = service.computeAtl(values, config: customConfig);
-      final factor = 1 / 5.0;
+      const factor = 1 / 5.0;
       double expected = 0;
       for (final trimp in values) {
         expected = expected * (1 - factor) + trimp * factor;
@@ -299,15 +299,15 @@ void main() {
     test('single value computes correctly', () {
       final values = [100.0];
       final ctl = service.computeCtl(values);
-      final factor = 1 / 42.0;
+      const factor = 1 / 42.0;
       expect(ctl, closeTo(100 * factor, 0.01));
     });
 
     test('custom ctl decay config', () {
-      final customConfig = const TrimpConfig(ctlDecayDays: 21);
+      const customConfig = TrimpConfig(ctlDecayDays: 21);
       final values = List.generate(10, (_) => 100.0);
       final ctl = service.computeCtl(values, config: customConfig);
-      final factor = 1 / 21.0;
+      const factor = 1 / 21.0;
       double expected = 0;
       for (final trimp in values) {
         expected = expected * (1 - factor) + trimp * factor;
@@ -333,8 +333,8 @@ void main() {
     });
 
     test('TSB = CTL - ATL', () {
-      final ctl = 60.5;
-      final atl = 45.3;
+      const ctl = 60.5;
+      const atl = 45.3;
       expect(service.computeTsb(ctl, atl), closeTo(15.2, 0.01));
     });
   });

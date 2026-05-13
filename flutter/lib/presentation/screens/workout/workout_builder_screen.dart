@@ -513,11 +513,10 @@ class _EditableNode {
     required this.id,
     this.stepType = StepType.interval,
     this.durationType = StepDurationType.time,
-    this.name = '',
     this.isGroup = false,
     this.repeatCount = 1,
     List<_EditableNode>? children,
-  }) : children = children ?? [];
+  }) : name = '', children = children ?? [];
 
   final String id;
   StepType stepType;

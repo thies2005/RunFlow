@@ -78,7 +78,7 @@ enum WorkoutType {
   RIDE_INTERVALS         // Structured bike intervals
   SWIM_DRILL             // Technique-focused swim
   TRANSITION_PRACTICE    // T1/T2 transition practice
-  DOUBLE_DAY             // Two-a-day (AM/PM sessions, stored as single planned entity)
+  DOUBLE_DAY             // Two-a-day marker (AM/PM sessions, stored as separate Workout rows linked by groupId)
 }
 ```
 
@@ -103,9 +103,43 @@ enum PlanCreationMode {
 }
 ```
 
+#### Expand `PlanPhase` — Add ultra/triathlon/multi-goal phases
+
+**Current** (`Web/prisma/schema.prisma:884`):
+```
+enum PlanPhase {
+  BASE
+  BUILD
+  PEAK
+  TAPER
+  RACE_WEEK
+  RECOVERY
+}
+```
+
+**New:**
+```
+enum PlanPhase {
+  // Existing
+  BASE
+  BUILD
+  PEAK
+  TAPER
+  RACE_WEEK
+  RECOVERY
+  // New for advanced plan builder
+  ENDURANCE              // Ultra: extended endurance block between BUILD and PEAK
+  MENTAL_PREP            // Backyard ultra: mental conditioning (night runs, fatigue adaptation)
+  TUNE_UP                // Multi-goal: mini-taper block for sub-goal events
+  MAINTAIN               // No-race plans: steady-state maintenance after build
+}
+```
+
 ### Schema Changes to `Goal` Model
 
 Add these fields to the existing `Goal` model:
+
+> **Breaking change for no-race mode:** The existing `raceType  RaceType` field must become `raceType  RaceType?` (nullable). The existing `raceDate  DateTime` field must become `raceDate  DateTime?` (nullable). All existing code that reads `raceType` or `raceDate` must handle null. For standard plans, these are always populated. For no-race/general-fitness plans, they are null.
 
 ```
 sport              PlanSport           @default(RUN)
@@ -115,7 +149,7 @@ customSwimDistM    Float?              // For CUSTOM_TRI
 customBikeDistM    Float?              // For CUSTOM_TRI
 customRunDistM     Float?              // For CUSTOM_TRI
 backyardLoopDistM  Float?              // For BACKYARD_ULTRA (default 6706m = 4.167 miles)
-backyardLoopTimeS  Int                 @default(3600)  // Time per loop (1 hour standard)
+backyardLoopTimeS  Int?                // Time per loop in seconds (default 3600 applied at app level for backyard ultra only)
 targetLaps         Int?                // For backyard ultra: how many loops is the goal
 planSource         String              @default("standard")  // "standard" | "advanced" | "csv_import"
 guidanceLevel      String              @default("none")  // "none" | "light" | "full"
@@ -163,7 +197,7 @@ Goal (PRIMARY):  Full Ironman — December 15, 2026
 **Workout tagging** — add field to `Workout`:
 ```
 subGoalId           String?             // Which sub-goal this workout primarily serves (null = general plan)
-subGoal             Goal?               @relation(fields: [subGoalId], references: [id])
+subGoal             Goal?               @relation("WorkoutSubGoal", fields: [subGoalId], references: [id])
 ```
 
 **How multi-goal periodization works:**
@@ -294,6 +328,7 @@ model IntervalProgression {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   goal        Goal        @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  workouts    Workout[]   // Reverse relation for Workout.intervalProgressionId
 
   @@index([goalId])
 }
@@ -345,30 +380,27 @@ model AiPlanAnalysis {
 }
 ```
 
-#### 5. `PlanAiConfig` — Premium AI Model for Plan Builder
+#### 5. Plan Builder AI — Reuse Existing `AiProvider` Infrastructure
 
+**Decision:** No separate `PlanAiConfig` model. Instead, reuse the existing `GlobalAiSettings` + `AiProvider` system.
+
+**Add to `GlobalAiSettings`:**
 ```
-model PlanAiConfig {
-  id              String   @id @default(cuid())
-  provider        String     // "openai", "anthropic", "google"
-  model           String     // e.g. "gpt-4o", "claude-opus-4-20250514"
-  apiKey          String?    @db.Text  // Encrypted
-  apiEndpoint     String?    // For OpenRouter/custom endpoints
-  maxTokensPerAnalysis Int   @default(8000)
-  monthlyTokenBudget Int    @default(2000000)
-  tokensUsedThisMonth Int   @default(0)
-  budgetResetDate  DateTime?
-  isActive        Boolean    @default(true)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-
-  @@index([isActive])
-}
+planBuilderProviderId     String?   // Which AiProvider to use for plan builder AI features
+planBuilderModel          String    @default("gpt-4o")  // Model for plan analysis/generation
+planMaxTokensPerAnalysis  Int       @default(8000)
+planBuilderProvider       AiProvider? @relation("PlanBuilderProvider", fields: [planBuilderProviderId], references: [id])
 ```
 
-- Only one active config at a time
-- Admin manages this in the admin panel
-- Separate budget from the existing tier system
+**Add to `AiProvider`:**
+```
+planBuilderInSettings     GlobalAiSettings[] @relation("PlanBuilderProvider")
+```
+
+- Uses the same API key, base URL, and token tracking as existing AI chat
+- Admin selects which provider to use for plan builder in the existing AI config tab
+- Token usage for plan builder is tracked per-provider via existing `AiDailyTokenUsage`
+- Per-analysis limit (`planMaxTokensPerAnalysis`) prevents runaway token usage
 
 #### 6. `PlanPaceProfile` — Adapting Paces & HR Zones
 
@@ -421,16 +453,20 @@ model PlanPaceProfile {
 **Goal** — add relations:
 ```
 snapshots             PlanSnapshot[]
-templates             WeekTemplate[]
 intervalProgressions  IntervalProgression[]
 aiAnalysis            AiPlanAnalysis?
 paceProfile           PlanPaceProfile?
-planSource            String?       @default("standard")  // "standard" | "advanced" | "csv_import"
+taggedWorkouts        Workout[]       @relation("WorkoutSubGoal")  // Reverse relation for Workout.subGoalId
+guidedPlanSessions    GuidedPlanSession[]
 ```
 
-**User** — add relation:
+> Note: `planSource` is defined in the "Schema Changes to Goal Model" section above. Do not duplicate.
+> Note: `WeekTemplate` is user-scoped (not goal-scoped), so the relation is on User only.
+
+**User** — add relations:
 ```
 weekTemplates         WeekTemplate[]
+guidedPlanSessions    GuidedPlanSession[]
 ```
 
 **Workout** — add fields:
@@ -440,7 +476,10 @@ color                 String?       // Custom color override
 intervalProgressionId String?
 intervalProgression   IntervalProgression? @relation(fields: [intervalProgressionId], references: [id])
 structuredSteps       Json?         // Structured workout steps (warmup/intervals/cooldown)
+groupId               String?       // Links DOUBLE_DAY AM/PM sessions (shared UUID between paired workouts)
 ```
+
+**DOUBLE_DAY implementation note:** A two-a-day is stored as **two separate Workout rows** sharing the same `groupId`. This allows each session to be independently linked to different activities (e.g., AM swim + PM run), tracked for completion, and typed correctly. The `DOUBLE_DAY` WorkoutType is used only as a display marker; the individual sessions use their actual types (EASY, SWIM, etc.).
 
 ---
 
@@ -798,7 +837,7 @@ LONG_RIDE:          { bg: 'bg-emerald-500/20', text: 'text-emerald-400', dot: 'b
 RIDE_INTERVALS:     { bg: 'bg-teal-500/20',    text: 'text-teal-400',    dot: 'bg-teal-400' },
 SWIM_DRILL:         { bg: 'bg-blue-400/20',    text: 'text-blue-300',    dot: 'bg-blue-300' },
 TRANSITION_PRACTICE:{ bg: 'bg-fuchsia-500/20', text: 'text-fuchsia-400', dot: 'bg-fuchsia-400' },
-DOUBLE_DAY:         { bg: 'bg-orange-400/20',  text: 'text-orange-300',  dot: 'bg-orange-300' },
+DOUBLE_DAY:         { bg: 'bg-rose-400/20',    text: 'text-rose-300',    dot: 'bg-rose-300' },
 ```
 
 ---
@@ -827,8 +866,7 @@ Web/src/app/api/plan-advanced/
 │   ├── apply-template/
 │   │   └── route.ts            # POST apply template to week range
 │   ├── progression/
-│   │   └── route.ts            # GET/POST/PUT/DELETE interval progressions
-│   ├── progression/
+│   │   ├── route.ts            # GET/POST/PUT/DELETE interval progressions
 │   │   └── apply/
 │   │       └── route.ts        # POST apply progression to workouts
 │   ├── ai-analysis/
@@ -850,9 +888,10 @@ Web/src/app/api/plan-advanced/
 │       └── route.ts            # GET plan analytics (volume, intensity distribution, etc.)
 
 Web/src/app/api/admin/
-├── plan-ai-config/
-│   └── route.ts                # GET/PUT admin plan AI config
+├── ai-settings/                    # (existing) — add plan builder provider selector to existing AI config tab
 ```
+
+> Note: No separate `plan-ai-config/` admin route. Plan builder AI config is integrated into the existing AI settings admin tab.
 
 ### API Endpoints Detail
 
@@ -936,15 +975,21 @@ Web/src/app/api/admin/
 2. **FinalSurge**: Columns: `Date, Activity Type, Workout Name, Description, Planned Distance, Planned Duration, Planned Pace`
 3. **RunFlow Custom**: Columns: `date, workout_type, phase, name, description, distance_m, duration_s, pace_s_km, hr_zone, structured_steps`
 
-**Response:**
+**Response (preview mode, `confirm=false` or first call):**
 ```json
 {
+  "previewId": "prev_abc123",      // Server-cached preview ID (15-min TTL)
   "imported": 84,
   "skipped": 2,
   "errors": [...],
-  "preview": true  // First import is preview-only, confirm with second call
+  "preview": true,
+  "rows": [...]                    // First 10 parsed workout previews
 }
 ```
+
+**Confirm call:** `POST /api/plan-advanced/[goalId]/csv/import` with `{ "previewId": "prev_abc123", "confirm": true }`
+
+**CSV Preview Caching:** The server parses the CSV once and stores the parsed result in-memory (or Redis if available) keyed by `previewId` with a 15-minute TTL. The confirm call retrieves the cached parse result and creates workouts without re-parsing. This avoids double-parsing and ensures the user confirms exactly what they previewed.
 
 #### `GET /api/plan-advanced/[goalId]/csv/export` — CSV Export
 
@@ -1329,25 +1374,35 @@ date,workout_type,phase,name,description,distance_m,duration_s,pace_s_km,hr_zone
 
 ## Phase 4: Admin Section Updates
 
-### New Admin Tab: "Plan AI Config"
+### Existing Admin AI Tab Update
 
-**Component**: New tab in `Web/src/components/admin/PlanAiConfigTab.tsx`
+Add a "Plan Builder" sub-section to the existing `Web/src/components/admin/AiSettingsTab.tsx`:
 
-**UI:**
-- Provider selector (OpenAI, Anthropic, Google, OpenRouter)
-- Model selector (updates based on provider)
-- API key input (encrypted storage)
-- Custom endpoint URL (for OpenRouter/custom)
-- Token budget settings (max per analysis, monthly budget)
-- Current month usage display
-- Active/inactive toggle
-- Test connection button
+**UI additions:**
+- Plan Builder Provider selector (dropdown of existing `AiProvider` entries)
+- Plan Builder Model selector (e.g., `gpt-4o`, `claude-opus-4`)
+- Max tokens per analysis (default 8000)
+- Test plan analysis button (runs a sample analysis to verify connection)
 
-**API:** `GET/PUT /api/admin/plan-ai-config`
+**API:** Uses existing `GET/PUT /api/admin/ai-settings` — just adds `planBuilderProviderId` and `planBuilderModel` fields.
 
 ---
 
 ## Phase 5: Landing Page & Plan Creation
+
+### Plan Coexistence — Standard & Advanced
+
+Both standard plans (`/plan`) and advanced plans (`/plan-advanced`) can coexist simultaneously. Users are not forced to choose one or the other.
+
+**Standard → Advanced migration:**
+- The existing `/plan` page gets a new button: **"Open in Advanced Editor →"**
+- Clicking it:
+  1. Sets `Goal.planSource = "advanced"` on the existing goal
+  2. Redirects to `/plan-advanced/[goalId]`
+  3. All existing workouts are preserved and immediately editable in the advanced editor
+  4. The plan can still be viewed (read-only) on `/plan` afterward
+- No data duplication — the same `Goal` and `Workout` records are shared
+- The advanced editor simply provides richer editing tools on the same data
 
 ### `PlanLanding.tsx` — No Active Plan State
 
@@ -1438,6 +1493,34 @@ The creation flow is the same regardless of mode. Mode is selected later via the
 6. → **Empty plan opens immediately in the editor** (or CSV import path)
 7. Default mode is **Expert Manual**. User can toggle to Guided or AI-Assisted at any time from the toolbar.
 
+### "No Race" Mode — Simplified Rolling Plans
+
+When the user selects **"No Race / General Fitness"**, the plan operates differently:
+
+**Creation:**
+- No race date required
+- User sets plan start date + duration (e.g., "12 weeks" or "ongoing")
+- User sets training days/week and general volume target
+
+**Plan structure:**
+- Uses simplified phase cycle: `BASE → BUILD → MAINTAIN` (no PEAK/TAPER/RACE_WEEK)
+- `MAINTAIN` phase uses the `PlanPhase.MAINTAIN` enum value
+- Volume builds progressively during BASE → BUILD, then holds steady in MAINTAIN
+- Recovery weeks still apply every 4th week (same step-loading cycle as race plans)
+- No periodization toward a target date — volume is capped at the user's weekly goal
+
+**In the editor:**
+- No race marker on the timeline
+- Phase labels show BASE/BUILD/MAINTAIN instead of the full race periodization
+- AI analysis focuses on volume consistency and injury prevention rather than race readiness
+- "Race Readiness" card is hidden; replaced with "Fitness Progress" card
+
+**Stored on Goal:**
+- `raceType = null` (field becomes nullable for no-race goals)
+- `raceDate = plan end date` (or null for ongoing plans)
+- `planSource = "advanced"`
+- `creationMode = EXPERT_MANUAL | GUIDED | AI_ASSISTED`
+
 ### Mode Toggle — Persistent in Toolbar
 
 **Component**: `ModeToggle.tsx` — sits in the top toolbar, always visible when editing a plan.
@@ -1450,8 +1533,9 @@ The creation flow is the same regardless of mode. Mode is selected later via the
 
 - Three-state toggle: `EXPERT_MANUAL` | `GUIDED` | `AI_ASSISTED`
 - Visually prominent (pill-style segmented control) so the user always knows the active mode
-- Per-user preference persisted in localStorage (sticky across plans)
+- Per-user preference persisted in localStorage (default for new plans, sticky across sessions)
 - Per-plan override stored on `Goal.guidanceLevel` field in DB
+- **Priority**: `Goal.guidanceLevel` (per-plan) takes precedence over localStorage. If the user explicitly toggles mode on a specific plan, that choice is saved to the DB and always used for that plan. localStorage is only the fallback for plans that haven't been toggled yet.
 
 #### What changes when you switch modes:
 
@@ -1573,91 +1657,397 @@ When switching to AI-Assisted mode on an existing plan:
 
 ---
 
-## Phase 6: Implementation Order
+## Phase 6: Implementation Order — Subagent Execution Plan
 
-### Sprint 0: Multi-Sport Foundation (Week 0 — before Sprint 1)
-0a. Expand `RaceType` enum with all new race types
-0b. Expand `WorkoutType` enum with triathlon/ultra workout types
-0c. Add `PlanSport`, `PlanCreationMode` enums
-0d. Add new fields to `Goal` model (sport, creationMode, custom distances, etc.)
-0e. Create `GuidedPlanSession` model
-0f. Run Prisma migration
-0g. Update existing plan generation to handle new race types gracefully (fallback for unknown types)
+### Execution Model
 
-### Sprint 1: Foundation (Week 1-2)
-1. Remaining database migration (all other new models + schema changes)
-2. API routes: CRUD for goals, workouts, snapshots
-3. Plan landing page with sport/distance/mode selection
-4. Create plan dialog (expert manual + standard builder modes)
-5. Basic plan editor layout (3-panel)
-6. Infinite scroll week view (read-only first)
+Each phase is executed by an **implementing subagent** (150k context max), followed by a **review subagent** that validates the output. The final phase is a comprehensive cross-phase review.
 
-### Sprint 2: Editing (Week 3-4)
-6. Single workout CRUD (inline editing)
-7. Drag-and-drop reorder (adapt from existing plan page)
-8. Auto-save with snapshot creation
-9. Undo/redo system
-10. Mass selection UI
+**Subagent context budget per phase (~150k):**
+- Plan section for this phase: ~5-15k
+- Existing code files to read: ~40-60k
+- New code being written: ~30-50k
+- Headroom for reasoning: ~30-50k
 
-### Sprint 3: Mass Operations (Week 5-6)
-11. Bulk delete, move, shift
-12. Bulk type change, scale volume/intensity
-13. Week templates: create, save, apply
-14. Mass edit toolbar polish
+**Rules for implementing agents:**
+1. Read ONLY the plan sections listed in "Context Slice" — do not load the full plan
+2. Run `flutter analyze` (Flutter) or `npx tsc --noEmit` (Web) after every phase
+3. Run relevant tests after every phase
+4. Create a `PHASE_N_COMPLETE.md` file listing all files created/modified
 
-### Sprint 4: Advanced Features (Week 7-8)
-15. Interval progression builder (manual)
-16. AI progression suggestions
-17. Pace profile editor with phase-based adaptation
-18. Pace timeline visualization
+**Rules for review agents:**
+1. Read the phase's plan section + `PHASE_N_COMPLETE.md` + all listed output files
+2. Check acceptance criteria one by one
+3. Check for: missing relations, unused imports, type errors, missing error handling, inconsistent naming
+4. Output: `PHASE_N_REVIEW.md` with PASS/FAIL per criterion + list of issues to fix
+5. If FAIL: implementing agent runs again with the review feedback
 
-### Sprint 5: Multi-Goal Support & Multi-Sport Generators (Week 9-10)
-19. `GoalPriority` enum + `parentGoalId`/`priority`/`trainingFocus` fields on Goal
-20. Multi-goal API routes: `POST /sub-goals`, `PATCH /sub-goals/[id]`, `DELETE /sub-goals/[id]`
-21. `generators/multi-goal.ts`: `generateMultiGoalPhases()`, `calculateVolumeForWeek()`, `resolveConflicts()`
-22. `EventsPanel.tsx` + `EventCard.tsx` + `AddSubGoalDialog.tsx` in editor
-23. `GoalTimeline.tsx` horizontal bar with event markers
-24. `MultiGoalPhaseLabel.tsx` showing which goal each phase serves
-25. Phase recalculation when sub-goals are added/removed (with snapshot before recalc)
-26. Ultra running plan generator (`generators/run-ultra.ts`)
-27. Triathlon plan generator (`generators/triathlon.ts`)
-28. Swim CSS/pace calculation module
-29. Bike zone calculation module (FTP or HR-based)
-30. Brick/multi-sport workout scheduling
+---
 
-### Sprint 6: Mode Toggle & Guided/AI-Assisted Behavior (Week 11-12)
-25. `ModeToggle.tsx` component (3-state segmented control in toolbar)
-26. Mode persistence (localStorage + Goal.guidanceLevel in DB)
-27. Guided mode: contextual tip card system + guided panel renderer
-28. Guided mode: `GuidedPlanSession` API (lazy session creation, dismissed tips tracking)
-29. AI-Assisted mode: proactive inline suggestion system
-30. AI-Assisted mode: plan scan on mode switch, suggestion card rendering
-31. Mode switch behavior: non-destructive, instant, per-feature show/hide logic
+### Phase 1: Database Schema & Migration
 
-### Sprint 7: AI Analysis (Week 13-14)
-31. Admin Plan AI Config tab
-32. AI plan analysis engine (prompt engineering for all sports)
-33. AI analysis panel UI
-34. Risk flag system (sport-specific: ultra overtraining, triathlon overreach, etc.)
-35. Race readiness prediction (distance-specific: ultra time estimation, triathlon split predictions)
-36. AI suggestion cards with apply
+**Goal:** All schema changes applied, Prisma client regenerated, existing code still compiles.
 
-### Sprint 8: CSV Import/Export (Week 15-16)
-37. CSV parser (multi-format auto-detection)
-38. CSV import wizard with preview
-39. CSV export with format selection
-40. TrainingPeaks format support
-41. FinalSurge format support
-42. Triathlon-specific CSV mapping (swim/bike/run workouts)
+**Context Slice:** Plan sections: "Phase 0: Database Schema Changes" + "Phase 0.5: Multi-Sport & Race Type Support" (enums + Goal fields + new models)
 
-### Sprint 9: Polish & Integration (Week 17-18)
-43. Keyboard shortcuts
-44. Performance optimization (virtualization, debouncing)
-45. Mobile-responsive layout (tablet minimum)
-46. Premium tier access gates
-47. Integration with existing plan system (link from standard plan → advanced)
-48. Backyard ultra timer/simulation tool
-49. Testing & bug fixes
+**Input files to read:**
+- `Web/prisma/schema.prisma`
+- `Web/src/lib/plans/index.ts` (first 40 lines — to understand current RaceType/WorkoutType imports)
+
+**Tasks:**
+1. Expand `RaceType` enum (add ultra + triathlon types)
+2. Expand `WorkoutType` enum (add BRICK, OPEN_WATER_SWIM, LONG_RIDE, etc.)
+3. Expand `PlanPhase` enum (add ENDURANCE, MENTAL_PREP, TUNE_UP, MAINTAIN)
+4. Add new enums: `PlanSport`, `PlanCreationMode`, `GoalPriority`
+5. Add new fields to `Goal` model (sport, creationMode, custom distances, parentGoalId, priority, guidanceLevel, planSource, etc.)
+6. Make `raceType` and `raceDate` nullable on `Goal` (for no-race mode)
+7. Create new models: `PlanSnapshot`, `WeekTemplate`, `IntervalProgression`, `AiPlanAnalysis`, `PlanPaceProfile`, `GuidedPlanSession`
+8. Add fields to `Workout` model (customName, color, intervalProgressionId, structuredSteps, groupId, subGoalId)
+9. Add `planBuilderProviderId` + `planBuilderModel` to `GlobalAiSettings`
+10. Add all reverse relations (User.weekTemplates, User.guidedPlanSessions, Goal.taggedWorkouts, etc.)
+11. Run `npx prisma generate` + `npx prisma migrate dev`
+12. Fix any existing code that breaks due to nullable `raceType`/`raceDate` (add null checks in `Web/src/lib/plans/index.ts`)
+
+**Output files:** `Web/prisma/schema.prisma` (modified), `Web/src/lib/plans/index.ts` (modified), migration file
+
+**Acceptance criteria:**
+- [ ] `npx prisma validate` passes
+- [ ] `npx prisma generate` succeeds
+- [ ] `npx tsc --noEmit` passes (no type errors)
+- [ ] All new enums have correct values matching the plan
+- [ ] All new models have proper relations, indexes, and cascade deletes
+- [ ] Existing tests still pass (`npm test`)
+
+**Review agent checks:** Schema completeness, relation consistency (both sides defined), index coverage, nullable correctness.
+
+---
+
+### Phase 2: Core Backend API — CRUD & Snapshots
+
+**Goal:** All plan-advanced API routes for basic CRUD, snapshots, undo, sub-goals, and pace profiles.
+
+**Context Slice:** Plan section "Phase 1: Backend API Routes" (directory structure + endpoint details)
+
+**Input files to read:**
+- `Web/prisma/schema.prisma` (from Phase 1)
+- `Web/src/app/api/plan/` (existing plan API for patterns)
+- `Web/src/auth.ts` (auth patterns)
+
+**Tasks:**
+1. `plan-advanced/route.ts` — GET list, POST create (blank/standard/no-race)
+2. `plan-advanced/[goalId]/route.ts` — GET full plan, DELETE
+3. `plan-advanced/[goalId]/workouts/route.ts` — GET/POST
+4. `plan-advanced/[goalId]/workouts/[workoutId]/route.ts` — PATCH/DELETE
+5. `plan-advanced/[goalId]/snapshot/route.ts` — GET list, POST create
+6. `plan-advanced/[goalId]/undo/route.ts` — POST restore
+7. `plan-advanced/[goalId]/sub-goals/route.ts` — GET/POST
+8. `plan-advanced/[goalId]/sub-goals/[subGoalId]/route.ts` — PATCH/DELETE
+9. `plan-advanced/[goalId]/pace-profile/route.ts` — GET/PUT
+10. `plan-advanced/[goalId]/regenerate/route.ts` — POST
+11. `plan-advanced/[goalId]/analysis/route.ts` — GET stats
+12. All routes: auth guard, premium tier check, input validation, error handling
+13. Snapshot auto-creation before mutations, tier-based limits (10/30/50)
+
+**Acceptance criteria:**
+- [ ] All endpoints return proper HTTP status codes
+- [ ] Auth guard on every route (session check)
+- [ ] Premium tier check (tier2+ or admin)
+- [ ] Snapshot created before destructive operations
+- [ ] Sub-goal creation triggers phase recalculation
+- [ ] `npx tsc --noEmit` passes
+- [ ] Integration tests for each endpoint
+
+**Review agent checks:** Auth on every route, error handling, Prisma transactions for multi-step ops, snapshot limit enforcement.
+
+---
+
+### Phase 3: Backend API — Bulk Ops, Templates, Progressions, CSV
+
+**Goal:** All remaining API routes: bulk ops, templates, progression CRUD+apply, CSV import/export, AI analysis trigger.
+
+**Context Slice:** Plan section "Phase 1: Backend API Routes" (bulk endpoint detail, CSV spec, AI analysis)
+
+**Input files to read:** Phase 2 output files (API patterns), `Web/src/lib/plans/index.ts`
+
+**Tasks:**
+1. `[goalId]/workouts/bulk/route.ts` — PATCH bulk ops (DELETE, MOVE, CHANGE_TYPE, SCALE, SHIFT, CHANGE_INTENSITY)
+2. `[goalId]/template/route.ts` — GET/POST/PUT/DELETE
+3. `[goalId]/apply-template/route.ts` — POST
+4. `[goalId]/progression/route.ts` — GET/POST/PUT/DELETE
+5. `[goalId]/progression/apply/route.ts` — POST
+6. `[goalId]/csv/import/route.ts` — POST (preview + confirm via previewId)
+7. `[goalId]/csv/export/route.ts` — GET
+8. `[goalId]/ai-analysis/route.ts` — GET/POST
+9. `Web/src/lib/plans/csv-parser.ts` — multi-format parser (TrainingPeaks, FinalSurge, RunFlow)
+10. `Web/src/lib/plans/csv-preview-cache.ts` — in-memory preview cache with 15-min TTL
+11. All bulk ops: create snapshot before execution
+
+**Acceptance criteria:**
+- [ ] Bulk operations modify multiple workouts atomically (transaction)
+- [ ] CSV parser handles all 3 formats
+- [ ] CSV preview→confirm flow works with previewId
+- [ ] Template apply creates workouts for target week range
+- [ ] `npx tsc --noEmit` passes
+- [ ] Unit tests for CSV parser, bulk operation logic
+
+**Review agent checks:** Transaction safety on bulk ops, CSV edge cases, preview cache cleanup.
+
+---
+
+### Phase 4: Plan Generation Engines
+
+**Goal:** Ultra, triathlon, multi-goal periodization, no-race generators all functional.
+
+**Context Slice:** Plan section "Phase 0.5: Multi-Sport & Race Type Support" (ultra/tri specs, multi-goal phase structure)
+
+**Input files to read:** `Web/src/lib/plans/index.ts` (full file), `Web/src/lib/metrics/vdot.ts`
+
+**Tasks:**
+1. `generators/run-ultra.ts` — ultra-specific phases, back-to-back long runs, backyard ultra loops
+2. `generators/triathlon.ts` — 3-sport periodization, brick scheduling
+3. `generators/multi-goal.ts` — `generateMultiGoalPhases()`, `resolveConflicts()`
+4. `generators/ai-proposal.ts` — AI plan proposals (conservative/balanced/aggressive)
+5. `generators/no-race.ts` — BASE → BUILD → MAINTAIN rolling cycle
+6. `swim-pace.ts` — CSS calculation from 400m/2000m times
+7. `bike-zones.ts` — FTP/HR-based bike training zones
+8. Update `index.ts` — route to correct generator based on PlanSport + RaceType
+
+**Acceptance criteria:**
+- [ ] Ultra generator produces ENDURANCE phase, back-to-back long runs
+- [ ] Triathlon generator produces correct swim/bike/run distribution per phase
+- [ ] Multi-goal phases correctly insert focus blocks and mini-tapers
+- [ ] No-race generator produces BASE → BUILD → MAINTAIN without PEAK/TAPER
+- [ ] All generators respect 10% weekly volume cap
+- [ ] Unit tests for each generator (minimum 3 tests each)
+- [ ] `npx tsc --noEmit` passes
+
+**Review agent checks:** Training science correctness, edge cases (1-week plans, overlapping sub-goals).
+
+---
+
+### Phase 5: Frontend Core — Layout, Landing, Calendar
+
+**Goal:** The plan-advanced route exists with landing page, create dialog, 3-panel editor shell, and read-only calendar view.
+
+**Context Slice:** Plan sections: "Phase 2: Frontend Components" (directory structure + layout), "Phase 5: Landing Page & Plan Creation"
+
+**Input files to read:** `Web/src/app/plan/` (existing plan page), `Web/src/app/layout.tsx`, `Web/src/app/globals.css`
+
+**Tasks:**
+1. `plan-advanced/layout.tsx` + `page.tsx` + `[goalId]/page.tsx`
+2. `PlanLanding.tsx` — sport/distance selection, sub-goals, CSV import, standard→advanced
+3. `CreatePlanDialog.tsx` — unified creation flow (run/tri/no-race)
+4. `PlanEditorLayout.tsx` — 3-panel layout
+5. `Calendar/` — MiniCalendar, CalendarDay, CalendarWeek, CalendarHeader, WorkoutDot
+6. `Shared/WorkoutTypeColors.ts` — full color mapping
+7. `Shared/InfiniteScroll.tsx` — virtualized week scroll (`@tanstack/react-virtual`)
+8. `Toolbar/` — PlanToolbar, ViewModeToggle, PlanActionsMenu, UndoRedoButtons
+9. Install `@tanstack/react-virtual`
+
+**Acceptance criteria:**
+- [ ] `/plan-advanced` shows landing page when no active plan
+- [ ] Create dialog produces a new Goal via POST API
+- [ ] Editor layout renders 3 panels (mini-cal, main, toolbar)
+- [ ] Infinite scroll renders weeks with workout dots
+- [ ] Premium tier gate works (non-premium sees upsell)
+- [ ] `npx tsc --noEmit` passes
+
+**Review agent checks:** Responsive layout, React Query integration, loading/error states, accessibility.
+
+---
+
+### Phase 6: Frontend Editing — CRUD, Drag-Drop, Mass Edit
+
+**Goal:** Full editing: single workout CRUD, drag-drop, auto-save, undo/redo, mass selection + bulk dialogs.
+
+**Context Slice:** Plan section "Phase 3: Core Features Implementation" (3.1 Infinite Scroll, 3.2 Mass Edit System)
+
+**Input files to read:** Phase 5 output (editor layout), Phase 2 output (CRUD APIs), existing drag-drop code
+
+**Tasks:**
+1. `Editor/` — WorkoutDetailPanel, WorkoutListPanel, WeekSummaryBar, PhaseSelector, StructuredWorkoutEditor
+2. `MassEdit/` — MassEditToolbar, SelectionOverlay, BulkDeleteDialog, BulkMoveDialog, BulkTypeChangeDialog, BulkScaleDialog, TemplateApplyDialog
+3. Selection modes (click, shift+click, ctrl+click, week/phase header checkboxes)
+4. Auto-save (500ms debounce, "Saving…" indicator)
+5. Undo/redo (Ctrl+Z / Ctrl+Shift+Z, snapshot dropdown)
+6. `Shared/PlanKeyboardShortcuts.tsx`
+
+**Acceptance criteria:**
+- [ ] Single workout: create, edit, delete inline
+- [ ] Drag-drop reorders workouts within and across days
+- [ ] Auto-save fires 500ms after last change
+- [ ] Undo restores from snapshot, redo re-applies
+- [ ] All 6 bulk operations execute and show result
+- [ ] Keyboard shortcuts: Ctrl+Z, Ctrl+Shift+Z, Ctrl+A, Delete
+- [ ] `npx tsc --noEmit` passes
+
+**Review agent checks:** Optimistic updates with rollback, selection state, bulk error handling, keyboard accessibility.
+
+---
+
+### Phase 7: Frontend Advanced — Progressions, Paces, Multi-Goal
+
+**Goal:** Progression builder, pace profile editor, and full multi-goal UI.
+
+**Context Slice:** Plan sections: "3.3 Progressive Intervals", "3.4 Adapting Training Paces", multi-goal component specs
+
+**Input files to read:** Phase 5+6 output, Phase 2 output (progression, pace-profile, sub-goals APIs), Phase 4 (generators)
+
+**Tasks:**
+1. `Progression/` — ProgressionBuilder, ProgressionTimeline, ProgressionWeekCard, AiProgressionSuggest
+2. `PaceProfile/` — PaceProfileEditor, PaceTimeline, HrZoneEditor
+3. `MultiGoal/` — EventsPanel, EventCard, AddSubGoalDialog, EditSubGoalDialog, GoalTimeline, GoalTimelineMarker, PrioritySelector, MultiGoalPhaseLabel
+
+**Acceptance criteria:**
+- [ ] Progression builder: define weeks manually or via AI suggest
+- [ ] Pace profile shows pace ranges adapting per phase
+- [ ] Events panel lists all goals with priority badges
+- [ ] Adding sub-goal triggers phase recalculation via API
+- [ ] Timeline marker click scrolls to that week
+- [ ] `npx tsc --noEmit` passes
+
+**Review agent checks:** Progression math, pace calculation accuracy, timeline edge cases.
+
+---
+
+### Phase 8: Frontend — Mode Toggle, Guided, AI-Assisted, AI Analysis
+
+**Goal:** Mode toggle with all 3 behaviors, guided panels, AI suggestions, full AI analysis panel.
+
+**Context Slice:** Plan sections: "Mode Toggle", "3.5 AI Plan Analysis", "Guided Mode", "AI-Assisted Mode"
+
+**Input files to read:** Phase 5+6+7 output, Phase 2+3 output (AI analysis API), `Web/src/components/admin/`
+
+**Tasks:**
+1. `Toolbar/ModeToggle.tsx` — 3-state segmented control
+2. Mode persistence: localStorage default, Goal.guidanceLevel per-plan override
+3. Guided mode: tip cards, "Suggest Week", GuidedPlanSession integration
+4. AI-Assisted mode: proactive scan, inline suggestion cards
+5. `AI/` — AiAnalysisPanel, PlanScoreGauge, WeekAnalysisCard, RiskFlagBadge, RaceReadinessCard, AiSuggestionCard
+6. Add plan builder provider selector to existing admin AI settings tab
+
+**Acceptance criteria:**
+- [ ] Mode toggle persists per-plan
+- [ ] Expert: no tips/suggestions; Guided: tip cards; AI-Assisted: inline suggestions
+- [ ] AI analysis panel: score gauge, risk flags, race readiness
+- [ ] "Apply" on suggestion card modifies the workout/week
+- [ ] Switching modes is instant and non-destructive
+- [ ] `npx tsc --noEmit` passes
+
+**Review agent checks:** Mode state management, AI token budget enforcement, admin auth on config.
+
+---
+
+### Phase 9: CSV Import/Export UI + Polish + Integration
+
+**Goal:** CSV wizard UI, keyboard shortcuts, performance, standard→advanced migration, premium gates, no-race UI.
+
+**Context Slice:** Plan sections: "3.6 CSV Import/Export", "Key Technical Decisions"
+
+**Input files to read:** Phase 3 output (CSV API), Phase 5+6 output, `Web/src/app/plan/`
+
+**Tasks:**
+1. `CsvImportExport/` — CsvImportDialog, CsvExportDialog, CsvPreview, FormatSelector
+2. Install `papaparse`, `file-saver`
+3. Performance: lazy load AI panel, code-split CSV, prefetch on scroll
+4. Add "Open in Advanced Editor →" button to existing `/plan` page
+5. No-race mode UI: hide race marker, MAINTAIN labels, Fitness Progress card
+6. Premium tier gate: upsell page for non-premium
+7. Mobile-responsive layout (tablet minimum)
+
+**Acceptance criteria:**
+- [ ] CSV import: upload → preview → confirm creates workouts
+- [ ] CSV export: downloads correct format file
+- [ ] "Open in Advanced Editor" on `/plan` works
+- [ ] No-race plan displays correctly
+- [ ] Non-premium users see upsell
+- [ ] `npx tsc --noEmit` passes
+- [ ] `npm run build` succeeds
+
+**Review agent checks:** CSV edge cases, bundle size, responsive breakpoints, premium gate bypass.
+
+---
+
+### Phase 10: Final Comprehensive Review
+
+**Goal:** Full cross-phase validation, E2E testing, consistency check.
+
+**Agent type:** Review agent only (no implementation).
+
+**Input:** All `PHASE_N_COMPLETE.md` + `PHASE_N_REVIEW.md` files, full plan document, all created/modified files.
+
+**Checks:**
+1. **Schema consistency:** All models have proper relations, all enums used correctly
+2. **API completeness:** Every route in the plan's directory tree exists
+3. **Frontend completeness:** Every component in the plan's directory tree exists
+4. **Cross-phase integration:** Frontend calls correct API endpoints, API uses correct Prisma models
+5. **Type safety:** `npx tsc --noEmit` passes with zero errors
+6. **Test coverage:** Unit tests for generators, CSV parser, bulk ops, pace calcs
+7. **Build validation:** `npm run build` succeeds
+8. **E2E scenarios:** Expert manual flow, Guided flow, AI-Assisted flow, mode switching, multi-goal (Ironman + HM + Oly Tri), multi-goal conflict, triathlon plan, ultra plan, no-race plan, standard→advanced migration, CSV round-trip
+9. **Security:** Auth on all routes, admin check on admin routes, no exposed API keys
+10. **Performance:** Calendar scroll smooth at 30+ weeks, mass edit preview < 500ms
+
+**Output:** `FINAL_REVIEW.md` with PASS/FAIL per check, remaining issues, severity ratings.
+
+---
+
+### Phase Dependency Graph
+
+```
+Phase 1 (Schema)
+    ↓
+Phase 2 (Core API) ──→ Phase 3 (Advanced API)
+    ↓                       ↓
+Phase 4 (Generators) ←─────┘
+    ↓
+Phase 5 (Frontend Shell)
+    ↓
+Phase 6 (Frontend Editing)
+    ↓
+Phase 7 (Frontend Advanced) ──→ Phase 8 (Mode Toggle + AI)
+    ↓                                ↓
+Phase 9 (CSV + Polish) ←────────────┘
+    ↓
+Phase 10 (Final Review)
+```
+
+**Parallelizable:** Phases 2+4 can run in parallel (both depend only on Phase 1). Phase 3 depends on Phase 2 patterns but not output.
+
+---
+
+### Review Agent Template
+
+Every review agent receives this prompt structure:
+
+```
+You are a code review agent. Your job is to validate Phase N of the Advanced Plan Builder.
+
+## Your inputs:
+1. The plan section for this phase (attached)
+2. PHASE_N_COMPLETE.md — list of all files created/modified
+3. All files listed in PHASE_N_COMPLETE.md
+
+## Your task:
+For each acceptance criterion:
+1. Check if it is satisfied
+2. If FAIL: describe exactly what's wrong and what file/line to fix
+3. Rate severity: CRITICAL (blocks next phase) / MAJOR (must fix) / MINOR (can defer)
+
+## Additional checks:
+- No TODO/FIXME comments left in production code
+- No console.log statements (use proper logging)
+- All public APIs have JSDoc comments
+- Error messages are user-friendly (no raw Prisma errors)
+- No hardcoded strings that should be constants
+
+## Output:
+Create PHASE_N_REVIEW.md with:
+- Summary: PASS / FAIL (with count of issues)
+- Table: criterion | status | notes
+- List of issues with file:line references
+- Recommendation: PROCEED to next phase / REWORK needed
+```
 
 ---
 
@@ -1676,7 +2066,12 @@ Use `@tanstack/react-virtual` for the week-by-week infinite scroll. Each "row" i
 - Debounce: 500ms after last change
 - Creates snapshot before every mutation batch
 - Visual indicator: "Saving..." → "Saved" → (no indicator)
-- Snapshot limit: 50 per goal, pruned via background job
+- **Snapshot limit (tier-based, 1/10 of AI chat monthly quota):**
+  - tier1: 10 snapshots per goal
+  - tier2: 30 snapshots per goal
+  - tier3: 50 snapshots per goal
+- Older snapshots pruned via background cron job
+- Admin always has tier3 limits
 
 ### Premium Tier Access
 - Check `UserAiSettings.usageTier` in `layout.tsx`

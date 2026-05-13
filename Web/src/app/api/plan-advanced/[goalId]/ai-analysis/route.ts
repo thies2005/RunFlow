@@ -23,14 +23,14 @@ type RouteContext = { params: Promise<{ goalId: string }> };
 async function getPlanBuilderConfig(): Promise<{ config: AiConfig; maxTokens: number } | null> {
     const settings = await prisma.globalAiSettings.findUnique({
         where: { id: 'singleton' },
-        include: { planBuilderProvider: true },
+        include: { activeProvider: true },
     });
 
-    if (!settings?.planBuilderProviderId || !settings.planBuilderProvider) {
+    if (!settings?.activeProvider) {
         return null;
     }
 
-    const provider = settings.planBuilderProvider;
+    const provider = settings.activeProvider;
     const decryptedKey = decryptToken(provider.apiKey);
     if (!decryptedKey) return null;
 

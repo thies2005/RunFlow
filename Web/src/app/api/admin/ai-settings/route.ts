@@ -85,6 +85,8 @@ export async function GET(request: NextRequest) {
                 // Non-realtime AI Feature Models
                 mealSuggestModel: globalSettings.mealSuggestModel,
                 activityFeedbackModel: globalSettings.activityFeedbackModel,
+                planBuilderModel: globalSettings.planBuilderModel,
+                planMaxTokensPerAnalysis: globalSettings.planMaxTokensPerAnalysis,
 
                 // Legacy (deprecated)
                 dailyMessageLimit: globalSettings.dailyMessageLimit,
@@ -149,6 +151,8 @@ export async function PUT(request: NextRequest) {
             tier1MealSuggestLimit, tier2MealSuggestLimit, tier3MealSuggestLimit,
             activityFeedbackModel,
             tier1ActivityFeedbackLimit, tier2ActivityFeedbackLimit, tier3ActivityFeedbackLimit,
+            planBuilderModel,
+            planMaxTokensPerAnalysis,
 
 
 
@@ -209,6 +213,8 @@ export async function PUT(request: NextRequest) {
         if (tier1ActivityFeedbackLimit !== undefined) updateData.tier1ActivityFeedbackLimit = parseInt(tier1ActivityFeedbackLimit) || 0;
         if (tier2ActivityFeedbackLimit !== undefined) updateData.tier2ActivityFeedbackLimit = parseInt(tier2ActivityFeedbackLimit) || 0;
         if (tier3ActivityFeedbackLimit !== undefined) updateData.tier3ActivityFeedbackLimit = parseInt(tier3ActivityFeedbackLimit) || 0;
+        if (planBuilderModel !== undefined) updateData.planBuilderModel = planBuilderModel;
+        if (planMaxTokensPerAnalysis !== undefined) updateData.planMaxTokensPerAnalysis = parseInt(planMaxTokensPerAnalysis) || 8000;
 
         // Legacy (deprecated)
         if (dailyMessageLimit !== undefined) updateData.dailyMessageLimit = parseInt(dailyMessageLimit) || 50;
@@ -242,6 +248,8 @@ export async function PUT(request: NextRequest) {
                 tier1DailyTokenLimit: settings.tier1DailyTokenLimit,
                 tier1MonthlyTokenLimit: settings.tier1MonthlyTokenLimit,
                 calorieSnapModel: settings.calorieSnapModel,
+                planBuilderModel: settings.planBuilderModel,
+                planMaxTokensPerAnalysis: settings.planMaxTokensPerAnalysis,
             },
         });
 

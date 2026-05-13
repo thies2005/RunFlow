@@ -238,7 +238,6 @@ export const GlobalAiSettingsScalarFieldEnum = {
   tier1ActivityFeedbackLimit: 'tier1ActivityFeedbackLimit',
   tier2ActivityFeedbackLimit: 'tier2ActivityFeedbackLimit',
   tier3ActivityFeedbackLimit: 'tier3ActivityFeedbackLimit',
-  planBuilderProviderId: 'planBuilderProviderId',
   planBuilderModel: 'planBuilderModel',
   planMaxTokensPerAnalysis: 'planMaxTokensPerAnalysis'
 } as const

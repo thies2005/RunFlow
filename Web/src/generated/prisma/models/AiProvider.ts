@@ -295,7 +295,6 @@ export type AiProviderWhereInput = {
   dailyUsage?: Prisma.AiDailyTokenUsageListRelationFilter
   activeInSettings?: Prisma.GlobalAiSettingsListRelationFilter
   fallbackInSettings?: Prisma.GlobalAiSettingsListRelationFilter
-  planBuilderInSettings?: Prisma.GlobalAiSettingsListRelationFilter
 }
 
 export type AiProviderOrderByWithRelationInput = {
@@ -316,7 +315,6 @@ export type AiProviderOrderByWithRelationInput = {
   dailyUsage?: Prisma.AiDailyTokenUsageOrderByRelationAggregateInput
   activeInSettings?: Prisma.GlobalAiSettingsOrderByRelationAggregateInput
   fallbackInSettings?: Prisma.GlobalAiSettingsOrderByRelationAggregateInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsOrderByRelationAggregateInput
 }
 
 export type AiProviderWhereUniqueInput = Prisma.AtLeast<{
@@ -340,7 +338,6 @@ export type AiProviderWhereUniqueInput = Prisma.AtLeast<{
   dailyUsage?: Prisma.AiDailyTokenUsageListRelationFilter
   activeInSettings?: Prisma.GlobalAiSettingsListRelationFilter
   fallbackInSettings?: Prisma.GlobalAiSettingsListRelationFilter
-  planBuilderInSettings?: Prisma.GlobalAiSettingsListRelationFilter
 }, "id" | "slug">
 
 export type AiProviderOrderByWithAggregationInput = {
@@ -403,7 +400,6 @@ export type AiProviderCreateInput = {
   dailyUsage?: Prisma.AiDailyTokenUsageCreateNestedManyWithoutProviderInput
   activeInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutActiveProviderInput
   fallbackInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutFallbackProviderInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutPlanBuilderProviderInput
 }
 
 export type AiProviderUncheckedCreateInput = {
@@ -424,7 +420,6 @@ export type AiProviderUncheckedCreateInput = {
   dailyUsage?: Prisma.AiDailyTokenUsageUncheckedCreateNestedManyWithoutProviderInput
   activeInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutActiveProviderInput
   fallbackInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutFallbackProviderInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutPlanBuilderProviderInput
 }
 
 export type AiProviderUpdateInput = {
@@ -445,7 +440,6 @@ export type AiProviderUpdateInput = {
   dailyUsage?: Prisma.AiDailyTokenUsageUpdateManyWithoutProviderNestedInput
   activeInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutActiveProviderNestedInput
   fallbackInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutFallbackProviderNestedInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutPlanBuilderProviderNestedInput
 }
 
 export type AiProviderUncheckedUpdateInput = {
@@ -466,7 +460,6 @@ export type AiProviderUncheckedUpdateInput = {
   dailyUsage?: Prisma.AiDailyTokenUsageUncheckedUpdateManyWithoutProviderNestedInput
   activeInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutActiveProviderNestedInput
   fallbackInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutFallbackProviderNestedInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutPlanBuilderProviderNestedInput
 }
 
 export type AiProviderCreateManyInput = {
@@ -611,12 +604,6 @@ export type AiProviderCreateNestedOneWithoutFallbackInSettingsInput = {
   connect?: Prisma.AiProviderWhereUniqueInput
 }
 
-export type AiProviderCreateNestedOneWithoutPlanBuilderInSettingsInput = {
-  create?: Prisma.XOR<Prisma.AiProviderCreateWithoutPlanBuilderInSettingsInput, Prisma.AiProviderUncheckedCreateWithoutPlanBuilderInSettingsInput>
-  connectOrCreate?: Prisma.AiProviderCreateOrConnectWithoutPlanBuilderInSettingsInput
-  connect?: Prisma.AiProviderWhereUniqueInput
-}
-
 export type AiProviderUpdateOneWithoutActiveInSettingsNestedInput = {
   create?: Prisma.XOR<Prisma.AiProviderCreateWithoutActiveInSettingsInput, Prisma.AiProviderUncheckedCreateWithoutActiveInSettingsInput>
   connectOrCreate?: Prisma.AiProviderCreateOrConnectWithoutActiveInSettingsInput
@@ -635,16 +622,6 @@ export type AiProviderUpdateOneWithoutFallbackInSettingsNestedInput = {
   delete?: Prisma.AiProviderWhereInput | boolean
   connect?: Prisma.AiProviderWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.AiProviderUpdateToOneWithWhereWithoutFallbackInSettingsInput, Prisma.AiProviderUpdateWithoutFallbackInSettingsInput>, Prisma.AiProviderUncheckedUpdateWithoutFallbackInSettingsInput>
-}
-
-export type AiProviderUpdateOneWithoutPlanBuilderInSettingsNestedInput = {
-  create?: Prisma.XOR<Prisma.AiProviderCreateWithoutPlanBuilderInSettingsInput, Prisma.AiProviderUncheckedCreateWithoutPlanBuilderInSettingsInput>
-  connectOrCreate?: Prisma.AiProviderCreateOrConnectWithoutPlanBuilderInSettingsInput
-  upsert?: Prisma.AiProviderUpsertWithoutPlanBuilderInSettingsInput
-  disconnect?: Prisma.AiProviderWhereInput | boolean
-  delete?: Prisma.AiProviderWhereInput | boolean
-  connect?: Prisma.AiProviderWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.AiProviderUpdateToOneWithWhereWithoutPlanBuilderInSettingsInput, Prisma.AiProviderUpdateWithoutPlanBuilderInSettingsInput>, Prisma.AiProviderUncheckedUpdateWithoutPlanBuilderInSettingsInput>
 }
 
 export type AiProviderCreatemodelsInput = {
@@ -695,7 +672,6 @@ export type AiProviderCreateWithoutActiveInSettingsInput = {
   monthlyTokenLimit?: bigint | number | null
   dailyUsage?: Prisma.AiDailyTokenUsageCreateNestedManyWithoutProviderInput
   fallbackInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutFallbackProviderInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutPlanBuilderProviderInput
 }
 
 export type AiProviderUncheckedCreateWithoutActiveInSettingsInput = {
@@ -715,7 +691,6 @@ export type AiProviderUncheckedCreateWithoutActiveInSettingsInput = {
   monthlyTokenLimit?: bigint | number | null
   dailyUsage?: Prisma.AiDailyTokenUsageUncheckedCreateNestedManyWithoutProviderInput
   fallbackInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutFallbackProviderInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutPlanBuilderProviderInput
 }
 
 export type AiProviderCreateOrConnectWithoutActiveInSettingsInput = {
@@ -740,7 +715,6 @@ export type AiProviderCreateWithoutFallbackInSettingsInput = {
   monthlyTokenLimit?: bigint | number | null
   dailyUsage?: Prisma.AiDailyTokenUsageCreateNestedManyWithoutProviderInput
   activeInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutActiveProviderInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutPlanBuilderProviderInput
 }
 
 export type AiProviderUncheckedCreateWithoutFallbackInSettingsInput = {
@@ -760,57 +734,11 @@ export type AiProviderUncheckedCreateWithoutFallbackInSettingsInput = {
   monthlyTokenLimit?: bigint | number | null
   dailyUsage?: Prisma.AiDailyTokenUsageUncheckedCreateNestedManyWithoutProviderInput
   activeInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutActiveProviderInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutPlanBuilderProviderInput
 }
 
 export type AiProviderCreateOrConnectWithoutFallbackInSettingsInput = {
   where: Prisma.AiProviderWhereUniqueInput
   create: Prisma.XOR<Prisma.AiProviderCreateWithoutFallbackInSettingsInput, Prisma.AiProviderUncheckedCreateWithoutFallbackInSettingsInput>
-}
-
-export type AiProviderCreateWithoutPlanBuilderInSettingsInput = {
-  id?: string
-  name: string
-  slug: string
-  type: string
-  baseUrl: string
-  apiKey: string
-  models?: Prisma.AiProviderCreatemodelsInput | string[]
-  isActive?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  lastUsageReset?: Date | string
-  monthlyInputTokensUsed?: number
-  monthlyOutputTokensUsed?: number
-  monthlyTokenLimit?: bigint | number | null
-  dailyUsage?: Prisma.AiDailyTokenUsageCreateNestedManyWithoutProviderInput
-  activeInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutActiveProviderInput
-  fallbackInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutFallbackProviderInput
-}
-
-export type AiProviderUncheckedCreateWithoutPlanBuilderInSettingsInput = {
-  id?: string
-  name: string
-  slug: string
-  type: string
-  baseUrl: string
-  apiKey: string
-  models?: Prisma.AiProviderCreatemodelsInput | string[]
-  isActive?: boolean
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  lastUsageReset?: Date | string
-  monthlyInputTokensUsed?: number
-  monthlyOutputTokensUsed?: number
-  monthlyTokenLimit?: bigint | number | null
-  dailyUsage?: Prisma.AiDailyTokenUsageUncheckedCreateNestedManyWithoutProviderInput
-  activeInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutActiveProviderInput
-  fallbackInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutFallbackProviderInput
-}
-
-export type AiProviderCreateOrConnectWithoutPlanBuilderInSettingsInput = {
-  where: Prisma.AiProviderWhereUniqueInput
-  create: Prisma.XOR<Prisma.AiProviderCreateWithoutPlanBuilderInSettingsInput, Prisma.AiProviderUncheckedCreateWithoutPlanBuilderInSettingsInput>
 }
 
 export type AiProviderUpsertWithoutActiveInSettingsInput = {
@@ -841,7 +769,6 @@ export type AiProviderUpdateWithoutActiveInSettingsInput = {
   monthlyTokenLimit?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   dailyUsage?: Prisma.AiDailyTokenUsageUpdateManyWithoutProviderNestedInput
   fallbackInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutFallbackProviderNestedInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutPlanBuilderProviderNestedInput
 }
 
 export type AiProviderUncheckedUpdateWithoutActiveInSettingsInput = {
@@ -861,7 +788,6 @@ export type AiProviderUncheckedUpdateWithoutActiveInSettingsInput = {
   monthlyTokenLimit?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   dailyUsage?: Prisma.AiDailyTokenUsageUncheckedUpdateManyWithoutProviderNestedInput
   fallbackInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutFallbackProviderNestedInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutPlanBuilderProviderNestedInput
 }
 
 export type AiProviderUpsertWithoutFallbackInSettingsInput = {
@@ -892,7 +818,6 @@ export type AiProviderUpdateWithoutFallbackInSettingsInput = {
   monthlyTokenLimit?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   dailyUsage?: Prisma.AiDailyTokenUsageUpdateManyWithoutProviderNestedInput
   activeInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutActiveProviderNestedInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutPlanBuilderProviderNestedInput
 }
 
 export type AiProviderUncheckedUpdateWithoutFallbackInSettingsInput = {
@@ -912,58 +837,6 @@ export type AiProviderUncheckedUpdateWithoutFallbackInSettingsInput = {
   monthlyTokenLimit?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   dailyUsage?: Prisma.AiDailyTokenUsageUncheckedUpdateManyWithoutProviderNestedInput
   activeInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutActiveProviderNestedInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutPlanBuilderProviderNestedInput
-}
-
-export type AiProviderUpsertWithoutPlanBuilderInSettingsInput = {
-  update: Prisma.XOR<Prisma.AiProviderUpdateWithoutPlanBuilderInSettingsInput, Prisma.AiProviderUncheckedUpdateWithoutPlanBuilderInSettingsInput>
-  create: Prisma.XOR<Prisma.AiProviderCreateWithoutPlanBuilderInSettingsInput, Prisma.AiProviderUncheckedCreateWithoutPlanBuilderInSettingsInput>
-  where?: Prisma.AiProviderWhereInput
-}
-
-export type AiProviderUpdateToOneWithWhereWithoutPlanBuilderInSettingsInput = {
-  where?: Prisma.AiProviderWhereInput
-  data: Prisma.XOR<Prisma.AiProviderUpdateWithoutPlanBuilderInSettingsInput, Prisma.AiProviderUncheckedUpdateWithoutPlanBuilderInSettingsInput>
-}
-
-export type AiProviderUpdateWithoutPlanBuilderInSettingsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  slug?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.StringFieldUpdateOperationsInput | string
-  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  apiKey?: Prisma.StringFieldUpdateOperationsInput | string
-  models?: Prisma.AiProviderUpdatemodelsInput | string[]
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  lastUsageReset?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  monthlyInputTokensUsed?: Prisma.IntFieldUpdateOperationsInput | number
-  monthlyOutputTokensUsed?: Prisma.IntFieldUpdateOperationsInput | number
-  monthlyTokenLimit?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  dailyUsage?: Prisma.AiDailyTokenUsageUpdateManyWithoutProviderNestedInput
-  activeInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutActiveProviderNestedInput
-  fallbackInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutFallbackProviderNestedInput
-}
-
-export type AiProviderUncheckedUpdateWithoutPlanBuilderInSettingsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  slug?: Prisma.StringFieldUpdateOperationsInput | string
-  type?: Prisma.StringFieldUpdateOperationsInput | string
-  baseUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  apiKey?: Prisma.StringFieldUpdateOperationsInput | string
-  models?: Prisma.AiProviderUpdatemodelsInput | string[]
-  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  lastUsageReset?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  monthlyInputTokensUsed?: Prisma.IntFieldUpdateOperationsInput | number
-  monthlyOutputTokensUsed?: Prisma.IntFieldUpdateOperationsInput | number
-  monthlyTokenLimit?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  dailyUsage?: Prisma.AiDailyTokenUsageUncheckedUpdateManyWithoutProviderNestedInput
-  activeInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutActiveProviderNestedInput
-  fallbackInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutFallbackProviderNestedInput
 }
 
 export type AiProviderCreateWithoutDailyUsageInput = {
@@ -983,7 +856,6 @@ export type AiProviderCreateWithoutDailyUsageInput = {
   monthlyTokenLimit?: bigint | number | null
   activeInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutActiveProviderInput
   fallbackInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutFallbackProviderInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsCreateNestedManyWithoutPlanBuilderProviderInput
 }
 
 export type AiProviderUncheckedCreateWithoutDailyUsageInput = {
@@ -1003,7 +875,6 @@ export type AiProviderUncheckedCreateWithoutDailyUsageInput = {
   monthlyTokenLimit?: bigint | number | null
   activeInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutActiveProviderInput
   fallbackInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutFallbackProviderInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUncheckedCreateNestedManyWithoutPlanBuilderProviderInput
 }
 
 export type AiProviderCreateOrConnectWithoutDailyUsageInput = {
@@ -1039,7 +910,6 @@ export type AiProviderUpdateWithoutDailyUsageInput = {
   monthlyTokenLimit?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   activeInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutActiveProviderNestedInput
   fallbackInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutFallbackProviderNestedInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUpdateManyWithoutPlanBuilderProviderNestedInput
 }
 
 export type AiProviderUncheckedUpdateWithoutDailyUsageInput = {
@@ -1059,7 +929,6 @@ export type AiProviderUncheckedUpdateWithoutDailyUsageInput = {
   monthlyTokenLimit?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   activeInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutActiveProviderNestedInput
   fallbackInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutFallbackProviderNestedInput
-  planBuilderInSettings?: Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutPlanBuilderProviderNestedInput
 }
 
 
@@ -1071,14 +940,12 @@ export type AiProviderCountOutputType = {
   dailyUsage: number
   activeInSettings: number
   fallbackInSettings: number
-  planBuilderInSettings: number
 }
 
 export type AiProviderCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   dailyUsage?: boolean | AiProviderCountOutputTypeCountDailyUsageArgs
   activeInSettings?: boolean | AiProviderCountOutputTypeCountActiveInSettingsArgs
   fallbackInSettings?: boolean | AiProviderCountOutputTypeCountFallbackInSettingsArgs
-  planBuilderInSettings?: boolean | AiProviderCountOutputTypeCountPlanBuilderInSettingsArgs
 }
 
 /**
@@ -1112,13 +979,6 @@ export type AiProviderCountOutputTypeCountFallbackInSettingsArgs<ExtArgs extends
   where?: Prisma.GlobalAiSettingsWhereInput
 }
 
-/**
- * AiProviderCountOutputType without action
- */
-export type AiProviderCountOutputTypeCountPlanBuilderInSettingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.GlobalAiSettingsWhereInput
-}
-
 
 export type AiProviderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1138,7 +998,6 @@ export type AiProviderSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   dailyUsage?: boolean | Prisma.AiProvider$dailyUsageArgs<ExtArgs>
   activeInSettings?: boolean | Prisma.AiProvider$activeInSettingsArgs<ExtArgs>
   fallbackInSettings?: boolean | Prisma.AiProvider$fallbackInSettingsArgs<ExtArgs>
-  planBuilderInSettings?: boolean | Prisma.AiProvider$planBuilderInSettingsArgs<ExtArgs>
   _count?: boolean | Prisma.AiProviderCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["aiProvider"]>
 
@@ -1198,7 +1057,6 @@ export type AiProviderInclude<ExtArgs extends runtime.Types.Extensions.InternalA
   dailyUsage?: boolean | Prisma.AiProvider$dailyUsageArgs<ExtArgs>
   activeInSettings?: boolean | Prisma.AiProvider$activeInSettingsArgs<ExtArgs>
   fallbackInSettings?: boolean | Prisma.AiProvider$fallbackInSettingsArgs<ExtArgs>
-  planBuilderInSettings?: boolean | Prisma.AiProvider$planBuilderInSettingsArgs<ExtArgs>
   _count?: boolean | Prisma.AiProviderCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AiProviderIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1210,7 +1068,6 @@ export type $AiProviderPayload<ExtArgs extends runtime.Types.Extensions.Internal
     dailyUsage: Prisma.$AiDailyTokenUsagePayload<ExtArgs>[]
     activeInSettings: Prisma.$GlobalAiSettingsPayload<ExtArgs>[]
     fallbackInSettings: Prisma.$GlobalAiSettingsPayload<ExtArgs>[]
-    planBuilderInSettings: Prisma.$GlobalAiSettingsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1624,7 +1481,6 @@ export interface Prisma__AiProviderClient<T, Null = never, ExtArgs extends runti
   dailyUsage<T extends Prisma.AiProvider$dailyUsageArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AiProvider$dailyUsageArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AiDailyTokenUsagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   activeInSettings<T extends Prisma.AiProvider$activeInSettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AiProvider$activeInSettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GlobalAiSettingsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   fallbackInSettings<T extends Prisma.AiProvider$fallbackInSettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AiProvider$fallbackInSettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GlobalAiSettingsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  planBuilderInSettings<T extends Prisma.AiProvider$planBuilderInSettingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AiProvider$planBuilderInSettingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GlobalAiSettingsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2112,30 +1968,6 @@ export type AiProvider$activeInSettingsArgs<ExtArgs extends runtime.Types.Extens
  * AiProvider.fallbackInSettings
  */
 export type AiProvider$fallbackInSettingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the GlobalAiSettings
-   */
-  select?: Prisma.GlobalAiSettingsSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the GlobalAiSettings
-   */
-  omit?: Prisma.GlobalAiSettingsOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.GlobalAiSettingsInclude<ExtArgs> | null
-  where?: Prisma.GlobalAiSettingsWhereInput
-  orderBy?: Prisma.GlobalAiSettingsOrderByWithRelationInput | Prisma.GlobalAiSettingsOrderByWithRelationInput[]
-  cursor?: Prisma.GlobalAiSettingsWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.GlobalAiSettingsScalarFieldEnum | Prisma.GlobalAiSettingsScalarFieldEnum[]
-}
-
-/**
- * AiProvider.planBuilderInSettings
- */
-export type AiProvider$planBuilderInSettingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the GlobalAiSettings
    */

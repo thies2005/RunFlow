@@ -152,10 +152,8 @@ model GlobalAiSettings {
   tier3ActivityFeedbackLimit Int     @default(50)
   activeProvider         AiProvider? @relation("ActiveProvider", fields: [activeProviderId], references: [id])
   fallbackProvider       AiProvider? @relation("FallbackProvider", fields: [fallbackProviderId], references: [id])
-  planBuilderProviderId  String?
   planBuilderModel       String      @default("gpt-4o")
   planMaxTokensPerAnalysis Int       @default(8000)
-  planBuilderProvider    AiProvider? @relation("PlanBuilderProvider", fields: [planBuilderProviderId], references: [id])
 }
 
 model AiProvider {
@@ -176,7 +174,6 @@ model AiProvider {
   dailyUsage              AiDailyTokenUsage[]
   activeInSettings        GlobalAiSettings[]  @relation("ActiveProvider")
   fallbackInSettings      GlobalAiSettings[]  @relation("FallbackProvider")
-  planBuilderInSettings   GlobalAiSettings[]  @relation("PlanBuilderProvider")
 }
 
 model UserAiSettings {

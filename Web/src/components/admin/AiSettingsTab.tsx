@@ -64,7 +64,6 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
 
         systemPrompt: settings?.systemPrompt || '',
 
-        planBuilderProviderId: settings?.planBuilderProviderId || null,
         planBuilderModel: settings?.planBuilderModel || 'gpt-4o',
         planMaxTokensPerAnalysis: settings?.planMaxTokensPerAnalysis || 8000,
     });
@@ -115,7 +114,6 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
 
                 systemPrompt: settings.systemPrompt || prev.systemPrompt,
 
-                planBuilderProviderId: settings.planBuilderProviderId || prev.planBuilderProviderId,
                 planBuilderModel: settings.planBuilderModel || prev.planBuilderModel,
                 planMaxTokensPerAnalysis: settings.planMaxTokensPerAnalysis ?? prev.planMaxTokensPerAnalysis,
             }));
@@ -346,25 +344,8 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                     Plan Builder AI
                 </h3>
                 <p className="text-xs text-gray-500">
-                    Configure the AI provider and model used for plan analysis, suggestions, and guided mode features.
+                    Configure the AI model used for plan analysis, suggestions, and guided mode features. It will use the globally active AI provider.
                 </p>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Plan Builder Provider</label>
-                    <select
-                        value={formData.planBuilderProviderId || ''}
-                        onChange={(e) => setFormData({ ...formData, planBuilderProviderId: e.target.value || null })}
-                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                        <option value="">None (disabled)</option>
-                        {providers.map((p) => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                        Select an AI provider for plan analysis features. Must be configured above.
-                    </p>
-                </div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Plan Builder Model</label>

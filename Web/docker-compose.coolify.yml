@@ -115,7 +115,7 @@ services:
       - -c
       - |
           apk add --no-cache postgresql-client 2>/dev/null || apk add --no-cache postgresql-client
-          PGPASSWORD="${POSTGRES_PASSWORD}" psql -h db -U ${POSTGRES_USER:-runflow} -d ${POSTGRES_DB:-runflow} -c "DELETE FROM public._prisma_migrations WHERE migration_name IN ('00000000000000_init', '20250212120000_optimize_activity_indexes');" 2>/dev/null || true
+          PGPASSWORD="${POSTGRES_PASSWORD}" psql -h db -U ${POSTGRES_USER:-runflow} -d ${POSTGRES_DB:-runflow} -c "DELETE FROM public._prisma_migrations WHERE migration_name IN ('00000000000000_init', '20250212120000_optimize_activity_indexes', '20260513120000_add_advanced_plan_features');" 2>/dev/null || true
           node_modules/.bin/prisma migrate deploy
     restart: "no"
     environment:

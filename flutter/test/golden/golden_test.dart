@@ -120,6 +120,9 @@ class _FakeRecordingService implements WorkoutRecordingService {
   RecordingMetrics get currentMetrics => const RecordingMetrics();
 
   @override
+  double get smoothedCurrentPaceSecondsPerKm => 0.0;
+
+  @override
   Future<bool> requestPermissions() async => true;
 
   @override

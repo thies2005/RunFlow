@@ -7,11 +7,19 @@ import 'package:universal_ble/universal_ble.dart' as ble;
 
 enum RecordingStatus { idle, recording, paused }
 
+class _TimestampedPace {
+  _TimestampedPace({required this.timestamp, required this.paceSecondsPerKm});
+
+  final DateTime timestamp;
+  final double paceSecondsPerKm;
+}
+
 class RecordingMetrics {
   const RecordingMetrics({
     this.distanceMeters = 0.0,
     this.durationSeconds = 0,
     this.currentPaceSecondsPerKm = 0.0,
+    this.smoothedCurrentPaceSecondsPerKm = 0.0,
     this.currentSpeedMps = 0.0,
     this.averageSpeedMps = 0.0,
     this.currentHr = 0,
@@ -23,11 +31,14 @@ class RecordingMetrics {
     this.currentAltitude,
     this.totalElevation = 0.0,
     this.gpsPointCount = 0,
+    this.lapSplits = const [],
+    this.isAutoPaused = false,
   });
 
   final double distanceMeters;
   final int durationSeconds;
   final double currentPaceSecondsPerKm;
+  final double smoothedCurrentPaceSecondsPerKm;
   final double currentSpeedMps;
   final double averageSpeedMps;
   final int currentHr;
@@ -39,6 +50,8 @@ class RecordingMetrics {
   final double? currentAltitude;
   final double totalElevation;
   final int gpsPointCount;
+  final List<LapSplit> lapSplits;
+  final bool isAutoPaused;
 }
 
 class HrSensorInfo {
@@ -49,6 +62,9 @@ class HrSensorInfo {
 }
 
 class WorkoutRecordingService {
+  final List<_TimestampedPace> _paceSamples = [];
+  static const Duration _smoothedPaceWindow = Duration(seconds: 30);
+
   RecordingStatus _status = RecordingStatus.idle;
   DateTime? _startTime;
   int _elapsedMovingSeconds = 0;
@@ -69,6 +85,13 @@ class WorkoutRecordingService {
   double _currentCadence = 0.0;
   double _gpsAccuracy = 0.0;
   double? _currentAltitude;
+
+  bool _isAutoPaused = false;
+  DateTime? _autoPauseStartTime;
+  int _lastAutoLapKm = 0;
+  final List<LapSplit> _lapSplits = [];
+  int _lapStartSeconds = 0;
+  double _lapStartDistance = 0.0;
 
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<ble.BleDevice>? _scanSubscription;
@@ -91,6 +114,15 @@ class WorkoutRecordingService {
   bool get isBleConnected => _connectedSensor != null;
   List<GpsPoint> get gpsPoints => List.unmodifiable(_gpsPoints);
 
+  double get smoothedCurrentPaceSecondsPerKm {
+    final DateTime cutoff = DateTime.now().subtract(_smoothedPaceWindow);
+    _paceSamples.removeWhere((_TimestampedPace p) => p.timestamp.isBefore(cutoff));
+    if (_paceSamples.isEmpty) return 0.0;
+    final double sum = _paceSamples.fold<double>(
+        0.0, (double acc, _TimestampedPace p) => acc + p.paceSecondsPerKm);
+    return sum / _paceSamples.length;
+  }
+
   Stream<RecordingStatus> get statusStream async* {
     yield _status;
     yield* _statusController.stream;
@@ -105,6 +137,7 @@ class WorkoutRecordingService {
         durationSeconds: _elapsedMovingSeconds,
         currentPaceSecondsPerKm:
             _currentSpeed > 0.5 ? 1000 / _currentSpeed : 0,
+        smoothedCurrentPaceSecondsPerKm: smoothedCurrentPaceSecondsPerKm,
         currentSpeedMps: _currentSpeed,
         averageSpeedMps: _elapsedMovingSeconds > 0
             ? _totalDistance / _elapsedMovingSeconds
@@ -125,6 +158,8 @@ class WorkoutRecordingService {
         currentAltitude: _currentAltitude,
         totalElevation: _totalElevation,
         gpsPointCount: _gpsPoints.length,
+        lapSplits: List.unmodifiable(_lapSplits),
+        isAutoPaused: _isAutoPaused,
       );
 
   Future<bool> requestPermissions() async {
@@ -203,6 +238,7 @@ class WorkoutRecordingService {
       gpsPoints: List<GpsPoint>.from(_gpsPoints),
       hrSamples: List<HrSample>.from(_hrSamples),
       totalElevation: _totalElevation > 0 ? _totalElevation : null,
+      lapSplits: List<LapSplit>.from(_lapSplits),
     );
 
     _reset();
@@ -230,8 +266,15 @@ class WorkoutRecordingService {
     _currentAltitude = null;
     _movingPointCount = 0;
     _totalCadence = 0.0;
+    _paceSamples.clear();
     _gpsPoints.clear();
     _hrSamples.clear();
+    _isAutoPaused = false;
+    _autoPauseStartTime = null;
+    _lapSplits.clear();
+    _lastAutoLapKm = 0;
+    _lapStartDistance = 0.0;
+    _lapStartSeconds = 0;
 
     _positionSubscription?.cancel();
     _positionSubscription = null;
@@ -259,7 +302,20 @@ class WorkoutRecordingService {
         _currentAltitude = position.altitude;
         _currentSpeed = position.speed > 0 ? position.speed : 0.0;
 
+        if (_currentSpeed < 0.5 && !_isAutoPaused) {
+          _autoPauseStartTime ??= DateTime.now();
+          if (_autoPauseStartTime != null && DateTime.now().difference(_autoPauseStartTime!).inSeconds >= 5) {
+            _isAutoPaused = true;
+          }
+        } else if (_currentSpeed >= 1.0 && _isAutoPaused) {
+          _isAutoPaused = false;
+          _autoPauseStartTime = null;
+        } else if (_currentSpeed >= 0.5) {
+          _autoPauseStartTime = null;
+        }
+
         if (position.accuracy > 25.0) return;
+        if (_isAutoPaused) return;
 
         final GpsPoint point = GpsPoint(
           latitude: position.latitude,
@@ -278,13 +334,33 @@ class WorkoutRecordingService {
             point.longitude,
           );
 
-          if (distance > 0) {
-            _totalDistance += distance;
-            _movingPointCount++;
+            if (distance > 0) {
+              _totalDistance += distance;
+              _movingPointCount++;
+
+              final currentKm = (_totalDistance / 1000).floor();
+              if (currentKm > _lastAutoLapKm && _lastAutoLapKm >= 0) {
+                final lapDistance = _totalDistance - _lapStartDistance;
+                final lapDuration = _elapsedMovingSeconds - _lapStartSeconds;
+                _lapSplits.add(LapSplit(
+                  lapNumber: currentKm,
+                  distanceMeters: lapDistance,
+                  durationSeconds: _elapsedMovingSeconds,
+                  splitTimeSeconds: lapDuration,
+                  averagePaceSecondsPerKm: lapDistance > 0 ? (lapDuration / (lapDistance / 1000)) : null,
+                ));
+                _lastAutoLapKm = currentKm;
+                _lapStartDistance = _totalDistance;
+                _lapStartSeconds = _elapsedMovingSeconds;
+              }
 
             if (point.speed > 0.5) {
               _currentCadence = _estimateCadence(point.speed);
               _totalCadence += _currentCadence;
+              _paceSamples.add(_TimestampedPace(
+                timestamp: DateTime.now(),
+                paceSecondsPerKm: 1000 / point.speed,
+              ));
             }
 
             if (_previousAltitude != null && point.altitude != null) {
@@ -318,7 +394,7 @@ class WorkoutRecordingService {
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_status == RecordingStatus.recording) {
+      if (_status == RecordingStatus.recording && !_isAutoPaused) {
         _elapsedMovingSeconds++;
         _metricsController.add(currentMetrics);
       }

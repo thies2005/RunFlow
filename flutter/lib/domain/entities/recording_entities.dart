@@ -86,6 +86,22 @@ class HrSample {
       );
 }
 
+class LapSplit {
+  const LapSplit({
+    required this.lapNumber,
+    required this.distanceMeters,
+    required this.durationSeconds,
+    required this.splitTimeSeconds,
+    this.averagePaceSecondsPerKm,
+  });
+
+  final int lapNumber;
+  final double distanceMeters;
+  final int durationSeconds;
+  final int splitTimeSeconds;
+  final double? averagePaceSecondsPerKm;
+}
+
 class RecordedWorkout {
   const RecordedWorkout({
     this.name = 'Morning Run',
@@ -101,6 +117,7 @@ class RecordedWorkout {
     this.hasHeartrate = false,
     this.gpsPoints = const [],
     this.hrSamples = const [],
+    this.lapSplits = const [],
     this.totalElevation,
   });
 
@@ -117,6 +134,7 @@ class RecordedWorkout {
   final bool hasHeartrate;
   final List<GpsPoint> gpsPoints;
   final List<HrSample> hrSamples;
+  final List<LapSplit> lapSplits;
   final double? totalElevation;
 
   RecordedWorkout copyWith({
@@ -133,6 +151,7 @@ class RecordedWorkout {
     bool? hasHeartrate,
     List<GpsPoint>? gpsPoints,
     List<HrSample>? hrSamples,
+    List<LapSplit>? lapSplits,
     double? totalElevation,
   }) {
     return RecordedWorkout(
@@ -149,6 +168,7 @@ class RecordedWorkout {
       hasHeartrate: hasHeartrate ?? this.hasHeartrate,
       gpsPoints: gpsPoints ?? this.gpsPoints,
       hrSamples: hrSamples ?? this.hrSamples,
+      lapSplits: lapSplits ?? this.lapSplits,
       totalElevation: totalElevation ?? this.totalElevation,
     );
   }
@@ -171,6 +191,7 @@ class RecordedWorkout {
           hasHeartrate == other.hasHeartrate &&
           listEquals(gpsPoints, other.gpsPoints) &&
           listEquals(hrSamples, other.hrSamples) &&
+          listEquals(lapSplits, other.lapSplits) &&
           totalElevation == other.totalElevation;
 
   @override
@@ -188,6 +209,7 @@ class RecordedWorkout {
         hasHeartrate,
         Object.hashAll(gpsPoints),
         Object.hashAll(hrSamples),
+        Object.hashAll(lapSplits),
         totalElevation,
       ]);
 }

@@ -42,6 +42,9 @@ import 'package:runflow_flutter/presentation/screens/onboarding/feature_showcase
 import 'package:runflow_flutter/presentation/screens/startup/startup_screen.dart';
 import 'package:runflow_flutter/presentation/screens/record/record_screen.dart';
 import 'package:runflow_flutter/presentation/screens/race/race_result_screen.dart';
+import 'package:runflow_flutter/presentation/screens/workout/workout_builder_screen.dart';
+import 'package:runflow_flutter/presentation/screens/workout/workout_preview_screen.dart';
+import 'package:runflow_flutter/presentation/screens/workout/workout_templates_screen.dart';
 import 'package:runflow_flutter/presentation/widgets/app_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -255,6 +258,24 @@ GoRouter createRouter(Ref ref) {
           return RaceResultScreen(goalId: goalId);
         },
       ),
+      GoRoute(
+        path: '/workout/templates',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const WorkoutTemplatesScreen(),
+      ),
+      GoRoute(
+        path: '/workout/builder',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const WorkoutBuilderScreen(),
+      ),
+      GoRoute(
+        path: '/workout/preview/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return WorkoutPreviewScreen(templateId: id);
+        },
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return AppShell(navigationShell: navigationShell);
@@ -282,7 +303,8 @@ GoRouter createRouter(Ref ref) {
                 path: '/record',
                 builder: (context, state) {
                   final workoutId = state.uri.queryParameters['workoutId'];
-                  return RecordScreen(workoutId: workoutId);
+                  final templateId = state.uri.queryParameters['templateId'];
+                  return RecordScreen(workoutId: workoutId, templateId: templateId);
                 },
               ),
             ],

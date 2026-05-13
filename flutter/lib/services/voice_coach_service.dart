@@ -199,15 +199,19 @@ class VoiceCoachService {
       }
     }
 
-    if (durationSeconds > 0 && durationSeconds % 300 == 0 && durationSeconds > 0) {
-      final motivationMessages = [
-        'You\'re doing great, keep pushing!',
-        'Stay strong, you\'ve got this!',
-        'Fantastic effort, keep it going!',
-        'Almost there, don\'t give up!',
-      ];
-      final msg = motivationMessages[Random().nextInt(motivationMessages.length)];
-      await speak(msg, CoachMessageType.motivation);
+    if (durationSeconds > 0) {
+      final lastMotivational = _lastSpokenByType[CoachMessageType.motivation];
+      final cooldown = _cooldownByType[CoachMessageType.motivation] ?? const Duration(minutes: 5);
+      if (lastMotivational == null || DateTime.now().difference(lastMotivational) >= cooldown) {
+        final motivationMessages = [
+          'You\'re doing great, keep pushing!',
+          'Stay strong, you\'ve got this!',
+          'Fantastic effort, keep it going!',
+          'Almost there, don\'t give up!',
+        ];
+        final msg = motivationMessages[Random().nextInt(motivationMessages.length)];
+        await speak(msg, CoachMessageType.motivation);
+      }
     }
   }
 
@@ -243,6 +247,30 @@ class VoiceCoachService {
       default:
         return '${(milestone * 100).toInt()} percent complete';
     }
+  }
+
+  Future<void> announceStep(String stepName, int stepIndex, int totalSteps) async {
+    await speak(
+      '$stepName. Step $stepIndex of $totalSteps.',
+      CoachMessageType.phase,
+      overrideCooldown: true,
+    );
+  }
+
+  Future<void> announceCountdown(int seconds) async {
+    await speak(
+      '$seconds',
+      CoachMessageType.phase,
+      overrideCooldown: true,
+    );
+  }
+
+  Future<void> announceWorkoutComplete() async {
+    await speak(
+      'Workout complete! Well done!',
+      CoachMessageType.motivation,
+      overrideCooldown: true,
+    );
   }
 
   void reset() {

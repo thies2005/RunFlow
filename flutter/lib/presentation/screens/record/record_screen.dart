@@ -1,19 +1,30 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/connectivity_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
+import 'package:runflow_flutter/domain/entities/pace_zone.dart';
 import 'package:runflow_flutter/domain/entities/recording_entities.dart';
+import 'package:runflow_flutter/data/datasources/local/workout_template_local_datasource.dart';
+import 'package:runflow_flutter/domain/services/workout_step_execution_engine.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
+import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 import 'package:runflow_flutter/presentation/providers/recording_providers.dart';
+import 'package:runflow_flutter/presentation/widgets/next_step_preview.dart';
+import 'package:runflow_flutter/presentation/widgets/pace_zone_indicator.dart';
 import 'package:runflow_flutter/presentation/widgets/runflow_map.dart';
+import 'package:runflow_flutter/presentation/widgets/step_progress_card.dart';
+import 'package:runflow_flutter/presentation/widgets/workout_progress_bar.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/services/workout_recording_service.dart';
 
 class RecordScreen extends ConsumerStatefulWidget {
-  const RecordScreen({this.workoutId, super.key});
+  const RecordScreen({this.workoutId, this.templateId, super.key});
 
   final String? workoutId;
+  final String? templateId;
 
   @override
   ConsumerState<RecordScreen> createState() => _RecordScreenState();
@@ -26,6 +37,19 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
   List<HrSensorInfo> _scannedSensors = [];
   bool _coachEnabled = false;
 
+  Workout? _plannedWorkout;
+  Timer? _coachEvalTimer;
+  WorkoutStepExecutionEngine? _executionEngine;
+  ActiveStep? _currentActiveStep;
+  StepProgress? _currentStepProgress;
+  ActiveStep? _nextStep;
+  StreamSubscription<StepTransitionEvent>? _stepEventSub;
+  double _overallProgress = 0;
+
+  bool _showCountdown = false;
+  int _countdownValue = 3;
+  Timer? _countdownTimer;
+
   @override
   void initState() {
     super.initState();
@@ -34,11 +58,90 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
       if (widget.workoutId != null) {
         _loadWorkoutDetails();
       }
+      if (widget.templateId != null) {
+        _loadTemplate();
+      }
     });
   }
 
-  void _loadWorkoutDetails() {
-    // Will be used later to show workout context during recording
+  @override
+  void dispose() {
+    _coachEvalTimer?.cancel();
+    _stepEventSub?.cancel();
+    _countdownTimer?.cancel();
+    _executionEngine?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadWorkoutDetails() async {
+    if (widget.workoutId == null) return;
+    try {
+      final repo = ref.read(goalRepositoryProvider);
+      final response = await repo.listWorkouts();
+      final workout = response.workouts.where((w) => w.id == widget.workoutId).firstOrNull;
+      if (workout != null && mounted) {
+        setState(() => _plannedWorkout = workout);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadTemplate() async {
+    if (widget.templateId == null) return;
+    try {
+      final ds = WorkoutTemplateLocalDatasource();
+      final templates = await ds.loadTemplates();
+      final template = templates.where((t) => t.id == widget.templateId).firstOrNull;
+      if (template != null && mounted) {
+        final engine = WorkoutStepExecutionEngine(workout: template);
+        engine.initialize();
+        setState(() {
+          _executionEngine = engine;
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _startCoachEvalTimer() {
+    _coachEvalTimer?.cancel();
+    _coachEvalTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      final service = ref.read(recordingServiceProvider);
+      final metrics = service.currentMetrics;
+
+      if (_executionEngine != null && _executionEngine!.state == StepExecutionState.active) {
+        _executionEngine!.updateMetrics(
+          totalElapsedSeconds: metrics.durationSeconds,
+          totalDistanceMeters: metrics.distanceMeters,
+        );
+        setState(() {
+          _currentActiveStep = _executionEngine!.currentActiveStep;
+          _currentStepProgress = _executionEngine!.currentStepProgress;
+          _nextStep = _executionEngine!.nextStep;
+          _overallProgress = _executionEngine!.overallFraction;
+        });
+      }
+
+      final coach = ref.read(voiceCoachProvider);
+      if (!coach.isEnabled || _plannedWorkout == null) return;
+      final targetPace = _currentActiveStep?.step.paceTarget?.minPaceSecondsPerKm ??
+          (_plannedWorkout!.targetPace > 0 ? _plannedWorkout!.targetPace : 0);
+      coach.evaluate(
+        currentPaceSecondsPerKm: metrics.smoothedCurrentPaceSecondsPerKm > 0
+            ? metrics.smoothedCurrentPaceSecondsPerKm
+            : metrics.currentPaceSecondsPerKm,
+        targetPaceSecondsPerKm: targetPace,
+        currentHr: metrics.currentHr,
+        distanceMeters: metrics.distanceMeters,
+        targetDistanceMeters: _plannedWorkout!.targetDistance > 0 ? _plannedWorkout!.targetDistance : 0,
+        workoutType: _plannedWorkout!.workoutType.name,
+        durationSeconds: metrics.durationSeconds,
+        maxHr: metrics.maxHr > 0 ? metrics.maxHr : null,
+      );
+    });
+  }
+
+  void _stopCoachEvalTimer() {
+    _coachEvalTimer?.cancel();
+    _coachEvalTimer = null;
   }
 
   @override
@@ -105,6 +208,11 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
 
         switch (status) {
           case RecordingStatus.idle:
+            if (_showCountdown) {
+              return _CountdownOverlay(
+                value: _countdownValue,
+              );
+            }
             return _IdleView(
               onStart: _handleStart,
               isScanning: _isScanning,
@@ -117,14 +225,23 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
               onPause: _handlePause,
               onStop: _handleStop,
               coachEnabled: _coachEnabled,
+              targetPaceSecondsPerKm: _currentActiveStep?.step.paceTarget?.minPaceSecondsPerKm ??
+                  (_plannedWorkout?.targetPace ?? 0),
+              currentActiveStep: _currentActiveStep,
+              currentStepProgress: _currentStepProgress,
+              nextStep: _nextStep,
+              overallProgress: _overallProgress,
+              onSkipStep: _executionEngine != null ? () => _executionEngine!.skipStep() : null,
               onToggleCoach: () {
                 final coach = ref.read(voiceCoachProvider);
                 if (coach.isEnabled) {
                   coach.disable();
+                  _stopCoachEvalTimer();
                 } else {
                   coach.enable();
+                  _startCoachEvalTimer();
                 }
-                setState(() => _coachEnabled = !coach.isEnabled);
+                setState(() => _coachEnabled = coach.isEnabled);
               },
             );
           case RecordingStatus.paused:
@@ -149,29 +266,105 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
       );
       return;
     }
-    if (widget.workoutId != null) {
-      final coach = ref.read(voiceCoachProvider);
+
+    setState(() {
+      _showCountdown = true;
+      _countdownValue = 3;
+    });
+
+    final coach = ref.read(voiceCoachProvider);
+    if (widget.workoutId != null || widget.templateId != null || _coachEnabled) {
       coach.enable();
-      setState(() => _coachEnabled = true);
+      unawaited(coach.announceCountdown(3));
     }
+
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() => _countdownValue--);
+      if (_countdownValue <= 0) {
+        timer.cancel();
+        unawaited(_startRecordingAfterCountdown());
+      } else if (coach.isEnabled) {
+        coach.announceCountdown(_countdownValue);
+      }
+    });
+  }
+
+  Future<void> _startRecordingAfterCountdown() async {
+    setState(() => _showCountdown = false);
+
+    final service = ref.read(recordingServiceProvider);
+    final coach = ref.read(voiceCoachProvider);
+
     await service.startRecording();
+
+    if (_executionEngine != null) {
+      _executionEngine!.start();
+      _currentActiveStep = _executionEngine!.currentActiveStep;
+      _currentStepProgress = _executionEngine!.currentStepProgress;
+      _nextStep = _executionEngine!.nextStep;
+      _stepEventSub = _executionEngine!.eventStream.listen((event) {
+        if (coach.isEnabled) {
+          if (event.type == 'stepStarted') {
+            coach.announceStep(
+              event.step.name,
+              event.overallIndex + 1,
+              event.totalSteps,
+            );
+          } else if (event.type == 'workoutCompleted') {
+            coach.announceWorkoutComplete();
+          }
+        }
+        setState(() {
+          _currentActiveStep = _executionEngine!.currentActiveStep;
+          _currentStepProgress = _executionEngine!.currentStepProgress;
+          _nextStep = _executionEngine!.nextStep;
+          _overallProgress = _executionEngine!.overallFraction;
+        });
+      });
+    }
+
+    if (coach.isEnabled) {
+      _startCoachEvalTimer();
+    }
   }
 
   void _handlePause() {
+    _stopCoachEvalTimer();
+    _executionEngine?.pause();
     ref.read(recordingServiceProvider).pauseRecording();
   }
 
   void _handleResume() {
     ref.read(recordingServiceProvider).resumeRecording();
+    final metrics = ref.read(recordingServiceProvider).currentMetrics;
+    _executionEngine?.resume(metrics.durationSeconds, metrics.distanceMeters);
+    _startCoachEvalTimer();
   }
 
   void _handleStop() {
+    _stopCoachEvalTimer();
+    _stepEventSub?.cancel();
+    _stepEventSub = null;
     final WorkoutRecordingService service =
         ref.read(recordingServiceProvider);
     final coach = ref.read(voiceCoachProvider);
     coach.disable();
     coach.stop();
-    setState(() => _coachEnabled = false);
+    coach.reset();
+    _executionEngine?.dispose();
+    _executionEngine = null;
+    setState(() {
+      _coachEnabled = false;
+      _currentActiveStep = null;
+      _currentStepProgress = null;
+      _nextStep = null;
+      _overallProgress = 0;
+    });
     final RecordedWorkout? workout = service.stopRecording();
     if (workout != null) {
       setState(() {
@@ -448,12 +641,24 @@ class _RecordingView extends ConsumerWidget {
     required this.onPause,
     required this.onStop,
     this.coachEnabled = false,
+    this.targetPaceSecondsPerKm = 0,
+    this.currentActiveStep,
+    this.currentStepProgress,
+    this.nextStep,
+    this.overallProgress = 0,
+    this.onSkipStep,
     this.onToggleCoach,
   });
 
   final VoidCallback onPause;
   final VoidCallback onStop;
   final bool coachEnabled;
+  final double targetPaceSecondsPerKm;
+  final ActiveStep? currentActiveStep;
+  final StepProgress? currentStepProgress;
+  final ActiveStep? nextStep;
+  final double overallProgress;
+  final VoidCallback? onSkipStep;
   final VoidCallback? onToggleCoach;
 
   @override
@@ -470,6 +675,12 @@ class _RecordingView extends ConsumerWidget {
         onPause: onPause,
         onStop: onStop,
         coachEnabled: coachEnabled,
+        targetPaceSecondsPerKm: targetPaceSecondsPerKm,
+        currentActiveStep: currentActiveStep,
+        currentStepProgress: currentStepProgress,
+        nextStep: nextStep,
+        overallProgress: overallProgress,
+        onSkipStep: onSkipStep,
         onToggleCoach: onToggleCoach,
       ),
       error: (Object e, StackTrace st) => _RecordingContent(
@@ -478,6 +689,12 @@ class _RecordingView extends ConsumerWidget {
         onPause: onPause,
         onStop: onStop,
         coachEnabled: coachEnabled,
+        targetPaceSecondsPerKm: targetPaceSecondsPerKm,
+        currentActiveStep: currentActiveStep,
+        currentStepProgress: currentStepProgress,
+        nextStep: nextStep,
+        overallProgress: overallProgress,
+        onSkipStep: onSkipStep,
         onToggleCoach: onToggleCoach,
       ),
       data: (RecordingMetrics metrics) => _RecordingContent(
@@ -486,6 +703,12 @@ class _RecordingView extends ConsumerWidget {
         onPause: onPause,
         onStop: onStop,
         coachEnabled: coachEnabled,
+        targetPaceSecondsPerKm: targetPaceSecondsPerKm,
+        currentActiveStep: currentActiveStep,
+        currentStepProgress: currentStepProgress,
+        nextStep: nextStep,
+        overallProgress: overallProgress,
+        onSkipStep: onSkipStep,
         onToggleCoach: onToggleCoach,
       ),
     );
@@ -499,6 +722,12 @@ class _RecordingContent extends StatefulWidget {
     required this.onPause,
     required this.onStop,
     this.coachEnabled = false,
+    this.targetPaceSecondsPerKm = 0,
+    this.currentActiveStep,
+    this.currentStepProgress,
+    this.nextStep,
+    this.overallProgress = 0,
+    this.onSkipStep,
     this.onToggleCoach,
   });
 
@@ -507,6 +736,12 @@ class _RecordingContent extends StatefulWidget {
   final VoidCallback onPause;
   final VoidCallback onStop;
   final bool coachEnabled;
+  final double targetPaceSecondsPerKm;
+  final ActiveStep? currentActiveStep;
+  final StepProgress? currentStepProgress;
+  final ActiveStep? nextStep;
+  final double overallProgress;
+  final VoidCallback? onSkipStep;
   final VoidCallback? onToggleCoach;
 
   @override
@@ -641,6 +876,42 @@ class _RecordingContentState extends State<_RecordingContent> {
                       ),
                     ),
                     const SizedBox(height: 32),
+                    if (widget.currentActiveStep != null && widget.currentStepProgress != null) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: WorkoutProgressBar(fraction: widget.overallProgress),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: StepProgressCard(
+                          activeStep: widget.currentActiveStep!,
+                          progress: widget.currentStepProgress!,
+                        ),
+                      ),
+                      if (widget.onSkipStep != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: widget.onSkipStep,
+                              child: Text(
+                                'Skip',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: NextStepPreview(nextStep: widget.nextStep),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
@@ -667,6 +938,20 @@ class _RecordingContentState extends State<_RecordingContent> {
                         ],
                       ),
                     ),
+                    if (widget.targetPaceSecondsPerKm > 0) ...[
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: PaceZoneIndicator(
+                          zoneResult: PaceZoneResult.evaluate(
+                            currentPaceSecondsPerKm: metrics.smoothedCurrentPaceSecondsPerKm > 0
+                                ? metrics.smoothedCurrentPaceSecondsPerKm
+                                : metrics.currentPaceSecondsPerKm,
+                            targetPaceSecondsPerKm: widget.targetPaceSecondsPerKm,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1178,6 +1463,42 @@ class _SummaryRow extends StatelessWidget {
               ),
         ),
       ],
+    );
+  }
+}
+
+class _CountdownOverlay extends StatelessWidget {
+  const _CountdownOverlay({required this.value});
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.8, end: 1.2),
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutBack,
+                builder: (context, scale, child) {
+                  return Transform.scale(scale: scale, child: child);
+                },
+                child: Text(
+                  value > 0 ? '$value' : 'GO!',
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    fontSize: 120,
+                    fontWeight: FontWeight.w900,
+                    color: value > 0 ? AppColors.onSurface : AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

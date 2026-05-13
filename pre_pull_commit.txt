@@ -1,1 +1,0 @@
-054ae65 Fix: Ensure desktop chat takes full height flex-col

@@ -298,14 +298,14 @@ function PostRacePending({ goal, daysToRace, onSelectRace, className, isIncomple
         <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-300">Race Goal</h2>
-                <span className="badge badge-run">{raceLabels[goal.raceType]}</span>
+                <span className="badge badge-run">{raceLabels[goal.raceType ?? 'MARATHON'] ?? goal.raceType}</span>
             </div>
 
             <div className="mb-4">
                 <h3 className="text-xl font-bold text-white mb-1">{goal.name}</h3>
                 <div className="flex items-center gap-2 text-gray-400">
                     <Calendar className="w-4 h-4" />
-                    <span>{format(new Date(goal.raceDate), 'MMMM d, yyyy')}</span>
+                    <span>{goal.raceDate ? format(new Date(goal.raceDate), 'MMMM d, yyyy') : 'No date'}</span>
                 </div>
             </div>
 
@@ -425,7 +425,7 @@ function PostRaceOverdue({ goal, className }: { goal: Goal; className: string })
                 <Trophy className="w-16 h-16 mx-auto text-gray-500 mb-4 block" />
                 <h3 className="text-lg font-bold text-white mb-1">{goal.name}</h3>
                 <p className="text-gray-400 text-sm mb-4">
-                    {format(new Date(goal.raceDate), 'MMMM d, yyyy')} &middot; {raceLabels[goal.raceType]}
+                    {goal.raceDate ? format(new Date(goal.raceDate), 'MMMM d, yyyy') : 'No date'} &middot; {raceLabels[goal.raceType ?? 'MARATHON'] ?? goal.raceType}
                 </p>
                 <p className="text-gray-500 text-sm mb-6">This training block has concluded.</p>
                 <button

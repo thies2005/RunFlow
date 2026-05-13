@@ -252,7 +252,7 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
                 </div>
             );
         },
-        [goalId, isGuided, isAiAssisted, getGuidedTip, getAiSuggestions, suggestWeekIndex, handleWorkoutClick, handlePhaseChange],
+        [goalId, isGuided, isAiAssisted, getGuidedTip, getAiSuggestions, suggestWeekIndex, handleWorkoutClick, handlePhaseChange, currentVdot],
     );
 
     const handleOperationComplete = useCallback(() => {

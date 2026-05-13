@@ -109,7 +109,7 @@ describe('handleApiError', () => {
     const originalEnv = process.env.NODE_ENV;
 
     afterEach(() => {
-        process.env.NODE_ENV = originalEnv;
+        (process.env as Record<string, string | undefined>).NODE_ENV = originalEnv;
     });
 
     it('should handle ApiError correctly', () => {
@@ -121,7 +121,7 @@ describe('handleApiError', () => {
     });
 
     it('should handle standard Error in development', () => {
-        process.env.NODE_ENV = 'development';
+        (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
         const error = new Error('Something went wrong');
         const response = handleApiError(error);
 
@@ -130,7 +130,7 @@ describe('handleApiError', () => {
     });
 
     it('should hide error message in production', () => {
-        process.env.NODE_ENV = 'production';
+        (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
         const error = new Error('Sensitive database error');
         const response = handleApiError(error);
 

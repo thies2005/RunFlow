@@ -99,13 +99,13 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
             header: true,
             skipEmptyLines: true,
             preview: 10,
-            complete: (results) => {
+            complete: (results: Papa.ParseResult<Record<string, string>>) => {
                 const rows = results.data as Array<Record<string, string>>;
                 setParsedRows(rows);
 
                 if (results.meta.fields && results.meta.fields.length > 0) {
                     const headers = results.meta.fields;
-                    const normalized = headers.map((h) => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
+                    const normalized = headers.map((h: string) => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
 
                     if (normalized.includes('date') && normalized.includes('title') && normalized.includes('totaldistance')) {
                         setAutoDetected('trainingpeaks');
@@ -120,13 +120,13 @@ export function CsvImportDialog({ goalId, isOpen, onClose, onImported }: CsvImpo
                 }
 
                 const errors: Array<{ row: number; message: string }> = [];
-                results.errors.forEach((err) => {
-                    errors.push({ row: err.row || 0, message: err.message });
+                results.errors.forEach((err: Papa.ParseError) => {
+                    errors.push({ row: err.row ?? 0, message: err.message });
                 });
                 setParseErrors(errors);
                 setStep('preview');
             },
-            error: (err) => {
+            error: (err: Error) => {
                 toast.error(`Failed to parse CSV: ${err.message}`);
             },
         });

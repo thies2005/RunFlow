@@ -74,6 +74,15 @@ export function RaceCountdown({
         );
     }
 
+    if (!goal.raceDate || !goal.raceType) {
+        return (
+            <div className={`glass-card p-6 animate-slide-in ${className}`} style={{ animationDelay: '0.1s' }}>
+                <h2 className="text-lg font-semibold text-gray-300 mb-4">{goal.name}</h2>
+                <p className="text-gray-500 text-sm">No race goal set.</p>
+            </div>
+        );
+    }
+
     const raceDate = new Date(goal.raceDate);
     const today = new Date();
     const daysToRace = differenceInDays(raceDate, today);

@@ -187,11 +187,11 @@ function PastRaceCard({ goal, isExpanded, onToggle, onEdit }: {
             >
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="badge badge-run text-[10px]">{raceLabels[goal.raceType]}</span>
+                        <span className="badge badge-run text-[10px]">{raceLabels[goal.raceType ?? 'MARATHON']}</span>
                         <p className="text-sm font-medium text-white truncate">{goal.name}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-gray-400">{format(new Date(goal.raceDate), 'MMM d, yyyy')}</span>
+                        <span className="text-xs text-gray-400">{goal.raceDate ? format(new Date(goal.raceDate), 'MMM d, yyyy') : ''}</span>
                         {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                     </div>
                 </div>

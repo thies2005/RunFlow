@@ -50,6 +50,7 @@ export type GlobalAiSettingsAvgAggregateOutputType = {
   tier1ActivityFeedbackLimit: number | null
   tier2ActivityFeedbackLimit: number | null
   tier3ActivityFeedbackLimit: number | null
+  planMaxTokensPerAnalysis: number | null
 }
 
 export type GlobalAiSettingsSumAggregateOutputType = {
@@ -76,6 +77,7 @@ export type GlobalAiSettingsSumAggregateOutputType = {
   tier1ActivityFeedbackLimit: number | null
   tier2ActivityFeedbackLimit: number | null
   tier3ActivityFeedbackLimit: number | null
+  planMaxTokensPerAnalysis: number | null
 }
 
 export type GlobalAiSettingsMinAggregateOutputType = {
@@ -116,6 +118,9 @@ export type GlobalAiSettingsMinAggregateOutputType = {
   tier1ActivityFeedbackLimit: number | null
   tier2ActivityFeedbackLimit: number | null
   tier3ActivityFeedbackLimit: number | null
+  planBuilderProviderId: string | null
+  planBuilderModel: string | null
+  planMaxTokensPerAnalysis: number | null
 }
 
 export type GlobalAiSettingsMaxAggregateOutputType = {
@@ -156,6 +161,9 @@ export type GlobalAiSettingsMaxAggregateOutputType = {
   tier1ActivityFeedbackLimit: number | null
   tier2ActivityFeedbackLimit: number | null
   tier3ActivityFeedbackLimit: number | null
+  planBuilderProviderId: string | null
+  planBuilderModel: string | null
+  planMaxTokensPerAnalysis: number | null
 }
 
 export type GlobalAiSettingsCountAggregateOutputType = {
@@ -196,6 +204,9 @@ export type GlobalAiSettingsCountAggregateOutputType = {
   tier1ActivityFeedbackLimit: number
   tier2ActivityFeedbackLimit: number
   tier3ActivityFeedbackLimit: number
+  planBuilderProviderId: number
+  planBuilderModel: number
+  planMaxTokensPerAnalysis: number
   _all: number
 }
 
@@ -224,6 +235,7 @@ export type GlobalAiSettingsAvgAggregateInputType = {
   tier1ActivityFeedbackLimit?: true
   tier2ActivityFeedbackLimit?: true
   tier3ActivityFeedbackLimit?: true
+  planMaxTokensPerAnalysis?: true
 }
 
 export type GlobalAiSettingsSumAggregateInputType = {
@@ -250,6 +262,7 @@ export type GlobalAiSettingsSumAggregateInputType = {
   tier1ActivityFeedbackLimit?: true
   tier2ActivityFeedbackLimit?: true
   tier3ActivityFeedbackLimit?: true
+  planMaxTokensPerAnalysis?: true
 }
 
 export type GlobalAiSettingsMinAggregateInputType = {
@@ -290,6 +303,9 @@ export type GlobalAiSettingsMinAggregateInputType = {
   tier1ActivityFeedbackLimit?: true
   tier2ActivityFeedbackLimit?: true
   tier3ActivityFeedbackLimit?: true
+  planBuilderProviderId?: true
+  planBuilderModel?: true
+  planMaxTokensPerAnalysis?: true
 }
 
 export type GlobalAiSettingsMaxAggregateInputType = {
@@ -330,6 +346,9 @@ export type GlobalAiSettingsMaxAggregateInputType = {
   tier1ActivityFeedbackLimit?: true
   tier2ActivityFeedbackLimit?: true
   tier3ActivityFeedbackLimit?: true
+  planBuilderProviderId?: true
+  planBuilderModel?: true
+  planMaxTokensPerAnalysis?: true
 }
 
 export type GlobalAiSettingsCountAggregateInputType = {
@@ -370,6 +389,9 @@ export type GlobalAiSettingsCountAggregateInputType = {
   tier1ActivityFeedbackLimit?: true
   tier2ActivityFeedbackLimit?: true
   tier3ActivityFeedbackLimit?: true
+  planBuilderProviderId?: true
+  planBuilderModel?: true
+  planMaxTokensPerAnalysis?: true
   _all?: true
 }
 
@@ -497,6 +519,9 @@ export type GlobalAiSettingsGroupByOutputType = {
   tier1ActivityFeedbackLimit: number
   tier2ActivityFeedbackLimit: number
   tier3ActivityFeedbackLimit: number
+  planBuilderProviderId: string | null
+  planBuilderModel: string
+  planMaxTokensPerAnalysis: number
   _count: GlobalAiSettingsCountAggregateOutputType | null
   _avg: GlobalAiSettingsAvgAggregateOutputType | null
   _sum: GlobalAiSettingsSumAggregateOutputType | null
@@ -560,8 +585,12 @@ export type GlobalAiSettingsWhereInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFilter<"GlobalAiSettings"> | number
   tier2ActivityFeedbackLimit?: Prisma.IntFilter<"GlobalAiSettings"> | number
   tier3ActivityFeedbackLimit?: Prisma.IntFilter<"GlobalAiSettings"> | number
+  planBuilderProviderId?: Prisma.StringNullableFilter<"GlobalAiSettings"> | string | null
+  planBuilderModel?: Prisma.StringFilter<"GlobalAiSettings"> | string
+  planMaxTokensPerAnalysis?: Prisma.IntFilter<"GlobalAiSettings"> | number
   activeProvider?: Prisma.XOR<Prisma.AiProviderNullableScalarRelationFilter, Prisma.AiProviderWhereInput> | null
   fallbackProvider?: Prisma.XOR<Prisma.AiProviderNullableScalarRelationFilter, Prisma.AiProviderWhereInput> | null
+  planBuilderProvider?: Prisma.XOR<Prisma.AiProviderNullableScalarRelationFilter, Prisma.AiProviderWhereInput> | null
 }
 
 export type GlobalAiSettingsOrderByWithRelationInput = {
@@ -602,8 +631,12 @@ export type GlobalAiSettingsOrderByWithRelationInput = {
   tier1ActivityFeedbackLimit?: Prisma.SortOrder
   tier2ActivityFeedbackLimit?: Prisma.SortOrder
   tier3ActivityFeedbackLimit?: Prisma.SortOrder
+  planBuilderProviderId?: Prisma.SortOrderInput | Prisma.SortOrder
+  planBuilderModel?: Prisma.SortOrder
+  planMaxTokensPerAnalysis?: Prisma.SortOrder
   activeProvider?: Prisma.AiProviderOrderByWithRelationInput
   fallbackProvider?: Prisma.AiProviderOrderByWithRelationInput
+  planBuilderProvider?: Prisma.AiProviderOrderByWithRelationInput
 }
 
 export type GlobalAiSettingsWhereUniqueInput = Prisma.AtLeast<{
@@ -647,8 +680,12 @@ export type GlobalAiSettingsWhereUniqueInput = Prisma.AtLeast<{
   tier1ActivityFeedbackLimit?: Prisma.IntFilter<"GlobalAiSettings"> | number
   tier2ActivityFeedbackLimit?: Prisma.IntFilter<"GlobalAiSettings"> | number
   tier3ActivityFeedbackLimit?: Prisma.IntFilter<"GlobalAiSettings"> | number
+  planBuilderProviderId?: Prisma.StringNullableFilter<"GlobalAiSettings"> | string | null
+  planBuilderModel?: Prisma.StringFilter<"GlobalAiSettings"> | string
+  planMaxTokensPerAnalysis?: Prisma.IntFilter<"GlobalAiSettings"> | number
   activeProvider?: Prisma.XOR<Prisma.AiProviderNullableScalarRelationFilter, Prisma.AiProviderWhereInput> | null
   fallbackProvider?: Prisma.XOR<Prisma.AiProviderNullableScalarRelationFilter, Prisma.AiProviderWhereInput> | null
+  planBuilderProvider?: Prisma.XOR<Prisma.AiProviderNullableScalarRelationFilter, Prisma.AiProviderWhereInput> | null
 }, "id">
 
 export type GlobalAiSettingsOrderByWithAggregationInput = {
@@ -689,6 +726,9 @@ export type GlobalAiSettingsOrderByWithAggregationInput = {
   tier1ActivityFeedbackLimit?: Prisma.SortOrder
   tier2ActivityFeedbackLimit?: Prisma.SortOrder
   tier3ActivityFeedbackLimit?: Prisma.SortOrder
+  planBuilderProviderId?: Prisma.SortOrderInput | Prisma.SortOrder
+  planBuilderModel?: Prisma.SortOrder
+  planMaxTokensPerAnalysis?: Prisma.SortOrder
   _count?: Prisma.GlobalAiSettingsCountOrderByAggregateInput
   _avg?: Prisma.GlobalAiSettingsAvgOrderByAggregateInput
   _max?: Prisma.GlobalAiSettingsMaxOrderByAggregateInput
@@ -737,6 +777,9 @@ export type GlobalAiSettingsScalarWhereWithAggregatesInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntWithAggregatesFilter<"GlobalAiSettings"> | number
   tier2ActivityFeedbackLimit?: Prisma.IntWithAggregatesFilter<"GlobalAiSettings"> | number
   tier3ActivityFeedbackLimit?: Prisma.IntWithAggregatesFilter<"GlobalAiSettings"> | number
+  planBuilderProviderId?: Prisma.StringNullableWithAggregatesFilter<"GlobalAiSettings"> | string | null
+  planBuilderModel?: Prisma.StringWithAggregatesFilter<"GlobalAiSettings"> | string
+  planMaxTokensPerAnalysis?: Prisma.IntWithAggregatesFilter<"GlobalAiSettings"> | number
 }
 
 export type GlobalAiSettingsCreateInput = {
@@ -775,8 +818,11 @@ export type GlobalAiSettingsCreateInput = {
   tier1ActivityFeedbackLimit?: number
   tier2ActivityFeedbackLimit?: number
   tier3ActivityFeedbackLimit?: number
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
   activeProvider?: Prisma.AiProviderCreateNestedOneWithoutActiveInSettingsInput
   fallbackProvider?: Prisma.AiProviderCreateNestedOneWithoutFallbackInSettingsInput
+  planBuilderProvider?: Prisma.AiProviderCreateNestedOneWithoutPlanBuilderInSettingsInput
 }
 
 export type GlobalAiSettingsUncheckedCreateInput = {
@@ -817,6 +863,9 @@ export type GlobalAiSettingsUncheckedCreateInput = {
   tier1ActivityFeedbackLimit?: number
   tier2ActivityFeedbackLimit?: number
   tier3ActivityFeedbackLimit?: number
+  planBuilderProviderId?: string | null
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
 }
 
 export type GlobalAiSettingsUpdateInput = {
@@ -855,8 +904,11 @@ export type GlobalAiSettingsUpdateInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
   activeProvider?: Prisma.AiProviderUpdateOneWithoutActiveInSettingsNestedInput
   fallbackProvider?: Prisma.AiProviderUpdateOneWithoutFallbackInSettingsNestedInput
+  planBuilderProvider?: Prisma.AiProviderUpdateOneWithoutPlanBuilderInSettingsNestedInput
 }
 
 export type GlobalAiSettingsUncheckedUpdateInput = {
@@ -897,6 +949,9 @@ export type GlobalAiSettingsUncheckedUpdateInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type GlobalAiSettingsCreateManyInput = {
@@ -937,6 +992,9 @@ export type GlobalAiSettingsCreateManyInput = {
   tier1ActivityFeedbackLimit?: number
   tier2ActivityFeedbackLimit?: number
   tier3ActivityFeedbackLimit?: number
+  planBuilderProviderId?: string | null
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
 }
 
 export type GlobalAiSettingsUpdateManyMutationInput = {
@@ -975,6 +1033,8 @@ export type GlobalAiSettingsUpdateManyMutationInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type GlobalAiSettingsUncheckedUpdateManyInput = {
@@ -1015,6 +1075,9 @@ export type GlobalAiSettingsUncheckedUpdateManyInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type GlobalAiSettingsCountOrderByAggregateInput = {
@@ -1055,6 +1118,9 @@ export type GlobalAiSettingsCountOrderByAggregateInput = {
   tier1ActivityFeedbackLimit?: Prisma.SortOrder
   tier2ActivityFeedbackLimit?: Prisma.SortOrder
   tier3ActivityFeedbackLimit?: Prisma.SortOrder
+  planBuilderProviderId?: Prisma.SortOrder
+  planBuilderModel?: Prisma.SortOrder
+  planMaxTokensPerAnalysis?: Prisma.SortOrder
 }
 
 export type GlobalAiSettingsAvgOrderByAggregateInput = {
@@ -1081,6 +1147,7 @@ export type GlobalAiSettingsAvgOrderByAggregateInput = {
   tier1ActivityFeedbackLimit?: Prisma.SortOrder
   tier2ActivityFeedbackLimit?: Prisma.SortOrder
   tier3ActivityFeedbackLimit?: Prisma.SortOrder
+  planMaxTokensPerAnalysis?: Prisma.SortOrder
 }
 
 export type GlobalAiSettingsMaxOrderByAggregateInput = {
@@ -1121,6 +1188,9 @@ export type GlobalAiSettingsMaxOrderByAggregateInput = {
   tier1ActivityFeedbackLimit?: Prisma.SortOrder
   tier2ActivityFeedbackLimit?: Prisma.SortOrder
   tier3ActivityFeedbackLimit?: Prisma.SortOrder
+  planBuilderProviderId?: Prisma.SortOrder
+  planBuilderModel?: Prisma.SortOrder
+  planMaxTokensPerAnalysis?: Prisma.SortOrder
 }
 
 export type GlobalAiSettingsMinOrderByAggregateInput = {
@@ -1161,6 +1231,9 @@ export type GlobalAiSettingsMinOrderByAggregateInput = {
   tier1ActivityFeedbackLimit?: Prisma.SortOrder
   tier2ActivityFeedbackLimit?: Prisma.SortOrder
   tier3ActivityFeedbackLimit?: Prisma.SortOrder
+  planBuilderProviderId?: Prisma.SortOrder
+  planBuilderModel?: Prisma.SortOrder
+  planMaxTokensPerAnalysis?: Prisma.SortOrder
 }
 
 export type GlobalAiSettingsSumOrderByAggregateInput = {
@@ -1187,6 +1260,7 @@ export type GlobalAiSettingsSumOrderByAggregateInput = {
   tier1ActivityFeedbackLimit?: Prisma.SortOrder
   tier2ActivityFeedbackLimit?: Prisma.SortOrder
   tier3ActivityFeedbackLimit?: Prisma.SortOrder
+  planMaxTokensPerAnalysis?: Prisma.SortOrder
 }
 
 export type GlobalAiSettingsListRelationFilter = {
@@ -1213,6 +1287,13 @@ export type GlobalAiSettingsCreateNestedManyWithoutFallbackProviderInput = {
   connect?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
 }
 
+export type GlobalAiSettingsCreateNestedManyWithoutPlanBuilderProviderInput = {
+  create?: Prisma.XOR<Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput, Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput> | Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput[] | Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput[]
+  connectOrCreate?: Prisma.GlobalAiSettingsCreateOrConnectWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsCreateOrConnectWithoutPlanBuilderProviderInput[]
+  createMany?: Prisma.GlobalAiSettingsCreateManyPlanBuilderProviderInputEnvelope
+  connect?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+}
+
 export type GlobalAiSettingsUncheckedCreateNestedManyWithoutActiveProviderInput = {
   create?: Prisma.XOR<Prisma.GlobalAiSettingsCreateWithoutActiveProviderInput, Prisma.GlobalAiSettingsUncheckedCreateWithoutActiveProviderInput> | Prisma.GlobalAiSettingsCreateWithoutActiveProviderInput[] | Prisma.GlobalAiSettingsUncheckedCreateWithoutActiveProviderInput[]
   connectOrCreate?: Prisma.GlobalAiSettingsCreateOrConnectWithoutActiveProviderInput | Prisma.GlobalAiSettingsCreateOrConnectWithoutActiveProviderInput[]
@@ -1224,6 +1305,13 @@ export type GlobalAiSettingsUncheckedCreateNestedManyWithoutFallbackProviderInpu
   create?: Prisma.XOR<Prisma.GlobalAiSettingsCreateWithoutFallbackProviderInput, Prisma.GlobalAiSettingsUncheckedCreateWithoutFallbackProviderInput> | Prisma.GlobalAiSettingsCreateWithoutFallbackProviderInput[] | Prisma.GlobalAiSettingsUncheckedCreateWithoutFallbackProviderInput[]
   connectOrCreate?: Prisma.GlobalAiSettingsCreateOrConnectWithoutFallbackProviderInput | Prisma.GlobalAiSettingsCreateOrConnectWithoutFallbackProviderInput[]
   createMany?: Prisma.GlobalAiSettingsCreateManyFallbackProviderInputEnvelope
+  connect?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+}
+
+export type GlobalAiSettingsUncheckedCreateNestedManyWithoutPlanBuilderProviderInput = {
+  create?: Prisma.XOR<Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput, Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput> | Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput[] | Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput[]
+  connectOrCreate?: Prisma.GlobalAiSettingsCreateOrConnectWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsCreateOrConnectWithoutPlanBuilderProviderInput[]
+  createMany?: Prisma.GlobalAiSettingsCreateManyPlanBuilderProviderInputEnvelope
   connect?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
 }
 
@@ -1255,6 +1343,20 @@ export type GlobalAiSettingsUpdateManyWithoutFallbackProviderNestedInput = {
   deleteMany?: Prisma.GlobalAiSettingsScalarWhereInput | Prisma.GlobalAiSettingsScalarWhereInput[]
 }
 
+export type GlobalAiSettingsUpdateManyWithoutPlanBuilderProviderNestedInput = {
+  create?: Prisma.XOR<Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput, Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput> | Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput[] | Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput[]
+  connectOrCreate?: Prisma.GlobalAiSettingsCreateOrConnectWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsCreateOrConnectWithoutPlanBuilderProviderInput[]
+  upsert?: Prisma.GlobalAiSettingsUpsertWithWhereUniqueWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsUpsertWithWhereUniqueWithoutPlanBuilderProviderInput[]
+  createMany?: Prisma.GlobalAiSettingsCreateManyPlanBuilderProviderInputEnvelope
+  set?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+  disconnect?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+  delete?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+  connect?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+  update?: Prisma.GlobalAiSettingsUpdateWithWhereUniqueWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsUpdateWithWhereUniqueWithoutPlanBuilderProviderInput[]
+  updateMany?: Prisma.GlobalAiSettingsUpdateManyWithWhereWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsUpdateManyWithWhereWithoutPlanBuilderProviderInput[]
+  deleteMany?: Prisma.GlobalAiSettingsScalarWhereInput | Prisma.GlobalAiSettingsScalarWhereInput[]
+}
+
 export type GlobalAiSettingsUncheckedUpdateManyWithoutActiveProviderNestedInput = {
   create?: Prisma.XOR<Prisma.GlobalAiSettingsCreateWithoutActiveProviderInput, Prisma.GlobalAiSettingsUncheckedCreateWithoutActiveProviderInput> | Prisma.GlobalAiSettingsCreateWithoutActiveProviderInput[] | Prisma.GlobalAiSettingsUncheckedCreateWithoutActiveProviderInput[]
   connectOrCreate?: Prisma.GlobalAiSettingsCreateOrConnectWithoutActiveProviderInput | Prisma.GlobalAiSettingsCreateOrConnectWithoutActiveProviderInput[]
@@ -1280,6 +1382,20 @@ export type GlobalAiSettingsUncheckedUpdateManyWithoutFallbackProviderNestedInpu
   connect?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
   update?: Prisma.GlobalAiSettingsUpdateWithWhereUniqueWithoutFallbackProviderInput | Prisma.GlobalAiSettingsUpdateWithWhereUniqueWithoutFallbackProviderInput[]
   updateMany?: Prisma.GlobalAiSettingsUpdateManyWithWhereWithoutFallbackProviderInput | Prisma.GlobalAiSettingsUpdateManyWithWhereWithoutFallbackProviderInput[]
+  deleteMany?: Prisma.GlobalAiSettingsScalarWhereInput | Prisma.GlobalAiSettingsScalarWhereInput[]
+}
+
+export type GlobalAiSettingsUncheckedUpdateManyWithoutPlanBuilderProviderNestedInput = {
+  create?: Prisma.XOR<Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput, Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput> | Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput[] | Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput[]
+  connectOrCreate?: Prisma.GlobalAiSettingsCreateOrConnectWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsCreateOrConnectWithoutPlanBuilderProviderInput[]
+  upsert?: Prisma.GlobalAiSettingsUpsertWithWhereUniqueWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsUpsertWithWhereUniqueWithoutPlanBuilderProviderInput[]
+  createMany?: Prisma.GlobalAiSettingsCreateManyPlanBuilderProviderInputEnvelope
+  set?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+  disconnect?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+  delete?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+  connect?: Prisma.GlobalAiSettingsWhereUniqueInput | Prisma.GlobalAiSettingsWhereUniqueInput[]
+  update?: Prisma.GlobalAiSettingsUpdateWithWhereUniqueWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsUpdateWithWhereUniqueWithoutPlanBuilderProviderInput[]
+  updateMany?: Prisma.GlobalAiSettingsUpdateManyWithWhereWithoutPlanBuilderProviderInput | Prisma.GlobalAiSettingsUpdateManyWithWhereWithoutPlanBuilderProviderInput[]
   deleteMany?: Prisma.GlobalAiSettingsScalarWhereInput | Prisma.GlobalAiSettingsScalarWhereInput[]
 }
 
@@ -1319,7 +1435,10 @@ export type GlobalAiSettingsCreateWithoutActiveProviderInput = {
   tier1ActivityFeedbackLimit?: number
   tier2ActivityFeedbackLimit?: number
   tier3ActivityFeedbackLimit?: number
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
   fallbackProvider?: Prisma.AiProviderCreateNestedOneWithoutFallbackInSettingsInput
+  planBuilderProvider?: Prisma.AiProviderCreateNestedOneWithoutPlanBuilderInSettingsInput
 }
 
 export type GlobalAiSettingsUncheckedCreateWithoutActiveProviderInput = {
@@ -1359,6 +1478,9 @@ export type GlobalAiSettingsUncheckedCreateWithoutActiveProviderInput = {
   tier1ActivityFeedbackLimit?: number
   tier2ActivityFeedbackLimit?: number
   tier3ActivityFeedbackLimit?: number
+  planBuilderProviderId?: string | null
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
 }
 
 export type GlobalAiSettingsCreateOrConnectWithoutActiveProviderInput = {
@@ -1407,7 +1529,10 @@ export type GlobalAiSettingsCreateWithoutFallbackProviderInput = {
   tier1ActivityFeedbackLimit?: number
   tier2ActivityFeedbackLimit?: number
   tier3ActivityFeedbackLimit?: number
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
   activeProvider?: Prisma.AiProviderCreateNestedOneWithoutActiveInSettingsInput
+  planBuilderProvider?: Prisma.AiProviderCreateNestedOneWithoutPlanBuilderInSettingsInput
 }
 
 export type GlobalAiSettingsUncheckedCreateWithoutFallbackProviderInput = {
@@ -1447,6 +1572,9 @@ export type GlobalAiSettingsUncheckedCreateWithoutFallbackProviderInput = {
   tier1ActivityFeedbackLimit?: number
   tier2ActivityFeedbackLimit?: number
   tier3ActivityFeedbackLimit?: number
+  planBuilderProviderId?: string | null
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
 }
 
 export type GlobalAiSettingsCreateOrConnectWithoutFallbackProviderInput = {
@@ -1456,6 +1584,100 @@ export type GlobalAiSettingsCreateOrConnectWithoutFallbackProviderInput = {
 
 export type GlobalAiSettingsCreateManyFallbackProviderInputEnvelope = {
   data: Prisma.GlobalAiSettingsCreateManyFallbackProviderInput | Prisma.GlobalAiSettingsCreateManyFallbackProviderInput[]
+  skipDuplicates?: boolean
+}
+
+export type GlobalAiSettingsCreateWithoutPlanBuilderProviderInput = {
+  id?: string
+  defaultBaseUrl?: string
+  defaultApiKey?: string | null
+  defaultModel?: string
+  tier1Name?: string
+  tier1DailyLimit?: number
+  tier1MonthlyLimit?: number
+  tier2Name?: string
+  tier2DailyLimit?: number
+  tier2MonthlyLimit?: number
+  tier3Name?: string
+  tier3DailyLimit?: number
+  tier3MonthlyLimit?: number
+  dailyMessageLimit?: number
+  monthlyMessageLimit?: number
+  systemPrompt?: string
+  updatedAt?: Date | string
+  tier1DailyTokenLimit?: number
+  tier1MonthlyTokenLimit?: number
+  tier2DailyTokenLimit?: number
+  tier2MonthlyTokenLimit?: number
+  tier3DailyTokenLimit?: number
+  tier3MonthlyTokenLimit?: number
+  calorieSnapModel?: string
+  tier1CalorieSnapLimit?: number
+  tier2CalorieSnapLimit?: number
+  tier3CalorieSnapLimit?: number
+  mealSuggestModel?: string
+  tier1MealSuggestLimit?: number
+  tier2MealSuggestLimit?: number
+  tier3MealSuggestLimit?: number
+  activityFeedbackModel?: string
+  tier1ActivityFeedbackLimit?: number
+  tier2ActivityFeedbackLimit?: number
+  tier3ActivityFeedbackLimit?: number
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
+  activeProvider?: Prisma.AiProviderCreateNestedOneWithoutActiveInSettingsInput
+  fallbackProvider?: Prisma.AiProviderCreateNestedOneWithoutFallbackInSettingsInput
+}
+
+export type GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput = {
+  id?: string
+  defaultBaseUrl?: string
+  defaultApiKey?: string | null
+  defaultModel?: string
+  tier1Name?: string
+  tier1DailyLimit?: number
+  tier1MonthlyLimit?: number
+  tier2Name?: string
+  tier2DailyLimit?: number
+  tier2MonthlyLimit?: number
+  tier3Name?: string
+  tier3DailyLimit?: number
+  tier3MonthlyLimit?: number
+  dailyMessageLimit?: number
+  monthlyMessageLimit?: number
+  systemPrompt?: string
+  activeProviderId?: string | null
+  updatedAt?: Date | string
+  tier1DailyTokenLimit?: number
+  tier1MonthlyTokenLimit?: number
+  tier2DailyTokenLimit?: number
+  tier2MonthlyTokenLimit?: number
+  tier3DailyTokenLimit?: number
+  tier3MonthlyTokenLimit?: number
+  fallbackProviderId?: string | null
+  calorieSnapModel?: string
+  tier1CalorieSnapLimit?: number
+  tier2CalorieSnapLimit?: number
+  tier3CalorieSnapLimit?: number
+  mealSuggestModel?: string
+  tier1MealSuggestLimit?: number
+  tier2MealSuggestLimit?: number
+  tier3MealSuggestLimit?: number
+  activityFeedbackModel?: string
+  tier1ActivityFeedbackLimit?: number
+  tier2ActivityFeedbackLimit?: number
+  tier3ActivityFeedbackLimit?: number
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
+}
+
+export type GlobalAiSettingsCreateOrConnectWithoutPlanBuilderProviderInput = {
+  where: Prisma.GlobalAiSettingsWhereUniqueInput
+  create: Prisma.XOR<Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput, Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput>
+}
+
+export type GlobalAiSettingsCreateManyPlanBuilderProviderInputEnvelope = {
+  data: Prisma.GlobalAiSettingsCreateManyPlanBuilderProviderInput | Prisma.GlobalAiSettingsCreateManyPlanBuilderProviderInput[]
   skipDuplicates?: boolean
 }
 
@@ -1516,6 +1738,9 @@ export type GlobalAiSettingsScalarWhereInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFilter<"GlobalAiSettings"> | number
   tier2ActivityFeedbackLimit?: Prisma.IntFilter<"GlobalAiSettings"> | number
   tier3ActivityFeedbackLimit?: Prisma.IntFilter<"GlobalAiSettings"> | number
+  planBuilderProviderId?: Prisma.StringNullableFilter<"GlobalAiSettings"> | string | null
+  planBuilderModel?: Prisma.StringFilter<"GlobalAiSettings"> | string
+  planMaxTokensPerAnalysis?: Prisma.IntFilter<"GlobalAiSettings"> | number
 }
 
 export type GlobalAiSettingsUpsertWithWhereUniqueWithoutFallbackProviderInput = {
@@ -1532,6 +1757,22 @@ export type GlobalAiSettingsUpdateWithWhereUniqueWithoutFallbackProviderInput = 
 export type GlobalAiSettingsUpdateManyWithWhereWithoutFallbackProviderInput = {
   where: Prisma.GlobalAiSettingsScalarWhereInput
   data: Prisma.XOR<Prisma.GlobalAiSettingsUpdateManyMutationInput, Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutFallbackProviderInput>
+}
+
+export type GlobalAiSettingsUpsertWithWhereUniqueWithoutPlanBuilderProviderInput = {
+  where: Prisma.GlobalAiSettingsWhereUniqueInput
+  update: Prisma.XOR<Prisma.GlobalAiSettingsUpdateWithoutPlanBuilderProviderInput, Prisma.GlobalAiSettingsUncheckedUpdateWithoutPlanBuilderProviderInput>
+  create: Prisma.XOR<Prisma.GlobalAiSettingsCreateWithoutPlanBuilderProviderInput, Prisma.GlobalAiSettingsUncheckedCreateWithoutPlanBuilderProviderInput>
+}
+
+export type GlobalAiSettingsUpdateWithWhereUniqueWithoutPlanBuilderProviderInput = {
+  where: Prisma.GlobalAiSettingsWhereUniqueInput
+  data: Prisma.XOR<Prisma.GlobalAiSettingsUpdateWithoutPlanBuilderProviderInput, Prisma.GlobalAiSettingsUncheckedUpdateWithoutPlanBuilderProviderInput>
+}
+
+export type GlobalAiSettingsUpdateManyWithWhereWithoutPlanBuilderProviderInput = {
+  where: Prisma.GlobalAiSettingsScalarWhereInput
+  data: Prisma.XOR<Prisma.GlobalAiSettingsUpdateManyMutationInput, Prisma.GlobalAiSettingsUncheckedUpdateManyWithoutPlanBuilderProviderInput>
 }
 
 export type GlobalAiSettingsCreateManyActiveProviderInput = {
@@ -1571,6 +1812,9 @@ export type GlobalAiSettingsCreateManyActiveProviderInput = {
   tier1ActivityFeedbackLimit?: number
   tier2ActivityFeedbackLimit?: number
   tier3ActivityFeedbackLimit?: number
+  planBuilderProviderId?: string | null
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
 }
 
 export type GlobalAiSettingsCreateManyFallbackProviderInput = {
@@ -1610,6 +1854,51 @@ export type GlobalAiSettingsCreateManyFallbackProviderInput = {
   tier1ActivityFeedbackLimit?: number
   tier2ActivityFeedbackLimit?: number
   tier3ActivityFeedbackLimit?: number
+  planBuilderProviderId?: string | null
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
+}
+
+export type GlobalAiSettingsCreateManyPlanBuilderProviderInput = {
+  id?: string
+  defaultBaseUrl?: string
+  defaultApiKey?: string | null
+  defaultModel?: string
+  tier1Name?: string
+  tier1DailyLimit?: number
+  tier1MonthlyLimit?: number
+  tier2Name?: string
+  tier2DailyLimit?: number
+  tier2MonthlyLimit?: number
+  tier3Name?: string
+  tier3DailyLimit?: number
+  tier3MonthlyLimit?: number
+  dailyMessageLimit?: number
+  monthlyMessageLimit?: number
+  systemPrompt?: string
+  activeProviderId?: string | null
+  updatedAt?: Date | string
+  tier1DailyTokenLimit?: number
+  tier1MonthlyTokenLimit?: number
+  tier2DailyTokenLimit?: number
+  tier2MonthlyTokenLimit?: number
+  tier3DailyTokenLimit?: number
+  tier3MonthlyTokenLimit?: number
+  fallbackProviderId?: string | null
+  calorieSnapModel?: string
+  tier1CalorieSnapLimit?: number
+  tier2CalorieSnapLimit?: number
+  tier3CalorieSnapLimit?: number
+  mealSuggestModel?: string
+  tier1MealSuggestLimit?: number
+  tier2MealSuggestLimit?: number
+  tier3MealSuggestLimit?: number
+  activityFeedbackModel?: string
+  tier1ActivityFeedbackLimit?: number
+  tier2ActivityFeedbackLimit?: number
+  tier3ActivityFeedbackLimit?: number
+  planBuilderModel?: string
+  planMaxTokensPerAnalysis?: number
 }
 
 export type GlobalAiSettingsUpdateWithoutActiveProviderInput = {
@@ -1648,7 +1937,10 @@ export type GlobalAiSettingsUpdateWithoutActiveProviderInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
   fallbackProvider?: Prisma.AiProviderUpdateOneWithoutFallbackInSettingsNestedInput
+  planBuilderProvider?: Prisma.AiProviderUpdateOneWithoutPlanBuilderInSettingsNestedInput
 }
 
 export type GlobalAiSettingsUncheckedUpdateWithoutActiveProviderInput = {
@@ -1688,6 +1980,9 @@ export type GlobalAiSettingsUncheckedUpdateWithoutActiveProviderInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type GlobalAiSettingsUncheckedUpdateManyWithoutActiveProviderInput = {
@@ -1727,6 +2022,9 @@ export type GlobalAiSettingsUncheckedUpdateManyWithoutActiveProviderInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type GlobalAiSettingsUpdateWithoutFallbackProviderInput = {
@@ -1765,7 +2063,10 @@ export type GlobalAiSettingsUpdateWithoutFallbackProviderInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
   activeProvider?: Prisma.AiProviderUpdateOneWithoutActiveInSettingsNestedInput
+  planBuilderProvider?: Prisma.AiProviderUpdateOneWithoutPlanBuilderInSettingsNestedInput
 }
 
 export type GlobalAiSettingsUncheckedUpdateWithoutFallbackProviderInput = {
@@ -1805,6 +2106,9 @@ export type GlobalAiSettingsUncheckedUpdateWithoutFallbackProviderInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type GlobalAiSettingsUncheckedUpdateManyWithoutFallbackProviderInput = {
@@ -1844,6 +2148,135 @@ export type GlobalAiSettingsUncheckedUpdateManyWithoutFallbackProviderInput = {
   tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
   tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
+}
+
+export type GlobalAiSettingsUpdateWithoutPlanBuilderProviderInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultBaseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultApiKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defaultModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1Name?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1DailyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier1MonthlyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2Name?: Prisma.StringFieldUpdateOperationsInput | string
+  tier2DailyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2MonthlyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3Name?: Prisma.StringFieldUpdateOperationsInput | string
+  tier3DailyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3MonthlyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  dailyMessageLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyMessageLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  tier1DailyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier1MonthlyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2DailyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2MonthlyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3DailyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3MonthlyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  calorieSnapModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1CalorieSnapLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2CalorieSnapLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3CalorieSnapLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  mealSuggestModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1MealSuggestLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2MealSuggestLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3MealSuggestLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  activityFeedbackModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
+  activeProvider?: Prisma.AiProviderUpdateOneWithoutActiveInSettingsNestedInput
+  fallbackProvider?: Prisma.AiProviderUpdateOneWithoutFallbackInSettingsNestedInput
+}
+
+export type GlobalAiSettingsUncheckedUpdateWithoutPlanBuilderProviderInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultBaseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultApiKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defaultModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1Name?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1DailyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier1MonthlyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2Name?: Prisma.StringFieldUpdateOperationsInput | string
+  tier2DailyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2MonthlyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3Name?: Prisma.StringFieldUpdateOperationsInput | string
+  tier3DailyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3MonthlyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  dailyMessageLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyMessageLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
+  activeProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  tier1DailyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier1MonthlyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2DailyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2MonthlyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3DailyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3MonthlyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  fallbackProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  calorieSnapModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1CalorieSnapLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2CalorieSnapLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3CalorieSnapLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  mealSuggestModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1MealSuggestLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2MealSuggestLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3MealSuggestLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  activityFeedbackModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
+}
+
+export type GlobalAiSettingsUncheckedUpdateManyWithoutPlanBuilderProviderInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultBaseUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  defaultApiKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  defaultModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1Name?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1DailyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier1MonthlyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2Name?: Prisma.StringFieldUpdateOperationsInput | string
+  tier2DailyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2MonthlyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3Name?: Prisma.StringFieldUpdateOperationsInput | string
+  tier3DailyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3MonthlyLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  dailyMessageLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyMessageLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  systemPrompt?: Prisma.StringFieldUpdateOperationsInput | string
+  activeProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  tier1DailyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier1MonthlyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2DailyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2MonthlyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3DailyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3MonthlyTokenLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  fallbackProviderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  calorieSnapModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1CalorieSnapLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2CalorieSnapLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3CalorieSnapLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  mealSuggestModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1MealSuggestLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2MealSuggestLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3MealSuggestLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  activityFeedbackModel?: Prisma.StringFieldUpdateOperationsInput | string
+  tier1ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier2ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  tier3ActivityFeedbackLimit?: Prisma.IntFieldUpdateOperationsInput | number
+  planBuilderModel?: Prisma.StringFieldUpdateOperationsInput | string
+  planMaxTokensPerAnalysis?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 
@@ -1886,8 +2319,12 @@ export type GlobalAiSettingsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   tier1ActivityFeedbackLimit?: boolean
   tier2ActivityFeedbackLimit?: boolean
   tier3ActivityFeedbackLimit?: boolean
+  planBuilderProviderId?: boolean
+  planBuilderModel?: boolean
+  planMaxTokensPerAnalysis?: boolean
   activeProvider?: boolean | Prisma.GlobalAiSettings$activeProviderArgs<ExtArgs>
   fallbackProvider?: boolean | Prisma.GlobalAiSettings$fallbackProviderArgs<ExtArgs>
+  planBuilderProvider?: boolean | Prisma.GlobalAiSettings$planBuilderProviderArgs<ExtArgs>
 }, ExtArgs["result"]["globalAiSettings"]>
 
 export type GlobalAiSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1928,8 +2365,12 @@ export type GlobalAiSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   tier1ActivityFeedbackLimit?: boolean
   tier2ActivityFeedbackLimit?: boolean
   tier3ActivityFeedbackLimit?: boolean
+  planBuilderProviderId?: boolean
+  planBuilderModel?: boolean
+  planMaxTokensPerAnalysis?: boolean
   activeProvider?: boolean | Prisma.GlobalAiSettings$activeProviderArgs<ExtArgs>
   fallbackProvider?: boolean | Prisma.GlobalAiSettings$fallbackProviderArgs<ExtArgs>
+  planBuilderProvider?: boolean | Prisma.GlobalAiSettings$planBuilderProviderArgs<ExtArgs>
 }, ExtArgs["result"]["globalAiSettings"]>
 
 export type GlobalAiSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1970,8 +2411,12 @@ export type GlobalAiSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   tier1ActivityFeedbackLimit?: boolean
   tier2ActivityFeedbackLimit?: boolean
   tier3ActivityFeedbackLimit?: boolean
+  planBuilderProviderId?: boolean
+  planBuilderModel?: boolean
+  planMaxTokensPerAnalysis?: boolean
   activeProvider?: boolean | Prisma.GlobalAiSettings$activeProviderArgs<ExtArgs>
   fallbackProvider?: boolean | Prisma.GlobalAiSettings$fallbackProviderArgs<ExtArgs>
+  planBuilderProvider?: boolean | Prisma.GlobalAiSettings$planBuilderProviderArgs<ExtArgs>
 }, ExtArgs["result"]["globalAiSettings"]>
 
 export type GlobalAiSettingsSelectScalar = {
@@ -2012,20 +2457,26 @@ export type GlobalAiSettingsSelectScalar = {
   tier1ActivityFeedbackLimit?: boolean
   tier2ActivityFeedbackLimit?: boolean
   tier3ActivityFeedbackLimit?: boolean
+  planBuilderProviderId?: boolean
+  planBuilderModel?: boolean
+  planMaxTokensPerAnalysis?: boolean
 }
 
-export type GlobalAiSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "defaultBaseUrl" | "defaultApiKey" | "defaultModel" | "tier1Name" | "tier1DailyLimit" | "tier1MonthlyLimit" | "tier2Name" | "tier2DailyLimit" | "tier2MonthlyLimit" | "tier3Name" | "tier3DailyLimit" | "tier3MonthlyLimit" | "dailyMessageLimit" | "monthlyMessageLimit" | "systemPrompt" | "activeProviderId" | "updatedAt" | "tier1DailyTokenLimit" | "tier1MonthlyTokenLimit" | "tier2DailyTokenLimit" | "tier2MonthlyTokenLimit" | "tier3DailyTokenLimit" | "tier3MonthlyTokenLimit" | "fallbackProviderId" | "calorieSnapModel" | "tier1CalorieSnapLimit" | "tier2CalorieSnapLimit" | "tier3CalorieSnapLimit" | "mealSuggestModel" | "tier1MealSuggestLimit" | "tier2MealSuggestLimit" | "tier3MealSuggestLimit" | "activityFeedbackModel" | "tier1ActivityFeedbackLimit" | "tier2ActivityFeedbackLimit" | "tier3ActivityFeedbackLimit", ExtArgs["result"]["globalAiSettings"]>
+export type GlobalAiSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "defaultBaseUrl" | "defaultApiKey" | "defaultModel" | "tier1Name" | "tier1DailyLimit" | "tier1MonthlyLimit" | "tier2Name" | "tier2DailyLimit" | "tier2MonthlyLimit" | "tier3Name" | "tier3DailyLimit" | "tier3MonthlyLimit" | "dailyMessageLimit" | "monthlyMessageLimit" | "systemPrompt" | "activeProviderId" | "updatedAt" | "tier1DailyTokenLimit" | "tier1MonthlyTokenLimit" | "tier2DailyTokenLimit" | "tier2MonthlyTokenLimit" | "tier3DailyTokenLimit" | "tier3MonthlyTokenLimit" | "fallbackProviderId" | "calorieSnapModel" | "tier1CalorieSnapLimit" | "tier2CalorieSnapLimit" | "tier3CalorieSnapLimit" | "mealSuggestModel" | "tier1MealSuggestLimit" | "tier2MealSuggestLimit" | "tier3MealSuggestLimit" | "activityFeedbackModel" | "tier1ActivityFeedbackLimit" | "tier2ActivityFeedbackLimit" | "tier3ActivityFeedbackLimit" | "planBuilderProviderId" | "planBuilderModel" | "planMaxTokensPerAnalysis", ExtArgs["result"]["globalAiSettings"]>
 export type GlobalAiSettingsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   activeProvider?: boolean | Prisma.GlobalAiSettings$activeProviderArgs<ExtArgs>
   fallbackProvider?: boolean | Prisma.GlobalAiSettings$fallbackProviderArgs<ExtArgs>
+  planBuilderProvider?: boolean | Prisma.GlobalAiSettings$planBuilderProviderArgs<ExtArgs>
 }
 export type GlobalAiSettingsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   activeProvider?: boolean | Prisma.GlobalAiSettings$activeProviderArgs<ExtArgs>
   fallbackProvider?: boolean | Prisma.GlobalAiSettings$fallbackProviderArgs<ExtArgs>
+  planBuilderProvider?: boolean | Prisma.GlobalAiSettings$planBuilderProviderArgs<ExtArgs>
 }
 export type GlobalAiSettingsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   activeProvider?: boolean | Prisma.GlobalAiSettings$activeProviderArgs<ExtArgs>
   fallbackProvider?: boolean | Prisma.GlobalAiSettings$fallbackProviderArgs<ExtArgs>
+  planBuilderProvider?: boolean | Prisma.GlobalAiSettings$planBuilderProviderArgs<ExtArgs>
 }
 
 export type $GlobalAiSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2033,6 +2484,7 @@ export type $GlobalAiSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
   objects: {
     activeProvider: Prisma.$AiProviderPayload<ExtArgs> | null
     fallbackProvider: Prisma.$AiProviderPayload<ExtArgs> | null
+    planBuilderProvider: Prisma.$AiProviderPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2072,6 +2524,9 @@ export type $GlobalAiSettingsPayload<ExtArgs extends runtime.Types.Extensions.In
     tier1ActivityFeedbackLimit: number
     tier2ActivityFeedbackLimit: number
     tier3ActivityFeedbackLimit: number
+    planBuilderProviderId: string | null
+    planBuilderModel: string
+    planMaxTokensPerAnalysis: number
   }, ExtArgs["result"]["globalAiSettings"]>
   composites: {}
 }
@@ -2468,6 +2923,7 @@ export interface Prisma__GlobalAiSettingsClient<T, Null = never, ExtArgs extends
   readonly [Symbol.toStringTag]: "PrismaPromise"
   activeProvider<T extends Prisma.GlobalAiSettings$activeProviderArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GlobalAiSettings$activeProviderArgs<ExtArgs>>): Prisma.Prisma__AiProviderClient<runtime.Types.Result.GetResult<Prisma.$AiProviderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   fallbackProvider<T extends Prisma.GlobalAiSettings$fallbackProviderArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GlobalAiSettings$fallbackProviderArgs<ExtArgs>>): Prisma.Prisma__AiProviderClient<runtime.Types.Result.GetResult<Prisma.$AiProviderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  planBuilderProvider<T extends Prisma.GlobalAiSettings$planBuilderProviderArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GlobalAiSettings$planBuilderProviderArgs<ExtArgs>>): Prisma.Prisma__AiProviderClient<runtime.Types.Result.GetResult<Prisma.$AiProviderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2534,6 +2990,9 @@ export interface GlobalAiSettingsFieldRefs {
   readonly tier1ActivityFeedbackLimit: Prisma.FieldRef<"GlobalAiSettings", 'Int'>
   readonly tier2ActivityFeedbackLimit: Prisma.FieldRef<"GlobalAiSettings", 'Int'>
   readonly tier3ActivityFeedbackLimit: Prisma.FieldRef<"GlobalAiSettings", 'Int'>
+  readonly planBuilderProviderId: Prisma.FieldRef<"GlobalAiSettings", 'String'>
+  readonly planBuilderModel: Prisma.FieldRef<"GlobalAiSettings", 'String'>
+  readonly planMaxTokensPerAnalysis: Prisma.FieldRef<"GlobalAiSettings", 'Int'>
 }
     
 
@@ -2957,6 +3416,25 @@ export type GlobalAiSettings$activeProviderArgs<ExtArgs extends runtime.Types.Ex
  * GlobalAiSettings.fallbackProvider
  */
 export type GlobalAiSettings$fallbackProviderArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AiProvider
+   */
+  select?: Prisma.AiProviderSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AiProvider
+   */
+  omit?: Prisma.AiProviderOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AiProviderInclude<ExtArgs> | null
+  where?: Prisma.AiProviderWhereInput
+}
+
+/**
+ * GlobalAiSettings.planBuilderProvider
+ */
+export type GlobalAiSettings$planBuilderProviderArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the AiProvider
    */

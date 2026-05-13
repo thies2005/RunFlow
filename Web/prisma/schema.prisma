@@ -77,6 +77,8 @@ model User {
   readinessBaselines    ReadinessBaseline[]
   adaptedWorkouts       AdaptedWorkout[]
   weeklyReconciliationRecords WeeklyReconciliationRecord[]
+  weekTemplates             WeekTemplate[]
+  guidedPlanSessions        GuidedPlanSession[]
 }
 
 model UserConsent {
@@ -150,6 +152,10 @@ model GlobalAiSettings {
   tier3ActivityFeedbackLimit Int     @default(50)
   activeProvider         AiProvider? @relation("ActiveProvider", fields: [activeProviderId], references: [id])
   fallbackProvider       AiProvider? @relation("FallbackProvider", fields: [fallbackProviderId], references: [id])
+  planBuilderProviderId  String?
+  planBuilderModel       String      @default("gpt-4o")
+  planMaxTokensPerAnalysis Int       @default(8000)
+  planBuilderProvider    AiProvider? @relation("PlanBuilderProvider", fields: [planBuilderProviderId], references: [id])
 }
 
 model AiProvider {
@@ -170,6 +176,7 @@ model AiProvider {
   dailyUsage              AiDailyTokenUsage[]
   activeInSettings        GlobalAiSettings[]  @relation("ActiveProvider")
   fallbackInSettings      GlobalAiSettings[]  @relation("FallbackProvider")
+  planBuilderInSettings   GlobalAiSettings[]  @relation("PlanBuilderProvider")
 }
 
 model UserAiSettings {
@@ -464,37 +471,59 @@ model DailyHealthLog {
 }
 
 model Goal {
-  id                  String    @id @default(cuid())
-  userId              String
-  name                String
-  raceType            RaceType
-  raceDate            DateTime
-  planStartDate       DateTime?
-  targetTime          Int?
-  currentVdot         Float?
-  predictedTime       Int?
-  marathonShapeFactor Float     @default(1.0)
-  weeklyMileageGoal   Float?
-  planWeeks           Int       @default(12)
-  runsPerWeek         Int       @default(4)
-  ridesPerWeek        Int       @default(0)
-  strengthPerWeek     Int       @default(0)
-  swimsPerWeek        Int       @default(0)
-  taperWeeks          Int       @default(2)
-  peakWeeks           Int       @default(4)
-  buildWeeks          Int       @default(4)
-  longRunDay          Int       @default(0)
-  workoutDay          Int       @default(3)
-  swimDay             Int?
-  restDays            Json      @default("[1, 5]")
-  isActive            Boolean   @default(true)
-  completedAt         DateTime?
-  deletedAt           DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workouts            Workout[]
-  raceResult          RaceResult?
+  id                    String              @id @default(cuid())
+  userId                String
+  name                  String
+  raceType              RaceType?
+  raceDate              DateTime?
+  planStartDate         DateTime?
+  targetTime            Int?
+  currentVdot           Float?
+  predictedTime         Int?
+  marathonShapeFactor   Float               @default(1.0)
+  weeklyMileageGoal     Float?
+  planWeeks             Int                 @default(12)
+  runsPerWeek           Int                 @default(4)
+  ridesPerWeek          Int                 @default(0)
+  strengthPerWeek       Int                 @default(0)
+  swimsPerWeek          Int                 @default(0)
+  taperWeeks            Int                 @default(2)
+  peakWeeks             Int                 @default(4)
+  buildWeeks            Int                 @default(4)
+  longRunDay            Int                 @default(0)
+  workoutDay            Int                 @default(3)
+  swimDay               Int?
+  restDays              Json                @default("[1, 5]")
+  isActive              Boolean             @default(true)
+  completedAt           DateTime?
+  deletedAt             DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  sport                 PlanSport           @default(RUN)
+  creationMode          PlanCreationMode    @default(STANDARD_BUILDER)
+  customDistanceM       Float?
+  customSwimDistM       Float?
+  customBikeDistM       Float?
+  customRunDistM        Float?
+  backyardLoopDistM     Float?
+  backyardLoopTimeS     Int?
+  targetLaps            Int?
+  planSource            String              @default("standard")
+  guidanceLevel         String              @default("none")
+  parentGoalId          String?
+  priority              GoalPriority        @default(PRIMARY)
+  trainingFocus         String?
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workouts              Workout[]
+  raceResult            RaceResult?
+  parentGoal            Goal?               @relation("GoalHierarchy", fields: [parentGoalId], references: [id])
+  subGoals              Goal[]              @relation("GoalHierarchy")
+  snapshots             PlanSnapshot[]
+  intervalProgressions  IntervalProgression[]
+  aiAnalysis            AiPlanAnalysis?
+  paceProfile           PlanPaceProfile?
+  taggedWorkouts        Workout[]           @relation("WorkoutSubGoal")
+  guidedPlanSessions    GuidedPlanSession[]
 
   @@index([userId, isActive])
 }
@@ -522,25 +551,33 @@ model RaceResult {
 }
 
 model Workout {
-  id               String      @id @default(cuid())
-  goalId           String
-  scheduledDate    DateTime
-  workoutType      WorkoutType
-  description      String
-  phase            PlanPhase   @default(BASE)
-  order            Int         @default(0)
-  notes            String?
-  targetDistance   Float?
-  targetDuration   Int?
-  targetPace       Float?
-  targetHrZone     Int?
-  isCompleted      Boolean     @default(false)
-  completedAt      DateTime?
-  linkedActivityId String?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  goal             Goal        @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  linkedActivity   Activity?   @relation(fields: [linkedActivityId], references: [id])
+  id                      String                @id @default(cuid())
+  goalId                  String
+  scheduledDate           DateTime
+  workoutType             WorkoutType
+  description             String
+  phase                   PlanPhase             @default(BASE)
+  order                   Int                   @default(0)
+  notes                   String?
+  targetDistance          Float?
+  targetDuration          Int?
+  targetPace              Float?
+  targetHrZone            Int?
+  isCompleted             Boolean               @default(false)
+  completedAt             DateTime?
+  linkedActivityId        String?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  customName              String?
+  color                   String?
+  intervalProgressionId   String?
+  intervalProgression     IntervalProgression?  @relation(fields: [intervalProgressionId], references: [id])
+  structuredSteps         Json?
+  groupId                 String?
+  subGoalId               String?
+  goal                    Goal                  @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  linkedActivity          Activity?             @relation(fields: [linkedActivityId], references: [id])
+  subGoal                 Goal?                 @relation("WorkoutSubGoal", fields: [subGoalId], references: [id])
 
   @@index([goalId, scheduledDate])
   @@index([goalId, isCompleted])
@@ -857,11 +894,44 @@ enum ActivityType {
   OTHER
 }
 
+enum PlanSport {
+  RUN
+  TRIATHLON
+}
+
+enum PlanCreationMode {
+  EXPERT_MANUAL
+  GUIDED
+  AI_ASSISTED
+  STANDARD_BUILDER
+  CSV_IMPORT
+}
+
+enum GoalPriority {
+  PRIMARY
+  SECONDARY
+  TUNE_UP
+  MILESTONE
+}
+
 enum RaceType {
   FIVE_K
   TEN_K
   HALF_MARATHON
   MARATHON
+  FIFTY_K
+  FIFTY_MILE
+  HUNDRED_K
+  HUNDRED_MILE
+  TWELVE_HOUR
+  TWENTY_FOUR_HOUR
+  BACKYARD_ULTRA
+  CUSTOM_DISTANCE
+  SPRINT_TRI
+  OLYMPIC_TRI
+  HALF_IRONMAN
+  FULL_IRONMAN
+  CUSTOM_TRI
 }
 
 enum WorkoutType {
@@ -879,6 +949,13 @@ enum WorkoutType {
   SWIM
   STRENGTH
   OTHER
+  BRICK
+  OPEN_WATER_SWIM
+  LONG_RIDE
+  RIDE_INTERVALS
+  SWIM_DRILL
+  TRANSITION_PRACTICE
+  DOUBLE_DAY
 }
 
 enum PlanPhase {
@@ -888,6 +965,10 @@ enum PlanPhase {
   TAPER
   RACE_WEEK
   RECOVERY
+  ENDURANCE
+  MENTAL_PREP
+  TUNE_UP
+  MAINTAIN
 }
 
 model ApiRouteMetric {
@@ -1078,4 +1159,93 @@ model WeeklyReconciliationRecord {
 
   @@unique([userId, weekStartDate])
   @@map("weekly_reconciliation_records")
+}
+
+model PlanSnapshot {
+  id          String   @id @default(cuid())
+  goalId      String
+  snapshot    Json
+  description String?
+  operation   String?
+  createdAt   DateTime @default(now())
+  goal        Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId, createdAt])
+}
+
+model WeekTemplate {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  days        Json
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model IntervalProgression {
+  id          String      @id @default(cuid())
+  goalId      String
+  name        String
+  workoutType WorkoutType
+  startWeek   Int
+  endWeek     Int
+  weeks       Json
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  goal        Goal        @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  workouts    Workout[]
+
+  @@index([goalId])
+}
+
+model AiPlanAnalysis {
+  id              String   @id @default(cuid())
+  goalId          String   @unique
+  overallScore    Float?
+  overallSummary  String?  @db.Text
+  weekAnalyses    Json?
+  riskFlags       Json?
+  raceReadiness   Json?
+  suggestions     Json?
+  modelUsed       String?
+  inputTokens     Int      @default(0)
+  outputTokens    Int      @default(0)
+  generatedAt     DateTime @default(now())
+  goal            Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+model PlanPaceProfile {
+  id          String   @id @default(cuid())
+  goalId      String   @unique
+  baseVdot    Float
+  profiles    Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  goal        Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+model GuidedPlanSession {
+  id                  String   @id @default(cuid())
+  goalId              String?
+  userId              String
+  currentStep         String
+  responses           Json
+  aiRecommendation    Json?
+  isComplete          Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  goal                Goal?    @relation(fields: [goalId], references: [id])
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([goalId])
 }

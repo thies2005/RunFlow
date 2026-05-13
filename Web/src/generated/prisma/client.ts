@@ -296,3 +296,33 @@ export type AdaptedWorkout = Prisma.AdaptedWorkoutModel
  * 
  */
 export type WeeklyReconciliationRecord = Prisma.WeeklyReconciliationRecordModel
+/**
+ * Model PlanSnapshot
+ * 
+ */
+export type PlanSnapshot = Prisma.PlanSnapshotModel
+/**
+ * Model WeekTemplate
+ * 
+ */
+export type WeekTemplate = Prisma.WeekTemplateModel
+/**
+ * Model IntervalProgression
+ * 
+ */
+export type IntervalProgression = Prisma.IntervalProgressionModel
+/**
+ * Model AiPlanAnalysis
+ * 
+ */
+export type AiPlanAnalysis = Prisma.AiPlanAnalysisModel
+/**
+ * Model PlanPaceProfile
+ * 
+ */
+export type PlanPaceProfile = Prisma.PlanPaceProfileModel
+/**
+ * Model GuidedPlanSession
+ * 
+ */
+export type GuidedPlanSession = Prisma.GuidedPlanSessionModel

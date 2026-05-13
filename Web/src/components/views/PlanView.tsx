@@ -44,6 +44,7 @@ function PlanViewComponent({
         if (!data?.goal) return { goal: null, weeks: {}, sortedWeeks: [], raceDate: new Date() };
 
         const goal = data.goal;
+        if (!goal.raceDate) return { goal, weeks: {}, sortedWeeks: [], raceDate: new Date() };
         const raceDateObj = new Date(goal.raceDate);
         const raceDate = !isNaN(raceDateObj.getTime()) ? raceDateObj : new Date();
         const workouts = goal.workouts || [];

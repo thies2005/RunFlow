@@ -93,8 +93,8 @@ export async function GET(request: NextRequest) {
             return {
                 id: goal.id,
                 name: goal.name,
-                raceType: goal.raceType,
-                raceDate: goal.raceDate,
+                raceType: goal.raceType ?? null,
+                raceDate: goal.raceDate ?? null,
                 targetTime: goal.targetTime,
                 planWeeks: goal.planWeeks,
                 runsPerWeek: goal.runsPerWeek,

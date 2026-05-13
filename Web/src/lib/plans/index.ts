@@ -1,19 +1,31 @@
-import { WorkoutType, RaceType } from '@/generated/prisma/browser';
+import { WorkoutType, RaceType, PlanSport } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '../metrics/vdot';
+import { generateUltraPlan } from './generators/run-ultra';
+import { generateTriathlonPlan } from './generators/triathlon';
+import { generateNoRacePlan } from './generators/no-race';
+
+export const ULTRA_RACE_TYPES: RaceType[] = [
+    'FIFTY_K', 'FIFTY_MILE', 'HUNDRED_K', 'HUNDRED_MILE',
+    'TWELVE_HOUR', 'TWENTY_FOUR_HOUR', 'BACKYARD_ULTRA',
+];
+
+export const TRIATHLON_RACE_TYPES: RaceType[] = [
+    'SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI',
+];
 
 export const PLAN_CONSTANTS = {
     MIN_PEAK_VOLUME: {
         FIVE_K: 20000,
         TEN_K: 30000,
         HALF_MARATHON: 40000,
-        MARATHON: 50000
-    },
+        MARATHON: 50000,
+    } as Partial<Record<RaceType, number>>,
     MAX_LONG_RUN_DIST: {
         FIVE_K: 18000,
         TEN_K: 22000,
         HALF_MARATHON: 24000,
-        MARATHON: 34000
-    },
+        MARATHON: 34000,
+    } as Partial<Record<RaceType, number>>,
     DYNAMIC_LONG_RUN_RATIO: 0.55,
     MIN_LONG_RUN: 6000,
     MIN_VOLUME_START: 15000,
@@ -30,7 +42,7 @@ export const PLAN_CONSTANTS = {
     MAX_TIME_ON_FEET_SECONDS: 12600,
 };
 
-const TAPER_FRACTIONS: Record<RaceType, number[]> = {
+const TAPER_FRACTIONS: Partial<Record<RaceType, number[]>> = {
     FIVE_K: [0.75],
     TEN_K: [0.80, 0.60],
     HALF_MARATHON: [0.75, 0.55],
@@ -39,9 +51,10 @@ const TAPER_FRACTIONS: Record<RaceType, number[]> = {
 
 export type PlanConfig = {
     vdot: number;
-    raceType: RaceType;
+    raceType: RaceType | null;
     raceDate: Date;
     startDate?: Date;
+    sport?: PlanSport;
     runsPerWeek?: number;
     ridesPerWeek?: number;
     strengthPerWeek?: number;
@@ -55,6 +68,7 @@ export type PlanConfig = {
     workoutDay?: number;
     swimDay?: number;
     restDays?: number[];
+    weeksTotal?: number;
 };
 
 export type GeneratedWorkout = {
@@ -71,7 +85,24 @@ type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
 
 export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
-    const { vdot, raceType, raceDate } = config;
+    if (config.sport === 'TRIATHLON' || (config.raceType && TRIATHLON_RACE_TYPES.includes(config.raceType))) {
+        return generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType });
+    }
+
+    if (config.raceType === null) {
+        return generateNoRacePlan(config);
+    }
+
+    if (config.raceType && ULTRA_RACE_TYPES.includes(config.raceType)) {
+        return generateUltraPlan(config);
+    }
+
+    return generateStandardPlan(config);
+}
+
+function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
+    const { vdot, raceDate } = config;
+    const raceType = config.raceType as RaceType;
     const requestedStartDate = config.startDate || new Date();
     const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate;
     const runsPerWeek = Math.max(0, config.runsPerWeek ?? 4);
@@ -83,7 +114,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
 
     let peakVolume = config.weeklyMileageGoal || 40000;
-    const minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[raceType];
+    const minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[raceType] || 20000;
     if (peakVolume < minPeak) peakVolume = minPeak;
 
     let currentDate = new Date(startDate);
@@ -99,7 +130,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
 
     const paces = calculateTrainingPaces(vdot);
 
-    const defaultTaperWeeks = TAPER_FRACTIONS[raceType].length;
+    const defaultTaperWeeks = TAPER_FRACTIONS[raceType]?.length || 2;
     const taperWeeks = (config.taperWeeks != null && config.taperWeeks > 0)
         ? config.taperWeeks
         : defaultTaperWeeks;
@@ -264,18 +295,20 @@ function getTaperVolume(
     raceType: RaceType
 ): number {
     const fractions = TAPER_FRACTIONS[raceType];
+    if (!fractions) return Math.round(peakVolume * 0.65);
     const taperWeekIndex = taperWeeks - weeksUntilRace;
-    // Clamp is intentional: handles case where user-configured taperWeeks < TAPER_FRACTIONS[raceType].length
     const clampedIndex = Math.min(Math.max(0, taperWeekIndex), fractions.length - 1);
     const fraction = fractions[clampedIndex];
     return Math.round(peakVolume * fraction);
 }
 
 export function getRaceWeekRunVolumeCap(raceType: RaceType, effectivePeakVolume: number): number {
-    const finalTaperFraction = TAPER_FRACTIONS[raceType][TAPER_FRACTIONS[raceType].length - 1];
+    const fractions = TAPER_FRACTIONS[raceType];
+    const finalTaperFraction = fractions ? fractions[fractions.length - 1] : 0.45;
+    const raceDist = getRaceDistanceMeters(raceType) || 10000;
     return Math.max(
         Math.round(effectivePeakVolume * finalTaperFraction * 0.5),
-        getRaceDistanceMeters(raceType) + 10000,
+        raceDist + 10000,
     );
 }
 
@@ -780,7 +813,7 @@ function getLongRunDistance(
 
     let dynamicCap = Math.min(
         weeklyVolume * PLAN_CONSTANTS.DYNAMIC_LONG_RUN_RATIO,
-        PLAN_CONSTANTS.MAX_LONG_RUN_DIST[raceType]
+        PLAN_CONSTANTS.MAX_LONG_RUN_DIST[raceType] || 34000
     );
     if (maxLongRunKm) {
         const userCap = maxLongRunKm * 1000;
@@ -1107,6 +1140,11 @@ function getRaceDistanceKm(raceType: RaceType): string {
         case 'TEN_K': return '10';
         case 'HALF_MARATHON': return '21.1';
         case 'MARATHON': return '42.2';
+        case 'FIFTY_K': return '50';
+        case 'FIFTY_MILE': return '80.5';
+        case 'HUNDRED_K': return '100';
+        case 'HUNDRED_MILE': return '161';
+        default: return '0';
     }
 }
 
@@ -1116,6 +1154,11 @@ function getRaceDistanceMeters(raceType: RaceType): number {
         case 'TEN_K': return 10000;
         case 'HALF_MARATHON': return 21097;
         case 'MARATHON': return 42195;
+        case 'FIFTY_K': return 50000;
+        case 'FIFTY_MILE': return 80467;
+        case 'HUNDRED_K': return 100000;
+        case 'HUNDRED_MILE': return 160934;
+        default: return 0;
     }
 }
 

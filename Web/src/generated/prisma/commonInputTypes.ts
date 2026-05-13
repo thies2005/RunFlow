@@ -497,21 +497,72 @@ export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
   _max?: Prisma.NestedJsonFilter<$PrismaModel>
 }
 
-export type EnumRaceTypeFilter<$PrismaModel = never> = {
-  equals?: $Enums.RaceType | Prisma.EnumRaceTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumRaceTypeFilter<$PrismaModel> | $Enums.RaceType
+export type EnumRaceTypeNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.RaceType | Prisma.EnumRaceTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumRaceTypeNullableFilter<$PrismaModel> | $Enums.RaceType | null
 }
 
-export type EnumRaceTypeWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.RaceType | Prisma.EnumRaceTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumRaceTypeWithAggregatesFilter<$PrismaModel> | $Enums.RaceType
+export type EnumPlanSportFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlanSport | Prisma.EnumPlanSportFieldRefInput<$PrismaModel>
+  in?: $Enums.PlanSport[] | Prisma.ListEnumPlanSportFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlanSport[] | Prisma.ListEnumPlanSportFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlanSportFilter<$PrismaModel> | $Enums.PlanSport
+}
+
+export type EnumPlanCreationModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlanCreationMode | Prisma.EnumPlanCreationModeFieldRefInput<$PrismaModel>
+  in?: $Enums.PlanCreationMode[] | Prisma.ListEnumPlanCreationModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlanCreationMode[] | Prisma.ListEnumPlanCreationModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlanCreationModeFilter<$PrismaModel> | $Enums.PlanCreationMode
+}
+
+export type EnumGoalPriorityFilter<$PrismaModel = never> = {
+  equals?: $Enums.GoalPriority | Prisma.EnumGoalPriorityFieldRefInput<$PrismaModel>
+  in?: $Enums.GoalPriority[] | Prisma.ListEnumGoalPriorityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GoalPriority[] | Prisma.ListEnumGoalPriorityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGoalPriorityFilter<$PrismaModel> | $Enums.GoalPriority
+}
+
+export type EnumRaceTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RaceType | Prisma.EnumRaceTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumRaceTypeNullableWithAggregatesFilter<$PrismaModel> | $Enums.RaceType | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRaceTypeNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRaceTypeNullableFilter<$PrismaModel>
+}
+
+export type EnumPlanSportWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlanSport | Prisma.EnumPlanSportFieldRefInput<$PrismaModel>
+  in?: $Enums.PlanSport[] | Prisma.ListEnumPlanSportFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlanSport[] | Prisma.ListEnumPlanSportFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlanSportWithAggregatesFilter<$PrismaModel> | $Enums.PlanSport
   _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumRaceTypeFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumRaceTypeFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPlanSportFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPlanSportFilter<$PrismaModel>
+}
+
+export type EnumPlanCreationModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlanCreationMode | Prisma.EnumPlanCreationModeFieldRefInput<$PrismaModel>
+  in?: $Enums.PlanCreationMode[] | Prisma.ListEnumPlanCreationModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlanCreationMode[] | Prisma.ListEnumPlanCreationModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlanCreationModeWithAggregatesFilter<$PrismaModel> | $Enums.PlanCreationMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPlanCreationModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPlanCreationModeFilter<$PrismaModel>
+}
+
+export type EnumGoalPriorityWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GoalPriority | Prisma.EnumGoalPriorityFieldRefInput<$PrismaModel>
+  in?: $Enums.GoalPriority[] | Prisma.ListEnumGoalPriorityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GoalPriority[] | Prisma.ListEnumGoalPriorityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGoalPriorityWithAggregatesFilter<$PrismaModel> | $Enums.GoalPriority
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGoalPriorityFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGoalPriorityFilter<$PrismaModel>
 }
 
 export type EnumWorkoutTypeFilter<$PrismaModel = never> = {
@@ -968,21 +1019,72 @@ export type NestedJsonFilterBase<$PrismaModel = never> = {
   not?: runtime.InputJsonValue | Prisma.JsonFieldRefInput<$PrismaModel> | Prisma.JsonNullValueFilter
 }
 
-export type NestedEnumRaceTypeFilter<$PrismaModel = never> = {
-  equals?: $Enums.RaceType | Prisma.EnumRaceTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumRaceTypeFilter<$PrismaModel> | $Enums.RaceType
+export type NestedEnumRaceTypeNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.RaceType | Prisma.EnumRaceTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumRaceTypeNullableFilter<$PrismaModel> | $Enums.RaceType | null
 }
 
-export type NestedEnumRaceTypeWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.RaceType | Prisma.EnumRaceTypeFieldRefInput<$PrismaModel>
-  in?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel>
-  notIn?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumRaceTypeWithAggregatesFilter<$PrismaModel> | $Enums.RaceType
+export type NestedEnumPlanSportFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlanSport | Prisma.EnumPlanSportFieldRefInput<$PrismaModel>
+  in?: $Enums.PlanSport[] | Prisma.ListEnumPlanSportFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlanSport[] | Prisma.ListEnumPlanSportFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlanSportFilter<$PrismaModel> | $Enums.PlanSport
+}
+
+export type NestedEnumPlanCreationModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlanCreationMode | Prisma.EnumPlanCreationModeFieldRefInput<$PrismaModel>
+  in?: $Enums.PlanCreationMode[] | Prisma.ListEnumPlanCreationModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlanCreationMode[] | Prisma.ListEnumPlanCreationModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlanCreationModeFilter<$PrismaModel> | $Enums.PlanCreationMode
+}
+
+export type NestedEnumGoalPriorityFilter<$PrismaModel = never> = {
+  equals?: $Enums.GoalPriority | Prisma.EnumGoalPriorityFieldRefInput<$PrismaModel>
+  in?: $Enums.GoalPriority[] | Prisma.ListEnumGoalPriorityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GoalPriority[] | Prisma.ListEnumGoalPriorityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGoalPriorityFilter<$PrismaModel> | $Enums.GoalPriority
+}
+
+export type NestedEnumRaceTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.RaceType | Prisma.EnumRaceTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.RaceType[] | Prisma.ListEnumRaceTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumRaceTypeNullableWithAggregatesFilter<$PrismaModel> | $Enums.RaceType | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumRaceTypeNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumRaceTypeNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumPlanSportWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlanSport | Prisma.EnumPlanSportFieldRefInput<$PrismaModel>
+  in?: $Enums.PlanSport[] | Prisma.ListEnumPlanSportFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlanSport[] | Prisma.ListEnumPlanSportFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlanSportWithAggregatesFilter<$PrismaModel> | $Enums.PlanSport
   _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumRaceTypeFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumRaceTypeFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPlanSportFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPlanSportFilter<$PrismaModel>
+}
+
+export type NestedEnumPlanCreationModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PlanCreationMode | Prisma.EnumPlanCreationModeFieldRefInput<$PrismaModel>
+  in?: $Enums.PlanCreationMode[] | Prisma.ListEnumPlanCreationModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PlanCreationMode[] | Prisma.ListEnumPlanCreationModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPlanCreationModeWithAggregatesFilter<$PrismaModel> | $Enums.PlanCreationMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPlanCreationModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPlanCreationModeFilter<$PrismaModel>
+}
+
+export type NestedEnumGoalPriorityWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GoalPriority | Prisma.EnumGoalPriorityFieldRefInput<$PrismaModel>
+  in?: $Enums.GoalPriority[] | Prisma.ListEnumGoalPriorityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GoalPriority[] | Prisma.ListEnumGoalPriorityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGoalPriorityWithAggregatesFilter<$PrismaModel> | $Enums.GoalPriority
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGoalPriorityFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGoalPriorityFilter<$PrismaModel>
 }
 
 export type NestedEnumWorkoutTypeFilter<$PrismaModel = never> = {

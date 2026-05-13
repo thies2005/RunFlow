@@ -205,9 +205,9 @@ export async function POST(req: NextRequest) {
             let build = buildWeeks || 4;
 
             // M-07: Validate that phase weeks don't exceed available weeks
-            const weeksUntilRace = Math.floor(
-                (new Date(activeGoal.raceDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 7)
-            );
+            const weeksUntilRace = activeGoal.raceDate
+                ? Math.floor((new Date(activeGoal.raceDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 7))
+                : 0;
             const totalPhaseWeeks = taper + peak + build;
 
             if (weeksUntilRace > 0 && totalPhaseWeeks > weeksUntilRace) {
@@ -265,40 +265,42 @@ export async function POST(req: NextRequest) {
             });
 
             const startDate = activeGoal.planStartDate ?? firstPendingWorkout?.scheduledDate ?? new Date();
+            let workouts: { date: Date; type: WorkoutType; description: string; totalDistance: number; targetPace?: number; targetDuration?: number }[] = [];
 
-            const workouts = generateTrainingPlan({
-                vdot: newVdot,
-                raceType: activeGoal.raceType,
-                raceDate: activeGoal.raceDate,
-                startDate: startDate,
-                runsPerWeek: runs,
-                ridesPerWeek: rides,
-                swimsPerWeek: swims,
-                strengthPerWeek: strength,
-                weeklyMileageGoal: mileageGoal,
-                taperWeeks: taper,
-                peakWeeks: peak,
-                buildWeeks: build,
-                longRunDay: typeof longRunDay === 'number' ? longRunDay : activeGoal.longRunDay,
-                workoutDay: typeof qualityDay === 'number' ? qualityDay : activeGoal.workoutDay,
-                swimDay: typeof swimDay === 'number' ? swimDay : undefined,
-                restDays: Array.isArray(restDays) ? restDays : (activeGoal.restDays as number[] ?? undefined),
-                maxLongRunKm: normalizedMaxLongRunKm,
-            });
+            if (activeGoal.raceType && activeGoal.raceDate) {
+                workouts = generateTrainingPlan({
+                    vdot: newVdot,
+                    raceType: activeGoal.raceType,
+                    raceDate: activeGoal.raceDate,
+                    startDate: startDate,
+                    runsPerWeek: runs,
+                    ridesPerWeek: rides,
+                    swimsPerWeek: swims,
+                    strengthPerWeek: strength,
+                    weeklyMileageGoal: mileageGoal,
+                    taperWeeks: taper,
+                    peakWeeks: peak,
+                    buildWeeks: build,
+                    longRunDay: typeof longRunDay === 'number' ? longRunDay : activeGoal.longRunDay,
+                    workoutDay: typeof qualityDay === 'number' ? qualityDay : activeGoal.workoutDay,
+                    swimDay: typeof swimDay === 'number' ? swimDay : undefined,
+                    restDays: Array.isArray(restDays) ? restDays : (activeGoal.restDays as number[] ?? undefined),
+                    maxLongRunKm: normalizedMaxLongRunKm,
+                });
 
-            // Save workouts (M-08: Use createMany for batch insert instead of transaction)
-            await prisma.workout.createMany({
-                data: workouts.map(w => ({
-                    goalId: activeGoal.id,
-                    scheduledDate: w.date,
-                    workoutType: w.type as WorkoutType,
-                    description: w.description,
-                    targetDistance: w.totalDistance,
-                    targetPace: w.targetPace || 0,
-                    targetDuration: w.targetDuration || 0,
-                    isCompleted: false
-                }))
-            });
+                await prisma.workout.createMany({
+                    data: workouts.map(w => ({
+                        goalId: activeGoal.id,
+                        scheduledDate: w.date,
+                        workoutType: w.type as WorkoutType,
+                        description: w.description,
+                        targetDistance: w.totalDistance,
+                        targetPace: w.targetPace || 0,
+                        targetDuration: w.targetDuration || 0,
+                        isCompleted: false
+                    }))
+                });
+            }
         }
 
         return NextResponse.json({ success: true, vdot: newVdot });

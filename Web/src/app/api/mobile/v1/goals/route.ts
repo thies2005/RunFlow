@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         // Serialize dates
         const serialized = goals.map(g => ({
             ...g,
-            raceDate: g.raceDate.toISOString(),
+            raceDate: g.raceDate?.toISOString() ?? null,
             createdAt: g.createdAt.toISOString(),
             updatedAt: g.updatedAt.toISOString(),
             completedAt: g.completedAt?.toISOString() || null,
@@ -277,7 +277,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             goal: {
                 ...responseGoal,
-                raceDate: responseGoal.raceDate.toISOString(),
+                raceDate: responseGoal.raceDate?.toISOString() ?? null,
                 createdAt: responseGoal.createdAt.toISOString(),
                 updatedAt: responseGoal.updatedAt.toISOString(),
                 completedAt: responseGoal.completedAt?.toISOString() || null

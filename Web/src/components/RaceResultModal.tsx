@@ -327,7 +327,7 @@ export default function RaceResultModal({
                     <div className="space-y-4">
                         <div className="text-center py-4">
                             <Trophy className="w-12 h-12 mx-auto text-gray-500 mb-3" />
-                            <p className="text-gray-300 mb-1">No matching run found near {format(new Date(goal.raceDate), 'MMM d')}</p>
+                            <p className="text-gray-300 mb-1">No matching run found near {goal.raceDate ? format(new Date(goal.raceDate), 'MMM d') : 'your race date'}</p>
                             <p className="text-xs text-gray-500">Your race activity might not have synced yet, or was on a different date.</p>
                         </div>
 
@@ -352,7 +352,7 @@ export default function RaceResultModal({
                 {mode === 'pick' && (
                     <div className="space-y-4">
                         <RaceActivityPicker
-                            raceDate={goal.raceDate}
+                            raceDate={goal.raceDate ?? undefined}
                             selectedId={raceActivityId}
                             onSelect={(id) => {
                                 setRaceActivityId(id);

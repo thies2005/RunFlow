@@ -43,6 +43,13 @@ export type GoalAvgAggregateOutputType = {
   longRunDay: number | null
   workoutDay: number | null
   swimDay: number | null
+  customDistanceM: number | null
+  customSwimDistM: number | null
+  customBikeDistM: number | null
+  customRunDistM: number | null
+  backyardLoopDistM: number | null
+  backyardLoopTimeS: number | null
+  targetLaps: number | null
 }
 
 export type GoalSumAggregateOutputType = {
@@ -62,6 +69,13 @@ export type GoalSumAggregateOutputType = {
   longRunDay: number | null
   workoutDay: number | null
   swimDay: number | null
+  customDistanceM: number | null
+  customSwimDistM: number | null
+  customBikeDistM: number | null
+  customRunDistM: number | null
+  backyardLoopDistM: number | null
+  backyardLoopTimeS: number | null
+  targetLaps: number | null
 }
 
 export type GoalMinAggregateOutputType = {
@@ -92,6 +106,20 @@ export type GoalMinAggregateOutputType = {
   deletedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
+  sport: $Enums.PlanSport | null
+  creationMode: $Enums.PlanCreationMode | null
+  customDistanceM: number | null
+  customSwimDistM: number | null
+  customBikeDistM: number | null
+  customRunDistM: number | null
+  backyardLoopDistM: number | null
+  backyardLoopTimeS: number | null
+  targetLaps: number | null
+  planSource: string | null
+  guidanceLevel: string | null
+  parentGoalId: string | null
+  priority: $Enums.GoalPriority | null
+  trainingFocus: string | null
 }
 
 export type GoalMaxAggregateOutputType = {
@@ -122,6 +150,20 @@ export type GoalMaxAggregateOutputType = {
   deletedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
+  sport: $Enums.PlanSport | null
+  creationMode: $Enums.PlanCreationMode | null
+  customDistanceM: number | null
+  customSwimDistM: number | null
+  customBikeDistM: number | null
+  customRunDistM: number | null
+  backyardLoopDistM: number | null
+  backyardLoopTimeS: number | null
+  targetLaps: number | null
+  planSource: string | null
+  guidanceLevel: string | null
+  parentGoalId: string | null
+  priority: $Enums.GoalPriority | null
+  trainingFocus: string | null
 }
 
 export type GoalCountAggregateOutputType = {
@@ -153,6 +195,20 @@ export type GoalCountAggregateOutputType = {
   deletedAt: number
   createdAt: number
   updatedAt: number
+  sport: number
+  creationMode: number
+  customDistanceM: number
+  customSwimDistM: number
+  customBikeDistM: number
+  customRunDistM: number
+  backyardLoopDistM: number
+  backyardLoopTimeS: number
+  targetLaps: number
+  planSource: number
+  guidanceLevel: number
+  parentGoalId: number
+  priority: number
+  trainingFocus: number
   _all: number
 }
 
@@ -174,6 +230,13 @@ export type GoalAvgAggregateInputType = {
   longRunDay?: true
   workoutDay?: true
   swimDay?: true
+  customDistanceM?: true
+  customSwimDistM?: true
+  customBikeDistM?: true
+  customRunDistM?: true
+  backyardLoopDistM?: true
+  backyardLoopTimeS?: true
+  targetLaps?: true
 }
 
 export type GoalSumAggregateInputType = {
@@ -193,6 +256,13 @@ export type GoalSumAggregateInputType = {
   longRunDay?: true
   workoutDay?: true
   swimDay?: true
+  customDistanceM?: true
+  customSwimDistM?: true
+  customBikeDistM?: true
+  customRunDistM?: true
+  backyardLoopDistM?: true
+  backyardLoopTimeS?: true
+  targetLaps?: true
 }
 
 export type GoalMinAggregateInputType = {
@@ -223,6 +293,20 @@ export type GoalMinAggregateInputType = {
   deletedAt?: true
   createdAt?: true
   updatedAt?: true
+  sport?: true
+  creationMode?: true
+  customDistanceM?: true
+  customSwimDistM?: true
+  customBikeDistM?: true
+  customRunDistM?: true
+  backyardLoopDistM?: true
+  backyardLoopTimeS?: true
+  targetLaps?: true
+  planSource?: true
+  guidanceLevel?: true
+  parentGoalId?: true
+  priority?: true
+  trainingFocus?: true
 }
 
 export type GoalMaxAggregateInputType = {
@@ -253,6 +337,20 @@ export type GoalMaxAggregateInputType = {
   deletedAt?: true
   createdAt?: true
   updatedAt?: true
+  sport?: true
+  creationMode?: true
+  customDistanceM?: true
+  customSwimDistM?: true
+  customBikeDistM?: true
+  customRunDistM?: true
+  backyardLoopDistM?: true
+  backyardLoopTimeS?: true
+  targetLaps?: true
+  planSource?: true
+  guidanceLevel?: true
+  parentGoalId?: true
+  priority?: true
+  trainingFocus?: true
 }
 
 export type GoalCountAggregateInputType = {
@@ -284,6 +382,20 @@ export type GoalCountAggregateInputType = {
   deletedAt?: true
   createdAt?: true
   updatedAt?: true
+  sport?: true
+  creationMode?: true
+  customDistanceM?: true
+  customSwimDistM?: true
+  customBikeDistM?: true
+  customRunDistM?: true
+  backyardLoopDistM?: true
+  backyardLoopTimeS?: true
+  targetLaps?: true
+  planSource?: true
+  guidanceLevel?: true
+  parentGoalId?: true
+  priority?: true
+  trainingFocus?: true
   _all?: true
 }
 
@@ -377,8 +489,8 @@ export type GoalGroupByOutputType = {
   id: string
   userId: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date
+  raceType: $Enums.RaceType | null
+  raceDate: Date | null
   planStartDate: Date | null
   targetTime: number | null
   currentVdot: number | null
@@ -402,6 +514,20 @@ export type GoalGroupByOutputType = {
   deletedAt: Date | null
   createdAt: Date
   updatedAt: Date
+  sport: $Enums.PlanSport
+  creationMode: $Enums.PlanCreationMode
+  customDistanceM: number | null
+  customSwimDistM: number | null
+  customBikeDistM: number | null
+  customRunDistM: number | null
+  backyardLoopDistM: number | null
+  backyardLoopTimeS: number | null
+  targetLaps: number | null
+  planSource: string
+  guidanceLevel: string
+  parentGoalId: string | null
+  priority: $Enums.GoalPriority
+  trainingFocus: string | null
   _count: GoalCountAggregateOutputType | null
   _avg: GoalAvgAggregateOutputType | null
   _sum: GoalSumAggregateOutputType | null
@@ -431,8 +557,8 @@ export type GoalWhereInput = {
   id?: Prisma.StringFilter<"Goal"> | string
   userId?: Prisma.StringFilter<"Goal"> | string
   name?: Prisma.StringFilter<"Goal"> | string
-  raceType?: Prisma.EnumRaceTypeFilter<"Goal"> | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFilter<"Goal"> | Date | string
+  raceType?: Prisma.EnumRaceTypeNullableFilter<"Goal"> | $Enums.RaceType | null
+  raceDate?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   planStartDate?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   targetTime?: Prisma.IntNullableFilter<"Goal"> | number | null
   currentVdot?: Prisma.FloatNullableFilter<"Goal"> | number | null
@@ -456,17 +582,39 @@ export type GoalWhereInput = {
   deletedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
+  sport?: Prisma.EnumPlanSportFilter<"Goal"> | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFilter<"Goal"> | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  customSwimDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  customBikeDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  customRunDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  backyardLoopDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  backyardLoopTimeS?: Prisma.IntNullableFilter<"Goal"> | number | null
+  targetLaps?: Prisma.IntNullableFilter<"Goal"> | number | null
+  planSource?: Prisma.StringFilter<"Goal"> | string
+  guidanceLevel?: Prisma.StringFilter<"Goal"> | string
+  parentGoalId?: Prisma.StringNullableFilter<"Goal"> | string | null
+  priority?: Prisma.EnumGoalPriorityFilter<"Goal"> | $Enums.GoalPriority
+  trainingFocus?: Prisma.StringNullableFilter<"Goal"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   workouts?: Prisma.WorkoutListRelationFilter
   raceResult?: Prisma.XOR<Prisma.RaceResultNullableScalarRelationFilter, Prisma.RaceResultWhereInput> | null
+  parentGoal?: Prisma.XOR<Prisma.GoalNullableScalarRelationFilter, Prisma.GoalWhereInput> | null
+  subGoals?: Prisma.GoalListRelationFilter
+  snapshots?: Prisma.PlanSnapshotListRelationFilter
+  intervalProgressions?: Prisma.IntervalProgressionListRelationFilter
+  aiAnalysis?: Prisma.XOR<Prisma.AiPlanAnalysisNullableScalarRelationFilter, Prisma.AiPlanAnalysisWhereInput> | null
+  paceProfile?: Prisma.XOR<Prisma.PlanPaceProfileNullableScalarRelationFilter, Prisma.PlanPaceProfileWhereInput> | null
+  taggedWorkouts?: Prisma.WorkoutListRelationFilter
+  guidedPlanSessions?: Prisma.GuidedPlanSessionListRelationFilter
 }
 
 export type GoalOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  raceType?: Prisma.SortOrder
-  raceDate?: Prisma.SortOrder
+  raceType?: Prisma.SortOrderInput | Prisma.SortOrder
+  raceDate?: Prisma.SortOrderInput | Prisma.SortOrder
   planStartDate?: Prisma.SortOrderInput | Prisma.SortOrder
   targetTime?: Prisma.SortOrderInput | Prisma.SortOrder
   currentVdot?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -490,9 +638,31 @@ export type GoalOrderByWithRelationInput = {
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sport?: Prisma.SortOrder
+  creationMode?: Prisma.SortOrder
+  customDistanceM?: Prisma.SortOrderInput | Prisma.SortOrder
+  customSwimDistM?: Prisma.SortOrderInput | Prisma.SortOrder
+  customBikeDistM?: Prisma.SortOrderInput | Prisma.SortOrder
+  customRunDistM?: Prisma.SortOrderInput | Prisma.SortOrder
+  backyardLoopDistM?: Prisma.SortOrderInput | Prisma.SortOrder
+  backyardLoopTimeS?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetLaps?: Prisma.SortOrderInput | Prisma.SortOrder
+  planSource?: Prisma.SortOrder
+  guidanceLevel?: Prisma.SortOrder
+  parentGoalId?: Prisma.SortOrderInput | Prisma.SortOrder
+  priority?: Prisma.SortOrder
+  trainingFocus?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   workouts?: Prisma.WorkoutOrderByRelationAggregateInput
   raceResult?: Prisma.RaceResultOrderByWithRelationInput
+  parentGoal?: Prisma.GoalOrderByWithRelationInput
+  subGoals?: Prisma.GoalOrderByRelationAggregateInput
+  snapshots?: Prisma.PlanSnapshotOrderByRelationAggregateInput
+  intervalProgressions?: Prisma.IntervalProgressionOrderByRelationAggregateInput
+  aiAnalysis?: Prisma.AiPlanAnalysisOrderByWithRelationInput
+  paceProfile?: Prisma.PlanPaceProfileOrderByWithRelationInput
+  taggedWorkouts?: Prisma.WorkoutOrderByRelationAggregateInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionOrderByRelationAggregateInput
 }
 
 export type GoalWhereUniqueInput = Prisma.AtLeast<{
@@ -502,8 +672,8 @@ export type GoalWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.GoalWhereInput | Prisma.GoalWhereInput[]
   userId?: Prisma.StringFilter<"Goal"> | string
   name?: Prisma.StringFilter<"Goal"> | string
-  raceType?: Prisma.EnumRaceTypeFilter<"Goal"> | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFilter<"Goal"> | Date | string
+  raceType?: Prisma.EnumRaceTypeNullableFilter<"Goal"> | $Enums.RaceType | null
+  raceDate?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   planStartDate?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   targetTime?: Prisma.IntNullableFilter<"Goal"> | number | null
   currentVdot?: Prisma.FloatNullableFilter<"Goal"> | number | null
@@ -527,17 +697,39 @@ export type GoalWhereUniqueInput = Prisma.AtLeast<{
   deletedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
+  sport?: Prisma.EnumPlanSportFilter<"Goal"> | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFilter<"Goal"> | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  customSwimDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  customBikeDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  customRunDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  backyardLoopDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  backyardLoopTimeS?: Prisma.IntNullableFilter<"Goal"> | number | null
+  targetLaps?: Prisma.IntNullableFilter<"Goal"> | number | null
+  planSource?: Prisma.StringFilter<"Goal"> | string
+  guidanceLevel?: Prisma.StringFilter<"Goal"> | string
+  parentGoalId?: Prisma.StringNullableFilter<"Goal"> | string | null
+  priority?: Prisma.EnumGoalPriorityFilter<"Goal"> | $Enums.GoalPriority
+  trainingFocus?: Prisma.StringNullableFilter<"Goal"> | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   workouts?: Prisma.WorkoutListRelationFilter
   raceResult?: Prisma.XOR<Prisma.RaceResultNullableScalarRelationFilter, Prisma.RaceResultWhereInput> | null
+  parentGoal?: Prisma.XOR<Prisma.GoalNullableScalarRelationFilter, Prisma.GoalWhereInput> | null
+  subGoals?: Prisma.GoalListRelationFilter
+  snapshots?: Prisma.PlanSnapshotListRelationFilter
+  intervalProgressions?: Prisma.IntervalProgressionListRelationFilter
+  aiAnalysis?: Prisma.XOR<Prisma.AiPlanAnalysisNullableScalarRelationFilter, Prisma.AiPlanAnalysisWhereInput> | null
+  paceProfile?: Prisma.XOR<Prisma.PlanPaceProfileNullableScalarRelationFilter, Prisma.PlanPaceProfileWhereInput> | null
+  taggedWorkouts?: Prisma.WorkoutListRelationFilter
+  guidedPlanSessions?: Prisma.GuidedPlanSessionListRelationFilter
 }, "id">
 
 export type GoalOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  raceType?: Prisma.SortOrder
-  raceDate?: Prisma.SortOrder
+  raceType?: Prisma.SortOrderInput | Prisma.SortOrder
+  raceDate?: Prisma.SortOrderInput | Prisma.SortOrder
   planStartDate?: Prisma.SortOrderInput | Prisma.SortOrder
   targetTime?: Prisma.SortOrderInput | Prisma.SortOrder
   currentVdot?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -561,6 +753,20 @@ export type GoalOrderByWithAggregationInput = {
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sport?: Prisma.SortOrder
+  creationMode?: Prisma.SortOrder
+  customDistanceM?: Prisma.SortOrderInput | Prisma.SortOrder
+  customSwimDistM?: Prisma.SortOrderInput | Prisma.SortOrder
+  customBikeDistM?: Prisma.SortOrderInput | Prisma.SortOrder
+  customRunDistM?: Prisma.SortOrderInput | Prisma.SortOrder
+  backyardLoopDistM?: Prisma.SortOrderInput | Prisma.SortOrder
+  backyardLoopTimeS?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetLaps?: Prisma.SortOrderInput | Prisma.SortOrder
+  planSource?: Prisma.SortOrder
+  guidanceLevel?: Prisma.SortOrder
+  parentGoalId?: Prisma.SortOrderInput | Prisma.SortOrder
+  priority?: Prisma.SortOrder
+  trainingFocus?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.GoalCountOrderByAggregateInput
   _avg?: Prisma.GoalAvgOrderByAggregateInput
   _max?: Prisma.GoalMaxOrderByAggregateInput
@@ -575,8 +781,8 @@ export type GoalScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Goal"> | string
   userId?: Prisma.StringWithAggregatesFilter<"Goal"> | string
   name?: Prisma.StringWithAggregatesFilter<"Goal"> | string
-  raceType?: Prisma.EnumRaceTypeWithAggregatesFilter<"Goal"> | $Enums.RaceType
-  raceDate?: Prisma.DateTimeWithAggregatesFilter<"Goal"> | Date | string
+  raceType?: Prisma.EnumRaceTypeNullableWithAggregatesFilter<"Goal"> | $Enums.RaceType | null
+  raceDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Goal"> | Date | string | null
   planStartDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Goal"> | Date | string | null
   targetTime?: Prisma.IntNullableWithAggregatesFilter<"Goal"> | number | null
   currentVdot?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
@@ -600,13 +806,27 @@ export type GoalScalarWhereWithAggregatesInput = {
   deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Goal"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Goal"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Goal"> | Date | string
+  sport?: Prisma.EnumPlanSportWithAggregatesFilter<"Goal"> | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeWithAggregatesFilter<"Goal"> | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
+  customSwimDistM?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
+  customBikeDistM?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
+  customRunDistM?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
+  backyardLoopDistM?: Prisma.FloatNullableWithAggregatesFilter<"Goal"> | number | null
+  backyardLoopTimeS?: Prisma.IntNullableWithAggregatesFilter<"Goal"> | number | null
+  targetLaps?: Prisma.IntNullableWithAggregatesFilter<"Goal"> | number | null
+  planSource?: Prisma.StringWithAggregatesFilter<"Goal"> | string
+  guidanceLevel?: Prisma.StringWithAggregatesFilter<"Goal"> | string
+  parentGoalId?: Prisma.StringNullableWithAggregatesFilter<"Goal"> | string | null
+  priority?: Prisma.EnumGoalPriorityWithAggregatesFilter<"Goal"> | $Enums.GoalPriority
+  trainingFocus?: Prisma.StringNullableWithAggregatesFilter<"Goal"> | string | null
 }
 
 export type GoalCreateInput = {
   id?: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -630,17 +850,38 @@ export type GoalCreateInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
 }
 
 export type GoalUncheckedCreateInput = {
   id?: string
   userId: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -664,15 +905,36 @@ export type GoalUncheckedCreateInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
 }
 
 export type GoalUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -696,17 +958,38 @@ export type GoalUpdateInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
 }
 
 export type GoalUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -730,16 +1013,37 @@ export type GoalUncheckedUpdateInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
 }
 
 export type GoalCreateManyInput = {
   id?: string
   userId: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -763,13 +1067,27 @@ export type GoalCreateManyInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
 }
 
 export type GoalUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -793,14 +1111,27 @@ export type GoalUpdateManyMutationInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type GoalUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -824,6 +1155,20 @@ export type GoalUncheckedUpdateManyInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type GoalListRelationFilter = {
@@ -834,6 +1179,11 @@ export type GoalListRelationFilter = {
 
 export type GoalOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type GoalNullableScalarRelationFilter = {
+  is?: Prisma.GoalWhereInput | null
+  isNot?: Prisma.GoalWhereInput | null
 }
 
 export type GoalCountOrderByAggregateInput = {
@@ -865,6 +1215,20 @@ export type GoalCountOrderByAggregateInput = {
   deletedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sport?: Prisma.SortOrder
+  creationMode?: Prisma.SortOrder
+  customDistanceM?: Prisma.SortOrder
+  customSwimDistM?: Prisma.SortOrder
+  customBikeDistM?: Prisma.SortOrder
+  customRunDistM?: Prisma.SortOrder
+  backyardLoopDistM?: Prisma.SortOrder
+  backyardLoopTimeS?: Prisma.SortOrder
+  targetLaps?: Prisma.SortOrder
+  planSource?: Prisma.SortOrder
+  guidanceLevel?: Prisma.SortOrder
+  parentGoalId?: Prisma.SortOrder
+  priority?: Prisma.SortOrder
+  trainingFocus?: Prisma.SortOrder
 }
 
 export type GoalAvgOrderByAggregateInput = {
@@ -884,6 +1248,13 @@ export type GoalAvgOrderByAggregateInput = {
   longRunDay?: Prisma.SortOrder
   workoutDay?: Prisma.SortOrder
   swimDay?: Prisma.SortOrder
+  customDistanceM?: Prisma.SortOrder
+  customSwimDistM?: Prisma.SortOrder
+  customBikeDistM?: Prisma.SortOrder
+  customRunDistM?: Prisma.SortOrder
+  backyardLoopDistM?: Prisma.SortOrder
+  backyardLoopTimeS?: Prisma.SortOrder
+  targetLaps?: Prisma.SortOrder
 }
 
 export type GoalMaxOrderByAggregateInput = {
@@ -914,6 +1285,20 @@ export type GoalMaxOrderByAggregateInput = {
   deletedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sport?: Prisma.SortOrder
+  creationMode?: Prisma.SortOrder
+  customDistanceM?: Prisma.SortOrder
+  customSwimDistM?: Prisma.SortOrder
+  customBikeDistM?: Prisma.SortOrder
+  customRunDistM?: Prisma.SortOrder
+  backyardLoopDistM?: Prisma.SortOrder
+  backyardLoopTimeS?: Prisma.SortOrder
+  targetLaps?: Prisma.SortOrder
+  planSource?: Prisma.SortOrder
+  guidanceLevel?: Prisma.SortOrder
+  parentGoalId?: Prisma.SortOrder
+  priority?: Prisma.SortOrder
+  trainingFocus?: Prisma.SortOrder
 }
 
 export type GoalMinOrderByAggregateInput = {
@@ -944,6 +1329,20 @@ export type GoalMinOrderByAggregateInput = {
   deletedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  sport?: Prisma.SortOrder
+  creationMode?: Prisma.SortOrder
+  customDistanceM?: Prisma.SortOrder
+  customSwimDistM?: Prisma.SortOrder
+  customBikeDistM?: Prisma.SortOrder
+  customRunDistM?: Prisma.SortOrder
+  backyardLoopDistM?: Prisma.SortOrder
+  backyardLoopTimeS?: Prisma.SortOrder
+  targetLaps?: Prisma.SortOrder
+  planSource?: Prisma.SortOrder
+  guidanceLevel?: Prisma.SortOrder
+  parentGoalId?: Prisma.SortOrder
+  priority?: Prisma.SortOrder
+  trainingFocus?: Prisma.SortOrder
 }
 
 export type GoalSumOrderByAggregateInput = {
@@ -963,6 +1362,13 @@ export type GoalSumOrderByAggregateInput = {
   longRunDay?: Prisma.SortOrder
   workoutDay?: Prisma.SortOrder
   swimDay?: Prisma.SortOrder
+  customDistanceM?: Prisma.SortOrder
+  customSwimDistM?: Prisma.SortOrder
+  customBikeDistM?: Prisma.SortOrder
+  customRunDistM?: Prisma.SortOrder
+  backyardLoopDistM?: Prisma.SortOrder
+  backyardLoopTimeS?: Prisma.SortOrder
+  targetLaps?: Prisma.SortOrder
 }
 
 export type GoalScalarRelationFilter = {
@@ -1012,8 +1418,78 @@ export type GoalUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.GoalScalarWhereInput | Prisma.GoalScalarWhereInput[]
 }
 
-export type EnumRaceTypeFieldUpdateOperationsInput = {
-  set?: $Enums.RaceType
+export type GoalCreateNestedOneWithoutSubGoalsInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutSubGoalsInput, Prisma.GoalUncheckedCreateWithoutSubGoalsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutSubGoalsInput
+  connect?: Prisma.GoalWhereUniqueInput
+}
+
+export type GoalCreateNestedManyWithoutParentGoalInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutParentGoalInput, Prisma.GoalUncheckedCreateWithoutParentGoalInput> | Prisma.GoalCreateWithoutParentGoalInput[] | Prisma.GoalUncheckedCreateWithoutParentGoalInput[]
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutParentGoalInput | Prisma.GoalCreateOrConnectWithoutParentGoalInput[]
+  createMany?: Prisma.GoalCreateManyParentGoalInputEnvelope
+  connect?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+}
+
+export type GoalUncheckedCreateNestedManyWithoutParentGoalInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutParentGoalInput, Prisma.GoalUncheckedCreateWithoutParentGoalInput> | Prisma.GoalCreateWithoutParentGoalInput[] | Prisma.GoalUncheckedCreateWithoutParentGoalInput[]
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutParentGoalInput | Prisma.GoalCreateOrConnectWithoutParentGoalInput[]
+  createMany?: Prisma.GoalCreateManyParentGoalInputEnvelope
+  connect?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+}
+
+export type NullableEnumRaceTypeFieldUpdateOperationsInput = {
+  set?: $Enums.RaceType | null
+}
+
+export type EnumPlanSportFieldUpdateOperationsInput = {
+  set?: $Enums.PlanSport
+}
+
+export type EnumPlanCreationModeFieldUpdateOperationsInput = {
+  set?: $Enums.PlanCreationMode
+}
+
+export type EnumGoalPriorityFieldUpdateOperationsInput = {
+  set?: $Enums.GoalPriority
+}
+
+export type GoalUpdateOneWithoutSubGoalsNestedInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutSubGoalsInput, Prisma.GoalUncheckedCreateWithoutSubGoalsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutSubGoalsInput
+  upsert?: Prisma.GoalUpsertWithoutSubGoalsInput
+  disconnect?: Prisma.GoalWhereInput | boolean
+  delete?: Prisma.GoalWhereInput | boolean
+  connect?: Prisma.GoalWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GoalUpdateToOneWithWhereWithoutSubGoalsInput, Prisma.GoalUpdateWithoutSubGoalsInput>, Prisma.GoalUncheckedUpdateWithoutSubGoalsInput>
+}
+
+export type GoalUpdateManyWithoutParentGoalNestedInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutParentGoalInput, Prisma.GoalUncheckedCreateWithoutParentGoalInput> | Prisma.GoalCreateWithoutParentGoalInput[] | Prisma.GoalUncheckedCreateWithoutParentGoalInput[]
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutParentGoalInput | Prisma.GoalCreateOrConnectWithoutParentGoalInput[]
+  upsert?: Prisma.GoalUpsertWithWhereUniqueWithoutParentGoalInput | Prisma.GoalUpsertWithWhereUniqueWithoutParentGoalInput[]
+  createMany?: Prisma.GoalCreateManyParentGoalInputEnvelope
+  set?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+  disconnect?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+  delete?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+  connect?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+  update?: Prisma.GoalUpdateWithWhereUniqueWithoutParentGoalInput | Prisma.GoalUpdateWithWhereUniqueWithoutParentGoalInput[]
+  updateMany?: Prisma.GoalUpdateManyWithWhereWithoutParentGoalInput | Prisma.GoalUpdateManyWithWhereWithoutParentGoalInput[]
+  deleteMany?: Prisma.GoalScalarWhereInput | Prisma.GoalScalarWhereInput[]
+}
+
+export type GoalUncheckedUpdateManyWithoutParentGoalNestedInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutParentGoalInput, Prisma.GoalUncheckedCreateWithoutParentGoalInput> | Prisma.GoalCreateWithoutParentGoalInput[] | Prisma.GoalUncheckedCreateWithoutParentGoalInput[]
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutParentGoalInput | Prisma.GoalCreateOrConnectWithoutParentGoalInput[]
+  upsert?: Prisma.GoalUpsertWithWhereUniqueWithoutParentGoalInput | Prisma.GoalUpsertWithWhereUniqueWithoutParentGoalInput[]
+  createMany?: Prisma.GoalCreateManyParentGoalInputEnvelope
+  set?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+  disconnect?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+  delete?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+  connect?: Prisma.GoalWhereUniqueInput | Prisma.GoalWhereUniqueInput[]
+  update?: Prisma.GoalUpdateWithWhereUniqueWithoutParentGoalInput | Prisma.GoalUpdateWithWhereUniqueWithoutParentGoalInput[]
+  updateMany?: Prisma.GoalUpdateManyWithWhereWithoutParentGoalInput | Prisma.GoalUpdateManyWithWhereWithoutParentGoalInput[]
+  deleteMany?: Prisma.GoalScalarWhereInput | Prisma.GoalScalarWhereInput[]
 }
 
 export type GoalCreateNestedOneWithoutRaceResultInput = {
@@ -1036,6 +1512,12 @@ export type GoalCreateNestedOneWithoutWorkoutsInput = {
   connect?: Prisma.GoalWhereUniqueInput
 }
 
+export type GoalCreateNestedOneWithoutTaggedWorkoutsInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutTaggedWorkoutsInput, Prisma.GoalUncheckedCreateWithoutTaggedWorkoutsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutTaggedWorkoutsInput
+  connect?: Prisma.GoalWhereUniqueInput
+}
+
 export type GoalUpdateOneRequiredWithoutWorkoutsNestedInput = {
   create?: Prisma.XOR<Prisma.GoalCreateWithoutWorkoutsInput, Prisma.GoalUncheckedCreateWithoutWorkoutsInput>
   connectOrCreate?: Prisma.GoalCreateOrConnectWithoutWorkoutsInput
@@ -1044,11 +1526,93 @@ export type GoalUpdateOneRequiredWithoutWorkoutsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.GoalUpdateToOneWithWhereWithoutWorkoutsInput, Prisma.GoalUpdateWithoutWorkoutsInput>, Prisma.GoalUncheckedUpdateWithoutWorkoutsInput>
 }
 
+export type GoalUpdateOneWithoutTaggedWorkoutsNestedInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutTaggedWorkoutsInput, Prisma.GoalUncheckedCreateWithoutTaggedWorkoutsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutTaggedWorkoutsInput
+  upsert?: Prisma.GoalUpsertWithoutTaggedWorkoutsInput
+  disconnect?: Prisma.GoalWhereInput | boolean
+  delete?: Prisma.GoalWhereInput | boolean
+  connect?: Prisma.GoalWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GoalUpdateToOneWithWhereWithoutTaggedWorkoutsInput, Prisma.GoalUpdateWithoutTaggedWorkoutsInput>, Prisma.GoalUncheckedUpdateWithoutTaggedWorkoutsInput>
+}
+
+export type GoalCreateNestedOneWithoutSnapshotsInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutSnapshotsInput, Prisma.GoalUncheckedCreateWithoutSnapshotsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutSnapshotsInput
+  connect?: Prisma.GoalWhereUniqueInput
+}
+
+export type GoalUpdateOneRequiredWithoutSnapshotsNestedInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutSnapshotsInput, Prisma.GoalUncheckedCreateWithoutSnapshotsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutSnapshotsInput
+  upsert?: Prisma.GoalUpsertWithoutSnapshotsInput
+  connect?: Prisma.GoalWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GoalUpdateToOneWithWhereWithoutSnapshotsInput, Prisma.GoalUpdateWithoutSnapshotsInput>, Prisma.GoalUncheckedUpdateWithoutSnapshotsInput>
+}
+
+export type GoalCreateNestedOneWithoutIntervalProgressionsInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutIntervalProgressionsInput, Prisma.GoalUncheckedCreateWithoutIntervalProgressionsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutIntervalProgressionsInput
+  connect?: Prisma.GoalWhereUniqueInput
+}
+
+export type GoalUpdateOneRequiredWithoutIntervalProgressionsNestedInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutIntervalProgressionsInput, Prisma.GoalUncheckedCreateWithoutIntervalProgressionsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutIntervalProgressionsInput
+  upsert?: Prisma.GoalUpsertWithoutIntervalProgressionsInput
+  connect?: Prisma.GoalWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GoalUpdateToOneWithWhereWithoutIntervalProgressionsInput, Prisma.GoalUpdateWithoutIntervalProgressionsInput>, Prisma.GoalUncheckedUpdateWithoutIntervalProgressionsInput>
+}
+
+export type GoalCreateNestedOneWithoutAiAnalysisInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutAiAnalysisInput, Prisma.GoalUncheckedCreateWithoutAiAnalysisInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutAiAnalysisInput
+  connect?: Prisma.GoalWhereUniqueInput
+}
+
+export type GoalUpdateOneRequiredWithoutAiAnalysisNestedInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutAiAnalysisInput, Prisma.GoalUncheckedCreateWithoutAiAnalysisInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutAiAnalysisInput
+  upsert?: Prisma.GoalUpsertWithoutAiAnalysisInput
+  connect?: Prisma.GoalWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GoalUpdateToOneWithWhereWithoutAiAnalysisInput, Prisma.GoalUpdateWithoutAiAnalysisInput>, Prisma.GoalUncheckedUpdateWithoutAiAnalysisInput>
+}
+
+export type GoalCreateNestedOneWithoutPaceProfileInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutPaceProfileInput, Prisma.GoalUncheckedCreateWithoutPaceProfileInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutPaceProfileInput
+  connect?: Prisma.GoalWhereUniqueInput
+}
+
+export type GoalUpdateOneRequiredWithoutPaceProfileNestedInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutPaceProfileInput, Prisma.GoalUncheckedCreateWithoutPaceProfileInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutPaceProfileInput
+  upsert?: Prisma.GoalUpsertWithoutPaceProfileInput
+  connect?: Prisma.GoalWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GoalUpdateToOneWithWhereWithoutPaceProfileInput, Prisma.GoalUpdateWithoutPaceProfileInput>, Prisma.GoalUncheckedUpdateWithoutPaceProfileInput>
+}
+
+export type GoalCreateNestedOneWithoutGuidedPlanSessionsInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutGuidedPlanSessionsInput, Prisma.GoalUncheckedCreateWithoutGuidedPlanSessionsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutGuidedPlanSessionsInput
+  connect?: Prisma.GoalWhereUniqueInput
+}
+
+export type GoalUpdateOneWithoutGuidedPlanSessionsNestedInput = {
+  create?: Prisma.XOR<Prisma.GoalCreateWithoutGuidedPlanSessionsInput, Prisma.GoalUncheckedCreateWithoutGuidedPlanSessionsInput>
+  connectOrCreate?: Prisma.GoalCreateOrConnectWithoutGuidedPlanSessionsInput
+  upsert?: Prisma.GoalUpsertWithoutGuidedPlanSessionsInput
+  disconnect?: Prisma.GoalWhereInput | boolean
+  delete?: Prisma.GoalWhereInput | boolean
+  connect?: Prisma.GoalWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GoalUpdateToOneWithWhereWithoutGuidedPlanSessionsInput, Prisma.GoalUpdateWithoutGuidedPlanSessionsInput>, Prisma.GoalUncheckedUpdateWithoutGuidedPlanSessionsInput>
+}
+
 export type GoalCreateWithoutUserInput = {
   id?: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -1072,15 +1636,36 @@ export type GoalCreateWithoutUserInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
 }
 
 export type GoalUncheckedCreateWithoutUserInput = {
   id?: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -1104,8 +1689,29 @@ export type GoalUncheckedCreateWithoutUserInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
 }
 
 export type GoalCreateOrConnectWithoutUserInput = {
@@ -1141,8 +1747,8 @@ export type GoalScalarWhereInput = {
   id?: Prisma.StringFilter<"Goal"> | string
   userId?: Prisma.StringFilter<"Goal"> | string
   name?: Prisma.StringFilter<"Goal"> | string
-  raceType?: Prisma.EnumRaceTypeFilter<"Goal"> | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFilter<"Goal"> | Date | string
+  raceType?: Prisma.EnumRaceTypeNullableFilter<"Goal"> | $Enums.RaceType | null
+  raceDate?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   planStartDate?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   targetTime?: Prisma.IntNullableFilter<"Goal"> | number | null
   currentVdot?: Prisma.FloatNullableFilter<"Goal"> | number | null
@@ -1166,13 +1772,27 @@ export type GoalScalarWhereInput = {
   deletedAt?: Prisma.DateTimeNullableFilter<"Goal"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Goal"> | Date | string
+  sport?: Prisma.EnumPlanSportFilter<"Goal"> | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFilter<"Goal"> | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  customSwimDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  customBikeDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  customRunDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  backyardLoopDistM?: Prisma.FloatNullableFilter<"Goal"> | number | null
+  backyardLoopTimeS?: Prisma.IntNullableFilter<"Goal"> | number | null
+  targetLaps?: Prisma.IntNullableFilter<"Goal"> | number | null
+  planSource?: Prisma.StringFilter<"Goal"> | string
+  guidanceLevel?: Prisma.StringFilter<"Goal"> | string
+  parentGoalId?: Prisma.StringNullableFilter<"Goal"> | string | null
+  priority?: Prisma.EnumGoalPriorityFilter<"Goal"> | $Enums.GoalPriority
+  trainingFocus?: Prisma.StringNullableFilter<"Goal"> | string | null
 }
 
-export type GoalCreateWithoutRaceResultInput = {
+export type GoalCreateWithoutSubGoalsInput = {
   id?: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -1196,16 +1816,397 @@ export type GoalCreateWithoutRaceResultInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
+}
+
+export type GoalUncheckedCreateWithoutSubGoalsInput = {
+  id?: string
+  userId: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
+}
+
+export type GoalCreateOrConnectWithoutSubGoalsInput = {
+  where: Prisma.GoalWhereUniqueInput
+  create: Prisma.XOR<Prisma.GoalCreateWithoutSubGoalsInput, Prisma.GoalUncheckedCreateWithoutSubGoalsInput>
+}
+
+export type GoalCreateWithoutParentGoalInput = {
+  id?: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  user: Prisma.UserCreateNestedOneWithoutGoalsInput
+  workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
+}
+
+export type GoalUncheckedCreateWithoutParentGoalInput = {
+  id?: string
+  userId: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
+}
+
+export type GoalCreateOrConnectWithoutParentGoalInput = {
+  where: Prisma.GoalWhereUniqueInput
+  create: Prisma.XOR<Prisma.GoalCreateWithoutParentGoalInput, Prisma.GoalUncheckedCreateWithoutParentGoalInput>
+}
+
+export type GoalCreateManyParentGoalInputEnvelope = {
+  data: Prisma.GoalCreateManyParentGoalInput | Prisma.GoalCreateManyParentGoalInput[]
+  skipDuplicates?: boolean
+}
+
+export type GoalUpsertWithoutSubGoalsInput = {
+  update: Prisma.XOR<Prisma.GoalUpdateWithoutSubGoalsInput, Prisma.GoalUncheckedUpdateWithoutSubGoalsInput>
+  create: Prisma.XOR<Prisma.GoalCreateWithoutSubGoalsInput, Prisma.GoalUncheckedCreateWithoutSubGoalsInput>
+  where?: Prisma.GoalWhereInput
+}
+
+export type GoalUpdateToOneWithWhereWithoutSubGoalsInput = {
+  where?: Prisma.GoalWhereInput
+  data: Prisma.XOR<Prisma.GoalUpdateWithoutSubGoalsInput, Prisma.GoalUncheckedUpdateWithoutSubGoalsInput>
+}
+
+export type GoalUpdateWithoutSubGoalsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
+  workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalUncheckedUpdateWithoutSubGoalsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalUpsertWithWhereUniqueWithoutParentGoalInput = {
+  where: Prisma.GoalWhereUniqueInput
+  update: Prisma.XOR<Prisma.GoalUpdateWithoutParentGoalInput, Prisma.GoalUncheckedUpdateWithoutParentGoalInput>
+  create: Prisma.XOR<Prisma.GoalCreateWithoutParentGoalInput, Prisma.GoalUncheckedCreateWithoutParentGoalInput>
+}
+
+export type GoalUpdateWithWhereUniqueWithoutParentGoalInput = {
+  where: Prisma.GoalWhereUniqueInput
+  data: Prisma.XOR<Prisma.GoalUpdateWithoutParentGoalInput, Prisma.GoalUncheckedUpdateWithoutParentGoalInput>
+}
+
+export type GoalUpdateManyWithWhereWithoutParentGoalInput = {
+  where: Prisma.GoalScalarWhereInput
+  data: Prisma.XOR<Prisma.GoalUpdateManyMutationInput, Prisma.GoalUncheckedUpdateManyWithoutParentGoalInput>
+}
+
+export type GoalCreateWithoutRaceResultInput = {
+  id?: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  user: Prisma.UserCreateNestedOneWithoutGoalsInput
+  workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
 }
 
 export type GoalUncheckedCreateWithoutRaceResultInput = {
   id?: string
   userId: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -1229,7 +2230,28 @@ export type GoalUncheckedCreateWithoutRaceResultInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
   workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
 }
 
 export type GoalCreateOrConnectWithoutRaceResultInput = {
@@ -1251,8 +2273,8 @@ export type GoalUpdateToOneWithWhereWithoutRaceResultInput = {
 export type GoalUpdateWithoutRaceResultInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1276,16 +2298,37 @@ export type GoalUpdateWithoutRaceResultInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
 }
 
 export type GoalUncheckedUpdateWithoutRaceResultInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1309,14 +2352,35 @@ export type GoalUncheckedUpdateWithoutRaceResultInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
 }
 
 export type GoalCreateWithoutWorkoutsInput = {
   id?: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -1340,16 +2404,37 @@ export type GoalCreateWithoutWorkoutsInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
   user: Prisma.UserCreateNestedOneWithoutGoalsInput
   raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
 }
 
 export type GoalUncheckedCreateWithoutWorkoutsInput = {
   id?: string
   userId: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -1373,12 +2458,144 @@ export type GoalUncheckedCreateWithoutWorkoutsInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
   raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
 }
 
 export type GoalCreateOrConnectWithoutWorkoutsInput = {
   where: Prisma.GoalWhereUniqueInput
   create: Prisma.XOR<Prisma.GoalCreateWithoutWorkoutsInput, Prisma.GoalUncheckedCreateWithoutWorkoutsInput>
+}
+
+export type GoalCreateWithoutTaggedWorkoutsInput = {
+  id?: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  user: Prisma.UserCreateNestedOneWithoutGoalsInput
+  workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
+}
+
+export type GoalUncheckedCreateWithoutTaggedWorkoutsInput = {
+  id?: string
+  userId: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
+}
+
+export type GoalCreateOrConnectWithoutTaggedWorkoutsInput = {
+  where: Prisma.GoalWhereUniqueInput
+  create: Prisma.XOR<Prisma.GoalCreateWithoutTaggedWorkoutsInput, Prisma.GoalUncheckedCreateWithoutTaggedWorkoutsInput>
 }
 
 export type GoalUpsertWithoutWorkoutsInput = {
@@ -1395,8 +2612,8 @@ export type GoalUpdateToOneWithWhereWithoutWorkoutsInput = {
 export type GoalUpdateWithoutWorkoutsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1420,16 +2637,37 @@ export type GoalUpdateWithoutWorkoutsInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
 }
 
 export type GoalUncheckedUpdateWithoutWorkoutsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1453,14 +2691,152 @@ export type GoalUncheckedUpdateWithoutWorkoutsInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
 }
 
-export type GoalCreateManyUserInput = {
+export type GoalUpsertWithoutTaggedWorkoutsInput = {
+  update: Prisma.XOR<Prisma.GoalUpdateWithoutTaggedWorkoutsInput, Prisma.GoalUncheckedUpdateWithoutTaggedWorkoutsInput>
+  create: Prisma.XOR<Prisma.GoalCreateWithoutTaggedWorkoutsInput, Prisma.GoalUncheckedCreateWithoutTaggedWorkoutsInput>
+  where?: Prisma.GoalWhereInput
+}
+
+export type GoalUpdateToOneWithWhereWithoutTaggedWorkoutsInput = {
+  where?: Prisma.GoalWhereInput
+  data: Prisma.XOR<Prisma.GoalUpdateWithoutTaggedWorkoutsInput, Prisma.GoalUncheckedUpdateWithoutTaggedWorkoutsInput>
+}
+
+export type GoalUpdateWithoutTaggedWorkoutsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
+  workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalUncheckedUpdateWithoutTaggedWorkoutsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalCreateWithoutSnapshotsInput = {
   id?: string
   name: string
-  raceType: $Enums.RaceType
-  raceDate: Date | string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
   planStartDate?: Date | string | null
   targetTime?: number | null
   currentVdot?: number | null
@@ -1484,13 +2860,1167 @@ export type GoalCreateManyUserInput = {
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  user: Prisma.UserCreateNestedOneWithoutGoalsInput
+  workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
+}
+
+export type GoalUncheckedCreateWithoutSnapshotsInput = {
+  id?: string
+  userId: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
+}
+
+export type GoalCreateOrConnectWithoutSnapshotsInput = {
+  where: Prisma.GoalWhereUniqueInput
+  create: Prisma.XOR<Prisma.GoalCreateWithoutSnapshotsInput, Prisma.GoalUncheckedCreateWithoutSnapshotsInput>
+}
+
+export type GoalUpsertWithoutSnapshotsInput = {
+  update: Prisma.XOR<Prisma.GoalUpdateWithoutSnapshotsInput, Prisma.GoalUncheckedUpdateWithoutSnapshotsInput>
+  create: Prisma.XOR<Prisma.GoalCreateWithoutSnapshotsInput, Prisma.GoalUncheckedCreateWithoutSnapshotsInput>
+  where?: Prisma.GoalWhereInput
+}
+
+export type GoalUpdateToOneWithWhereWithoutSnapshotsInput = {
+  where?: Prisma.GoalWhereInput
+  data: Prisma.XOR<Prisma.GoalUpdateWithoutSnapshotsInput, Prisma.GoalUncheckedUpdateWithoutSnapshotsInput>
+}
+
+export type GoalUpdateWithoutSnapshotsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
+  workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalUncheckedUpdateWithoutSnapshotsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalCreateWithoutIntervalProgressionsInput = {
+  id?: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  user: Prisma.UserCreateNestedOneWithoutGoalsInput
+  workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
+}
+
+export type GoalUncheckedCreateWithoutIntervalProgressionsInput = {
+  id?: string
+  userId: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
+}
+
+export type GoalCreateOrConnectWithoutIntervalProgressionsInput = {
+  where: Prisma.GoalWhereUniqueInput
+  create: Prisma.XOR<Prisma.GoalCreateWithoutIntervalProgressionsInput, Prisma.GoalUncheckedCreateWithoutIntervalProgressionsInput>
+}
+
+export type GoalUpsertWithoutIntervalProgressionsInput = {
+  update: Prisma.XOR<Prisma.GoalUpdateWithoutIntervalProgressionsInput, Prisma.GoalUncheckedUpdateWithoutIntervalProgressionsInput>
+  create: Prisma.XOR<Prisma.GoalCreateWithoutIntervalProgressionsInput, Prisma.GoalUncheckedCreateWithoutIntervalProgressionsInput>
+  where?: Prisma.GoalWhereInput
+}
+
+export type GoalUpdateToOneWithWhereWithoutIntervalProgressionsInput = {
+  where?: Prisma.GoalWhereInput
+  data: Prisma.XOR<Prisma.GoalUpdateWithoutIntervalProgressionsInput, Prisma.GoalUncheckedUpdateWithoutIntervalProgressionsInput>
+}
+
+export type GoalUpdateWithoutIntervalProgressionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
+  workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalUncheckedUpdateWithoutIntervalProgressionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalCreateWithoutAiAnalysisInput = {
+  id?: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  user: Prisma.UserCreateNestedOneWithoutGoalsInput
+  workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
+}
+
+export type GoalUncheckedCreateWithoutAiAnalysisInput = {
+  id?: string
+  userId: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
+}
+
+export type GoalCreateOrConnectWithoutAiAnalysisInput = {
+  where: Prisma.GoalWhereUniqueInput
+  create: Prisma.XOR<Prisma.GoalCreateWithoutAiAnalysisInput, Prisma.GoalUncheckedCreateWithoutAiAnalysisInput>
+}
+
+export type GoalUpsertWithoutAiAnalysisInput = {
+  update: Prisma.XOR<Prisma.GoalUpdateWithoutAiAnalysisInput, Prisma.GoalUncheckedUpdateWithoutAiAnalysisInput>
+  create: Prisma.XOR<Prisma.GoalCreateWithoutAiAnalysisInput, Prisma.GoalUncheckedCreateWithoutAiAnalysisInput>
+  where?: Prisma.GoalWhereInput
+}
+
+export type GoalUpdateToOneWithWhereWithoutAiAnalysisInput = {
+  where?: Prisma.GoalWhereInput
+  data: Prisma.XOR<Prisma.GoalUpdateWithoutAiAnalysisInput, Prisma.GoalUncheckedUpdateWithoutAiAnalysisInput>
+}
+
+export type GoalUpdateWithoutAiAnalysisInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
+  workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalUncheckedUpdateWithoutAiAnalysisInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalCreateWithoutPaceProfileInput = {
+  id?: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  user: Prisma.UserCreateNestedOneWithoutGoalsInput
+  workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutGoalInput
+}
+
+export type GoalUncheckedCreateWithoutPaceProfileInput = {
+  id?: string
+  userId: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutGoalInput
+}
+
+export type GoalCreateOrConnectWithoutPaceProfileInput = {
+  where: Prisma.GoalWhereUniqueInput
+  create: Prisma.XOR<Prisma.GoalCreateWithoutPaceProfileInput, Prisma.GoalUncheckedCreateWithoutPaceProfileInput>
+}
+
+export type GoalUpsertWithoutPaceProfileInput = {
+  update: Prisma.XOR<Prisma.GoalUpdateWithoutPaceProfileInput, Prisma.GoalUncheckedUpdateWithoutPaceProfileInput>
+  create: Prisma.XOR<Prisma.GoalCreateWithoutPaceProfileInput, Prisma.GoalUncheckedCreateWithoutPaceProfileInput>
+  where?: Prisma.GoalWhereInput
+}
+
+export type GoalUpdateToOneWithWhereWithoutPaceProfileInput = {
+  where?: Prisma.GoalWhereInput
+  data: Prisma.XOR<Prisma.GoalUpdateWithoutPaceProfileInput, Prisma.GoalUncheckedUpdateWithoutPaceProfileInput>
+}
+
+export type GoalUpdateWithoutPaceProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
+  workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalUncheckedUpdateWithoutPaceProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalCreateWithoutGuidedPlanSessionsInput = {
+  id?: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  user: Prisma.UserCreateNestedOneWithoutGoalsInput
+  workouts?: Prisma.WorkoutCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultCreateNestedOneWithoutGoalInput
+  parentGoal?: Prisma.GoalCreateNestedOneWithoutSubGoalsInput
+  subGoals?: Prisma.GoalCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutCreateNestedManyWithoutSubGoalInput
+}
+
+export type GoalUncheckedCreateWithoutGuidedPlanSessionsInput = {
+  id?: string
+  userId: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+  workouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutGoalInput
+  raceResult?: Prisma.RaceResultUncheckedCreateNestedOneWithoutGoalInput
+  subGoals?: Prisma.GoalUncheckedCreateNestedManyWithoutParentGoalInput
+  snapshots?: Prisma.PlanSnapshotUncheckedCreateNestedManyWithoutGoalInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedCreateNestedManyWithoutGoalInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedCreateNestedOneWithoutGoalInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedCreateNestedOneWithoutGoalInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedCreateNestedManyWithoutSubGoalInput
+}
+
+export type GoalCreateOrConnectWithoutGuidedPlanSessionsInput = {
+  where: Prisma.GoalWhereUniqueInput
+  create: Prisma.XOR<Prisma.GoalCreateWithoutGuidedPlanSessionsInput, Prisma.GoalUncheckedCreateWithoutGuidedPlanSessionsInput>
+}
+
+export type GoalUpsertWithoutGuidedPlanSessionsInput = {
+  update: Prisma.XOR<Prisma.GoalUpdateWithoutGuidedPlanSessionsInput, Prisma.GoalUncheckedUpdateWithoutGuidedPlanSessionsInput>
+  create: Prisma.XOR<Prisma.GoalCreateWithoutGuidedPlanSessionsInput, Prisma.GoalUncheckedCreateWithoutGuidedPlanSessionsInput>
+  where?: Prisma.GoalWhereInput
+}
+
+export type GoalUpdateToOneWithWhereWithoutGuidedPlanSessionsInput = {
+  where?: Prisma.GoalWhereInput
+  data: Prisma.XOR<Prisma.GoalUpdateWithoutGuidedPlanSessionsInput, Prisma.GoalUncheckedUpdateWithoutGuidedPlanSessionsInput>
+}
+
+export type GoalUpdateWithoutGuidedPlanSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
+  workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+}
+
+export type GoalUncheckedUpdateWithoutGuidedPlanSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+}
+
+export type GoalCreateManyUserInput = {
+  id?: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  parentGoalId?: string | null
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
 }
 
 export type GoalUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1514,15 +4044,36 @@ export type GoalUpdateWithoutUserInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  parentGoal?: Prisma.GoalUpdateOneWithoutSubGoalsNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
 }
 
 export type GoalUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1546,15 +4097,36 @@ export type GoalUncheckedUpdateWithoutUserInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
   raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
 }
 
 export type GoalUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  raceType?: Prisma.EnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType
-  raceDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1578,6 +4150,214 @@ export type GoalUncheckedUpdateManyWithoutUserInput = {
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  parentGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type GoalCreateManyParentGoalInput = {
+  id?: string
+  userId: string
+  name: string
+  raceType?: $Enums.RaceType | null
+  raceDate?: Date | string | null
+  planStartDate?: Date | string | null
+  targetTime?: number | null
+  currentVdot?: number | null
+  predictedTime?: number | null
+  marathonShapeFactor?: number
+  weeklyMileageGoal?: number | null
+  planWeeks?: number
+  runsPerWeek?: number
+  ridesPerWeek?: number
+  strengthPerWeek?: number
+  swimsPerWeek?: number
+  taperWeeks?: number
+  peakWeeks?: number
+  buildWeeks?: number
+  longRunDay?: number
+  workoutDay?: number
+  swimDay?: number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: boolean
+  completedAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sport?: $Enums.PlanSport
+  creationMode?: $Enums.PlanCreationMode
+  customDistanceM?: number | null
+  customSwimDistM?: number | null
+  customBikeDistM?: number | null
+  customRunDistM?: number | null
+  backyardLoopDistM?: number | null
+  backyardLoopTimeS?: number | null
+  targetLaps?: number | null
+  planSource?: string
+  guidanceLevel?: string
+  priority?: $Enums.GoalPriority
+  trainingFocus?: string | null
+}
+
+export type GoalUpdateWithoutParentGoalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutGoalsNestedInput
+  workouts?: Prisma.WorkoutUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalUncheckedUpdateWithoutParentGoalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  workouts?: Prisma.WorkoutUncheckedUpdateManyWithoutGoalNestedInput
+  raceResult?: Prisma.RaceResultUncheckedUpdateOneWithoutGoalNestedInput
+  subGoals?: Prisma.GoalUncheckedUpdateManyWithoutParentGoalNestedInput
+  snapshots?: Prisma.PlanSnapshotUncheckedUpdateManyWithoutGoalNestedInput
+  intervalProgressions?: Prisma.IntervalProgressionUncheckedUpdateManyWithoutGoalNestedInput
+  aiAnalysis?: Prisma.AiPlanAnalysisUncheckedUpdateOneWithoutGoalNestedInput
+  paceProfile?: Prisma.PlanPaceProfileUncheckedUpdateOneWithoutGoalNestedInput
+  taggedWorkouts?: Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutGoalNestedInput
+}
+
+export type GoalUncheckedUpdateManyWithoutParentGoalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  raceType?: Prisma.NullableEnumRaceTypeFieldUpdateOperationsInput | $Enums.RaceType | null
+  raceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  planStartDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  targetTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currentVdot?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  predictedTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  marathonShapeFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  weeklyMileageGoal?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  planWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  runsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  ridesPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  strengthPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  swimsPerWeek?: Prisma.IntFieldUpdateOperationsInput | number
+  taperWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  peakWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  buildWeeks?: Prisma.IntFieldUpdateOperationsInput | number
+  longRunDay?: Prisma.IntFieldUpdateOperationsInput | number
+  workoutDay?: Prisma.IntFieldUpdateOperationsInput | number
+  swimDay?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  restDays?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sport?: Prisma.EnumPlanSportFieldUpdateOperationsInput | $Enums.PlanSport
+  creationMode?: Prisma.EnumPlanCreationModeFieldUpdateOperationsInput | $Enums.PlanCreationMode
+  customDistanceM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customSwimDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customBikeDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  customRunDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopDistM?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  backyardLoopTimeS?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetLaps?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  planSource?: Prisma.StringFieldUpdateOperationsInput | string
+  guidanceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  priority?: Prisma.EnumGoalPriorityFieldUpdateOperationsInput | $Enums.GoalPriority
+  trainingFocus?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -1587,10 +4367,20 @@ export type GoalUncheckedUpdateManyWithoutUserInput = {
 
 export type GoalCountOutputType = {
   workouts: number
+  subGoals: number
+  snapshots: number
+  intervalProgressions: number
+  taggedWorkouts: number
+  guidedPlanSessions: number
 }
 
 export type GoalCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   workouts?: boolean | GoalCountOutputTypeCountWorkoutsArgs
+  subGoals?: boolean | GoalCountOutputTypeCountSubGoalsArgs
+  snapshots?: boolean | GoalCountOutputTypeCountSnapshotsArgs
+  intervalProgressions?: boolean | GoalCountOutputTypeCountIntervalProgressionsArgs
+  taggedWorkouts?: boolean | GoalCountOutputTypeCountTaggedWorkoutsArgs
+  guidedPlanSessions?: boolean | GoalCountOutputTypeCountGuidedPlanSessionsArgs
 }
 
 /**
@@ -1608,6 +4398,41 @@ export type GoalCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
  */
 export type GoalCountOutputTypeCountWorkoutsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.WorkoutWhereInput
+}
+
+/**
+ * GoalCountOutputType without action
+ */
+export type GoalCountOutputTypeCountSubGoalsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.GoalWhereInput
+}
+
+/**
+ * GoalCountOutputType without action
+ */
+export type GoalCountOutputTypeCountSnapshotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PlanSnapshotWhereInput
+}
+
+/**
+ * GoalCountOutputType without action
+ */
+export type GoalCountOutputTypeCountIntervalProgressionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.IntervalProgressionWhereInput
+}
+
+/**
+ * GoalCountOutputType without action
+ */
+export type GoalCountOutputTypeCountTaggedWorkoutsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WorkoutWhereInput
+}
+
+/**
+ * GoalCountOutputType without action
+ */
+export type GoalCountOutputTypeCountGuidedPlanSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.GuidedPlanSessionWhereInput
 }
 
 
@@ -1640,9 +4465,31 @@ export type GoalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   deletedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  sport?: boolean
+  creationMode?: boolean
+  customDistanceM?: boolean
+  customSwimDistM?: boolean
+  customBikeDistM?: boolean
+  customRunDistM?: boolean
+  backyardLoopDistM?: boolean
+  backyardLoopTimeS?: boolean
+  targetLaps?: boolean
+  planSource?: boolean
+  guidanceLevel?: boolean
+  parentGoalId?: boolean
+  priority?: boolean
+  trainingFocus?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   workouts?: boolean | Prisma.Goal$workoutsArgs<ExtArgs>
   raceResult?: boolean | Prisma.Goal$raceResultArgs<ExtArgs>
+  parentGoal?: boolean | Prisma.Goal$parentGoalArgs<ExtArgs>
+  subGoals?: boolean | Prisma.Goal$subGoalsArgs<ExtArgs>
+  snapshots?: boolean | Prisma.Goal$snapshotsArgs<ExtArgs>
+  intervalProgressions?: boolean | Prisma.Goal$intervalProgressionsArgs<ExtArgs>
+  aiAnalysis?: boolean | Prisma.Goal$aiAnalysisArgs<ExtArgs>
+  paceProfile?: boolean | Prisma.Goal$paceProfileArgs<ExtArgs>
+  taggedWorkouts?: boolean | Prisma.Goal$taggedWorkoutsArgs<ExtArgs>
+  guidedPlanSessions?: boolean | Prisma.Goal$guidedPlanSessionsArgs<ExtArgs>
   _count?: boolean | Prisma.GoalCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["goal"]>
 
@@ -1675,7 +4522,22 @@ export type GoalSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   deletedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  sport?: boolean
+  creationMode?: boolean
+  customDistanceM?: boolean
+  customSwimDistM?: boolean
+  customBikeDistM?: boolean
+  customRunDistM?: boolean
+  backyardLoopDistM?: boolean
+  backyardLoopTimeS?: boolean
+  targetLaps?: boolean
+  planSource?: boolean
+  guidanceLevel?: boolean
+  parentGoalId?: boolean
+  priority?: boolean
+  trainingFocus?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  parentGoal?: boolean | Prisma.Goal$parentGoalArgs<ExtArgs>
 }, ExtArgs["result"]["goal"]>
 
 export type GoalSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1707,7 +4569,22 @@ export type GoalSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   deletedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  sport?: boolean
+  creationMode?: boolean
+  customDistanceM?: boolean
+  customSwimDistM?: boolean
+  customBikeDistM?: boolean
+  customRunDistM?: boolean
+  backyardLoopDistM?: boolean
+  backyardLoopTimeS?: boolean
+  targetLaps?: boolean
+  planSource?: boolean
+  guidanceLevel?: boolean
+  parentGoalId?: boolean
+  priority?: boolean
+  trainingFocus?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  parentGoal?: boolean | Prisma.Goal$parentGoalArgs<ExtArgs>
 }, ExtArgs["result"]["goal"]>
 
 export type GoalSelectScalar = {
@@ -1739,20 +4616,44 @@ export type GoalSelectScalar = {
   deletedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  sport?: boolean
+  creationMode?: boolean
+  customDistanceM?: boolean
+  customSwimDistM?: boolean
+  customBikeDistM?: boolean
+  customRunDistM?: boolean
+  backyardLoopDistM?: boolean
+  backyardLoopTimeS?: boolean
+  targetLaps?: boolean
+  planSource?: boolean
+  guidanceLevel?: boolean
+  parentGoalId?: boolean
+  priority?: boolean
+  trainingFocus?: boolean
 }
 
-export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "swimDay" | "restDays" | "isActive" | "completedAt" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["goal"]>
+export type GoalOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "name" | "raceType" | "raceDate" | "planStartDate" | "targetTime" | "currentVdot" | "predictedTime" | "marathonShapeFactor" | "weeklyMileageGoal" | "planWeeks" | "runsPerWeek" | "ridesPerWeek" | "strengthPerWeek" | "swimsPerWeek" | "taperWeeks" | "peakWeeks" | "buildWeeks" | "longRunDay" | "workoutDay" | "swimDay" | "restDays" | "isActive" | "completedAt" | "deletedAt" | "createdAt" | "updatedAt" | "sport" | "creationMode" | "customDistanceM" | "customSwimDistM" | "customBikeDistM" | "customRunDistM" | "backyardLoopDistM" | "backyardLoopTimeS" | "targetLaps" | "planSource" | "guidanceLevel" | "parentGoalId" | "priority" | "trainingFocus", ExtArgs["result"]["goal"]>
 export type GoalInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   workouts?: boolean | Prisma.Goal$workoutsArgs<ExtArgs>
   raceResult?: boolean | Prisma.Goal$raceResultArgs<ExtArgs>
+  parentGoal?: boolean | Prisma.Goal$parentGoalArgs<ExtArgs>
+  subGoals?: boolean | Prisma.Goal$subGoalsArgs<ExtArgs>
+  snapshots?: boolean | Prisma.Goal$snapshotsArgs<ExtArgs>
+  intervalProgressions?: boolean | Prisma.Goal$intervalProgressionsArgs<ExtArgs>
+  aiAnalysis?: boolean | Prisma.Goal$aiAnalysisArgs<ExtArgs>
+  paceProfile?: boolean | Prisma.Goal$paceProfileArgs<ExtArgs>
+  taggedWorkouts?: boolean | Prisma.Goal$taggedWorkoutsArgs<ExtArgs>
+  guidedPlanSessions?: boolean | Prisma.Goal$guidedPlanSessionsArgs<ExtArgs>
   _count?: boolean | Prisma.GoalCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type GoalIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  parentGoal?: boolean | Prisma.Goal$parentGoalArgs<ExtArgs>
 }
 export type GoalIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  parentGoal?: boolean | Prisma.Goal$parentGoalArgs<ExtArgs>
 }
 
 export type $GoalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1761,13 +4662,21 @@ export type $GoalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     user: Prisma.$UserPayload<ExtArgs>
     workouts: Prisma.$WorkoutPayload<ExtArgs>[]
     raceResult: Prisma.$RaceResultPayload<ExtArgs> | null
+    parentGoal: Prisma.$GoalPayload<ExtArgs> | null
+    subGoals: Prisma.$GoalPayload<ExtArgs>[]
+    snapshots: Prisma.$PlanSnapshotPayload<ExtArgs>[]
+    intervalProgressions: Prisma.$IntervalProgressionPayload<ExtArgs>[]
+    aiAnalysis: Prisma.$AiPlanAnalysisPayload<ExtArgs> | null
+    paceProfile: Prisma.$PlanPaceProfilePayload<ExtArgs> | null
+    taggedWorkouts: Prisma.$WorkoutPayload<ExtArgs>[]
+    guidedPlanSessions: Prisma.$GuidedPlanSessionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     userId: string
     name: string
-    raceType: $Enums.RaceType
-    raceDate: Date
+    raceType: $Enums.RaceType | null
+    raceDate: Date | null
     planStartDate: Date | null
     targetTime: number | null
     currentVdot: number | null
@@ -1791,6 +4700,20 @@ export type $GoalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     deletedAt: Date | null
     createdAt: Date
     updatedAt: Date
+    sport: $Enums.PlanSport
+    creationMode: $Enums.PlanCreationMode
+    customDistanceM: number | null
+    customSwimDistM: number | null
+    customBikeDistM: number | null
+    customRunDistM: number | null
+    backyardLoopDistM: number | null
+    backyardLoopTimeS: number | null
+    targetLaps: number | null
+    planSource: string
+    guidanceLevel: string
+    parentGoalId: string | null
+    priority: $Enums.GoalPriority
+    trainingFocus: string | null
   }, ExtArgs["result"]["goal"]>
   composites: {}
 }
@@ -2188,6 +5111,14 @@ export interface Prisma__GoalClient<T, Null = never, ExtArgs extends runtime.Typ
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   workouts<T extends Prisma.Goal$workoutsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$workoutsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   raceResult<T extends Prisma.Goal$raceResultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$raceResultArgs<ExtArgs>>): Prisma.Prisma__RaceResultClient<runtime.Types.Result.GetResult<Prisma.$RaceResultPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  parentGoal<T extends Prisma.Goal$parentGoalArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$parentGoalArgs<ExtArgs>>): Prisma.Prisma__GoalClient<runtime.Types.Result.GetResult<Prisma.$GoalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  subGoals<T extends Prisma.Goal$subGoalsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$subGoalsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GoalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  snapshots<T extends Prisma.Goal$snapshotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$snapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlanSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  intervalProgressions<T extends Prisma.Goal$intervalProgressionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$intervalProgressionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IntervalProgressionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  aiAnalysis<T extends Prisma.Goal$aiAnalysisArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$aiAnalysisArgs<ExtArgs>>): Prisma.Prisma__AiPlanAnalysisClient<runtime.Types.Result.GetResult<Prisma.$AiPlanAnalysisPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  paceProfile<T extends Prisma.Goal$paceProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$paceProfileArgs<ExtArgs>>): Prisma.Prisma__PlanPaceProfileClient<runtime.Types.Result.GetResult<Prisma.$PlanPaceProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  taggedWorkouts<T extends Prisma.Goal$taggedWorkoutsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$taggedWorkoutsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  guidedPlanSessions<T extends Prisma.Goal$guidedPlanSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Goal$guidedPlanSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GuidedPlanSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2245,6 +5176,20 @@ export interface GoalFieldRefs {
   readonly deletedAt: Prisma.FieldRef<"Goal", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Goal", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Goal", 'DateTime'>
+  readonly sport: Prisma.FieldRef<"Goal", 'PlanSport'>
+  readonly creationMode: Prisma.FieldRef<"Goal", 'PlanCreationMode'>
+  readonly customDistanceM: Prisma.FieldRef<"Goal", 'Float'>
+  readonly customSwimDistM: Prisma.FieldRef<"Goal", 'Float'>
+  readonly customBikeDistM: Prisma.FieldRef<"Goal", 'Float'>
+  readonly customRunDistM: Prisma.FieldRef<"Goal", 'Float'>
+  readonly backyardLoopDistM: Prisma.FieldRef<"Goal", 'Float'>
+  readonly backyardLoopTimeS: Prisma.FieldRef<"Goal", 'Int'>
+  readonly targetLaps: Prisma.FieldRef<"Goal", 'Int'>
+  readonly planSource: Prisma.FieldRef<"Goal", 'String'>
+  readonly guidanceLevel: Prisma.FieldRef<"Goal", 'String'>
+  readonly parentGoalId: Prisma.FieldRef<"Goal", 'String'>
+  readonly priority: Prisma.FieldRef<"Goal", 'GoalPriority'>
+  readonly trainingFocus: Prisma.FieldRef<"Goal", 'String'>
 }
     
 
@@ -2686,6 +5631,183 @@ export type Goal$raceResultArgs<ExtArgs extends runtime.Types.Extensions.Interna
    */
   include?: Prisma.RaceResultInclude<ExtArgs> | null
   where?: Prisma.RaceResultWhereInput
+}
+
+/**
+ * Goal.parentGoal
+ */
+export type Goal$parentGoalArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Goal
+   */
+  select?: Prisma.GoalSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Goal
+   */
+  omit?: Prisma.GoalOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GoalInclude<ExtArgs> | null
+  where?: Prisma.GoalWhereInput
+}
+
+/**
+ * Goal.subGoals
+ */
+export type Goal$subGoalsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Goal
+   */
+  select?: Prisma.GoalSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Goal
+   */
+  omit?: Prisma.GoalOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GoalInclude<ExtArgs> | null
+  where?: Prisma.GoalWhereInput
+  orderBy?: Prisma.GoalOrderByWithRelationInput | Prisma.GoalOrderByWithRelationInput[]
+  cursor?: Prisma.GoalWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.GoalScalarFieldEnum | Prisma.GoalScalarFieldEnum[]
+}
+
+/**
+ * Goal.snapshots
+ */
+export type Goal$snapshotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PlanSnapshot
+   */
+  select?: Prisma.PlanSnapshotSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PlanSnapshot
+   */
+  omit?: Prisma.PlanSnapshotOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PlanSnapshotInclude<ExtArgs> | null
+  where?: Prisma.PlanSnapshotWhereInput
+  orderBy?: Prisma.PlanSnapshotOrderByWithRelationInput | Prisma.PlanSnapshotOrderByWithRelationInput[]
+  cursor?: Prisma.PlanSnapshotWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PlanSnapshotScalarFieldEnum | Prisma.PlanSnapshotScalarFieldEnum[]
+}
+
+/**
+ * Goal.intervalProgressions
+ */
+export type Goal$intervalProgressionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the IntervalProgression
+   */
+  select?: Prisma.IntervalProgressionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the IntervalProgression
+   */
+  omit?: Prisma.IntervalProgressionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.IntervalProgressionInclude<ExtArgs> | null
+  where?: Prisma.IntervalProgressionWhereInput
+  orderBy?: Prisma.IntervalProgressionOrderByWithRelationInput | Prisma.IntervalProgressionOrderByWithRelationInput[]
+  cursor?: Prisma.IntervalProgressionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.IntervalProgressionScalarFieldEnum | Prisma.IntervalProgressionScalarFieldEnum[]
+}
+
+/**
+ * Goal.aiAnalysis
+ */
+export type Goal$aiAnalysisArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AiPlanAnalysis
+   */
+  select?: Prisma.AiPlanAnalysisSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AiPlanAnalysis
+   */
+  omit?: Prisma.AiPlanAnalysisOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AiPlanAnalysisInclude<ExtArgs> | null
+  where?: Prisma.AiPlanAnalysisWhereInput
+}
+
+/**
+ * Goal.paceProfile
+ */
+export type Goal$paceProfileArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PlanPaceProfile
+   */
+  select?: Prisma.PlanPaceProfileSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PlanPaceProfile
+   */
+  omit?: Prisma.PlanPaceProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PlanPaceProfileInclude<ExtArgs> | null
+  where?: Prisma.PlanPaceProfileWhereInput
+}
+
+/**
+ * Goal.taggedWorkouts
+ */
+export type Goal$taggedWorkoutsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Workout
+   */
+  select?: Prisma.WorkoutSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Workout
+   */
+  omit?: Prisma.WorkoutOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WorkoutInclude<ExtArgs> | null
+  where?: Prisma.WorkoutWhereInput
+  orderBy?: Prisma.WorkoutOrderByWithRelationInput | Prisma.WorkoutOrderByWithRelationInput[]
+  cursor?: Prisma.WorkoutWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WorkoutScalarFieldEnum | Prisma.WorkoutScalarFieldEnum[]
+}
+
+/**
+ * Goal.guidedPlanSessions
+ */
+export type Goal$guidedPlanSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the GuidedPlanSession
+   */
+  select?: Prisma.GuidedPlanSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the GuidedPlanSession
+   */
+  omit?: Prisma.GuidedPlanSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GuidedPlanSessionInclude<ExtArgs> | null
+  where?: Prisma.GuidedPlanSessionWhereInput
+  orderBy?: Prisma.GuidedPlanSessionOrderByWithRelationInput | Prisma.GuidedPlanSessionOrderByWithRelationInput[]
+  cursor?: Prisma.GuidedPlanSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.GuidedPlanSessionScalarFieldEnum | Prisma.GuidedPlanSessionScalarFieldEnum[]
 }
 
 /**

@@ -3,7 +3,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Eye, EyeOff, Download } from 'lucide-react';
+import { ArrowLeft, Calendar, Eye, EyeOff, Download, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 import { format, startOfWeek, addDays, isToday, isSameDay, differenceInWeeks, isBefore } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { EditWorkoutModal, ErrorBoundary, Footer } from '@/components';
@@ -39,6 +40,7 @@ export default function PlanPage() {
 
     // Show Unlinked Activities Toggle
     const [showUnlinked, setShowUnlinked] = useState(true);
+    const [migrating, setMigrating] = useState(false);
 
     // DnD Sensors
     const sensors = useSensors(
@@ -150,8 +152,10 @@ export default function PlanPage() {
     }
 
     const goal = data.goal;
+    if (!goal.raceDate) {
+        return <div className="text-foreground-muted p-8 text-center">No race date set for this plan.</div>;
+    }
     const raceDateObj = new Date(goal.raceDate);
-    // Fallback if raceDate is invalid (though it shouldn't be)
     const raceDate = !isNaN(raceDateObj.getTime()) ? raceDateObj : new Date();
 
     const workouts = goal.workouts || [];
@@ -215,6 +219,37 @@ export default function PlanPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                            <button
+                                onClick={async () => {
+                                    if (migrating) return;
+                                    setMigrating(true);
+                                    try {
+                                        const res = await fetch(`/api/plan-advanced/${goal.id}`, {
+                                            method: 'PATCH',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ planSource: 'advanced' }),
+                                        });
+                                        if (res.ok) {
+                                            router.push(`/plan-advanced/${goal.id}`);
+                                        } else {
+                                            toast.error('Failed to migrate plan');
+                                            setMigrating(false);
+                                        }
+                                    } catch {
+                                        toast.error('Failed to migrate plan');
+                                        setMigrating(false);
+                                    }
+                                }}
+                                disabled={migrating}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 disabled:opacity-50"
+                            >
+                                {migrating ? (
+                                    <div className="w-4 h-4 border-2 border-orange-400/30 border-t-orange-400 rounded-full animate-spin" />
+                                ) : (
+                                    <ExternalLink className="w-4 h-4" />
+                                )}
+                                Open in Advanced Editor
+                            </button>
                             <button
                                 onClick={() => {
                                     const printStyles = document.createElement('style');

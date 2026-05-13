@@ -60,6 +60,11 @@ export type WorkoutMinAggregateOutputType = {
   linkedActivityId: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  customName: string | null
+  color: string | null
+  intervalProgressionId: string | null
+  groupId: string | null
+  subGoalId: string | null
 }
 
 export type WorkoutMaxAggregateOutputType = {
@@ -80,6 +85,11 @@ export type WorkoutMaxAggregateOutputType = {
   linkedActivityId: string | null
   createdAt: Date | null
   updatedAt: Date | null
+  customName: string | null
+  color: string | null
+  intervalProgressionId: string | null
+  groupId: string | null
+  subGoalId: string | null
 }
 
 export type WorkoutCountAggregateOutputType = {
@@ -100,6 +110,12 @@ export type WorkoutCountAggregateOutputType = {
   linkedActivityId: number
   createdAt: number
   updatedAt: number
+  customName: number
+  color: number
+  intervalProgressionId: number
+  structuredSteps: number
+  groupId: number
+  subGoalId: number
   _all: number
 }
 
@@ -138,6 +154,11 @@ export type WorkoutMinAggregateInputType = {
   linkedActivityId?: true
   createdAt?: true
   updatedAt?: true
+  customName?: true
+  color?: true
+  intervalProgressionId?: true
+  groupId?: true
+  subGoalId?: true
 }
 
 export type WorkoutMaxAggregateInputType = {
@@ -158,6 +179,11 @@ export type WorkoutMaxAggregateInputType = {
   linkedActivityId?: true
   createdAt?: true
   updatedAt?: true
+  customName?: true
+  color?: true
+  intervalProgressionId?: true
+  groupId?: true
+  subGoalId?: true
 }
 
 export type WorkoutCountAggregateInputType = {
@@ -178,6 +204,12 @@ export type WorkoutCountAggregateInputType = {
   linkedActivityId?: true
   createdAt?: true
   updatedAt?: true
+  customName?: true
+  color?: true
+  intervalProgressionId?: true
+  structuredSteps?: true
+  groupId?: true
+  subGoalId?: true
   _all?: true
 }
 
@@ -285,6 +317,12 @@ export type WorkoutGroupByOutputType = {
   linkedActivityId: string | null
   createdAt: Date
   updatedAt: Date
+  customName: string | null
+  color: string | null
+  intervalProgressionId: string | null
+  structuredSteps: runtime.JsonValue | null
+  groupId: string | null
+  subGoalId: string | null
   _count: WorkoutCountAggregateOutputType | null
   _avg: WorkoutAvgAggregateOutputType | null
   _sum: WorkoutSumAggregateOutputType | null
@@ -328,8 +366,16 @@ export type WorkoutWhereInput = {
   linkedActivityId?: Prisma.StringNullableFilter<"Workout"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Workout"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Workout"> | Date | string
+  customName?: Prisma.StringNullableFilter<"Workout"> | string | null
+  color?: Prisma.StringNullableFilter<"Workout"> | string | null
+  intervalProgressionId?: Prisma.StringNullableFilter<"Workout"> | string | null
+  structuredSteps?: Prisma.JsonNullableFilter<"Workout">
+  groupId?: Prisma.StringNullableFilter<"Workout"> | string | null
+  subGoalId?: Prisma.StringNullableFilter<"Workout"> | string | null
+  intervalProgression?: Prisma.XOR<Prisma.IntervalProgressionNullableScalarRelationFilter, Prisma.IntervalProgressionWhereInput> | null
   goal?: Prisma.XOR<Prisma.GoalScalarRelationFilter, Prisma.GoalWhereInput>
   linkedActivity?: Prisma.XOR<Prisma.ActivityNullableScalarRelationFilter, Prisma.ActivityWhereInput> | null
+  subGoal?: Prisma.XOR<Prisma.GoalNullableScalarRelationFilter, Prisma.GoalWhereInput> | null
 }
 
 export type WorkoutOrderByWithRelationInput = {
@@ -350,8 +396,16 @@ export type WorkoutOrderByWithRelationInput = {
   linkedActivityId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  customName?: Prisma.SortOrderInput | Prisma.SortOrder
+  color?: Prisma.SortOrderInput | Prisma.SortOrder
+  intervalProgressionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  structuredSteps?: Prisma.SortOrderInput | Prisma.SortOrder
+  groupId?: Prisma.SortOrderInput | Prisma.SortOrder
+  subGoalId?: Prisma.SortOrderInput | Prisma.SortOrder
+  intervalProgression?: Prisma.IntervalProgressionOrderByWithRelationInput
   goal?: Prisma.GoalOrderByWithRelationInput
   linkedActivity?: Prisma.ActivityOrderByWithRelationInput
+  subGoal?: Prisma.GoalOrderByWithRelationInput
 }
 
 export type WorkoutWhereUniqueInput = Prisma.AtLeast<{
@@ -375,8 +429,16 @@ export type WorkoutWhereUniqueInput = Prisma.AtLeast<{
   linkedActivityId?: Prisma.StringNullableFilter<"Workout"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Workout"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Workout"> | Date | string
+  customName?: Prisma.StringNullableFilter<"Workout"> | string | null
+  color?: Prisma.StringNullableFilter<"Workout"> | string | null
+  intervalProgressionId?: Prisma.StringNullableFilter<"Workout"> | string | null
+  structuredSteps?: Prisma.JsonNullableFilter<"Workout">
+  groupId?: Prisma.StringNullableFilter<"Workout"> | string | null
+  subGoalId?: Prisma.StringNullableFilter<"Workout"> | string | null
+  intervalProgression?: Prisma.XOR<Prisma.IntervalProgressionNullableScalarRelationFilter, Prisma.IntervalProgressionWhereInput> | null
   goal?: Prisma.XOR<Prisma.GoalScalarRelationFilter, Prisma.GoalWhereInput>
   linkedActivity?: Prisma.XOR<Prisma.ActivityNullableScalarRelationFilter, Prisma.ActivityWhereInput> | null
+  subGoal?: Prisma.XOR<Prisma.GoalNullableScalarRelationFilter, Prisma.GoalWhereInput> | null
 }, "id">
 
 export type WorkoutOrderByWithAggregationInput = {
@@ -397,6 +459,12 @@ export type WorkoutOrderByWithAggregationInput = {
   linkedActivityId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  customName?: Prisma.SortOrderInput | Prisma.SortOrder
+  color?: Prisma.SortOrderInput | Prisma.SortOrder
+  intervalProgressionId?: Prisma.SortOrderInput | Prisma.SortOrder
+  structuredSteps?: Prisma.SortOrderInput | Prisma.SortOrder
+  groupId?: Prisma.SortOrderInput | Prisma.SortOrder
+  subGoalId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.WorkoutCountOrderByAggregateInput
   _avg?: Prisma.WorkoutAvgOrderByAggregateInput
   _max?: Prisma.WorkoutMaxOrderByAggregateInput
@@ -425,6 +493,12 @@ export type WorkoutScalarWhereWithAggregatesInput = {
   linkedActivityId?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Workout"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Workout"> | Date | string
+  customName?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
+  color?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
+  intervalProgressionId?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
+  structuredSteps?: Prisma.JsonNullableWithAggregatesFilter<"Workout">
+  groupId?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
+  subGoalId?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
 }
 
 export type WorkoutCreateInput = {
@@ -443,8 +517,14 @@ export type WorkoutCreateInput = {
   completedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  intervalProgression?: Prisma.IntervalProgressionCreateNestedOneWithoutWorkoutsInput
   goal: Prisma.GoalCreateNestedOneWithoutWorkoutsInput
   linkedActivity?: Prisma.ActivityCreateNestedOneWithoutLinkedWorkoutsInput
+  subGoal?: Prisma.GoalCreateNestedOneWithoutTaggedWorkoutsInput
 }
 
 export type WorkoutUncheckedCreateInput = {
@@ -465,6 +545,12 @@ export type WorkoutUncheckedCreateInput = {
   linkedActivityId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  intervalProgressionId?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  subGoalId?: string | null
 }
 
 export type WorkoutUpdateInput = {
@@ -483,8 +569,14 @@ export type WorkoutUpdateInput = {
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgression?: Prisma.IntervalProgressionUpdateOneWithoutWorkoutsNestedInput
   goal?: Prisma.GoalUpdateOneRequiredWithoutWorkoutsNestedInput
   linkedActivity?: Prisma.ActivityUpdateOneWithoutLinkedWorkoutsNestedInput
+  subGoal?: Prisma.GoalUpdateOneWithoutTaggedWorkoutsNestedInput
 }
 
 export type WorkoutUncheckedUpdateInput = {
@@ -505,6 +597,12 @@ export type WorkoutUncheckedUpdateInput = {
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgressionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type WorkoutCreateManyInput = {
@@ -525,6 +623,12 @@ export type WorkoutCreateManyInput = {
   linkedActivityId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  intervalProgressionId?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  subGoalId?: string | null
 }
 
 export type WorkoutUpdateManyMutationInput = {
@@ -543,6 +647,10 @@ export type WorkoutUpdateManyMutationInput = {
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type WorkoutUncheckedUpdateManyInput = {
@@ -563,6 +671,12 @@ export type WorkoutUncheckedUpdateManyInput = {
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgressionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type WorkoutListRelationFilter = {
@@ -593,6 +707,12 @@ export type WorkoutCountOrderByAggregateInput = {
   linkedActivityId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  customName?: Prisma.SortOrder
+  color?: Prisma.SortOrder
+  intervalProgressionId?: Prisma.SortOrder
+  structuredSteps?: Prisma.SortOrder
+  groupId?: Prisma.SortOrder
+  subGoalId?: Prisma.SortOrder
 }
 
 export type WorkoutAvgOrderByAggregateInput = {
@@ -621,6 +741,11 @@ export type WorkoutMaxOrderByAggregateInput = {
   linkedActivityId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  customName?: Prisma.SortOrder
+  color?: Prisma.SortOrder
+  intervalProgressionId?: Prisma.SortOrder
+  groupId?: Prisma.SortOrder
+  subGoalId?: Prisma.SortOrder
 }
 
 export type WorkoutMinOrderByAggregateInput = {
@@ -641,6 +766,11 @@ export type WorkoutMinOrderByAggregateInput = {
   linkedActivityId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  customName?: Prisma.SortOrder
+  color?: Prisma.SortOrder
+  intervalProgressionId?: Prisma.SortOrder
+  groupId?: Prisma.SortOrder
+  subGoalId?: Prisma.SortOrder
 }
 
 export type WorkoutSumOrderByAggregateInput = {
@@ -700,10 +830,24 @@ export type WorkoutCreateNestedManyWithoutGoalInput = {
   connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
 }
 
+export type WorkoutCreateNestedManyWithoutSubGoalInput = {
+  create?: Prisma.XOR<Prisma.WorkoutCreateWithoutSubGoalInput, Prisma.WorkoutUncheckedCreateWithoutSubGoalInput> | Prisma.WorkoutCreateWithoutSubGoalInput[] | Prisma.WorkoutUncheckedCreateWithoutSubGoalInput[]
+  connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutSubGoalInput | Prisma.WorkoutCreateOrConnectWithoutSubGoalInput[]
+  createMany?: Prisma.WorkoutCreateManySubGoalInputEnvelope
+  connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+}
+
 export type WorkoutUncheckedCreateNestedManyWithoutGoalInput = {
   create?: Prisma.XOR<Prisma.WorkoutCreateWithoutGoalInput, Prisma.WorkoutUncheckedCreateWithoutGoalInput> | Prisma.WorkoutCreateWithoutGoalInput[] | Prisma.WorkoutUncheckedCreateWithoutGoalInput[]
   connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutGoalInput | Prisma.WorkoutCreateOrConnectWithoutGoalInput[]
   createMany?: Prisma.WorkoutCreateManyGoalInputEnvelope
+  connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+}
+
+export type WorkoutUncheckedCreateNestedManyWithoutSubGoalInput = {
+  create?: Prisma.XOR<Prisma.WorkoutCreateWithoutSubGoalInput, Prisma.WorkoutUncheckedCreateWithoutSubGoalInput> | Prisma.WorkoutCreateWithoutSubGoalInput[] | Prisma.WorkoutUncheckedCreateWithoutSubGoalInput[]
+  connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutSubGoalInput | Prisma.WorkoutCreateOrConnectWithoutSubGoalInput[]
+  createMany?: Prisma.WorkoutCreateManySubGoalInputEnvelope
   connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
 }
 
@@ -721,6 +865,20 @@ export type WorkoutUpdateManyWithoutGoalNestedInput = {
   deleteMany?: Prisma.WorkoutScalarWhereInput | Prisma.WorkoutScalarWhereInput[]
 }
 
+export type WorkoutUpdateManyWithoutSubGoalNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkoutCreateWithoutSubGoalInput, Prisma.WorkoutUncheckedCreateWithoutSubGoalInput> | Prisma.WorkoutCreateWithoutSubGoalInput[] | Prisma.WorkoutUncheckedCreateWithoutSubGoalInput[]
+  connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutSubGoalInput | Prisma.WorkoutCreateOrConnectWithoutSubGoalInput[]
+  upsert?: Prisma.WorkoutUpsertWithWhereUniqueWithoutSubGoalInput | Prisma.WorkoutUpsertWithWhereUniqueWithoutSubGoalInput[]
+  createMany?: Prisma.WorkoutCreateManySubGoalInputEnvelope
+  set?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  disconnect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  delete?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  update?: Prisma.WorkoutUpdateWithWhereUniqueWithoutSubGoalInput | Prisma.WorkoutUpdateWithWhereUniqueWithoutSubGoalInput[]
+  updateMany?: Prisma.WorkoutUpdateManyWithWhereWithoutSubGoalInput | Prisma.WorkoutUpdateManyWithWhereWithoutSubGoalInput[]
+  deleteMany?: Prisma.WorkoutScalarWhereInput | Prisma.WorkoutScalarWhereInput[]
+}
+
 export type WorkoutUncheckedUpdateManyWithoutGoalNestedInput = {
   create?: Prisma.XOR<Prisma.WorkoutCreateWithoutGoalInput, Prisma.WorkoutUncheckedCreateWithoutGoalInput> | Prisma.WorkoutCreateWithoutGoalInput[] | Prisma.WorkoutUncheckedCreateWithoutGoalInput[]
   connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutGoalInput | Prisma.WorkoutCreateOrConnectWithoutGoalInput[]
@@ -735,12 +893,68 @@ export type WorkoutUncheckedUpdateManyWithoutGoalNestedInput = {
   deleteMany?: Prisma.WorkoutScalarWhereInput | Prisma.WorkoutScalarWhereInput[]
 }
 
+export type WorkoutUncheckedUpdateManyWithoutSubGoalNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkoutCreateWithoutSubGoalInput, Prisma.WorkoutUncheckedCreateWithoutSubGoalInput> | Prisma.WorkoutCreateWithoutSubGoalInput[] | Prisma.WorkoutUncheckedCreateWithoutSubGoalInput[]
+  connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutSubGoalInput | Prisma.WorkoutCreateOrConnectWithoutSubGoalInput[]
+  upsert?: Prisma.WorkoutUpsertWithWhereUniqueWithoutSubGoalInput | Prisma.WorkoutUpsertWithWhereUniqueWithoutSubGoalInput[]
+  createMany?: Prisma.WorkoutCreateManySubGoalInputEnvelope
+  set?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  disconnect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  delete?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  update?: Prisma.WorkoutUpdateWithWhereUniqueWithoutSubGoalInput | Prisma.WorkoutUpdateWithWhereUniqueWithoutSubGoalInput[]
+  updateMany?: Prisma.WorkoutUpdateManyWithWhereWithoutSubGoalInput | Prisma.WorkoutUpdateManyWithWhereWithoutSubGoalInput[]
+  deleteMany?: Prisma.WorkoutScalarWhereInput | Prisma.WorkoutScalarWhereInput[]
+}
+
 export type EnumWorkoutTypeFieldUpdateOperationsInput = {
   set?: $Enums.WorkoutType
 }
 
 export type EnumPlanPhaseFieldUpdateOperationsInput = {
   set?: $Enums.PlanPhase
+}
+
+export type WorkoutCreateNestedManyWithoutIntervalProgressionInput = {
+  create?: Prisma.XOR<Prisma.WorkoutCreateWithoutIntervalProgressionInput, Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput> | Prisma.WorkoutCreateWithoutIntervalProgressionInput[] | Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput[]
+  connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutIntervalProgressionInput | Prisma.WorkoutCreateOrConnectWithoutIntervalProgressionInput[]
+  createMany?: Prisma.WorkoutCreateManyIntervalProgressionInputEnvelope
+  connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+}
+
+export type WorkoutUncheckedCreateNestedManyWithoutIntervalProgressionInput = {
+  create?: Prisma.XOR<Prisma.WorkoutCreateWithoutIntervalProgressionInput, Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput> | Prisma.WorkoutCreateWithoutIntervalProgressionInput[] | Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput[]
+  connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutIntervalProgressionInput | Prisma.WorkoutCreateOrConnectWithoutIntervalProgressionInput[]
+  createMany?: Prisma.WorkoutCreateManyIntervalProgressionInputEnvelope
+  connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+}
+
+export type WorkoutUpdateManyWithoutIntervalProgressionNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkoutCreateWithoutIntervalProgressionInput, Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput> | Prisma.WorkoutCreateWithoutIntervalProgressionInput[] | Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput[]
+  connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutIntervalProgressionInput | Prisma.WorkoutCreateOrConnectWithoutIntervalProgressionInput[]
+  upsert?: Prisma.WorkoutUpsertWithWhereUniqueWithoutIntervalProgressionInput | Prisma.WorkoutUpsertWithWhereUniqueWithoutIntervalProgressionInput[]
+  createMany?: Prisma.WorkoutCreateManyIntervalProgressionInputEnvelope
+  set?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  disconnect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  delete?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  update?: Prisma.WorkoutUpdateWithWhereUniqueWithoutIntervalProgressionInput | Prisma.WorkoutUpdateWithWhereUniqueWithoutIntervalProgressionInput[]
+  updateMany?: Prisma.WorkoutUpdateManyWithWhereWithoutIntervalProgressionInput | Prisma.WorkoutUpdateManyWithWhereWithoutIntervalProgressionInput[]
+  deleteMany?: Prisma.WorkoutScalarWhereInput | Prisma.WorkoutScalarWhereInput[]
+}
+
+export type WorkoutUncheckedUpdateManyWithoutIntervalProgressionNestedInput = {
+  create?: Prisma.XOR<Prisma.WorkoutCreateWithoutIntervalProgressionInput, Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput> | Prisma.WorkoutCreateWithoutIntervalProgressionInput[] | Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput[]
+  connectOrCreate?: Prisma.WorkoutCreateOrConnectWithoutIntervalProgressionInput | Prisma.WorkoutCreateOrConnectWithoutIntervalProgressionInput[]
+  upsert?: Prisma.WorkoutUpsertWithWhereUniqueWithoutIntervalProgressionInput | Prisma.WorkoutUpsertWithWhereUniqueWithoutIntervalProgressionInput[]
+  createMany?: Prisma.WorkoutCreateManyIntervalProgressionInputEnvelope
+  set?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  disconnect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  delete?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  connect?: Prisma.WorkoutWhereUniqueInput | Prisma.WorkoutWhereUniqueInput[]
+  update?: Prisma.WorkoutUpdateWithWhereUniqueWithoutIntervalProgressionInput | Prisma.WorkoutUpdateWithWhereUniqueWithoutIntervalProgressionInput[]
+  updateMany?: Prisma.WorkoutUpdateManyWithWhereWithoutIntervalProgressionInput | Prisma.WorkoutUpdateManyWithWhereWithoutIntervalProgressionInput[]
+  deleteMany?: Prisma.WorkoutScalarWhereInput | Prisma.WorkoutScalarWhereInput[]
 }
 
 export type WorkoutCreateWithoutLinkedActivityInput = {
@@ -759,7 +973,13 @@ export type WorkoutCreateWithoutLinkedActivityInput = {
   completedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  intervalProgression?: Prisma.IntervalProgressionCreateNestedOneWithoutWorkoutsInput
   goal: Prisma.GoalCreateNestedOneWithoutWorkoutsInput
+  subGoal?: Prisma.GoalCreateNestedOneWithoutTaggedWorkoutsInput
 }
 
 export type WorkoutUncheckedCreateWithoutLinkedActivityInput = {
@@ -779,6 +999,12 @@ export type WorkoutUncheckedCreateWithoutLinkedActivityInput = {
   completedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  intervalProgressionId?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  subGoalId?: string | null
 }
 
 export type WorkoutCreateOrConnectWithoutLinkedActivityInput = {
@@ -828,6 +1054,12 @@ export type WorkoutScalarWhereInput = {
   linkedActivityId?: Prisma.StringNullableFilter<"Workout"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Workout"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Workout"> | Date | string
+  customName?: Prisma.StringNullableFilter<"Workout"> | string | null
+  color?: Prisma.StringNullableFilter<"Workout"> | string | null
+  intervalProgressionId?: Prisma.StringNullableFilter<"Workout"> | string | null
+  structuredSteps?: Prisma.JsonNullableFilter<"Workout">
+  groupId?: Prisma.StringNullableFilter<"Workout"> | string | null
+  subGoalId?: Prisma.StringNullableFilter<"Workout"> | string | null
 }
 
 export type WorkoutCreateWithoutGoalInput = {
@@ -846,7 +1078,13 @@ export type WorkoutCreateWithoutGoalInput = {
   completedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  intervalProgression?: Prisma.IntervalProgressionCreateNestedOneWithoutWorkoutsInput
   linkedActivity?: Prisma.ActivityCreateNestedOneWithoutLinkedWorkoutsInput
+  subGoal?: Prisma.GoalCreateNestedOneWithoutTaggedWorkoutsInput
 }
 
 export type WorkoutUncheckedCreateWithoutGoalInput = {
@@ -866,6 +1104,12 @@ export type WorkoutUncheckedCreateWithoutGoalInput = {
   linkedActivityId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  intervalProgressionId?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  subGoalId?: string | null
 }
 
 export type WorkoutCreateOrConnectWithoutGoalInput = {
@@ -875,6 +1119,66 @@ export type WorkoutCreateOrConnectWithoutGoalInput = {
 
 export type WorkoutCreateManyGoalInputEnvelope = {
   data: Prisma.WorkoutCreateManyGoalInput | Prisma.WorkoutCreateManyGoalInput[]
+  skipDuplicates?: boolean
+}
+
+export type WorkoutCreateWithoutSubGoalInput = {
+  id?: string
+  scheduledDate: Date | string
+  workoutType: $Enums.WorkoutType
+  description: string
+  phase?: $Enums.PlanPhase
+  order?: number
+  notes?: string | null
+  targetDistance?: number | null
+  targetDuration?: number | null
+  targetPace?: number | null
+  targetHrZone?: number | null
+  isCompleted?: boolean
+  completedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  intervalProgression?: Prisma.IntervalProgressionCreateNestedOneWithoutWorkoutsInput
+  goal: Prisma.GoalCreateNestedOneWithoutWorkoutsInput
+  linkedActivity?: Prisma.ActivityCreateNestedOneWithoutLinkedWorkoutsInput
+}
+
+export type WorkoutUncheckedCreateWithoutSubGoalInput = {
+  id?: string
+  goalId: string
+  scheduledDate: Date | string
+  workoutType: $Enums.WorkoutType
+  description: string
+  phase?: $Enums.PlanPhase
+  order?: number
+  notes?: string | null
+  targetDistance?: number | null
+  targetDuration?: number | null
+  targetPace?: number | null
+  targetHrZone?: number | null
+  isCompleted?: boolean
+  completedAt?: Date | string | null
+  linkedActivityId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  intervalProgressionId?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+}
+
+export type WorkoutCreateOrConnectWithoutSubGoalInput = {
+  where: Prisma.WorkoutWhereUniqueInput
+  create: Prisma.XOR<Prisma.WorkoutCreateWithoutSubGoalInput, Prisma.WorkoutUncheckedCreateWithoutSubGoalInput>
+}
+
+export type WorkoutCreateManySubGoalInputEnvelope = {
+  data: Prisma.WorkoutCreateManySubGoalInput | Prisma.WorkoutCreateManySubGoalInput[]
   skipDuplicates?: boolean
 }
 
@@ -894,6 +1198,98 @@ export type WorkoutUpdateManyWithWhereWithoutGoalInput = {
   data: Prisma.XOR<Prisma.WorkoutUpdateManyMutationInput, Prisma.WorkoutUncheckedUpdateManyWithoutGoalInput>
 }
 
+export type WorkoutUpsertWithWhereUniqueWithoutSubGoalInput = {
+  where: Prisma.WorkoutWhereUniqueInput
+  update: Prisma.XOR<Prisma.WorkoutUpdateWithoutSubGoalInput, Prisma.WorkoutUncheckedUpdateWithoutSubGoalInput>
+  create: Prisma.XOR<Prisma.WorkoutCreateWithoutSubGoalInput, Prisma.WorkoutUncheckedCreateWithoutSubGoalInput>
+}
+
+export type WorkoutUpdateWithWhereUniqueWithoutSubGoalInput = {
+  where: Prisma.WorkoutWhereUniqueInput
+  data: Prisma.XOR<Prisma.WorkoutUpdateWithoutSubGoalInput, Prisma.WorkoutUncheckedUpdateWithoutSubGoalInput>
+}
+
+export type WorkoutUpdateManyWithWhereWithoutSubGoalInput = {
+  where: Prisma.WorkoutScalarWhereInput
+  data: Prisma.XOR<Prisma.WorkoutUpdateManyMutationInput, Prisma.WorkoutUncheckedUpdateManyWithoutSubGoalInput>
+}
+
+export type WorkoutCreateWithoutIntervalProgressionInput = {
+  id?: string
+  scheduledDate: Date | string
+  workoutType: $Enums.WorkoutType
+  description: string
+  phase?: $Enums.PlanPhase
+  order?: number
+  notes?: string | null
+  targetDistance?: number | null
+  targetDuration?: number | null
+  targetPace?: number | null
+  targetHrZone?: number | null
+  isCompleted?: boolean
+  completedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  goal: Prisma.GoalCreateNestedOneWithoutWorkoutsInput
+  linkedActivity?: Prisma.ActivityCreateNestedOneWithoutLinkedWorkoutsInput
+  subGoal?: Prisma.GoalCreateNestedOneWithoutTaggedWorkoutsInput
+}
+
+export type WorkoutUncheckedCreateWithoutIntervalProgressionInput = {
+  id?: string
+  goalId: string
+  scheduledDate: Date | string
+  workoutType: $Enums.WorkoutType
+  description: string
+  phase?: $Enums.PlanPhase
+  order?: number
+  notes?: string | null
+  targetDistance?: number | null
+  targetDuration?: number | null
+  targetPace?: number | null
+  targetHrZone?: number | null
+  isCompleted?: boolean
+  completedAt?: Date | string | null
+  linkedActivityId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  subGoalId?: string | null
+}
+
+export type WorkoutCreateOrConnectWithoutIntervalProgressionInput = {
+  where: Prisma.WorkoutWhereUniqueInput
+  create: Prisma.XOR<Prisma.WorkoutCreateWithoutIntervalProgressionInput, Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput>
+}
+
+export type WorkoutCreateManyIntervalProgressionInputEnvelope = {
+  data: Prisma.WorkoutCreateManyIntervalProgressionInput | Prisma.WorkoutCreateManyIntervalProgressionInput[]
+  skipDuplicates?: boolean
+}
+
+export type WorkoutUpsertWithWhereUniqueWithoutIntervalProgressionInput = {
+  where: Prisma.WorkoutWhereUniqueInput
+  update: Prisma.XOR<Prisma.WorkoutUpdateWithoutIntervalProgressionInput, Prisma.WorkoutUncheckedUpdateWithoutIntervalProgressionInput>
+  create: Prisma.XOR<Prisma.WorkoutCreateWithoutIntervalProgressionInput, Prisma.WorkoutUncheckedCreateWithoutIntervalProgressionInput>
+}
+
+export type WorkoutUpdateWithWhereUniqueWithoutIntervalProgressionInput = {
+  where: Prisma.WorkoutWhereUniqueInput
+  data: Prisma.XOR<Prisma.WorkoutUpdateWithoutIntervalProgressionInput, Prisma.WorkoutUncheckedUpdateWithoutIntervalProgressionInput>
+}
+
+export type WorkoutUpdateManyWithWhereWithoutIntervalProgressionInput = {
+  where: Prisma.WorkoutScalarWhereInput
+  data: Prisma.XOR<Prisma.WorkoutUpdateManyMutationInput, Prisma.WorkoutUncheckedUpdateManyWithoutIntervalProgressionInput>
+}
+
 export type WorkoutCreateManyLinkedActivityInput = {
   id?: string
   goalId: string
@@ -911,6 +1307,12 @@ export type WorkoutCreateManyLinkedActivityInput = {
   completedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  intervalProgressionId?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  subGoalId?: string | null
 }
 
 export type WorkoutUpdateWithoutLinkedActivityInput = {
@@ -929,7 +1331,13 @@ export type WorkoutUpdateWithoutLinkedActivityInput = {
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgression?: Prisma.IntervalProgressionUpdateOneWithoutWorkoutsNestedInput
   goal?: Prisma.GoalUpdateOneRequiredWithoutWorkoutsNestedInput
+  subGoal?: Prisma.GoalUpdateOneWithoutTaggedWorkoutsNestedInput
 }
 
 export type WorkoutUncheckedUpdateWithoutLinkedActivityInput = {
@@ -949,6 +1357,12 @@ export type WorkoutUncheckedUpdateWithoutLinkedActivityInput = {
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgressionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type WorkoutUncheckedUpdateManyWithoutLinkedActivityInput = {
@@ -968,6 +1382,12 @@ export type WorkoutUncheckedUpdateManyWithoutLinkedActivityInput = {
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgressionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type WorkoutCreateManyGoalInput = {
@@ -987,6 +1407,37 @@ export type WorkoutCreateManyGoalInput = {
   linkedActivityId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  intervalProgressionId?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  subGoalId?: string | null
+}
+
+export type WorkoutCreateManySubGoalInput = {
+  id?: string
+  goalId: string
+  scheduledDate: Date | string
+  workoutType: $Enums.WorkoutType
+  description: string
+  phase?: $Enums.PlanPhase
+  order?: number
+  notes?: string | null
+  targetDistance?: number | null
+  targetDuration?: number | null
+  targetPace?: number | null
+  targetHrZone?: number | null
+  isCompleted?: boolean
+  completedAt?: Date | string | null
+  linkedActivityId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  intervalProgressionId?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
 }
 
 export type WorkoutUpdateWithoutGoalInput = {
@@ -1005,7 +1456,13 @@ export type WorkoutUpdateWithoutGoalInput = {
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgression?: Prisma.IntervalProgressionUpdateOneWithoutWorkoutsNestedInput
   linkedActivity?: Prisma.ActivityUpdateOneWithoutLinkedWorkoutsNestedInput
+  subGoal?: Prisma.GoalUpdateOneWithoutTaggedWorkoutsNestedInput
 }
 
 export type WorkoutUncheckedUpdateWithoutGoalInput = {
@@ -1025,6 +1482,12 @@ export type WorkoutUncheckedUpdateWithoutGoalInput = {
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgressionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type WorkoutUncheckedUpdateManyWithoutGoalInput = {
@@ -1044,6 +1507,187 @@ export type WorkoutUncheckedUpdateManyWithoutGoalInput = {
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgressionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type WorkoutUpdateWithoutSubGoalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  scheduledDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workoutType?: Prisma.EnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  phase?: Prisma.EnumPlanPhaseFieldUpdateOperationsInput | $Enums.PlanPhase
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetDistance?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgression?: Prisma.IntervalProgressionUpdateOneWithoutWorkoutsNestedInput
+  goal?: Prisma.GoalUpdateOneRequiredWithoutWorkoutsNestedInput
+  linkedActivity?: Prisma.ActivityUpdateOneWithoutLinkedWorkoutsNestedInput
+}
+
+export type WorkoutUncheckedUpdateWithoutSubGoalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  goalId?: Prisma.StringFieldUpdateOperationsInput | string
+  scheduledDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workoutType?: Prisma.EnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  phase?: Prisma.EnumPlanPhaseFieldUpdateOperationsInput | $Enums.PlanPhase
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetDistance?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgressionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type WorkoutUncheckedUpdateManyWithoutSubGoalInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  goalId?: Prisma.StringFieldUpdateOperationsInput | string
+  scheduledDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workoutType?: Prisma.EnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  phase?: Prisma.EnumPlanPhaseFieldUpdateOperationsInput | $Enums.PlanPhase
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetDistance?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  intervalProgressionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type WorkoutCreateManyIntervalProgressionInput = {
+  id?: string
+  goalId: string
+  scheduledDate: Date | string
+  workoutType: $Enums.WorkoutType
+  description: string
+  phase?: $Enums.PlanPhase
+  order?: number
+  notes?: string | null
+  targetDistance?: number | null
+  targetDuration?: number | null
+  targetPace?: number | null
+  targetHrZone?: number | null
+  isCompleted?: boolean
+  completedAt?: Date | string | null
+  linkedActivityId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customName?: string | null
+  color?: string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: string | null
+  subGoalId?: string | null
+}
+
+export type WorkoutUpdateWithoutIntervalProgressionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  scheduledDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workoutType?: Prisma.EnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  phase?: Prisma.EnumPlanPhaseFieldUpdateOperationsInput | $Enums.PlanPhase
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetDistance?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  goal?: Prisma.GoalUpdateOneRequiredWithoutWorkoutsNestedInput
+  linkedActivity?: Prisma.ActivityUpdateOneWithoutLinkedWorkoutsNestedInput
+  subGoal?: Prisma.GoalUpdateOneWithoutTaggedWorkoutsNestedInput
+}
+
+export type WorkoutUncheckedUpdateWithoutIntervalProgressionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  goalId?: Prisma.StringFieldUpdateOperationsInput | string
+  scheduledDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workoutType?: Prisma.EnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  phase?: Prisma.EnumPlanPhaseFieldUpdateOperationsInput | $Enums.PlanPhase
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetDistance?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type WorkoutUncheckedUpdateManyWithoutIntervalProgressionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  goalId?: Prisma.StringFieldUpdateOperationsInput | string
+  scheduledDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  workoutType?: Prisma.EnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  phase?: Prisma.EnumPlanPhaseFieldUpdateOperationsInput | $Enums.PlanPhase
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetDistance?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  structuredSteps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  groupId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subGoalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -1066,8 +1710,16 @@ export type WorkoutSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   linkedActivityId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  customName?: boolean
+  color?: boolean
+  intervalProgressionId?: boolean
+  structuredSteps?: boolean
+  groupId?: boolean
+  subGoalId?: boolean
+  intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
   linkedActivity?: boolean | Prisma.Workout$linkedActivityArgs<ExtArgs>
+  subGoal?: boolean | Prisma.Workout$subGoalArgs<ExtArgs>
 }, ExtArgs["result"]["workout"]>
 
 export type WorkoutSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1088,8 +1740,16 @@ export type WorkoutSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   linkedActivityId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  customName?: boolean
+  color?: boolean
+  intervalProgressionId?: boolean
+  structuredSteps?: boolean
+  groupId?: boolean
+  subGoalId?: boolean
+  intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
   linkedActivity?: boolean | Prisma.Workout$linkedActivityArgs<ExtArgs>
+  subGoal?: boolean | Prisma.Workout$subGoalArgs<ExtArgs>
 }, ExtArgs["result"]["workout"]>
 
 export type WorkoutSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1110,8 +1770,16 @@ export type WorkoutSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   linkedActivityId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  customName?: boolean
+  color?: boolean
+  intervalProgressionId?: boolean
+  structuredSteps?: boolean
+  groupId?: boolean
+  subGoalId?: boolean
+  intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
   linkedActivity?: boolean | Prisma.Workout$linkedActivityArgs<ExtArgs>
+  subGoal?: boolean | Prisma.Workout$subGoalArgs<ExtArgs>
 }, ExtArgs["result"]["workout"]>
 
 export type WorkoutSelectScalar = {
@@ -1132,27 +1800,41 @@ export type WorkoutSelectScalar = {
   linkedActivityId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  customName?: boolean
+  color?: boolean
+  intervalProgressionId?: boolean
+  structuredSteps?: boolean
+  groupId?: boolean
+  subGoalId?: boolean
 }
 
-export type WorkoutOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "goalId" | "scheduledDate" | "workoutType" | "description" | "phase" | "order" | "notes" | "targetDistance" | "targetDuration" | "targetPace" | "targetHrZone" | "isCompleted" | "completedAt" | "linkedActivityId" | "createdAt" | "updatedAt", ExtArgs["result"]["workout"]>
+export type WorkoutOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "goalId" | "scheduledDate" | "workoutType" | "description" | "phase" | "order" | "notes" | "targetDistance" | "targetDuration" | "targetPace" | "targetHrZone" | "isCompleted" | "completedAt" | "linkedActivityId" | "createdAt" | "updatedAt" | "customName" | "color" | "intervalProgressionId" | "structuredSteps" | "groupId" | "subGoalId", ExtArgs["result"]["workout"]>
 export type WorkoutInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
   linkedActivity?: boolean | Prisma.Workout$linkedActivityArgs<ExtArgs>
+  subGoal?: boolean | Prisma.Workout$subGoalArgs<ExtArgs>
 }
 export type WorkoutIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
   linkedActivity?: boolean | Prisma.Workout$linkedActivityArgs<ExtArgs>
+  subGoal?: boolean | Prisma.Workout$subGoalArgs<ExtArgs>
 }
 export type WorkoutIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
   linkedActivity?: boolean | Prisma.Workout$linkedActivityArgs<ExtArgs>
+  subGoal?: boolean | Prisma.Workout$subGoalArgs<ExtArgs>
 }
 
 export type $WorkoutPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Workout"
   objects: {
+    intervalProgression: Prisma.$IntervalProgressionPayload<ExtArgs> | null
     goal: Prisma.$GoalPayload<ExtArgs>
     linkedActivity: Prisma.$ActivityPayload<ExtArgs> | null
+    subGoal: Prisma.$GoalPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1172,6 +1854,12 @@ export type $WorkoutPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     linkedActivityId: string | null
     createdAt: Date
     updatedAt: Date
+    customName: string | null
+    color: string | null
+    intervalProgressionId: string | null
+    structuredSteps: runtime.JsonValue | null
+    groupId: string | null
+    subGoalId: string | null
   }, ExtArgs["result"]["workout"]>
   composites: {}
 }
@@ -1566,8 +2254,10 @@ readonly fields: WorkoutFieldRefs;
  */
 export interface Prisma__WorkoutClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  intervalProgression<T extends Prisma.Workout$intervalProgressionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workout$intervalProgressionArgs<ExtArgs>>): Prisma.Prisma__IntervalProgressionClient<runtime.Types.Result.GetResult<Prisma.$IntervalProgressionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   goal<T extends Prisma.GoalDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GoalDefaultArgs<ExtArgs>>): Prisma.Prisma__GoalClient<runtime.Types.Result.GetResult<Prisma.$GoalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   linkedActivity<T extends Prisma.Workout$linkedActivityArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workout$linkedActivityArgs<ExtArgs>>): Prisma.Prisma__ActivityClient<runtime.Types.Result.GetResult<Prisma.$ActivityPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  subGoal<T extends Prisma.Workout$subGoalArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Workout$subGoalArgs<ExtArgs>>): Prisma.Prisma__GoalClient<runtime.Types.Result.GetResult<Prisma.$GoalPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1614,6 +2304,12 @@ export interface WorkoutFieldRefs {
   readonly linkedActivityId: Prisma.FieldRef<"Workout", 'String'>
   readonly createdAt: Prisma.FieldRef<"Workout", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Workout", 'DateTime'>
+  readonly customName: Prisma.FieldRef<"Workout", 'String'>
+  readonly color: Prisma.FieldRef<"Workout", 'String'>
+  readonly intervalProgressionId: Prisma.FieldRef<"Workout", 'String'>
+  readonly structuredSteps: Prisma.FieldRef<"Workout", 'Json'>
+  readonly groupId: Prisma.FieldRef<"Workout", 'String'>
+  readonly subGoalId: Prisma.FieldRef<"Workout", 'String'>
 }
     
 
@@ -2015,6 +2711,25 @@ export type WorkoutDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
 }
 
 /**
+ * Workout.intervalProgression
+ */
+export type Workout$intervalProgressionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the IntervalProgression
+   */
+  select?: Prisma.IntervalProgressionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the IntervalProgression
+   */
+  omit?: Prisma.IntervalProgressionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.IntervalProgressionInclude<ExtArgs> | null
+  where?: Prisma.IntervalProgressionWhereInput
+}
+
+/**
  * Workout.linkedActivity
  */
 export type Workout$linkedActivityArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2031,6 +2746,25 @@ export type Workout$linkedActivityArgs<ExtArgs extends runtime.Types.Extensions.
    */
   include?: Prisma.ActivityInclude<ExtArgs> | null
   where?: Prisma.ActivityWhereInput
+}
+
+/**
+ * Workout.subGoal
+ */
+export type Workout$subGoalArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Goal
+   */
+  select?: Prisma.GoalSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Goal
+   */
+  omit?: Prisma.GoalOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GoalInclude<ExtArgs> | null
+  where?: Prisma.GoalWhereInput
 }
 
 /**

@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
         // Serialize goals
         const serializedGoals = goals.map(g => ({
             ...g,
-            raceDate: g.raceDate.toISOString(),
+            raceDate: g.raceDate?.toISOString() ?? null,
             createdAt: g.createdAt.toISOString(),
             updatedAt: g.updatedAt.toISOString(),
             completedAt: g.completedAt?.toISOString() || null,

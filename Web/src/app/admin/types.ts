@@ -89,6 +89,10 @@ export interface AdminAiSettingsData {
     dailyMessageLimit: number;
     monthlyMessageLimit: number;
     systemPrompt: string | null;
+
+    planBuilderProviderId: string | null;
+    planBuilderModel: string | null;
+    planMaxTokensPerAnalysis: number;
 }
 
 export interface AdminAiSettings {

@@ -434,7 +434,13 @@ export const ModelName = {
   DailyReadinessRecord: 'DailyReadinessRecord',
   ReadinessBaseline: 'ReadinessBaseline',
   AdaptedWorkout: 'AdaptedWorkout',
-  WeeklyReconciliationRecord: 'WeeklyReconciliationRecord'
+  WeeklyReconciliationRecord: 'WeeklyReconciliationRecord',
+  PlanSnapshot: 'PlanSnapshot',
+  WeekTemplate: 'WeekTemplate',
+  IntervalProgression: 'IntervalProgression',
+  AiPlanAnalysis: 'AiPlanAnalysis',
+  PlanPaceProfile: 'PlanPaceProfile',
+  GuidedPlanSession: 'GuidedPlanSession'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -450,7 +456,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord"
+    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord" | "planSnapshot" | "weekTemplate" | "intervalProgression" | "aiPlanAnalysis" | "planPaceProfile" | "guidedPlanSession"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4228,6 +4234,450 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PlanSnapshot: {
+      payload: Prisma.$PlanSnapshotPayload<ExtArgs>
+      fields: Prisma.PlanSnapshotFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PlanSnapshotFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PlanSnapshotFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload>
+        }
+        findFirst: {
+          args: Prisma.PlanSnapshotFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PlanSnapshotFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload>
+        }
+        findMany: {
+          args: Prisma.PlanSnapshotFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload>[]
+        }
+        create: {
+          args: Prisma.PlanSnapshotCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload>
+        }
+        createMany: {
+          args: Prisma.PlanSnapshotCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PlanSnapshotCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload>[]
+        }
+        delete: {
+          args: Prisma.PlanSnapshotDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload>
+        }
+        update: {
+          args: Prisma.PlanSnapshotUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload>
+        }
+        deleteMany: {
+          args: Prisma.PlanSnapshotDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PlanSnapshotUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PlanSnapshotUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload>[]
+        }
+        upsert: {
+          args: Prisma.PlanSnapshotUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanSnapshotPayload>
+        }
+        aggregate: {
+          args: Prisma.PlanSnapshotAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePlanSnapshot>
+        }
+        groupBy: {
+          args: Prisma.PlanSnapshotGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlanSnapshotGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PlanSnapshotCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlanSnapshotCountAggregateOutputType> | number
+        }
+      }
+    }
+    WeekTemplate: {
+      payload: Prisma.$WeekTemplatePayload<ExtArgs>
+      fields: Prisma.WeekTemplateFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WeekTemplateFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WeekTemplateFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload>
+        }
+        findFirst: {
+          args: Prisma.WeekTemplateFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WeekTemplateFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload>
+        }
+        findMany: {
+          args: Prisma.WeekTemplateFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload>[]
+        }
+        create: {
+          args: Prisma.WeekTemplateCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload>
+        }
+        createMany: {
+          args: Prisma.WeekTemplateCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WeekTemplateCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload>[]
+        }
+        delete: {
+          args: Prisma.WeekTemplateDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload>
+        }
+        update: {
+          args: Prisma.WeekTemplateUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload>
+        }
+        deleteMany: {
+          args: Prisma.WeekTemplateDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WeekTemplateUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WeekTemplateUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload>[]
+        }
+        upsert: {
+          args: Prisma.WeekTemplateUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WeekTemplatePayload>
+        }
+        aggregate: {
+          args: Prisma.WeekTemplateAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWeekTemplate>
+        }
+        groupBy: {
+          args: Prisma.WeekTemplateGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WeekTemplateGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WeekTemplateCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WeekTemplateCountAggregateOutputType> | number
+        }
+      }
+    }
+    IntervalProgression: {
+      payload: Prisma.$IntervalProgressionPayload<ExtArgs>
+      fields: Prisma.IntervalProgressionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.IntervalProgressionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.IntervalProgressionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload>
+        }
+        findFirst: {
+          args: Prisma.IntervalProgressionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.IntervalProgressionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload>
+        }
+        findMany: {
+          args: Prisma.IntervalProgressionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload>[]
+        }
+        create: {
+          args: Prisma.IntervalProgressionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload>
+        }
+        createMany: {
+          args: Prisma.IntervalProgressionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.IntervalProgressionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload>[]
+        }
+        delete: {
+          args: Prisma.IntervalProgressionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload>
+        }
+        update: {
+          args: Prisma.IntervalProgressionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload>
+        }
+        deleteMany: {
+          args: Prisma.IntervalProgressionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.IntervalProgressionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.IntervalProgressionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload>[]
+        }
+        upsert: {
+          args: Prisma.IntervalProgressionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IntervalProgressionPayload>
+        }
+        aggregate: {
+          args: Prisma.IntervalProgressionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateIntervalProgression>
+        }
+        groupBy: {
+          args: Prisma.IntervalProgressionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IntervalProgressionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.IntervalProgressionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IntervalProgressionCountAggregateOutputType> | number
+        }
+      }
+    }
+    AiPlanAnalysis: {
+      payload: Prisma.$AiPlanAnalysisPayload<ExtArgs>
+      fields: Prisma.AiPlanAnalysisFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AiPlanAnalysisFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AiPlanAnalysisFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload>
+        }
+        findFirst: {
+          args: Prisma.AiPlanAnalysisFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AiPlanAnalysisFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload>
+        }
+        findMany: {
+          args: Prisma.AiPlanAnalysisFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload>[]
+        }
+        create: {
+          args: Prisma.AiPlanAnalysisCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload>
+        }
+        createMany: {
+          args: Prisma.AiPlanAnalysisCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AiPlanAnalysisCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload>[]
+        }
+        delete: {
+          args: Prisma.AiPlanAnalysisDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload>
+        }
+        update: {
+          args: Prisma.AiPlanAnalysisUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload>
+        }
+        deleteMany: {
+          args: Prisma.AiPlanAnalysisDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AiPlanAnalysisUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AiPlanAnalysisUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload>[]
+        }
+        upsert: {
+          args: Prisma.AiPlanAnalysisUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AiPlanAnalysisPayload>
+        }
+        aggregate: {
+          args: Prisma.AiPlanAnalysisAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAiPlanAnalysis>
+        }
+        groupBy: {
+          args: Prisma.AiPlanAnalysisGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiPlanAnalysisGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AiPlanAnalysisCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AiPlanAnalysisCountAggregateOutputType> | number
+        }
+      }
+    }
+    PlanPaceProfile: {
+      payload: Prisma.$PlanPaceProfilePayload<ExtArgs>
+      fields: Prisma.PlanPaceProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PlanPaceProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PlanPaceProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.PlanPaceProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PlanPaceProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload>
+        }
+        findMany: {
+          args: Prisma.PlanPaceProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload>[]
+        }
+        create: {
+          args: Prisma.PlanPaceProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload>
+        }
+        createMany: {
+          args: Prisma.PlanPaceProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PlanPaceProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.PlanPaceProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload>
+        }
+        update: {
+          args: Prisma.PlanPaceProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.PlanPaceProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PlanPaceProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PlanPaceProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.PlanPaceProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PlanPaceProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.PlanPaceProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePlanPaceProfile>
+        }
+        groupBy: {
+          args: Prisma.PlanPaceProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlanPaceProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PlanPaceProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PlanPaceProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    GuidedPlanSession: {
+      payload: Prisma.$GuidedPlanSessionPayload<ExtArgs>
+      fields: Prisma.GuidedPlanSessionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GuidedPlanSessionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GuidedPlanSessionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload>
+        }
+        findFirst: {
+          args: Prisma.GuidedPlanSessionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GuidedPlanSessionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload>
+        }
+        findMany: {
+          args: Prisma.GuidedPlanSessionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload>[]
+        }
+        create: {
+          args: Prisma.GuidedPlanSessionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload>
+        }
+        createMany: {
+          args: Prisma.GuidedPlanSessionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GuidedPlanSessionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload>[]
+        }
+        delete: {
+          args: Prisma.GuidedPlanSessionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload>
+        }
+        update: {
+          args: Prisma.GuidedPlanSessionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload>
+        }
+        deleteMany: {
+          args: Prisma.GuidedPlanSessionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GuidedPlanSessionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GuidedPlanSessionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload>[]
+        }
+        upsert: {
+          args: Prisma.GuidedPlanSessionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GuidedPlanSessionPayload>
+        }
+        aggregate: {
+          args: Prisma.GuidedPlanSessionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGuidedPlanSession>
+        }
+        groupBy: {
+          args: Prisma.GuidedPlanSessionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GuidedPlanSessionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GuidedPlanSessionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GuidedPlanSessionCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -4378,7 +4828,10 @@ export const GlobalAiSettingsScalarFieldEnum = {
   activityFeedbackModel: 'activityFeedbackModel',
   tier1ActivityFeedbackLimit: 'tier1ActivityFeedbackLimit',
   tier2ActivityFeedbackLimit: 'tier2ActivityFeedbackLimit',
-  tier3ActivityFeedbackLimit: 'tier3ActivityFeedbackLimit'
+  tier3ActivityFeedbackLimit: 'tier3ActivityFeedbackLimit',
+  planBuilderProviderId: 'planBuilderProviderId',
+  planBuilderModel: 'planBuilderModel',
+  planMaxTokensPerAnalysis: 'planMaxTokensPerAnalysis'
 } as const
 
 export type GlobalAiSettingsScalarFieldEnum = (typeof GlobalAiSettingsScalarFieldEnum)[keyof typeof GlobalAiSettingsScalarFieldEnum]
@@ -4694,7 +5147,21 @@ export const GoalScalarFieldEnum = {
   completedAt: 'completedAt',
   deletedAt: 'deletedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  sport: 'sport',
+  creationMode: 'creationMode',
+  customDistanceM: 'customDistanceM',
+  customSwimDistM: 'customSwimDistM',
+  customBikeDistM: 'customBikeDistM',
+  customRunDistM: 'customRunDistM',
+  backyardLoopDistM: 'backyardLoopDistM',
+  backyardLoopTimeS: 'backyardLoopTimeS',
+  targetLaps: 'targetLaps',
+  planSource: 'planSource',
+  guidanceLevel: 'guidanceLevel',
+  parentGoalId: 'parentGoalId',
+  priority: 'priority',
+  trainingFocus: 'trainingFocus'
 } as const
 
 export type GoalScalarFieldEnum = (typeof GoalScalarFieldEnum)[keyof typeof GoalScalarFieldEnum]
@@ -4738,7 +5205,13 @@ export const WorkoutScalarFieldEnum = {
   completedAt: 'completedAt',
   linkedActivityId: 'linkedActivityId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  customName: 'customName',
+  color: 'color',
+  intervalProgressionId: 'intervalProgressionId',
+  structuredSteps: 'structuredSteps',
+  groupId: 'groupId',
+  subGoalId: 'subGoalId'
 } as const
 
 export type WorkoutScalarFieldEnum = (typeof WorkoutScalarFieldEnum)[keyof typeof WorkoutScalarFieldEnum]
@@ -5203,6 +5676,92 @@ export const WeeklyReconciliationRecordScalarFieldEnum = {
 export type WeeklyReconciliationRecordScalarFieldEnum = (typeof WeeklyReconciliationRecordScalarFieldEnum)[keyof typeof WeeklyReconciliationRecordScalarFieldEnum]
 
 
+export const PlanSnapshotScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  snapshot: 'snapshot',
+  description: 'description',
+  operation: 'operation',
+  createdAt: 'createdAt'
+} as const
+
+export type PlanSnapshotScalarFieldEnum = (typeof PlanSnapshotScalarFieldEnum)[keyof typeof PlanSnapshotScalarFieldEnum]
+
+
+export const WeekTemplateScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  description: 'description',
+  days: 'days',
+  isDefault: 'isDefault',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WeekTemplateScalarFieldEnum = (typeof WeekTemplateScalarFieldEnum)[keyof typeof WeekTemplateScalarFieldEnum]
+
+
+export const IntervalProgressionScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  name: 'name',
+  workoutType: 'workoutType',
+  startWeek: 'startWeek',
+  endWeek: 'endWeek',
+  weeks: 'weeks',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type IntervalProgressionScalarFieldEnum = (typeof IntervalProgressionScalarFieldEnum)[keyof typeof IntervalProgressionScalarFieldEnum]
+
+
+export const AiPlanAnalysisScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  overallScore: 'overallScore',
+  overallSummary: 'overallSummary',
+  weekAnalyses: 'weekAnalyses',
+  riskFlags: 'riskFlags',
+  raceReadiness: 'raceReadiness',
+  suggestions: 'suggestions',
+  modelUsed: 'modelUsed',
+  inputTokens: 'inputTokens',
+  outputTokens: 'outputTokens',
+  generatedAt: 'generatedAt'
+} as const
+
+export type AiPlanAnalysisScalarFieldEnum = (typeof AiPlanAnalysisScalarFieldEnum)[keyof typeof AiPlanAnalysisScalarFieldEnum]
+
+
+export const PlanPaceProfileScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  baseVdot: 'baseVdot',
+  profiles: 'profiles',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlanPaceProfileScalarFieldEnum = (typeof PlanPaceProfileScalarFieldEnum)[keyof typeof PlanPaceProfileScalarFieldEnum]
+
+
+export const GuidedPlanSessionScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  userId: 'userId',
+  currentStep: 'currentStep',
+  responses: 'responses',
+  aiRecommendation: 'aiRecommendation',
+  isComplete: 'isComplete',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GuidedPlanSessionScalarFieldEnum = (typeof GuidedPlanSessionScalarFieldEnum)[keyof typeof GuidedPlanSessionScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -5433,6 +5992,48 @@ export type ListEnumRaceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
+ * Reference to a field of type 'PlanSport'
+ */
+export type EnumPlanSportFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlanSport'>
+    
+
+
+/**
+ * Reference to a field of type 'PlanSport[]'
+ */
+export type ListEnumPlanSportFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlanSport[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PlanCreationMode'
+ */
+export type EnumPlanCreationModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlanCreationMode'>
+    
+
+
+/**
+ * Reference to a field of type 'PlanCreationMode[]'
+ */
+export type ListEnumPlanCreationModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlanCreationMode[]'>
+    
+
+
+/**
+ * Reference to a field of type 'GoalPriority'
+ */
+export type EnumGoalPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GoalPriority'>
+    
+
+
+/**
+ * Reference to a field of type 'GoalPriority[]'
+ */
+export type ListEnumGoalPriorityFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GoalPriority[]'>
+    
+
+
+/**
  * Reference to a field of type 'PlanPhase'
  */
 export type EnumPlanPhaseFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlanPhase'>
@@ -5591,6 +6192,12 @@ export type GlobalOmitConfig = {
   readinessBaseline?: Prisma.ReadinessBaselineOmit
   adaptedWorkout?: Prisma.AdaptedWorkoutOmit
   weeklyReconciliationRecord?: Prisma.WeeklyReconciliationRecordOmit
+  planSnapshot?: Prisma.PlanSnapshotOmit
+  weekTemplate?: Prisma.WeekTemplateOmit
+  intervalProgression?: Prisma.IntervalProgressionOmit
+  aiPlanAnalysis?: Prisma.AiPlanAnalysisOmit
+  planPaceProfile?: Prisma.PlanPaceProfileOmit
+  guidedPlanSession?: Prisma.GuidedPlanSessionOmit
 }
 
 /* Types for Logging */

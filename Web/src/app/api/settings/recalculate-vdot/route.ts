@@ -31,7 +31,7 @@ export async function POST() {
         'MARATHON': { distance: 'MARATHON', meters: 42195 },
     };
 
-    const targetInfo = raceDistanceMap[goal.raceType] || raceDistanceMap['FIVE_K'];
+    const targetInfo = raceDistanceMap[goal.raceType || 'FIVE_K'] || raceDistanceMap['FIVE_K'];
 
     // Find best recent run of similar distance (within 10%)
     const recentRuns = await prisma.activity.findMany({

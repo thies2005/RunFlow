@@ -112,7 +112,7 @@ export async function GET(req: Request) {
         let unlinkedActivities: ActivityListItem[] = [];
         if (includeUnlinked) {
             const planStartDate = activeGoal.planStartDate || activeGoal.createdAt;
-            const planEndDate = activeGoal.raceDate;
+            const planEndDate = activeGoal.raceDate ?? undefined;
 
             // Get all activity IDs that are linked to workouts for this goal
             const allLinkedActivityIds = await prisma.workout.findMany({

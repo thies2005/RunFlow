@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Bot, Eye, Trash2, Save, Loader2, Zap, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Plus, Bot, Eye, Trash2, Save, Loader2, Zap, AlertTriangle, CheckCircle, Sparkles } from 'lucide-react';
 import { csrfHeaders, getCsrfToken } from '@/lib/admin/csrfHelper';
 import TierInputGroup from '@/components/admin/TierInputGroup';
 import useConfirmAction from '@/hooks/useConfirmAction';
@@ -63,6 +63,10 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
         activityFeedbackModel: settings?.activityFeedbackModel || 'gemini-1.5-flash',
 
         systemPrompt: settings?.systemPrompt || '',
+
+        planBuilderProviderId: settings?.planBuilderProviderId || null,
+        planBuilderModel: settings?.planBuilderModel || 'gpt-4o',
+        planMaxTokensPerAnalysis: settings?.planMaxTokensPerAnalysis || 8000,
     });
 
     useEffect(() => {
@@ -110,6 +114,10 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                 activityFeedbackModel: settings.activityFeedbackModel || prev.activityFeedbackModel,
 
                 systemPrompt: settings.systemPrompt || prev.systemPrompt,
+
+                planBuilderProviderId: settings.planBuilderProviderId || prev.planBuilderProviderId,
+                planBuilderModel: settings.planBuilderModel || prev.planBuilderModel,
+                planMaxTokensPerAnalysis: settings.planMaxTokensPerAnalysis ?? prev.planMaxTokensPerAnalysis,
             }));
         }
     }, [settings]);
@@ -328,6 +336,63 @@ export default function AiSettingsTab({ settings, stats, onRefresh, processing, 
                         <Save className="w-4 h-4" />
                         {processing ? 'Saving...' : 'Save All Settings'}
                     </button>
+                </div>
+            </div>
+
+            {/* Plan Builder AI Settings */}
+            <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 space-y-4">
+                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-indigo-600" />
+                    Plan Builder AI
+                </h3>
+                <p className="text-xs text-gray-500">
+                    Configure the AI provider and model used for plan analysis, suggestions, and guided mode features.
+                </p>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Plan Builder Provider</label>
+                    <select
+                        value={formData.planBuilderProviderId || ''}
+                        onChange={(e) => setFormData({ ...formData, planBuilderProviderId: e.target.value || null })}
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                        <option value="">None (disabled)</option>
+                        {providers.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                        Select an AI provider for plan analysis features. Must be configured above.
+                    </p>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Plan Builder Model</label>
+                    <input
+                        type="text"
+                        value={formData.planBuilderModel}
+                        onChange={(e) => setFormData({ ...formData, planBuilderModel: e.target.value })}
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="e.g. gpt-4o"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                        Model ID used for plan analysis and suggestions. Should support large context windows.
+                    </p>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Tokens Per Analysis</label>
+                    <input
+                        type="number"
+                        value={formData.planMaxTokensPerAnalysis}
+                        onChange={(e) => setFormData({ ...formData, planMaxTokensPerAnalysis: parseInt(e.target.value, 10) || 8000 })}
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        min={1000}
+                        max={16000}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                        Maximum output tokens per AI analysis request (default: 8000). Higher values give more detailed analysis.
+                    </p>
                 </div>
             </div>
 

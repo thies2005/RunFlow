@@ -90,11 +90,11 @@ export async function GET(request: NextRequest) {
         const formattedGoals = goals.map(goal => ({
             id: goal.id,
             name: goal.name,
-            race: {
+            race: goal.raceType && goal.raceDate ? {
                 type: goal.raceType,
                 date: goal.raceDate,
                 daysUntil: Math.ceil((new Date(goal.raceDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-            },
+            } : null,
             times: {
                 target: goal.targetTime ? formatTime(goal.targetTime) : null,
                 targetSeconds: goal.targetTime,

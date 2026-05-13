@@ -101,7 +101,13 @@ export const ModelName = {
   DailyReadinessRecord: 'DailyReadinessRecord',
   ReadinessBaseline: 'ReadinessBaseline',
   AdaptedWorkout: 'AdaptedWorkout',
-  WeeklyReconciliationRecord: 'WeeklyReconciliationRecord'
+  WeeklyReconciliationRecord: 'WeeklyReconciliationRecord',
+  PlanSnapshot: 'PlanSnapshot',
+  WeekTemplate: 'WeekTemplate',
+  IntervalProgression: 'IntervalProgression',
+  AiPlanAnalysis: 'AiPlanAnalysis',
+  PlanPaceProfile: 'PlanPaceProfile',
+  GuidedPlanSession: 'GuidedPlanSession'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -231,7 +237,10 @@ export const GlobalAiSettingsScalarFieldEnum = {
   activityFeedbackModel: 'activityFeedbackModel',
   tier1ActivityFeedbackLimit: 'tier1ActivityFeedbackLimit',
   tier2ActivityFeedbackLimit: 'tier2ActivityFeedbackLimit',
-  tier3ActivityFeedbackLimit: 'tier3ActivityFeedbackLimit'
+  tier3ActivityFeedbackLimit: 'tier3ActivityFeedbackLimit',
+  planBuilderProviderId: 'planBuilderProviderId',
+  planBuilderModel: 'planBuilderModel',
+  planMaxTokensPerAnalysis: 'planMaxTokensPerAnalysis'
 } as const
 
 export type GlobalAiSettingsScalarFieldEnum = (typeof GlobalAiSettingsScalarFieldEnum)[keyof typeof GlobalAiSettingsScalarFieldEnum]
@@ -547,7 +556,21 @@ export const GoalScalarFieldEnum = {
   completedAt: 'completedAt',
   deletedAt: 'deletedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  sport: 'sport',
+  creationMode: 'creationMode',
+  customDistanceM: 'customDistanceM',
+  customSwimDistM: 'customSwimDistM',
+  customBikeDistM: 'customBikeDistM',
+  customRunDistM: 'customRunDistM',
+  backyardLoopDistM: 'backyardLoopDistM',
+  backyardLoopTimeS: 'backyardLoopTimeS',
+  targetLaps: 'targetLaps',
+  planSource: 'planSource',
+  guidanceLevel: 'guidanceLevel',
+  parentGoalId: 'parentGoalId',
+  priority: 'priority',
+  trainingFocus: 'trainingFocus'
 } as const
 
 export type GoalScalarFieldEnum = (typeof GoalScalarFieldEnum)[keyof typeof GoalScalarFieldEnum]
@@ -591,7 +614,13 @@ export const WorkoutScalarFieldEnum = {
   completedAt: 'completedAt',
   linkedActivityId: 'linkedActivityId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  customName: 'customName',
+  color: 'color',
+  intervalProgressionId: 'intervalProgressionId',
+  structuredSteps: 'structuredSteps',
+  groupId: 'groupId',
+  subGoalId: 'subGoalId'
 } as const
 
 export type WorkoutScalarFieldEnum = (typeof WorkoutScalarFieldEnum)[keyof typeof WorkoutScalarFieldEnum]
@@ -1054,6 +1083,92 @@ export const WeeklyReconciliationRecordScalarFieldEnum = {
 } as const
 
 export type WeeklyReconciliationRecordScalarFieldEnum = (typeof WeeklyReconciliationRecordScalarFieldEnum)[keyof typeof WeeklyReconciliationRecordScalarFieldEnum]
+
+
+export const PlanSnapshotScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  snapshot: 'snapshot',
+  description: 'description',
+  operation: 'operation',
+  createdAt: 'createdAt'
+} as const
+
+export type PlanSnapshotScalarFieldEnum = (typeof PlanSnapshotScalarFieldEnum)[keyof typeof PlanSnapshotScalarFieldEnum]
+
+
+export const WeekTemplateScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  description: 'description',
+  days: 'days',
+  isDefault: 'isDefault',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WeekTemplateScalarFieldEnum = (typeof WeekTemplateScalarFieldEnum)[keyof typeof WeekTemplateScalarFieldEnum]
+
+
+export const IntervalProgressionScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  name: 'name',
+  workoutType: 'workoutType',
+  startWeek: 'startWeek',
+  endWeek: 'endWeek',
+  weeks: 'weeks',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type IntervalProgressionScalarFieldEnum = (typeof IntervalProgressionScalarFieldEnum)[keyof typeof IntervalProgressionScalarFieldEnum]
+
+
+export const AiPlanAnalysisScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  overallScore: 'overallScore',
+  overallSummary: 'overallSummary',
+  weekAnalyses: 'weekAnalyses',
+  riskFlags: 'riskFlags',
+  raceReadiness: 'raceReadiness',
+  suggestions: 'suggestions',
+  modelUsed: 'modelUsed',
+  inputTokens: 'inputTokens',
+  outputTokens: 'outputTokens',
+  generatedAt: 'generatedAt'
+} as const
+
+export type AiPlanAnalysisScalarFieldEnum = (typeof AiPlanAnalysisScalarFieldEnum)[keyof typeof AiPlanAnalysisScalarFieldEnum]
+
+
+export const PlanPaceProfileScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  baseVdot: 'baseVdot',
+  profiles: 'profiles',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlanPaceProfileScalarFieldEnum = (typeof PlanPaceProfileScalarFieldEnum)[keyof typeof PlanPaceProfileScalarFieldEnum]
+
+
+export const GuidedPlanSessionScalarFieldEnum = {
+  id: 'id',
+  goalId: 'goalId',
+  userId: 'userId',
+  currentStep: 'currentStep',
+  responses: 'responses',
+  aiRecommendation: 'aiRecommendation',
+  isComplete: 'isComplete',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GuidedPlanSessionScalarFieldEnum = (typeof GuidedPlanSessionScalarFieldEnum)[keyof typeof GuidedPlanSessionScalarFieldEnum]
 
 
 export const SortOrder = {

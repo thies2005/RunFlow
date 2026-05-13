@@ -48,7 +48,7 @@ export async function GET(
 
         const serialized = {
             ...goal,
-            raceDate: goal.raceDate.toISOString(),
+            raceDate: goal.raceDate?.toISOString() ?? null,
             createdAt: goal.createdAt.toISOString(),
             updatedAt: goal.updatedAt.toISOString(),
             completedAt: goal.completedAt?.toISOString() || null,
@@ -131,7 +131,7 @@ export async function PUT(
         return NextResponse.json({
             goal: {
                 ...goal,
-                raceDate: goal.raceDate.toISOString(),
+                raceDate: goal.raceDate?.toISOString() ?? null,
                 createdAt: goal.createdAt.toISOString(),
                 updatedAt: goal.updatedAt.toISOString(),
                 completedAt: goal.completedAt?.toISOString() || null

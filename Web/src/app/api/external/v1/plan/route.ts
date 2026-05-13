@@ -148,11 +148,11 @@ export async function GET(request: NextRequest) {
             {
                 plan: {
                     ...activeGoal,
-                    race: {
+                    race: activeGoal.raceType && activeGoal.raceDate ? {
                         type: activeGoal.raceType,
                         date: activeGoal.raceDate,
                         daysUntil: Math.ceil((new Date(activeGoal.raceDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-                    }
+                    } : null,
                 },
                 workouts: workouts.map(w => ({
                     id: w.id,

@@ -43,8 +43,8 @@ export interface UserContext {
     // Goals (if accessGoals)
     goals?: {
         name: string;
-        raceType: string;
-        raceDate: string;
+        raceType?: string;
+        raceDate?: string;
         targetTime?: number;
         predictedTime?: number;
         currentVdot?: number;
@@ -242,8 +242,8 @@ export async function buildUserContext(userId: string): Promise<UserContext> {
     if (settings.accessGoals && user.goals.length > 0) {
         context.goals = user.goals.map((g) => ({
             name: g.name,
-            raceType: g.raceType,
-            raceDate: g.raceDate.toISOString().split('T')[0],
+            raceType: g.raceType ?? undefined,
+            raceDate: g.raceDate?.toISOString().split('T')[0] ?? undefined,
             targetTime: g.targetTime || undefined,
             predictedTime: g.predictedTime || undefined,
             currentVdot: g.currentVdot || undefined,
@@ -479,8 +479,9 @@ export function formatContextForAi(context: UserContext): string {
 
     if (context.goals && context.goals.length > 0) {
         const goalStrs = context.goals.map((g) => {
-            const daysUntil = Math.ceil((new Date(g.raceDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-            return `${g.name} (${g.raceType}, ${daysUntil} days away${g.targetTime ? `, target: ${formatTime(g.targetTime)}` : ''})`;
+            const daysUntil = g.raceDate ? Math.ceil((new Date(g.raceDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+            const raceStr = g.raceType ? `${g.raceType}${daysUntil !== null ? `, ${daysUntil} days away` : ''}` : '';
+            return `${g.name} (${raceStr}${g.targetTime ? `, target: ${formatTime(g.targetTime)}` : ''})`;
         });
         parts.push(`Goals: ${goalStrs.join('; ')}`);
     }

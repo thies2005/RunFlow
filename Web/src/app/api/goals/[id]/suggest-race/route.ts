@@ -36,8 +36,8 @@ export async function GET(
             where: { id },
         });
 
-        if (!goal || goal.userId !== session.user.id) {
-            return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
+        if (!goal || goal.userId !== session.user.id || !goal.raceDate || !goal.raceType) {
+            return NextResponse.json({ error: 'Goal not found or missing race details' }, { status: 404 });
         }
 
         const raceDate = new Date(goal.raceDate);

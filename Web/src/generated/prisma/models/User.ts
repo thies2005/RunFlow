@@ -573,6 +573,8 @@ export type UserWhereInput = {
   readinessBaselines?: Prisma.ReadinessBaselineListRelationFilter
   adaptedWorkouts?: Prisma.AdaptedWorkoutListRelationFilter
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordListRelationFilter
+  weekTemplates?: Prisma.WeekTemplateListRelationFilter
+  guidedPlanSessions?: Prisma.GuidedPlanSessionListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -644,6 +646,8 @@ export type UserOrderByWithRelationInput = {
   readinessBaselines?: Prisma.ReadinessBaselineOrderByRelationAggregateInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutOrderByRelationAggregateInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordOrderByRelationAggregateInput
+  weekTemplates?: Prisma.WeekTemplateOrderByRelationAggregateInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -718,6 +722,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   readinessBaselines?: Prisma.ReadinessBaselineListRelationFilter
   adaptedWorkouts?: Prisma.AdaptedWorkoutListRelationFilter
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordListRelationFilter
+  weekTemplates?: Prisma.WeekTemplateListRelationFilter
+  guidedPlanSessions?: Prisma.GuidedPlanSessionListRelationFilter
 }, "id" | "email" | "stravaId">
 
 export type UserOrderByWithAggregationInput = {
@@ -881,6 +887,8 @@ export type UserCreateInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -952,6 +960,8 @@ export type UserUncheckedCreateInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -1023,6 +1033,8 @@ export type UserUpdateInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -1094,6 +1106,8 @@ export type UserUncheckedUpdateInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1851,6 +1865,34 @@ export type UserUpdateOneRequiredWithoutWeeklyReconciliationRecordsNestedInput =
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWeeklyReconciliationRecordsInput, Prisma.UserUpdateWithoutWeeklyReconciliationRecordsInput>, Prisma.UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput>
 }
 
+export type UserCreateNestedOneWithoutWeekTemplatesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWeekTemplatesInput, Prisma.UserUncheckedCreateWithoutWeekTemplatesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWeekTemplatesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutWeekTemplatesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWeekTemplatesInput, Prisma.UserUncheckedCreateWithoutWeekTemplatesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWeekTemplatesInput
+  upsert?: Prisma.UserUpsertWithoutWeekTemplatesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWeekTemplatesInput, Prisma.UserUpdateWithoutWeekTemplatesInput>, Prisma.UserUncheckedUpdateWithoutWeekTemplatesInput>
+}
+
+export type UserCreateNestedOneWithoutGuidedPlanSessionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutGuidedPlanSessionsInput, Prisma.UserUncheckedCreateWithoutGuidedPlanSessionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutGuidedPlanSessionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutGuidedPlanSessionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutGuidedPlanSessionsInput, Prisma.UserUncheckedCreateWithoutGuidedPlanSessionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutGuidedPlanSessionsInput
+  upsert?: Prisma.UserUpsertWithoutGuidedPlanSessionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutGuidedPlanSessionsInput, Prisma.UserUpdateWithoutGuidedPlanSessionsInput>, Prisma.UserUncheckedUpdateWithoutGuidedPlanSessionsInput>
+}
+
 export type UserCreateWithoutConsentsInput = {
   id?: string
   email?: string | null
@@ -1919,6 +1961,8 @@ export type UserCreateWithoutConsentsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutConsentsInput = {
@@ -1989,6 +2033,8 @@ export type UserUncheckedCreateWithoutConsentsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutConsentsInput = {
@@ -2075,6 +2121,8 @@ export type UserUpdateWithoutConsentsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutConsentsInput = {
@@ -2145,6 +2193,8 @@ export type UserUncheckedUpdateWithoutConsentsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAiSettingsInput = {
@@ -2215,6 +2265,8 @@ export type UserCreateWithoutAiSettingsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAiSettingsInput = {
@@ -2285,6 +2337,8 @@ export type UserUncheckedCreateWithoutAiSettingsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAiSettingsInput = {
@@ -2371,6 +2425,8 @@ export type UserUpdateWithoutAiSettingsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAiSettingsInput = {
@@ -2441,6 +2497,8 @@ export type UserUncheckedUpdateWithoutAiSettingsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutFeedbackJobsInput = {
@@ -2511,6 +2569,8 @@ export type UserCreateWithoutFeedbackJobsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutFeedbackJobsInput = {
@@ -2581,6 +2641,8 @@ export type UserUncheckedCreateWithoutFeedbackJobsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutFeedbackJobsInput = {
@@ -2667,6 +2729,8 @@ export type UserUpdateWithoutFeedbackJobsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
@@ -2737,6 +2801,8 @@ export type UserUncheckedUpdateWithoutFeedbackJobsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -2807,6 +2873,8 @@ export type UserCreateWithoutAccountsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -2877,6 +2945,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -2963,6 +3033,8 @@ export type UserUpdateWithoutAccountsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -3033,6 +3105,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -3103,6 +3177,8 @@ export type UserCreateWithoutSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -3173,6 +3249,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -3259,6 +3337,8 @@ export type UserUpdateWithoutSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -3329,6 +3409,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutActivitiesInput = {
@@ -3399,6 +3481,8 @@ export type UserCreateWithoutActivitiesInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutActivitiesInput = {
@@ -3469,6 +3553,8 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutActivitiesInput = {
@@ -3555,6 +3641,8 @@ export type UserUpdateWithoutActivitiesInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutActivitiesInput = {
@@ -3625,6 +3713,8 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDailyFitnessInput = {
@@ -3695,6 +3785,8 @@ export type UserCreateWithoutDailyFitnessInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDailyFitnessInput = {
@@ -3765,6 +3857,8 @@ export type UserUncheckedCreateWithoutDailyFitnessInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDailyFitnessInput = {
@@ -3851,6 +3945,8 @@ export type UserUpdateWithoutDailyFitnessInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDailyFitnessInput = {
@@ -3921,6 +4017,8 @@ export type UserUncheckedUpdateWithoutDailyFitnessInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSupplementStacksInput = {
@@ -3991,6 +4089,8 @@ export type UserCreateWithoutSupplementStacksInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSupplementStacksInput = {
@@ -4061,6 +4161,8 @@ export type UserUncheckedCreateWithoutSupplementStacksInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSupplementStacksInput = {
@@ -4147,6 +4249,8 @@ export type UserUpdateWithoutSupplementStacksInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSupplementStacksInput = {
@@ -4217,6 +4321,8 @@ export type UserUncheckedUpdateWithoutSupplementStacksInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSupplementsInput = {
@@ -4287,6 +4393,8 @@ export type UserCreateWithoutSupplementsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSupplementsInput = {
@@ -4357,6 +4465,8 @@ export type UserUncheckedCreateWithoutSupplementsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSupplementsInput = {
@@ -4443,6 +4553,8 @@ export type UserUpdateWithoutSupplementsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSupplementsInput = {
@@ -4513,6 +4625,8 @@ export type UserUncheckedUpdateWithoutSupplementsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDailyHealthLogsInput = {
@@ -4583,6 +4697,8 @@ export type UserCreateWithoutDailyHealthLogsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
@@ -4653,6 +4769,8 @@ export type UserUncheckedCreateWithoutDailyHealthLogsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDailyHealthLogsInput = {
@@ -4739,6 +4857,8 @@ export type UserUpdateWithoutDailyHealthLogsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
@@ -4809,6 +4929,8 @@ export type UserUncheckedUpdateWithoutDailyHealthLogsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutGoalsInput = {
@@ -4879,6 +5001,8 @@ export type UserCreateWithoutGoalsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutGoalsInput = {
@@ -4949,6 +5073,8 @@ export type UserUncheckedCreateWithoutGoalsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutGoalsInput = {
@@ -5035,6 +5161,8 @@ export type UserUpdateWithoutGoalsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutGoalsInput = {
@@ -5105,6 +5233,8 @@ export type UserUncheckedUpdateWithoutGoalsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -5175,6 +5305,8 @@ export type UserCreateWithoutNotificationsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -5245,6 +5377,8 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -5331,6 +5465,8 @@ export type UserUpdateWithoutNotificationsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -5401,6 +5537,8 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPushSubscriptionsInput = {
@@ -5471,6 +5609,8 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
@@ -5541,6 +5681,8 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPushSubscriptionsInput = {
@@ -5627,6 +5769,8 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
@@ -5697,6 +5841,8 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutReminderSettingsInput = {
@@ -5767,6 +5913,8 @@ export type UserCreateWithoutReminderSettingsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReminderSettingsInput = {
@@ -5837,6 +5985,8 @@ export type UserUncheckedCreateWithoutReminderSettingsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReminderSettingsInput = {
@@ -5923,6 +6073,8 @@ export type UserUpdateWithoutReminderSettingsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReminderSettingsInput = {
@@ -5993,6 +6145,8 @@ export type UserUncheckedUpdateWithoutReminderSettingsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutApiKeyInput = {
@@ -6063,6 +6217,8 @@ export type UserCreateWithoutApiKeyInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutApiKeyInput = {
@@ -6133,6 +6289,8 @@ export type UserUncheckedCreateWithoutApiKeyInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutApiKeyInput = {
@@ -6219,6 +6377,8 @@ export type UserUpdateWithoutApiKeyInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApiKeyInput = {
@@ -6289,6 +6449,8 @@ export type UserUncheckedUpdateWithoutApiKeyInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutChatMessagesInput = {
@@ -6359,6 +6521,8 @@ export type UserCreateWithoutChatMessagesInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutChatMessagesInput = {
@@ -6429,6 +6593,8 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutChatMessagesInput = {
@@ -6515,6 +6681,8 @@ export type UserUpdateWithoutChatMessagesInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChatMessagesInput = {
@@ -6585,6 +6753,8 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutChatSessionsInput = {
@@ -6655,6 +6825,8 @@ export type UserCreateWithoutChatSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutChatSessionsInput = {
@@ -6725,6 +6897,8 @@ export type UserUncheckedCreateWithoutChatSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutChatSessionsInput = {
@@ -6811,6 +6985,8 @@ export type UserUpdateWithoutChatSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChatSessionsInput = {
@@ -6881,6 +7057,8 @@ export type UserUncheckedUpdateWithoutChatSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutUsageHistoryInput = {
@@ -6951,6 +7129,8 @@ export type UserCreateWithoutUsageHistoryInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUsageHistoryInput = {
@@ -7021,6 +7201,8 @@ export type UserUncheckedCreateWithoutUsageHistoryInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUsageHistoryInput = {
@@ -7107,6 +7289,8 @@ export type UserUpdateWithoutUsageHistoryInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUsageHistoryInput = {
@@ -7177,6 +7361,8 @@ export type UserUncheckedUpdateWithoutUsageHistoryInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNutritionLogsInput = {
@@ -7247,6 +7433,8 @@ export type UserCreateWithoutNutritionLogsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNutritionLogsInput = {
@@ -7317,6 +7505,8 @@ export type UserUncheckedCreateWithoutNutritionLogsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNutritionLogsInput = {
@@ -7403,6 +7593,8 @@ export type UserUpdateWithoutNutritionLogsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNutritionLogsInput = {
@@ -7473,6 +7665,8 @@ export type UserUncheckedUpdateWithoutNutritionLogsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNutritionTargetInput = {
@@ -7543,6 +7737,8 @@ export type UserCreateWithoutNutritionTargetInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNutritionTargetInput = {
@@ -7613,6 +7809,8 @@ export type UserUncheckedCreateWithoutNutritionTargetInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNutritionTargetInput = {
@@ -7699,6 +7897,8 @@ export type UserUpdateWithoutNutritionTargetInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNutritionTargetInput = {
@@ -7769,6 +7969,8 @@ export type UserUncheckedUpdateWithoutNutritionTargetInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBodyMeasurementsInput = {
@@ -7839,6 +8041,8 @@ export type UserCreateWithoutBodyMeasurementsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
@@ -7909,6 +8113,8 @@ export type UserUncheckedCreateWithoutBodyMeasurementsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBodyMeasurementsInput = {
@@ -7995,6 +8201,8 @@ export type UserUpdateWithoutBodyMeasurementsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
@@ -8065,6 +8273,8 @@ export type UserUncheckedUpdateWithoutBodyMeasurementsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutFastingSessionsInput = {
@@ -8135,6 +8345,8 @@ export type UserCreateWithoutFastingSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutFastingSessionsInput = {
@@ -8205,6 +8417,8 @@ export type UserUncheckedCreateWithoutFastingSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutFastingSessionsInput = {
@@ -8291,6 +8505,8 @@ export type UserUpdateWithoutFastingSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFastingSessionsInput = {
@@ -8361,6 +8577,8 @@ export type UserUncheckedUpdateWithoutFastingSessionsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutHealthInsightsInput = {
@@ -8431,6 +8649,8 @@ export type UserCreateWithoutHealthInsightsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutHealthInsightsInput = {
@@ -8501,6 +8721,8 @@ export type UserUncheckedCreateWithoutHealthInsightsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutHealthInsightsInput = {
@@ -8587,6 +8809,8 @@ export type UserUpdateWithoutHealthInsightsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutHealthInsightsInput = {
@@ -8657,6 +8881,8 @@ export type UserUncheckedUpdateWithoutHealthInsightsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSavedMealsInput = {
@@ -8727,6 +8953,8 @@ export type UserCreateWithoutSavedMealsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSavedMealsInput = {
@@ -8797,6 +9025,8 @@ export type UserUncheckedCreateWithoutSavedMealsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSavedMealsInput = {
@@ -8883,6 +9113,8 @@ export type UserUpdateWithoutSavedMealsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSavedMealsInput = {
@@ -8953,6 +9185,8 @@ export type UserUncheckedUpdateWithoutSavedMealsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDeviceTokensInput = {
@@ -9023,6 +9257,8 @@ export type UserCreateWithoutDeviceTokensInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDeviceTokensInput = {
@@ -9093,6 +9329,8 @@ export type UserUncheckedCreateWithoutDeviceTokensInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDeviceTokensInput = {
@@ -9179,6 +9417,8 @@ export type UserUpdateWithoutDeviceTokensInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDeviceTokensInput = {
@@ -9249,6 +9489,8 @@ export type UserUncheckedUpdateWithoutDeviceTokensInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDailyReadinessRecordsInput = {
@@ -9319,6 +9561,8 @@ export type UserCreateWithoutDailyReadinessRecordsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
@@ -9389,6 +9633,8 @@ export type UserUncheckedCreateWithoutDailyReadinessRecordsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDailyReadinessRecordsInput = {
@@ -9475,6 +9721,8 @@ export type UserUpdateWithoutDailyReadinessRecordsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
@@ -9545,6 +9793,8 @@ export type UserUncheckedUpdateWithoutDailyReadinessRecordsInput = {
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutReadinessBaselinesInput = {
@@ -9615,6 +9865,8 @@ export type UserCreateWithoutReadinessBaselinesInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
@@ -9685,6 +9937,8 @@ export type UserUncheckedCreateWithoutReadinessBaselinesInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReadinessBaselinesInput = {
@@ -9771,6 +10025,8 @@ export type UserUpdateWithoutReadinessBaselinesInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
@@ -9841,6 +10097,8 @@ export type UserUncheckedUpdateWithoutReadinessBaselinesInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAdaptedWorkoutsInput = {
@@ -9911,6 +10169,8 @@ export type UserCreateWithoutAdaptedWorkoutsInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
@@ -9981,6 +10241,8 @@ export type UserUncheckedCreateWithoutAdaptedWorkoutsInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAdaptedWorkoutsInput = {
@@ -10067,6 +10329,8 @@ export type UserUpdateWithoutAdaptedWorkoutsInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
@@ -10137,6 +10401,8 @@ export type UserUncheckedUpdateWithoutAdaptedWorkoutsInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
@@ -10207,6 +10473,8 @@ export type UserCreateWithoutWeeklyReconciliationRecordsInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
   readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
@@ -10277,6 +10545,8 @@ export type UserUncheckedCreateWithoutWeeklyReconciliationRecordsInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWeeklyReconciliationRecordsInput = {
@@ -10363,6 +10633,8 @@ export type UserUpdateWithoutWeeklyReconciliationRecordsInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
   readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
@@ -10433,6 +10705,616 @@ export type UserUncheckedUpdateWithoutWeeklyReconciliationRecordsInput = {
   dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
   readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
   adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutWeekTemplatesInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutWeekTemplatesInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementUncheckedCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackUncheckedCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentUncheckedCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutWeekTemplatesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutWeekTemplatesInput, Prisma.UserUncheckedCreateWithoutWeekTemplatesInput>
+}
+
+export type UserUpsertWithoutWeekTemplatesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutWeekTemplatesInput, Prisma.UserUncheckedUpdateWithoutWeekTemplatesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutWeekTemplatesInput, Prisma.UserUncheckedCreateWithoutWeekTemplatesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutWeekTemplatesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutWeekTemplatesInput, Prisma.UserUncheckedUpdateWithoutWeekTemplatesInput>
+}
+
+export type UserUpdateWithoutWeekTemplatesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutWeekTemplatesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUncheckedUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUncheckedUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUncheckedUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  guidedPlanSessions?: Prisma.GuidedPlanSessionUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutGuidedPlanSessionsInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutGuidedPlanSessionsInput = {
+  id?: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  emailVerified?: Date | string | null
+  passwordHash?: string | null
+  authMethod?: string
+  stravaId?: string | null
+  stravaAccessToken?: string | null
+  stravaRefreshToken?: string | null
+  stravaTokenExpiry?: Date | string | null
+  sex?: $Enums.Sex
+  birthDate?: Date | string | null
+  hrMax?: number | null
+  hrRest?: number | null
+  weight?: number | null
+  height?: number | null
+  thresholdHeartRate?: number | null
+  thresholdPace?: number | null
+  hrZone1Max?: number
+  hrZone2Max?: number
+  hrZone3Max?: number
+  hrZone4Max?: number
+  hrZone5Max?: number
+  hrZone6Max?: number
+  vdotCorrectionFactor?: number
+  vdotReferenceRaceDate?: Date | string | null
+  vdotReferenceRaceTime?: number | null
+  vdotReferenceRaceType?: string | null
+  autoRevolvingVo2max?: number | null
+  autoRevolvingCalculatedAt?: Date | string | null
+  includeCrossTraining?: boolean
+  useImperial?: boolean
+  lastSyncAt?: Date | string | null
+  syncInProgress?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  healthTrackingEnabled?: boolean
+  isAdmin?: boolean
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  activities?: Prisma.ActivityUncheckedCreateNestedManyWithoutUserInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedCreateNestedManyWithoutUserInput
+  apiKey?: Prisma.ApiKeyUncheckedCreateNestedOneWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  chatSessions?: Prisma.ChatSessionUncheckedCreateNestedManyWithoutUserInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedCreateNestedManyWithoutUserInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedCreateNestedManyWithoutUserInput
+  goals?: Prisma.GoalUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedCreateNestedOneWithoutUserInput
+  savedMeals?: Prisma.SavedMealUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  supplements?: Prisma.SupplementUncheckedCreateNestedManyWithoutUserInput
+  supplementStacks?: Prisma.SupplementStackUncheckedCreateNestedManyWithoutUserInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedCreateNestedOneWithoutUserInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedCreateNestedManyWithoutUserInput
+  consents?: Prisma.UserConsentUncheckedCreateNestedManyWithoutUserInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedCreateNestedOneWithoutUserInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedCreateNestedManyWithoutUserInput
+  fastingSessions?: Prisma.FastingSessionUncheckedCreateNestedManyWithoutUserInput
+  healthInsights?: Prisma.HealthInsightUncheckedCreateNestedManyWithoutUserInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedCreateNestedManyWithoutUserInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedCreateNestedManyWithoutUserInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedCreateNestedManyWithoutUserInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedCreateNestedManyWithoutUserInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedCreateNestedManyWithoutUserInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutGuidedPlanSessionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutGuidedPlanSessionsInput, Prisma.UserUncheckedCreateWithoutGuidedPlanSessionsInput>
+}
+
+export type UserUpsertWithoutGuidedPlanSessionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutGuidedPlanSessionsInput, Prisma.UserUncheckedUpdateWithoutGuidedPlanSessionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutGuidedPlanSessionsInput, Prisma.UserUncheckedCreateWithoutGuidedPlanSessionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutGuidedPlanSessionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutGuidedPlanSessionsInput, Prisma.UserUncheckedUpdateWithoutGuidedPlanSessionsInput>
+}
+
+export type UserUpdateWithoutGuidedPlanSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutGuidedPlanSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  authMethod?: Prisma.StringFieldUpdateOperationsInput | string
+  stravaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaAccessToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaRefreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stravaTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sex?: Prisma.EnumSexFieldUpdateOperationsInput | $Enums.Sex
+  birthDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hrMax?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrRest?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  weight?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  thresholdHeartRate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  thresholdPace?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  hrZone1Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone2Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone3Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone4Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone5Max?: Prisma.IntFieldUpdateOperationsInput | number
+  hrZone6Max?: Prisma.IntFieldUpdateOperationsInput | number
+  vdotCorrectionFactor?: Prisma.FloatFieldUpdateOperationsInput | number
+  vdotReferenceRaceDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vdotReferenceRaceTime?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  vdotReferenceRaceType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  autoRevolvingVo2max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  autoRevolvingCalculatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  includeCrossTraining?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  useImperial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastSyncAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  syncInProgress?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  healthTrackingEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  activities?: Prisma.ActivityUncheckedUpdateManyWithoutUserNestedInput
+  usageHistory?: Prisma.AiUsageHistoryUncheckedUpdateManyWithoutUserNestedInput
+  apiKey?: Prisma.ApiKeyUncheckedUpdateOneWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  chatSessions?: Prisma.ChatSessionUncheckedUpdateManyWithoutUserNestedInput
+  DailyFitness?: Prisma.DailyFitnessUncheckedUpdateManyWithoutUserNestedInput
+  dailyHealthLogs?: Prisma.DailyHealthLogUncheckedUpdateManyWithoutUserNestedInput
+  goals?: Prisma.GoalUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  nutritionLogs?: Prisma.NutritionLogUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  reminderSettings?: Prisma.ReminderSettingsUncheckedUpdateOneWithoutUserNestedInput
+  savedMeals?: Prisma.SavedMealUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  supplements?: Prisma.SupplementUncheckedUpdateManyWithoutUserNestedInput
+  supplementStacks?: Prisma.SupplementStackUncheckedUpdateManyWithoutUserNestedInput
+  aiSettings?: Prisma.UserAiSettingsUncheckedUpdateOneWithoutUserNestedInput
+  feedbackJobs?: Prisma.FeedbackJobUncheckedUpdateManyWithoutUserNestedInput
+  consents?: Prisma.UserConsentUncheckedUpdateManyWithoutUserNestedInput
+  nutritionTarget?: Prisma.UserNutritionTargetUncheckedUpdateOneWithoutUserNestedInput
+  bodyMeasurements?: Prisma.BodyMeasurementUncheckedUpdateManyWithoutUserNestedInput
+  fastingSessions?: Prisma.FastingSessionUncheckedUpdateManyWithoutUserNestedInput
+  healthInsights?: Prisma.HealthInsightUncheckedUpdateManyWithoutUserNestedInput
+  deviceTokens?: Prisma.DeviceTokenUncheckedUpdateManyWithoutUserNestedInput
+  dailyReadinessRecords?: Prisma.DailyReadinessRecordUncheckedUpdateManyWithoutUserNestedInput
+  readinessBaselines?: Prisma.ReadinessBaselineUncheckedUpdateManyWithoutUserNestedInput
+  adaptedWorkouts?: Prisma.AdaptedWorkoutUncheckedUpdateManyWithoutUserNestedInput
+  weeklyReconciliationRecords?: Prisma.WeeklyReconciliationRecordUncheckedUpdateManyWithoutUserNestedInput
+  weekTemplates?: Prisma.WeekTemplateUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -10466,6 +11348,8 @@ export type UserCountOutputType = {
   readinessBaselines: number
   adaptedWorkouts: number
   weeklyReconciliationRecords: number
+  weekTemplates: number
+  guidedPlanSessions: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -10494,6 +11378,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   readinessBaselines?: boolean | UserCountOutputTypeCountReadinessBaselinesArgs
   adaptedWorkouts?: boolean | UserCountOutputTypeCountAdaptedWorkoutsArgs
   weeklyReconciliationRecords?: boolean | UserCountOutputTypeCountWeeklyReconciliationRecordsArgs
+  weekTemplates?: boolean | UserCountOutputTypeCountWeekTemplatesArgs
+  guidedPlanSessions?: boolean | UserCountOutputTypeCountGuidedPlanSessionsArgs
 }
 
 /**
@@ -10681,6 +11567,20 @@ export type UserCountOutputTypeCountWeeklyReconciliationRecordsArgs<ExtArgs exte
   where?: Prisma.WeeklyReconciliationRecordWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountWeekTemplatesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.WeekTemplateWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountGuidedPlanSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.GuidedPlanSessionWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -10751,6 +11651,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   readinessBaselines?: boolean | Prisma.User$readinessBaselinesArgs<ExtArgs>
   adaptedWorkouts?: boolean | Prisma.User$adaptedWorkoutsArgs<ExtArgs>
   weeklyReconciliationRecords?: boolean | Prisma.User$weeklyReconciliationRecordsArgs<ExtArgs>
+  weekTemplates?: boolean | Prisma.User$weekTemplatesArgs<ExtArgs>
+  guidedPlanSessions?: boolean | Prisma.User$guidedPlanSessionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -10911,6 +11813,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   readinessBaselines?: boolean | Prisma.User$readinessBaselinesArgs<ExtArgs>
   adaptedWorkouts?: boolean | Prisma.User$adaptedWorkoutsArgs<ExtArgs>
   weeklyReconciliationRecords?: boolean | Prisma.User$weeklyReconciliationRecordsArgs<ExtArgs>
+  weekTemplates?: boolean | Prisma.User$weekTemplatesArgs<ExtArgs>
+  guidedPlanSessions?: boolean | Prisma.User$guidedPlanSessionsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -10948,6 +11852,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     readinessBaselines: Prisma.$ReadinessBaselinePayload<ExtArgs>[]
     adaptedWorkouts: Prisma.$AdaptedWorkoutPayload<ExtArgs>[]
     weeklyReconciliationRecords: Prisma.$WeeklyReconciliationRecordPayload<ExtArgs>[]
+    weekTemplates: Prisma.$WeekTemplatePayload<ExtArgs>[]
+    guidedPlanSessions: Prisma.$GuidedPlanSessionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -11412,6 +12318,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   readinessBaselines<T extends Prisma.User$readinessBaselinesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$readinessBaselinesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ReadinessBaselinePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   adaptedWorkouts<T extends Prisma.User$adaptedWorkoutsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$adaptedWorkoutsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdaptedWorkoutPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   weeklyReconciliationRecords<T extends Prisma.User$weeklyReconciliationRecordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$weeklyReconciliationRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WeeklyReconciliationRecordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  weekTemplates<T extends Prisma.User$weekTemplatesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$weekTemplatesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WeekTemplatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  guidedPlanSessions<T extends Prisma.User$guidedPlanSessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$guidedPlanSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GuidedPlanSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12546,6 +13454,54 @@ export type User$weeklyReconciliationRecordsArgs<ExtArgs extends runtime.Types.E
   take?: number
   skip?: number
   distinct?: Prisma.WeeklyReconciliationRecordScalarFieldEnum | Prisma.WeeklyReconciliationRecordScalarFieldEnum[]
+}
+
+/**
+ * User.weekTemplates
+ */
+export type User$weekTemplatesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WeekTemplate
+   */
+  select?: Prisma.WeekTemplateSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WeekTemplate
+   */
+  omit?: Prisma.WeekTemplateOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WeekTemplateInclude<ExtArgs> | null
+  where?: Prisma.WeekTemplateWhereInput
+  orderBy?: Prisma.WeekTemplateOrderByWithRelationInput | Prisma.WeekTemplateOrderByWithRelationInput[]
+  cursor?: Prisma.WeekTemplateWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.WeekTemplateScalarFieldEnum | Prisma.WeekTemplateScalarFieldEnum[]
+}
+
+/**
+ * User.guidedPlanSessions
+ */
+export type User$guidedPlanSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the GuidedPlanSession
+   */
+  select?: Prisma.GuidedPlanSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the GuidedPlanSession
+   */
+  omit?: Prisma.GuidedPlanSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.GuidedPlanSessionInclude<ExtArgs> | null
+  where?: Prisma.GuidedPlanSessionWhereInput
+  orderBy?: Prisma.GuidedPlanSessionOrderByWithRelationInput | Prisma.GuidedPlanSessionOrderByWithRelationInput[]
+  cursor?: Prisma.GuidedPlanSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.GuidedPlanSessionScalarFieldEnum | Prisma.GuidedPlanSessionScalarFieldEnum[]
 }
 
 /**

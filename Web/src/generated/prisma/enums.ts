@@ -50,11 +50,53 @@ export const ActivityType = {
 export type ActivityType = (typeof ActivityType)[keyof typeof ActivityType]
 
 
+export const PlanSport = {
+  RUN: 'RUN',
+  TRIATHLON: 'TRIATHLON'
+} as const
+
+export type PlanSport = (typeof PlanSport)[keyof typeof PlanSport]
+
+
+export const PlanCreationMode = {
+  EXPERT_MANUAL: 'EXPERT_MANUAL',
+  GUIDED: 'GUIDED',
+  AI_ASSISTED: 'AI_ASSISTED',
+  STANDARD_BUILDER: 'STANDARD_BUILDER',
+  CSV_IMPORT: 'CSV_IMPORT'
+} as const
+
+export type PlanCreationMode = (typeof PlanCreationMode)[keyof typeof PlanCreationMode]
+
+
+export const GoalPriority = {
+  PRIMARY: 'PRIMARY',
+  SECONDARY: 'SECONDARY',
+  TUNE_UP: 'TUNE_UP',
+  MILESTONE: 'MILESTONE'
+} as const
+
+export type GoalPriority = (typeof GoalPriority)[keyof typeof GoalPriority]
+
+
 export const RaceType = {
   FIVE_K: 'FIVE_K',
   TEN_K: 'TEN_K',
   HALF_MARATHON: 'HALF_MARATHON',
-  MARATHON: 'MARATHON'
+  MARATHON: 'MARATHON',
+  FIFTY_K: 'FIFTY_K',
+  FIFTY_MILE: 'FIFTY_MILE',
+  HUNDRED_K: 'HUNDRED_K',
+  HUNDRED_MILE: 'HUNDRED_MILE',
+  TWELVE_HOUR: 'TWELVE_HOUR',
+  TWENTY_FOUR_HOUR: 'TWENTY_FOUR_HOUR',
+  BACKYARD_ULTRA: 'BACKYARD_ULTRA',
+  CUSTOM_DISTANCE: 'CUSTOM_DISTANCE',
+  SPRINT_TRI: 'SPRINT_TRI',
+  OLYMPIC_TRI: 'OLYMPIC_TRI',
+  HALF_IRONMAN: 'HALF_IRONMAN',
+  FULL_IRONMAN: 'FULL_IRONMAN',
+  CUSTOM_TRI: 'CUSTOM_TRI'
 } as const
 
 export type RaceType = (typeof RaceType)[keyof typeof RaceType]
@@ -74,7 +116,14 @@ export const WorkoutType = {
   RIDE: 'RIDE',
   SWIM: 'SWIM',
   STRENGTH: 'STRENGTH',
-  OTHER: 'OTHER'
+  OTHER: 'OTHER',
+  BRICK: 'BRICK',
+  OPEN_WATER_SWIM: 'OPEN_WATER_SWIM',
+  LONG_RIDE: 'LONG_RIDE',
+  RIDE_INTERVALS: 'RIDE_INTERVALS',
+  SWIM_DRILL: 'SWIM_DRILL',
+  TRANSITION_PRACTICE: 'TRANSITION_PRACTICE',
+  DOUBLE_DAY: 'DOUBLE_DAY'
 } as const
 
 export type WorkoutType = (typeof WorkoutType)[keyof typeof WorkoutType]
@@ -86,7 +135,11 @@ export const PlanPhase = {
   PEAK: 'PEAK',
   TAPER: 'TAPER',
   RACE_WEEK: 'RACE_WEEK',
-  RECOVERY: 'RECOVERY'
+  RECOVERY: 'RECOVERY',
+  ENDURANCE: 'ENDURANCE',
+  MENTAL_PREP: 'MENTAL_PREP',
+  TUNE_UP: 'TUNE_UP',
+  MAINTAIN: 'MAINTAIN'
 } as const
 
 export type PlanPhase = (typeof PlanPhase)[keyof typeof PlanPhase]

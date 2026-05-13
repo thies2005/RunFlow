@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import type { Goal } from '../Progression/types';
-import { PRIORITY_CONFIG } from '../Progression/types';
 import { GoalTimelineMarker } from './GoalTimelineMarker';
 
 interface GoalTimelineProps {
@@ -10,7 +9,7 @@ interface GoalTimelineProps {
     planStartDate: Date;
     planEndDate: Date;
     currentWeek: number;
-    onMarkerClick: (goalId: string) => void;
+    onMarkerClick: (_goalId: string) => void;
 }
 
 export function GoalTimeline({
@@ -21,9 +20,9 @@ export function GoalTimeline({
     onMarkerClick,
 }: GoalTimelineProps) {
     const totalMs = planEndDate.getTime() - planStartDate.getTime();
-    if (totalMs <= 0 || goals.length === 0) return null;
 
     const markers = useMemo(() => {
+        if (totalMs <= 0) return [];
         return goals
             .filter((g) => g.raceDate)
             .map((g) => {
@@ -42,9 +41,11 @@ export function GoalTimeline({
     }, [currentWeek, totalMs]);
 
     const phases = useMemo(() => {
-        const sorted = markers.map((m) => m.x);
-        return sorted;
+        return markers.map((m) => m.x);
     }, [markers]);
+
+    // Early return AFTER all hooks to satisfy rules-of-hooks
+    if (totalMs <= 0 || goals.length === 0) return null;
 
     return (
         <div className="relative px-4 py-2 border-b border-zinc-800">

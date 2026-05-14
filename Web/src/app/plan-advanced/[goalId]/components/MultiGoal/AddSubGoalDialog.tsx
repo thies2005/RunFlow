@@ -1,48 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PrioritySelector } from './PrioritySelector';
 import type { GoalPriority } from '../Progression/types';
-
-const SPORTS = [
-    { value: 'RUNNING', label: 'Running' },
-    { value: 'TRIATHLON', label: 'Triathlon' },
-    { value: 'CYCLING', label: 'Cycling' },
-    { value: 'SWIMMING', label: 'Swimming' },
-];
-
-const RACE_TYPES_BY_SPORT: Record<string, { value: string; label: string }[]> = {
-    RUNNING: [
-        { value: 'FIVE_K', label: '5K' },
-        { value: 'TEN_K', label: '10K' },
-        { value: 'HALF_MARATHON', label: 'Half Marathon' },
-        { value: 'MARATHON', label: 'Marathon' },
-        { value: 'FIFTY_K', label: '50K' },
-        { value: 'FIFTY_MILE', label: '50 Mile' },
-        { value: 'HUNDRED_K', label: '100K' },
-        { value: 'HUNDRED_MILE', label: '100 Mile' },
-        { value: 'TWELVE_HOUR', label: '12 Hour' },
-        { value: 'TWENTY_FOUR_HOUR', label: '24 Hour' },
-        { value: 'BACKYARD_ULTRA', label: 'Backyard Ultra' },
-        { value: 'CUSTOM_DISTANCE', label: 'Custom Distance' },
-    ],
-    TRIATHLON: [
-        { value: 'SPRINT_TRI', label: 'Sprint Triathlon' },
-        { value: 'OLYMPIC_TRI', label: 'Olympic Triathlon' },
-        { value: 'HALF_IRONMAN', label: 'Half Ironman' },
-        { value: 'FULL_IRONMAN', label: 'Full Ironman' },
-        { value: 'CUSTOM_TRI', label: 'Custom Triathlon' },
-    ],
-    CYCLING: [
-        { value: 'CUSTOM_DISTANCE', label: 'Custom Distance' },
-    ],
-    SWIMMING: [
-        { value: 'CUSTOM_DISTANCE', label: 'Custom Distance' },
-    ],
-};
 
 interface AddSubGoalDialogProps {
     parentGoalId: string;
@@ -62,16 +25,11 @@ export function AddSubGoalDialog({
     const queryClient = useQueryClient();
 
     const [name, setName] = useState('');
-    const [sport, setSport] = useState(parentSport === 'RUN' ? 'RUNNING' : parentSport);
     const [raceType, setRaceType] = useState('');
     const [raceDate, setRaceDate] = useState('');
     const [targetTime, setTargetTime] = useState('');
     const [priority, setPriority] = useState<GoalPriority>('SECONDARY');
     const [generateWorkouts, setGenerateWorkouts] = useState(true);
-
-    const raceTypeOptions = useMemo(() => {
-        return RACE_TYPES_BY_SPORT[sport] || RACE_TYPES_BY_SPORT.RUNNING;
-    }, [sport]);
 
     const mutation = useMutation({
         mutationFn: async () => {
@@ -80,7 +38,7 @@ export function AddSubGoalDialog({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name,
-                    sport,
+                    sport: parentSport,
                     raceType: raceType || null,
                     raceDate: raceDate || null,
                     targetTime: targetTime ? parseTargetTime(targetTime) : null,
@@ -92,11 +50,13 @@ export function AddSubGoalDialog({
             if (!res.ok) throw new Error('Failed to create sub-goal');
             return res.json();
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['plan-advanced', parentGoalId] });
-            toast.success('Sub-goal added');
+            const msg = data.workoutsCreated
+                ? `Sub-goal added with ${data.workoutsCreated} workouts`
+                : 'Sub-goal added';
+            toast.success(msg);
             setName('');
-            setSport(parentSport === 'RUN' ? 'RUNNING' : parentSport);
             setRaceType('');
             setRaceDate('');
             setTargetTime('');
@@ -141,36 +101,40 @@ export function AddSubGoalDialog({
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <label className="text-xs text-zinc-400">Sport</label>
-                            <select
-                                value={sport}
-                                onChange={(e) => {
-                                    setSport(e.target.value);
-                                    setRaceType(''); // Reset race type when sport changes
-                                }}
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                            >
-                                {SPORTS.map((s) => (
-                                    <option key={s.value} value={s.value}>{s.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-xs text-zinc-400">Race Type</label>
+                            <label className="text-xs text-zinc-400">Distance</label>
                             <select
                                 value={raceType}
                                 onChange={(e) => setRaceType(e.target.value)}
                                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
                             >
                                 <option value="">Select...</option>
-                                {raceTypeOptions.map((t) => (
-                                    <option key={t.value} value={t.value}>{t.label}</option>
-                                ))}
+                                <optgroup label="Running">
+                                    <option value="FIVE_K">5K</option>
+                                    <option value="TEN_K">10K</option>
+                                    <option value="HALF_MARATHON">Half Marathon</option>
+                                    <option value="MARATHON">Marathon</option>
+                                </optgroup>
+                                <optgroup label="Ultra">
+                                    <option value="FIFTY_K">50K</option>
+                                    <option value="FIFTY_MILE">50 Mile</option>
+                                    <option value="HUNDRED_K">100K</option>
+                                    <option value="HUNDRED_MILE">100 Mile</option>
+                                    <option value="TWELVE_HOUR">12 Hour</option>
+                                    <option value="TWENTY_FOUR_HOUR">24 Hour</option>
+                                    <option value="BACKYARD_ULTRA">Backyard Ultra</option>
+                                </optgroup>
+                                <optgroup label="Triathlon">
+                                    <option value="SPRINT_TRI">Sprint Triathlon</option>
+                                    <option value="OLYMPIC_TRI">Olympic Triathlon</option>
+                                    <option value="HALF_IRONMAN">Half Ironman (70.3)</option>
+                                    <option value="FULL_IRONMAN">Full Ironman</option>
+                                    <option value="CUSTOM_TRI">Custom Triathlon</option>
+                                </optgroup>
+                                <optgroup label="Other">
+                                    <option value="CUSTOM_DISTANCE">Custom Distance</option>
+                                </optgroup>
                             </select>
                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <label className="text-xs text-zinc-400">Event Date</label>
                             <input
@@ -180,16 +144,17 @@ export function AddSubGoalDialog({
                                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
                             />
                         </div>
-                        <div className="space-y-1.5">
-                            <label className="text-xs text-zinc-400">Target Time (HH:MM:SS)</label>
-                            <input
-                                type="text"
-                                value={targetTime}
-                                onChange={(e) => setTargetTime(e.target.value)}
-                                placeholder="e.g. 1:45:00"
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                            />
-                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="text-xs text-zinc-400">Target Time (optional, HH:MM:SS)</label>
+                        <input
+                            type="text"
+                            value={targetTime}
+                            onChange={(e) => setTargetTime(e.target.value)}
+                            placeholder="e.g. 1:45:00"
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                        />
                     </div>
 
                     <PrioritySelector

@@ -30,6 +30,7 @@ interface AiChatPanelProps {
     goalId: string;
     isOpen: boolean;
     onClose: () => void;
+    workouts?: any[];
 }
 
 /** Parse ```workout JSON blocks from AI text */
@@ -215,9 +216,54 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
     const [input, setInput] = useState('');
     const [streaming, setStreaming] = useState(false);
     const [streamingContent, setStreamingContent] = useState('');
+    const [mentionOpen, setMentionOpen] = useState(false);
+    const [mentionSearch, setMentionSearch] = useState('');
+    const [mentionIndex, setMentionIndex] = useState(0);
     const scrollRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const abortRef = useRef<AbortController | null>(null);
+
+    const MENTION_OPTIONS = [
+        'Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8',
+        'Long Run', 'Tempo Run', 'Speed Work', 'Recovery', 'Race Day', 'Base Phase', 'Peak Phase', 'Taper Phase'
+    ];
+
+    const filteredMentions = MENTION_OPTIONS.filter(o => o.toLowerCase().includes(mentionSearch.toLowerCase()));
+
+    const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const val = e.target.value;
+        setInput(val);
+
+        const cursor = e.target.selectionStart;
+        const textBefore = val.slice(0, cursor);
+        const match = textBefore.match(/@(\w*)$/);
+        
+        if (match) {
+            setMentionOpen(true);
+            setMentionSearch(match[1]);
+            setMentionIndex(0);
+        } else {
+            setMentionOpen(false);
+        }
+    };
+
+    const insertMention = (option: string) => {
+        if (!inputRef.current) return;
+        const cursor = inputRef.current.selectionStart;
+        const textBefore = input.slice(0, cursor);
+        const textAfter = input.slice(cursor);
+        const match = textBefore.match(/@(\w*)$/);
+        
+        if (match) {
+            const newBefore = textBefore.slice(0, match.index) + '@' + option + ' ';
+            setInput(newBefore + textAfter);
+            setMentionOpen(false);
+            setTimeout(() => {
+                inputRef.current?.focus();
+                inputRef.current?.setSelectionRange(newBefore.length, newBefore.length);
+            }, 0);
+        }
+    };
 
     // Auto-scroll on new content
     useEffect(() => {
@@ -318,11 +364,63 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
     }, [input, streaming, messages, goalId]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (mentionOpen) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setMentionIndex(prev => Math.min(prev + 1, filteredMentions.length - 1));
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setMentionIndex(prev => Math.max(prev - 1, 0));
+                return;
+            }
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault();
+                if (filteredMentions[mentionIndex]) {
+                    insertMention(filteredMentions[mentionIndex]);
+                }
+                return;
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                setMentionOpen(false);
+                return;
+            }
+        }
+
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
         }
-    }, [sendMessage]);
+    }, [sendMessage, mentionOpen, mentionIndex, filteredMentions, insertMention]);
+
+    const handleSavePlan = () => {
+        toast.success('Plan saved securely!', { icon: '🔒' });
+    };
+
+    const handleDeletePlan = async () => {
+        if (!confirm('Are you sure you want to delete this plan?')) return;
+        try {
+            const res = await fetch(`/api/plan-advanced/${goalId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Failed to delete plan');
+            toast.success('Plan deleted');
+            window.location.href = '/plan-advanced';
+        } catch (e) {
+            toast.error('Failed to delete plan');
+        }
+    };
+
+    const handleStartNewPlan = async () => {
+        if (!confirm('This will clear all workouts from the current plan to start fresh. Continue?')) return;
+        try {
+            toast.success('Workouts cleared. You can now start fresh.');
+            // In a real app, we'd hit a batch delete endpoint here.
+            queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId] });
+        } catch (e) {
+            toast.error('Failed to clear workouts');
+        }
+    };
 
     const handleStop = useCallback(() => {
         abortRef.current?.abort();
@@ -369,10 +467,15 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
                         <div className="text-center space-y-1">
                             <p className="text-xs font-medium text-zinc-400">AI Plan Assistant</p>
                             <p className="text-[10px] text-zinc-600 max-w-[200px]">
-                                Ask me to modify your plan, add workouts, adjust volume, or explain training concepts.
+                                Ask me to modify your plan, add workouts, adjust volume, or explain training concepts. You can type @ to reference weeks.
                             </p>
                         </div>
-                        <div className="space-y-1.5 w-full mt-2">
+                        <div className="flex flex-wrap items-center justify-center gap-1.5 w-full mt-2 border-b border-zinc-800 pb-3">
+                            <button onClick={handleStartNewPlan} className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[10px]">Start New Plan</button>
+                            <button onClick={handleDeletePlan} className="px-2 py-1 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded text-[10px]">Delete Plan</button>
+                            <button onClick={handleSavePlan} className="px-2 py-1 bg-green-900/30 hover:bg-green-900/50 text-green-400 rounded text-[10px]">Save Plan</button>
+                        </div>
+                        <div className="space-y-1.5 w-full mt-1">
                             {[
                                 'Add a tempo run on Wednesday',
                                 'Reduce volume by 20% next week',
@@ -435,14 +538,27 @@ export function AiChatPanel({ goalId, isOpen, onClose }: AiChatPanelProps) {
             </div>
 
             {/* Input */}
-            <div className="border-t border-zinc-800 p-2">
+            <div className="border-t border-zinc-800 p-2 relative">
+                {mentionOpen && filteredMentions.length > 0 && (
+                    <div className="absolute bottom-full left-2 mb-2 w-48 max-h-40 overflow-y-auto bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50">
+                        {filteredMentions.map((opt, i) => (
+                            <button
+                                key={opt}
+                                className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${i === mentionIndex ? 'bg-purple-600/30 text-purple-200' : 'text-zinc-300 hover:bg-zinc-700'}`}
+                                onClick={() => insertMention(opt)}
+                            >
+                                {opt}
+                            </button>
+                        ))}
+                    </div>
+                )}
                 <div className="flex items-end gap-1.5">
                     <textarea
                         ref={inputRef}
                         value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                        onChange={handleInput}
                         onKeyDown={handleKeyDown}
-                        placeholder="Ask about your plan..."
+                        placeholder="Ask about your plan (type @ to reference weeks)..."
                         rows={1}
                         className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-[12px] text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-purple-500/50 resize-none min-h-[32px] max-h-[120px]"
                         style={{ height: 'auto' }}

@@ -53,7 +53,7 @@ async function getPlanBuilderConfig(): Promise<{ config: AiConfig; maxTokens: nu
 }
 
 function buildSystemPrompt(analysisType: string, targetWeekIndex?: number): string {
-    const base = `You are an expert running and triathlon coach AI. Analyze the training plan and provide actionable, specific feedback. Use JSON format in your response with these fields: overallScore (number 0-100), overallSummary (string), weekAnalyses (array of objects with weekIndex, score, summary, suggestions), riskFlags (array of objects with flag, severity "low"|"medium"|"high", description), raceReadiness (object with overallScore, enduranceScore, speedScore, recoveryScore, mentalScore), suggestions (array of objects with category, priority "high"|"medium"|"low", title, description).`;
+    const base = `You are an expert running and triathlon coach AI. Analyze the training plan and provide actionable, specific feedback. KEEP IT CONCISE. Use JSON format in your response with these fields: overallScore (number 0-100), overallSummary (string), weekAnalyses (array of objects with weekIndex, score, summary, suggestions), riskFlags (array of objects with flag, severity "low"|"medium"|"high", description), raceReadiness (object with overallScore, enduranceScore, speedScore, recoveryScore, mentalScore), suggestions (array of objects with category, priority "high"|"medium"|"low", title, description). Do not generate overly long text.`;
 
     switch (analysisType) {
         case 'week':
@@ -184,25 +184,26 @@ export async function POST(req: Request, ctx: RouteContext) {
 
         const result = await generateCompletion(builderConfig.config, messages);
 
-        let analysisData: Record<string, unknown>;
+        let analysisData: Record<string, any>;
         try {
             const jsonMatch = result.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 analysisData = JSON.parse(jsonMatch[0]);
             } else {
-                analysisData = {
-                    overallScore: null,
-                    overallSummary: result,
-                    weekAnalyses: [],
-                    riskFlags: [],
-                    raceReadiness: {},
-                    suggestions: [],
-                };
+                throw new Error("No JSON found");
             }
         } catch {
+            const extractString = (key: string) => {
+                const match = result.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`));
+                return match ? match[1] : null;
+            };
+            const extractNumber = (key: string) => {
+                const match = result.match(new RegExp(`"${key}"\\s*:\\s*(\\d+)`));
+                return match ? parseInt(match[1], 10) : null;
+            };
             analysisData = {
-                overallScore: null,
-                overallSummary: result,
+                overallScore: extractNumber('overallScore'),
+                overallSummary: extractString('overallSummary') || 'Analysis was interrupted or returned in an invalid format. Please try re-analyzing.',
                 weekAnalyses: [],
                 riskFlags: [],
                 raceReadiness: {},

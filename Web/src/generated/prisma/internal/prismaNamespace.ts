@@ -5009,6 +5009,9 @@ export const ActivityScalarFieldEnum = {
   rawJson: 'rawJson',
   streams: 'streams',
   trainingType: 'trainingType',
+  averageWatts: 'averageWatts',
+  weightedAverageWatts: 'weightedAverageWatts',
+  deviceWatts: 'deviceWatts',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

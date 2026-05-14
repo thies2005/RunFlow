@@ -51,6 +51,8 @@ export type ActivityAvgAggregateOutputType = {
   hrZone5Time: number | null
   hrZone6Time: number | null
   hrZone7Time: number | null
+  averageWatts: number | null
+  weightedAverageWatts: number | null
 }
 
 export type ActivitySumAggregateOutputType = {
@@ -78,6 +80,8 @@ export type ActivitySumAggregateOutputType = {
   hrZone5Time: number | null
   hrZone6Time: number | null
   hrZone7Time: number | null
+  averageWatts: number | null
+  weightedAverageWatts: number | null
 }
 
 export type ActivityMinAggregateOutputType = {
@@ -115,6 +119,9 @@ export type ActivityMinAggregateOutputType = {
   hrZone6Time: number | null
   hrZone7Time: number | null
   trainingType: $Enums.WorkoutType | null
+  averageWatts: number | null
+  weightedAverageWatts: number | null
+  deviceWatts: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -154,6 +161,9 @@ export type ActivityMaxAggregateOutputType = {
   hrZone6Time: number | null
   hrZone7Time: number | null
   trainingType: $Enums.WorkoutType | null
+  averageWatts: number | null
+  weightedAverageWatts: number | null
+  deviceWatts: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -195,6 +205,9 @@ export type ActivityCountAggregateOutputType = {
   rawJson: number
   streams: number
   trainingType: number
+  averageWatts: number
+  weightedAverageWatts: number
+  deviceWatts: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -226,6 +239,8 @@ export type ActivityAvgAggregateInputType = {
   hrZone5Time?: true
   hrZone6Time?: true
   hrZone7Time?: true
+  averageWatts?: true
+  weightedAverageWatts?: true
 }
 
 export type ActivitySumAggregateInputType = {
@@ -253,6 +268,8 @@ export type ActivitySumAggregateInputType = {
   hrZone5Time?: true
   hrZone6Time?: true
   hrZone7Time?: true
+  averageWatts?: true
+  weightedAverageWatts?: true
 }
 
 export type ActivityMinAggregateInputType = {
@@ -290,6 +307,9 @@ export type ActivityMinAggregateInputType = {
   hrZone6Time?: true
   hrZone7Time?: true
   trainingType?: true
+  averageWatts?: true
+  weightedAverageWatts?: true
+  deviceWatts?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -329,6 +349,9 @@ export type ActivityMaxAggregateInputType = {
   hrZone6Time?: true
   hrZone7Time?: true
   trainingType?: true
+  averageWatts?: true
+  weightedAverageWatts?: true
+  deviceWatts?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -370,6 +393,9 @@ export type ActivityCountAggregateInputType = {
   rawJson?: true
   streams?: true
   trainingType?: true
+  averageWatts?: true
+  weightedAverageWatts?: true
+  deviceWatts?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -498,6 +524,9 @@ export type ActivityGroupByOutputType = {
   rawJson: runtime.JsonValue | null
   streams: runtime.JsonValue | null
   trainingType: $Enums.WorkoutType | null
+  averageWatts: number | null
+  weightedAverageWatts: number | null
+  deviceWatts: boolean
   createdAt: Date
   updatedAt: Date
   _count: ActivityCountAggregateOutputType | null
@@ -562,6 +591,9 @@ export type ActivityWhereInput = {
   rawJson?: Prisma.JsonNullableFilter<"Activity">
   streams?: Prisma.JsonNullableFilter<"Activity">
   trainingType?: Prisma.EnumWorkoutTypeNullableFilter<"Activity"> | $Enums.WorkoutType | null
+  averageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  weightedAverageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  deviceWatts?: Prisma.BoolFilter<"Activity"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -611,6 +643,9 @@ export type ActivityOrderByWithRelationInput = {
   rawJson?: Prisma.SortOrderInput | Prisma.SortOrder
   streams?: Prisma.SortOrderInput | Prisma.SortOrder
   trainingType?: Prisma.SortOrderInput | Prisma.SortOrder
+  averageWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  weightedAverageWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  deviceWatts?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -663,6 +698,9 @@ export type ActivityWhereUniqueInput = Prisma.AtLeast<{
   rawJson?: Prisma.JsonNullableFilter<"Activity">
   streams?: Prisma.JsonNullableFilter<"Activity">
   trainingType?: Prisma.EnumWorkoutTypeNullableFilter<"Activity"> | $Enums.WorkoutType | null
+  averageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  weightedAverageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  deviceWatts?: Prisma.BoolFilter<"Activity"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -712,6 +750,9 @@ export type ActivityOrderByWithAggregationInput = {
   rawJson?: Prisma.SortOrderInput | Prisma.SortOrder
   streams?: Prisma.SortOrderInput | Prisma.SortOrder
   trainingType?: Prisma.SortOrderInput | Prisma.SortOrder
+  averageWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  weightedAverageWatts?: Prisma.SortOrderInput | Prisma.SortOrder
+  deviceWatts?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ActivityCountOrderByAggregateInput
@@ -761,6 +802,9 @@ export type ActivityScalarWhereWithAggregatesInput = {
   rawJson?: Prisma.JsonNullableWithAggregatesFilter<"Activity">
   streams?: Prisma.JsonNullableWithAggregatesFilter<"Activity">
   trainingType?: Prisma.EnumWorkoutTypeNullableWithAggregatesFilter<"Activity"> | $Enums.WorkoutType | null
+  averageWatts?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  weightedAverageWatts?: Prisma.FloatNullableWithAggregatesFilter<"Activity"> | number | null
+  deviceWatts?: Prisma.BoolWithAggregatesFilter<"Activity"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Activity"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Activity"> | Date | string
 }
@@ -801,6 +845,9 @@ export type ActivityCreateInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -850,6 +897,9 @@ export type ActivityUncheckedCreateInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -897,6 +947,9 @@ export type ActivityUpdateInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -946,6 +999,9 @@ export type ActivityUncheckedUpdateInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -994,6 +1050,9 @@ export type ActivityCreateManyInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1034,6 +1093,9 @@ export type ActivityUpdateManyMutationInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1075,6 +1137,9 @@ export type ActivityUncheckedUpdateManyInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1131,6 +1196,9 @@ export type ActivityCountOrderByAggregateInput = {
   rawJson?: Prisma.SortOrder
   streams?: Prisma.SortOrder
   trainingType?: Prisma.SortOrder
+  averageWatts?: Prisma.SortOrder
+  weightedAverageWatts?: Prisma.SortOrder
+  deviceWatts?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1160,6 +1228,8 @@ export type ActivityAvgOrderByAggregateInput = {
   hrZone5Time?: Prisma.SortOrder
   hrZone6Time?: Prisma.SortOrder
   hrZone7Time?: Prisma.SortOrder
+  averageWatts?: Prisma.SortOrder
+  weightedAverageWatts?: Prisma.SortOrder
 }
 
 export type ActivityMaxOrderByAggregateInput = {
@@ -1197,6 +1267,9 @@ export type ActivityMaxOrderByAggregateInput = {
   hrZone6Time?: Prisma.SortOrder
   hrZone7Time?: Prisma.SortOrder
   trainingType?: Prisma.SortOrder
+  averageWatts?: Prisma.SortOrder
+  weightedAverageWatts?: Prisma.SortOrder
+  deviceWatts?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1236,6 +1309,9 @@ export type ActivityMinOrderByAggregateInput = {
   hrZone6Time?: Prisma.SortOrder
   hrZone7Time?: Prisma.SortOrder
   trainingType?: Prisma.SortOrder
+  averageWatts?: Prisma.SortOrder
+  weightedAverageWatts?: Prisma.SortOrder
+  deviceWatts?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -1265,6 +1341,8 @@ export type ActivitySumOrderByAggregateInput = {
   hrZone5Time?: Prisma.SortOrder
   hrZone6Time?: Prisma.SortOrder
   hrZone7Time?: Prisma.SortOrder
+  averageWatts?: Prisma.SortOrder
+  weightedAverageWatts?: Prisma.SortOrder
 }
 
 export type ActivityNullableScalarRelationFilter = {
@@ -1470,6 +1548,9 @@ export type ActivityCreateWithoutUserInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageCreateNestedManyWithoutActivityInput
@@ -1517,6 +1598,9 @@ export type ActivityUncheckedCreateWithoutUserInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -1594,6 +1678,9 @@ export type ActivityScalarWhereInput = {
   rawJson?: Prisma.JsonNullableFilter<"Activity">
   streams?: Prisma.JsonNullableFilter<"Activity">
   trainingType?: Prisma.EnumWorkoutTypeNullableFilter<"Activity"> | $Enums.WorkoutType | null
+  averageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  weightedAverageWatts?: Prisma.FloatNullableFilter<"Activity"> | number | null
+  deviceWatts?: Prisma.BoolFilter<"Activity"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Activity"> | Date | string
 }
@@ -1634,6 +1721,9 @@ export type ActivityCreateWithoutAiFeedbackInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -1682,6 +1772,9 @@ export type ActivityUncheckedCreateWithoutAiFeedbackInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -1744,6 +1837,9 @@ export type ActivityUpdateWithoutAiFeedbackInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -1792,6 +1888,9 @@ export type ActivityUncheckedUpdateWithoutAiFeedbackInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -1838,6 +1937,9 @@ export type ActivityCreateWithoutFeedbackJobInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -1886,6 +1988,9 @@ export type ActivityUncheckedCreateWithoutFeedbackJobInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -1948,6 +2053,9 @@ export type ActivityUpdateWithoutFeedbackJobInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -1996,6 +2104,9 @@ export type ActivityUncheckedUpdateWithoutFeedbackJobInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -2042,6 +2153,9 @@ export type ActivityCreateWithoutLapsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -2090,6 +2204,9 @@ export type ActivityUncheckedCreateWithoutLapsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -2152,6 +2269,9 @@ export type ActivityUpdateWithoutLapsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -2200,6 +2320,9 @@ export type ActivityUncheckedUpdateWithoutLapsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -2246,6 +2369,9 @@ export type ActivityCreateWithoutSplitsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -2294,6 +2420,9 @@ export type ActivityUncheckedCreateWithoutSplitsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -2356,6 +2485,9 @@ export type ActivityUpdateWithoutSplitsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -2404,6 +2536,9 @@ export type ActivityUncheckedUpdateWithoutSplitsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -2450,6 +2585,9 @@ export type ActivityCreateWithoutRaceResultsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -2498,6 +2636,9 @@ export type ActivityUncheckedCreateWithoutRaceResultsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -2560,6 +2701,9 @@ export type ActivityUpdateWithoutRaceResultsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -2608,6 +2752,9 @@ export type ActivityUncheckedUpdateWithoutRaceResultsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -2654,6 +2801,9 @@ export type ActivityCreateWithoutLinkedWorkoutsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -2702,6 +2852,9 @@ export type ActivityUncheckedCreateWithoutLinkedWorkoutsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutActivityInput
@@ -2764,6 +2917,9 @@ export type ActivityUpdateWithoutLinkedWorkoutsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -2812,6 +2968,9 @@ export type ActivityUncheckedUpdateWithoutLinkedWorkoutsInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -2858,6 +3017,9 @@ export type ActivityCreateWithoutChatMessageInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutActivitiesInput
@@ -2906,6 +3068,9 @@ export type ActivityUncheckedCreateWithoutChatMessageInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   laps?: Prisma.LapUncheckedCreateNestedManyWithoutActivityInput
@@ -2968,6 +3133,9 @@ export type ActivityUpdateWithoutChatMessageInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutActivitiesNestedInput
@@ -3016,6 +3184,9 @@ export type ActivityUncheckedUpdateWithoutChatMessageInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   laps?: Prisma.LapUncheckedUpdateManyWithoutActivityNestedInput
@@ -3062,6 +3233,9 @@ export type ActivityCreateManyUserInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: $Enums.WorkoutType | null
+  averageWatts?: number | null
+  weightedAverageWatts?: number | null
+  deviceWatts?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -3102,6 +3276,9 @@ export type ActivityUpdateWithoutUserInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUpdateManyWithoutActivityNestedInput
@@ -3149,6 +3326,9 @@ export type ActivityUncheckedUpdateWithoutUserInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ChatMessage?: Prisma.ChatMessageUncheckedUpdateManyWithoutActivityNestedInput
@@ -3196,6 +3376,9 @@ export type ActivityUncheckedUpdateManyWithoutUserInput = {
   rawJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   streams?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   trainingType?: Prisma.NullableEnumWorkoutTypeFieldUpdateOperationsInput | $Enums.WorkoutType | null
+  averageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  weightedAverageWatts?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  deviceWatts?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -3304,6 +3487,9 @@ export type ActivitySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   rawJson?: boolean
   streams?: boolean
   trainingType?: boolean
+  averageWatts?: boolean
+  weightedAverageWatts?: boolean
+  deviceWatts?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -3354,6 +3540,9 @@ export type ActivitySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   rawJson?: boolean
   streams?: boolean
   trainingType?: boolean
+  averageWatts?: boolean
+  weightedAverageWatts?: boolean
+  deviceWatts?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -3396,6 +3585,9 @@ export type ActivitySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   rawJson?: boolean
   streams?: boolean
   trainingType?: boolean
+  averageWatts?: boolean
+  weightedAverageWatts?: boolean
+  deviceWatts?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -3438,11 +3630,14 @@ export type ActivitySelectScalar = {
   rawJson?: boolean
   streams?: boolean
   trainingType?: boolean
+  averageWatts?: boolean
+  weightedAverageWatts?: boolean
+  deviceWatts?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ActivityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "stravaId" | "type" | "sportType" | "name" | "description" | "startDate" | "timezone" | "distance" | "movingTime" | "elapsedTime" | "averageSpeed" | "maxSpeed" | "gradeAdjustedSpeed" | "averageHr" | "maxHr" | "averageCadence" | "hasHeartrate" | "totalElevation" | "elevHigh" | "elevLow" | "calories" | "trimp" | "runningTss" | "estimatedVdot" | "hrZone1Time" | "hrZone2Time" | "hrZone3Time" | "hrZone4Time" | "hrZone5Time" | "hrZone6Time" | "hrZone7Time" | "rawJson" | "streams" | "trainingType" | "createdAt" | "updatedAt", ExtArgs["result"]["activity"]>
+export type ActivityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "stravaId" | "type" | "sportType" | "name" | "description" | "startDate" | "timezone" | "distance" | "movingTime" | "elapsedTime" | "averageSpeed" | "maxSpeed" | "gradeAdjustedSpeed" | "averageHr" | "maxHr" | "averageCadence" | "hasHeartrate" | "totalElevation" | "elevHigh" | "elevLow" | "calories" | "trimp" | "runningTss" | "estimatedVdot" | "hrZone1Time" | "hrZone2Time" | "hrZone3Time" | "hrZone4Time" | "hrZone5Time" | "hrZone6Time" | "hrZone7Time" | "rawJson" | "streams" | "trainingType" | "averageWatts" | "weightedAverageWatts" | "deviceWatts" | "createdAt" | "updatedAt", ExtArgs["result"]["activity"]>
 export type ActivityInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   ChatMessage?: boolean | Prisma.Activity$ChatMessageArgs<ExtArgs>
@@ -3510,6 +3705,9 @@ export type $ActivityPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     rawJson: runtime.JsonValue | null
     streams: runtime.JsonValue | null
     trainingType: $Enums.WorkoutType | null
+    averageWatts: number | null
+    weightedAverageWatts: number | null
+    deviceWatts: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["activity"]>
@@ -3979,6 +4177,9 @@ export interface ActivityFieldRefs {
   readonly rawJson: Prisma.FieldRef<"Activity", 'Json'>
   readonly streams: Prisma.FieldRef<"Activity", 'Json'>
   readonly trainingType: Prisma.FieldRef<"Activity", 'WorkoutType'>
+  readonly averageWatts: Prisma.FieldRef<"Activity", 'Float'>
+  readonly weightedAverageWatts: Prisma.FieldRef<"Activity", 'Float'>
+  readonly deviceWatts: Prisma.FieldRef<"Activity", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"Activity", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Activity", 'DateTime'>
 }

@@ -15,7 +15,7 @@ AthleteDefaults athleteDefaults(Ref ref) {
       cssSource: AthleteDefaultsSource.noData,
       bikeSource: AthleteDefaultsSource.noData,
     ),
-    error: (_, __) => const AthleteDefaults(
+    error: (_, _) => const AthleteDefaults(
       cssSource: AthleteDefaultsSource.noData,
       bikeSource: AthleteDefaultsSource.noData,
     ),

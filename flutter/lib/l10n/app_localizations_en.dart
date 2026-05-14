@@ -2178,7 +2178,25 @@ class SEn extends S {
   String get planTargetDistanceKm => 'Target Distance (km)';
 
   @override
+  String get planTargetPaceSecKm => 'Target Pace (sec/km)';
+
+  @override
   String get planTargetDurationMin => 'Target Duration (min)';
+
+  @override
+  String planSuggestedDurationMin(String value) {
+    return 'Suggested: $value min';
+  }
+
+  @override
+  String planSuggestedPaceSecKm(String value) {
+    return 'Suggested: $value sec/km';
+  }
+
+  @override
+  String planSuggestedDistanceKm(String value) {
+    return 'Suggested: $value km';
+  }
 
   @override
   String get planNoActivePlan => 'No Active Plan';

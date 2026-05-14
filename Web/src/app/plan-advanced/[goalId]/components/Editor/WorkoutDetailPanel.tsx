@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Trash2, Save, Loader2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { WORKOUT_COLORS } from '../Shared/WorkoutTypeColors';
 import { StructuredWorkoutEditor } from './StructuredWorkoutEditor';
+import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 
 export type WorkoutType =
     | 'EASY'
@@ -51,15 +52,6 @@ const PHASE_COLORS: Record<PlanPhase, string> = {
     OFF: 'bg-zinc-500/20 text-zinc-400',
 };
 
-const PACE_ZONES = ['E', 'M', 'T', 'I', 'R'] as const;
-const PACE_ZONE_LABELS: Record<string, string> = {
-    E: 'Easy',
-    M: 'Marathon',
-    T: 'Threshold',
-    I: 'Interval',
-    R: 'Repetition',
-};
-
 const STRUCTURED_TYPES = new Set(['INTERVALS', 'REPETITIONS', 'TEMPO', 'FARTLEK']);
 
 export interface Workout {
@@ -88,6 +80,19 @@ interface WorkoutDetailPanelProps {
 
 export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: WorkoutDetailPanelProps) {
     const queryClient = useQueryClient();
+    const planData = queryClient.getQueryData(['plan-advanced', goalId]) as any;
+    const currentVdot = planData?.goal?.currentVdot ?? 40;
+
+    const paceZoneOptions = useMemo(() => {
+        const paces = calculateTrainingPaces(currentVdot);
+        return [
+            { label: `E — Easy (${Math.floor(paces.easy.min / 60)}:${String(Math.round(paces.easy.min % 60)).padStart(2, '0')})`, value: Math.round((paces.easy.min + paces.easy.max) / 2) },
+            { label: `M — Marathon (${Math.floor(paces.marathon / 60)}:${String(Math.round(paces.marathon % 60)).padStart(2, '0')})`, value: paces.marathon },
+            { label: `T — Threshold (${Math.floor(paces.threshold / 60)}:${String(Math.round(paces.threshold % 60)).padStart(2, '0')})`, value: paces.threshold },
+            { label: `I — Interval (${Math.floor(paces.interval / 60)}:${String(Math.round(paces.interval % 60)).padStart(2, '0')})`, value: paces.interval },
+            { label: `R — Repetition (${Math.floor(paces.repetition / 60)}:${String(Math.round(paces.repetition % 60)).padStart(2, '0')})`, value: paces.repetition },
+        ];
+    }, [currentVdot]);
     const [form, setForm] = useState({ ...workout });
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -268,8 +273,8 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                         <label className="block text-xs text-zinc-500 mb-1">Duration (min)</label>
                         <input
                             type="number"
-                            value={form.targetDuration ?? ''}
-                            onChange={(e) => updateField('targetDuration', e.target.value ? Number(e.target.value) : null)}
+                            value={form.targetDuration ? Math.round(form.targetDuration / 60) : ''}
+                            onChange={(e) => updateField('targetDuration', e.target.value ? Number(e.target.value) * 60 : null)}
                             placeholder="e.g. 45"
                             className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2.5 py-1.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-500"
                         />
@@ -281,13 +286,13 @@ export function WorkoutDetailPanel({ workout, goalId, onClose, onUpdate }: Worko
                         <label className="block text-xs text-zinc-500 mb-1">Pace Zone</label>
                         <select
                             value={form.targetPace ?? ''}
-                            onChange={(e) => updateField('targetPace', e.target.value ? Number(e.target.value) : null)}
+                            onChange={(e) => updateField('targetPace', e.target.value ? parseInt(e.target.value, 10) : null)}
                             className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
                         >
                             <option value="">None</option>
-                            {PACE_ZONES.map((z) => (
-                                <option key={z} value={z}>
-                                    {PACE_ZONE_LABELS[z]}
+                            {paceZoneOptions.map((z) => (
+                                <option key={z.value} value={z.value}>
+                                    {z.label}
                                 </option>
                             ))}
                         </select>

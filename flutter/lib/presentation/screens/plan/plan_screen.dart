@@ -858,6 +858,30 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
     super.dispose();
   }
 
+  String? _getSuggestedValue() {
+    final distanceKm = _distanceController.text.isNotEmpty
+        ? double.tryParse(_distanceController.text)
+        : null;
+    final paceSecKm = _paceController.text.isNotEmpty
+        ? double.tryParse(_paceController.text)
+        : null;
+    final durationMin = _durationController.text.isNotEmpty
+        ? double.tryParse(_durationController.text)
+        : null;
+
+    if (distanceKm != null && distanceKm > 0 && paceSecKm != null && paceSecKm > 0 && durationMin == null) {
+      final suggested = (distanceKm * paceSecKm / 60).round();
+      return 'duration:$suggested';
+    } else if (distanceKm != null && distanceKm > 0 && durationMin != null && durationMin > 0 && paceSecKm == null) {
+      final suggested = (durationMin * 60 / distanceKm).round();
+      return 'pace:$suggested';
+    } else if (paceSecKm != null && paceSecKm > 0 && durationMin != null && durationMin > 0 && distanceKm == null) {
+      final suggested = (durationMin * 60 / paceSecKm).toStringAsFixed(1);
+      return 'distance:$suggested';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -902,9 +926,38 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
             ),
             const SizedBox(height: 12),
             TextField(
+              controller: _paceController,
+              decoration: InputDecoration(labelText: S.of(context).planTargetPaceSecKm),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            TextField(
               controller: _durationController,
               decoration: InputDecoration(labelText: S.of(context).planTargetDurationMin),
               keyboardType: TextInputType.number,
+            ),
+            ListenableBuilder(
+              listenable: Listenable.merge([_distanceController, _paceController, _durationController]),
+              builder: (context, _) {
+                final suggestion = _getSuggestedValue();
+                if (suggestion == null) return const SizedBox.shrink();
+                final s = S.of(context);
+                String text;
+                if (suggestion.startsWith('duration:')) {
+                  text = s.planSuggestedDurationMin(suggestion.substring(9));
+                } else if (suggestion.startsWith('pace:')) {
+                  text = s.planSuggestedPaceSecKm(suggestion.substring(5));
+                } else {
+                  text = s.planSuggestedDistanceKm(suggestion.substring(9));
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    text,
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.primary),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -914,7 +967,7 @@ class _EditWorkoutSheetState extends State<_EditWorkoutSheet> {
                   widget.onSave(UpdateWorkoutRequest(
                     description: _descController.text,
                     targetDistance: (double.tryParse(_distanceController.text) ?? 0) * 1000,
-                    targetPace: widget.workout.targetPace,
+                    targetPace: double.tryParse(_paceController.text) ?? 0,
                     targetDuration: (int.tryParse(_durationController.text) ?? 0) * 60,
                     workoutType: _selectedType,
                   ));

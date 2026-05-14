@@ -1,4 +1,4 @@
-import { WorkoutType, RaceType, PlanSport } from '@/generated/prisma/browser';
+import { WorkoutType, RaceType, PlanSport, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '../metrics/vdot';
 import { generateUltraPlan } from './generators/run-ultra';
 import { generateTriathlonPlan } from './generators/triathlon';
@@ -78,6 +78,8 @@ export type GeneratedWorkout = {
     totalDistance: number;
     targetPace?: number;
     targetDuration?: number;
+    phase?: PlanPhase;
+    targetHrZone?: number;
 };
 
 type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
@@ -194,6 +196,8 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
                     totalDistance: w.totalDistance,
                     targetPace: w.targetPace,
                     targetDuration: w.targetDuration,
+                    phase: w.phase,
+                    targetHrZone: w.targetHrZone,
                 });
             });
             currentDate.setDate(currentDate.getDate() + 7);
@@ -264,6 +268,8 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
                 totalDistance: w.totalDistance,
                 targetPace: w.targetPace,
                 targetDuration: w.targetDuration,
+                phase: w.phase,
+                targetHrZone: w.targetHrZone,
             });
         });
 
@@ -341,6 +347,8 @@ function generateRaceWeek(params: {
         totalDistance: raceDistMeters,
         targetPace: 0,
         targetDuration: 0,
+        phase: 'RACE_WEEK' as PlanPhase,
+        targetHrZone: workoutTypeToHrZone(WorkoutType.RACE),
     });
 
     const addSupplementalRun = (relativeOffset: number, workout: Omit<ScheduledWorkout, 'dayOffset'>): boolean => {
@@ -363,7 +371,9 @@ function generateRaceWeek(params: {
         description: 'Easy Run: 3km + 4x100m Strides',
         totalDistance: 3400,
         targetPace: Math.round((paces.easy.min + paces.easy.max) / 2),
-        targetDuration: 0,
+        targetDuration: computeDuration(3400, Math.round((paces.easy.min + paces.easy.max) / 2)),
+        phase: 'RACE_WEEK' as PlanPhase,
+        targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
     });
 
     const shakeoutRelativeOffsets = [-1, -3, -4, -5, -6];
@@ -375,7 +385,9 @@ function generateRaceWeek(params: {
             description: 'Shakeout Run: 3km @ Easy',
             totalDistance: 3000,
             targetPace: paces.easy.max,
-            targetDuration: 0,
+            targetDuration: computeDuration(3000, paces.easy.max),
+            phase: 'RACE_WEEK' as PlanPhase,
+            targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
         });
         if (wasAdded) shakeoutCount++;
     }
@@ -405,6 +417,8 @@ function generateRaceWeek(params: {
                     totalDistance: 0,
                     targetPace: 0,
                     targetDuration: 1800,
+                    phase: 'RACE_WEEK' as PlanPhase,
+                    targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE),
                 });
                 continue;
             }
@@ -420,6 +434,8 @@ function generateRaceWeek(params: {
                     totalDistance: 1500,
                     targetPace: 120,
                     targetDuration: 2700,
+                    phase: 'RACE_WEEK' as PlanPhase,
+                    targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
                 });
                 continue;
             }
@@ -434,6 +450,8 @@ function generateRaceWeek(params: {
                     totalDistance: 0,
                     targetPace: 0,
                     targetDuration: 1800,
+                    phase: 'RACE_WEEK' as PlanPhase,
+                    targetHrZone: workoutTypeToHrZone(WorkoutType.STRENGTH),
                 });
                 continue;
             }
@@ -550,7 +568,9 @@ function generateWeek(params: {
             description: longRunDesc,
             totalDistance: longRunDist,
             targetPace: longRunPace,
-            targetDuration: 0,
+            targetDuration: computeDuration(longRunDist, longRunPace),
+            phase: phase as PlanPhase,
+            targetHrZone: workoutTypeToHrZone(WorkoutType.LONG_RUN),
         });
     }
 
@@ -561,7 +581,9 @@ function generateWeek(params: {
         workouts.push({
             dayOffset: day,
             ...qualitySession,
-            targetDuration: 0,
+            targetDuration: computeQualityDuration(qualitySession.totalDistance, qualitySession.targetPace, easyPace, getQualityFraction(qualitySession.type)),
+            phase: phase as PlanPhase,
+            targetHrZone: workoutTypeToHrZone(qualitySession.type),
         });
     } else if (runsPerWeek >= 2) {
         const day = getAvailableDayWithGap(preferredWorkoutDay, hardSessionDays);
@@ -572,7 +594,9 @@ function generateWeek(params: {
             description: `Easy Run: ${(easyDist / 1000).toFixed(1)}km`,
             totalDistance: easyDist,
             targetPace: easyPace,
-            targetDuration: 0,
+            targetDuration: computeDuration(easyDist, easyPace),
+            phase: phase as PlanPhase,
+            targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
         });
     }
 
@@ -602,7 +626,9 @@ function generateWeek(params: {
                 description: `Recovery Run: ${(easyDist / 1000).toFixed(1)}km${suffix}`,
                 totalDistance: easyDist,
                 targetPace: recoveryPace,
-                targetDuration: 0,
+                targetDuration: computeDuration(easyDist, recoveryPace),
+                phase: phase as PlanPhase,
+                targetHrZone: workoutTypeToHrZone(WorkoutType.RECOVERY),
             });
         } else {
             const includeStrides = phase === 'BASE' && stridesInjected < stridesPerWeek;
@@ -618,7 +644,9 @@ function generateWeek(params: {
                 description: desc,
                 totalDistance: easyDist,
                 targetPace: easyPace,
-                targetDuration: 0,
+                targetDuration: computeDuration(easyDist, easyPace),
+                phase: phase as PlanPhase,
+                targetHrZone: workoutTypeToHrZone(WorkoutType.EASY),
             });
         }
     }
@@ -648,6 +676,8 @@ function generateWeek(params: {
             totalDistance: 1500,
             targetPace: 120,
             targetDuration: 2700,
+            phase: phase as PlanPhase,
+            targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
         });
     }
 
@@ -665,6 +695,8 @@ function generateWeek(params: {
                 totalDistance: 0,
                 targetPace: 0,
                 targetDuration: 3600,
+                phase: phase as PlanPhase,
+                targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE),
             });
         } else if (remainingSwims > 0) {
             remainingSwims--;
@@ -675,6 +707,8 @@ function generateWeek(params: {
                 totalDistance: 1500,
                 targetPace: 120,
                 targetDuration: 2700,
+                phase: phase as PlanPhase,
+                targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
             });
         }
     }
@@ -692,6 +726,8 @@ function generateWeek(params: {
                     totalDistance: 0,
                     targetPace: 0,
                     targetDuration: 3600,
+                    phase: phase as PlanPhase,
+                    targetHrZone: workoutTypeToHrZone(WorkoutType.RIDE),
                 });
             } else if (remainingSwims > 0) {
                 remainingSwims--;
@@ -702,6 +738,8 @@ function generateWeek(params: {
                     totalDistance: 1500,
                     targetPace: 120,
                     targetDuration: 2700,
+                    phase: phase as PlanPhase,
+                    targetHrZone: workoutTypeToHrZone(WorkoutType.SWIM),
                 });
             }
         }
@@ -749,6 +787,8 @@ function generateWeek(params: {
             totalDistance: 0,
             targetPace: 0,
             targetDuration: 2700,
+            phase: phase as PlanPhase,
+            targetHrZone: workoutTypeToHrZone(WorkoutType.STRENGTH),
         });
         remainingStrength--;
         return true;
@@ -1170,6 +1210,47 @@ function formatPace(secondsPerKm: number): string {
 
 function isRun(type: WorkoutType): boolean {
     return ['EASY', 'LONG_RUN', 'TEMPO', 'INTERVALS', 'FARTLEK', 'RECOVERY', 'RACE', 'REPETITIONS'].includes(type);
+}
+
+export function computeDuration(distanceMeters: number, paceSecondsPerKm: number): number {
+    if (distanceMeters <= 0 || paceSecondsPerKm <= 0) return 0;
+    return Math.round((distanceMeters / 1000) * paceSecondsPerKm);
+}
+
+export function computeQualityDuration(
+    totalDistance: number,
+    qualityPace: number,
+    easyPace: number,
+    qualityFraction: number = 0.5
+): number {
+    if (totalDistance <= 0) return 0;
+    const qualityDist = totalDistance * qualityFraction;
+    const easyDist = totalDistance - qualityDist;
+    return Math.round((qualityDist / 1000) * qualityPace + (easyDist / 1000) * easyPace);
+}
+
+export function workoutTypeToHrZone(type: WorkoutType): number | undefined {
+    switch (type) {
+        case WorkoutType.RECOVERY: return 1;
+        case WorkoutType.EASY: return 2;
+        case WorkoutType.LONG_RUN: return 2;
+        case WorkoutType.TEMPO: return 3;
+        case WorkoutType.FARTLEK: return 4;
+        case WorkoutType.INTERVALS: return 4;
+        case WorkoutType.REPETITIONS: return 5;
+        case WorkoutType.RACE: return 5;
+        default: return undefined;
+    }
+}
+
+export function getQualityFraction(type: WorkoutType): number {
+    switch (type) {
+        case WorkoutType.INTERVALS: return 0.5;
+        case WorkoutType.REPETITIONS: return 0.35;
+        case WorkoutType.TEMPO: return 0.65;
+        case WorkoutType.FARTLEK: return 0.45;
+        default: return 0.5;
+    }
 }
 
 function updateDescription(type: WorkoutType, distance: number, pace: number): string {

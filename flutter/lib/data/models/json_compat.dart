@@ -101,11 +101,11 @@ String compatibilityWorkoutTypeToJson(CompatibilityWorkoutType value) {
     case CompatibilityWorkoutType.easy:
       return 'EASY';
     case CompatibilityWorkoutType.long:
-      return 'LONG';
+      return 'LONG_RUN';
     case CompatibilityWorkoutType.tempo:
       return 'TEMPO';
     case CompatibilityWorkoutType.interval:
-      return 'INTERVAL';
+      return 'INTERVALS';
     case CompatibilityWorkoutType.recovery:
       return 'RECOVERY';
     case CompatibilityWorkoutType.race:

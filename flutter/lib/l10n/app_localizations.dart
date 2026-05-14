@@ -4135,11 +4135,35 @@ abstract class S {
   /// **'Target Distance (km)'**
   String get planTargetDistanceKm;
 
+  /// No description provided for @planTargetPaceSecKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Target Pace (sec/km)'**
+  String get planTargetPaceSecKm;
+
   /// No description provided for @planTargetDurationMin.
   ///
   /// In en, this message translates to:
   /// **'Target Duration (min)'**
   String get planTargetDurationMin;
+
+  /// No description provided for @planSuggestedDurationMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested: {value} min'**
+  String planSuggestedDurationMin(String value);
+
+  /// No description provided for @planSuggestedPaceSecKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested: {value} sec/km'**
+  String planSuggestedPaceSecKm(String value);
+
+  /// No description provided for @planSuggestedDistanceKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested: {value} km'**
+  String planSuggestedDistanceKm(String value);
 
   /// No description provided for @planNoActivePlan.
   ///

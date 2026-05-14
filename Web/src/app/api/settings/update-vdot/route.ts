@@ -1,9 +1,8 @@
 import { prisma } from '@/lib/db';
 import { calculateVdot, RaceDistance } from '@/lib/metrics/vdot';
-import { generateTrainingPlan } from '@/lib/plans';
+import { recalculateWorkoutPaces } from '@/lib/plans/recalculate-paces';
 import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { WorkoutType } from '@/generated/prisma/browser';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 
 export async function GET() {
@@ -255,52 +254,7 @@ export async function POST(req: NextRequest) {
                 }
             });
 
-            // Delete ALL incomplete workouts for this goal before regenerating.
-            // We keep completed workouts to preserve history.
-            await prisma.workout.deleteMany({
-                where: {
-                    goalId: activeGoal.id,
-                    isCompleted: false
-                }
-            });
-
-            const startDate = activeGoal.planStartDate ?? firstPendingWorkout?.scheduledDate ?? new Date();
-            let workouts: { date: Date; type: WorkoutType; description: string; totalDistance: number; targetPace?: number; targetDuration?: number }[] = [];
-
-            if (activeGoal.raceType && activeGoal.raceDate) {
-                workouts = generateTrainingPlan({
-                    vdot: newVdot,
-                    raceType: activeGoal.raceType,
-                    raceDate: activeGoal.raceDate,
-                    startDate: startDate,
-                    runsPerWeek: runs,
-                    ridesPerWeek: rides,
-                    swimsPerWeek: swims,
-                    strengthPerWeek: strength,
-                    weeklyMileageGoal: mileageGoal,
-                    taperWeeks: taper,
-                    peakWeeks: peak,
-                    buildWeeks: build,
-                    longRunDay: typeof longRunDay === 'number' ? longRunDay : activeGoal.longRunDay,
-                    workoutDay: typeof qualityDay === 'number' ? qualityDay : activeGoal.workoutDay,
-                    swimDay: typeof swimDay === 'number' ? swimDay : undefined,
-                    restDays: Array.isArray(restDays) ? restDays : (activeGoal.restDays as number[] ?? undefined),
-                    maxLongRunKm: normalizedMaxLongRunKm,
-                });
-
-                await prisma.workout.createMany({
-                    data: workouts.map(w => ({
-                        goalId: activeGoal.id,
-                        scheduledDate: w.date,
-                        workoutType: w.type as WorkoutType,
-                        description: w.description,
-                        targetDistance: w.totalDistance,
-                        targetPace: w.targetPace || 0,
-                        targetDuration: w.targetDuration || 0,
-                        isCompleted: false
-                    }))
-                });
-            }
+            const result = await recalculateWorkoutPaces(activeGoal.id, newVdot);
         }
 
         return NextResponse.json({ success: true, vdot: newVdot });

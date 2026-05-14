@@ -264,8 +264,10 @@ export async function POST(request: NextRequest) {
                         workoutType: w.type as WorkoutType,
                         description: w.description,
                         targetDistance: w.totalDistance,
-                        targetPace: w.targetPace || 0,
-                        targetDuration: w.targetDuration || 0,
+                        targetPace: w.targetPace ?? 0,
+                        targetDuration: w.targetDuration ?? 0,
+                        targetHrZone: w.targetHrZone ?? null,
+                        phase: w.phase ?? 'BASE',
                         isCompleted: false
                     })),
                 });

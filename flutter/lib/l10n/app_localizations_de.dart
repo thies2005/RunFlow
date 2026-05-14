@@ -2201,7 +2201,25 @@ class SDe extends S {
   String get planTargetDistanceKm => 'Zieldistanz (km)';
 
   @override
+  String get planTargetPaceSecKm => 'Zieltempo (s/km)';
+
+  @override
   String get planTargetDurationMin => 'Zieldauer (Min)';
+
+  @override
+  String planSuggestedDurationMin(String value) {
+    return 'Vorschlag: $value Min';
+  }
+
+  @override
+  String planSuggestedPaceSecKm(String value) {
+    return 'Vorschlag: $value s/km';
+  }
+
+  @override
+  String planSuggestedDistanceKm(String value) {
+    return 'Vorschlag: $value km';
+  }
 
   @override
   String get planNoActivePlan => 'Kein aktiver Plan';

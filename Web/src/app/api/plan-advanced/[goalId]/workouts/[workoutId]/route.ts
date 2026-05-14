@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
+import { checkFieldConsistency, deriveMissingField } from '@/lib/plans/validate-workout';
 
 type RouteContext = { params: Promise<{ goalId: string; workoutId: string }> };
 
@@ -55,6 +56,24 @@ export async function PATCH(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
         }
 
+        const merged = {
+            targetDistance: updateData.targetDistance !== undefined ? updateData.targetDistance as number | null : workout.targetDistance,
+            targetPace: updateData.targetPace !== undefined ? updateData.targetPace as number | null : workout.targetPace,
+            targetDuration: updateData.targetDuration !== undefined ? updateData.targetDuration as number | null : workout.targetDuration,
+        };
+
+        const derived = deriveMissingField(merged);
+        if (derived.targetDuration !== undefined) updateData.targetDuration = derived.targetDuration;
+        if (derived.targetPace !== undefined) updateData.targetPace = derived.targetPace;
+        if (derived.targetDistance !== undefined) updateData.targetDistance = derived.targetDistance;
+
+        const finalValues = {
+            targetDistance: updateData.targetDistance !== undefined ? updateData.targetDistance as number | null : workout.targetDistance,
+            targetPace: updateData.targetPace !== undefined ? updateData.targetPace as number | null : workout.targetPace,
+            targetDuration: updateData.targetDuration !== undefined ? updateData.targetDuration as number | null : workout.targetDuration,
+        };
+        const warnings = checkFieldConsistency(finalValues);
+
         await createSnapshot(goalId, 'Before workout update', 'update_workout');
 
         const updated = await prisma.workout.update({
@@ -62,7 +81,7 @@ export async function PATCH(req: Request, ctx: RouteContext) {
             data: updateData,
         });
 
-        return NextResponse.json({ workout: updated });
+        return NextResponse.json({ workout: updated, warnings });
     } catch (error) {
         console.error('Advanced plan workout update error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

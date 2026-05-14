@@ -201,9 +201,15 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   int? _computeTriathlonProjectedTime() {
     final stats = ref.read(analyticsStatsProvider).value;
     if (stats == null || stats.effectiveVO2max <= 0) return null;
+    final progressionFactor = calculateProgressionCoefficient(
+      _planWeeks,
+      _runsPerWeek,
+      _weeklyMileageGoal,
+    );
+    final projectedVdot = stats.effectiveVO2max * progressionFactor;
     final key = _triRaceTypeKey(_selectedRaceType);
     final projection = estimateTriathlonTime(
-      stats.effectiveVO2max,
+      projectedVdot,
       key,
       (double v, int d) => estimateTimeForDistance(v, d),
     );
@@ -214,8 +220,14 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     final stats = ref.read(analyticsStatsProvider).value;
     final vdot = stats?.effectiveVO2max ?? 0;
     if (vdot <= 0 || _backyardLoopDistM <= 0) return null;
+    final progressionFactor = calculateProgressionCoefficient(
+      _planWeeks,
+      _runsPerWeek,
+      _weeklyMileageGoal,
+    );
+    final projectedVdot = vdot * progressionFactor;
     final projection = estimateBackyardUltraTime(
-      vdot,
+      projectedVdot,
       _backyardLoopDistM.toInt(),
       _targetLaps,
       (double v, int d) => estimateTimeForDistance(v, d),
@@ -326,8 +338,14 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
 
     BackyardProjection? projection;
     if (vdot > 0 && _backyardLoopDistM > 0) {
+      final progressionFactor = calculateProgressionCoefficient(
+        _planWeeks,
+        _runsPerWeek,
+        _weeklyMileageGoal,
+      );
+      final projectedVdot = vdot * progressionFactor;
       projection = estimateBackyardUltraTime(
-        vdot,
+        projectedVdot,
         _backyardLoopDistM.toInt(),
         _targetLaps,
         (double v, int d) => estimateTimeForDistance(v, d),
@@ -530,8 +548,14 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
 
     TriathlonProjection? triProjection;
     if (vdot > 0) {
+      final progressionFactor = calculateProgressionCoefficient(
+        _planWeeks,
+        _runsPerWeek,
+        _weeklyMileageGoal,
+      );
+      final projectedVdot = vdot * progressionFactor;
       triProjection = estimateTriathlonTime(
-        vdot,
+        projectedVdot,
         key,
         (double v, int d) => estimateTimeForDistance(v, d),
       );
@@ -1191,6 +1215,10 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                       _selectedRaceType = type;
                       _isManualMode = false;
                       _sliderGoalTimeSeconds = null;
+                      _hasTargetTime = false;
+                      _hoursController.clear();
+                      _minutesController.clear();
+                      _secondsController.clear();
                       if (type.isTriathlon) {
                         if (type == RaceType.fullIronman) {
                           _runsPerWeek = 3;

@@ -22,6 +22,7 @@ import GoalTimeRenderer from '@/components/setup/GoalTimeRenderer';
 import TriathlonGoalTimeRenderer from '@/components/setup/TriathlonGoalTimeRenderer';
 import PlanVolumeSection from '@/components/setup/PlanVolumeSection';
 import { estimateBackyardUltraTime } from '@/lib/plans/backyard-time';
+import { calculateProgressionCoefficient } from '@/lib/metrics/goalProjection';
 
 type Sport = 'RUN' | 'TRIATHLON' | 'NO_RACE';
 
@@ -165,8 +166,10 @@ export function PlanLanding() {
             ? Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (7 * 24 * 60 * 60 * 1000)))
             : 12;
 
+    const backyardProgressionFactor = calculateProgressionCoefficient(computedPlanWeeks, runsPerWeek, weeklyMileage);
+    const backyardVdot = effectiveVO2max * calibrationFactor * backyardProgressionFactor;
     const backyardProjection = backyardLoopDistM && backyardLoopDistM > 0 && sport !== 'NO_RACE' && raceType === 'BACKYARD_ULTRA' && effectiveVO2max > 0
-        ? estimateBackyardUltraTime({ vdot: effectiveVO2max * calibrationFactor, loopDistM: backyardLoopDistM, targetLaps })
+        ? estimateBackyardUltraTime({ vdot: backyardVdot, loopDistM: backyardLoopDistM, targetLaps })
         : null;
 
     const createMutation = useMutation({
@@ -404,6 +407,9 @@ export function PlanLanding() {
                         raceType={raceType}
                         goalTimeSeconds={triGoalTimeSeconds}
                         onGoalTimeChange={setTriGoalTimeSeconds}
+                        planWeeks={computedPlanWeeks}
+                        runsPerWeek={runsPerWeek}
+                        weeklyMileageGoal={weeklyMileage}
                     />
                 )}
                 {sport === 'RUN' && GOAL_TIME_RACE_TYPES.has(raceType) && (

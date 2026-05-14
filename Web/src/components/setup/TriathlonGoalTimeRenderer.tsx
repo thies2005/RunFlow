@@ -3,6 +3,7 @@ import { Target, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { formatTime } from '@/lib/metrics/vdot';
 import { estimateTriathlonTime } from '@/lib/plans/triathlon-time';
 import { estimateBikeFtpFromVdot } from '@/lib/plans/bike-zones';
+import { calculateProgressionCoefficient } from '@/lib/metrics/goalProjection';
 import { RaceType } from '@/generated/prisma/browser';
 
 interface TriathlonGoalTimeRendererProps {
@@ -13,6 +14,9 @@ interface TriathlonGoalTimeRendererProps {
     customRunDistM?: number;
     goalTimeSeconds: number | null;
     onGoalTimeChange: (seconds: number | null) => void;
+    planWeeks?: number;
+    runsPerWeek?: number;
+    weeklyMileageGoal?: number;
 }
 
 function formatSwimPace(secondsPer100m: number): string {
@@ -35,6 +39,9 @@ export default function TriathlonGoalTimeRenderer({
     customRunDistM,
     goalTimeSeconds,
     onGoalTimeChange,
+    planWeeks = 12,
+    runsPerWeek = 4,
+    weeklyMileageGoal = 30,
 }: TriathlonGoalTimeRendererProps) {
     const [isManualEntry, setIsManualEntry] = useState(false);
     const [manualHours, setManualHours] = useState('');
@@ -112,8 +119,14 @@ export default function TriathlonGoalTimeRenderer({
         );
     }
 
+    const progressionFactor = calculateProgressionCoefficient(
+        planWeeks,
+        runsPerWeek,
+        weeklyMileageGoal,
+    );
+    const projectedVdot = vdot * progressionFactor;
     const projection = estimateTriathlonTime({
-        vdot,
+        vdot: projectedVdot,
         raceType: raceType as RaceType,
         customSwimDistM,
         customBikeDistM,

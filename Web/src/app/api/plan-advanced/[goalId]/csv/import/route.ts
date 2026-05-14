@@ -9,18 +9,6 @@ import { parseCsv, type ParsedCsvWorkout } from '@/lib/plans/csv-parser';
 import { storePreview, getPreview, deletePreview } from '@/lib/plans/csv-preview-cache';
 import { randomUUID } from 'crypto';
 
-async function checkPremium(userId: string) {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, isAdmin: true, aiSettings: { select: { usageTier: true } } },
-    });
-    const tier = user?.aiSettings?.usageTier || 'none';
-    if (tier !== 'tier2' && tier !== 'tier3' && !user?.isAdmin) {
-        return false;
-    }
-    return true;
-}
-
 type RouteContext = { params: Promise<{ goalId: string }> };
 
 type PreviewData = {
@@ -39,10 +27,6 @@ export async function POST(req: Request, ctx: RouteContext) {
         const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        if (!(await checkPremium(session.user.id))) {
-            return NextResponse.json({ error: 'Premium feature. Please upgrade your plan.' }, { status: 403 });
         }
 
         const clientId = getClientIdentifier(req);

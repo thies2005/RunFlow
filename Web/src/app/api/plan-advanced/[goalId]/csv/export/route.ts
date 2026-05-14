@@ -10,18 +10,6 @@ import {
     type CsvFormat,
 } from '@/lib/plans/csv-parser';
 
-async function checkPremium(userId: string) {
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, isAdmin: true, aiSettings: { select: { usageTier: true } } },
-    });
-    const tier = user?.aiSettings?.usageTier || 'none';
-    if (tier !== 'tier2' && tier !== 'tier3' && !user?.isAdmin) {
-        return false;
-    }
-    return true;
-}
-
 type RouteContext = { params: Promise<{ goalId: string }> };
 
 export async function GET(req: Request, ctx: RouteContext) {
@@ -29,10 +17,6 @@ export async function GET(req: Request, ctx: RouteContext) {
         const session = await auth();
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        if (!(await checkPremium(session.user.id))) {
-            return NextResponse.json({ error: 'Premium feature. Please upgrade your plan.' }, { status: 403 });
         }
 
         const { goalId } = await ctx.params;

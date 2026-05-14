@@ -4,7 +4,7 @@ import { UndoRedoButtons } from './UndoRedoButtons';
 import { ViewModeToggle } from './ViewModeToggle';
 import { ModeToggle } from './ModeToggle';
 import { PlanActionsMenu } from './PlanActionsMenu';
-import { Pencil, Check, Brain } from 'lucide-react';
+import { Pencil, Check, MessageSquare } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import type { PlanCreationMode } from '../../hooks/usePlanMode';
 
@@ -16,10 +16,28 @@ interface PlanToolbarProps {
     onNameChange?: (name: string) => void;
     onImportCsv?: () => void;
     onExportCsv?: () => void;
-    onAnalyzePlan?: () => void;
+    /** Replaces the old onAnalyzePlan — drives the Calendar/Analysis view toggle */
+    viewMode?: 'calendar' | 'analysis';
+    onViewModeChange?: (mode: 'calendar' | 'analysis') => void;
+    onToggleChat?: () => void;
+    chatOpen?: boolean;
+    isPremium?: boolean;
 }
 
-export function PlanToolbar({ goalId, planName, mode, onModeChange, onNameChange, onImportCsv, onExportCsv, onAnalyzePlan }: PlanToolbarProps) {
+export function PlanToolbar({
+    goalId,
+    planName,
+    mode,
+    onModeChange,
+    onNameChange,
+    onImportCsv,
+    onExportCsv,
+    viewMode = 'calendar',
+    onViewModeChange,
+    onToggleChat,
+    chatOpen,
+    isPremium,
+}: PlanToolbarProps) {
     const [isEditingName, setIsEditingName] = useState(false);
     const [editName, setEditName] = useState(planName);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +60,7 @@ export function PlanToolbar({ goalId, planName, mode, onModeChange, onNameChange
         <div className="h-14 border-b border-zinc-800 flex items-center px-4 gap-3 shrink-0">
             <UndoRedoButtons goalId={goalId} />
 
-            <ModeToggle mode={mode} onModeChange={onModeChange} />
+            <ModeToggle mode={mode} onModeChange={onModeChange} isPremium={isPremium} />
 
             <div className="flex-1 flex items-center justify-center min-w-0">
                 {isEditingName ? (
@@ -81,18 +99,27 @@ export function PlanToolbar({ goalId, planName, mode, onModeChange, onNameChange
                 )}
             </div>
 
-            {onAnalyzePlan && (
+            {onToggleChat && (
                 <button
                     type="button"
-                    onClick={onAnalyzePlan}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 transition-colors"
+                    onClick={onToggleChat}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
+                        chatOpen
+                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                            : 'bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border-purple-500/20'
+                    }`}
                 >
-                    <Brain className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Analyze Plan</span>
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">AI Chat</span>
                 </button>
             )}
 
-            <ViewModeToggle value="calendar" onChange={() => {}} />
+            {/* Calendar / Analysis view toggle — always visible, gated inside handler */}
+            <ViewModeToggle
+                value={viewMode}
+                onChange={onViewModeChange ?? (() => {})}
+                isPremium={isPremium}
+            />
 
             <PlanActionsMenu goalId={goalId} onImportCsv={onImportCsv} onExportCsv={onExportCsv} />
         </div>

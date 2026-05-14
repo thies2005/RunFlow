@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { PlanToolbar } from './Toolbar/PlanToolbar';
@@ -17,6 +17,7 @@ import { GoalTimeline } from './MultiGoal/GoalTimeline';
 import { AddSubGoalDialog } from './MultiGoal/AddSubGoalDialog';
 import { EditSubGoalDialog } from './MultiGoal/EditSubGoalDialog';
 import { usePlanMode } from '../hooks/usePlanMode';
+import { useIsPremium } from '../hooks/useIsPremium';
 import { GuidedTipCard } from './AI/GuidedTipCard';
 import { GuidedWeekSuggest } from './AI/GuidedWeekSuggest';
 import { AiSuggestionCard } from './AI/AiSuggestionCard';
@@ -27,6 +28,10 @@ import type { Goal } from './Progression/types';
 
 const AiAnalysisPanel = lazy(() =>
     import('./AI/AiAnalysisPanel').then((mod) => ({ default: mod.AiAnalysisPanel }))
+);
+
+const AiChatPanel = lazy(() =>
+    import('./AI/AiChatPanel').then((mod) => ({ default: mod.AiChatPanel }))
 );
 
 const CsvImportDialog = lazy(() =>
@@ -64,6 +69,8 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
     const [editingSubGoal, setEditingSubGoal] = useState<Goal | null>(null);
     const [removingSubGoalId, setRemovingSubGoalId] = useState<string | null>(null);
     const [analysisOpen, setAnalysisOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'calendar' | 'analysis'>('calendar');
+    const [chatOpen, setChatOpen] = useState(false);
     const [dismissedGuidedTips, setDismissedGuidedTips] = useState<Set<string>>(new Set());
     const [suggestWeekIndex, setSuggestWeekIndex] = useState<number | null>(null);
     const [dismissedAiSuggestions, setDismissedAiSuggestions] = useState<Set<string>>(new Set());
@@ -72,6 +79,32 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
     const mainScrollRef = useRef<HTMLDivElement>(null);
 
     const { mode, setMode, isGuided, isAiAssisted } = usePlanMode(goalId);
+    const { isPremium } = useIsPremium();
+
+    // Sync view mode toggle with analysis panel
+    const handleViewModeChange = useCallback((vm: 'calendar' | 'analysis') => {
+        if (vm === 'analysis') {
+            if (isPremium) {
+                setViewMode('analysis');
+                setAnalysisOpen(true);
+            } else {
+                toast.info('Upgrade to premium to access AI plan analysis.');
+            }
+        } else {
+            setViewMode('calendar');
+            setAnalysisOpen(false);
+        }
+    }, [isPremium]);
+
+    // Keep viewMode in sync when panel is closed via X button
+    useEffect(() => {
+        if (!analysisOpen) setViewMode('calendar');
+    }, [analysisOpen]);
+
+    // Auto-toggle chat panel based on mode (premium only)
+    useEffect(() => {
+        setChatOpen(isPremium && mode === 'AI_ASSISTED');
+    }, [mode, isPremium]);
     const isNoRace = raceType === null || raceType === undefined;
 
     const weeks = useMemo<WeekData[]>(() => {
@@ -307,7 +340,11 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
                 onModeChange={setMode}
                 onImportCsv={() => setCsvImportOpen(true)}
                 onExportCsv={() => setCsvExportOpen(true)}
-                onAnalyzePlan={() => setAnalysisOpen(true)}
+                viewMode={viewMode}
+                onViewModeChange={handleViewModeChange}
+                onToggleChat={isPremium ? () => setChatOpen((prev) => !prev) : undefined}
+                chatOpen={chatOpen}
+                isPremium={isPremium}
             />
 
             <EventsPanel
@@ -348,14 +385,26 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
                     )}
                 </div>
 
-                <Suspense fallback={null}>
-                    <AiAnalysisPanel
-                        goalId={goalId}
-                        isOpen={analysisOpen}
-                        onClose={() => setAnalysisOpen(false)}
-                        isNoRace={isNoRace}
-                    />
-                </Suspense>
+                {isPremium && (
+                    <Suspense fallback={null}>
+                        <AiAnalysisPanel
+                            goalId={goalId}
+                            isOpen={analysisOpen}
+                            onClose={() => setAnalysisOpen(false)}
+                            isNoRace={isNoRace}
+                        />
+                    </Suspense>
+                )}
+
+                {isPremium && (
+                    <Suspense fallback={null}>
+                        <AiChatPanel
+                            goalId={goalId}
+                            isOpen={chatOpen}
+                            onClose={() => setChatOpen(false)}
+                        />
+                    </Suspense>
+                )}
 
                 {selectedWorkout && (
                     <WorkoutDetailPanel

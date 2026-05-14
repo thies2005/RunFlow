@@ -60,6 +60,9 @@ export interface StravaActivity {
     workout_type?: number;
     average_cadence?: number;
     calories?: number;
+    average_watts?: number;
+    weighted_average_watts?: number;
+    device_watts?: boolean;
 }
 
 export const rateLimiter = {

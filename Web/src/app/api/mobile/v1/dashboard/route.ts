@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         const recentActivitiesPromise = prisma.activity.findMany({
             where: { userId },
             orderBy: { startDate: 'desc' },
-            take: 10,
+            take: 30,
             select: {
                 id: true,
                 type: true,
@@ -83,6 +83,9 @@ export async function GET(request: NextRequest) {
                 trimp: true,
                 runningTss: true,
                 stravaId: true,
+                averageWatts: true,
+                weightedAverageWatts: true,
+                deviceWatts: true,
             }
         });
 

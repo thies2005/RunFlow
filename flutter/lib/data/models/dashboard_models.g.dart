@@ -93,6 +93,9 @@ _Activity _$ActivityFromJson(Map<String, dynamic> json) => _Activity(
   hrZone5Time: (json['hrZone5Time'] as num?)?.toInt() ?? 0,
   streams: json['streams'] as Map<String, dynamic>?,
   calories: (json['calories'] as num?)?.toDouble(),
+  averageWatts: (json['averageWatts'] as num?)?.toDouble(),
+  weightedAverageWatts: (json['weightedAverageWatts'] as num?)?.toDouble(),
+  deviceWatts: json['deviceWatts'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ActivityToJson(_Activity instance) => <String, dynamic>{
@@ -120,6 +123,9 @@ Map<String, dynamic> _$ActivityToJson(_Activity instance) => <String, dynamic>{
   'hrZone5Time': instance.hrZone5Time,
   'streams': instance.streams,
   'calories': instance.calories,
+  'averageWatts': instance.averageWatts,
+  'weightedAverageWatts': instance.weightedAverageWatts,
+  'deviceWatts': instance.deviceWatts,
 };
 
 const _$ActivityTypeEnumMap = {
@@ -167,7 +173,7 @@ _Goal _$GoalFromJson(Map<String, dynamic> json) => _Goal(
   id: json['id'] as String,
   userId: json['userId'] as String? ?? '',
   name: json['name'] as String,
-  raceType: $enumDecode(_$RaceTypeEnumMap, json['raceType']),
+  raceType: $enumDecodeNullable(_$RaceTypeEnumMap, json['raceType']),
   raceDate: DateTime.parse(json['raceDate'] as String),
   targetTime: (json['targetTime'] as num?)?.toInt(),
   weeklyMileageGoal: (json['weeklyMileageGoal'] as num?)?.toDouble(),
@@ -196,7 +202,7 @@ Map<String, dynamic> _$GoalToJson(_Goal instance) => <String, dynamic>{
   'id': instance.id,
   'userId': instance.userId,
   'name': instance.name,
-  'raceType': _$RaceTypeEnumMap[instance.raceType]!,
+  'raceType': _$RaceTypeEnumMap[instance.raceType],
   'raceDate': instance.raceDate.toIso8601String(),
   'targetTime': instance.targetTime,
   'weeklyMileageGoal': instance.weeklyMileageGoal,

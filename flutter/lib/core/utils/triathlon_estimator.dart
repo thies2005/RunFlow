@@ -96,14 +96,25 @@ TriathlonSplits computeTriathlonSplits(
   int bikeDistM,
   int runDistM,
   TransitionTimes transitions,
-  int Function(double vdot, int distanceM) estimateTimeFn,
-) {
-  final swimPace = estimateSwimPaceFromVdot(vdot);
+  int Function(double vdot, int distanceM) estimateTimeFn, {
+  double? cssOverride,
+  double? bikeSpeedOverrideMs,
+}) {
+  final swimPace = cssOverride ?? estimateSwimPaceFromVdot(vdot);
   final swimSeconds = (swimPace * swimDistM / 100).round();
-  final ftp = estimateBikeFtpFromVdot(vdot);
-  final racePower = ftp * 0.75;
-  final bikeSpeed = bikePowerToSpeed(racePower);
-  final bikeSeconds = (bikeDistM / bikeSpeed).round();
+
+  int bikeSeconds;
+  double bikeAvgPower;
+  if (bikeSpeedOverrideMs != null && bikeSpeedOverrideMs > 0) {
+    bikeSeconds = (bikeDistM / bikeSpeedOverrideMs).round();
+    bikeAvgPower = math.pow(bikeSpeedOverrideMs, 3).toDouble() * 38;
+  } else {
+    final ftp = estimateBikeFtpFromVdot(vdot);
+    bikeAvgPower = ftp * 0.75;
+    final bikeSpeed = bikePowerToSpeed(bikeAvgPower);
+    bikeSeconds = (bikeDistM / bikeSpeed).round();
+  }
+
   final runSeconds = estimateTimeFn(vdot, runDistM);
   final totalSeconds =
       swimSeconds + bikeSeconds + runSeconds + transitions.t1 + transitions.t2;
@@ -117,7 +128,7 @@ TriathlonSplits computeTriathlonSplits(
     t2Seconds: transitions.t2,
     totalSeconds: totalSeconds,
     swimPacePer100m: swimPace,
-    bikeAvgPower: racePower,
+    bikeAvgPower: bikeAvgPower,
     runPacePerKm: runPacePerKm,
   );
 }
@@ -129,6 +140,8 @@ TriathlonProjection? estimateTriathlonTime(
   int? customSwimDistM,
   int? customBikeDistM,
   int? customRunDistM,
+  double? cssOverride,
+  double? bikeSpeedOverrideMs,
 }) {
   if (vdot <= 0) return null;
 
@@ -144,7 +157,9 @@ TriathlonProjection? estimateTriathlonTime(
   final transitions = triTransitions[raceType] ?? defaultTransition;
 
   final optimal = computeTriathlonSplits(
-      vdot, swimDistM, bikeDistM, runDistM, transitions, estimateTimeFn);
+      vdot, swimDistM, bikeDistM, runDistM, transitions, estimateTimeFn,
+      cssOverride: cssOverride,
+      bikeSpeedOverrideMs: bikeSpeedOverrideMs);
 
   final isLongCourse =
       raceType == 'HALF_IRONMAN' || raceType == 'FULL_IRONMAN';

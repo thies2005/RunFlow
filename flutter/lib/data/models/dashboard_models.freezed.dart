@@ -831,7 +831,7 @@ as DateTime?,
 /// @nodoc
 mixin _$Activity {
 
- String get id; String get stravaId; ActivityType get type; String get name; DateTime get startDate; double get distance; int get movingTime; double? get averageSpeed; double? get averageHr; int? get maxHr; double? get averageCadence; bool get hasHeartrate; double get totalElevation; double? get trimp; double? get runningTss; double? get estimatedVdot; String? get trainingType;@JsonKey(name: 'hrZone1Time') int get hrZone1Time;@JsonKey(name: 'hrZone2Time') int get hrZone2Time;@JsonKey(name: 'hrZone3Time') int get hrZone3Time;@JsonKey(name: 'hrZone4Time') int get hrZone4Time;@JsonKey(name: 'hrZone5Time') int get hrZone5Time;@JsonKey(name: 'streams') Map<String, dynamic>? get streams;@JsonKey(name: 'calories') double? get calories;
+ String get id; String get stravaId; ActivityType get type; String get name; DateTime get startDate; double get distance; int get movingTime; double? get averageSpeed; double? get averageHr; int? get maxHr; double? get averageCadence; bool get hasHeartrate; double get totalElevation; double? get trimp; double? get runningTss; double? get estimatedVdot; String? get trainingType;@JsonKey(name: 'hrZone1Time') int get hrZone1Time;@JsonKey(name: 'hrZone2Time') int get hrZone2Time;@JsonKey(name: 'hrZone3Time') int get hrZone3Time;@JsonKey(name: 'hrZone4Time') int get hrZone4Time;@JsonKey(name: 'hrZone5Time') int get hrZone5Time;@JsonKey(name: 'streams') Map<String, dynamic>? get streams;@JsonKey(name: 'calories') double? get calories;@JsonKey(name: 'averageWatts') double? get averageWatts;@JsonKey(name: 'weightedAverageWatts') double? get weightedAverageWatts;@JsonKey(name: 'deviceWatts') bool get deviceWatts;
 /// Create a copy of Activity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -844,16 +844,16 @@ $ActivityCopyWith<Activity> get copyWith => _$ActivityCopyWithImpl<Activity>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Activity&&(identical(other.id, id) || other.id == id)&&(identical(other.stravaId, stravaId) || other.stravaId == stravaId)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.movingTime, movingTime) || other.movingTime == movingTime)&&(identical(other.averageSpeed, averageSpeed) || other.averageSpeed == averageSpeed)&&(identical(other.averageHr, averageHr) || other.averageHr == averageHr)&&(identical(other.maxHr, maxHr) || other.maxHr == maxHr)&&(identical(other.averageCadence, averageCadence) || other.averageCadence == averageCadence)&&(identical(other.hasHeartrate, hasHeartrate) || other.hasHeartrate == hasHeartrate)&&(identical(other.totalElevation, totalElevation) || other.totalElevation == totalElevation)&&(identical(other.trimp, trimp) || other.trimp == trimp)&&(identical(other.runningTss, runningTss) || other.runningTss == runningTss)&&(identical(other.estimatedVdot, estimatedVdot) || other.estimatedVdot == estimatedVdot)&&(identical(other.trainingType, trainingType) || other.trainingType == trainingType)&&(identical(other.hrZone1Time, hrZone1Time) || other.hrZone1Time == hrZone1Time)&&(identical(other.hrZone2Time, hrZone2Time) || other.hrZone2Time == hrZone2Time)&&(identical(other.hrZone3Time, hrZone3Time) || other.hrZone3Time == hrZone3Time)&&(identical(other.hrZone4Time, hrZone4Time) || other.hrZone4Time == hrZone4Time)&&(identical(other.hrZone5Time, hrZone5Time) || other.hrZone5Time == hrZone5Time)&&const DeepCollectionEquality().equals(other.streams, streams)&&(identical(other.calories, calories) || other.calories == calories));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Activity&&(identical(other.id, id) || other.id == id)&&(identical(other.stravaId, stravaId) || other.stravaId == stravaId)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.movingTime, movingTime) || other.movingTime == movingTime)&&(identical(other.averageSpeed, averageSpeed) || other.averageSpeed == averageSpeed)&&(identical(other.averageHr, averageHr) || other.averageHr == averageHr)&&(identical(other.maxHr, maxHr) || other.maxHr == maxHr)&&(identical(other.averageCadence, averageCadence) || other.averageCadence == averageCadence)&&(identical(other.hasHeartrate, hasHeartrate) || other.hasHeartrate == hasHeartrate)&&(identical(other.totalElevation, totalElevation) || other.totalElevation == totalElevation)&&(identical(other.trimp, trimp) || other.trimp == trimp)&&(identical(other.runningTss, runningTss) || other.runningTss == runningTss)&&(identical(other.estimatedVdot, estimatedVdot) || other.estimatedVdot == estimatedVdot)&&(identical(other.trainingType, trainingType) || other.trainingType == trainingType)&&(identical(other.hrZone1Time, hrZone1Time) || other.hrZone1Time == hrZone1Time)&&(identical(other.hrZone2Time, hrZone2Time) || other.hrZone2Time == hrZone2Time)&&(identical(other.hrZone3Time, hrZone3Time) || other.hrZone3Time == hrZone3Time)&&(identical(other.hrZone4Time, hrZone4Time) || other.hrZone4Time == hrZone4Time)&&(identical(other.hrZone5Time, hrZone5Time) || other.hrZone5Time == hrZone5Time)&&const DeepCollectionEquality().equals(other.streams, streams)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.averageWatts, averageWatts) || other.averageWatts == averageWatts)&&(identical(other.weightedAverageWatts, weightedAverageWatts) || other.weightedAverageWatts == weightedAverageWatts)&&(identical(other.deviceWatts, deviceWatts) || other.deviceWatts == deviceWatts));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,stravaId,type,name,startDate,distance,movingTime,averageSpeed,averageHr,maxHr,averageCadence,hasHeartrate,totalElevation,trimp,runningTss,estimatedVdot,trainingType,hrZone1Time,hrZone2Time,hrZone3Time,hrZone4Time,hrZone5Time,const DeepCollectionEquality().hash(streams),calories]);
+int get hashCode => Object.hashAll([runtimeType,id,stravaId,type,name,startDate,distance,movingTime,averageSpeed,averageHr,maxHr,averageCadence,hasHeartrate,totalElevation,trimp,runningTss,estimatedVdot,trainingType,hrZone1Time,hrZone2Time,hrZone3Time,hrZone4Time,hrZone5Time,const DeepCollectionEquality().hash(streams),calories,averageWatts,weightedAverageWatts,deviceWatts]);
 
 @override
 String toString() {
-  return 'Activity(id: $id, stravaId: $stravaId, type: $type, name: $name, startDate: $startDate, distance: $distance, movingTime: $movingTime, averageSpeed: $averageSpeed, averageHr: $averageHr, maxHr: $maxHr, averageCadence: $averageCadence, hasHeartrate: $hasHeartrate, totalElevation: $totalElevation, trimp: $trimp, runningTss: $runningTss, estimatedVdot: $estimatedVdot, trainingType: $trainingType, hrZone1Time: $hrZone1Time, hrZone2Time: $hrZone2Time, hrZone3Time: $hrZone3Time, hrZone4Time: $hrZone4Time, hrZone5Time: $hrZone5Time, streams: $streams, calories: $calories)';
+  return 'Activity(id: $id, stravaId: $stravaId, type: $type, name: $name, startDate: $startDate, distance: $distance, movingTime: $movingTime, averageSpeed: $averageSpeed, averageHr: $averageHr, maxHr: $maxHr, averageCadence: $averageCadence, hasHeartrate: $hasHeartrate, totalElevation: $totalElevation, trimp: $trimp, runningTss: $runningTss, estimatedVdot: $estimatedVdot, trainingType: $trainingType, hrZone1Time: $hrZone1Time, hrZone2Time: $hrZone2Time, hrZone3Time: $hrZone3Time, hrZone4Time: $hrZone4Time, hrZone5Time: $hrZone5Time, streams: $streams, calories: $calories, averageWatts: $averageWatts, weightedAverageWatts: $weightedAverageWatts, deviceWatts: $deviceWatts)';
 }
 
 
@@ -864,7 +864,7 @@ abstract mixin class $ActivityCopyWith<$Res>  {
   factory $ActivityCopyWith(Activity value, $Res Function(Activity) _then) = _$ActivityCopyWithImpl;
 @useResult
 $Res call({
- String id, String stravaId, ActivityType type, String name, DateTime startDate, double distance, int movingTime, double? averageSpeed, double? averageHr, int? maxHr, double? averageCadence, bool hasHeartrate, double totalElevation, double? trimp, double? runningTss, double? estimatedVdot, String? trainingType,@JsonKey(name: 'hrZone1Time') int hrZone1Time,@JsonKey(name: 'hrZone2Time') int hrZone2Time,@JsonKey(name: 'hrZone3Time') int hrZone3Time,@JsonKey(name: 'hrZone4Time') int hrZone4Time,@JsonKey(name: 'hrZone5Time') int hrZone5Time,@JsonKey(name: 'streams') Map<String, dynamic>? streams,@JsonKey(name: 'calories') double? calories
+ String id, String stravaId, ActivityType type, String name, DateTime startDate, double distance, int movingTime, double? averageSpeed, double? averageHr, int? maxHr, double? averageCadence, bool hasHeartrate, double totalElevation, double? trimp, double? runningTss, double? estimatedVdot, String? trainingType,@JsonKey(name: 'hrZone1Time') int hrZone1Time,@JsonKey(name: 'hrZone2Time') int hrZone2Time,@JsonKey(name: 'hrZone3Time') int hrZone3Time,@JsonKey(name: 'hrZone4Time') int hrZone4Time,@JsonKey(name: 'hrZone5Time') int hrZone5Time,@JsonKey(name: 'streams') Map<String, dynamic>? streams,@JsonKey(name: 'calories') double? calories,@JsonKey(name: 'averageWatts') double? averageWatts,@JsonKey(name: 'weightedAverageWatts') double? weightedAverageWatts,@JsonKey(name: 'deviceWatts') bool deviceWatts
 });
 
 
@@ -881,7 +881,7 @@ class _$ActivityCopyWithImpl<$Res>
 
 /// Create a copy of Activity
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? stravaId = null,Object? type = null,Object? name = null,Object? startDate = null,Object? distance = null,Object? movingTime = null,Object? averageSpeed = freezed,Object? averageHr = freezed,Object? maxHr = freezed,Object? averageCadence = freezed,Object? hasHeartrate = null,Object? totalElevation = null,Object? trimp = freezed,Object? runningTss = freezed,Object? estimatedVdot = freezed,Object? trainingType = freezed,Object? hrZone1Time = null,Object? hrZone2Time = null,Object? hrZone3Time = null,Object? hrZone4Time = null,Object? hrZone5Time = null,Object? streams = freezed,Object? calories = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? stravaId = null,Object? type = null,Object? name = null,Object? startDate = null,Object? distance = null,Object? movingTime = null,Object? averageSpeed = freezed,Object? averageHr = freezed,Object? maxHr = freezed,Object? averageCadence = freezed,Object? hasHeartrate = null,Object? totalElevation = null,Object? trimp = freezed,Object? runningTss = freezed,Object? estimatedVdot = freezed,Object? trainingType = freezed,Object? hrZone1Time = null,Object? hrZone2Time = null,Object? hrZone3Time = null,Object? hrZone4Time = null,Object? hrZone5Time = null,Object? streams = freezed,Object? calories = freezed,Object? averageWatts = freezed,Object? weightedAverageWatts = freezed,Object? deviceWatts = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,stravaId: null == stravaId ? _self.stravaId : stravaId // ignore: cast_nullable_to_non_nullable
@@ -907,7 +907,10 @@ as int,hrZone4Time: null == hrZone4Time ? _self.hrZone4Time : hrZone4Time // ign
 as int,hrZone5Time: null == hrZone5Time ? _self.hrZone5Time : hrZone5Time // ignore: cast_nullable_to_non_nullable
 as int,streams: freezed == streams ? _self.streams : streams // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>?,calories: freezed == calories ? _self.calories : calories // ignore: cast_nullable_to_non_nullable
-as double?,
+as double?,averageWatts: freezed == averageWatts ? _self.averageWatts : averageWatts // ignore: cast_nullable_to_non_nullable
+as double?,weightedAverageWatts: freezed == weightedAverageWatts ? _self.weightedAverageWatts : weightedAverageWatts // ignore: cast_nullable_to_non_nullable
+as double?,deviceWatts: null == deviceWatts ? _self.deviceWatts : deviceWatts // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -989,10 +992,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String stravaId,  ActivityType type,  String name,  DateTime startDate,  double distance,  int movingTime,  double? averageSpeed,  double? averageHr,  int? maxHr,  double? averageCadence,  bool hasHeartrate,  double totalElevation,  double? trimp,  double? runningTss,  double? estimatedVdot,  String? trainingType, @JsonKey(name: 'hrZone1Time')  int hrZone1Time, @JsonKey(name: 'hrZone2Time')  int hrZone2Time, @JsonKey(name: 'hrZone3Time')  int hrZone3Time, @JsonKey(name: 'hrZone4Time')  int hrZone4Time, @JsonKey(name: 'hrZone5Time')  int hrZone5Time, @JsonKey(name: 'streams')  Map<String, dynamic>? streams, @JsonKey(name: 'calories')  double? calories)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String stravaId,  ActivityType type,  String name,  DateTime startDate,  double distance,  int movingTime,  double? averageSpeed,  double? averageHr,  int? maxHr,  double? averageCadence,  bool hasHeartrate,  double totalElevation,  double? trimp,  double? runningTss,  double? estimatedVdot,  String? trainingType, @JsonKey(name: 'hrZone1Time')  int hrZone1Time, @JsonKey(name: 'hrZone2Time')  int hrZone2Time, @JsonKey(name: 'hrZone3Time')  int hrZone3Time, @JsonKey(name: 'hrZone4Time')  int hrZone4Time, @JsonKey(name: 'hrZone5Time')  int hrZone5Time, @JsonKey(name: 'streams')  Map<String, dynamic>? streams, @JsonKey(name: 'calories')  double? calories, @JsonKey(name: 'averageWatts')  double? averageWatts, @JsonKey(name: 'weightedAverageWatts')  double? weightedAverageWatts, @JsonKey(name: 'deviceWatts')  bool deviceWatts)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Activity() when $default != null:
-return $default(_that.id,_that.stravaId,_that.type,_that.name,_that.startDate,_that.distance,_that.movingTime,_that.averageSpeed,_that.averageHr,_that.maxHr,_that.averageCadence,_that.hasHeartrate,_that.totalElevation,_that.trimp,_that.runningTss,_that.estimatedVdot,_that.trainingType,_that.hrZone1Time,_that.hrZone2Time,_that.hrZone3Time,_that.hrZone4Time,_that.hrZone5Time,_that.streams,_that.calories);case _:
+return $default(_that.id,_that.stravaId,_that.type,_that.name,_that.startDate,_that.distance,_that.movingTime,_that.averageSpeed,_that.averageHr,_that.maxHr,_that.averageCadence,_that.hasHeartrate,_that.totalElevation,_that.trimp,_that.runningTss,_that.estimatedVdot,_that.trainingType,_that.hrZone1Time,_that.hrZone2Time,_that.hrZone3Time,_that.hrZone4Time,_that.hrZone5Time,_that.streams,_that.calories,_that.averageWatts,_that.weightedAverageWatts,_that.deviceWatts);case _:
   return orElse();
 
 }
@@ -1010,10 +1013,10 @@ return $default(_that.id,_that.stravaId,_that.type,_that.name,_that.startDate,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String stravaId,  ActivityType type,  String name,  DateTime startDate,  double distance,  int movingTime,  double? averageSpeed,  double? averageHr,  int? maxHr,  double? averageCadence,  bool hasHeartrate,  double totalElevation,  double? trimp,  double? runningTss,  double? estimatedVdot,  String? trainingType, @JsonKey(name: 'hrZone1Time')  int hrZone1Time, @JsonKey(name: 'hrZone2Time')  int hrZone2Time, @JsonKey(name: 'hrZone3Time')  int hrZone3Time, @JsonKey(name: 'hrZone4Time')  int hrZone4Time, @JsonKey(name: 'hrZone5Time')  int hrZone5Time, @JsonKey(name: 'streams')  Map<String, dynamic>? streams, @JsonKey(name: 'calories')  double? calories)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String stravaId,  ActivityType type,  String name,  DateTime startDate,  double distance,  int movingTime,  double? averageSpeed,  double? averageHr,  int? maxHr,  double? averageCadence,  bool hasHeartrate,  double totalElevation,  double? trimp,  double? runningTss,  double? estimatedVdot,  String? trainingType, @JsonKey(name: 'hrZone1Time')  int hrZone1Time, @JsonKey(name: 'hrZone2Time')  int hrZone2Time, @JsonKey(name: 'hrZone3Time')  int hrZone3Time, @JsonKey(name: 'hrZone4Time')  int hrZone4Time, @JsonKey(name: 'hrZone5Time')  int hrZone5Time, @JsonKey(name: 'streams')  Map<String, dynamic>? streams, @JsonKey(name: 'calories')  double? calories, @JsonKey(name: 'averageWatts')  double? averageWatts, @JsonKey(name: 'weightedAverageWatts')  double? weightedAverageWatts, @JsonKey(name: 'deviceWatts')  bool deviceWatts)  $default,) {final _that = this;
 switch (_that) {
 case _Activity():
-return $default(_that.id,_that.stravaId,_that.type,_that.name,_that.startDate,_that.distance,_that.movingTime,_that.averageSpeed,_that.averageHr,_that.maxHr,_that.averageCadence,_that.hasHeartrate,_that.totalElevation,_that.trimp,_that.runningTss,_that.estimatedVdot,_that.trainingType,_that.hrZone1Time,_that.hrZone2Time,_that.hrZone3Time,_that.hrZone4Time,_that.hrZone5Time,_that.streams,_that.calories);}
+return $default(_that.id,_that.stravaId,_that.type,_that.name,_that.startDate,_that.distance,_that.movingTime,_that.averageSpeed,_that.averageHr,_that.maxHr,_that.averageCadence,_that.hasHeartrate,_that.totalElevation,_that.trimp,_that.runningTss,_that.estimatedVdot,_that.trainingType,_that.hrZone1Time,_that.hrZone2Time,_that.hrZone3Time,_that.hrZone4Time,_that.hrZone5Time,_that.streams,_that.calories,_that.averageWatts,_that.weightedAverageWatts,_that.deviceWatts);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1027,10 +1030,10 @@ return $default(_that.id,_that.stravaId,_that.type,_that.name,_that.startDate,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String stravaId,  ActivityType type,  String name,  DateTime startDate,  double distance,  int movingTime,  double? averageSpeed,  double? averageHr,  int? maxHr,  double? averageCadence,  bool hasHeartrate,  double totalElevation,  double? trimp,  double? runningTss,  double? estimatedVdot,  String? trainingType, @JsonKey(name: 'hrZone1Time')  int hrZone1Time, @JsonKey(name: 'hrZone2Time')  int hrZone2Time, @JsonKey(name: 'hrZone3Time')  int hrZone3Time, @JsonKey(name: 'hrZone4Time')  int hrZone4Time, @JsonKey(name: 'hrZone5Time')  int hrZone5Time, @JsonKey(name: 'streams')  Map<String, dynamic>? streams, @JsonKey(name: 'calories')  double? calories)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String stravaId,  ActivityType type,  String name,  DateTime startDate,  double distance,  int movingTime,  double? averageSpeed,  double? averageHr,  int? maxHr,  double? averageCadence,  bool hasHeartrate,  double totalElevation,  double? trimp,  double? runningTss,  double? estimatedVdot,  String? trainingType, @JsonKey(name: 'hrZone1Time')  int hrZone1Time, @JsonKey(name: 'hrZone2Time')  int hrZone2Time, @JsonKey(name: 'hrZone3Time')  int hrZone3Time, @JsonKey(name: 'hrZone4Time')  int hrZone4Time, @JsonKey(name: 'hrZone5Time')  int hrZone5Time, @JsonKey(name: 'streams')  Map<String, dynamic>? streams, @JsonKey(name: 'calories')  double? calories, @JsonKey(name: 'averageWatts')  double? averageWatts, @JsonKey(name: 'weightedAverageWatts')  double? weightedAverageWatts, @JsonKey(name: 'deviceWatts')  bool deviceWatts)?  $default,) {final _that = this;
 switch (_that) {
 case _Activity() when $default != null:
-return $default(_that.id,_that.stravaId,_that.type,_that.name,_that.startDate,_that.distance,_that.movingTime,_that.averageSpeed,_that.averageHr,_that.maxHr,_that.averageCadence,_that.hasHeartrate,_that.totalElevation,_that.trimp,_that.runningTss,_that.estimatedVdot,_that.trainingType,_that.hrZone1Time,_that.hrZone2Time,_that.hrZone3Time,_that.hrZone4Time,_that.hrZone5Time,_that.streams,_that.calories);case _:
+return $default(_that.id,_that.stravaId,_that.type,_that.name,_that.startDate,_that.distance,_that.movingTime,_that.averageSpeed,_that.averageHr,_that.maxHr,_that.averageCadence,_that.hasHeartrate,_that.totalElevation,_that.trimp,_that.runningTss,_that.estimatedVdot,_that.trainingType,_that.hrZone1Time,_that.hrZone2Time,_that.hrZone3Time,_that.hrZone4Time,_that.hrZone5Time,_that.streams,_that.calories,_that.averageWatts,_that.weightedAverageWatts,_that.deviceWatts);case _:
   return null;
 
 }
@@ -1042,7 +1045,7 @@ return $default(_that.id,_that.stravaId,_that.type,_that.name,_that.startDate,_t
 @JsonSerializable()
 
 class _Activity extends Activity {
-  const _Activity({required this.id, required this.stravaId, required this.type, required this.name, required this.startDate, required this.distance, required this.movingTime, required this.averageSpeed, required this.averageHr, required this.maxHr, required this.averageCadence, required this.hasHeartrate, required this.totalElevation, required this.trimp, required this.runningTss, required this.estimatedVdot, required this.trainingType, @JsonKey(name: 'hrZone1Time') this.hrZone1Time = 0, @JsonKey(name: 'hrZone2Time') this.hrZone2Time = 0, @JsonKey(name: 'hrZone3Time') this.hrZone3Time = 0, @JsonKey(name: 'hrZone4Time') this.hrZone4Time = 0, @JsonKey(name: 'hrZone5Time') this.hrZone5Time = 0, @JsonKey(name: 'streams') final  Map<String, dynamic>? streams, @JsonKey(name: 'calories') this.calories}): _streams = streams,super._();
+  const _Activity({required this.id, required this.stravaId, required this.type, required this.name, required this.startDate, required this.distance, required this.movingTime, required this.averageSpeed, required this.averageHr, required this.maxHr, required this.averageCadence, required this.hasHeartrate, required this.totalElevation, required this.trimp, required this.runningTss, required this.estimatedVdot, required this.trainingType, @JsonKey(name: 'hrZone1Time') this.hrZone1Time = 0, @JsonKey(name: 'hrZone2Time') this.hrZone2Time = 0, @JsonKey(name: 'hrZone3Time') this.hrZone3Time = 0, @JsonKey(name: 'hrZone4Time') this.hrZone4Time = 0, @JsonKey(name: 'hrZone5Time') this.hrZone5Time = 0, @JsonKey(name: 'streams') final  Map<String, dynamic>? streams, @JsonKey(name: 'calories') this.calories, @JsonKey(name: 'averageWatts') this.averageWatts, @JsonKey(name: 'weightedAverageWatts') this.weightedAverageWatts, @JsonKey(name: 'deviceWatts') this.deviceWatts = false}): _streams = streams,super._();
   factory _Activity.fromJson(Map<String, dynamic> json) => _$ActivityFromJson(json);
 
 @override final  String id;
@@ -1077,6 +1080,9 @@ class _Activity extends Activity {
 }
 
 @override@JsonKey(name: 'calories') final  double? calories;
+@override@JsonKey(name: 'averageWatts') final  double? averageWatts;
+@override@JsonKey(name: 'weightedAverageWatts') final  double? weightedAverageWatts;
+@override@JsonKey(name: 'deviceWatts') final  bool deviceWatts;
 
 /// Create a copy of Activity
 /// with the given fields replaced by the non-null parameter values.
@@ -1091,16 +1097,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Activity&&(identical(other.id, id) || other.id == id)&&(identical(other.stravaId, stravaId) || other.stravaId == stravaId)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.movingTime, movingTime) || other.movingTime == movingTime)&&(identical(other.averageSpeed, averageSpeed) || other.averageSpeed == averageSpeed)&&(identical(other.averageHr, averageHr) || other.averageHr == averageHr)&&(identical(other.maxHr, maxHr) || other.maxHr == maxHr)&&(identical(other.averageCadence, averageCadence) || other.averageCadence == averageCadence)&&(identical(other.hasHeartrate, hasHeartrate) || other.hasHeartrate == hasHeartrate)&&(identical(other.totalElevation, totalElevation) || other.totalElevation == totalElevation)&&(identical(other.trimp, trimp) || other.trimp == trimp)&&(identical(other.runningTss, runningTss) || other.runningTss == runningTss)&&(identical(other.estimatedVdot, estimatedVdot) || other.estimatedVdot == estimatedVdot)&&(identical(other.trainingType, trainingType) || other.trainingType == trainingType)&&(identical(other.hrZone1Time, hrZone1Time) || other.hrZone1Time == hrZone1Time)&&(identical(other.hrZone2Time, hrZone2Time) || other.hrZone2Time == hrZone2Time)&&(identical(other.hrZone3Time, hrZone3Time) || other.hrZone3Time == hrZone3Time)&&(identical(other.hrZone4Time, hrZone4Time) || other.hrZone4Time == hrZone4Time)&&(identical(other.hrZone5Time, hrZone5Time) || other.hrZone5Time == hrZone5Time)&&const DeepCollectionEquality().equals(other._streams, _streams)&&(identical(other.calories, calories) || other.calories == calories));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Activity&&(identical(other.id, id) || other.id == id)&&(identical(other.stravaId, stravaId) || other.stravaId == stravaId)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&(identical(other.startDate, startDate) || other.startDate == startDate)&&(identical(other.distance, distance) || other.distance == distance)&&(identical(other.movingTime, movingTime) || other.movingTime == movingTime)&&(identical(other.averageSpeed, averageSpeed) || other.averageSpeed == averageSpeed)&&(identical(other.averageHr, averageHr) || other.averageHr == averageHr)&&(identical(other.maxHr, maxHr) || other.maxHr == maxHr)&&(identical(other.averageCadence, averageCadence) || other.averageCadence == averageCadence)&&(identical(other.hasHeartrate, hasHeartrate) || other.hasHeartrate == hasHeartrate)&&(identical(other.totalElevation, totalElevation) || other.totalElevation == totalElevation)&&(identical(other.trimp, trimp) || other.trimp == trimp)&&(identical(other.runningTss, runningTss) || other.runningTss == runningTss)&&(identical(other.estimatedVdot, estimatedVdot) || other.estimatedVdot == estimatedVdot)&&(identical(other.trainingType, trainingType) || other.trainingType == trainingType)&&(identical(other.hrZone1Time, hrZone1Time) || other.hrZone1Time == hrZone1Time)&&(identical(other.hrZone2Time, hrZone2Time) || other.hrZone2Time == hrZone2Time)&&(identical(other.hrZone3Time, hrZone3Time) || other.hrZone3Time == hrZone3Time)&&(identical(other.hrZone4Time, hrZone4Time) || other.hrZone4Time == hrZone4Time)&&(identical(other.hrZone5Time, hrZone5Time) || other.hrZone5Time == hrZone5Time)&&const DeepCollectionEquality().equals(other._streams, _streams)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.averageWatts, averageWatts) || other.averageWatts == averageWatts)&&(identical(other.weightedAverageWatts, weightedAverageWatts) || other.weightedAverageWatts == weightedAverageWatts)&&(identical(other.deviceWatts, deviceWatts) || other.deviceWatts == deviceWatts));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,stravaId,type,name,startDate,distance,movingTime,averageSpeed,averageHr,maxHr,averageCadence,hasHeartrate,totalElevation,trimp,runningTss,estimatedVdot,trainingType,hrZone1Time,hrZone2Time,hrZone3Time,hrZone4Time,hrZone5Time,const DeepCollectionEquality().hash(_streams),calories]);
+int get hashCode => Object.hashAll([runtimeType,id,stravaId,type,name,startDate,distance,movingTime,averageSpeed,averageHr,maxHr,averageCadence,hasHeartrate,totalElevation,trimp,runningTss,estimatedVdot,trainingType,hrZone1Time,hrZone2Time,hrZone3Time,hrZone4Time,hrZone5Time,const DeepCollectionEquality().hash(_streams),calories,averageWatts,weightedAverageWatts,deviceWatts]);
 
 @override
 String toString() {
-  return 'Activity(id: $id, stravaId: $stravaId, type: $type, name: $name, startDate: $startDate, distance: $distance, movingTime: $movingTime, averageSpeed: $averageSpeed, averageHr: $averageHr, maxHr: $maxHr, averageCadence: $averageCadence, hasHeartrate: $hasHeartrate, totalElevation: $totalElevation, trimp: $trimp, runningTss: $runningTss, estimatedVdot: $estimatedVdot, trainingType: $trainingType, hrZone1Time: $hrZone1Time, hrZone2Time: $hrZone2Time, hrZone3Time: $hrZone3Time, hrZone4Time: $hrZone4Time, hrZone5Time: $hrZone5Time, streams: $streams, calories: $calories)';
+  return 'Activity(id: $id, stravaId: $stravaId, type: $type, name: $name, startDate: $startDate, distance: $distance, movingTime: $movingTime, averageSpeed: $averageSpeed, averageHr: $averageHr, maxHr: $maxHr, averageCadence: $averageCadence, hasHeartrate: $hasHeartrate, totalElevation: $totalElevation, trimp: $trimp, runningTss: $runningTss, estimatedVdot: $estimatedVdot, trainingType: $trainingType, hrZone1Time: $hrZone1Time, hrZone2Time: $hrZone2Time, hrZone3Time: $hrZone3Time, hrZone4Time: $hrZone4Time, hrZone5Time: $hrZone5Time, streams: $streams, calories: $calories, averageWatts: $averageWatts, weightedAverageWatts: $weightedAverageWatts, deviceWatts: $deviceWatts)';
 }
 
 
@@ -1111,7 +1117,7 @@ abstract mixin class _$ActivityCopyWith<$Res> implements $ActivityCopyWith<$Res>
   factory _$ActivityCopyWith(_Activity value, $Res Function(_Activity) _then) = __$ActivityCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String stravaId, ActivityType type, String name, DateTime startDate, double distance, int movingTime, double? averageSpeed, double? averageHr, int? maxHr, double? averageCadence, bool hasHeartrate, double totalElevation, double? trimp, double? runningTss, double? estimatedVdot, String? trainingType,@JsonKey(name: 'hrZone1Time') int hrZone1Time,@JsonKey(name: 'hrZone2Time') int hrZone2Time,@JsonKey(name: 'hrZone3Time') int hrZone3Time,@JsonKey(name: 'hrZone4Time') int hrZone4Time,@JsonKey(name: 'hrZone5Time') int hrZone5Time,@JsonKey(name: 'streams') Map<String, dynamic>? streams,@JsonKey(name: 'calories') double? calories
+ String id, String stravaId, ActivityType type, String name, DateTime startDate, double distance, int movingTime, double? averageSpeed, double? averageHr, int? maxHr, double? averageCadence, bool hasHeartrate, double totalElevation, double? trimp, double? runningTss, double? estimatedVdot, String? trainingType,@JsonKey(name: 'hrZone1Time') int hrZone1Time,@JsonKey(name: 'hrZone2Time') int hrZone2Time,@JsonKey(name: 'hrZone3Time') int hrZone3Time,@JsonKey(name: 'hrZone4Time') int hrZone4Time,@JsonKey(name: 'hrZone5Time') int hrZone5Time,@JsonKey(name: 'streams') Map<String, dynamic>? streams,@JsonKey(name: 'calories') double? calories,@JsonKey(name: 'averageWatts') double? averageWatts,@JsonKey(name: 'weightedAverageWatts') double? weightedAverageWatts,@JsonKey(name: 'deviceWatts') bool deviceWatts
 });
 
 
@@ -1128,7 +1134,7 @@ class __$ActivityCopyWithImpl<$Res>
 
 /// Create a copy of Activity
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? stravaId = null,Object? type = null,Object? name = null,Object? startDate = null,Object? distance = null,Object? movingTime = null,Object? averageSpeed = freezed,Object? averageHr = freezed,Object? maxHr = freezed,Object? averageCadence = freezed,Object? hasHeartrate = null,Object? totalElevation = null,Object? trimp = freezed,Object? runningTss = freezed,Object? estimatedVdot = freezed,Object? trainingType = freezed,Object? hrZone1Time = null,Object? hrZone2Time = null,Object? hrZone3Time = null,Object? hrZone4Time = null,Object? hrZone5Time = null,Object? streams = freezed,Object? calories = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? stravaId = null,Object? type = null,Object? name = null,Object? startDate = null,Object? distance = null,Object? movingTime = null,Object? averageSpeed = freezed,Object? averageHr = freezed,Object? maxHr = freezed,Object? averageCadence = freezed,Object? hasHeartrate = null,Object? totalElevation = null,Object? trimp = freezed,Object? runningTss = freezed,Object? estimatedVdot = freezed,Object? trainingType = freezed,Object? hrZone1Time = null,Object? hrZone2Time = null,Object? hrZone3Time = null,Object? hrZone4Time = null,Object? hrZone5Time = null,Object? streams = freezed,Object? calories = freezed,Object? averageWatts = freezed,Object? weightedAverageWatts = freezed,Object? deviceWatts = null,}) {
   return _then(_Activity(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,stravaId: null == stravaId ? _self.stravaId : stravaId // ignore: cast_nullable_to_non_nullable
@@ -1154,7 +1160,10 @@ as int,hrZone4Time: null == hrZone4Time ? _self.hrZone4Time : hrZone4Time // ign
 as int,hrZone5Time: null == hrZone5Time ? _self.hrZone5Time : hrZone5Time // ignore: cast_nullable_to_non_nullable
 as int,streams: freezed == streams ? _self._streams : streams // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>?,calories: freezed == calories ? _self.calories : calories // ignore: cast_nullable_to_non_nullable
-as double?,
+as double?,averageWatts: freezed == averageWatts ? _self.averageWatts : averageWatts // ignore: cast_nullable_to_non_nullable
+as double?,weightedAverageWatts: freezed == weightedAverageWatts ? _self.weightedAverageWatts : weightedAverageWatts // ignore: cast_nullable_to_non_nullable
+as double?,deviceWatts: null == deviceWatts ? _self.deviceWatts : deviceWatts // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -1452,7 +1461,7 @@ as String?,
 /// @nodoc
 mixin _$Goal {
 
- String get id; String get userId; String get name; RaceType get raceType; DateTime get raceDate; int? get targetTime; double? get weeklyMileageGoal; int get planWeeks; int get runsPerWeek; int get longRunDay; int get workoutDay; double? get currentVdot; int? get predictedTime; bool get isActive; DateTime get createdAt; DateTime get updatedAt; DateTime? get completedAt; List<Workout> get workouts; double? get backyardLoopDistM; int? get targetLaps;
+ String get id; String get userId; String get name; RaceType? get raceType; DateTime get raceDate; int? get targetTime; double? get weeklyMileageGoal; int get planWeeks; int get runsPerWeek; int get longRunDay; int get workoutDay; double? get currentVdot; int? get predictedTime; bool get isActive; DateTime get createdAt; DateTime get updatedAt; DateTime? get completedAt; List<Workout> get workouts; double? get backyardLoopDistM; int? get targetLaps;
 /// Create a copy of Goal
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1485,7 +1494,7 @@ abstract mixin class $GoalCopyWith<$Res>  {
   factory $GoalCopyWith(Goal value, $Res Function(Goal) _then) = _$GoalCopyWithImpl;
 @useResult
 $Res call({
- String id, String userId, String name, RaceType raceType, DateTime raceDate, int? targetTime, double? weeklyMileageGoal, int planWeeks, int runsPerWeek, int longRunDay, int workoutDay, double? currentVdot, int? predictedTime, bool isActive, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, List<Workout> workouts, double? backyardLoopDistM, int? targetLaps
+ String id, String userId, String name, RaceType? raceType, DateTime raceDate, int? targetTime, double? weeklyMileageGoal, int planWeeks, int runsPerWeek, int longRunDay, int workoutDay, double? currentVdot, int? predictedTime, bool isActive, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, List<Workout> workouts, double? backyardLoopDistM, int? targetLaps
 });
 
 
@@ -1502,13 +1511,13 @@ class _$GoalCopyWithImpl<$Res>
 
 /// Create a copy of Goal
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = null,Object? raceDate = null,Object? targetTime = freezed,Object? weeklyMileageGoal = freezed,Object? planWeeks = null,Object? runsPerWeek = null,Object? longRunDay = null,Object? workoutDay = null,Object? currentVdot = freezed,Object? predictedTime = freezed,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? workouts = null,Object? backyardLoopDistM = freezed,Object? targetLaps = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = freezed,Object? raceDate = null,Object? targetTime = freezed,Object? weeklyMileageGoal = freezed,Object? planWeeks = null,Object? runsPerWeek = null,Object? longRunDay = null,Object? workoutDay = null,Object? currentVdot = freezed,Object? predictedTime = freezed,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? workouts = null,Object? backyardLoopDistM = freezed,Object? targetLaps = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,raceType: null == raceType ? _self.raceType : raceType // ignore: cast_nullable_to_non_nullable
-as RaceType,raceDate: null == raceDate ? _self.raceDate : raceDate // ignore: cast_nullable_to_non_nullable
+as String,raceType: freezed == raceType ? _self.raceType : raceType // ignore: cast_nullable_to_non_nullable
+as RaceType?,raceDate: null == raceDate ? _self.raceDate : raceDate // ignore: cast_nullable_to_non_nullable
 as DateTime,targetTime: freezed == targetTime ? _self.targetTime : targetTime // ignore: cast_nullable_to_non_nullable
 as int?,weeklyMileageGoal: freezed == weeklyMileageGoal ? _self.weeklyMileageGoal : weeklyMileageGoal // ignore: cast_nullable_to_non_nullable
 as double?,planWeeks: null == planWeeks ? _self.planWeeks : planWeeks // ignore: cast_nullable_to_non_nullable
@@ -1606,7 +1615,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType raceType,  DateTime raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Goal() when $default != null:
 return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.weeklyMileageGoal,_that.planWeeks,_that.runsPerWeek,_that.longRunDay,_that.workoutDay,_that.currentVdot,_that.predictedTime,_that.isActive,_that.createdAt,_that.updatedAt,_that.completedAt,_that.workouts,_that.backyardLoopDistM,_that.targetLaps);case _:
@@ -1627,7 +1636,7 @@ return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType raceType,  DateTime raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps)  $default,) {final _that = this;
 switch (_that) {
 case _Goal():
 return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.weeklyMileageGoal,_that.planWeeks,_that.runsPerWeek,_that.longRunDay,_that.workoutDay,_that.currentVdot,_that.predictedTime,_that.isActive,_that.createdAt,_that.updatedAt,_that.completedAt,_that.workouts,_that.backyardLoopDistM,_that.targetLaps);}
@@ -1644,7 +1653,7 @@ return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String name,  RaceType raceType,  DateTime raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps)?  $default,) {final _that = this;
 switch (_that) {
 case _Goal() when $default != null:
 return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.weeklyMileageGoal,_that.planWeeks,_that.runsPerWeek,_that.longRunDay,_that.workoutDay,_that.currentVdot,_that.predictedTime,_that.isActive,_that.createdAt,_that.updatedAt,_that.completedAt,_that.workouts,_that.backyardLoopDistM,_that.targetLaps);case _:
@@ -1659,13 +1668,13 @@ return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_
 @JsonSerializable()
 
 class _Goal extends Goal {
-  const _Goal({required this.id, this.userId = '', required this.name, required this.raceType, required this.raceDate, required this.targetTime, required this.weeklyMileageGoal, this.planWeeks = 12, this.runsPerWeek = 4, this.longRunDay = 0, this.workoutDay = 3, required this.currentVdot, required this.predictedTime, this.isActive = true, required this.createdAt, required this.updatedAt, required this.completedAt, final  List<Workout> workouts = const [], this.backyardLoopDistM, this.targetLaps}): _workouts = workouts,super._();
+  const _Goal({required this.id, this.userId = '', required this.name, this.raceType, required this.raceDate, required this.targetTime, required this.weeklyMileageGoal, this.planWeeks = 12, this.runsPerWeek = 4, this.longRunDay = 0, this.workoutDay = 3, required this.currentVdot, required this.predictedTime, this.isActive = true, required this.createdAt, required this.updatedAt, required this.completedAt, final  List<Workout> workouts = const [], this.backyardLoopDistM, this.targetLaps}): _workouts = workouts,super._();
   factory _Goal.fromJson(Map<String, dynamic> json) => _$GoalFromJson(json);
 
 @override final  String id;
 @override@JsonKey() final  String userId;
 @override final  String name;
-@override final  RaceType raceType;
+@override final  RaceType? raceType;
 @override final  DateTime raceDate;
 @override final  int? targetTime;
 @override final  double? weeklyMileageGoal;
@@ -1722,7 +1731,7 @@ abstract mixin class _$GoalCopyWith<$Res> implements $GoalCopyWith<$Res> {
   factory _$GoalCopyWith(_Goal value, $Res Function(_Goal) _then) = __$GoalCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String userId, String name, RaceType raceType, DateTime raceDate, int? targetTime, double? weeklyMileageGoal, int planWeeks, int runsPerWeek, int longRunDay, int workoutDay, double? currentVdot, int? predictedTime, bool isActive, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, List<Workout> workouts, double? backyardLoopDistM, int? targetLaps
+ String id, String userId, String name, RaceType? raceType, DateTime raceDate, int? targetTime, double? weeklyMileageGoal, int planWeeks, int runsPerWeek, int longRunDay, int workoutDay, double? currentVdot, int? predictedTime, bool isActive, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, List<Workout> workouts, double? backyardLoopDistM, int? targetLaps
 });
 
 
@@ -1739,13 +1748,13 @@ class __$GoalCopyWithImpl<$Res>
 
 /// Create a copy of Goal
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = null,Object? raceDate = null,Object? targetTime = freezed,Object? weeklyMileageGoal = freezed,Object? planWeeks = null,Object? runsPerWeek = null,Object? longRunDay = null,Object? workoutDay = null,Object? currentVdot = freezed,Object? predictedTime = freezed,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? workouts = null,Object? backyardLoopDistM = freezed,Object? targetLaps = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = freezed,Object? raceDate = null,Object? targetTime = freezed,Object? weeklyMileageGoal = freezed,Object? planWeeks = null,Object? runsPerWeek = null,Object? longRunDay = null,Object? workoutDay = null,Object? currentVdot = freezed,Object? predictedTime = freezed,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? workouts = null,Object? backyardLoopDistM = freezed,Object? targetLaps = freezed,}) {
   return _then(_Goal(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,raceType: null == raceType ? _self.raceType : raceType // ignore: cast_nullable_to_non_nullable
-as RaceType,raceDate: null == raceDate ? _self.raceDate : raceDate // ignore: cast_nullable_to_non_nullable
+as String,raceType: freezed == raceType ? _self.raceType : raceType // ignore: cast_nullable_to_non_nullable
+as RaceType?,raceDate: null == raceDate ? _self.raceDate : raceDate // ignore: cast_nullable_to_non_nullable
 as DateTime,targetTime: freezed == targetTime ? _self.targetTime : targetTime // ignore: cast_nullable_to_non_nullable
 as int?,weeklyMileageGoal: freezed == weeklyMileageGoal ? _self.weeklyMileageGoal : weeklyMileageGoal // ignore: cast_nullable_to_non_nullable
 as double?,planWeeks: null == planWeeks ? _self.planWeeks : planWeeks // ignore: cast_nullable_to_non_nullable

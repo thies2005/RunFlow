@@ -179,6 +179,9 @@ sealed class Activity with _$Activity {
     @JsonKey(name: 'hrZone5Time') @Default(0) int hrZone5Time,
     @JsonKey(name: 'streams') Map<String, dynamic>? streams,
     @JsonKey(name: 'calories') double? calories,
+    @JsonKey(name: 'averageWatts') double? averageWatts,
+    @JsonKey(name: 'weightedAverageWatts') double? weightedAverageWatts,
+    @JsonKey(name: 'deviceWatts') @Default(false) bool deviceWatts,
   }) = _Activity;
   const Activity._();
 
@@ -214,7 +217,7 @@ sealed class Goal with _$Goal {
     required String id,
     @Default('') String userId,
     required String name,
-    required RaceType raceType,
+    RaceType? raceType,
     required DateTime raceDate,
     required int? targetTime,
     required double? weeklyMileageGoal,

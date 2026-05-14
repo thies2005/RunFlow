@@ -55,6 +55,9 @@ export interface ActivityData {
     rawJson: Prisma.InputJsonValue;
     streams: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
     trainingType: WorkoutType;
+    averageWatts: number | null;
+    weightedAverageWatts: number | null;
+    deviceWatts: boolean;
 }
 
 export interface MetricsInput {
@@ -284,5 +287,8 @@ export function transformActivityData(
         rawJson: activity as unknown as Prisma.InputJsonValue,
         streams: Prisma.JsonNull,
         trainingType: determineWorkoutType(activity),
+        averageWatts: activity.average_watts ?? null,
+        weightedAverageWatts: activity.weighted_average_watts ?? null,
+        deviceWatts: activity.device_watts ?? false,
     };
 }

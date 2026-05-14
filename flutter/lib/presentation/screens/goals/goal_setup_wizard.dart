@@ -8,10 +8,12 @@ import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/goal_projection.dart';
 import 'package:runflow_flutter/core/utils/triathlon_estimator.dart';
+import 'package:runflow_flutter/core/utils/athlete_defaults.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
+import 'package:runflow_flutter/presentation/providers/athlete_defaults_provider.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
 
 class GoalSetupWizard extends ConsumerStatefulWidget {
@@ -207,11 +209,14 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
       _weeklyMileageGoal,
     );
     final projectedVdot = stats.effectiveVO2max * progressionFactor;
-    final key = _triRaceTypeKey(_selectedRaceType);
+    final key = triRaceTypeKey(_selectedRaceType);
+    final defaults = ref.read(athleteDefaultsProvider);
     final projection = estimateTriathlonTime(
       projectedVdot,
       key,
       (double v, int d) => estimateTimeForDistance(v, d),
+      cssOverride: defaults.estimatedCssSecPer100m,
+      bikeSpeedOverrideMs: defaults.estimatedFlatBikeSpeedMs,
     );
     return projection?.projected.totalSeconds;
   }
@@ -233,23 +238,6 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
       (double v, int d) => estimateTimeForDistance(v, d),
     );
     return projection?.projected.totalSeconds;
-  }
-
-  String _triRaceTypeKey(RaceType type) {
-    switch (type) {
-      case RaceType.sprintTri:
-        return 'SPRINT_TRI';
-      case RaceType.olympicTri:
-        return 'OLYMPIC_TRI';
-      case RaceType.halfIronman:
-        return 'HALF_IRONMAN';
-      case RaceType.fullIronman:
-        return 'FULL_IRONMAN';
-      case RaceType.customTri:
-        return 'SPRINT_TRI';
-      default:
-        return 'SPRINT_TRI';
-    }
   }
 
   int _estimateDistanceForTime(double vdot, int timeSeconds) {
@@ -540,7 +528,8 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     final theme = Theme.of(context);
     final stats = ref.watch(analyticsStatsProvider).value;
     final vdot = stats?.effectiveVO2max ?? 0;
-    final key = _triRaceTypeKey(_selectedRaceType);
+    final key = triRaceTypeKey(_selectedRaceType);
+    final defaults = ref.watch(athleteDefaultsProvider);
 
     final swimDist = triSwimDist[key] ?? 1500;
     final bikeDist = triBikeDist[key] ?? 40000;
@@ -558,6 +547,8 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         projectedVdot,
         key,
         (double v, int d) => estimateTimeForDistance(v, d),
+        cssOverride: defaults.estimatedCssSecPer100m,
+        bikeSpeedOverrideMs: defaults.estimatedFlatBikeSpeedMs,
       );
     }
 
@@ -855,31 +846,80 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
           Card(
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'VO2max',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.onSurfaceVariant,
-                          ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'VO2max',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                            Text(
+                              vdot.toStringAsFixed(1),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          vdot.toStringAsFixed(1),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+                      ),
+                      if (defaults.cssSource ==
+                              AthleteDefaultsSource.fromActivities ||
+                          defaults.bikeSource ==
+                              AthleteDefaultsSource.fromActivities)
+                        const Icon(Icons.data_usage,
+                            size: 18, color: AppColors.success),
+                    ],
+                  ),
+                  if (defaults.cssSource ==
+                      AthleteDefaultsSource.fromActivities) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.pool,
+                            size: 16, color: AppColors.onSurfaceVariant),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'CSS from ${defaults.qualifyingSwimCount} swims',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
+                  ],
+                  if (defaults.bikeSource ==
+                      AthleteDefaultsSource.fromActivities) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.directions_bike,
+                            size: 16, color: AppColors.onSurfaceVariant),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Bike speed from ${defaults.qualifyingRideCount} rides',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
+
         ],
       ),
     );

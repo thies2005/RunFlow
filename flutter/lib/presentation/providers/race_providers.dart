@@ -4,8 +4,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/models/race_models.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/providers/dashboard_providers.dart';
+import 'package:runflow_flutter/presentation/providers/athlete_defaults_provider.dart';
 import 'package:runflow_flutter/core/utils/vdot.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
+import 'package:runflow_flutter/core/utils/triathlon_estimator.dart';
+import 'package:runflow_flutter/core/utils/goal_projection.dart';
+import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 
 part 'race_providers.g.dart';
 
@@ -40,13 +44,30 @@ List<RaceCountdownData> raceCountdown(Ref ref) {
         int? projectedTimeSeconds;
         double? projectedVdot;
         if (vo2max > 0 && daysToRace > 0) {
-          final distance = raceTypeDistance(goal.raceType);
-          final basePrediction = racePrediction(vo2max, distance);
-          if (basePrediction > 0) {
-            final fitnessGain = 0.3 * log(1 + weeksToRace) / log(2);
+          if (goal.raceType.isTriathlon) {
+            final defaults = ref.watch(athleteDefaultsProvider);
+            final key = triRaceTypeKey(goal.raceType);
+            final fitnessGain =
+                0.3 * log(1 + weeksToRace) / log(2);
             projectedVdot = min(vo2max + fitnessGain, vo2max + 5.0);
-            projectedTimeSeconds =
-                (racePrediction(projectedVdot, distance) * 60).round();
+            final projection = estimateTriathlonTime(
+              projectedVdot,
+              key,
+              (double v, int d) => estimateTimeForDistance(v, d),
+              cssOverride: defaults.estimatedCssSecPer100m,
+              bikeSpeedOverrideMs: defaults.estimatedFlatBikeSpeedMs,
+            );
+            projectedTimeSeconds = projection?.projected.totalSeconds;
+          } else {
+            final distance = raceTypeDistance(goal.raceType);
+            final basePrediction = racePrediction(vo2max, distance);
+            if (basePrediction > 0) {
+              final fitnessGain =
+                  0.3 * log(1 + weeksToRace) / log(2);
+              projectedVdot = min(vo2max + fitnessGain, vo2max + 5.0);
+              projectedTimeSeconds =
+                  (racePrediction(projectedVdot, distance) * 60).round();
+            }
           }
         }
 

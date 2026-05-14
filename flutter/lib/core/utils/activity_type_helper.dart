@@ -120,3 +120,18 @@ double raceTypeDistance(RaceType type) {
       return 0;
   }
 }
+
+String triRaceTypeKey(RaceType type) {
+  switch (type) {
+    case RaceType.sprintTri:
+      return 'SPRINT_TRI';
+    case RaceType.olympicTri:
+      return 'OLYMPIC_TRI';
+    case RaceType.halfIronman:
+      return 'HALF_IRONMAN';
+    case RaceType.fullIronman:
+      return 'FULL_IRONMAN';
+    default:
+      return 'SPRINT_TRI';
+  }
+}

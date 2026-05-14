@@ -187,7 +187,7 @@ extension GoalMapper on Goal {
         id: id,
         userId: userId,
         name: name,
-        raceType: raceType.toDomain(),
+        raceType: raceType?.toDomain() ?? domain.RaceType.customDistance,
         raceDate: raceDate,
         targetTime: targetTime,
         weeklyMileageGoal: weeklyMileageGoal,

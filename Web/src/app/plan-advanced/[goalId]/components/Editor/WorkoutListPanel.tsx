@@ -34,7 +34,21 @@ export function WorkoutListPanel({ week, goalId, focusGoal, onWorkoutClick, onPh
     const [dragId, setDragId] = useState<string | null>(null);
 
     const days = Array.from({ length: 7 }, (_, i) => addDays(week.weekStart, i));
-    const totalDistance = week.workouts.reduce((sum, w) => sum + (w.targetDistance || 0), 0);
+    
+    let runDistance = 0;
+    let swimDistance = 0;
+    let bikeDuration = 0;
+
+    for (const w of week.workouts) {
+        if (w.workoutType.includes('SWIM')) {
+            swimDistance += (w.targetDistance || 0);
+        } else if (w.workoutType.includes('RIDE') || w.workoutType === 'BRICK') {
+            bikeDuration += (w.targetDuration || 0);
+        } else if (w.workoutType !== 'STRENGTH' && w.workoutType !== 'CROSS_TRAINING' && w.workoutType !== 'REST') {
+            runDistance += (w.targetDistance || 0);
+        }
+    }
+
     const weekPhase = (week.workouts[0]?.phase as PlanPhase) || 'BASE';
 
     const createWorkoutMutation = useMutation({
@@ -92,7 +106,9 @@ export function WorkoutListPanel({ week, goalId, focusGoal, onWorkoutClick, onPh
             <WeekSummaryBar
                 weekIndex={week.weekNumber}
                 phase={weekPhase}
-                totalDistance={totalDistance}
+                runDistance={runDistance}
+                swimDistance={swimDistance}
+                bikeDuration={bikeDuration}
                 focusGoal={focusGoal}
                 goalId={goalId}
                 onPhaseChange={onPhaseChange}

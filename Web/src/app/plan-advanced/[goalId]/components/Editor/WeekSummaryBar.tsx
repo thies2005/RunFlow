@@ -17,7 +17,9 @@ const PHASE_COLORS: Record<PlanPhase, string> = {
 interface WeekSummaryBarProps {
     weekIndex: number;
     phase: PlanPhase;
-    totalDistance: number;
+    runDistance: number;
+    swimDistance: number;
+    bikeDuration: number;
     focusGoal?: string;
     goalId: string;
     onPhaseChange: (phase: PlanPhase) => void;
@@ -26,7 +28,9 @@ interface WeekSummaryBarProps {
 export function WeekSummaryBar({
     weekIndex,
     phase,
-    totalDistance,
+    runDistance,
+    swimDistance,
+    bikeDuration,
     focusGoal,
     goalId,
     onPhaseChange,
@@ -45,9 +49,19 @@ export function WeekSummaryBar({
                 />
             </div>
             <div className="flex items-center gap-3">
-                {totalDistance > 0 && (
-                    <span className="text-xs text-zinc-400">
-                        {(totalDistance / 1000).toFixed(1)} km total
+                {runDistance > 0 && (
+                    <span className="text-xs text-blue-400 font-medium">
+                        🏃 {(runDistance / 1000).toFixed(1)}k
+                    </span>
+                )}
+                {swimDistance > 0 && (
+                    <span className="text-xs text-cyan-400 font-medium">
+                        🏊 {swimDistance >= 1000 ? `${(swimDistance / 1000).toFixed(1)}k` : `${swimDistance}m`}
+                    </span>
+                )}
+                {bikeDuration > 0 && (
+                    <span className="text-xs text-emerald-400 font-medium">
+                        🚴 {Math.round(bikeDuration / 60)}m
                     </span>
                 )}
                 {focusGoal && (

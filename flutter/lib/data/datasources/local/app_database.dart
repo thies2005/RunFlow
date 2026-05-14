@@ -603,6 +603,15 @@ class AppDatabase {
     }
   }
 
+  Future<void> deleteFastingSession(int id) async {
+    try {
+      final db = await database;
+      db.execute('DELETE FROM fasting_sessions WHERE id = ?', [id]);
+    } catch (e) {
+      throw CacheException(message: 'Failed to delete fasting session: $e');
+    }
+  }
+
   NutritionLog _rowToNutritionLog(Row row) {
     return NutritionLog(
       id: row['id'] as int,

@@ -470,7 +470,7 @@ function generateTriWeek(params: {
             workouts.push({
                 dayOffset: longRideDay,
                 type: WorkoutType.LONG_RIDE,
-                description: `Long Ride: ${Math.round(longRideDuration / 60)}h (Zone 2)`,
+                description: `Long Ride: ${Math.round(longRideDuration / 60)}min (Zone 2)`,
                 totalDistance: 0,
                 targetPace: 0,
                 targetDuration: longRideDuration,

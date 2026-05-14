@@ -60,8 +60,6 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                     const SizedBox(height: 8),
                     const ReadinessCard(),
                     const SizedBox(height: 16),
-                    _SyncBanner(),
-                    const SizedBox(height: 20),
                     _buildDashboardGrid(
                       context,
                       nutritionAsync: nutritionAsync,
@@ -251,120 +249,6 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
         ),
       ],
     );
-  }
-}
-
-// ─── Sync Banner ─────────────────────────────────────────────────────────────
-
-class _SyncBanner extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final syncState = ref.watch(healthSyncStateProvider);
-
-    if (syncState.isSyncing) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                S.of(context).healthSyncedWithHealthConnect,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (syncState.error != null) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.error_outline, size: 16, color: AppColors.error),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                S.of(context).healthSyncedWithHealthConnect,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.error,
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
-              child: Text(
-                S.of(context).actionSyncNow,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (syncState.lastSyncTime == null) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.sync, size: 16, color: AppColors.primary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                S.of(context).healthSyncedWithHealthConnect,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: () => ref.read(healthSyncStateProvider.notifier).syncNow(),
-              child: Text(
-                S.of(context).actionSyncNow,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return const SizedBox.shrink();
   }
 }
 

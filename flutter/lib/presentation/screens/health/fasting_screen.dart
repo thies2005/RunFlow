@@ -72,6 +72,132 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
   String _fmtDate(DateTime t) =>
       '${t.day.toString().padLeft(2, '0')}/${t.month.toString().padLeft(2, '0')}';
 
+  Future<void> _deleteSession(BuildContext context, FastingSession session) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Session?'),
+        content: const Text('Are you sure you want to delete this fasting session?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final repo = ref.read(healthRepositoryProvider);
+      await repo.deleteFastingSession(session.id);
+      ref.invalidate(fastingHistoryProvider);
+    }
+  }
+
+  Future<void> _editSession(BuildContext context, FastingSession session) async {
+    DateTime start = session.startTime;
+    DateTime? end = session.endTime;
+
+    final result = await showDialog<FastingSession>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Edit Session'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    title: const Text('Start Time'),
+                    subtitle: Text('${_fmtDate(start)} ${_fmtTime(start)}'),
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: start,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (date != null) {
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.fromDateTime(start),
+                        );
+                        if (time != null) {
+                          setState(() {
+                            start = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                          });
+                        }
+                      }
+                    },
+                  ),
+                  ListTile(
+                    title: const Text('End Time'),
+                    subtitle: Text(end != null ? '${_fmtDate(end!)} ${_fmtTime(end!)}' : 'Active'),
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: end ?? DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now().add(const Duration(days: 1)),
+                      );
+                      if (date != null) {
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.fromDateTime(end ?? DateTime.now()),
+                        );
+                        if (time != null) {
+                          setState(() {
+                            end = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                          });
+                        }
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final duration = end != null ? end!.difference(start).inMinutes : session.duration;
+                    Navigator.pop(
+                      ctx,
+                      session.copyWith(
+                        startTime: start,
+                        endTime: end,
+                        duration: duration,
+                      ),
+                    );
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null) {
+      final repo = ref.read(healthRepositoryProvider);
+      await repo.updateFastingSession(result);
+      ref.invalidate(fastingHistoryProvider);
+      if (result.isActive) {
+         ref.invalidate(fastingProvider);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final fastingAsync = ref.watch(fastingProvider);
@@ -168,48 +294,69 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                     return Column(
                       children: history.map((session) {
                         final dur = Duration(minutes: session.duration);
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.timer_outlined,
-                                color: AppColors.primary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${dur.inHours}h ${dur.inMinutes % 60}m',
-                                      style: theme.textTheme.titleSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                        return InkWell(
+                          onTap: () => _editSession(context, session),
+                          onLongPress: () => _deleteSession(context, session),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.timer_outlined,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${dur.inHours}h ${dur.inMinutes % 60}m',
+                                        style: theme.textTheme.titleSmall?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${_fmtDate(session.startTime)} ${_fmtTime(session.startTime)} – ${session.endTime != null ? _fmtTime(session.endTime!) : S.of(context).fastingActive}',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: AppColors.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert, size: 20),
+                                  onSelected: (value) {
+                                    if (value == 'edit') {
+                                      _editSession(context, session);
+                                    } else if (value == 'delete') {
+                                      _deleteSession(context, session);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text('Edit'),
                                     ),
-                                    Text(
-                                      '${_fmtDate(session.startTime)} ${_fmtTime(session.startTime)} – ${session.endTime != null ? _fmtTime(session.endTime!) : S.of(context).fastingActive}',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: AppColors.onSurfaceVariant,
-                                          ),
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Delete'),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       }).toList(),

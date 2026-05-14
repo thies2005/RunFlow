@@ -115,4 +115,14 @@ class HealthRepositoryImpl implements HealthRepository {
     final history = await database.getFastingHistory();
     return history.map((s) => s.toDomain()).toList();
   }
+
+  @override
+  Future<void> updateFastingSession(domain.FastingSession session) async {
+    await database.updateFastingSession(session.toData());
+  }
+
+  @override
+  Future<void> deleteFastingSession(int id) async {
+    await database.deleteFastingSession(id);
+  }
 }

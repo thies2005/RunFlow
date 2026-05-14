@@ -18,4 +18,6 @@ abstract class HealthRepository {
   Future<FastingSession> stopFasting();
   Future<FastingSession?> getActiveFasting();
   Future<List<FastingSession>> getFastingHistory();
+  Future<void> updateFastingSession(FastingSession session);
+  Future<void> deleteFastingSession(int id);
 }

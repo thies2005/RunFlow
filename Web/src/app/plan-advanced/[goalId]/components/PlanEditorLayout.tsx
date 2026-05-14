@@ -128,7 +128,9 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
     }, [workouts]);
 
     const handleDayClick = useCallback((date: Date) => {
-        const el = document.getElementById(`week-${date.toISOString().split('T')[0]}`);
+        const monday = startOfWeek(date, { weekStartsOn: 1 });
+        const weekKey = monday.toISOString().split('T')[0];
+        const el = document.getElementById(`week-${weekKey}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, []);
 

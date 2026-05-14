@@ -42,6 +42,6 @@ export function calculateBikeZonesFromHR(hrMax: number, thresholdHR: number): Bi
 export function estimateBikeFtpFromVdot(vdot: number): number {
     if (vdot <= 0) return 100;
 
-    const baseFTP = 1.8 + vdot * 0.62;
-    return Math.max(100, Math.min(450, Math.round(baseFTP)));
+    const baseFTP = (vdot - 10) * 6 + 120;
+    return Math.max(100, Math.min(400, Math.round(baseFTP)));
 }

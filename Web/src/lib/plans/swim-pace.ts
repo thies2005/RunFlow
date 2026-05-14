@@ -32,7 +32,6 @@ export function calculateSwimCSS(
 export function estimateSwimPaceFromVdot(vdot: number): number {
     if (vdot <= 0) return 120;
 
-    const easyPaceSecPerKm = 360 + (60 - vdot) * 5.5;
-    const css = Math.round(easyPaceSecPerKm / 10 * 1.4);
-    return Math.max(60, Math.min(180, css));
+    const css = Math.round(180 - vdot * 1.5);
+    return Math.max(80, Math.min(180, css));
 }

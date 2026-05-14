@@ -2,19 +2,18 @@ import 'dart:math' as math;
 
 double estimateSwimPaceFromVdot(double vdot) {
   if (vdot <= 0) return 120;
-  final easyPaceSecPerKm = 360 + (60 - vdot) * 5.5;
-  final css = (easyPaceSecPerKm / 10 * 1.4).round();
-  return css.clamp(60, 180).toDouble();
+  final css = (180 - vdot * 1.5).round();
+  return css.clamp(80, 180).toDouble();
 }
 
 double estimateBikeFtpFromVdot(double vdot) {
   if (vdot <= 0) return 100;
-  final baseFTP = 1.8 + vdot * 0.62;
-  return baseFTP.clamp(100, 450).roundToDouble();
+  final baseFTP = (vdot - 10) * 6 + 120;
+  return baseFTP.clamp(100, 400).roundToDouble();
 }
 
 double bikePowerToSpeed(double watts) {
-  return math.pow(watts / 38, 1 / 3).toDouble();
+  return math.pow(watts / 0.38, 1 / 3).toDouble();
 }
 
 const Map<String, int> triSwimDist = {
@@ -107,7 +106,7 @@ TriathlonSplits computeTriathlonSplits(
   double bikeAvgPower;
   if (bikeSpeedOverrideMs != null && bikeSpeedOverrideMs > 0) {
     bikeSeconds = (bikeDistM / bikeSpeedOverrideMs).round();
-    bikeAvgPower = math.pow(bikeSpeedOverrideMs, 3).toDouble() * 38;
+    bikeAvgPower = math.pow(bikeSpeedOverrideMs, 3).toDouble() * 0.38;
   } else {
     final ftp = estimateBikeFtpFromVdot(vdot);
     bikeAvgPower = ftp * 0.75;

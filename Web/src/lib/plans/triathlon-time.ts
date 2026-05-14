@@ -72,7 +72,7 @@ function predictTimeForDistance(vdot: number, distanceM: number): number {
 }
 
 function bikePowerToSpeed(watts: number): number {
-    return Math.pow(watts / 38, 1 / 3);
+    return Math.pow(watts / 0.38, 1 / 3);
 }
 
 function computeTriathlonSplits(vdot: number, swimDistM: number, bikeDistM: number, runDistM: number, transitions: TransitionTimes): TriathlonTimeResult {

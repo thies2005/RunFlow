@@ -1,16 +1,16 @@
 -- DropIndex
-DROP INDEX "NutritionLog_userId_foodItemId_idx";
+DROP INDEX IF EXISTS "NutritionLog_userId_foodItemId_idx";
 
 -- DropIndex
-DROP INDEX "FastingSession_userId_startTime_idx";
+DROP INDEX IF EXISTS "FastingSession_userId_startTime_idx";
 
 -- DropIndex
-DROP INDEX "HealthInsight_userId_date_idx";
+DROP INDEX IF EXISTS "HealthInsight_userId_date_idx";
 
 -- AlterTable
-ALTER TABLE "GlobalAiSettings" ADD COLUMN     "planBuilderModel" TEXT NOT NULL DEFAULT 'gpt-4o',
-ADD COLUMN     "planBuilderProviderId" TEXT,
-ADD COLUMN     "planMaxTokensPerAnalysis" INTEGER NOT NULL DEFAULT 8000,
+ALTER TABLE "GlobalAiSettings" ADD COLUMN IF NOT EXISTS     "planBuilderModel" TEXT NOT NULL DEFAULT 'gpt-4o',
+ADD COLUMN IF NOT EXISTS     "planBuilderProviderId" TEXT,
+ADD COLUMN IF NOT EXISTS     "planMaxTokensPerAnalysis" INTEGER NOT NULL DEFAULT 8000,
 ALTER COLUMN "tier1MealSuggestLimit" SET DEFAULT 3,
 ALTER COLUMN "tier2MealSuggestLimit" SET DEFAULT 10,
 ALTER COLUMN "tier3MealSuggestLimit" SET DEFAULT 25,
@@ -19,30 +19,30 @@ ALTER COLUMN "tier2ActivityFeedbackLimit" SET DEFAULT 15,
 ALTER COLUMN "tier3ActivityFeedbackLimit" SET DEFAULT 50;
 
 -- AlterTable
-ALTER TABLE "Goal" ADD COLUMN     "backyardLoopDistM" DOUBLE PRECISION,
-ADD COLUMN     "backyardLoopTimeS" INTEGER,
-ADD COLUMN     "creationMode" "PlanCreationMode" NOT NULL DEFAULT 'STANDARD_BUILDER',
-ADD COLUMN     "customBikeDistM" DOUBLE PRECISION,
-ADD COLUMN     "customDistanceM" DOUBLE PRECISION,
-ADD COLUMN     "customRunDistM" DOUBLE PRECISION,
-ADD COLUMN     "customSwimDistM" DOUBLE PRECISION,
-ADD COLUMN     "guidanceLevel" TEXT NOT NULL DEFAULT 'none',
-ADD COLUMN     "parentGoalId" TEXT,
-ADD COLUMN     "planSource" TEXT NOT NULL DEFAULT 'standard',
-ADD COLUMN     "priority" "GoalPriority" NOT NULL DEFAULT 'PRIMARY',
-ADD COLUMN     "sport" "PlanSport" NOT NULL DEFAULT 'RUN',
-ADD COLUMN     "targetLaps" INTEGER,
-ADD COLUMN     "trainingFocus" TEXT,
+ALTER TABLE "Goal" ADD COLUMN IF NOT EXISTS     "backyardLoopDistM" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS     "backyardLoopTimeS" INTEGER,
+ADD COLUMN IF NOT EXISTS     "creationMode" "PlanCreationMode" NOT NULL DEFAULT 'STANDARD_BUILDER',
+ADD COLUMN IF NOT EXISTS     "customBikeDistM" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS     "customDistanceM" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS     "customRunDistM" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS     "customSwimDistM" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS     "guidanceLevel" TEXT NOT NULL DEFAULT 'none',
+ADD COLUMN IF NOT EXISTS     "parentGoalId" TEXT,
+ADD COLUMN IF NOT EXISTS     "planSource" TEXT NOT NULL DEFAULT 'standard',
+ADD COLUMN IF NOT EXISTS     "priority" "GoalPriority" NOT NULL DEFAULT 'PRIMARY',
+ADD COLUMN IF NOT EXISTS     "sport" "PlanSport" NOT NULL DEFAULT 'RUN',
+ADD COLUMN IF NOT EXISTS     "targetLaps" INTEGER,
+ADD COLUMN IF NOT EXISTS     "trainingFocus" TEXT,
 ALTER COLUMN "raceType" DROP NOT NULL,
 ALTER COLUMN "raceDate" DROP NOT NULL;
 
 -- AlterTable
-ALTER TABLE "Workout" ADD COLUMN     "color" TEXT,
-ADD COLUMN     "customName" TEXT,
-ADD COLUMN     "groupId" TEXT,
-ADD COLUMN     "intervalProgressionId" TEXT,
-ADD COLUMN     "structuredSteps" JSONB,
-ADD COLUMN     "subGoalId" TEXT;
+ALTER TABLE "Workout" ADD COLUMN IF NOT EXISTS     "color" TEXT,
+ADD COLUMN IF NOT EXISTS     "customName" TEXT,
+ADD COLUMN IF NOT EXISTS     "groupId" TEXT,
+ADD COLUMN IF NOT EXISTS     "intervalProgressionId" TEXT,
+ADD COLUMN IF NOT EXISTS     "structuredSteps" JSONB,
+ADD COLUMN IF NOT EXISTS     "subGoalId" TEXT;
 
 -- AlterTable
 ALTER TABLE "UserNutritionTarget" ALTER COLUMN "aiInsightProvider" DROP NOT NULL;
@@ -58,7 +58,7 @@ ALTER TABLE "HealthInsight" ALTER COLUMN "date" SET DATA TYPE TIMESTAMP(3);
 ALTER TABLE "PerformanceSummary" ADD CONSTRAINT "PerformanceSummary_pkey" PRIMARY KEY ("id");
 
 -- CreateTable
-CREATE TABLE "DeviceToken" (
+CREATE TABLE IF NOT EXISTS "DeviceToken" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "token" TEXT NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE "DeviceToken" (
 );
 
 -- CreateTable
-CREATE TABLE "daily_readiness_records" (
+CREATE TABLE IF NOT EXISTS "daily_readiness_records" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "_date" TIMESTAMP(3) NOT NULL,
@@ -95,7 +95,7 @@ CREATE TABLE "daily_readiness_records" (
 );
 
 -- CreateTable
-CREATE TABLE "readiness_baselines" (
+CREATE TABLE IF NOT EXISTS "readiness_baselines" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "rhrMedian30Day" DOUBLE PRECISION,
@@ -108,7 +108,7 @@ CREATE TABLE "readiness_baselines" (
 );
 
 -- CreateTable
-CREATE TABLE "adapted_workouts" (
+CREATE TABLE IF NOT EXISTS "adapted_workouts" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "originalWorkoutId" TEXT NOT NULL,
@@ -133,7 +133,7 @@ CREATE TABLE "adapted_workouts" (
 );
 
 -- CreateTable
-CREATE TABLE "weekly_reconciliation_records" (
+CREATE TABLE IF NOT EXISTS "weekly_reconciliation_records" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "weekStartDate" TIMESTAMP(3) NOT NULL,
@@ -153,7 +153,7 @@ CREATE TABLE "weekly_reconciliation_records" (
 );
 
 -- CreateTable
-CREATE TABLE "PlanSnapshot" (
+CREATE TABLE IF NOT EXISTS "PlanSnapshot" (
     "id" TEXT NOT NULL,
     "goalId" TEXT NOT NULL,
     "snapshot" JSONB NOT NULL,
@@ -165,7 +165,7 @@ CREATE TABLE "PlanSnapshot" (
 );
 
 -- CreateTable
-CREATE TABLE "WeekTemplate" (
+CREATE TABLE IF NOT EXISTS "WeekTemplate" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -179,7 +179,7 @@ CREATE TABLE "WeekTemplate" (
 );
 
 -- CreateTable
-CREATE TABLE "IntervalProgression" (
+CREATE TABLE IF NOT EXISTS "IntervalProgression" (
     "id" TEXT NOT NULL,
     "goalId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -194,7 +194,7 @@ CREATE TABLE "IntervalProgression" (
 );
 
 -- CreateTable
-CREATE TABLE "AiPlanAnalysis" (
+CREATE TABLE IF NOT EXISTS "AiPlanAnalysis" (
     "id" TEXT NOT NULL,
     "goalId" TEXT NOT NULL,
     "overallScore" DOUBLE PRECISION,
@@ -212,7 +212,7 @@ CREATE TABLE "AiPlanAnalysis" (
 );
 
 -- CreateTable
-CREATE TABLE "PlanPaceProfile" (
+CREATE TABLE IF NOT EXISTS "PlanPaceProfile" (
     "id" TEXT NOT NULL,
     "goalId" TEXT NOT NULL,
     "baseVdot" DOUBLE PRECISION NOT NULL,
@@ -224,7 +224,7 @@ CREATE TABLE "PlanPaceProfile" (
 );
 
 -- CreateTable
-CREATE TABLE "GuidedPlanSession" (
+CREATE TABLE IF NOT EXISTS "GuidedPlanSession" (
     "id" TEXT NOT NULL,
     "goalId" TEXT,
     "userId" TEXT NOT NULL,
@@ -239,112 +239,128 @@ CREATE TABLE "GuidedPlanSession" (
 );
 
 -- CreateIndex
-CREATE INDEX "DeviceToken_userId_idx" ON "DeviceToken"("userId");
+CREATE INDEX IF NOT EXISTS "DeviceToken_userId_idx" ON "DeviceToken"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "DeviceToken_userId_token_key" ON "DeviceToken"("userId", "token");
+CREATE UNIQUE INDEX IF NOT EXISTS "DeviceToken_userId_token_key" ON "DeviceToken"("userId", "token");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "daily_readiness_records_userId__date_key" ON "daily_readiness_records"("userId", "_date");
+CREATE UNIQUE INDEX IF NOT EXISTS "daily_readiness_records_userId__date_key" ON "daily_readiness_records"("userId", "_date");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "readiness_baselines_userId_key" ON "readiness_baselines"("userId");
+CREATE UNIQUE INDEX IF NOT EXISTS "readiness_baselines_userId_key" ON "readiness_baselines"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "adapted_workouts_userId_originalWorkoutId_key" ON "adapted_workouts"("userId", "originalWorkoutId");
+CREATE UNIQUE INDEX IF NOT EXISTS "adapted_workouts_userId_originalWorkoutId_key" ON "adapted_workouts"("userId", "originalWorkoutId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "weekly_reconciliation_records_userId_weekStartDate_key" ON "weekly_reconciliation_records"("userId", "weekStartDate");
+CREATE UNIQUE INDEX IF NOT EXISTS "weekly_reconciliation_records_userId_weekStartDate_key" ON "weekly_reconciliation_records"("userId", "weekStartDate");
 
 -- CreateIndex
-CREATE INDEX "PlanSnapshot_goalId_createdAt_idx" ON "PlanSnapshot"("goalId", "createdAt");
+CREATE INDEX IF NOT EXISTS "PlanSnapshot_goalId_createdAt_idx" ON "PlanSnapshot"("goalId", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "WeekTemplate_userId_idx" ON "WeekTemplate"("userId");
+CREATE INDEX IF NOT EXISTS "WeekTemplate_userId_idx" ON "WeekTemplate"("userId");
 
 -- CreateIndex
-CREATE INDEX "IntervalProgression_goalId_idx" ON "IntervalProgression"("goalId");
+CREATE INDEX IF NOT EXISTS "IntervalProgression_goalId_idx" ON "IntervalProgression"("goalId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AiPlanAnalysis_goalId_key" ON "AiPlanAnalysis"("goalId");
+CREATE UNIQUE INDEX IF NOT EXISTS "AiPlanAnalysis_goalId_key" ON "AiPlanAnalysis"("goalId");
 
 -- CreateIndex
-CREATE INDEX "AiPlanAnalysis_goalId_idx" ON "AiPlanAnalysis"("goalId");
+CREATE INDEX IF NOT EXISTS "AiPlanAnalysis_goalId_idx" ON "AiPlanAnalysis"("goalId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PlanPaceProfile_goalId_key" ON "PlanPaceProfile"("goalId");
+CREATE UNIQUE INDEX IF NOT EXISTS "PlanPaceProfile_goalId_key" ON "PlanPaceProfile"("goalId");
 
 -- CreateIndex
-CREATE INDEX "PlanPaceProfile_goalId_idx" ON "PlanPaceProfile"("goalId");
+CREATE INDEX IF NOT EXISTS "PlanPaceProfile_goalId_idx" ON "PlanPaceProfile"("goalId");
 
 -- CreateIndex
-CREATE INDEX "GuidedPlanSession_userId_idx" ON "GuidedPlanSession"("userId");
+CREATE INDEX IF NOT EXISTS "GuidedPlanSession_userId_idx" ON "GuidedPlanSession"("userId");
 
 -- CreateIndex
-CREATE INDEX "GuidedPlanSession_goalId_idx" ON "GuidedPlanSession"("goalId");
+CREATE INDEX IF NOT EXISTS "GuidedPlanSession_goalId_idx" ON "GuidedPlanSession"("goalId");
 
 -- CreateIndex
-CREATE INDEX "Account_userId_idx" ON "Account"("userId");
+CREATE INDEX IF NOT EXISTS "Account_userId_idx" ON "Account"("userId");
 
 -- CreateIndex
-CREATE INDEX "Session_userId_idx" ON "Session"("userId");
+CREATE INDEX IF NOT EXISTS "Session_userId_idx" ON "Session"("userId");
 
 -- CreateIndex
-CREATE INDEX "BodyMeasurement_userId_idx" ON "BodyMeasurement"("userId");
+CREATE INDEX IF NOT EXISTS "BodyMeasurement_userId_idx" ON "BodyMeasurement"("userId");
 
 -- CreateIndex
-CREATE INDEX "FastingSession_userId_endTime_idx" ON "FastingSession"("userId", "endTime");
+CREATE INDEX IF NOT EXISTS "FastingSession_userId_endTime_idx" ON "FastingSession"("userId", "endTime");
 
 -- CreateIndex
-CREATE INDEX "HealthInsight_userId_createdAt_idx" ON "HealthInsight"("userId", "createdAt");
+CREATE INDEX IF NOT EXISTS "HealthInsight_userId_createdAt_idx" ON "HealthInsight"("userId", "createdAt");
 
--- AddForeignKey
-ALTER TABLE "GlobalAiSettings" ADD CONSTRAINT "GlobalAiSettings_planBuilderProviderId_fkey" FOREIGN KEY ("planBuilderProviderId") REFERENCES "AiProvider"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "GlobalAiSettings" ADD CONSTRAINT "GlobalAiSettings_planBuilderProviderId_fkey" FOREIGN KEY ("planBuilderProviderId") REFERENCES "AiProvider"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "Goal" ADD CONSTRAINT "Goal_parentGoalId_fkey" FOREIGN KEY ("parentGoalId") REFERENCES "Goal"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "Goal" ADD CONSTRAINT "Goal_parentGoalId_fkey" FOREIGN KEY ("parentGoalId") REFERENCES "Goal"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "Workout" ADD CONSTRAINT "Workout_intervalProgressionId_fkey" FOREIGN KEY ("intervalProgressionId") REFERENCES "IntervalProgression"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "Workout" ADD CONSTRAINT "Workout_intervalProgressionId_fkey" FOREIGN KEY ("intervalProgressionId") REFERENCES "IntervalProgression"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "Workout" ADD CONSTRAINT "Workout_subGoalId_fkey" FOREIGN KEY ("subGoalId") REFERENCES "Goal"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "Workout" ADD CONSTRAINT "Workout_subGoalId_fkey" FOREIGN KEY ("subGoalId") REFERENCES "Goal"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "DeviceToken" ADD CONSTRAINT "DeviceToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "DeviceToken" ADD CONSTRAINT "DeviceToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "daily_readiness_records" ADD CONSTRAINT "daily_readiness_records_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "daily_readiness_records" ADD CONSTRAINT "daily_readiness_records_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "readiness_baselines" ADD CONSTRAINT "readiness_baselines_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "readiness_baselines" ADD CONSTRAINT "readiness_baselines_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "adapted_workouts" ADD CONSTRAINT "adapted_workouts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "adapted_workouts" ADD CONSTRAINT "adapted_workouts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "weekly_reconciliation_records" ADD CONSTRAINT "weekly_reconciliation_records_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "weekly_reconciliation_records" ADD CONSTRAINT "weekly_reconciliation_records_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "PlanSnapshot" ADD CONSTRAINT "PlanSnapshot_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "PlanSnapshot" ADD CONSTRAINT "PlanSnapshot_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "WeekTemplate" ADD CONSTRAINT "WeekTemplate_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "WeekTemplate" ADD CONSTRAINT "WeekTemplate_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "IntervalProgression" ADD CONSTRAINT "IntervalProgression_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "IntervalProgression" ADD CONSTRAINT "IntervalProgression_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "AiPlanAnalysis" ADD CONSTRAINT "AiPlanAnalysis_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "AiPlanAnalysis" ADD CONSTRAINT "AiPlanAnalysis_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "PlanPaceProfile" ADD CONSTRAINT "PlanPaceProfile_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "PlanPaceProfile" ADD CONSTRAINT "PlanPaceProfile_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "GuidedPlanSession" ADD CONSTRAINT "GuidedPlanSession_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "GuidedPlanSession" ADD CONSTRAINT "GuidedPlanSession_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- AddForeignKey
-ALTER TABLE "GuidedPlanSession" ADD CONSTRAINT "GuidedPlanSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+    ALTER TABLE "GuidedPlanSession" ADD CONSTRAINT "GuidedPlanSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- RenameIndex
 ALTER INDEX "PerformanceSummary_route_method_timeRange_timestamp_key" RENAME TO "PerformanceSummary_routePath_method_timeRange_timestamp_key";

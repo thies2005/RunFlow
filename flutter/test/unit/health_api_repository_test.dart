@@ -78,7 +78,7 @@ void main() {
 
     group('logFoodEntry', () {
       test('sends POST with correct food entry format', () async {
-        final food = FoodItem(
+        const food = FoodItem(
           id: 0,
           name: 'Chicken Breast',
           calories: 200,

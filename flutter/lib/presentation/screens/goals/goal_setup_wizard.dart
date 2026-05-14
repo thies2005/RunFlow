@@ -569,6 +569,36 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         ? displayTime.clamp(sliderMin, sliderMax).toInt()
         : sliderMin;
 
+    final t = range > 0
+        ? (clampedDisplay - sliderMin) / range
+        : 0.0;
+
+    TriathlonSplits? interpSplits;
+    if (triProjection != null) {
+      final proj = triProjection;
+      final opt = proj.optimal;
+      final cons = proj.conservative;
+      interpSplits = TriathlonSplits(
+        swimSeconds:
+            (opt.swimSeconds + t * (cons.swimSeconds - opt.swimSeconds))
+                .round(),
+        bikeSeconds:
+            (opt.bikeSeconds + t * (cons.bikeSeconds - opt.bikeSeconds))
+                .round(),
+        runSeconds:
+            (opt.runSeconds + t * (cons.runSeconds - opt.runSeconds)).round(),
+        t1Seconds: opt.t1Seconds,
+        t2Seconds: opt.t2Seconds,
+        totalSeconds: clampedDisplay,
+        swimPacePer100m: opt.swimPacePer100m +
+            t * (cons.swimPacePer100m - opt.swimPacePer100m),
+        bikeAvgPower: opt.bikeAvgPower +
+            t * (cons.bikeAvgPower - opt.bikeAvgPower),
+        runPacePerKm:
+            opt.runPacePerKm + t * (cons.runPacePerKm - opt.runPacePerKm),
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -628,26 +658,26 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    if (triProjection != null) ...[
+                    if (triProjection != null && interpSplits != null) ...[
                       _buildSplitRow(theme, Icons.pool, 'Swim',
-                          triProjection.projected.swimSeconds),
+                          interpSplits.swimSeconds),
                       const Divider(height: 16),
                       _buildSplitRow(
                           theme, Icons.swap_horiz, 'T1',
-                          triProjection.projected.t1Seconds),
+                          interpSplits.t1Seconds),
                       const Divider(height: 16),
-                      _buildSplitRow(theme, Icons.directions_bike, 'Bike',
-                          triProjection.projected.bikeSeconds),
+                      _buildBikeSplitRow(
+                          theme, interpSplits),
                       const Divider(height: 16),
                       _buildSplitRow(
                           theme, Icons.swap_horiz, 'T2',
-                          triProjection.projected.t2Seconds),
+                          interpSplits.t2Seconds),
                       const Divider(height: 16),
                       _buildSplitRow(theme, Icons.directions_run, 'Run',
-                          triProjection.projected.runSeconds),
+                          interpSplits.runSeconds),
                       const Divider(height: 16),
                       _buildSplitRow(theme, Icons.timer, 'Total',
-                          triProjection.projected.totalSeconds),
+                          interpSplits.totalSeconds),
                     ] else ...[
                       _buildDistanceRow(theme, Icons.pool, 'Swim',
                           '${(swimDist / 1000).toStringAsFixed(1)} km'),
@@ -939,6 +969,41 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         ),
         Text(
           formatDurationClock(seconds),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBikeSplitRow(ThemeData theme, TriathlonSplits splits) {
+    final watts = splits.bikeAvgPower.round();
+    final speedMs = bikePowerToSpeed(splits.bikeAvgPower);
+    final speedKmh = speedMs * 3.6;
+    return Row(
+      children: [
+        const Icon(Icons.directions_bike, size: 20, color: AppColors.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Bike',
+                style: theme.textTheme.bodyMedium,
+              ),
+              Text(
+                '${watts}W · ${speedKmh.toStringAsFixed(1)} km/h',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          formatDurationClock(splits.bikeSeconds),
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),

@@ -65,6 +65,8 @@ class CreateGoalRequest {
     this.calibrationTime,
     this.calibrationDistance,
     this.calibrationFactor,
+    this.backyardLoopDistM,
+    this.targetLaps,
   });
 
   final String name;
@@ -89,6 +91,8 @@ class CreateGoalRequest {
   final int? calibrationTime;
   final String? calibrationDistance;
   final double? calibrationFactor;
+  final double? backyardLoopDistM;
+  final int? targetLaps;
 
   CreateGoalRequest copyWith({
     String? name,
@@ -113,6 +117,8 @@ class CreateGoalRequest {
     int? calibrationTime,
     String? calibrationDistance,
     double? calibrationFactor,
+    double? backyardLoopDistM,
+    int? targetLaps,
   }) {
     return CreateGoalRequest(
       name: name ?? this.name,
@@ -137,6 +143,8 @@ class CreateGoalRequest {
       calibrationTime: calibrationTime ?? this.calibrationTime,
       calibrationDistance: calibrationDistance ?? this.calibrationDistance,
       calibrationFactor: calibrationFactor ?? this.calibrationFactor,
+      backyardLoopDistM: backyardLoopDistM ?? this.backyardLoopDistM,
+      targetLaps: targetLaps ?? this.targetLaps,
     );
   }
 
@@ -166,7 +174,9 @@ class CreateGoalRequest {
           listEquals(restDays, other.restDays) &&
           calibrationTime == other.calibrationTime &&
           calibrationDistance == other.calibrationDistance &&
-          calibrationFactor == other.calibrationFactor;
+          calibrationFactor == other.calibrationFactor &&
+          backyardLoopDistM == other.backyardLoopDistM &&
+          targetLaps == other.targetLaps;
 
   @override
   int get hashCode => Object.hashAll([
@@ -192,6 +202,8 @@ class CreateGoalRequest {
     calibrationTime,
     calibrationDistance,
     calibrationFactor,
+    backyardLoopDistM,
+    targetLaps,
   ]);
 }
 

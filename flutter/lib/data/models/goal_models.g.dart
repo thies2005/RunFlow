@@ -58,6 +58,8 @@ _CreateGoalRequest _$CreateGoalRequestFromJson(Map<String, dynamic> json) =>
       calibrationTime: (json['calibrationTime'] as num?)?.toInt(),
       calibrationDistance: json['calibrationDistance'] as String?,
       calibrationFactor: (json['calibrationFactor'] as num?)?.toDouble(),
+      backyardLoopDistM: (json['backyardLoopDistM'] as num?)?.toDouble(),
+      targetLaps: (json['targetLaps'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
@@ -84,6 +86,8 @@ Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
       'calibrationTime': instance.calibrationTime,
       'calibrationDistance': instance.calibrationDistance,
       'calibrationFactor': instance.calibrationFactor,
+      'backyardLoopDistM': instance.backyardLoopDistM,
+      'targetLaps': instance.targetLaps,
     };
 
 const _$RaceTypeEnumMap = {
@@ -91,6 +95,19 @@ const _$RaceTypeEnumMap = {
   RaceType.tenK: 'TEN_K',
   RaceType.halfMarathon: 'HALF_MARATHON',
   RaceType.marathon: 'MARATHON',
+  RaceType.fiftyK: 'FIFTY_K',
+  RaceType.fiftyMile: 'FIFTY_MILE',
+  RaceType.hundredK: 'HUNDRED_K',
+  RaceType.hundredMile: 'HUNDRED_MILE',
+  RaceType.twelveHour: 'TWELVE_HOUR',
+  RaceType.twentyFourHour: 'TWENTY_FOUR_HOUR',
+  RaceType.backyardUltra: 'BACKYARD_ULTRA',
+  RaceType.customDistance: 'CUSTOM_DISTANCE',
+  RaceType.sprintTri: 'SPRINT_TRI',
+  RaceType.olympicTri: 'OLYMPIC_TRI',
+  RaceType.halfIronman: 'HALF_IRONMAN',
+  RaceType.fullIronman: 'FULL_IRONMAN',
+  RaceType.customTri: 'CUSTOM_TRI',
 };
 
 _UpdateGoalRequest _$UpdateGoalRequestFromJson(Map<String, dynamic> json) =>

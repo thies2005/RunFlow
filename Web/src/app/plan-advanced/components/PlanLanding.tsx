@@ -15,10 +15,13 @@ import {
     Flag,
     Clock,
     X,
+    Target,
 } from 'lucide-react';
 import CalibrationSection from '@/components/setup/CalibrationSection';
 import GoalTimeRenderer from '@/components/setup/GoalTimeRenderer';
+import TriathlonGoalTimeRenderer from '@/components/setup/TriathlonGoalTimeRenderer';
 import PlanVolumeSection from '@/components/setup/PlanVolumeSection';
+import { estimateBackyardUltraTime } from '@/lib/plans/backyard-time';
 
 type Sport = 'RUN' | 'TRIATHLON' | 'NO_RACE';
 
@@ -51,13 +54,24 @@ const TRIATHLON_DISTANCES = [
     { value: 'CUSTOM_TRI', label: 'Custom' },
 ];
 
-const GOAL_TIME_RACE_TYPES = new Set(['FIVE_K', 'TEN_K', 'HALF_MARATHON', 'MARATHON']);
+const GOAL_TIME_RACE_TYPES = new Set([
+    'FIVE_K', 'TEN_K', 'HALF_MARATHON', 'MARATHON',
+    'FIFTY_K', 'FIFTY_MILE', 'HUNDRED_K', 'HUNDRED_MILE',
+]);
+
+const ULTRA_DISTANCE_MAP: Record<string, number> = {
+    'FIFTY_K': 50000,
+    'FIFTY_MILE': 80467,
+    'HUNDRED_K': 100000,
+    'HUNDRED_MILE': 160934,
+};
 
 interface SubGoalForm {
     name: string;
     sport: Sport;
     raceType: string;
     raceDate: string;
+    targetTime?: number;
 }
 
 interface RaceActivity {
@@ -111,10 +125,14 @@ export function PlanLanding() {
     const [restDays, setRestDays] = useState<number[]>([1, 5]);
 
     const [goalTimeSeconds, setGoalTimeSeconds] = useState<number | null>(null);
+    const [triGoalTimeSeconds, setTriGoalTimeSeconds] = useState<number | null>(null);
     const [isEditingGoalTime, setIsEditingGoalTime] = useState(false);
     const [goalTimeHours, setGoalTimeHours] = useState('');
     const [goalTimeMinutes, setGoalTimeMinutes] = useState('');
     const [goalTimeSecs, setGoalTimeSecs] = useState('');
+
+    const [backyardLoopDistM, setBackyardLoopDistM] = useState<number | null>(null);
+    const [targetLaps, setTargetLaps] = useState(2);
 
     const { data: activitiesData } = useQuery({
         queryKey: ['race-activities'],
@@ -146,6 +164,10 @@ export function PlanLanding() {
         : raceDate && planStartDate
             ? Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (7 * 24 * 60 * 60 * 1000)))
             : 12;
+
+    const backyardProjection = backyardLoopDistM && backyardLoopDistM > 0 && sport !== 'NO_RACE' && raceType === 'BACKYARD_ULTRA' && effectiveVO2max > 0
+        ? estimateBackyardUltraTime({ vdot: effectiveVO2max * calibrationFactor, loopDistM: backyardLoopDistM, targetLaps })
+        : null;
 
     const createMutation = useMutation({
         mutationFn: async (body: Record<string, unknown>) => {
@@ -199,7 +221,11 @@ export function PlanLanding() {
             workoutDay: qualityDay,
             swimDay,
             restDays,
-            ...(goalTimeSeconds && { targetTime: goalTimeSeconds }),
+            ...((goalTimeSeconds || triGoalTimeSeconds) && { targetTime: goalTimeSeconds || triGoalTimeSeconds }),
+            ...(raceType === 'BACKYARD_ULTRA' && backyardLoopDistM && backyardLoopDistM > 0 && {
+                backyardLoopDistM,
+                targetLaps,
+            }),
             ...(calibrationTimeSeconds > 0 && {
                 calibrationTime: Math.round(calibrationTimeSeconds),
                 calibrationDistance,
@@ -215,6 +241,7 @@ export function PlanLanding() {
                     sport: sg.sport,
                     raceType: sg.raceType || null,
                     raceDate: sg.raceDate || null,
+                    ...(sg.targetTime && { targetTime: sg.targetTime }),
                 }));
         }
         createMutation.mutate(body);
@@ -371,7 +398,15 @@ export function PlanLanding() {
                     </div>
                 )}
 
-                {sport !== 'NO_RACE' && GOAL_TIME_RACE_TYPES.has(raceType) && (
+                {sport === 'TRIATHLON' && effectiveVO2max > 0 && (
+                    <TriathlonGoalTimeRenderer
+                        vdot={effectiveVO2max * calibrationFactor}
+                        raceType={raceType}
+                        goalTimeSeconds={triGoalTimeSeconds}
+                        onGoalTimeChange={setTriGoalTimeSeconds}
+                    />
+                )}
+                {sport === 'RUN' && GOAL_TIME_RACE_TYPES.has(raceType) && (
                     <GoalTimeRenderer
                         mode="onboarding"
                         effectiveVO2max={effectiveVO2max}
@@ -394,7 +429,58 @@ export function PlanLanding() {
                         setGoalTimeSecs={setGoalTimeSecs}
                         isEditingGoalTime={isEditingGoalTime}
                         setIsEditingGoalTime={setIsEditingGoalTime}
+                        distanceOverrideM={ULTRA_DISTANCE_MAP[raceType]}
                     />
+                )}
+
+                {sport !== 'NO_RACE' && raceType === 'BACKYARD_ULTRA' && (
+                    <div className="border-t border-glass-border pt-6">
+                        <div className="flex items-center gap-2 text-orange-400 mb-3">
+                            <Target className="w-5 h-5" />
+                            <h3 className="text-sm font-semibold uppercase tracking-wide">Backyard Ultra Setup</h3>
+                        </div>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-xs font-medium text-zinc-400 mb-1">Loop Distance (meters)</label>
+                                <input
+                                    type="number"
+                                    value={backyardLoopDistM ?? ''}
+                                    onChange={(e) => setBackyardLoopDistM(e.target.value ? parseFloat(e.target.value) : null)}
+                                    placeholder="e.g. 6706"
+                                    min={100}
+                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-zinc-400 mb-1">Target Laps: {targetLaps}</label>
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={100}
+                                    step={1}
+                                    value={targetLaps}
+                                    onChange={(e) => setTargetLaps(parseInt(e.target.value))}
+                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                />
+                                <div className="flex justify-between text-xs text-zinc-500 mt-1">
+                                    <span>1</span>
+                                    <span>100</span>
+                                </div>
+                            </div>
+                            <div className="text-xs text-zinc-400">
+                                Total distance: <span className="text-zinc-200 font-medium">{backyardLoopDistM ? (backyardLoopDistM * targetLaps / 1000).toFixed(1) : '0'} km</span>
+                            </div>
+                            {backyardProjection && (
+                                <div className="text-xs bg-zinc-900 border border-zinc-800 rounded-lg p-3 space-y-1">
+                                    <div className="text-zinc-400">Estimated finish time:</div>
+                                    <div className="text-green-400 font-medium">Optimal: {Math.floor(backyardProjection.optimal.totalSeconds / 3600)}h {Math.floor((backyardProjection.optimal.totalSeconds % 3600) / 60)}m</div>
+                                    <div className="text-orange-400 font-medium">Projected: {Math.floor(backyardProjection.projected.totalSeconds / 3600)}h {Math.floor((backyardProjection.projected.totalSeconds % 3600) / 60)}m</div>
+                                    <div className="text-red-400 font-medium">Conservative: {Math.floor(backyardProjection.conservative.totalSeconds / 3600)}h {Math.floor((backyardProjection.conservative.totalSeconds % 3600) / 60)}m</div>
+                                </div>
+                            )}
+                            <div className="text-[10px] text-zinc-600">Estimated based on running fitness</div>
+                        </div>
+                    </div>
                 )}
 
                 <div className="border-t border-glass-border pt-6">
@@ -453,6 +539,11 @@ export function PlanLanding() {
                                         <span className="text-xs text-zinc-200">{sg.name}</span>
                                         {sg.raceDate && (
                                             <span className="text-[10px] text-zinc-500 ml-2">{sg.raceDate}</span>
+                                        )}
+                                        {sg.targetTime && (
+                                            <span className="text-[10px] text-orange-400 ml-2">
+                                                {Math.floor(sg.targetTime / 3600)}:{String(Math.floor((sg.targetTime % 3600) / 60)).padStart(2, '0')}
+                                            </span>
                                         )}
                                     </div>
                                     <button
@@ -549,7 +640,7 @@ export function PlanLanding() {
                     <button
                         type="button"
                         onClick={handleCreate}
-                        disabled={createMutation.isPending}
+                        disabled={createMutation.isPending || (raceType === 'BACKYARD_ULTRA' && (!backyardLoopDistM || backyardLoopDistM <= 0))}
                         className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-white font-medium text-sm transition-colors disabled:opacity-50"
                     >
                         {createMutation.isPending ? (

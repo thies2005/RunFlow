@@ -100,21 +100,56 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: RaceType.values.map((type) {
-                      final selected = type == onboarding.raceType;
-                      return ChoiceChip(
-                        label: Text(raceTypeLabel(type)),
-                        selected: selected,
-                        onSelected: (_) {
-                          ref
-                              .read(onboardingProvider.notifier)
-                              .setRaceType(type);
-                        },
-                      );
-                    }).toList(),
+                  _RaceTypeGroup(
+                    title: S.of(context).raceCategoryRunning,
+                    types: const [
+                      RaceType.fiveK,
+                      RaceType.tenK,
+                      RaceType.halfMarathon,
+                      RaceType.marathon,
+                    ],
+                    selectedType: onboarding.raceType,
+                    onSelected: (type) {
+                      ref
+                          .read(onboardingProvider.notifier)
+                          .setRaceType(type);
+                    },
+                    initiallyExpanded: true,
+                  ),
+                  _RaceTypeGroup(
+                    title: S.of(context).raceCategoryUltra,
+                    types: const [
+                      RaceType.fiftyK,
+                      RaceType.fiftyMile,
+                      RaceType.hundredK,
+                      RaceType.hundredMile,
+                      RaceType.twelveHour,
+                      RaceType.twentyFourHour,
+                      RaceType.backyardUltra,
+                      RaceType.customDistance,
+                    ],
+                    selectedType: onboarding.raceType,
+                    onSelected: (type) {
+                      ref
+                          .read(onboardingProvider.notifier)
+                          .setRaceType(type);
+                    },
+                  ),
+                  _RaceTypeGroup(
+                    title: S.of(context).raceCategoryTriathlon,
+                    types: const [
+                      RaceType.sprintTri,
+                      RaceType.olympicTri,
+                      RaceType.halfIronman,
+                      RaceType.fullIronman,
+                      RaceType.customTri,
+                    ],
+                    selectedType: onboarding.raceType,
+                    onSelected: (type) {
+                      ref
+                          .read(onboardingProvider.notifier)
+                          .setRaceType(type);
+                    },
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -209,5 +244,51 @@ class _RaceGoalStepState extends ConsumerState<RaceGoalStep> {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+class _RaceTypeGroup extends StatelessWidget {
+  const _RaceTypeGroup({
+    required this.title,
+    required this.types,
+    required this.selectedType,
+    required this.onSelected,
+    this.initiallyExpanded = false,
+  });
+
+  final String title;
+  final List<RaceType> types;
+  final RaceType selectedType;
+  final ValueChanged<RaceType> onSelected;
+  final bool initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ExpansionTile(
+      title: Text(
+        title,
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      initiallyExpanded: initiallyExpanded,
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: const EdgeInsets.only(bottom: 8),
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: types.map((type) {
+            final selected = type == selectedType;
+            return ChoiceChip(
+              label: Text(raceTypeLabel(type)),
+              selected: selected,
+              onSelected: (_) => onSelected(type),
+            );
+          }).toList(),
+        ),
+      ],
+    );
   }
 }

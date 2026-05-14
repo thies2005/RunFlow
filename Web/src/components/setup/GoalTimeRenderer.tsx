@@ -1,6 +1,6 @@
 import { Target, Check } from 'lucide-react';
 import { formatTime, type RaceDistance } from '@/lib/metrics/vdot';
-import { calculateProjectedGoalTime, type PlanSettings } from '@/lib/metrics/goalProjection';
+import { calculateProjectedGoalTime, calculateProjectedGoalTimeForDistance, type PlanSettings } from '@/lib/metrics/goalProjection';
 
 interface GoalTimeRendererProps {
     mode: 'onboarding' | 'settings';
@@ -24,6 +24,7 @@ interface GoalTimeRendererProps {
     setGoalTimeSecs: (_val: string) => void;
     isEditingGoalTime: boolean;
     setIsEditingGoalTime: (_val: boolean) => void;
+    distanceOverrideM?: number;
 }
 
 export default function GoalTimeRenderer({
@@ -47,7 +48,8 @@ export default function GoalTimeRenderer({
     goalTimeSecs,
     setGoalTimeSecs,
     isEditingGoalTime,
-    setIsEditingGoalTime
+    setIsEditingGoalTime,
+    distanceOverrideM
 }: GoalTimeRendererProps) {
     if (mode !== 'onboarding') return null;
 
@@ -141,14 +143,36 @@ export default function GoalTimeRenderer({
         buildWeeks: buildWeeks,
     };
 
-    const projection = calculateProjectedGoalTime(
-        calibratedVO2max,
-        planSettings,
-        shapePercent
-    );
+    const projectionBase = distanceOverrideM && distanceOverrideM > 0
+        ? calculateProjectedGoalTimeForDistance(
+            calibratedVO2max,
+            { durationWeeks: computedPlanWeeks, runsPerWeek, weeklyMileageGoal: weeklyMileage },
+            distanceOverrideM,
+            shapePercent,
+        )
+        : calculateProjectedGoalTime(
+            calibratedVO2max,
+            planSettings,
+            shapePercent
+        );
+
+    const projection = {
+        optimalTime: projectionBase.optimalTime,
+        projectedTime: projectionBase.projectedTime,
+        conservativeTime: projectionBase.conservativeTime,
+        projectedVdot: 'projectedVdot' in projectionBase ? (projectionBase as Record<string, unknown>).projectedVdot as number : calibratedVO2max,
+        improvementPercent: 'improvementPercent' in projectionBase ? (projectionBase as Record<string, unknown>).improvementPercent as number : 0,
+        projectedShape: 'projectedShape' in projectionBase ? (projectionBase as Record<string, unknown>).projectedShape as number : shapePercent,
+        shapeImprovementPercent: 'shapeImprovementPercent' in projectionBase ? (projectionBase as Record<string, unknown>).shapeImprovementPercent as number : 0,
+    };
 
     const distanceName = mappedDistance === 'HALF' ? 'Half Marathon' :
-        mappedDistance === 'MARATHON' ? 'Marathon' : mappedDistance;
+        mappedDistance === 'MARATHON' ? 'Marathon' :
+        raceType === 'FIFTY_K' ? '50K' :
+        raceType === 'FIFTY_MILE' ? '50 Mile' :
+        raceType === 'HUNDRED_K' ? '100K' :
+        raceType === 'HUNDRED_MILE' ? '100 Mile' :
+        mappedDistance;
 
     const displayGoalTime = goalTimeSeconds ?? projection.projectedTime;
 

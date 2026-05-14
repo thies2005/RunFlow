@@ -7,6 +7,7 @@ import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/goal_projection.dart';
+import 'package:runflow_flutter/core/utils/triathlon_estimator.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
@@ -44,6 +45,9 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   bool _isSubmitting = false;
   bool _isManualMode = false;
   int? _sliderGoalTimeSeconds;
+  double _backyardLoopDistM = 0;
+  int _targetLaps = 2;
+  final _backyardLoopDistController = TextEditingController();
 
   final _nameFormKey = GlobalKey<FormState>();
   final _hoursController = TextEditingController();
@@ -75,6 +79,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     _hoursController.dispose();
     _minutesController.dispose();
     _secondsController.dispose();
+    _backyardLoopDistController.dispose();
     super.dispose();
   }
 
@@ -142,6 +147,13 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   }
 
   int? get _targetTimeInSeconds {
+    if (_selectedRaceType.isTimedEvent) {
+      return _selectedRaceType == RaceType.twelveHour ? 43200 : 86400;
+    }
+    if (_selectedRaceType == RaceType.backyardUltra) {
+      return _computeBackyardTime();
+    }
+
     final stats = ref.read(analyticsStatsProvider).value;
     final vo2max = stats?.effectiveVO2max ?? 0;
 
@@ -152,6 +164,9 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         final seconds = int.tryParse(_secondsController.text) ?? 0;
         final total = hours * 3600 + minutes * 60 + seconds;
         return total > 0 ? total : null;
+      }
+      if (_selectedRaceType.isTriathlon) {
+        return _sliderGoalTimeSeconds ?? _computeTriathlonProjectedTime();
       }
       return _sliderGoalTimeSeconds ?? _computeProjectedTime();
     }
@@ -181,6 +196,879 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
 
     if (projection.projectedTime <= 0) return null;
     return projection.projectedTime;
+  }
+
+  int? _computeTriathlonProjectedTime() {
+    final stats = ref.read(analyticsStatsProvider).value;
+    if (stats == null || stats.effectiveVO2max <= 0) return null;
+    final key = _triRaceTypeKey(_selectedRaceType);
+    final projection = estimateTriathlonTime(
+      stats.effectiveVO2max,
+      key,
+      (double v, int d) => estimateTimeForDistance(v, d),
+    );
+    return projection?.projected.totalSeconds;
+  }
+
+  int? _computeBackyardTime() {
+    final stats = ref.read(analyticsStatsProvider).value;
+    final vdot = stats?.effectiveVO2max ?? 0;
+    if (vdot <= 0 || _backyardLoopDistM <= 0) return null;
+    final projection = estimateBackyardUltraTime(
+      vdot,
+      _backyardLoopDistM.toInt(),
+      _targetLaps,
+      (double v, int d) => estimateTimeForDistance(v, d),
+    );
+    return projection?.projected.totalSeconds;
+  }
+
+  String _triRaceTypeKey(RaceType type) {
+    switch (type) {
+      case RaceType.sprintTri:
+        return 'SPRINT_TRI';
+      case RaceType.olympicTri:
+        return 'OLYMPIC_TRI';
+      case RaceType.halfIronman:
+        return 'HALF_IRONMAN';
+      case RaceType.fullIronman:
+        return 'FULL_IRONMAN';
+      case RaceType.customTri:
+        return 'SPRINT_TRI';
+      default:
+        return 'SPRINT_TRI';
+    }
+  }
+
+  int _estimateDistanceForTime(double vdot, int timeSeconds) {
+    int lo = 1000;
+    int hi = 500000;
+    while (hi - lo > 100) {
+      final mid = (lo + hi) ~/ 2;
+      final estimated = estimateTimeForDistance(vdot, mid);
+      if (estimated <= 0) break;
+      if (estimated < timeSeconds) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    return lo;
+  }
+
+  String? _computeEstimatedTimedDistance() {
+    final stats = ref.read(analyticsStatsProvider).value;
+    final vdot = stats?.effectiveVO2max ?? 0;
+    if (vdot <= 0) return null;
+    final fixedSeconds =
+        _selectedRaceType == RaceType.twelveHour ? 43200 : 86400;
+    final progressionFactor = calculateProgressionCoefficient(
+      _planWeeks,
+      _runsPerWeek,
+      _weeklyMileageGoal,
+    );
+    final projectedVdot = vdot * progressionFactor;
+    final distM = _estimateDistanceForTime(projectedVdot, fixedSeconds);
+    return '${(distM / 1000).toStringAsFixed(1)} km';
+  }
+
+  Widget _buildTargetTimeStep() {
+    if (_selectedRaceType == RaceType.backyardUltra) {
+      return _buildBackyardUltraTimeStep();
+    }
+    if (_selectedRaceType.isTriathlon) return _buildTriathlonTimeStep();
+    if (_selectedRaceType.isTimedEvent) return _buildTimedEventStep();
+    return _buildStandardTargetTimeStep();
+  }
+
+  Widget _buildStandardTargetTimeStep() {
+    final stats = ref.watch(analyticsStatsProvider).value;
+    final effectiveVO2max = stats?.effectiveVO2max ?? 0;
+    final marathonShape = stats?.marathonShape ?? 70;
+    return _TargetTimeStep(
+      hasTargetTime: _hasTargetTime,
+      onHasTargetTimeChanged: (value) {
+        setState(() {
+          _hasTargetTime = value;
+        });
+      },
+      hoursController: _hoursController,
+      minutesController: _minutesController,
+      secondsController: _secondsController,
+      effectiveVO2max: effectiveVO2max,
+      marathonShape: marathonShape,
+      selectedRaceType: _selectedRaceType,
+      planWeeks: _planWeeks,
+      runsPerWeek: _runsPerWeek,
+      weeklyMileageGoal: _weeklyMileageGoal,
+      isManualMode: _isManualMode,
+      sliderGoalTimeSeconds: _sliderGoalTimeSeconds,
+      onManualModeChanged: (value) {
+        setState(() {
+          _isManualMode = value;
+        });
+      },
+      onSliderGoalTimeChanged: (value) {
+        setState(() {
+          _sliderGoalTimeSeconds = value;
+        });
+      },
+    );
+  }
+
+  Widget _buildBackyardUltraTimeStep() {
+    final theme = Theme.of(context);
+    final stats = ref.watch(analyticsStatsProvider).value;
+    final vdot = stats?.effectiveVO2max ?? 0;
+    final totalDistKm = _backyardLoopDistM > 0
+        ? (_backyardLoopDistM * _targetLaps) / 1000
+        : 0.0;
+
+    BackyardProjection? projection;
+    if (vdot > 0 && _backyardLoopDistM > 0) {
+      projection = estimateBackyardUltraTime(
+        vdot,
+        _backyardLoopDistM.toInt(),
+        _targetLaps,
+        (double v, int d) => estimateTimeForDistance(v, d),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            S.of(context).goalWizardTargetTimeTitle,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Configure your backyard ultra loop and lap count.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
+          TextFormField(
+            controller: _backyardLoopDistController,
+            decoration: const InputDecoration(
+              labelText: 'Loop distance (meters)',
+              hintText: 'e.g. 6706',
+            ),
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              setState(() {
+                _backyardLoopDistM = double.tryParse(value) ?? 0;
+              });
+            },
+          ),
+          const SizedBox(height: 24),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.loop, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Target laps',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$_targetLaps',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: _targetLaps.toDouble(),
+                    min: 1,
+                    max: 100,
+                    divisions: 99,
+                    label: '$_targetLaps',
+                    onChanged: (v) =>
+                        setState(() => _targetLaps = v.round()),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_backyardLoopDistM > 0) ...[
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(Icons.straighten, color: AppColors.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Total distance',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${totalDistKm.toStringAsFixed(1)} km',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (projection != null) ...[
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Center(
+                      child: Text(
+                        formatDurationClock(
+                            projection.projected.totalSeconds),
+                        style: theme.textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Estimated finish time',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Optimal: ${formatDurationClock(projection.optimal.totalSeconds)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.success,
+                          ),
+                        ),
+                        Text(
+                          'Conservative: ${formatDurationClock(projection.conservative.totalSeconds)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (vdot > 0) ...[
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'VO2max',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            vdot.toStringAsFixed(1),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTriathlonTimeStep() {
+    final theme = Theme.of(context);
+    final stats = ref.watch(analyticsStatsProvider).value;
+    final vdot = stats?.effectiveVO2max ?? 0;
+    final key = _triRaceTypeKey(_selectedRaceType);
+
+    final swimDist = triSwimDist[key] ?? 1500;
+    final bikeDist = triBikeDist[key] ?? 40000;
+    final runDist = triRunDist[key] ?? 10000;
+
+    TriathlonProjection? triProjection;
+    if (vdot > 0) {
+      triProjection = estimateTriathlonTime(
+        vdot,
+        key,
+        (double v, int d) => estimateTimeForDistance(v, d),
+      );
+    }
+
+    final sliderMin = triProjection?.optimal.totalSeconds ?? 3600;
+    final sliderMax = triProjection?.conservative.totalSeconds ?? 21600;
+    final range = sliderMax - sliderMin;
+    final adaptiveStep = range <= 7200
+        ? 30
+        : range <= 14400
+            ? 60
+            : range <= 28800
+                ? 120
+                : 300;
+    final divisions = (range ~/ adaptiveStep).clamp(1, 200);
+    final displayTime =
+        _sliderGoalTimeSeconds ?? triProjection?.projected.totalSeconds;
+    final clampedDisplay = displayTime != null
+        ? displayTime.clamp(sliderMin, sliderMax).toInt()
+        : sliderMin;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            S.of(context).goalWizardTargetTimeTitle,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Set your target finish time for the triathlon.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  formatDurationClock(clampedDisplay),
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _sliderGoalTimeSeconds != null
+                      ? 'Custom goal'
+                      : 'Projected based on fitness',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: _sliderGoalTimeSeconds != null
+                        ? AppColors.primary
+                        : AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ExpansionTile(
+            title: Text(
+              triProjection != null
+                  ? 'Estimated Splits'
+                  : 'Race Disciplines',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            initiallyExpanded: triProjection == null,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    if (triProjection != null) ...[
+                      _buildSplitRow(theme, Icons.pool, 'Swim',
+                          triProjection.projected.swimSeconds),
+                      const Divider(height: 16),
+                      _buildSplitRow(
+                          theme, Icons.swap_horiz, 'T1',
+                          triProjection.projected.t1Seconds),
+                      const Divider(height: 16),
+                      _buildSplitRow(theme, Icons.directions_bike, 'Bike',
+                          triProjection.projected.bikeSeconds),
+                      const Divider(height: 16),
+                      _buildSplitRow(
+                          theme, Icons.swap_horiz, 'T2',
+                          triProjection.projected.t2Seconds),
+                      const Divider(height: 16),
+                      _buildSplitRow(theme, Icons.directions_run, 'Run',
+                          triProjection.projected.runSeconds),
+                      const Divider(height: 16),
+                      _buildSplitRow(theme, Icons.timer, 'Total',
+                          triProjection.projected.totalSeconds),
+                    ] else ...[
+                      _buildDistanceRow(theme, Icons.pool, 'Swim',
+                          '${(swimDist / 1000).toStringAsFixed(1)} km'),
+                      const Divider(height: 16),
+                      _buildDistanceRow(theme, Icons.directions_bike, 'Bike',
+                          '${(bikeDist / 1000).toStringAsFixed(0)} km'),
+                      const Divider(height: 16),
+                      _buildDistanceRow(theme, Icons.directions_run, 'Run',
+                          '${(runDist / 1000).toStringAsFixed(1)} km'),
+                      const Divider(height: 16),
+                      Text(
+                        'Set a target time to see predicted splits',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (triProjection == null) ...[
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: Text(S.of(context).goalWizardSetTargetTime),
+              value: _hasTargetTime,
+              onChanged: (v) => setState(() => _hasTargetTime = v),
+              contentPadding: EdgeInsets.zero,
+            ),
+            if (_hasTargetTime) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _hoursController,
+                      decoration: InputDecoration(
+                        labelText: S.of(context).goalWizardHours,
+                        hintText: '0',
+                      ),
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Text(':',
+                        style: theme.textTheme.headlineMedium),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _minutesController,
+                      decoration: InputDecoration(
+                        labelText: S.of(context).goalWizardMinutes,
+                        hintText: '0',
+                      ),
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Text(':',
+                        style: theme.textTheme.headlineMedium),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _secondsController,
+                      decoration: InputDecoration(
+                        labelText:
+                            S.of(context).goalWizardSecondsLabel,
+                        hintText: '0',
+                      ),
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ] else ...[
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton.icon(
+                  onPressed: () =>
+                      setState(() => _isManualMode = !_isManualMode),
+                  icon: Icon(_isManualMode ? Icons.tune : Icons.edit),
+                  label: Text(_isManualMode ? 'Prediction' : 'Manual'),
+                ),
+                if (_sliderGoalTimeSeconds != null)
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _sliderGoalTimeSeconds = null;
+                        _isManualMode = false;
+                      });
+                    },
+                    child: const Text('Reset to projected'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_isManualMode)
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _hoursController,
+                      decoration: InputDecoration(
+                        labelText: S.of(context).goalWizardHours,
+                        hintText: '0',
+                      ),
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Text(':',
+                        style: theme.textTheme.headlineMedium),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _minutesController,
+                      decoration: InputDecoration(
+                        labelText: S.of(context).goalWizardMinutes,
+                        hintText: '0',
+                      ),
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Text(':',
+                        style: theme.textTheme.headlineMedium),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _secondsController,
+                      decoration: InputDecoration(
+                        labelText:
+                            S.of(context).goalWizardSecondsLabel,
+                        hintText: '0',
+                      ),
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Column(
+                children: [
+                  Slider(
+                    value: clampedDisplay.toDouble(),
+                    min: sliderMin.toDouble(),
+                    max: sliderMax.toDouble(),
+                    divisions: divisions,
+                    label: formatDurationClock(clampedDisplay),
+                    onChanged: (value) => setState(
+                        () => _sliderGoalTimeSeconds = value.round()),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${formatDurationClock(sliderMin)} (Optimal)',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.success,
+                        ),
+                      ),
+                      Text(
+                        '${formatDurationClock(sliderMax)} (Conservative)',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+          ],
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'VO2max',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          vdot.toStringAsFixed(1),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSplitRow(
+      ThemeData theme, IconData icon, String label, int seconds) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppColors.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
+        Text(
+          formatDurationClock(seconds),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDistanceRow(
+      ThemeData theme, IconData icon, String label, String distance) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppColors.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
+        Text(
+          distance,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimedEventStep() {
+    final theme = Theme.of(context);
+    final stats = ref.watch(analyticsStatsProvider).value;
+    final vdot = stats?.effectiveVO2max ?? 0;
+    final fixedSeconds =
+        _selectedRaceType == RaceType.twelveHour ? 43200 : 86400;
+    final durationLabel =
+        _selectedRaceType == RaceType.twelveHour ? '12 hours' : '24 hours';
+
+    String? estimatedDistance;
+    String? pacePerKm;
+    if (vdot > 0) {
+      final progressionFactor = calculateProgressionCoefficient(
+        _planWeeks,
+        _runsPerWeek,
+        _weeklyMileageGoal,
+      );
+      final projectedVdot = vdot * progressionFactor;
+      final distM =
+          _estimateDistanceForTime(projectedVdot, fixedSeconds);
+      estimatedDistance = '${(distM / 1000).toStringAsFixed(1)} km';
+      pacePerKm = formatPace(fixedSeconds / (distM / 1000));
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            S.of(context).goalWizardTargetTimeTitle,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This is a fixed-duration event.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Center(
+                    child: Text(
+                      formatDurationClock(fixedSeconds),
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Fixed duration: $durationLabel',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (estimatedDistance != null) ...[
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.straighten,
+                            color: AppColors.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Estimated distance',
+                            style:
+                                theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          estimatedDistance,
+                          style:
+                              theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.speed,
+                            color: AppColors.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Projected pace',
+                            style:
+                                theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          pacePerKm!,
+                          style:
+                              theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (vdot > 0) ...[
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'VO2max',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            vdot.toStringAsFixed(1),
+                            style:
+                                theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   Future<void> _submit() async {
@@ -223,6 +1111,13 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         workoutDay: _qualityDay,
         swimDay: _swimDay,
         restDays: _restDays.isNotEmpty ? _restDays : null,
+        backyardLoopDistM: _selectedRaceType ==
+                RaceType.backyardUltra &&
+            _backyardLoopDistM > 0
+            ? _backyardLoopDistM
+            : null,
+        targetLaps:
+            _selectedRaceType == RaceType.backyardUltra ? _targetLaps : null,
       );
 
       final goal = await ref.read(goalsProvider.notifier).createGoal(request);
@@ -245,9 +1140,6 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
 
   @override
   Widget build(BuildContext context) {
-    final stats = ref.watch(analyticsStatsProvider).value;
-    final effectiveVO2max = stats?.effectiveVO2max ?? 0;
-    final marathonShape = stats?.marathonShape ?? 70;
     final planWeeksCap = _planWeeksCap;
 
     return Scaffold(
@@ -297,6 +1189,63 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                   onRaceTypeSelected: (type) {
                     setState(() {
                       _selectedRaceType = type;
+                      _isManualMode = false;
+                      _sliderGoalTimeSeconds = null;
+                      if (type.isTriathlon) {
+                        if (type == RaceType.fullIronman) {
+                          _runsPerWeek = 3;
+                          _ridesPerWeek = 3;
+                          _swimsPerWeek = 2;
+                          _strengthPerWeek = 2;
+                          _maxLongRunKm = 32.0;
+                          _weeklyMileageGoal = 50.0;
+                        } else if (type == RaceType.halfIronman) {
+                          _runsPerWeek = 3;
+                          _ridesPerWeek = 3;
+                          _swimsPerWeek = 2;
+                          _strengthPerWeek = 1;
+                          _maxLongRunKm = 22.0;
+                          _weeklyMileageGoal = 40.0;
+                        } else {
+                          _runsPerWeek = 3;
+                          _ridesPerWeek = 2;
+                          _swimsPerWeek = 2;
+                          _strengthPerWeek = 1;
+                          _maxLongRunKm = 15.0;
+                          _weeklyMileageGoal = 30.0;
+                        }
+                        _taperWeeks = type == RaceType.fullIronman ? 3 : 2;
+                        _peakWeeks = type == RaceType.fullIronman ? 4 : 3;
+                        _buildWeeks = 4;
+                      } else if (type == RaceType.backyardUltra) {
+                        _runsPerWeek = 4;
+                        _ridesPerWeek = 0;
+                        _swimsPerWeek = 0;
+                        _strengthPerWeek = 1;
+                        _maxLongRunKm = 30.0;
+                        _weeklyMileageGoal = 50.0;
+                      } else if (type.isTimedEvent) {
+                        _runsPerWeek = 5;
+                        _ridesPerWeek = 0;
+                        _swimsPerWeek = 0;
+                        _strengthPerWeek = 1;
+                        _maxLongRunKm = 35.0;
+                        _weeklyMileageGoal = 60.0;
+                      } else {
+                        _runsPerWeek = 4;
+                        _ridesPerWeek = 0;
+                        _swimsPerWeek = 0;
+                        _strengthPerWeek = 0;
+                        _maxLongRunKm = type == RaceType.marathon
+                            ? 32.0
+                            : type == RaceType.halfMarathon
+                                ? 22.0
+                                : 21.0;
+                        _weeklyMileageGoal = 30.0;
+                        _taperWeeks = 2;
+                        _peakWeeks = 4;
+                        _buildWeeks = 4;
+                      }
                     });
                   },
                 ),
@@ -329,35 +1278,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                     });
                   },
                 ),
-                _TargetTimeStep(
-                  hasTargetTime: _hasTargetTime,
-                  onHasTargetTimeChanged: (value) {
-                    setState(() {
-                      _hasTargetTime = value;
-                    });
-                  },
-                  hoursController: _hoursController,
-                  minutesController: _minutesController,
-                  secondsController: _secondsController,
-                  effectiveVO2max: effectiveVO2max,
-                  marathonShape: marathonShape,
-                  selectedRaceType: _selectedRaceType,
-                  planWeeks: _planWeeks,
-                  runsPerWeek: _runsPerWeek,
-                  weeklyMileageGoal: _weeklyMileageGoal,
-                  isManualMode: _isManualMode,
-                  sliderGoalTimeSeconds: _sliderGoalTimeSeconds,
-                  onManualModeChanged: (value) {
-                    setState(() {
-                      _isManualMode = value;
-                    });
-                  },
-                  onSliderGoalTimeChanged: (value) {
-                    setState(() {
-                      _sliderGoalTimeSeconds = value;
-                    });
-                  },
-                ),
+                _buildTargetTimeStep(),
                 _TrainingVolumeStep(
                   runsPerWeek: _runsPerWeek,
                   ridesPerWeek: _ridesPerWeek,
@@ -426,6 +1347,12 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                   qualityDay: _qualityDay,
                   swimDay: _swimDay,
                   restDays: _restDays,
+                  backyardLoopDistM: _backyardLoopDistM,
+                  targetLaps: _targetLaps,
+                  estimatedTimedDistance:
+                      _selectedRaceType.isTimedEvent && _targetTimeInSeconds != null
+                          ? _computeEstimatedTimedDistance()
+                          : null,
                 ),
               ],
             ),
@@ -566,17 +1493,53 @@ class _NameStep extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          ...RaceType.values.map(
-            (type) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _RaceTypeOption(
-                type: type,
-                isSelected: type == selectedRaceType,
-                onTap: () => onRaceTypeSelected(type),
-              ),
-            ),
+          ExpansionTile(
+            title: Text(S.of(context).raceCategoryRunning),
+            initiallyExpanded: true,
+            children: [
+              _buildRaceOption(RaceType.fiveK),
+              _buildRaceOption(RaceType.tenK),
+              _buildRaceOption(RaceType.halfMarathon),
+              _buildRaceOption(RaceType.marathon),
+            ],
+          ),
+          ExpansionTile(
+            title: Text(S.of(context).raceCategoryUltra),
+            initiallyExpanded: false,
+            children: [
+              _buildRaceOption(RaceType.fiftyK),
+              _buildRaceOption(RaceType.fiftyMile),
+              _buildRaceOption(RaceType.hundredK),
+              _buildRaceOption(RaceType.hundredMile),
+              _buildRaceOption(RaceType.twelveHour),
+              _buildRaceOption(RaceType.twentyFourHour),
+              _buildRaceOption(RaceType.backyardUltra),
+              _buildRaceOption(RaceType.customDistance),
+            ],
+          ),
+          ExpansionTile(
+            title: Text(S.of(context).raceCategoryTriathlon),
+            initiallyExpanded: false,
+            children: [
+              _buildRaceOption(RaceType.sprintTri),
+              _buildRaceOption(RaceType.olympicTri),
+              _buildRaceOption(RaceType.halfIronman),
+              _buildRaceOption(RaceType.fullIronman),
+              _buildRaceOption(RaceType.customTri),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRaceOption(RaceType type) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: _RaceTypeOption(
+        type: type,
+        isSelected: type == selectedRaceType,
+        onTap: () => onRaceTypeSelected(type),
       ),
     );
   }
@@ -660,6 +1623,13 @@ class _RaceTypeOption extends StatelessWidget {
   }
 
   String _formatRaceDistance(RaceType type) {
+    if (type.isTimedEvent) {
+      return type == RaceType.twelveHour ? '12 hours' : '24 hours';
+    }
+    if (type.isTriathlon) return 'Swim \u00b7 Bike \u00b7 Run';
+    if (type == RaceType.backyardUltra) return 'Variable distance';
+    if (type == RaceType.customDistance) return 'Custom distance';
+    if (type == RaceType.customTri) return 'Custom triathlon';
     final distance = raceTypeDistance(type);
     return '${(distance / 1000).toStringAsFixed(1)} km';
   }
@@ -1855,6 +2825,9 @@ class _ReviewStep extends StatelessWidget {
     required this.qualityDay,
     required this.swimDay,
     required this.restDays,
+    this.backyardLoopDistM = 0,
+    this.targetLaps = 0,
+    this.estimatedTimedDistance,
   });
 
   final String name;
@@ -1876,6 +2849,9 @@ class _ReviewStep extends StatelessWidget {
   final int qualityDay;
   final int swimDay;
   final List<int> restDays;
+  final double backyardLoopDistM;
+  final int targetLaps;
+  final String? estimatedTimedDistance;
 
   static const _dayNames = [
     'Sunday',
@@ -1944,7 +2920,40 @@ class _ReviewStep extends StatelessWidget {
                     _ReviewRow(
                       icon: Icons.timer,
                       label: s.goalWizardTargetTimeLabel,
-                      value: formatDuration(targetTime!),
+                      value: raceType.isTimedEvent
+                          ? formatDurationClock(targetTime!)
+                          : formatDuration(targetTime!),
+                    ),
+                  ],
+                  if (raceType == RaceType.backyardUltra &&
+                      backyardLoopDistM > 0) ...[
+                    const Divider(height: 24),
+                    _ReviewRow(
+                      icon: Icons.loop,
+                      label: 'Loop distance',
+                      value: '${backyardLoopDistM.toStringAsFixed(0)} m',
+                    ),
+                    const Divider(height: 24),
+                    _ReviewRow(
+                      icon: Icons.repeat,
+                      label: 'Target laps',
+                      value: '$targetLaps',
+                    ),
+                    const Divider(height: 24),
+                    _ReviewRow(
+                      icon: Icons.straighten,
+                      label: 'Total distance',
+                      value:
+                          '${(backyardLoopDistM * targetLaps / 1000).toStringAsFixed(1)} km',
+                    ),
+                  ],
+                  if (raceType.isTimedEvent &&
+                      estimatedTimedDistance != null) ...[
+                    const Divider(height: 24),
+                    _ReviewRow(
+                      icon: Icons.straighten,
+                      label: 'Estimated distance',
+                      value: estimatedTimedDistance!,
                     ),
                   ],
                   const Divider(height: 24),

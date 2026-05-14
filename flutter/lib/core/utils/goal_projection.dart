@@ -28,6 +28,24 @@ double _raceDistanceMeters(RaceType type) {
       return 21097.5;
     case RaceType.marathon:
       return 42195;
+    case RaceType.fiftyK:
+      return 50000;
+    case RaceType.fiftyMile:
+      return 80467;
+    case RaceType.hundredK:
+      return 100000;
+    case RaceType.hundredMile:
+      return 160934;
+    case RaceType.twelveHour:
+    case RaceType.twentyFourHour:
+    case RaceType.backyardUltra:
+    case RaceType.customDistance:
+    case RaceType.sprintTri:
+    case RaceType.olympicTri:
+    case RaceType.halfIronman:
+    case RaceType.fullIronman:
+    case RaceType.customTri:
+      return 0;
   }
 }
 
@@ -97,6 +115,18 @@ ProjectedGoalResult calculateProjectedGoalTime(
   double currentShapePercent = 70,
   double? currentWeeklyKm,
 }) {
+  if (_raceDistanceMeters(planSettings.raceDistance) == 0) {
+    return const ProjectedGoalResult(
+      optimalTime: 0,
+      projectedTime: 0,
+      conservativeTime: 0,
+      projectedVdot: 0,
+      improvementPercent: 0,
+      projectedShape: 0,
+      shapeImprovementPercent: 0,
+    );
+  }
+
   if (currentVO2max <= 0 || planSettings.durationWeeks <= 0) {
     return const ProjectedGoalResult(
       optimalTime: 0,
@@ -174,5 +204,66 @@ ProjectedGoalResult calculateProjectedGoalTime(
     projectedShape: projectedShape.round(),
     shapeImprovementPercent:
         (shapeImprovementPercent * 10).round() / 10.0,
+  );
+}
+
+int estimateTimeForDistance(double vdot, int distanceMeters) {
+  final timeMinutes = estimateTime(vdot, distanceMeters.toDouble());
+  return (timeMinutes * 60).round();
+}
+
+ProjectedGoalResult calculateProjectedGoalTimeForDistance(
+  double currentVO2max,
+  int durationWeeks,
+  int runsPerWeek,
+  double? weeklyMileageGoalKm,
+  int distanceMeters, {
+  double currentShapePercent = 70,
+}) {
+  if (currentVO2max <= 0 || durationWeeks <= 0 || distanceMeters <= 0) {
+    return const ProjectedGoalResult(
+      optimalTime: 0,
+      projectedTime: 0,
+      conservativeTime: 0,
+      projectedVdot: 0,
+      improvementPercent: 0,
+      projectedShape: 0,
+      shapeImprovementPercent: 0,
+    );
+  }
+
+  final progressionFactor = calculateProgressionCoefficient(
+    durationWeeks,
+    runsPerWeek,
+    weeklyMileageGoalKm ?? 0,
+  );
+
+  final projectedVdot = currentVO2max * progressionFactor;
+  final improvementPercent = (progressionFactor - 1) * 100;
+
+  const shapeImpactBase = 0.30;
+  final projectedPenalty =
+      (1 - (currentShapePercent + 5).clamp(0, 100) / 100) * shapeImpactBase;
+
+  final optimalTime = estimateTimeForDistance(projectedVdot, distanceMeters);
+  final projectedTime = (optimalTime * (1 + projectedPenalty)).round();
+
+  final conservativeVdot =
+      currentVO2max * (1 + (progressionFactor - 1) * 0.5);
+  final conservativeBase =
+      estimateTimeForDistance(conservativeVdot, distanceMeters);
+  final conservativePenalty =
+      (1 - currentShapePercent.clamp(0, 100) / 100) * shapeImpactBase;
+  final conservativeTime =
+      (conservativeBase * (1 + conservativePenalty)).round();
+
+  return ProjectedGoalResult(
+    optimalTime: optimalTime.round(),
+    projectedTime: projectedTime,
+    conservativeTime: conservativeTime,
+    projectedVdot: (projectedVdot * 10).round() / 10.0,
+    improvementPercent: (improvementPercent * 10).round() / 10.0,
+    projectedShape: 0,
+    shapeImprovementPercent: 0,
   );
 }

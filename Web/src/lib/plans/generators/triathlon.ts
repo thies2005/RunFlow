@@ -17,10 +17,10 @@ type SportDistribution = {
 };
 
 const TRI_DISTRIBUTION: Partial<Record<RaceType, SportDistribution>> = {
-    SPRINT_TRI: { bike: 0.40, run: 0.30, swim: 0.20, strength: 0.10 },
-    OLYMPIC_TRI: { bike: 0.40, run: 0.30, swim: 0.20, strength: 0.10 },
-    HALF_IRONMAN: { bike: 0.40, run: 0.30, swim: 0.20, strength: 0.10 },
-    FULL_IRONMAN: { bike: 0.45, run: 0.30, swim: 0.15, strength: 0.10 },
+    SPRINT_TRI: { bike: 0.45, run: 0.30, swim: 0.15, strength: 0.10 },
+    OLYMPIC_TRI: { bike: 0.48, run: 0.28, swim: 0.14, strength: 0.10 },
+    HALF_IRONMAN: { bike: 0.52, run: 0.28, swim: 0.10, strength: 0.10 },
+    FULL_IRONMAN: { bike: 0.55, run: 0.25, swim: 0.08, strength: 0.12 },
 };
 
 const TRI_TAPER_FRACTIONS: Record<string, number[]> = {
@@ -56,6 +56,20 @@ const TRI_MAX_LONG_RUN: Partial<Record<RaceType, number>> = {
     OLYMPIC_TRI: 18000,
     HALF_IRONMAN: 22000,
     FULL_IRONMAN: 32000,
+};
+
+const TRI_RACE_SWIM_DIST: Partial<Record<RaceType, number>> = {
+    SPRINT_TRI: 750,
+    OLYMPIC_TRI: 1500,
+    HALF_IRONMAN: 1900,
+    FULL_IRONMAN: 3800,
+};
+
+const TRI_BIKE_SPEED_KMH: Partial<Record<RaceType, number>> = {
+    SPRINT_TRI: 28,
+    OLYMPIC_TRI: 27,
+    HALF_IRONMAN: 25,
+    FULL_IRONMAN: 23,
 };
 
 export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
@@ -414,7 +428,12 @@ function generateTriWeek(params: {
         });
     }
 
-    const swimDistPerSession = swimsPerWeek > 0 ? Math.round(swimVolume / swimsPerWeek / 100) * 100 : 1500;
+    const raceSwimDist = TRI_RACE_SWIM_DIST[raceType] || 1500;
+    const maxSwimPerSession = raceSwimDist * 2;
+    const swimDistPerSession = Math.min(
+        swimsPerWeek > 0 ? Math.round(swimVolume / swimsPerWeek / 100) * 100 : 1500,
+        maxSwimPerSession,
+    );
 
     if (hasOpenWater && swimsPerWeek >= 2) {
         const owDay = getAvailableDay(preferredSwimDay, hardSessionDays);
@@ -459,7 +478,10 @@ function generateTriWeek(params: {
         });
     }
 
-    const longRideDuration = getLongRideDuration(raceType, phase, isTaper, taperIdx);
+    const bikeSpeedKmh = TRI_BIKE_SPEED_KMH[raceType] || 25;
+    const bikeSpeedMs = bikeSpeedKmh * 1000 / 3600;
+    const bikeVolumeSeconds = bikeVolume / bikeSpeedMs;
+    const longRideDuration = getLongRideDuration(raceType, phase, isTaper, taperIdx, bikeVolumeSeconds);
     const hasLongRide = ridesPerWeek >= 2 && !isRecoveryWeek;
     let longRideDay: number | undefined;
 
@@ -512,18 +534,25 @@ function generateTriWeek(params: {
         - (hasLongRide ? 1 : 0)
         - workouts.filter(w => w.type === WorkoutType.BRICK).length;
 
+    const usedBikeSeconds = longRideDuration
+        + (workouts.filter(w => w.type === WorkoutType.BRICK).length * ((raceType === 'FULL_IRONMAN' ? 90 : raceType === 'HALF_IRONMAN' ? 60 : 40) * 60));
+    const remainingBikeBudget = Math.max(0, bikeVolumeSeconds - usedBikeSeconds);
+
     if (!isRecoveryWeek && phase !== 'TAPER' && remainingRides > 0) {
         const intervalDay = getAvailableDay((preferredWorkoutDay + 2) % 7, hardSessionDays);
         if (!usedDays.has(intervalDay)) {
             usedDays.add(intervalDay);
             hardSessionDays.push(intervalDay);
+            const intervalDuration = remainingRides >= 2
+                ? Math.max(2400, Math.min(5400, Math.round(remainingBikeBudget * 0.45)))
+                : Math.max(2400, Math.min(5400, Math.round(remainingBikeBudget * 0.55)));
             workouts.push({
                 dayOffset: intervalDay,
                 type: WorkoutType.RIDE_INTERVALS,
                 description: `Bike Intervals: 4x5min @ Threshold (${bikeZones.threshold.min}-${bikeZones.threshold.max}W)`,
                 totalDistance: 0,
                 targetPace: 0,
-                targetDuration: 3600,
+                targetDuration: intervalDuration,
             });
             remainingRides--;
         }
@@ -533,13 +562,17 @@ function generateTriWeek(params: {
         const day = getAvailableDay((longRideDay || 5 + i) % 7, hardSessionDays);
         if (usedDays.has(day)) break;
         usedDays.add(day);
+        const ridesLeft = remainingRides - i;
+        const usedSoFar = workouts.filter(w => w.type === WorkoutType.LONG_RIDE || w.type === WorkoutType.RIDE_INTERVALS || w.type === WorkoutType.BRICK)
+            .reduce((s, w) => s + (w.targetDuration || 0), 0);
+        const easyDuration = Math.max(1800, Math.round((bikeVolumeSeconds - usedSoFar) / ridesLeft));
         workouts.push({
             dayOffset: day,
             type: WorkoutType.RIDE,
-            description: 'Easy Ride: 60min (Zone 1-2)',
+            description: `Easy Ride: ${Math.round(easyDuration / 60)}min (Zone 1-2)`,
             totalDistance: 0,
             targetPace: 0,
-            targetDuration: 3600,
+            targetDuration: easyDuration,
         });
     }
 
@@ -565,7 +598,7 @@ function generateTriWeek(params: {
     return workouts;
 }
 
-function getLongRideDuration(raceType: RaceType, phase: TriPhase, isTaper: boolean, taperIdx: number): number {
+function getLongRideDuration(raceType: RaceType, phase: TriPhase, isTaper: boolean, taperIdx: number, bikeVolumeSeconds?: number): number {
     const baseDurations: Partial<Record<RaceType, number>> = {
         SPRINT_TRI: 3600,
         OLYMPIC_TRI: 5400,
@@ -573,6 +606,19 @@ function getLongRideDuration(raceType: RaceType, phase: TriPhase, isTaper: boole
         FULL_IRONMAN: 18000,
     };
     const base = baseDurations[raceType] || 5400;
+
+    if (bikeVolumeSeconds && bikeVolumeSeconds > 0) {
+        const longRideShare = 0.40;
+        const scaled = Math.round(bikeVolumeSeconds * longRideShare);
+        if (phase === 'BASE') return Math.max(1800, Math.round(scaled * 0.55));
+        if (phase === 'BUILD') return Math.max(2400, Math.round(scaled * 0.80));
+        if (phase === 'PEAK') return Math.max(3000, scaled);
+        if (isTaper) {
+            const factor = taperIdx === 0 ? 0.4 : taperIdx === 1 ? 0.6 : 0.75;
+            return Math.max(1800, Math.round(scaled * factor));
+        }
+        return Math.max(2400, scaled);
+    }
 
     if (phase === 'BASE') return Math.round(base * 0.5);
     if (phase === 'BUILD') return Math.round(base * 0.75);

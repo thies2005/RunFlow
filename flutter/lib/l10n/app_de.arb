@@ -956,5 +956,22 @@
   "monthJanuary": "Januar", "monthFebruary": "Februar", "monthMarch": "März", "monthApril": "April",
   "monthMayFull": "Mai", "monthJune": "Juni", "monthJuly": "Juli", "monthAugust": "August",
   "monthSeptember": "September", "monthOctober": "Oktober", "monthNovember": "November", "monthDecember": "Dezember",
-  "dayMon": "Mo", "dayTue": "Di", "dayWed": "Mi", "dayThu": "Do", "dayFri": "Fr", "daySat": "Sa", "daySun": "So"
+  "dayMon": "Mo", "dayTue": "Di", "dayWed": "Mi", "dayThu": "Do", "dayFri": "Fr", "daySat": "Sa", "daySun": "So",
+
+  "raceCategoryRunning": "Laufen",
+  "raceCategoryUltra": "Ultra",
+  "raceCategoryTriathlon": "Triathlon",
+  "raceType50k": "50K",
+  "raceType50Mile": "50 Meilen",
+  "raceType100k": "100K",
+  "raceType100Mile": "100 Meilen",
+  "raceType12Hour": "12 Stunden",
+  "raceType24Hour": "24 Stunden",
+  "raceTypeBackyardUltra": "Backyard Ultra",
+  "raceTypeCustomDistance": "Benutzerdefinierte Distanz",
+  "raceTypeSprintTri": "Sprint-Triathlon",
+  "raceTypeOlympicTri": "Olympischer Triathlon",
+  "raceTypeHalfIronman": "Half-Ironman",
+  "raceTypeFullIronman": "Ironman",
+  "raceTypeCustomTri": "Benutzerdefinierter Triathlon"
 }

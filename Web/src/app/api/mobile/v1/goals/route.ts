@@ -110,10 +110,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const validRaceTypes = ['FIVE_K', 'TEN_K', 'HALF_MARATHON', 'MARATHON'];
+        const validRaceTypes = Object.values(RaceType);
         if (!validRaceTypes.includes(raceType)) {
             return errorResponses.validation(
-                'Invalid raceType. Must be one of: FIVE_K, TEN_K, HALF_MARATHON, MARATHON',
+                'Invalid raceType. Must be one of: ' + validRaceTypes.join(', '),
                 { provided: raceType, validValues: validRaceTypes }
             );
         }

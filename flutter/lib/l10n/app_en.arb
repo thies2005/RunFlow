@@ -1019,5 +1019,22 @@
   "monthJanuary": "January", "monthFebruary": "February", "monthMarch": "March", "monthApril": "April",
   "monthMayFull": "May", "monthJune": "June", "monthJuly": "July", "monthAugust": "August",
   "monthSeptember": "September", "monthOctober": "October", "monthNovember": "November", "monthDecember": "December",
-  "dayMon": "Mon", "dayTue": "Tue", "dayWed": "Wed", "dayThu": "Thu", "dayFri": "Fri", "daySat": "Sat", "daySun": "Sun"
+  "dayMon": "Mon", "dayTue": "Tue", "dayWed": "Wed", "dayThu": "Thu", "dayFri": "Fri", "daySat": "Sat", "daySun": "Sun",
+
+  "raceCategoryRunning": "Running",
+  "raceCategoryUltra": "Ultra",
+  "raceCategoryTriathlon": "Triathlon",
+  "raceType50k": "50K",
+  "raceType50Mile": "50 Mile",
+  "raceType100k": "100K",
+  "raceType100Mile": "100 Mile",
+  "raceType12Hour": "12 Hour",
+  "raceType24Hour": "24 Hour",
+  "raceTypeBackyardUltra": "Backyard Ultra",
+  "raceTypeCustomDistance": "Custom Distance",
+  "raceTypeSprintTri": "Sprint Triathlon",
+  "raceTypeOlympicTri": "Olympic Triathlon",
+  "raceTypeHalfIronman": "Half Ironman",
+  "raceTypeFullIronman": "Full Ironman",
+  "raceTypeCustomTri": "Custom Triathlon"
 }

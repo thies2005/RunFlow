@@ -7,7 +7,7 @@ import { createSnapshot } from '@/lib/plan/snapshot';
 import { generateTrainingPlan } from '@/lib/plans';
 import { WorkoutType, RaceType, PlanCreationMode, type PlanSport } from '@/generated/prisma/browser';
 import { z } from 'zod';
-import { analyzeRace, type RaceDistance } from '@/lib/metrics/vdot';
+import { analyzeRace, calculateVdot, type RaceDistance } from '@/lib/metrics/vdot';
 
 const dateStringSchema = z.string().refine((value) => !Number.isNaN(new Date(value).getTime()), {
     message: 'Invalid date',
@@ -43,16 +43,16 @@ const advancedPlanSchema = z.object({
     customSwimDistM: z.number().nullable().optional(),
     customBikeDistM: z.number().nullable().optional(),
     customRunDistM: z.number().nullable().optional(),
-    backyardLoopDistM: z.number().nullable().optional(),
+    backyardLoopDistM: z.number().min(100).nullable().optional(),
     backyardLoopTimeS: z.number().nullable().optional(),
-    targetLaps: z.number().nullable().optional(),
+    targetLaps: z.number().int().min(1).max(100).nullable().optional(),
     durationWeeks: z.number().int().min(4).max(52).optional(),
     runsPerWeek: z.number().int().nonnegative().max(7).optional(),
     ridesPerWeek: z.number().int().nonnegative().max(7).optional(),
     swimsPerWeek: z.number().int().nonnegative().max(7).optional(),
     strengthPerWeek: z.number().int().nonnegative().max(7).optional(),
     weeklyMileageGoal: z.number().positive().optional(),
-    maxLongRunKm: z.number().min(6).max(80).optional(),
+    maxLongRunKm: z.number().min(6).max(200).optional(),
     taperWeeks: z.number().int().nonnegative().optional(),
     peakWeeks: z.number().int().nonnegative().optional(),
     buildWeeks: z.number().int().nonnegative().optional(),
@@ -63,15 +63,29 @@ const advancedPlanSchema = z.object({
     targetTime: z.number().int().positive().optional(),
     calibrationTime: z.number().int().positive().optional(),
     calibrationDistance: z.enum(['5K', '10K', 'HALF', 'MARATHON']).optional(),
-    calibrationFactor: z.number().positive().optional(),
+    calibrationFactor: z.number().min(0.5).max(2.0).optional(),
     subGoals: z.array(z.object({
         name: z.string().min(1).max(255),
         sport: z.enum(['RUN', 'TRIATHLON', 'NO_RACE']).optional(),
         raceType: z.nativeEnum(RaceType).nullable().optional(),
         raceDate: dateStringSchema.nullable().optional(),
         priority: z.enum(['SECONDARY', 'TUNE_UP', 'MILESTONE']).optional(),
+        targetTime: z.number().int().positive().optional(),
     })).optional(),
 });
+
+function predictTimeForDist(vdot: number, distM: number): number {
+    let low = 600;
+    let high = 18000;
+    for (let i = 0; i < 50; i++) {
+        const mid = (low + high) / 2;
+        const tv = calculateVdot({ distance: distM, timeSeconds: mid });
+        if (Math.abs(tv - vdot) < 0.01) return Math.round(mid);
+        if (tv > vdot) low = mid;
+        else high = mid;
+    }
+    return Math.round((low + high) / 2);
+}
 
 export async function GET(req: Request) {
     try {
@@ -184,6 +198,10 @@ export async function POST(req: Request) {
             effectiveVdot = currentVdot * calibrationFactor;
         }
 
+        const computedBackyardLoopTimeS = backyardLoopDistM && backyardLoopDistM > 0
+            ? predictTimeForDist(effectiveVdot, backyardLoopDistM)
+            : null;
+
         if (calibrationFactor && calibrationFactor > 0) {
             await prisma.user.update({
                 where: { id: session.user.id },
@@ -249,7 +267,7 @@ export async function POST(req: Request) {
                 customBikeDistM: customBikeDistM ?? null,
                 customRunDistM: customRunDistM ?? null,
                 backyardLoopDistM: backyardLoopDistM ?? null,
-                backyardLoopTimeS: backyardLoopTimeS ?? null,
+                backyardLoopTimeS: computedBackyardLoopTimeS ?? backyardLoopTimeS ?? null,
                 targetLaps: targetLaps ?? null,
                 isActive: true,
                 targetTime: targetTime ?? null,
@@ -333,6 +351,7 @@ export async function POST(req: Request) {
                         planSource: 'advanced',
                         creationMode: 'EXPERT_MANUAL',
                         currentVdot: effectiveVdot,
+                        targetTime: sg.targetTime ?? null,
                     },
                 });
 

@@ -2984,4 +2984,52 @@ class SEn extends S {
 
   @override
   String get daySun => 'Sun';
+
+  @override
+  String get raceCategoryRunning => 'Running';
+
+  @override
+  String get raceCategoryUltra => 'Ultra';
+
+  @override
+  String get raceCategoryTriathlon => 'Triathlon';
+
+  @override
+  String get raceType50k => '50K';
+
+  @override
+  String get raceType50Mile => '50 Mile';
+
+  @override
+  String get raceType100k => '100K';
+
+  @override
+  String get raceType100Mile => '100 Mile';
+
+  @override
+  String get raceType12Hour => '12 Hour';
+
+  @override
+  String get raceType24Hour => '24 Hour';
+
+  @override
+  String get raceTypeBackyardUltra => 'Backyard Ultra';
+
+  @override
+  String get raceTypeCustomDistance => 'Custom Distance';
+
+  @override
+  String get raceTypeSprintTri => 'Sprint Triathlon';
+
+  @override
+  String get raceTypeOlympicTri => 'Olympic Triathlon';
+
+  @override
+  String get raceTypeHalfIronman => 'Half Ironman';
+
+  @override
+  String get raceTypeFullIronman => 'Full Ironman';
+
+  @override
+  String get raceTypeCustomTri => 'Custom Triathlon';
 }

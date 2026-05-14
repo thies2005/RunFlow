@@ -3020,4 +3020,52 @@ class SDe extends S {
 
   @override
   String get daySun => 'So';
+
+  @override
+  String get raceCategoryRunning => 'Laufen';
+
+  @override
+  String get raceCategoryUltra => 'Ultra';
+
+  @override
+  String get raceCategoryTriathlon => 'Triathlon';
+
+  @override
+  String get raceType50k => '50K';
+
+  @override
+  String get raceType50Mile => '50 Meilen';
+
+  @override
+  String get raceType100k => '100K';
+
+  @override
+  String get raceType100Mile => '100 Meilen';
+
+  @override
+  String get raceType12Hour => '12 Stunden';
+
+  @override
+  String get raceType24Hour => '24 Stunden';
+
+  @override
+  String get raceTypeBackyardUltra => 'Backyard Ultra';
+
+  @override
+  String get raceTypeCustomDistance => 'Benutzerdefinierte Distanz';
+
+  @override
+  String get raceTypeSprintTri => 'Sprint-Triathlon';
+
+  @override
+  String get raceTypeOlympicTri => 'Olympischer Triathlon';
+
+  @override
+  String get raceTypeHalfIronman => 'Half-Ironman';
+
+  @override
+  String get raceTypeFullIronman => 'Ironman';
+
+  @override
+  String get raceTypeCustomTri => 'Benutzerdefinierter Triathlon';
 }

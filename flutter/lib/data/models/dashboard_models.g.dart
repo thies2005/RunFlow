@@ -188,6 +188,8 @@ _Goal _$GoalFromJson(Map<String, dynamic> json) => _Goal(
           ?.map((e) => Workout.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  backyardLoopDistM: (json['backyardLoopDistM'] as num?)?.toDouble(),
+  targetLaps: (json['targetLaps'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$GoalToJson(_Goal instance) => <String, dynamic>{
@@ -209,6 +211,8 @@ Map<String, dynamic> _$GoalToJson(_Goal instance) => <String, dynamic>{
   'updatedAt': instance.updatedAt.toIso8601String(),
   'completedAt': instance.completedAt?.toIso8601String(),
   'workouts': instance.workouts,
+  'backyardLoopDistM': instance.backyardLoopDistM,
+  'targetLaps': instance.targetLaps,
 };
 
 const _$RaceTypeEnumMap = {
@@ -216,6 +220,19 @@ const _$RaceTypeEnumMap = {
   RaceType.tenK: 'TEN_K',
   RaceType.halfMarathon: 'HALF_MARATHON',
   RaceType.marathon: 'MARATHON',
+  RaceType.fiftyK: 'FIFTY_K',
+  RaceType.fiftyMile: 'FIFTY_MILE',
+  RaceType.hundredK: 'HUNDRED_K',
+  RaceType.hundredMile: 'HUNDRED_MILE',
+  RaceType.twelveHour: 'TWELVE_HOUR',
+  RaceType.twentyFourHour: 'TWENTY_FOUR_HOUR',
+  RaceType.backyardUltra: 'BACKYARD_ULTRA',
+  RaceType.customDistance: 'CUSTOM_DISTANCE',
+  RaceType.sprintTri: 'SPRINT_TRI',
+  RaceType.olympicTri: 'OLYMPIC_TRI',
+  RaceType.halfIronman: 'HALF_IRONMAN',
+  RaceType.fullIronman: 'FULL_IRONMAN',
+  RaceType.customTri: 'CUSTOM_TRI',
 };
 
 _DashboardResponse _$DashboardResponseFromJson(Map<String, dynamic> json) =>

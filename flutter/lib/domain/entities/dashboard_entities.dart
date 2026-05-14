@@ -3,7 +3,25 @@ import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 
 enum ActivityType { run, ride, virtualRide, walk, hike, swim, workout, other }
 
-enum RaceType { fiveK, tenK, halfMarathon, marathon }
+enum RaceType {
+  fiveK,
+  tenK,
+  halfMarathon,
+  marathon,
+  fiftyK,
+  fiftyMile,
+  hundredK,
+  hundredMile,
+  twelveHour,
+  twentyFourHour,
+  backyardUltra,
+  customDistance,
+  sprintTri,
+  olympicTri,
+  halfIronman,
+  fullIronman,
+  customTri,
+}
 
 enum WorkoutType { easy, long, tempo, interval, recovery, race, other }
 
@@ -455,6 +473,8 @@ class Goal {
     required this.updatedAt,
     required this.completedAt,
     required this.workouts,
+    this.backyardLoopDistM,
+    this.targetLaps,
   });
 
   final String id;
@@ -475,6 +495,8 @@ class Goal {
   final DateTime updatedAt;
   final DateTime? completedAt;
   final List<Workout> workouts;
+  final double? backyardLoopDistM;
+  final int? targetLaps;
 
   Goal copyWith({
     String? id,
@@ -495,6 +517,8 @@ class Goal {
     DateTime? updatedAt,
     DateTime? completedAt,
     List<Workout>? workouts,
+    double? backyardLoopDistM,
+    int? targetLaps,
   }) {
     return Goal(
       id: id ?? this.id,
@@ -515,6 +539,8 @@ class Goal {
       updatedAt: updatedAt ?? this.updatedAt,
       completedAt: completedAt ?? this.completedAt,
       workouts: workouts ?? this.workouts,
+      backyardLoopDistM: backyardLoopDistM ?? this.backyardLoopDistM,
+      targetLaps: targetLaps ?? this.targetLaps,
     );
   }
 
@@ -540,7 +566,9 @@ class Goal {
           createdAt == other.createdAt &&
           updatedAt == other.updatedAt &&
           completedAt == other.completedAt &&
-          listEquals(workouts, other.workouts);
+          listEquals(workouts, other.workouts) &&
+          backyardLoopDistM == other.backyardLoopDistM &&
+          targetLaps == other.targetLaps;
 
   @override
   int get hashCode => Object.hash(
@@ -562,6 +590,8 @@ class Goal {
         updatedAt,
         completedAt,
         Object.hashAll(workouts),
+        backyardLoopDistM,
+        targetLaps,
       );
 }
 
@@ -621,4 +651,52 @@ class DashboardResponse {
         user,
         todayWorkout,
       );
+}
+
+extension RaceTypeX on RaceType {
+  bool get isRunning => const [
+        RaceType.fiveK,
+        RaceType.tenK,
+        RaceType.halfMarathon,
+        RaceType.marathon,
+        RaceType.fiftyK,
+        RaceType.fiftyMile,
+        RaceType.hundredK,
+        RaceType.hundredMile,
+        RaceType.customDistance,
+      ].contains(this);
+
+  bool get isUltra => const [
+        RaceType.fiftyK,
+        RaceType.fiftyMile,
+        RaceType.hundredK,
+        RaceType.hundredMile,
+        RaceType.twelveHour,
+        RaceType.twentyFourHour,
+        RaceType.backyardUltra,
+      ].contains(this);
+
+  bool get isTriathlon => const [
+        RaceType.sprintTri,
+        RaceType.olympicTri,
+        RaceType.halfIronman,
+        RaceType.fullIronman,
+        RaceType.customTri,
+      ].contains(this);
+
+  bool get isTimedEvent => const [
+        RaceType.twelveHour,
+        RaceType.twentyFourHour,
+      ].contains(this);
+
+  bool get hasNumericDistance => const [
+        RaceType.fiveK,
+        RaceType.tenK,
+        RaceType.halfMarathon,
+        RaceType.marathon,
+        RaceType.fiftyK,
+        RaceType.fiftyMile,
+        RaceType.hundredK,
+        RaceType.hundredMile,
+      ].contains(this);
 }

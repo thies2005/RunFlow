@@ -53,6 +53,32 @@ String raceTypeLabel(RaceType type) {
       return 'Half Marathon';
     case RaceType.marathon:
       return 'Marathon';
+    case RaceType.fiftyK:
+      return '50K';
+    case RaceType.fiftyMile:
+      return '50 Mile';
+    case RaceType.hundredK:
+      return '100K';
+    case RaceType.hundredMile:
+      return '100 Mile';
+    case RaceType.twelveHour:
+      return '12 Hour';
+    case RaceType.twentyFourHour:
+      return '24 Hour';
+    case RaceType.backyardUltra:
+      return 'Backyard Ultra';
+    case RaceType.customDistance:
+      return 'Custom';
+    case RaceType.sprintTri:
+      return 'Sprint Tri';
+    case RaceType.olympicTri:
+      return 'Olympic Tri';
+    case RaceType.halfIronman:
+      return 'Half Ironman';
+    case RaceType.fullIronman:
+      return 'Full Ironman';
+    case RaceType.customTri:
+      return 'Custom Tri';
   }
 }
 
@@ -66,5 +92,31 @@ double raceTypeDistance(RaceType type) {
       return 21097.5;
     case RaceType.marathon:
       return 42195;
+    case RaceType.fiftyK:
+      return 50000;
+    case RaceType.fiftyMile:
+      return 80467;
+    case RaceType.hundredK:
+      return 100000;
+    case RaceType.hundredMile:
+      return 160934;
+    case RaceType.twelveHour:
+      return 0;
+    case RaceType.twentyFourHour:
+      return 0;
+    case RaceType.backyardUltra:
+      return 0;
+    case RaceType.customDistance:
+      return 0;
+    case RaceType.sprintTri:
+      return 0;
+    case RaceType.olympicTri:
+      return 0;
+    case RaceType.halfIronman:
+      return 0;
+    case RaceType.fullIronman:
+      return 0;
+    case RaceType.customTri:
+      return 0;
   }
 }

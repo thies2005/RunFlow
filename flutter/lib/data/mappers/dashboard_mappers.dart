@@ -202,6 +202,8 @@ extension GoalMapper on Goal {
         updatedAt: updatedAt,
         completedAt: completedAt,
         workouts: workouts.map((w) => w.toDomain()).toList(),
+        backyardLoopDistM: backyardLoopDistM,
+        targetLaps: targetLaps,
       );
 }
 
@@ -225,6 +227,8 @@ extension DomainGoalMapper on domain.Goal {
         updatedAt: updatedAt,
         completedAt: completedAt,
         workouts: workouts.map((w) => w.toData()).toList(),
+        backyardLoopDistM: backyardLoopDistM,
+        targetLaps: targetLaps,
       );
 }
 

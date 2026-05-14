@@ -51,6 +51,8 @@ sealed class CreateGoalRequest with _$CreateGoalRequest {
     int? calibrationTime,
     String? calibrationDistance,
     double? calibrationFactor,
+    double? backyardLoopDistM,
+    int? targetLaps,
   }) = _CreateGoalRequest;
   const CreateGoalRequest._();
 

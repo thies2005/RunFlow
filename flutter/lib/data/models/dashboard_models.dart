@@ -66,6 +66,32 @@ enum RaceType {
   halfMarathon,
   @JsonValue('MARATHON')
   marathon,
+  @JsonValue('FIFTY_K')
+  fiftyK,
+  @JsonValue('FIFTY_MILE')
+  fiftyMile,
+  @JsonValue('HUNDRED_K')
+  hundredK,
+  @JsonValue('HUNDRED_MILE')
+  hundredMile,
+  @JsonValue('TWELVE_HOUR')
+  twelveHour,
+  @JsonValue('TWENTY_FOUR_HOUR')
+  twentyFourHour,
+  @JsonValue('BACKYARD_ULTRA')
+  backyardUltra,
+  @JsonValue('CUSTOM_DISTANCE')
+  customDistance,
+  @JsonValue('SPRINT_TRI')
+  sprintTri,
+  @JsonValue('OLYMPIC_TRI')
+  olympicTri,
+  @JsonValue('HALF_IRONMAN')
+  halfIronman,
+  @JsonValue('FULL_IRONMAN')
+  fullIronman,
+  @JsonValue('CUSTOM_TRI')
+  customTri,
 }
 
 enum WorkoutType {
@@ -203,6 +229,8 @@ sealed class Goal with _$Goal {
     required DateTime updatedAt,
     required DateTime? completedAt,
     @Default([]) List<Workout> workouts,
+    double? backyardLoopDistM,
+    int? targetLaps,
   }) = _Goal;
   const Goal._();
 

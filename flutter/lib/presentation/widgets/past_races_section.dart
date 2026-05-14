@@ -155,6 +155,19 @@ class _PastRaceCard extends StatelessWidget {
       RaceType.tenK => '10K',
       RaceType.halfMarathon => 'Half Marathon',
       RaceType.marathon => 'Marathon',
+      RaceType.fiftyK => '50K',
+      RaceType.fiftyMile => '50 Mile',
+      RaceType.hundredK => '100K',
+      RaceType.hundredMile => '100 Mile',
+      RaceType.twelveHour => '12 Hour',
+      RaceType.twentyFourHour => '24 Hour',
+      RaceType.backyardUltra => 'Backyard Ultra',
+      RaceType.customDistance => 'Custom',
+      RaceType.sprintTri => 'Sprint Tri',
+      RaceType.olympicTri => 'Olympic Tri',
+      RaceType.halfIronman => 'Half Ironman',
+      RaceType.fullIronman => 'Full Ironman',
+      RaceType.customTri => 'Custom Tri',
     };
   }
 }

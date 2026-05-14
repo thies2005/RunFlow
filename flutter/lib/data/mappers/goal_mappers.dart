@@ -50,6 +50,8 @@ extension CreateGoalRequestMapper on CreateGoalRequest {
         calibrationTime: calibrationTime,
         calibrationDistance: calibrationDistance,
         calibrationFactor: calibrationFactor,
+        backyardLoopDistM: backyardLoopDistM,
+        targetLaps: targetLaps,
       );
 }
 
@@ -77,6 +79,8 @@ extension DomainCreateGoalRequestMapper on domain.CreateGoalRequest {
         calibrationTime: calibrationTime,
         calibrationDistance: calibrationDistance,
         calibrationFactor: calibrationFactor,
+        backyardLoopDistM: backyardLoopDistM,
+        targetLaps: targetLaps,
       );
 }
 

@@ -5598,6 +5598,102 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Sun'**
   String get daySun;
+
+  /// No description provided for @raceCategoryRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get raceCategoryRunning;
+
+  /// No description provided for @raceCategoryUltra.
+  ///
+  /// In en, this message translates to:
+  /// **'Ultra'**
+  String get raceCategoryUltra;
+
+  /// No description provided for @raceCategoryTriathlon.
+  ///
+  /// In en, this message translates to:
+  /// **'Triathlon'**
+  String get raceCategoryTriathlon;
+
+  /// No description provided for @raceType50k.
+  ///
+  /// In en, this message translates to:
+  /// **'50K'**
+  String get raceType50k;
+
+  /// No description provided for @raceType50Mile.
+  ///
+  /// In en, this message translates to:
+  /// **'50 Mile'**
+  String get raceType50Mile;
+
+  /// No description provided for @raceType100k.
+  ///
+  /// In en, this message translates to:
+  /// **'100K'**
+  String get raceType100k;
+
+  /// No description provided for @raceType100Mile.
+  ///
+  /// In en, this message translates to:
+  /// **'100 Mile'**
+  String get raceType100Mile;
+
+  /// No description provided for @raceType12Hour.
+  ///
+  /// In en, this message translates to:
+  /// **'12 Hour'**
+  String get raceType12Hour;
+
+  /// No description provided for @raceType24Hour.
+  ///
+  /// In en, this message translates to:
+  /// **'24 Hour'**
+  String get raceType24Hour;
+
+  /// No description provided for @raceTypeBackyardUltra.
+  ///
+  /// In en, this message translates to:
+  /// **'Backyard Ultra'**
+  String get raceTypeBackyardUltra;
+
+  /// No description provided for @raceTypeCustomDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Distance'**
+  String get raceTypeCustomDistance;
+
+  /// No description provided for @raceTypeSprintTri.
+  ///
+  /// In en, this message translates to:
+  /// **'Sprint Triathlon'**
+  String get raceTypeSprintTri;
+
+  /// No description provided for @raceTypeOlympicTri.
+  ///
+  /// In en, this message translates to:
+  /// **'Olympic Triathlon'**
+  String get raceTypeOlympicTri;
+
+  /// No description provided for @raceTypeHalfIronman.
+  ///
+  /// In en, this message translates to:
+  /// **'Half Ironman'**
+  String get raceTypeHalfIronman;
+
+  /// No description provided for @raceTypeFullIronman.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Ironman'**
+  String get raceTypeFullIronman;
+
+  /// No description provided for @raceTypeCustomTri.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Triathlon'**
+  String get raceTypeCustomTri;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

@@ -11,7 +11,7 @@
  * over the plan duration.
  */
 
-import { predictRaceTime, type RaceDistance } from './vdot';
+import { predictRaceTime, calculateVdot, type RaceDistance } from './vdot';
 
 // ============================================
 // Types and Interfaces
@@ -245,4 +245,61 @@ export function calculateWeeksUntilRace(
     const msPerWeek = 7 * 24 * 60 * 60 * 1000;
     const diffMs = raceDate.getTime() - startDate.getTime();
     return Math.max(0, Math.floor(diffMs / msPerWeek));
+}
+
+function predictTimeForNumericDistance(vdot: number, distanceMeters: number): number {
+    let low = 600;
+    let high = 43200;
+    for (let i = 0; i < 50; i++) {
+        const mid = (low + high) / 2;
+        const testVdot = calculateVdot({ distance: distanceMeters, timeSeconds: mid });
+        if (Math.abs(testVdot - vdot) < 0.01) return Math.round(mid);
+        if (testVdot > vdot) low = mid;
+        else high = mid;
+    }
+    return Math.round((low + high) / 2);
+}
+
+export function calculateProjectedGoalTimeForDistance(
+    currentVO2max: number,
+    settings: {
+        durationWeeks: number;
+        runsPerWeek: number;
+        weeklyMileageGoal?: number;
+    },
+    distanceMeters: number,
+    currentShapePercent: number = 70,
+): { optimalTime: number; projectedTime: number; conservativeTime: number } {
+    if (currentVO2max <= 0 || settings.durationWeeks <= 0 || distanceMeters <= 0) {
+        return { optimalTime: 0, projectedTime: 0, conservativeTime: 0 };
+    }
+
+    const progressionFactor = calculateProgressionCoefficient(
+        settings.durationWeeks,
+        settings.runsPerWeek,
+        settings.weeklyMileageGoal ?? 0
+    );
+
+    const projectedVdot = currentVO2max * progressionFactor;
+
+    const optimalTime = predictTimeForNumericDistance(projectedVdot, distanceMeters);
+
+    const shapeImpactBase = 0.30;
+    const projectedPenalty = (1 - Math.min(currentShapePercent + 5, 100) / 100) * shapeImpactBase;
+    const projectedTime = Math.round(optimalTime * (1 + projectedPenalty));
+
+    const conservativeVdot = currentVO2max * (1 + (progressionFactor - 1) * 0.5);
+    const conservativeBase = predictTimeForNumericDistance(conservativeVdot, distanceMeters);
+    const conservativePenalty = (1 - Math.min(currentShapePercent, 100) / 100) * shapeImpactBase;
+    const conservativeTime = Math.round(conservativeBase * (1 + conservativePenalty));
+
+    return { optimalTime: Math.round(optimalTime), projectedTime, conservativeTime };
+}
+
+export function calculateProjectedDistanceForTime(
+    _currentVO2max: number,
+    _settings: { durationWeeks: number; runsPerWeek: number; weeklyMileageGoal?: number },
+    _targetTimeSeconds: number,
+): { estimatedDistanceM: number } {
+    return { estimatedDistanceM: 0 };
 }

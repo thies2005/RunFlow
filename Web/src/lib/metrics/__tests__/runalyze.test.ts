@@ -1,4 +1,4 @@
-import { calculateEffectiveVO2max, calculateMarathonShape, solveCalibrationFactor, calculateGeneralAerobicScore } from '../runalyze';
+import { calculateEffectiveVO2max, calculateMarathonShape, solveCalibrationFactor, calculateGeneralAerobicScore, calculateWeightedEffectiveVO2max } from '../runalyze';
 
 describe('Runalyze Metrics', () => {
     describe('calculateEffectiveVO2max', () => {
@@ -135,6 +135,59 @@ describe('Runalyze Metrics', () => {
             // If actual is 3:30 (12600s), we are faster than predicted -> Factor < 1
             const factor = solveCalibrationFactor(50, 50, 12600, 'MARATHON');
             expect(factor).toBeLessThan(1.0);
+        });
+    });
+
+    describe('calculateWeightedEffectiveVO2max', () => {
+        const makeActivity = (daysAgo: number, distance: number, time: number, hr: number) => ({
+            startDate: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
+            distance,
+            movingTime: time,
+            averageHr: hr,
+            hasHeartrate: true,
+        });
+
+        it('should return 0 for empty activities', () => {
+            expect(calculateWeightedEffectiveVO2max([], 200)).toBe(0);
+        });
+
+        it('should be stable across short time periods', () => {
+            const activities = Array.from({ length: 20 }, (_, i) =>
+                makeActivity(i, 5000, 1200, 170)
+            );
+            const result = calculateWeightedEffectiveVO2max(activities, 200);
+            const singleDay = calculateWeightedEffectiveVO2max(
+                [makeActivity(0, 5000, 1200, 170)], 200
+            );
+            const diff = Math.abs(result - singleDay);
+            expect(diff).toBeLessThan(3);
+        });
+
+        it('should filter out outlier activities using IQR', () => {
+            const normal = Array.from({ length: 8 }, (_, i) =>
+                makeActivity(i, 5000, 1200, 170)
+            );
+            const outlier = makeActivity(1, 5000, 1200, 195);
+            const withOutlier = calculateWeightedEffectiveVO2max([...normal, outlier], 200);
+            const withoutOutlier = calculateWeightedEffectiveVO2max(normal, 200);
+            const diff = Math.abs(withOutlier - withoutOutlier);
+            expect(diff).toBeLessThan(2);
+        });
+
+        it('should exclude activities older than 120 days', () => {
+            const recent = makeActivity(30, 5000, 1200, 170);
+            const old = makeActivity(150, 5000, 1200, 170);
+            const resultRecent = calculateWeightedEffectiveVO2max([recent], 200);
+            const resultBoth = calculateWeightedEffectiveVO2max([recent, old], 200);
+            expect(resultBoth).toBe(resultRecent);
+        });
+
+        it('should weight recent activities higher than older ones', () => {
+            const recent = makeActivity(1, 5000, 1200, 170);
+            const older = makeActivity(60, 5000, 1200, 180);
+            const recentOnly = calculateWeightedEffectiveVO2max([recent], 200);
+            const both = calculateWeightedEffectiveVO2max([recent, older], 200);
+            expect(both).not.toBe(recentOnly);
         });
     });
 });

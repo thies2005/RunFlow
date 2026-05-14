@@ -20,6 +20,11 @@ const MIN_DURATION_FOR_CALCULATION = 720; // 12 minutes
 /** Minimum Heart Rate percentage (of maxHR) for inclusion in VO2max calculation */
 const MIN_HR_PERCENT_FOR_CALCULATION = 0.60;
 
+const VO2MAX_DECAY_HALF_LIFE_DAYS = 30;
+const VO2MAX_MIN_ACTIVITIES_FOR_MEDIAN = 5;
+const VO2MAX_MAX_LOOKBACK_DAYS = 120;
+const VO2MAX_OUTLIER_SIGMA = 1.5;
+
 /**
  * Activity data needed for calculations
  */
@@ -417,19 +422,20 @@ export function calculateWeightedEffectiveVO2max(
         if (!a.hasHeartrate || !a.averageHr || a.averageHr <= 0) return false;
 
         const hrPercent = a.averageHr / maxHR;
+        const daysAgo = (Date.now() - new Date(a.startDate).getTime()) / DAY_MS;
 
         return (
             a.distance >= MIN_DISTANCE_FOR_CALCULATION &&
             a.movingTime >= MIN_DURATION_FOR_CALCULATION &&
-            hrPercent >= MIN_HR_PERCENT_FOR_CALCULATION
+            hrPercent >= MIN_HR_PERCENT_FOR_CALCULATION &&
+            daysAgo <= VO2MAX_MAX_LOOKBACK_DAYS
         );
     });
 
     if (!validActivities.length || maxHR <= 0) return 0;
 
     const now = new Date();
-    let weightedSum = 0;
-    let totalWeight = 0;
+    const vo2Values: { vo2: number; weight: number }[] = [];
 
     validActivities.forEach(a => {
         const vo2 = calculateEffectiveVO2max(
@@ -440,13 +446,41 @@ export function calculateWeightedEffectiveVO2max(
         );
 
         if (vo2 > 0) {
-            // Weight by recency: more recent = higher weight
             const daysAgo = (now.getTime() - new Date(a.startDate).getTime()) / DAY_MS;
-            const weight = Math.pow(0.95, daysAgo); // 5% decay per day
-
-            weightedSum += vo2 * weight;
-            totalWeight += weight;
+            const decayConstant = Math.LN2 / VO2MAX_DECAY_HALF_LIFE_DAYS;
+            const weight = Math.exp(-decayConstant * daysAgo);
+            vo2Values.push({ vo2, weight });
         }
+    });
+
+    if (vo2Values.length === 0) return 0;
+
+    if (vo2Values.length >= VO2MAX_MIN_ACTIVITIES_FOR_MEDIAN) {
+        const allVo2 = vo2Values.map(v => v.vo2).sort((a, b) => a - b);
+        const median = allVo2[Math.floor(allVo2.length / 2)];
+        const q1 = allVo2[Math.floor(allVo2.length * 0.25)];
+        const q3 = allVo2[Math.floor(allVo2.length * 0.75)];
+        const iqr = q3 - q1;
+        const lowerBound = median - VO2MAX_OUTLIER_SIGMA * iqr;
+        const upperBound = median + VO2MAX_OUTLIER_SIGMA * iqr;
+
+        let weightedSum = 0;
+        let totalWeight = 0;
+        vo2Values.forEach(({ vo2, weight }) => {
+            if (vo2 >= lowerBound && vo2 <= upperBound) {
+                weightedSum += vo2 * weight;
+                totalWeight += weight;
+            }
+        });
+
+        return totalWeight > 0 ? Math.round((weightedSum / totalWeight) * calibrationFactor * 10) / 10 : 0;
+    }
+
+    let weightedSum = 0;
+    let totalWeight = 0;
+    vo2Values.forEach(({ vo2, weight }) => {
+        weightedSum += vo2 * weight;
+        totalWeight += weight;
     });
 
     return totalWeight > 0 ? Math.round((weightedSum / totalWeight) * calibrationFactor * 10) / 10 : 0;

@@ -4555,6 +4555,144 @@ abstract class S {
   /// **'Plan Duration'**
   String get goalWizardPlanDurationLabel;
 
+  /// No description provided for @goalWizardTrainingVolumeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Volume'**
+  String get goalWizardTrainingVolumeTitle;
+
+  /// No description provided for @goalWizardTrainingVolumeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your weekly training volume and cross-training frequency.'**
+  String get goalWizardTrainingVolumeDesc;
+
+  /// No description provided for @goalWizardRidesPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides per week'**
+  String get goalWizardRidesPerWeek;
+
+  /// No description provided for @goalWizardSwimsPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Swims per week'**
+  String get goalWizardSwimsPerWeek;
+
+  /// No description provided for @goalWizardStrengthPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength sessions per week'**
+  String get goalWizardStrengthPerWeek;
+
+  /// No description provided for @goalWizardMaxLongRunKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Max long run'**
+  String get goalWizardMaxLongRunKm;
+
+  /// No description provided for @goalWizardMaxLongRunCapDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum distance for your longest weekly run'**
+  String get goalWizardMaxLongRunCapDesc;
+
+  /// No description provided for @goalWizardTrainingPhasesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Phases'**
+  String get goalWizardTrainingPhasesTitle;
+
+  /// No description provided for @goalWizardTrainingPhasesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your build, peak, and taper weeks.'**
+  String get goalWizardTrainingPhasesDesc;
+
+  /// No description provided for @goalWizardTaperWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Taper Weeks'**
+  String get goalWizardTaperWeeks;
+
+  /// No description provided for @goalWizardPeakWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak Weeks'**
+  String get goalWizardPeakWeeks;
+
+  /// No description provided for @goalWizardBuildWeeks.
+  ///
+  /// In en, this message translates to:
+  /// **'Build Weeks'**
+  String get goalWizardBuildWeeks;
+
+  /// No description provided for @goalWizardPhasesTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total: {current} of {total} weeks'**
+  String goalWizardPhasesTotalLabel(int current, int total);
+
+  /// No description provided for @goalWizardPhasesExceedPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Phases total ({current}) exceeds plan ({total} weeks). Adjust phases or plan duration.'**
+  String goalWizardPhasesExceedPlan(int current, int total);
+
+  /// No description provided for @goalWizardWorkoutSchedulingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Scheduling'**
+  String get goalWizardWorkoutSchedulingTitle;
+
+  /// No description provided for @goalWizardWorkoutSchedulingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which days to schedule key workouts and rest.'**
+  String get goalWizardWorkoutSchedulingDesc;
+
+  /// No description provided for @goalWizardLongRunDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Long Run Day'**
+  String get goalWizardLongRunDay;
+
+  /// No description provided for @goalWizardQualityDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Quality Workout Day'**
+  String get goalWizardQualityDay;
+
+  /// No description provided for @goalWizardSwimDayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Swim Day'**
+  String get goalWizardSwimDayLabel;
+
+  /// No description provided for @goalWizardRestDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest Days'**
+  String get goalWizardRestDays;
+
+  /// No description provided for @goalWizardMileageRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended weekly mileage based on your race distance'**
+  String get goalWizardMileageRecommendation;
+
+  /// No description provided for @goalWizardPlanStartDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan Start Date'**
+  String get goalWizardPlanStartDateLabel;
+
+  /// No description provided for @goalWizardPlanStartDateAfterRace.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan start date must be before race date'**
+  String get goalWizardPlanStartDateAfterRace;
+
   /// No description provided for @authStravaNotConfigured.
   ///
   /// In en, this message translates to:

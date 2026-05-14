@@ -5,7 +5,73 @@ export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
 import { generateTrainingPlan } from '@/lib/plans';
-import { WorkoutType, RaceType } from '@/generated/prisma/browser';
+import { WorkoutType, RaceType, PlanCreationMode, type PlanSport } from '@/generated/prisma/browser';
+import { z } from 'zod';
+import { analyzeRace, type RaceDistance } from '@/lib/metrics/vdot';
+
+const dateStringSchema = z.string().refine((value) => !Number.isNaN(new Date(value).getTime()), {
+    message: 'Invalid date',
+});
+
+const TRIATHLON_RACE_TYPES = new Set<RaceType>([
+    'SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI',
+]);
+
+function resolveDbSport(sport: 'RUN' | 'TRIATHLON' | 'NO_RACE'): PlanSport {
+    return sport === 'NO_RACE' ? 'RUN' : sport;
+}
+
+function resolveSubGoalSport(
+    parentSport: 'RUN' | 'TRIATHLON' | 'NO_RACE',
+    subGoalSport?: 'RUN' | 'TRIATHLON' | 'NO_RACE',
+    raceType?: RaceType | null,
+): PlanSport {
+    if (subGoalSport) return resolveDbSport(subGoalSport);
+    if (raceType) return TRIATHLON_RACE_TYPES.has(raceType) ? 'TRIATHLON' : 'RUN';
+    return resolveDbSport(parentSport);
+}
+
+const advancedPlanSchema = z.object({
+    name: z.string().min(1).max(255),
+    sport: z.enum(['RUN', 'TRIATHLON', 'NO_RACE']),
+    raceType: z.nativeEnum(RaceType).nullable().optional(),
+    raceDate: dateStringSchema.nullable().optional(),
+    planStartDate: dateStringSchema.nullable().optional(),
+    planSource: z.string().optional(),
+    creationMode: z.nativeEnum(PlanCreationMode).optional(),
+    customDistanceM: z.number().nullable().optional(),
+    customSwimDistM: z.number().nullable().optional(),
+    customBikeDistM: z.number().nullable().optional(),
+    customRunDistM: z.number().nullable().optional(),
+    backyardLoopDistM: z.number().nullable().optional(),
+    backyardLoopTimeS: z.number().nullable().optional(),
+    targetLaps: z.number().nullable().optional(),
+    durationWeeks: z.number().int().min(4).max(52).optional(),
+    runsPerWeek: z.number().int().nonnegative().max(7).optional(),
+    ridesPerWeek: z.number().int().nonnegative().max(7).optional(),
+    swimsPerWeek: z.number().int().nonnegative().max(7).optional(),
+    strengthPerWeek: z.number().int().nonnegative().max(7).optional(),
+    weeklyMileageGoal: z.number().positive().optional(),
+    maxLongRunKm: z.number().min(6).max(80).optional(),
+    taperWeeks: z.number().int().nonnegative().optional(),
+    peakWeeks: z.number().int().nonnegative().optional(),
+    buildWeeks: z.number().int().nonnegative().optional(),
+    longRunDay: z.number().int().min(0).max(6).optional(),
+    workoutDay: z.number().int().min(0).max(6).optional(),
+    swimDay: z.number().int().min(0).max(6).optional(),
+    restDays: z.array(z.number().int().min(0).max(6)).optional(),
+    targetTime: z.number().int().positive().optional(),
+    calibrationTime: z.number().int().positive().optional(),
+    calibrationDistance: z.enum(['5K', '10K', 'HALF', 'MARATHON']).optional(),
+    calibrationFactor: z.number().positive().optional(),
+    subGoals: z.array(z.object({
+        name: z.string().min(1).max(255),
+        sport: z.enum(['RUN', 'TRIATHLON', 'NO_RACE']).optional(),
+        raceType: z.nativeEnum(RaceType).nullable().optional(),
+        raceDate: dateStringSchema.nullable().optional(),
+        priority: z.enum(['SECONDARY', 'TUNE_UP', 'MILESTONE']).optional(),
+    })).optional(),
+});
 
 export async function GET(req: Request) {
     try {
@@ -69,28 +135,30 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { name, sport, raceType, raceDate, planStartDate, planSource, creationMode, customDistanceM, customSwimDistM, customBikeDistM, customRunDistM, backyardLoopDistM, backyardLoopTimeS, targetLaps, subGoals } = body;
-
-        if (!name || typeof name !== 'string' || !name.trim()) {
-            return NextResponse.json({ error: 'Plan name is required' }, { status: 400 });
+        const parsed = advancedPlanSchema.safeParse(body);
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: 'Validation failed', details: parsed.error.flatten() },
+                { status: 400 },
+            );
         }
 
-        if (!sport || !['RUN', 'TRIATHLON'].includes(sport)) {
-            return NextResponse.json({ error: 'Valid sport is required (RUN or TRIATHLON)' }, { status: 400 });
+        const {
+            name, sport, raceType, raceDate, planStartDate, planSource, creationMode,
+            customDistanceM, customSwimDistM, customBikeDistM, customRunDistM,
+            backyardLoopDistM, backyardLoopTimeS, targetLaps, subGoals,
+            durationWeeks, runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek,
+            weeklyMileageGoal, maxLongRunKm, taperWeeks, peakWeeks, buildWeeks,
+            longRunDay, workoutDay, swimDay, restDays, targetTime,
+            calibrationTime, calibrationDistance, calibrationFactor,
+        } = parsed.data;
+
+        if (sport !== 'NO_RACE' && !raceType) {
+            return NextResponse.json({ error: 'raceType is required for RUN and TRIATHLON sports' }, { status: 400 });
         }
 
-        if (planStartDate) {
-            const d = new Date(planStartDate);
-            if (isNaN(d.getTime())) {
-                return NextResponse.json({ error: 'Invalid planStartDate' }, { status: 400 });
-            }
-        }
-
-        if (raceDate) {
-            const d = new Date(raceDate);
-            if (isNaN(d.getTime())) {
-                return NextResponse.json({ error: 'Invalid raceDate' }, { status: 400 });
-            }
+        if (sport !== 'NO_RACE' && !raceDate) {
+            return NextResponse.json({ error: 'raceDate is required for RUN and TRIATHLON sports' }, { status: 400 });
         }
 
         const recentGoal = await prisma.goal.findFirst({
@@ -99,11 +167,78 @@ export async function POST(req: Request) {
         });
         const currentVdot = recentGoal?.currentVdot || 30.0;
 
+        let effectiveVdot = currentVdot;
+
+        if (calibrationTime && calibrationDistance) {
+            const map: Record<string, RaceDistance> = {
+                '5K': '5K',
+                '10K': '10K',
+                'HALF': 'HALF',
+                'MARATHON': 'MARATHON',
+            };
+            effectiveVdot = analyzeRace({
+                distance: map[calibrationDistance] || '5K',
+                timeSeconds: calibrationTime,
+            }).vdot;
+        } else if (calibrationFactor && calibrationFactor > 0) {
+            effectiveVdot = currentVdot * calibrationFactor;
+        }
+
+        if (calibrationFactor && calibrationFactor > 0) {
+            await prisma.user.update({
+                where: { id: session.user.id },
+                data: {
+                    vdotCorrectionFactor: calibrationFactor,
+                    ...(calibrationFactor !== 1.0 && {
+                        autoRevolvingVo2max: null,
+                        autoRevolvingCalculatedAt: null,
+                    }),
+                },
+            });
+        }
+
+        const now = new Date();
+        const pStartDate = planStartDate ? new Date(planStartDate) : now;
+        const startDate = pStartDate > now ? pStartDate : now;
+        const rDate = raceDate ? new Date(raceDate) : null;
+
+        if (sport !== 'NO_RACE' && rDate && rDate <= startDate) {
+            return NextResponse.json({ error: 'raceDate must be after the plan start date' }, { status: 400 });
+        }
+
+        let totalWeeks: number;
+        if (sport === 'NO_RACE') {
+            totalWeeks = durationWeeks || 12;
+        } else if (rDate) {
+            totalWeeks = Math.max(4, Math.ceil((rDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+        } else {
+            totalWeeks = 12;
+        }
+
+        const resolvedTotalWeeks = Math.max(4, totalWeeks);
+
+        let safeTaper = taperWeeks ?? (sport === 'TRIATHLON' ? 1 : 2);
+        let safePeak = peakWeeks ?? Math.min(4, Math.floor(resolvedTotalWeeks / 3));
+        let safeBuild = buildWeeks ?? Math.min(4, Math.floor(resolvedTotalWeeks / 3));
+
+        const availablePhaseWeeks = sport === 'NO_RACE' ? resolvedTotalWeeks : Math.max(1, resolvedTotalWeeks - 1);
+
+        if (safeTaper + safePeak + safeBuild > availablePhaseWeeks) {
+            const proportion = availablePhaseWeeks / (safeTaper + safePeak + safeBuild);
+            safeTaper = Math.max(1, Math.round(safeTaper * proportion));
+            safePeak = Math.max(1, Math.round(safePeak * proportion));
+            safeBuild = Math.max(0, availablePhaseWeeks - safeTaper - safePeak);
+        }
+
+        const finalRaceDate = rDate || new Date(startDate.getTime() + resolvedTotalWeeks * 7 * 24 * 60 * 60 * 1000);
+
+        const dbSport = resolveDbSport(sport);
+
         const goal = await prisma.goal.create({
             data: {
                 userId: session.user.id,
                 name: name.trim(),
-                sport,
+                sport: dbSport,
                 planSource: planSource || 'advanced',
                 creationMode: creationMode || 'EXPERT_MANUAL',
                 planStartDate: planStartDate ? new Date(planStartDate) : null,
@@ -117,37 +252,46 @@ export async function POST(req: Request) {
                 backyardLoopTimeS: backyardLoopTimeS ?? null,
                 targetLaps: targetLaps ?? null,
                 isActive: true,
-                currentVdot,
+                targetTime: targetTime ?? null,
+                weeklyMileageGoal: weeklyMileageGoal ?? null,
+                planWeeks: resolvedTotalWeeks,
+                runsPerWeek: runsPerWeek ?? 4,
+                ridesPerWeek: ridesPerWeek ?? 0,
+                swimsPerWeek: swimsPerWeek ?? 0,
+                strengthPerWeek: strengthPerWeek ?? 0,
+                taperWeeks: safeTaper,
+                peakWeeks: safePeak,
+                buildWeeks: safeBuild,
+                longRunDay: longRunDay ?? 0,
+                workoutDay: workoutDay ?? 3,
+                swimDay: typeof swimDay === 'number' ? swimDay : null,
+                restDays: Array.isArray(restDays) ? restDays : undefined,
+                currentVdot: effectiveVdot,
             },
         });
 
-        // Generate main plan workouts if raceType or sport NO_RACE exists
         try {
-            if (raceType || (sport === 'NO_RACE')) {
-                const now = new Date();
-                const pStartDate = planStartDate ? new Date(planStartDate) : now;
-                const startDate = pStartDate > now ? pStartDate : now;
-                const rDate = raceDate ? new Date(raceDate) : null;
-                const totalWeeks = Math.max(4, body.durationWeeks || 12);
-                const finalRaceDate = rDate || new Date(startDate.getTime() + totalWeeks * 7 * 24 * 60 * 60 * 1000);
-                
-                const taperWeeks = sport === 'TRIATHLON' ? 1 : 2;
-
+            if (raceType || sport === 'NO_RACE') {
                 const workouts = generateTrainingPlan({
-                    vdot: currentVdot,
+                    vdot: effectiveVdot,
                     raceType: (raceType as RaceType) || null,
                     raceDate: finalRaceDate,
                     startDate,
-                    runsPerWeek: 4,
-                    ridesPerWeek: sport === 'TRIATHLON' ? 2 : 0,
-                    swimsPerWeek: sport === 'TRIATHLON' ? 2 : 0,
-                    strengthPerWeek: 0,
-                    weeklyMileageGoal: null,
-                    taperWeeks,
-                    peakWeeks: Math.min(4, Math.floor(totalWeeks / 3)),
-                    buildWeeks: Math.min(4, Math.floor(totalWeeks / 3)),
-                    longRunDay: 0,
-                    workoutDay: 3,
+                    sport: dbSport,
+                    runsPerWeek: runsPerWeek ?? 4,
+                    ridesPerWeek: ridesPerWeek ?? (sport === 'TRIATHLON' ? 2 : 0),
+                    swimsPerWeek: swimsPerWeek ?? (sport === 'TRIATHLON' ? 2 : 0),
+                    strengthPerWeek: strengthPerWeek ?? 0,
+                    weeklyMileageGoal: weeklyMileageGoal ?? null,
+                    taperWeeks: safeTaper,
+                    peakWeeks: safePeak,
+                    buildWeeks: safeBuild,
+                    maxLongRunKm: maxLongRunKm,
+                    longRunDay: longRunDay ?? 0,
+                    workoutDay: workoutDay ?? 3,
+                    swimDay,
+                    restDays,
+                    weeksTotal: resolvedTotalWeeks,
                 });
 
                 if (workouts.length > 0) {
@@ -175,49 +319,54 @@ export async function POST(req: Request) {
             for (const sg of subGoals) {
                 if (!sg.name || typeof sg.name !== 'string' || !sg.name.trim()) continue;
 
+                const subGoalSport = resolveSubGoalSport(sport, sg.sport, sg.raceType);
+
                 const subGoal = await prisma.goal.create({
                     data: {
                         userId: session.user.id,
                         name: sg.name.trim(),
                         parentGoalId: goal.id,
-                        sport: sg.sport || sport,
+                        sport: subGoalSport,
                         raceType: sg.raceType || null,
                         raceDate: sg.raceDate ? new Date(sg.raceDate) : null,
                         priority: sg.priority || 'SECONDARY',
                         planSource: 'advanced',
                         creationMode: 'EXPERT_MANUAL',
-                        currentVdot,
+                        currentVdot: effectiveVdot,
                     },
                 });
 
-                // Generate sub-goal workouts
                 if (sg.raceType && sg.raceDate) {
                     try {
                         const subRaceDate = new Date(sg.raceDate);
-                        const now = new Date();
-                        const pStartDate = planStartDate ? new Date(planStartDate) : now;
-                        const startDate = pStartDate > now ? pStartDate : now;
 
                         if (subRaceDate > now) {
                             const weeksAvailable = Math.max(1, Math.ceil((subRaceDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
                             const priority = sg.priority || 'SECONDARY';
-                            const taperWeeks = priority === 'TUNE_UP' ? 1 : Math.min(2, Math.floor(weeksAvailable / 4));
+                            const subPhaseWeeks = Math.max(1, weeksAvailable - 1);
+                            const subTaper = Math.min(priority === 'TUNE_UP' ? 1 : safeTaper, subPhaseWeeks);
+                            const subPeak = Math.min(safePeak, Math.max(0, Math.floor(subPhaseWeeks / 3)));
+                            const subBuild = Math.min(safeBuild, Math.max(0, subPhaseWeeks - subTaper - subPeak));
 
                             const subWorkouts = generateTrainingPlan({
-                                vdot: currentVdot,
+                                vdot: effectiveVdot,
                                 raceType: sg.raceType as RaceType,
                                 raceDate: subRaceDate,
                                 startDate,
-                                runsPerWeek: 4,
-                                ridesPerWeek: sg.sport === 'TRIATHLON' ? 2 : 0,
-                                swimsPerWeek: sg.sport === 'TRIATHLON' ? 2 : 0,
-                                strengthPerWeek: 0,
-                                weeklyMileageGoal: null,
-                                taperWeeks,
-                                peakWeeks: Math.min(2, Math.floor(weeksAvailable / 3)),
-                                buildWeeks: Math.min(4, Math.floor(weeksAvailable / 3)),
-                                longRunDay: 0,
-                                workoutDay: 3,
+                                sport: subGoalSport,
+                                runsPerWeek: runsPerWeek ?? 4,
+                                ridesPerWeek: ridesPerWeek ?? (subGoalSport === 'TRIATHLON' ? 2 : 0),
+                                swimsPerWeek: swimsPerWeek ?? (subGoalSport === 'TRIATHLON' ? 2 : 0),
+                                strengthPerWeek: strengthPerWeek ?? 0,
+                                weeklyMileageGoal: weeklyMileageGoal ?? null,
+                                taperWeeks: subTaper,
+                                peakWeeks: subPeak,
+                                buildWeeks: subBuild,
+                                longRunDay: longRunDay ?? 0,
+                                workoutDay: workoutDay ?? 3,
+                                swimDay,
+                                restDays,
+                                weeksTotal: weeksAvailable,
                             });
 
                             const parentRaceDate = raceDate ? new Date(raceDate) : null;
@@ -228,7 +377,7 @@ export async function POST(req: Request) {
                             if (filteredWorkouts.length > 0) {
                                 await prisma.workout.createMany({
                                     data: filteredWorkouts.map(w => ({
-                                        goalId: goal.id, // Workouts belong to parent plan
+                                        goalId: goal.id,
                                         subGoalId: subGoal.id,
                                         scheduledDate: w.date,
                                         workoutType: w.type as WorkoutType,

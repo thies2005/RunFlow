@@ -46,6 +46,8 @@ sealed class CreateGoalRequest with _$CreateGoalRequest {
     double? maxLongRunKm,
     @Default(0) int longRunDay,
     @Default(3) int workoutDay,
+    @Default(1) int swimDay,
+    List<int>? restDays,
     int? calibrationTime,
     String? calibrationDistance,
     double? calibrationFactor,

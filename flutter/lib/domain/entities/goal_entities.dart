@@ -2,18 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 
 class GoalsResponse {
-  const GoalsResponse({
-    required this.goals,
-  });
+  const GoalsResponse({required this.goals});
 
   final List<Goal> goals;
 
-  GoalsResponse copyWith({
-    List<Goal>? goals,
-  }) {
-    return GoalsResponse(
-      goals: goals ?? this.goals,
-    );
+  GoalsResponse copyWith({List<Goal>? goals}) {
+    return GoalsResponse(goals: goals ?? this.goals);
   }
 
   @override
@@ -28,18 +22,12 @@ class GoalsResponse {
 }
 
 class WorkoutsResponse {
-  const WorkoutsResponse({
-    required this.workouts,
-  });
+  const WorkoutsResponse({required this.workouts});
 
   final List<Workout> workouts;
 
-  WorkoutsResponse copyWith({
-    List<Workout>? workouts,
-  }) {
-    return WorkoutsResponse(
-      workouts: workouts ?? this.workouts,
-    );
+  WorkoutsResponse copyWith({List<Workout>? workouts}) {
+    return WorkoutsResponse(workouts: workouts ?? this.workouts);
   }
 
   @override
@@ -72,6 +60,8 @@ class CreateGoalRequest {
     this.maxLongRunKm,
     this.longRunDay = 0,
     this.workoutDay = 3,
+    this.swimDay = 1,
+    this.restDays,
     this.calibrationTime,
     this.calibrationDistance,
     this.calibrationFactor,
@@ -94,6 +84,8 @@ class CreateGoalRequest {
   final double? maxLongRunKm;
   final int longRunDay;
   final int workoutDay;
+  final int swimDay;
+  final List<int>? restDays;
   final int? calibrationTime;
   final String? calibrationDistance;
   final double? calibrationFactor;
@@ -116,6 +108,8 @@ class CreateGoalRequest {
     double? maxLongRunKm,
     int? longRunDay,
     int? workoutDay,
+    int? swimDay,
+    List<int>? restDays,
     int? calibrationTime,
     String? calibrationDistance,
     double? calibrationFactor,
@@ -138,6 +132,8 @@ class CreateGoalRequest {
       maxLongRunKm: maxLongRunKm ?? this.maxLongRunKm,
       longRunDay: longRunDay ?? this.longRunDay,
       workoutDay: workoutDay ?? this.workoutDay,
+      swimDay: swimDay ?? this.swimDay,
+      restDays: restDays ?? this.restDays,
       calibrationTime: calibrationTime ?? this.calibrationTime,
       calibrationDistance: calibrationDistance ?? this.calibrationDistance,
       calibrationFactor: calibrationFactor ?? this.calibrationFactor,
@@ -166,33 +162,37 @@ class CreateGoalRequest {
           maxLongRunKm == other.maxLongRunKm &&
           longRunDay == other.longRunDay &&
           workoutDay == other.workoutDay &&
+          swimDay == other.swimDay &&
+          listEquals(restDays, other.restDays) &&
           calibrationTime == other.calibrationTime &&
           calibrationDistance == other.calibrationDistance &&
           calibrationFactor == other.calibrationFactor;
 
   @override
   int get hashCode => Object.hashAll([
-        name,
-        raceType,
-        raceDate,
-        planStartDate,
-        targetTime,
-        weeklyMileageGoal,
-        planWeeks,
-        runsPerWeek,
-        ridesPerWeek,
-        swimsPerWeek,
-        strengthPerWeek,
-        taperWeeks,
-        peakWeeks,
-        buildWeeks,
-        maxLongRunKm,
-        longRunDay,
-        workoutDay,
-        calibrationTime,
-        calibrationDistance,
-        calibrationFactor,
-      ]);
+    name,
+    raceType,
+    raceDate,
+    planStartDate,
+    targetTime,
+    weeklyMileageGoal,
+    planWeeks,
+    runsPerWeek,
+    ridesPerWeek,
+    swimsPerWeek,
+    strengthPerWeek,
+    taperWeeks,
+    peakWeeks,
+    buildWeeks,
+    maxLongRunKm,
+    longRunDay,
+    workoutDay,
+    swimDay,
+    Object.hashAll(restDays ?? const []),
+    calibrationTime,
+    calibrationDistance,
+    calibrationFactor,
+  ]);
 }
 
 class UpdateGoalRequest {
@@ -233,12 +233,7 @@ class UpdateGoalRequest {
           currentVdot == other.currentVdot;
 
   @override
-  int get hashCode => Object.hash(
-        name,
-        targetTime,
-        isActive,
-        currentVdot,
-      );
+  int get hashCode => Object.hash(name, targetTime, isActive, currentVdot);
 }
 
 class UpdateWorkoutRequest {
@@ -290,11 +285,11 @@ class UpdateWorkoutRequest {
 
   @override
   int get hashCode => Object.hash(
-        workoutType,
-        description,
-        targetDistance,
-        targetPace,
-        targetDuration,
-        isCompleted,
-      );
+    workoutType,
+    description,
+    targetDistance,
+    targetPace,
+    targetDuration,
+    isCompleted,
+  );
 }

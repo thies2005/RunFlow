@@ -1,6 +1,7 @@
 import { WorkoutType, RaceType } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
 import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS } from '../index';
+import { fixBackToBackSameType } from '../schedule-utils';
 
 type UltraPhase = 'BASE' | 'BUILD' | 'ENDURANCE' | 'MENTAL_PREP' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 
@@ -251,7 +252,11 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
-    return workouts;
+    return fixBackToBackSameType(workouts, {
+        raceDate,
+        restDays: config.restDays,
+        protectedTypes: [WorkoutType.RACE, WorkoutType.LONG_RUN],
+    });
 }
 
 function getUltraPhase(

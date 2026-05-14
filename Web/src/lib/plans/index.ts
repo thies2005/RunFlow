@@ -3,6 +3,7 @@ import { calculateTrainingPaces, TrainingPaces } from '../metrics/vdot';
 import { generateUltraPlan } from './generators/run-ultra';
 import { generateTriathlonPlan } from './generators/triathlon';
 import { generateNoRacePlan } from './generators/no-race';
+import { fixBackToBackSameType } from './schedule-utils';
 
 export const ULTRA_RACE_TYPES: RaceType[] = [
     'FIFTY_K', 'FIFTY_MILE', 'HUNDRED_K', 'HUNDRED_MILE',
@@ -276,7 +277,10 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
-    return workouts;
+    return fixBackToBackSameType(workouts, {
+        raceDate,
+        restDays: config.restDays,
+    });
 }
 
 function getPhase(

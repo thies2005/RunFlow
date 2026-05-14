@@ -51,6 +51,10 @@ _CreateGoalRequest _$CreateGoalRequestFromJson(Map<String, dynamic> json) =>
       maxLongRunKm: (json['maxLongRunKm'] as num?)?.toDouble(),
       longRunDay: (json['longRunDay'] as num?)?.toInt() ?? 0,
       workoutDay: (json['workoutDay'] as num?)?.toInt() ?? 3,
+      swimDay: (json['swimDay'] as num?)?.toInt() ?? 1,
+      restDays: (json['restDays'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList(),
       calibrationTime: (json['calibrationTime'] as num?)?.toInt(),
       calibrationDistance: json['calibrationDistance'] as String?,
       calibrationFactor: (json['calibrationFactor'] as num?)?.toDouble(),
@@ -75,6 +79,8 @@ Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
       'maxLongRunKm': instance.maxLongRunKm,
       'longRunDay': instance.longRunDay,
       'workoutDay': instance.workoutDay,
+      'swimDay': instance.swimDay,
+      'restDays': instance.restDays,
       'calibrationTime': instance.calibrationTime,
       'calibrationDistance': instance.calibrationDistance,
       'calibrationFactor': instance.calibrationFactor,

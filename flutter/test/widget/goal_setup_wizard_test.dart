@@ -7,13 +7,10 @@ import 'package:runflow_flutter/presentation/screens/goals/goal_setup_wizard.dar
 
 void main() {
   group('GoalSetupWizard', () {
-    testWidgets('renders first step with name and race type',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestApp(),
-        ),
-      );
+    testWidgets('renders first step with name and race type', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
       expect(find.text('New Goal'), findsOneWidget);
@@ -26,34 +23,23 @@ void main() {
     });
 
     testWidgets('has close button in app bar', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestApp(),
-        ),
-      );
+      await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.close), findsOneWidget);
     });
 
     testWidgets('has Next button on first step', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestApp(),
-        ),
-      );
+      await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
       expect(find.text('Next'), findsOneWidget);
     });
 
-    testWidgets('shows Back button after first step',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestApp(),
-        ),
-      );
+    testWidgets('shows Back button after first step', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).first, 'Test Goal');
@@ -65,11 +51,7 @@ void main() {
     });
 
     testWidgets('navigates through all steps', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestApp(),
-        ),
-      );
+      await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).first, 'My Goal');
@@ -86,6 +68,21 @@ void main() {
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
 
+      expect(find.text('Training Volume'), findsOneWidget);
+
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Training Phases'), findsOneWidget);
+
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Workout Scheduling'), findsOneWidget);
+
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+
       expect(find.text('Training Plan'), findsOneWidget);
 
       await tester.tap(find.text('Next'));
@@ -96,11 +93,7 @@ void main() {
     });
 
     testWidgets('can go back to previous step', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestApp(),
-        ),
-      );
+      await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).first, 'My Goal');
@@ -116,22 +109,14 @@ void main() {
     });
 
     testWidgets('shows progress indicators', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestApp(),
-        ),
-      );
+      await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
       expect(find.byType(ClipRRect), findsWidgets);
     });
 
     testWidgets('allows race type selection', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestApp(),
-        ),
-      );
+      await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Half Marathon'));
@@ -148,7 +133,7 @@ class _TestApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-       localizationsDelegates: [
+      localizationsDelegates: [
         S.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

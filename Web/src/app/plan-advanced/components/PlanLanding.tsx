@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -16,6 +16,9 @@ import {
     Clock,
     X,
 } from 'lucide-react';
+import CalibrationSection from '@/components/setup/CalibrationSection';
+import GoalTimeRenderer from '@/components/setup/GoalTimeRenderer';
+import PlanVolumeSection from '@/components/setup/PlanVolumeSection';
 
 type Sport = 'RUN' | 'TRIATHLON' | 'NO_RACE';
 
@@ -30,29 +33,39 @@ const RUNNING_DISTANCES = [
     { value: 'TEN_K', label: '10K' },
     { value: 'HALF_MARATHON', label: 'Half Marathon' },
     { value: 'MARATHON', label: 'Marathon' },
-    { value: '50K', label: '50K' },
-    { value: '50_MILE', label: '50 Mile' },
-    { value: '100K', label: '100K' },
-    { value: '100_MILE', label: '100 Mile' },
-    { value: '12HR', label: '12hr' },
-    { value: '24HR', label: '24hr' },
+    { value: 'FIFTY_K', label: '50K' },
+    { value: 'FIFTY_MILE', label: '50 Mile' },
+    { value: 'HUNDRED_K', label: '100K' },
+    { value: 'HUNDRED_MILE', label: '100 Mile' },
+    { value: 'TWELVE_HOUR', label: '12hr' },
+    { value: 'TWENTY_FOUR_HOUR', label: '24hr' },
     { value: 'BACKYARD_ULTRA', label: 'Backyard Ultra' },
     { value: 'CUSTOM_DISTANCE', label: 'Custom Distance' },
 ];
 
 const TRIATHLON_DISTANCES = [
-    { value: 'SPRINT', label: 'Sprint' },
-    { value: 'OLYMPIC', label: 'Olympic' },
+    { value: 'SPRINT_TRI', label: 'Sprint' },
+    { value: 'OLYMPIC_TRI', label: 'Olympic' },
     { value: 'HALF_IRONMAN', label: 'Half Ironman' },
     { value: 'FULL_IRONMAN', label: 'Full Ironman' },
-    { value: 'CUSTOM', label: 'Custom' },
+    { value: 'CUSTOM_TRI', label: 'Custom' },
 ];
+
+const GOAL_TIME_RACE_TYPES = new Set(['FIVE_K', 'TEN_K', 'HALF_MARATHON', 'MARATHON']);
 
 interface SubGoalForm {
     name: string;
     sport: Sport;
     raceType: string;
     raceDate: string;
+}
+
+interface RaceActivity {
+    id: string;
+    name: string;
+    distance: number;
+    movingTime: number;
+    startDate: string;
 }
 
 export function PlanLanding() {
@@ -73,6 +86,66 @@ export function PlanLanding() {
         raceType: '',
         raceDate: '',
     });
+
+    const [calibrationMode, setCalibrationMode] = useState<'activity' | 'manual'>('manual');
+    const [selectedActivityId, setSelectedActivityId] = useState('');
+    const [calibrationDistance, setCalibrationDistance] = useState('MARATHON');
+    const [hours, setHours] = useState('');
+    const [minutes, setMinutes] = useState('');
+    const [seconds, setSeconds] = useState('');
+    const [calibrationFactor, setCalibrationFactor] = useState(1.0);
+
+    const [runsPerWeek, setRunsPerWeek] = useState(4);
+    const [ridesPerWeek, setRidesPerWeek] = useState(0);
+    const [swimsPerWeek, setSwimsPerWeek] = useState(0);
+    const [strengthPerWeek, setStrengthPerWeek] = useState(0);
+    const [weeklyMileage, setWeeklyMileage] = useState(40);
+    const [maxLongRunKm, setMaxLongRunKm] = useState(22);
+    const [taperWeeks, setTaperWeeks] = useState(2);
+    const [peakWeeks, setPeakWeeks] = useState(4);
+    const [buildWeeks, setBuildWeeks] = useState(4);
+    const [showSchedulingSettings, setShowSchedulingSettings] = useState(false);
+    const [longRunDay, setLongRunDay] = useState(0);
+    const [qualityDay, setQualityDay] = useState(3);
+    const [swimDay, setSwimDay] = useState(2);
+    const [restDays, setRestDays] = useState<number[]>([1, 5]);
+
+    const [goalTimeSeconds, setGoalTimeSeconds] = useState<number | null>(null);
+    const [isEditingGoalTime, setIsEditingGoalTime] = useState(false);
+    const [goalTimeHours, setGoalTimeHours] = useState('');
+    const [goalTimeMinutes, setGoalTimeMinutes] = useState('');
+    const [goalTimeSecs, setGoalTimeSecs] = useState('');
+
+    const { data: activitiesData } = useQuery({
+        queryKey: ['race-activities'],
+        queryFn: async () => {
+            const res = await fetch('/api/activities?type=RUN&limit=50&raceEligible=true');
+            if (!res.ok) throw new Error('Failed to fetch activities');
+            return res.json();
+        },
+    });
+
+    const { data: statsData } = useQuery({
+        queryKey: ['analytics-stats'],
+        queryFn: async () => {
+            const res = await fetch('/api/analytics/stats');
+            if (!res.ok) throw new Error('Failed to fetch stats');
+            return res.json();
+        },
+    });
+
+    const effectiveVO2max = statsData?.effectiveVO2max || 0;
+    const shapePercent = statsData?.marathonShape?.shape || 0;
+
+    const raceActivities: RaceActivity[] = activitiesData?.activities?.filter((a: RaceActivity) =>
+        a.distance >= 4500
+    ) || [];
+
+    const computedPlanWeeks = sport === 'NO_RACE'
+        ? (parseInt(durationWeeks) || 12)
+        : raceDate && planStartDate
+            ? Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (7 * 24 * 60 * 60 * 1000)))
+            : 12;
 
     const createMutation = useMutation({
         mutationFn: async (body: Record<string, unknown>) => {
@@ -100,6 +173,12 @@ export function PlanLanding() {
     const distances = sport === 'TRIATHLON' ? TRIATHLON_DISTANCES : sport === 'RUN' ? RUNNING_DISTANCES : [];
 
     const handleCreate = () => {
+        const selectedActivity = raceActivities.find((activity) => activity.id === selectedActivityId);
+        const manualTimeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
+        const calibrationTimeSeconds = calibrationMode === 'activity'
+            ? selectedActivity?.movingTime ?? 0
+            : manualTimeSeconds;
+
         const body: Record<string, unknown> = {
             name: planName || `${sport === 'RUN' ? 'Running' : sport === 'TRIATHLON' ? 'Triathlon' : 'Fitness'} Plan`,
             sport,
@@ -107,6 +186,26 @@ export function PlanLanding() {
             planStartDate: planStartDate || null,
             raceDate: sport === 'NO_RACE' ? null : (raceDate || null),
             durationWeeks: sport === 'NO_RACE' ? parseInt(durationWeeks) || 12 : undefined,
+            runsPerWeek,
+            ridesPerWeek,
+            swimsPerWeek,
+            strengthPerWeek,
+            weeklyMileageGoal: weeklyMileage * 1000,
+            maxLongRunKm,
+            taperWeeks,
+            peakWeeks,
+            buildWeeks,
+            longRunDay,
+            workoutDay: qualityDay,
+            swimDay,
+            restDays,
+            ...(goalTimeSeconds && { targetTime: goalTimeSeconds }),
+            ...(calibrationTimeSeconds > 0 && {
+                calibrationTime: Math.round(calibrationTimeSeconds),
+                calibrationDistance,
+                calibrationActivityId: calibrationMode === 'activity' ? selectedActivityId : undefined,
+                calibrationFactor,
+            }),
         };
         if (subGoals.length > 0) {
             body.subGoals = subGoals
@@ -163,7 +262,7 @@ export function PlanLanding() {
                                 type="button"
                                 onClick={() => {
                                     setSport(value);
-                                    if (value === 'TRIATHLON') setRaceType('SPRINT');
+                                    if (value === 'TRIATHLON') setRaceType('SPRINT_TRI');
                                     else if (value === 'RUN') setRaceType('MARATHON');
                                 }}
                                 className={`p-3 rounded-lg border text-left transition-colors ${
@@ -248,6 +347,88 @@ export function PlanLanding() {
                             />
                         </div>
                     )}
+                </div>
+
+                {sport !== 'NO_RACE' && (
+                    <div className="border-t border-glass-border pt-6">
+                        <CalibrationSection
+                            calibrationMode={calibrationMode}
+                            setCalibrationMode={setCalibrationMode}
+                            selectedActivityId={selectedActivityId}
+                            setSelectedActivityId={setSelectedActivityId}
+                            calibrationDistance={calibrationDistance}
+                            setCalibrationDistance={setCalibrationDistance}
+                            hours={hours}
+                            setHours={setHours}
+                            minutes={minutes}
+                            setMinutes={setMinutes}
+                            seconds={seconds}
+                            setSeconds={setSeconds}
+                            setCalibrationFactor={setCalibrationFactor}
+                            effectiveVO2max={effectiveVO2max}
+                            raceActivities={raceActivities}
+                        />
+                    </div>
+                )}
+
+                {sport !== 'NO_RACE' && GOAL_TIME_RACE_TYPES.has(raceType) && (
+                    <GoalTimeRenderer
+                        mode="onboarding"
+                        effectiveVO2max={effectiveVO2max}
+                        calibrationFactor={calibrationFactor}
+                        raceType={raceType}
+                        computedPlanWeeks={computedPlanWeeks}
+                        runsPerWeek={runsPerWeek}
+                        weeklyMileage={weeklyMileage}
+                        taperWeeks={taperWeeks}
+                        peakWeeks={peakWeeks}
+                        buildWeeks={buildWeeks}
+                        shapePercent={shapePercent}
+                        goalTimeSeconds={goalTimeSeconds}
+                        setGoalTimeSeconds={setGoalTimeSeconds}
+                        goalTimeHours={goalTimeHours}
+                        setGoalTimeHours={setGoalTimeHours}
+                        goalTimeMinutes={goalTimeMinutes}
+                        setGoalTimeMinutes={setGoalTimeMinutes}
+                        goalTimeSecs={goalTimeSecs}
+                        setGoalTimeSecs={setGoalTimeSecs}
+                        isEditingGoalTime={isEditingGoalTime}
+                        setIsEditingGoalTime={setIsEditingGoalTime}
+                    />
+                )}
+
+                <div className="border-t border-glass-border pt-6">
+                    <PlanVolumeSection
+                        runsPerWeek={runsPerWeek}
+                        setRunsPerWeek={setRunsPerWeek}
+                        ridesPerWeek={ridesPerWeek}
+                        setRidesPerWeek={setRidesPerWeek}
+                        swimsPerWeek={swimsPerWeek}
+                        setSwimsPerWeek={setSwimsPerWeek}
+                        strengthPerWeek={strengthPerWeek}
+                        setStrengthPerWeek={setStrengthPerWeek}
+                        weeklyMileage={weeklyMileage}
+                        setWeeklyMileage={setWeeklyMileage}
+                        raceType={raceType}
+                        maxLongRunKm={maxLongRunKm}
+                        setMaxLongRunKm={setMaxLongRunKm}
+                        taperWeeks={taperWeeks}
+                        setTaperWeeks={setTaperWeeks}
+                        peakWeeks={peakWeeks}
+                        setPeakWeeks={setPeakWeeks}
+                        buildWeeks={buildWeeks}
+                        setBuildWeeks={setBuildWeeks}
+                        showSchedulingSettings={showSchedulingSettings}
+                        setShowSchedulingSettings={setShowSchedulingSettings}
+                        longRunDay={longRunDay}
+                        setLongRunDay={setLongRunDay}
+                        qualityDay={qualityDay}
+                        setQualityDay={setQualityDay}
+                        swimDay={swimDay}
+                        setSwimDay={setSwimDay}
+                        restDays={restDays}
+                        setRestDays={setRestDays}
+                    />
                 </div>
 
                 <div>
@@ -386,8 +567,10 @@ export function PlanLanding() {
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     name: 'Imported Plan',
-                                    sport: 'RUN',
+                                    sport: 'NO_RACE',
                                     raceType: null,
+                                    raceDate: null,
+                                    durationWeeks: 12,
                                     planSource: 'advanced',
                                 }),
                             });

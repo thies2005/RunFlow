@@ -72,12 +72,17 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
   String _fmtDate(DateTime t) =>
       '${t.day.toString().padLeft(2, '0')}/${t.month.toString().padLeft(2, '0')}';
 
-  Future<void> _deleteSession(BuildContext context, FastingSession session) async {
+  Future<void> _deleteSession(
+    BuildContext context,
+    FastingSession session,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Session?'),
-        content: const Text('Are you sure you want to delete this fasting session?'),
+        content: const Text(
+          'Are you sure you want to delete this fasting session?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -99,7 +104,10 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
     }
   }
 
-  Future<void> _editSession(BuildContext context, FastingSession session) async {
+  Future<void> _editSession(
+    BuildContext context,
+    FastingSession session,
+  ) async {
     DateTime start = session.startTime;
     DateTime? end = session.endTime;
 
@@ -125,13 +133,20 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                         lastDate: DateTime.now(),
                       );
                       if (date != null) {
+                        if (!context.mounted) return;
                         final time = await showTimePicker(
                           context: context,
                           initialTime: TimeOfDay.fromDateTime(start),
                         );
                         if (time != null) {
                           setState(() {
-                            start = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                            start = DateTime(
+                              date.year,
+                              date.month,
+                              date.day,
+                              time.hour,
+                              time.minute,
+                            );
                           });
                         }
                       }
@@ -139,7 +154,11 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                   ),
                   ListTile(
                     title: const Text('End Time'),
-                    subtitle: Text(end != null ? '${_fmtDate(end!)} ${_fmtTime(end!)}' : 'Active'),
+                    subtitle: Text(
+                      end != null
+                          ? '${_fmtDate(end!)} ${_fmtTime(end!)}'
+                          : 'Active',
+                    ),
                     onTap: () async {
                       final date = await showDatePicker(
                         context: context,
@@ -148,13 +167,22 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                         lastDate: DateTime.now().add(const Duration(days: 1)),
                       );
                       if (date != null) {
+                        if (!context.mounted) return;
                         final time = await showTimePicker(
                           context: context,
-                          initialTime: TimeOfDay.fromDateTime(end ?? DateTime.now()),
+                          initialTime: TimeOfDay.fromDateTime(
+                            end ?? DateTime.now(),
+                          ),
                         );
                         if (time != null) {
                           setState(() {
-                            end = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                            end = DateTime(
+                              date.year,
+                              date.month,
+                              date.day,
+                              time.hour,
+                              time.minute,
+                            );
                           });
                         }
                       }
@@ -169,7 +197,9 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                 ),
                 FilledButton(
                   onPressed: () {
-                    final duration = end != null ? end!.difference(start).inMinutes : session.duration;
+                    final duration = end != null
+                        ? end!.difference(start).inMinutes
+                        : session.duration;
                     Navigator.pop(
                       ctx,
                       session.copyWith(
@@ -193,7 +223,7 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
       await repo.updateFastingSession(result);
       ref.invalidate(fastingHistoryProvider);
       if (result.isActive) {
-         ref.invalidate(fastingProvider);
+        ref.invalidate(fastingProvider);
       }
     }
   }
@@ -305,7 +335,9 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                               vertical: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -318,19 +350,22 @@ class _FastingScreenState extends ConsumerState<FastingScreen> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         '${dur.inHours}h ${dur.inMinutes % 60}m',
-                                        style: theme.textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                       ),
                                       Text(
                                         '${_fmtDate(session.startTime)} ${_fmtTime(session.startTime)} – ${session.endTime != null ? _fmtTime(session.endTime!) : S.of(context).fastingActive}',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: AppColors.onSurfaceVariant,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.onSurfaceVariant,
+                                            ),
                                       ),
                                     ],
                                   ),

@@ -2454,6 +2454,85 @@ class SDe extends S {
   String get goalWizardPlanDurationLabel => 'Plandauer';
 
   @override
+  String get goalWizardTrainingVolumeTitle => 'Trainingsumfang';
+
+  @override
+  String get goalWizardTrainingVolumeDesc =>
+      'Lege deinen wöchentlichen Trainingsumfang und Cross-Training fest.';
+
+  @override
+  String get goalWizardRidesPerWeek => 'Radeinheiten pro Woche';
+
+  @override
+  String get goalWizardSwimsPerWeek => 'Schwimmeinheiten pro Woche';
+
+  @override
+  String get goalWizardStrengthPerWeek => 'Krafteinheiten pro Woche';
+
+  @override
+  String get goalWizardMaxLongRunKm => 'Maximaler langer Lauf';
+
+  @override
+  String get goalWizardMaxLongRunCapDesc =>
+      'Maximale Distanz für deinen längsten wöchentlichen Lauf';
+
+  @override
+  String get goalWizardTrainingPhasesTitle => 'Trainingsphasen';
+
+  @override
+  String get goalWizardTrainingPhasesDesc =>
+      'Passe Aufbau-, Peak- und Taper-Wochen an.';
+
+  @override
+  String get goalWizardTaperWeeks => 'Taper-Wochen';
+
+  @override
+  String get goalWizardPeakWeeks => 'Peak-Wochen';
+
+  @override
+  String get goalWizardBuildWeeks => 'Aufbauwochen';
+
+  @override
+  String goalWizardPhasesTotalLabel(int current, int total) {
+    return 'Gesamt: $current von $total Wochen';
+  }
+
+  @override
+  String goalWizardPhasesExceedPlan(int current, int total) {
+    return 'Phasen gesamt ($current) überschreiten den Plan ($total Wochen). Passe Phasen oder Plandauer an.';
+  }
+
+  @override
+  String get goalWizardWorkoutSchedulingTitle => 'Workout-Planung';
+
+  @override
+  String get goalWizardWorkoutSchedulingDesc =>
+      'Wähle Tage für Schlüsseleinheiten und Erholung.';
+
+  @override
+  String get goalWizardLongRunDay => 'Tag für langen Lauf';
+
+  @override
+  String get goalWizardQualityDay => 'Tag für Qualitätseinheit';
+
+  @override
+  String get goalWizardSwimDayLabel => 'Schwimmtag';
+
+  @override
+  String get goalWizardRestDays => 'Ruhetage';
+
+  @override
+  String get goalWizardMileageRecommendation =>
+      'Empfohlene Wochenkilometer basierend auf deiner Renndistanz';
+
+  @override
+  String get goalWizardPlanStartDateLabel => 'Planstartdatum';
+
+  @override
+  String get goalWizardPlanStartDateAfterRace =>
+      'Das Planstartdatum muss vor dem Renndatum liegen';
+
+  @override
   String get authStravaNotConfigured =>
       'Strava-Anmeldung ist für diesen Build nicht konfiguriert.';
 

@@ -1,6 +1,7 @@
 import { WorkoutType } from '@/generated/prisma/browser';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS } from '../index';
+import { fixBackToBackSameType } from '../schedule-utils';
 
 type NoRacePhase = 'BASE' | 'BUILD' | 'MAINTAIN';
 
@@ -101,7 +102,7 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
-    return workouts;
+    return fixBackToBackSameType(workouts, { restDays: config.restDays });
 }
 
 function getNoRacePhase(

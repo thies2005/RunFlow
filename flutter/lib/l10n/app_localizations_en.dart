@@ -2429,6 +2429,85 @@ class SEn extends S {
   String get goalWizardPlanDurationLabel => 'Plan Duration';
 
   @override
+  String get goalWizardTrainingVolumeTitle => 'Training Volume';
+
+  @override
+  String get goalWizardTrainingVolumeDesc =>
+      'Set your weekly training volume and cross-training frequency.';
+
+  @override
+  String get goalWizardRidesPerWeek => 'Rides per week';
+
+  @override
+  String get goalWizardSwimsPerWeek => 'Swims per week';
+
+  @override
+  String get goalWizardStrengthPerWeek => 'Strength sessions per week';
+
+  @override
+  String get goalWizardMaxLongRunKm => 'Max long run';
+
+  @override
+  String get goalWizardMaxLongRunCapDesc =>
+      'Maximum distance for your longest weekly run';
+
+  @override
+  String get goalWizardTrainingPhasesTitle => 'Training Phases';
+
+  @override
+  String get goalWizardTrainingPhasesDesc =>
+      'Customize your build, peak, and taper weeks.';
+
+  @override
+  String get goalWizardTaperWeeks => 'Taper Weeks';
+
+  @override
+  String get goalWizardPeakWeeks => 'Peak Weeks';
+
+  @override
+  String get goalWizardBuildWeeks => 'Build Weeks';
+
+  @override
+  String goalWizardPhasesTotalLabel(int current, int total) {
+    return 'Total: $current of $total weeks';
+  }
+
+  @override
+  String goalWizardPhasesExceedPlan(int current, int total) {
+    return 'Phases total ($current) exceeds plan ($total weeks). Adjust phases or plan duration.';
+  }
+
+  @override
+  String get goalWizardWorkoutSchedulingTitle => 'Workout Scheduling';
+
+  @override
+  String get goalWizardWorkoutSchedulingDesc =>
+      'Choose which days to schedule key workouts and rest.';
+
+  @override
+  String get goalWizardLongRunDay => 'Long Run Day';
+
+  @override
+  String get goalWizardQualityDay => 'Quality Workout Day';
+
+  @override
+  String get goalWizardSwimDayLabel => 'Swim Day';
+
+  @override
+  String get goalWizardRestDays => 'Rest Days';
+
+  @override
+  String get goalWizardMileageRecommendation =>
+      'Recommended weekly mileage based on your race distance';
+
+  @override
+  String get goalWizardPlanStartDateLabel => 'Plan Start Date';
+
+  @override
+  String get goalWizardPlanStartDateAfterRace =>
+      'Plan start date must be before race date';
+
+  @override
   String get authStravaNotConfigured =>
       'Strava sign-in is not configured for this build.';
 

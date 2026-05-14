@@ -3,6 +3,7 @@ import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
 import { estimateSwimPaceFromVdot } from '../swim-pace';
 import { estimateBikeFtpFromVdot, calculateBikeZones } from '../bike-zones';
 import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS } from '../index';
+import { fixBackToBackSameType } from '../schedule-utils';
 
 type TriPhase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 
@@ -228,7 +229,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
-    return workouts;
+    return fixBackToBackSameType(workouts, { raceDate, restDays: config.restDays });
 }
 
 function getTriPhase(

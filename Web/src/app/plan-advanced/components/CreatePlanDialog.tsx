@@ -24,22 +24,22 @@ const RUNNING_DISTANCES = [
     { value: 'TEN_K', label: '10K' },
     { value: 'HALF_MARATHON', label: 'Half Marathon' },
     { value: 'MARATHON', label: 'Marathon' },
-    { value: '50K', label: '50K' },
-    { value: '50_MILE', label: '50 Mile' },
-    { value: '100K', label: '100K' },
-    { value: '100_MILE', label: '100 Mile' },
-    { value: '12HR', label: '12hr' },
-    { value: '24HR', label: '24hr' },
+    { value: 'FIFTY_K', label: '50K' },
+    { value: 'FIFTY_MILE', label: '50 Mile' },
+    { value: 'HUNDRED_K', label: '100K' },
+    { value: 'HUNDRED_MILE', label: '100 Mile' },
+    { value: 'TWELVE_HOUR', label: '12hr' },
+    { value: 'TWENTY_FOUR_HOUR', label: '24hr' },
     { value: 'BACKYARD_ULTRA', label: 'Backyard Ultra' },
     { value: 'CUSTOM_DISTANCE', label: 'Custom' },
 ];
 
 const TRIATHLON_DISTANCES = [
-    { value: 'SPRINT', label: 'Sprint' },
-    { value: 'OLYMPIC', label: 'Olympic' },
+    { value: 'SPRINT_TRI', label: 'Sprint' },
+    { value: 'OLYMPIC_TRI', label: 'Olympic' },
     { value: 'HALF_IRONMAN', label: 'Half Ironman' },
     { value: 'FULL_IRONMAN', label: 'Full Ironman' },
-    { value: 'CUSTOM', label: 'Custom' },
+    { value: 'CUSTOM_TRI', label: 'Custom' },
 ];
 
 export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialogProps) {
@@ -49,6 +49,11 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
     const [planName, setPlanName] = useState('');
     const [planStartDate, setPlanStartDate] = useState('');
     const [raceDate, setRaceDate] = useState('');
+    const [durationWeeks, setDurationWeeks] = useState('12');
+    const [runsPerWeek, setRunsPerWeek] = useState(4);
+    const [ridesPerWeek, setRidesPerWeek] = useState(0);
+    const [swimsPerWeek, setSwimsPerWeek] = useState(0);
+    const [weeklyMileage, setWeeklyMileage] = useState(40);
 
     const createMutation = useMutation({
         mutationFn: async (body: Record<string, unknown>) => {
@@ -81,6 +86,11 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
         setPlanName('');
         setPlanStartDate('');
         setRaceDate('');
+        setDurationWeeks('12');
+        setRunsPerWeek(4);
+        setRidesPerWeek(0);
+        setSwimsPerWeek(0);
+        setWeeklyMileage(40);
     };
 
     const handleClose = () => {
@@ -95,7 +105,12 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
             sport,
             raceType: sport === 'NO_RACE' ? null : raceType,
             planStartDate: planStartDate || null,
-            raceDate: raceDate || null,
+            raceDate: sport === 'NO_RACE' ? null : (raceDate || null),
+            durationWeeks: sport === 'NO_RACE' ? parseInt(durationWeeks) || 12 : undefined,
+            runsPerWeek,
+            ridesPerWeek,
+            swimsPerWeek,
+            weeklyMileageGoal: weeklyMileage * 1000,
         });
     };
 
@@ -141,7 +156,7 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
                                     type="button"
                                     onClick={() => {
                                         setSport(value);
-                                        if (value === 'TRIATHLON') setRaceType('SPRINT');
+                                        if (value === 'TRIATHLON') setRaceType('SPRINT_TRI');
                                         else if (value === 'RUN') setRaceType('MARATHON');
                                     }}
                                     className={`p-2 rounded-md border text-center text-xs font-medium transition-colors ${
@@ -200,6 +215,70 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
                                 />
                             </div>
                         )}
+                        {sport === 'NO_RACE' && (
+                            <div>
+                                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Duration (weeks)</label>
+                                <input
+                                    type="number"
+                                    value={durationWeeks}
+                                    onChange={(e) => setDurationWeeks(e.target.value)}
+                                    min={4}
+                                    max={52}
+                                    className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                        <div>
+                            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Runs / week</label>
+                            <input
+                                type="number"
+                                value={runsPerWeek}
+                                onChange={(e) => setRunsPerWeek(parseInt(e.target.value) || 4)}
+                                min={2}
+                                max={7}
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                            />
+                        </div>
+                        {(sport === 'TRIATHLON') && (
+                            <div>
+                                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Rides / week</label>
+                                <input
+                                    type="number"
+                                    value={ridesPerWeek}
+                                    onChange={(e) => setRidesPerWeek(parseInt(e.target.value) || 0)}
+                                    min={0}
+                                    max={7}
+                                    className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                />
+                            </div>
+                        )}
+                        {(sport === 'TRIATHLON') && (
+                            <div>
+                                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Swims / week</label>
+                                <input
+                                    type="number"
+                                    value={swimsPerWeek}
+                                    onChange={(e) => setSwimsPerWeek(parseInt(e.target.value) || 0)}
+                                    min={0}
+                                    max={7}
+                                    className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                />
+                            </div>
+                        )}
+                        <div>
+                            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Weekly km goal</label>
+                            <input
+                                type="number"
+                                value={weeklyMileage}
+                                onChange={(e) => setWeeklyMileage(parseInt(e.target.value) || 40)}
+                                min={10}
+                                max={150}
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                            />
+                        </div>
                     </div>
                 </div>
 

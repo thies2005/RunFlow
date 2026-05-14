@@ -10,7 +10,7 @@ The standard plan creator (`Web/src/lib/plans/index.ts`) generates running worko
 
 ### RC-1: `targetDuration = 0` for all running workouts
 - **File**: `Web/src/lib/plans/index.ts` — every running workout (EASY, LONG_RUN, RECOVERY, TEMPO, INTERVALS, FARTLEK, REPETITIONS, RACE) sets `targetDuration: 0`
-- **Impact**: Mobile app cannot display expected finish time; readiness adaptation engine (`workout_adaptation_engine.dart` line ~814) caps adapted duration with `min(workout.targetDuration, 45)` which yields 0
+- **Impact**: Mobile app cannot display expected finish time; readiness adaptation engine (`workout_adaptation_engine.dart` line 129) caps adapted duration with `min(workout.targetDuration, 45)` which yields 0
 
 ### RC-2: `phase` not persisted to DB
 - **File**: `Web/src/lib/plans/index.ts` — `Phase` is computed internally (`'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK'`) but the `GeneratedWorkout` type (line 74-81) has no `phase` field
@@ -89,7 +89,7 @@ Note: The local `Phase` type (line 83) is a subset of `PlanPhase` (5 vs 10 value
 
 **Step 1.2**: Compute `targetDuration` for every running workout
 
-Add a helper function after line ~830:
+Add a helper function after line 831:
 
 ```typescript
 function computeDuration(distanceMeters: number, paceSecondsPerKm: number): number {
@@ -119,7 +119,7 @@ function computeQualityDuration(
 }
 ```
 
-The `qualityFraction` per workout type:
+The `qualityFraction` per workout type (Note: these are averages, actual sessions vary per-session, e.g. Marathon peak MP is 83%):
 - INTERVALS: ~50% (e.g., 5x1km = 5km intervals + 5km warmup/cooldown)
 - REPETITIONS: ~35% (shorter reps, more recovery)
 - TEMPO: ~65% (longer sustained effort)
@@ -226,6 +226,8 @@ await prisma.workout.createMany({
 ```typescript
 // Web/src/lib/plans/validate-workout.ts
 
+// IMPORTANT: Use the exported formatPace from vdot.ts which returns "5:00/km",
+// NOT the private formatPace in index.ts which returns "5:00".
 import { formatPace } from '../metrics/vdot';
 
 export interface WorkoutFieldValues {
@@ -379,6 +381,18 @@ Use these numeric values in the `<select>` so `targetPace` stores a real seconds
 
 ---
 
+### Phase 4.5: Fix duration display in WorkoutDetailPanel
+
+**Files to modify**:
+- `Web/src/app/plan-advanced/[goalId]/components/Editor/WorkoutDetailPanel.tsx`
+
+**Step 4.5.1**: Convert seconds to minutes for display
+The database stores `targetDuration` in seconds, but the UI labels it "Duration (min)". Currently it displays and saves raw seconds. Update the input field:
+- On display: `value={form.targetDuration ? Math.round(form.targetDuration / 60) : ''}`
+- On save: `onChange={(e) => updateField('targetDuration', e.target.value ? Number(e.target.value) * 60 : null)}`
+
+---
+
 ### Phase 5: Pace recalculation when VDOT changes (RC-5)
 
 **Files to create/modify**:
@@ -447,26 +461,31 @@ export async function recalculateWorkoutPaces(
     let skippedCount = 0;
     const warnings: string[] = [];
 
-    for (const w of workouts) {
-        const newPace = getPaceForType(paces, w.workoutType);
+    // Batch updates by workout type to avoid N+1 queries
+    const types = ['EASY', 'LONG_RUN', 'RECOVERY', 'TEMPO', 'INTERVALS', 'REPETITIONS', 'FARTLEK'];
+    for (const type of types) {
+        const newPace = getPaceForType(paces, type);
         if (newPace === null) {
             skippedCount++;
             continue;
         }
 
-        const newDuration = w.targetDistance && w.targetDistance > 0
-            ? Math.round((w.targetDistance / 1000) * newPace)
-            : null;
-
-        await prisma.workout.update({
-            where: { id: w.id },
-            data: {
-                targetPace: newPace,
-                ...(newDuration !== null && { targetDuration: newDuration }),
-            },
+        const res = await prisma.workout.updateMany({
+            where: { goalId, workoutType: type as any, isCompleted: false },
+            data: { targetPace: newPace },
         });
-        updatedCount++;
+        updatedCount += res.count;
     }
+
+    // Duration requires per-row distance calculation, so use raw SQL
+    await prisma.$executeRaw`
+        UPDATE "Workout"
+        SET "targetDuration" = ROUND(("targetDistance" / 1000.0) * "targetPace")
+        WHERE "goalId" = ${goalId}
+          AND "isCompleted" = false
+          AND "targetDistance" > 0
+          AND "targetPace" > 0
+    `;
 
     await prisma.goal.update({
         where: { id: goalId },
@@ -532,14 +551,15 @@ if (distance > 0 && pace > 0 && duration == 0) {
 
 **Step 6.2**: Handle `null` vs `0` for targetPace and targetDuration (deferred)
 
-Currently Flutter's Freezed models have:
-- `@Default(0.0) double targetPace` (non-nullable)
-- `@Default(0) int targetDuration` (non-nullable)
+Currently Flutter's Freezed models AND domain entities have:
+- `@Default(0.0) double targetPace` / `final double targetPace;` (non-nullable)
+- `@Default(0) int targetDuration` / `final int targetDuration;` (non-nullable)
 
 Changing these to nullable (`double?` / `int?`) requires:
-1. Updating the Freezed model
-2. Regenerating `.g.dart` files
-3. Updating all consumers that assume non-null
+1. Updating `dashboard_entities.dart`
+2. Updating `dashboard_models.dart`
+3. Regenerating `.g.dart` files
+4. Updating all consumers that assume non-null
 
 **This is a breaking change that should be done carefully.** For now, the server continues sending `0` (not `null`) for backward compatibility. The nullable migration can be done in a follow-up PR after verifying the server changes work.
 
@@ -547,9 +567,11 @@ Changing these to nullable (`double?` / `int?`) requires:
 
 The Flutter `WorkoutType` enum has only 7 values but the server has 22. Add a string-based fallback approach:
 
+**WARNING: Data Corruption Risk**. Currently, `compatibilityWorkoutTypeFromJson` maps unknown types to `other`. If a user edits a `FARTLEK` workout in Flutter, it saves as `OTHER`, permanently corrupting the type in the DB.
+
 ```dart
 // Option A: Extend the enum (preferred, but requires updating all switch statements)
-// Option B: Use a compatibility wrapper that maps unknown types to 'other'
+// Option B: Use a compatibility wrapper that maps unknown types to 'other' for display, but preserves the raw server string for saving.
 
 // In json_compat.dart, add mappings:
 // 'LONG_RUN' -> CompatibilityWorkoutType.long
@@ -729,7 +751,7 @@ WHERE "targetPace" > 0
 ## Follow-ups (Phase 8 — not in scope)
 
 1. **Sub-generator phase support**: Add phase logic to `run-ultra.ts`, `triathlon.ts`, `no-race.ts`
-2. **Flutter nullable model migration**: Change `targetPace: double` → `targetPace: double?` and `targetDuration: int` → `targetDuration: int?`, then switch server from `?? 0` to `?? null`
+2. **Flutter nullable model migration**: Update both `dashboard_entities.dart` and `dashboard_models.dart` to change `targetPace: double` → `targetPace: double?` and `targetDuration: int` → `targetDuration: int?`, then switch server from `?? 0` to `?? null`
 3. **Cross-editor cache invalidation**: Invalidate `['plan']` query when advanced editor saves, and vice versa
 4. **PaceProfile → workout integration**: Make the advanced editor's PaceProfile actually drive pace validation on individual workouts
 5. **`colorOverride` vs `color` field name fix**: Align the frontend field name with the DB column name in WorkoutDetailPanel

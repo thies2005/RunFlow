@@ -58,12 +58,21 @@ export async function PATCH(
       data: {
         ...(body.workoutType && { workoutType: body.workoutType }),
         ...(body.description && { description: body.description }),
-        ...(body.targetDistance !== undefined && { targetDistance: body.targetDistance }),
-        ...(derivedTargetDistance !== undefined && { targetDistance: derivedTargetDistance }),
-        ...(body.targetPace !== undefined && { targetPace: body.targetPace }),
-        ...(derivedTargetPace !== undefined && { targetPace: derivedTargetPace }),
-        ...(body.targetDuration !== undefined && { targetDuration: body.targetDuration }),
-        ...(derivedTargetDuration !== undefined && { targetDuration: derivedTargetDuration }),
+        ...(body.targetDistance !== undefined
+          ? { targetDistance: body.targetDistance }
+          : derivedTargetDistance !== undefined
+            ? { targetDistance: derivedTargetDistance }
+            : {}),
+        ...(body.targetPace !== undefined
+          ? { targetPace: body.targetPace }
+          : derivedTargetPace !== undefined
+            ? { targetPace: derivedTargetPace }
+            : {}),
+        ...(body.targetDuration !== undefined
+          ? { targetDuration: body.targetDuration }
+          : derivedTargetDuration !== undefined
+            ? { targetDuration: derivedTargetDuration }
+            : {}),
         ...(body.scheduledDate && { scheduledDate: new Date(body.scheduledDate) }),
         ...(body.isCompleted !== undefined && { isCompleted: body.isCompleted, completedAt: body.isCompleted ? new Date() : null }),
       },

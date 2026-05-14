@@ -233,11 +233,10 @@ export async function POST(req: NextRequest) {
                 },
             });
 
-            // Update Goal Settings
+            // Update Goal Settings (currentVdot is set inside recalculateWorkoutPaces)
             await prisma.goal.update({
                 where: { id: activeGoal.id },
                 data: {
-                    currentVdot: newVdot,
                     runsPerWeek: runs,
                     ridesPerWeek: rides,
                     swimsPerWeek: swims,
@@ -255,6 +254,7 @@ export async function POST(req: NextRequest) {
             });
 
             const result = await recalculateWorkoutPaces(activeGoal.id, newVdot);
+            console.log(`Pace recalculation complete: ${result.updatedCount} updated, ${result.skippedCount} skipped`);
         }
 
         return NextResponse.json({ success: true, vdot: newVdot });

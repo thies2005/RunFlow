@@ -35,21 +35,11 @@ export async function recalculateWorkoutPaces(
 ): Promise<RecalculationResult> {
     const paces = calculateTrainingPaces(newVdot);
 
-    const workouts = await prisma.workout.findMany({
-        where: {
-            goalId,
-            isCompleted: false,
-            workoutType: {
-                in: ['EASY', 'LONG_RUN', 'RECOVERY', 'TEMPO', 'INTERVALS',
-                     'REPETITIONS', 'FARTLEK'],
-            },
-        },
-    });
-
     let updatedCount = 0;
     let skippedCount = 0;
     const warnings: string[] = [];
 
+    // Batch updates by workout type to avoid N+1 queries
     const types = ['EASY', 'LONG_RUN', 'RECOVERY', 'TEMPO', 'INTERVALS', 'REPETITIONS', 'FARTLEK'];
     for (const type of types) {
         const newPace = getPaceForType(paces, type);

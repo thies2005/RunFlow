@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,11 +14,35 @@ const SPORTS = [
     { value: 'SWIMMING', label: 'Swimming' },
 ];
 
-const RACE_TYPES = [
-    '5K', '10K', 'HALF_MARATHON', 'MARATHON', 'ULTRA',
-    'SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'IRONMAN',
-    'OTHER',
-];
+const RACE_TYPES_BY_SPORT: Record<string, { value: string; label: string }[]> = {
+    RUNNING: [
+        { value: 'FIVE_K', label: '5K' },
+        { value: 'TEN_K', label: '10K' },
+        { value: 'HALF_MARATHON', label: 'Half Marathon' },
+        { value: 'MARATHON', label: 'Marathon' },
+        { value: 'FIFTY_K', label: '50K' },
+        { value: 'FIFTY_MILE', label: '50 Mile' },
+        { value: 'HUNDRED_K', label: '100K' },
+        { value: 'HUNDRED_MILE', label: '100 Mile' },
+        { value: 'TWELVE_HOUR', label: '12 Hour' },
+        { value: 'TWENTY_FOUR_HOUR', label: '24 Hour' },
+        { value: 'BACKYARD_ULTRA', label: 'Backyard Ultra' },
+        { value: 'CUSTOM_DISTANCE', label: 'Custom Distance' },
+    ],
+    TRIATHLON: [
+        { value: 'SPRINT_TRI', label: 'Sprint Triathlon' },
+        { value: 'OLYMPIC_TRI', label: 'Olympic Triathlon' },
+        { value: 'HALF_IRONMAN', label: 'Half Ironman' },
+        { value: 'FULL_IRONMAN', label: 'Full Ironman' },
+        { value: 'CUSTOM_TRI', label: 'Custom Triathlon' },
+    ],
+    CYCLING: [
+        { value: 'CUSTOM_DISTANCE', label: 'Custom Distance' },
+    ],
+    SWIMMING: [
+        { value: 'CUSTOM_DISTANCE', label: 'Custom Distance' },
+    ],
+};
 
 interface AddSubGoalDialogProps {
     parentGoalId: string;
@@ -38,10 +62,16 @@ export function AddSubGoalDialog({
     const queryClient = useQueryClient();
 
     const [name, setName] = useState('');
-    const [sport, setSport] = useState(parentSport);
+    const [sport, setSport] = useState(parentSport === 'RUN' ? 'RUNNING' : parentSport);
     const [raceType, setRaceType] = useState('');
     const [raceDate, setRaceDate] = useState('');
+    const [targetTime, setTargetTime] = useState('');
     const [priority, setPriority] = useState<GoalPriority>('SECONDARY');
+    const [generateWorkouts, setGenerateWorkouts] = useState(true);
+
+    const raceTypeOptions = useMemo(() => {
+        return RACE_TYPES_BY_SPORT[sport] || RACE_TYPES_BY_SPORT.RUNNING;
+    }, [sport]);
 
     const mutation = useMutation({
         mutationFn: async () => {
@@ -51,10 +81,12 @@ export function AddSubGoalDialog({
                 body: JSON.stringify({
                     name,
                     sport,
-                    raceType,
+                    raceType: raceType || null,
                     raceDate: raceDate || null,
+                    targetTime: targetTime ? parseTargetTime(targetTime) : null,
                     priority,
                     parentId: parentGoalId,
+                    generateWorkouts,
                 }),
             });
             if (!res.ok) throw new Error('Failed to create sub-goal');
@@ -64,10 +96,12 @@ export function AddSubGoalDialog({
             queryClient.invalidateQueries({ queryKey: ['plan-advanced', parentGoalId] });
             toast.success('Sub-goal added');
             setName('');
-            setSport(parentSport);
+            setSport(parentSport === 'RUN' ? 'RUNNING' : parentSport);
             setRaceType('');
             setRaceDate('');
+            setTargetTime('');
             setPriority('SECONDARY');
+            setGenerateWorkouts(true);
             onCreated();
             onClose();
         },
@@ -81,7 +115,7 @@ export function AddSubGoalDialog({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-            <div className="relative bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-5 w-full max-w-sm mx-4">
+            <div className="relative bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl p-5 w-full max-w-md mx-4 max-h-[85vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-semibold text-zinc-100">Add Event</h3>
                     <button
@@ -110,7 +144,10 @@ export function AddSubGoalDialog({
                             <label className="text-xs text-zinc-400">Sport</label>
                             <select
                                 value={sport}
-                                onChange={(e) => setSport(e.target.value)}
+                                onChange={(e) => {
+                                    setSport(e.target.value);
+                                    setRaceType(''); // Reset race type when sport changes
+                                }}
                                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
                             >
                                 {SPORTS.map((s) => (
@@ -126,21 +163,33 @@ export function AddSubGoalDialog({
                                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
                             >
                                 <option value="">Select...</option>
-                                {RACE_TYPES.map((t) => (
-                                    <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>
+                                {raceTypeOptions.map((t) => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
                                 ))}
                             </select>
                         </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                        <label className="text-xs text-zinc-400">Event Date</label>
-                        <input
-                            type="date"
-                            value={raceDate}
-                            onChange={(e) => setRaceDate(e.target.value)}
-                            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                        />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-zinc-400">Event Date</label>
+                            <input
+                                type="date"
+                                value={raceDate}
+                                onChange={(e) => setRaceDate(e.target.value)}
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-zinc-400">Target Time (HH:MM:SS)</label>
+                            <input
+                                type="text"
+                                value={targetTime}
+                                onChange={(e) => setTargetTime(e.target.value)}
+                                placeholder="e.g. 1:45:00"
+                                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                            />
+                        </div>
                     </div>
 
                     <PrioritySelector
@@ -148,6 +197,19 @@ export function AddSubGoalDialog({
                         onChange={setPriority}
                         hasPrimary={true}
                     />
+
+                    <div className="flex items-center gap-2 pt-1">
+                        <input
+                            type="checkbox"
+                            id="generateWorkouts"
+                            checked={generateWorkouts}
+                            onChange={(e) => setGenerateWorkouts(e.target.checked)}
+                            className="w-4 h-4 rounded border-zinc-600 bg-zinc-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
+                        />
+                        <label htmlFor="generateWorkouts" className="text-xs text-zinc-400">
+                            Auto-generate workouts for this event
+                        </label>
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-2 mt-5">
@@ -171,4 +233,12 @@ export function AddSubGoalDialog({
             </div>
         </div>
     );
+}
+
+function parseTargetTime(input: string): number | null {
+    const parts = input.split(':').map(Number);
+    if (parts.some(isNaN)) return null;
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return null;
 }

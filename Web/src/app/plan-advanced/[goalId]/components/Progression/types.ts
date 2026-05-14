@@ -31,6 +31,7 @@ export interface Goal {
     targetTime: number | null;
     priority: GoalPriority;
     parentId: string | null;
+    parentGoalId?: string | null;
     vdot: number;
     status: string;
     createdAt: string;

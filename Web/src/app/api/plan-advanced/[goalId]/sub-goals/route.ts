@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
+import { generateTrainingPlan } from '@/lib/plans';
+import { RaceType, WorkoutType } from '@/generated/prisma/browser';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 
@@ -66,7 +68,7 @@ export async function POST(req: Request, ctx: RouteContext) {
         }
 
         const body = await req.json();
-        const { name, raceType, raceDate, priority, sport } = body;
+        const { name, raceType, raceDate, priority, sport, targetTime, generateWorkouts } = body;
 
         if (!name || typeof name !== 'string' || !name.trim()) {
             return NextResponse.json({ error: 'Sub-goal name is required' }, { status: 400 });
@@ -82,13 +84,93 @@ export async function POST(req: Request, ctx: RouteContext) {
                 sport: sport || goal.sport,
                 raceType: raceType || null,
                 raceDate: raceDate ? new Date(raceDate) : null,
+                targetTime: targetTime || null,
                 priority: priority || 'SECONDARY',
                 planSource: 'advanced',
                 creationMode: 'EXPERT_MANUAL',
+                currentVdot: goal.currentVdot,
+                runsPerWeek: goal.runsPerWeek,
+                ridesPerWeek: goal.ridesPerWeek,
+                swimsPerWeek: goal.swimsPerWeek,
+                strengthPerWeek: goal.strengthPerWeek,
+                weeklyMileageGoal: goal.weeklyMileageGoal,
             },
         });
 
-        return NextResponse.json({ subGoal }, { status: 201 });
+        let workoutsCreated = 0;
+
+        // Generate workouts for the sub-goal if requested and we have enough info
+        if (generateWorkouts && raceType && raceDate) {
+            try {
+                const subRaceDate = new Date(raceDate);
+                const parentRaceDate = goal.raceDate ? new Date(goal.raceDate) : null;
+
+                // Determine start date for sub-goal training block
+                // Start from now or the parent plan start, whichever is later
+                const now = new Date();
+                const planStart = goal.planStartDate ? new Date(goal.planStartDate) : now;
+                const startDate = planStart > now ? planStart : now;
+
+                // Only generate if the race date is in the future
+                if (subRaceDate > now) {
+                    const vdot = goal.currentVdot || 30;
+
+                    // Calculate weeks available for this sub-goal
+                    const weeksAvailable = Math.max(1, Math.ceil((subRaceDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+
+                    // Scale taper based on available weeks and priority
+                    const taperWeeks = priority === 'TUNE_UP' ? 1 : Math.min(2, Math.floor(weeksAvailable / 4));
+
+                    const workouts = generateTrainingPlan({
+                        vdot,
+                        raceType: raceType as RaceType,
+                        raceDate: subRaceDate,
+                        startDate,
+                        runsPerWeek: goal.runsPerWeek || 4,
+                        ridesPerWeek: goal.ridesPerWeek || 0,
+                        strengthPerWeek: goal.strengthPerWeek || 0,
+                        swimsPerWeek: goal.swimsPerWeek || 0,
+                        weeklyMileageGoal: goal.weeklyMileageGoal || null,
+                        taperWeeks,
+                        peakWeeks: Math.min(goal.peakWeeks || 2, Math.floor(weeksAvailable / 3)),
+                        buildWeeks: Math.min(goal.buildWeeks || 4, Math.floor(weeksAvailable / 3)),
+                        longRunDay: goal.longRunDay ?? 0,
+                        workoutDay: goal.workoutDay ?? 3,
+                    });
+
+                    if (workouts.length > 0) {
+                        // Filter: if there's a parent race date, don't generate workouts past it
+                        const filteredWorkouts = parentRaceDate
+                            ? workouts.filter(w => w.date <= parentRaceDate)
+                            : workouts;
+
+                        if (filteredWorkouts.length > 0) {
+                            await prisma.workout.createMany({
+                                data: filteredWorkouts.map(w => ({
+                                    goalId: goalId, // Workouts belong to the parent goal
+                                    subGoalId: subGoal.id, // Tagged to the sub-goal
+                                    scheduledDate: w.date,
+                                    workoutType: w.type as WorkoutType,
+                                    description: `[${name.trim()}] ${w.description}`,
+                                    targetDistance: w.totalDistance,
+                                    targetPace: w.targetPace ?? 0,
+                                    targetDuration: w.targetDuration ?? 0,
+                                    targetHrZone: w.targetHrZone ?? null,
+                                    phase: w.phase ?? 'BASE',
+                                    isCompleted: false,
+                                })),
+                            });
+                            workoutsCreated = filteredWorkouts.length;
+                        }
+                    }
+                }
+            } catch (genError) {
+                console.error('Failed to generate sub-goal workouts:', genError);
+                // Don't fail the sub-goal creation if workout generation fails
+            }
+        }
+
+        return NextResponse.json({ subGoal, workoutsCreated }, { status: 201 });
     } catch (error) {
         console.error('Sub-goal create error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

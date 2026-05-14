@@ -1,22 +1,21 @@
 # syntax=docker/dockerfile:1
 
 # ==================================
-# Stage 1: Dependencies
+# Stage 1: Builder
 # ==================================
+FROM node:24-alpine AS builder
 # M-11 fix: Pin node version for reproducible builds
-FROM node:24-alpine AS deps
+
+# Install required packages
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-# Install dependencies with cache
+# Install dependencies with cache and memory limit
 COPY package.json package-lock.json* ./
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
 
-# ==================================
-# Stage 2: Builder
-# ==================================
-FROM node:24-alpine AS builder
 # M-10 fix: Add build arg for Sentry DSN (needed at build time for client-side code)
 ARG NEXT_PUBLIC_SENTRY_DSN
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
@@ -26,10 +25,6 @@ ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 ARG DATABASE_URL=postgresql://localhost:5432/dummy
 ENV DATABASE_URL=$DATABASE_URL
 
-RUN apk add --no-cache openssl libc6-compat
-WORKDIR /app
-
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client (cached across builds when schema unchanged)
@@ -45,7 +40,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
     npm run build
 
 # ==================================
-# Stage 3: Runner
+# Stage 2: Runner
 # ==================================
 FROM node:24-alpine AS runner
 RUN apk add --no-cache openssl libc6-compat wget curl postgresql16-client
@@ -58,7 +53,6 @@ ENV NODE_OPTIONS=""
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
-
 
 # Copy necessary files
 COPY --from=builder /app/public ./public

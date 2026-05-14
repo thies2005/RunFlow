@@ -245,13 +245,16 @@ class NutritionScreen extends ConsumerWidget {
       ),
     ).then((suggestion) {
       if (suggestion != null) {
-        final updated = nutrition.copyWith(
-          calories: nutrition.calories + suggestion.totalCalories,
-          protein: nutrition.protein + suggestion.totalProtein,
-          carbs: nutrition.carbs + suggestion.totalCarbs,
-          fat: nutrition.fat + suggestion.totalFats,
+        final food = FoodItem(
+          id: 0,
+          name: suggestion.suggestionName,
+          calories: suggestion.totalCalories,
+          protein: suggestion.totalProtein,
+          carbs: suggestion.totalCarbs,
+          fat: suggestion.totalFats,
+          servingSize: 100,
         );
-        ref.read(nutritionProvider(today).notifier).save(updated);
+        ref.read(nutritionProvider(today).notifier).logFood(food);
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(S.of(context).nutritionMealLogged)),
@@ -356,13 +359,16 @@ class NutritionScreen extends ConsumerWidget {
               width: double.infinity,
               child: FilledButton(
                 onPressed: () {
-                  final updated = nutrition.copyWith(
-                    calories: nutrition.calories + (double.tryParse(calCtl.text) ?? 0),
-                    protein: nutrition.protein + (double.tryParse(proteinCtl.text) ?? 0),
-                    carbs: nutrition.carbs + (double.tryParse(carbsCtl.text) ?? 0),
-                    fat: nutrition.fat + (double.tryParse(fatCtl.text) ?? 0),
+                  final food = FoodItem(
+                    id: 0,
+                    name: nameCtl.text.isNotEmpty ? nameCtl.text : 'Manual Entry',
+                    calories: double.tryParse(calCtl.text) ?? 0,
+                    protein: double.tryParse(proteinCtl.text) ?? 0,
+                    carbs: double.tryParse(carbsCtl.text) ?? 0,
+                    fat: double.tryParse(fatCtl.text) ?? 0,
+                    servingSize: 100,
                   );
-                  ref.read(nutritionProvider(today).notifier).save(updated);
+                  ref.read(nutritionProvider(today).notifier).logFood(food);
                   Navigator.pop(ctx);
                 },
                 child: Text(S.of(context).actionAdd),

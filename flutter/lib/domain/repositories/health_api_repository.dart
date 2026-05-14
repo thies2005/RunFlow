@@ -3,6 +3,12 @@ import 'package:runflow_flutter/domain/entities/meal_suggestion_entities.dart';
 
 abstract class HealthApiRepository {
   Future<void> syncNutritionLog(NutritionLog log);
+  Future<void> logFoodEntry({
+    required DateTime date,
+    required String mealType,
+    required double quantity,
+    required FoodItem foodItem,
+  });
   Future<List<FoodItem>> searchFood(String query);
   Future<FoodItem?> scanBarcode(String code);
   Future<FoodItem?> aiScanImage(String imagePath, {String? context});

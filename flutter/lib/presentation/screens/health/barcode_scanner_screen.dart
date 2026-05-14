@@ -344,19 +344,7 @@ class _BarcodeScannerScreenState extends ConsumerState<BarcodeScannerScreen> {
 
   void _addToNutritionLog(FoodItem food) {
     final today = DateTime.now();
-    final asyncLog = ref.read(nutritionProvider(today));
-    NutritionLog? currentLog;
-    asyncLog.whenData((log) => currentLog = log);
-    if (currentLog == null) return;
-    final log = currentLog!;
-
-    final updated = log.copyWith(
-      calories: log.calories + food.calories,
-      protein: log.protein + food.protein,
-      carbs: log.carbs + food.carbs,
-      fat: log.fat + food.fat,
-    );
-    ref.read(nutritionProvider(today).notifier).save(updated);
+    ref.read(nutritionProvider(today).notifier).logFood(food);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

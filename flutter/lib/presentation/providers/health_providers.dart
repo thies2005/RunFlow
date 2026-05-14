@@ -281,11 +281,31 @@ class NutritionNotifier extends _$NutritionNotifier {
   Future<void> save(NutritionLog log) async {
     final repo = ref.read(healthRepositoryProvider);
     await repo.saveNutritionLog(log);
+    ref.invalidateSelf();
+  }
+
+  Future<void> logFood(FoodItem food, {String mealType = 'snack'}) async {
     try {
       final apiRepo = ref.read(healthApiRepositoryProvider);
-      await apiRepo.syncNutritionLog(log);
+      await apiRepo.logFoodEntry(
+        date: DateTime.now(),
+        mealType: mealType,
+        quantity: 1,
+        foodItem: food,
+      );
     } catch (e) {
-      logger.error('[NutritionNotifier] Sync nutrition log failed: $e');
+      logger.error('[NutritionNotifier] Log food entry failed: $e');
+    }
+    final current = state.value;
+    if (current != null) {
+      final updated = current.copyWith(
+        calories: current.calories + food.calories,
+        protein: current.protein + food.protein,
+        carbs: current.carbs + food.carbs,
+        fat: current.fat + food.fat,
+      );
+      final repo = ref.read(healthRepositoryProvider);
+      await repo.saveNutritionLog(updated);
     }
     ref.invalidateSelf();
   }

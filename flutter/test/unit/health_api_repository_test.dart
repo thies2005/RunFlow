@@ -76,6 +76,53 @@ void main() {
       });
     });
 
+    group('logFoodEntry', () {
+      test('sends POST with correct food entry format', () async {
+        final food = FoodItem(
+          id: 0,
+          name: 'Chicken Breast',
+          calories: 200,
+          protein: 30,
+          carbs: 5,
+          fat: 8,
+          servingSize: 150,
+        );
+
+        when(() => mockDio.post(
+              any(),
+              data: any(named: 'data'),
+            )).thenAnswer((_) async => Response<dynamic>(
+              requestOptions: RequestOptions(path: ''),
+              statusCode: 200,
+              data: null,
+            ));
+
+        await repository.logFoodEntry(
+          date: DateTime(2024, 6, 15),
+          mealType: 'lunch',
+          quantity: 1,
+          foodItem: food,
+        );
+
+        verify(() => mockDio.post(
+              '/health/nutrition/log',
+              data: {
+                'date': '2024-06-15',
+                'mealType': 'lunch',
+                'quantity': 1,
+                'foodItem': {
+                  'name': 'Chicken Breast',
+                  'calories': 200,
+                  'protein': 30,
+                  'carbs': 5,
+                  'fats': 8,
+                  'servingSize': 150,
+                },
+              },
+            )).called(1);
+      });
+    });
+
     group('searchFood', () {
       test('returns list of FoodItem from array response', () async {
         when(() => mockDio.get(

@@ -26,6 +26,37 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
   }
 
   @override
+  Future<void> logFoodEntry({
+    required DateTime date,
+    required String mealType,
+    required double quantity,
+    required domain.FoodItem foodItem,
+  }) async {
+    try {
+      final data = foodItem.toData();
+      await dio.post(
+        ApiConstants.nutritionLogPath,
+        data: {
+          'date': date.toIso8601String().split('T').first,
+          'mealType': mealType,
+          'quantity': quantity,
+          'foodItem': {
+            'name': data.name,
+            'calories': data.calories,
+            'protein': data.protein,
+            'carbs': data.carbs,
+            'fats': data.fat,
+            'servingSize': data.servingSize,
+            if (data.barcode != null) 'barcode': data.barcode,
+          },
+        },
+      );
+    } on DioException catch (e) {
+      throw _mapException(e, 'Failed to log food entry.');
+    }
+  }
+
+  @override
   Future<List<domain.FoodItem>> searchFood(String query) async {
     try {
       final response = await dio.get(

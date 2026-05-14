@@ -296,12 +296,43 @@ export function PlanLanding() {
                             />
                             <div className="flex gap-2">
                                 <select
-                                    value={newSubGoal.sport}
-                                    onChange={(e) => setNewSubGoal((p) => ({ ...p, sport: e.target.value as Sport }))}
-                                    className="bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                    value={newSubGoal.raceType}
+                                    onChange={(e) => {
+                                        const rt = e.target.value;
+                                        let sp: Sport = 'RUN';
+                                        if (['SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI'].includes(rt)) {
+                                            sp = 'TRIATHLON';
+                                        }
+                                        setNewSubGoal((p) => ({ ...p, raceType: rt, sport: sp }));
+                                    }}
+                                    className="bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:ring-1 focus:ring-zinc-600 flex-1"
                                 >
-                                    <option value="RUN">Running</option>
-                                    <option value="TRIATHLON">Triathlon</option>
+                                    <option value="">Distance / Type</option>
+                                    <optgroup label="Running">
+                                        <option value="FIVE_K">5K</option>
+                                        <option value="TEN_K">10K</option>
+                                        <option value="HALF_MARATHON">Half Marathon</option>
+                                        <option value="MARATHON">Marathon</option>
+                                    </optgroup>
+                                    <optgroup label="Ultra">
+                                        <option value="FIFTY_K">50K</option>
+                                        <option value="FIFTY_MILE">50 Mile</option>
+                                        <option value="HUNDRED_K">100K</option>
+                                        <option value="HUNDRED_MILE">100 Mile</option>
+                                        <option value="TWELVE_HOUR">12 Hour</option>
+                                        <option value="TWENTY_FOUR_HOUR">24 Hour</option>
+                                        <option value="BACKYARD_ULTRA">Backyard Ultra</option>
+                                    </optgroup>
+                                    <optgroup label="Triathlon">
+                                        <option value="SPRINT_TRI">Sprint Triathlon</option>
+                                        <option value="OLYMPIC_TRI">Olympic Triathlon</option>
+                                        <option value="HALF_IRONMAN">Half Ironman (70.3)</option>
+                                        <option value="FULL_IRONMAN">Full Ironman</option>
+                                        <option value="CUSTOM_TRI">Custom Triathlon</option>
+                                    </optgroup>
+                                    <optgroup label="Other">
+                                        <option value="CUSTOM_DISTANCE">Custom Distance</option>
+                                    </optgroup>
                                 </select>
                                 <input
                                     type="date"

@@ -87,6 +87,9 @@ extension DomainCreateGoalRequestMapper on domain.CreateGoalRequest {
         sport: sport,
         athleteCssOverride: athleteCssOverride,
         athleteBikeSpeedOverride: athleteBikeSpeedOverride,
+        customSwimDistM: customSwimDistM,
+        customBikeDistM: customBikeDistM,
+        customRunDistM: customRunDistM,
       );
 }
 

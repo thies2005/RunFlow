@@ -56,6 +56,9 @@ sealed class CreateGoalRequest with _$CreateGoalRequest {
     String? sport,
     @JsonKey(name: 'athleteCssOverride') double? athleteCssOverride,
     @JsonKey(name: 'athleteBikeSpeedOverride') double? athleteBikeSpeedOverride,
+    double? customSwimDistM,
+    double? customBikeDistM,
+    double? customRunDistM,
   }) = _CreateGoalRequest;
   const CreateGoalRequest._();
 

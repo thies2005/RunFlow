@@ -21,6 +21,7 @@ const Map<String, int> triSwimDist = {
   'OLYMPIC_TRI': 1500,
   'HALF_IRONMAN': 1900,
   'FULL_IRONMAN': 3800,
+  'CUSTOM_TRI': 1500,
 };
 
 const Map<String, int> triBikeDist = {
@@ -28,6 +29,7 @@ const Map<String, int> triBikeDist = {
   'OLYMPIC_TRI': 40000,
   'HALF_IRONMAN': 90000,
   'FULL_IRONMAN': 180000,
+  'CUSTOM_TRI': 40000,
 };
 
 const Map<String, int> triRunDist = {
@@ -35,6 +37,7 @@ const Map<String, int> triRunDist = {
   'OLYMPIC_TRI': 10000,
   'HALF_IRONMAN': 21097,
   'FULL_IRONMAN': 42195,
+  'CUSTOM_TRI': 10000,
 };
 
 class TransitionTimes {
@@ -227,15 +230,6 @@ class BackyardProjection {
   final BackyardResult conservative;
 }
 
-int _totalBackyardTime(int baseLoop, int laps, double fatiguePerLapPct) {
-  int total = 0;
-  for (int i = 1; i <= laps; i++) {
-    final factor = i <= 3 ? 1.0 : 1.0 + ((i - 3) * fatiguePerLapPct);
-    total += (baseLoop * factor).round();
-  }
-  return total;
-}
-
 BackyardProjection? estimateBackyardUltraTime(
   double vdot,
   int loopDistM,
@@ -250,19 +244,19 @@ BackyardProjection? estimateBackyardUltraTime(
   return BackyardProjection(
     optimal: BackyardResult(
       perLoopSeconds: baseLoop,
-      totalSeconds: _totalBackyardTime(baseLoop, targetLaps, 0.01),
+      totalSeconds: targetLaps * 3600,
       totalDistM: totalDistM,
       targetLaps: targetLaps,
     ),
     projected: BackyardResult(
       perLoopSeconds: baseLoop,
-      totalSeconds: _totalBackyardTime(baseLoop, targetLaps, 0.02),
+      totalSeconds: targetLaps * 3600,
       totalDistM: totalDistM,
       targetLaps: targetLaps,
     ),
     conservative: BackyardResult(
       perLoopSeconds: baseLoop,
-      totalSeconds: _totalBackyardTime(baseLoop, targetLaps, 0.04),
+      totalSeconds: targetLaps * 3600,
       totalDistM: totalDistM,
       targetLaps: targetLaps,
     ),

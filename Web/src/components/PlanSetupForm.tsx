@@ -159,6 +159,9 @@ export default function PlanSetupForm({
 
     // Triathlon Goal Time
     const [triGoalTimeSeconds, setTriGoalTimeSeconds] = useState<number | null>(null);
+    const [customSwimDistM, setCustomSwimDistM] = useState<number>(0);
+    const [customBikeDistM, setCustomBikeDistM] = useState<number>(0);
+    const [customRunDistM, setCustomRunDistM] = useState<number>(0);
 
     // Calibration Result
     const [calibrationFactor, setCalibrationFactor] = useState<number>(1.0);
@@ -300,7 +303,6 @@ export default function PlanSetupForm({
     }, [raceType, weeklyMileage]);
 
     useEffect(() => {
-        if (mode !== 'onboarding') return;
         let defaults = getRaceDefaults(raceType);
         if (effectiveVO2max > 0) {
             defaults = adjustDefaultsForVdot(defaults, effectiveVO2max);
@@ -579,6 +581,9 @@ export default function PlanSetupForm({
                     backyardLoopDistM,
                     targetLaps,
                 }),
+                ...(raceType === 'CUSTOM_TRI' && customSwimDistM > 0 && { customSwimDistM }),
+                ...(raceType === 'CUSTOM_TRI' && customBikeDistM > 0 && { customBikeDistM }),
+                ...(raceType === 'CUSTOM_TRI' && customRunDistM > 0 && { customRunDistM }),
             };
 
             const res = await fetch('/api/plans', {
@@ -757,12 +762,60 @@ export default function PlanSetupForm({
                 <TriathlonGoalTimeRenderer
                     vdot={effectiveVO2max * calibrationFactor}
                     raceType={raceType}
+                    customSwimDistM={customSwimDistM > 0 ? customSwimDistM : undefined}
+                    customBikeDistM={customBikeDistM > 0 ? customBikeDistM : undefined}
+                    customRunDistM={customRunDistM > 0 ? customRunDistM : undefined}
                     goalTimeSeconds={triGoalTimeSeconds}
                     onGoalTimeChange={setTriGoalTimeSeconds}
                     planWeeks={computedPlanWeeks}
                     runsPerWeek={runsPerWeek}
                     weeklyMileageGoal={weeklyMileage}
                 />
+            )}
+
+            {raceType === 'CUSTOM_TRI' && (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-accent-orange mb-2">
+                        <Target className="w-5 h-5" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide">Custom Triathlon Distances</h3>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                        <div>
+                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Swim (m)</label>
+                            <input
+                                type="number"
+                                value={customSwimDistM || ''}
+                                onChange={(e) => setCustomSwimDistM(parseFloat(e.target.value) || 0)}
+                                placeholder="1500"
+                                min={100}
+                                className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Bike (m)</label>
+                            <input
+                                type="number"
+                                value={customBikeDistM || ''}
+                                onChange={(e) => setCustomBikeDistM(parseFloat(e.target.value) || 0)}
+                                placeholder="40000"
+                                min={1000}
+                                className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs text-foreground-muted mb-1 uppercase">Run (m)</label>
+                            <input
+                                type="number"
+                                value={customRunDistM || ''}
+                                onChange={(e) => setCustomRunDistM(parseFloat(e.target.value) || 0)}
+                                placeholder="10000"
+                                min={1000}
+                                className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                            />
+                        </div>
+                    </div>
+                    <p className="text-xs text-foreground-muted">Leave blank to use Olympic triathlon defaults (1500m / 40km / 10km)</p>
+                </div>
             )}
 
             {!TRIATHLON_RACE_TYPES.has(raceType) && raceType !== 'BACKYARD_ULTRA' && !['TWELVE_HOUR', 'TWENTY_FOUR_HOUR'].includes(raceType) && (

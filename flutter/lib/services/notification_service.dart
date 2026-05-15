@@ -50,7 +50,18 @@ class NotificationServiceImpl implements NotificationService {
 
     try {
       tz_data.initializeTimeZones();
-      tz.setLocalLocation(tz.UTC);
+      final offset = DateTime.now().timeZoneOffset;
+      final totalMinutes = offset.inMinutes;
+      final absMinutes = totalMinutes.abs();
+      final h = (absMinutes ~/ 60).toString().padLeft(2, '0');
+      final m = (absMinutes % 60).toString().padLeft(2, '0');
+      final sign = totalMinutes >= 0 ? '-' : '+';
+      final tzName = 'Etc/GMT$sign$h${m != '00' ? ':$m' : ''}';
+      try {
+        tz.setLocalLocation(tz.getLocation(tzName));
+      } catch (_) {
+        tz.setLocalLocation(tz.getLocation('UTC'));
+      }
 
       const androidSettings = AndroidInitializationSettings(
         '@mipmap/ic_launcher',

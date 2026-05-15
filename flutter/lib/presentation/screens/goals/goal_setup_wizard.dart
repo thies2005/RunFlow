@@ -51,6 +51,12 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   double _backyardLoopDistM = 0;
   int _targetLaps = 2;
   final _backyardLoopDistController = TextEditingController();
+  double _customSwimDistM = 0;
+  double _customBikeDistM = 0;
+  double _customRunDistM = 0;
+  final _customSwimController = TextEditingController();
+  final _customBikeController = TextEditingController();
+  final _customRunController = TextEditingController();
 
   final _nameFormKey = GlobalKey<FormState>();
   final _hoursController = TextEditingController();
@@ -83,6 +89,9 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     _minutesController.dispose();
     _secondsController.dispose();
     _backyardLoopDistController.dispose();
+    _customSwimController.dispose();
+    _customBikeController.dispose();
+    _customRunController.dispose();
     super.dispose();
   }
 
@@ -413,6 +422,46 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
               ),
             ),
           ),
+          if (projection != null)
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  formatDurationClock(
+                      projection.projected.totalSeconds),
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Estimated finish time',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Optimal: ${formatDurationClock(projection.optimal.totalSeconds)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.success,
+                      ),
+                    ),
+                    Text(
+                      'Conservative: ${formatDurationClock(projection.conservative.totalSeconds)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
           if (_backyardLoopDistM > 0) ...[
             const SizedBox(height: 16),
             Card(
@@ -436,53 +485,6 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          if (projection != null) ...[
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Center(
-                      child: Text(
-                        formatDurationClock(
-                            projection.projected.totalSeconds),
-                        style: theme.textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Estimated finish time',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Optimal: ${formatDurationClock(projection.optimal.totalSeconds)}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.success,
-                          ),
-                        ),
-                        Text(
-                          'Conservative: ${formatDurationClock(projection.conservative.totalSeconds)}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -532,9 +534,15 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     final key = triRaceTypeKey(_selectedRaceType);
     final defaults = ref.watch(athleteDefaultsProvider);
 
-    final swimDist = triSwimDist[key] ?? 1500;
-    final bikeDist = triBikeDist[key] ?? 40000;
-    final runDist = triRunDist[key] ?? 10000;
+    final swimDist = _selectedRaceType == RaceType.customTri && _customSwimDistM > 0
+        ? _customSwimDistM.toInt()
+        : (triSwimDist[key] ?? 1500);
+    final bikeDist = _selectedRaceType == RaceType.customTri && _customBikeDistM > 0
+        ? _customBikeDistM.toInt()
+        : (triBikeDist[key] ?? 40000);
+    final runDist = _selectedRaceType == RaceType.customTri && _customRunDistM > 0
+        ? _customRunDistM.toInt()
+        : (triRunDist[key] ?? 10000);
 
     TriathlonProjection? triProjection;
     if (vdot > 0) {
@@ -550,6 +558,12 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         (double v, int d) => estimateTimeForDistance(v, d),
         cssOverride: defaults.estimatedCssSecPer100m,
         bikeSpeedOverrideMs: defaults.estimatedFlatBikeSpeedMs,
+        customSwimDistM: _selectedRaceType == RaceType.customTri && _customSwimDistM > 0
+            ? _customSwimDistM.toInt() : null,
+        customBikeDistM: _selectedRaceType == RaceType.customTri && _customBikeDistM > 0
+            ? _customBikeDistM.toInt() : null,
+        customRunDistM: _selectedRaceType == RaceType.customTri && _customRunDistM > 0
+            ? _customRunDistM.toInt() : null,
       );
     }
 
@@ -619,6 +633,87 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
             ),
           ),
           const SizedBox(height: 24),
+          if (_selectedRaceType == RaceType.customTri) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Custom Distances',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _customSwimController,
+                            decoration: const InputDecoration(
+                              labelText: 'Swim (m)',
+                              hintText: '1500',
+                              isDense: true,
+                            ),
+                            keyboardType: TextInputType.number,
+                            onChanged: (v) {
+                              setState(() {
+                                _customSwimDistM = double.tryParse(v) ?? 0;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _customBikeController,
+                            decoration: const InputDecoration(
+                              labelText: 'Bike (m)',
+                              hintText: '40000',
+                              isDense: true,
+                            ),
+                            keyboardType: TextInputType.number,
+                            onChanged: (v) {
+                              setState(() {
+                                _customBikeDistM = double.tryParse(v) ?? 0;
+                              });
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _customRunController,
+                            decoration: const InputDecoration(
+                              labelText: 'Run (m)',
+                              hintText: '10000',
+                              isDense: true,
+                            ),
+                            keyboardType: TextInputType.number,
+                            onChanged: (v) {
+                              setState(() {
+                                _customRunDistM = double.tryParse(v) ?? 0;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Leave blank for Olympic defaults (1500m / 40km / 10km)',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           Center(
             child: Column(
               children: [
@@ -1227,7 +1322,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         raceDate: _selectedDate,
         planStartDate: _planStartDate,
         targetTime: _targetTimeInSeconds,
-        weeklyMileageGoal: _weeklyMileageGoal * 1000,
+        weeklyMileageGoal: (_weeklyMileageGoal * 1000).roundToDouble(),
         planWeeks: effectivePlanWeeks,
         runsPerWeek: _runsPerWeek,
         ridesPerWeek: _ridesPerWeek,
@@ -1236,7 +1331,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         taperWeeks: phases[0],
         peakWeeks: phases[1],
         buildWeeks: phases[2],
-        maxLongRunKm: _maxLongRunKm,
+        maxLongRunKm: _maxLongRunKm.roundToDouble(),
         longRunDay: _longRunDay,
         workoutDay: _qualityDay,
         swimDay: _swimDay,
@@ -1255,6 +1350,12 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         athleteBikeSpeedOverride: _selectedRaceType.isTriathlon
             ? ref.read(athleteDefaultsProvider).estimatedFlatBikeSpeedMs
             : null,
+        customSwimDistM: _selectedRaceType == RaceType.customTri &&
+            _customSwimDistM > 0 ? _customSwimDistM : null,
+        customBikeDistM: _selectedRaceType == RaceType.customTri &&
+            _customBikeDistM > 0 ? _customBikeDistM : null,
+        customRunDistM: _selectedRaceType == RaceType.customTri &&
+            _customRunDistM > 0 ? _customRunDistM : null,
       );
 
       final goal = await ref.read(goalsProvider.notifier).createGoal(request);

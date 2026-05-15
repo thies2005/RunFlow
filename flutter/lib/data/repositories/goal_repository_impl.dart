@@ -54,10 +54,22 @@ class GoalRepositoryImpl implements GoalRepository {
         ),
       ).toDomain();
     } on DioException catch (e) {
+      final data = e.response?.data;
+      String message = 'Failed to create goal.';
+      if (data is Map<String, dynamic>) {
+        final error = data['error'];
+        final details = data['details'];
+        if (error is String && error.isNotEmpty) {
+          message = error;
+          if (details != null) {
+            message = '$error: $details';
+          }
+        }
+      }
       throw e.error is AppException
           ? e.error as AppException
           : ServerException(
-              message: 'Failed to create goal.',
+              message: message,
               statusCode: e.response?.statusCode,
             );
     }

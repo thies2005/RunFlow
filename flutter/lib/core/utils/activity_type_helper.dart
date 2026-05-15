@@ -131,6 +131,8 @@ String triRaceTypeKey(RaceType type) {
       return 'HALF_IRONMAN';
     case RaceType.fullIronman:
       return 'FULL_IRONMAN';
+    case RaceType.customTri:
+      return 'CUSTOM_TRI';
     default:
       return 'SPRINT_TRI';
   }

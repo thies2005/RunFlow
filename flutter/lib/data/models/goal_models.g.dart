@@ -64,6 +64,9 @@ _CreateGoalRequest _$CreateGoalRequestFromJson(Map<String, dynamic> json) =>
       athleteCssOverride: (json['athleteCssOverride'] as num?)?.toDouble(),
       athleteBikeSpeedOverride: (json['athleteBikeSpeedOverride'] as num?)
           ?.toDouble(),
+      customSwimDistM: (json['customSwimDistM'] as num?)?.toDouble(),
+      customBikeDistM: (json['customBikeDistM'] as num?)?.toDouble(),
+      customRunDistM: (json['customRunDistM'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
@@ -95,6 +98,9 @@ Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
       'sport': instance.sport,
       'athleteCssOverride': instance.athleteCssOverride,
       'athleteBikeSpeedOverride': instance.athleteBikeSpeedOverride,
+      'customSwimDistM': instance.customSwimDistM,
+      'customBikeDistM': instance.customBikeDistM,
+      'customRunDistM': instance.customRunDistM,
     };
 
 const _$RaceTypeEnumMap = {

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { X, Trophy, Zap, Waves, Clock } from 'lucide-react';
+import { getRaceDefaults } from '@/lib/plans/defaults';
 
 type Sport = 'RUN' | 'TRIATHLON' | 'NO_RACE';
 
@@ -54,6 +55,17 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
     const [ridesPerWeek, setRidesPerWeek] = useState(0);
     const [swimsPerWeek, setSwimsPerWeek] = useState(0);
     const [weeklyMileage, setWeeklyMileage] = useState(40);
+    const [customSwimDistM, setCustomSwimDistM] = useState('');
+    const [customBikeDistM, setCustomBikeDistM] = useState('');
+    const [customRunDistM, setCustomRunDistM] = useState('');
+
+    useEffect(() => {
+        const defaults = getRaceDefaults(raceType);
+        setRunsPerWeek(defaults.runsPerWeek);
+        setRidesPerWeek(defaults.ridesPerWeek);
+        setSwimsPerWeek(defaults.swimsPerWeek);
+        setWeeklyMileage(defaults.weeklyVolumeKm);
+    }, [raceType]);
 
     const createMutation = useMutation({
         mutationFn: async (body: Record<string, unknown>) => {
@@ -91,6 +103,9 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
         setRidesPerWeek(0);
         setSwimsPerWeek(0);
         setWeeklyMileage(40);
+        setCustomSwimDistM('');
+        setCustomBikeDistM('');
+        setCustomRunDistM('');
     };
 
     const handleClose = () => {
@@ -111,6 +126,11 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
             ridesPerWeek,
             swimsPerWeek,
             weeklyMileageGoal: weeklyMileage * 1000,
+            ...(raceType === 'CUSTOM_TRI' && {
+                customSwimDistM: parseInt(customSwimDistM) || undefined,
+                customBikeDistM: parseInt(customBikeDistM) || undefined,
+                customRunDistM: parseInt(customRunDistM) || undefined,
+            }),
         });
     };
 
@@ -267,6 +287,43 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
                                     className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
                                 />
                             </div>
+                        )}
+                        {raceType === 'CUSTOM_TRI' && (
+                            <>
+                                <div>
+                                    <label className="block text-xs font-medium text-zinc-400 mb-1.5">Swim (m)</label>
+                                    <input
+                                        type="number"
+                                        value={customSwimDistM}
+                                        onChange={(e) => setCustomSwimDistM(e.target.value)}
+                                        placeholder="1500"
+                                        min={100}
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-zinc-400 mb-1.5">Bike (m)</label>
+                                    <input
+                                        type="number"
+                                        value={customBikeDistM}
+                                        onChange={(e) => setCustomBikeDistM(e.target.value)}
+                                        placeholder="40000"
+                                        min={1000}
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-zinc-400 mb-1.5">Run (m)</label>
+                                    <input
+                                        type="number"
+                                        value={customRunDistM}
+                                        onChange={(e) => setCustomRunDistM(e.target.value)}
+                                        placeholder="10000"
+                                        min={1000}
+                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                                    />
+                                </div>
+                            </>
                         )}
                         <div>
                             <label className="block text-xs font-medium text-zinc-400 mb-1.5">Weekly km goal</label>

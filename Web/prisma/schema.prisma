@@ -575,6 +575,9 @@ model Workout {
   structuredSteps         Json?
   groupId                 String?
   subGoalId               String?
+  sport                   String                @default("RUN")
+  displayDesc             String?
+  intensityZone           String?
   goal                    Goal                  @relation(fields: [goalId], references: [id], onDelete: Cascade)
   linkedActivity          Activity?             @relation(fields: [linkedActivityId], references: [id])
   subGoal                 Goal?                 @relation("WorkoutSubGoal", fields: [subGoalId], references: [id])

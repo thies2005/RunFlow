@@ -3,19 +3,23 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    AlertCircle, Save, Check, Trash2, Loader2
+    AlertCircle, Save, Check, Trash2, Loader2, Target
 } from 'lucide-react';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { calculateVdot, calculateTrainingPaces, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
 import {
     calculateProjectedGoalTime,
+    calculateProgressionCoefficient,
     type PlanSettings
 } from '@/lib/metrics/goalProjection';
 import TargetRaceSection from './setup/TargetRaceSection';
 import CalibrationSection from './setup/CalibrationSection';
 import GoalTimeRenderer from './setup/GoalTimeRenderer';
+import TriathlonGoalTimeRenderer from './setup/TriathlonGoalTimeRenderer';
 import PlanVolumeSection from './setup/PlanVolumeSection';
 import HeartRateZonesSection from './setup/HeartRateZonesSection';
+import { estimateBackyardUltraTime } from '@/lib/plans/backyard-time';
+import { getRaceDefaults, adjustDefaultsForVdot } from '@/lib/plans/defaults';
 
 
 interface RaceActivity {
@@ -39,12 +43,36 @@ const MAX_LONG_RUN_KM_BY_RACE: Record<string, number> = {
     TEN_K: 22,
     HALF_MARATHON: 24,
     MARATHON: 32,
+    FIFTY_K: 35,
+    FIFTY_MILE: 40,
+    HUNDRED_K: 45,
+    HUNDRED_MILE: 50,
+    TWELVE_HOUR: 40,
+    TWENTY_FOUR_HOUR: 50,
+    BACKYARD_ULTRA: 35,
+    CUSTOM_DISTANCE: 25,
+    SPRINT_TRI: 15,
+    OLYMPIC_TRI: 18,
+    HALF_IRONMAN: 22,
+    FULL_IRONMAN: 30,
+    CUSTOM_TRI: 22,
+};
+
+const TRIATHLON_RACE_TYPES = new Set([
+    'SPRINT_TRI', 'OLYMPIC_TRI', 'HALF_IRONMAN', 'FULL_IRONMAN', 'CUSTOM_TRI',
+]);
+
+const ULTRA_DISTANCE_MAP: Record<string, number> = {
+    FIFTY_K: 50000,
+    FIFTY_MILE: 80467,
+    HUNDRED_K: 100000,
+    HUNDRED_MILE: 160934,
 };
 
 function getDefaultMaxLongRunKm(raceType: string, weeklyMileageKm: number): number {
-    const raceCap = MAX_LONG_RUN_KM_BY_RACE[raceType] ?? 22;
+    const defaults = getRaceDefaults(raceType);
     const calculated = Math.round(weeklyMileageKm * 0.55);
-    return Math.max(6, Math.min(calculated, raceCap));
+    return Math.max(6, Math.min(calculated, defaults.maxLongRunKm));
 }
 
 export default function PlanSetupForm({
@@ -76,17 +104,18 @@ export default function PlanSetupForm({
     const [seconds, setSeconds] = useState('');
 
     // Plan Volume
-    const [runsPerWeek, setRunsPerWeek] = useState(4);
-    const [ridesPerWeek, setRidesPerWeek] = useState(0);
-    const [swimsPerWeek, setSwimsPerWeek] = useState(0);
-    const [strengthPerWeek, setStrengthPerWeek] = useState(0);
-    const [weeklyMileage, setWeeklyMileage] = useState(40);
-    const [maxLongRunKm, setMaxLongRunKm] = useState(() => getDefaultMaxLongRunKm('MARATHON', 40));
+    const marathonDefaults = getRaceDefaults('MARATHON');
+    const [runsPerWeek, setRunsPerWeek] = useState(marathonDefaults.runsPerWeek);
+    const [ridesPerWeek, setRidesPerWeek] = useState(marathonDefaults.ridesPerWeek);
+    const [swimsPerWeek, setSwimsPerWeek] = useState(marathonDefaults.swimsPerWeek);
+    const [strengthPerWeek, setStrengthPerWeek] = useState(marathonDefaults.strengthPerWeek);
+    const [weeklyMileage, setWeeklyMileage] = useState(marathonDefaults.weeklyVolumeKm);
+    const [maxLongRunKm, setMaxLongRunKm] = useState(() => getDefaultMaxLongRunKm('MARATHON', marathonDefaults.weeklyVolumeKm));
 
     // Phase Settings
-    const [taperWeeks, setTaperWeeks] = useState(2);
-    const [peakWeeks, setPeakWeeks] = useState(4);
-    const [buildWeeks, setBuildWeeks] = useState(4);
+    const [taperWeeks, setTaperWeeks] = useState(marathonDefaults.taperWeeks);
+    const [peakWeeks, setPeakWeeks] = useState(marathonDefaults.peakWeeks);
+    const [buildWeeks, setBuildWeeks] = useState(marathonDefaults.buildWeeks);
 
     // Workout Day Scheduling (hidden/advanced section)
     const [showSchedulingSettings, setShowSchedulingSettings] = useState(false);
@@ -123,6 +152,13 @@ export default function PlanSetupForm({
     const [goalTimeHours, setGoalTimeHours] = useState('');
     const [goalTimeMinutes, setGoalTimeMinutes] = useState('');
     const [goalTimeSecs, setGoalTimeSecs] = useState('');
+
+    // Backyard Ultra
+    const [backyardLoopDistM, setBackyardLoopDistM] = useState<number>(0);
+    const [targetLaps, setTargetLaps] = useState(2);
+
+    // Triathlon Goal Time
+    const [triGoalTimeSeconds, setTriGoalTimeSeconds] = useState<number | null>(null);
 
     // Calibration Result
     const [calibrationFactor, setCalibrationFactor] = useState<number>(1.0);
@@ -262,6 +298,29 @@ export default function PlanSetupForm({
     useEffect(() => {
         setMaxLongRunKm(getDefaultMaxLongRunKm(raceType, weeklyMileage));
     }, [raceType, weeklyMileage]);
+
+    useEffect(() => {
+        if (mode !== 'onboarding') return;
+        let defaults = getRaceDefaults(raceType);
+        if (effectiveVO2max > 0) {
+            defaults = adjustDefaultsForVdot(defaults, effectiveVO2max);
+        }
+        setRunsPerWeek(defaults.runsPerWeek);
+        setRidesPerWeek(defaults.ridesPerWeek);
+        setSwimsPerWeek(defaults.swimsPerWeek);
+        setStrengthPerWeek(defaults.strengthPerWeek);
+        setWeeklyMileage(defaults.weeklyVolumeKm);
+        setTaperWeeks(defaults.taperWeeks);
+        setPeakWeeks(defaults.peakWeeks);
+        setBuildWeeks(defaults.buildWeeks);
+        if (defaults.backyardLoopDistM) {
+            setBackyardLoopDistM(defaults.backyardLoopDistM);
+        }
+        if (defaults.targetLaps) {
+            setTargetLaps(defaults.targetLaps);
+        }
+        setTriGoalTimeSeconds(null);
+    }, [raceType, mode]);
 
     // Auto-prefill threshold values from calibration data while still allowing manual overrides.
     useEffect(() => {
@@ -459,11 +518,15 @@ export default function PlanSetupForm({
         mutationFn: async () => {
             const timeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
 
-            // Calculate the displayed goal time (either user-selected or projected)
-            // This ensures we always save a targetTime to the goal
+            const isTriathlon = TRIATHLON_RACE_TYPES.has(raceType);
+            const sport = isTriathlon ? 'TRIATHLON' : 'RUN';
+
             let computedTargetTime: number | null = goalTimeSeconds;
+            if (isTriathlon) {
+                computedTargetTime = triGoalTimeSeconds;
+            }
+
             if (!computedTargetTime && effectiveVO2max > 0) {
-                // Compute projection inline if no goal time was explicitly set
                 const raceDistanceMap: Record<string, RaceDistance> = {
                     'FIVE_K': '5K',
                     'TEN_K': '10K',
@@ -485,38 +548,43 @@ export default function PlanSetupForm({
                 computedTargetTime = projection.projectedTime;
             }
 
-            const res = await fetch('/api/goals', {
+            const body: Record<string, unknown> = {
+                name: goalName,
+                raceType,
+                raceDate: new Date(raceDate).toISOString(),
+                planStartDate: new Date(planStartDate).toISOString(),
+                planWeeks: Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (1000 * 60 * 60 * 24 * 7))),
+                runsPerWeek,
+                ridesPerWeek,
+                swimsPerWeek,
+                strengthPerWeek,
+                taperWeeks,
+                peakWeeks,
+                buildWeeks,
+                weeklyMileageGoal: weeklyMileage * 1000,
+                maxLongRunKm,
+                longRunDay,
+                workoutDay: qualityDay,
+                swimDay,
+                restDays,
+                sport,
+                ...(computedTargetTime && { targetTime: Math.round(computedTargetTime) }),
+                ...(timeSeconds > 0 && {
+                    calibrationTime: Math.round(timeSeconds),
+                    calibrationDistance,
+                    calibrationActivityId: calibrationMode === 'activity' ? selectedActivityId : undefined,
+                    calibrationFactor,
+                }),
+                ...(raceType === 'BACKYARD_ULTRA' && backyardLoopDistM > 0 && {
+                    backyardLoopDistM,
+                    targetLaps,
+                }),
+            };
+
+            const res = await fetch('/api/plans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: goalName,
-                    raceType,
-                    raceDate: new Date(raceDate).toISOString(),
-                    planStartDate: new Date(planStartDate).toISOString(),
-                    planWeeks: Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (1000 * 60 * 60 * 24 * 7))),
-                    runsPerWeek,
-                    ridesPerWeek,
-                    swimsPerWeek,
-                    strengthPerWeek,
-                    taperWeeks,
-                    peakWeeks,
-                    buildWeeks,
-                    weeklyMileageGoal: weeklyMileage * 1000, // Convert km to meters
-                    maxLongRunKm,
-                    longRunDay,
-                    workoutDay: qualityDay,
-                    swimDay,
-                    restDays,
-                    // Always include the computed goal time (ensure integer)
-                    ...(computedTargetTime && { targetTime: Math.round(computedTargetTime) }),
-                    // Include calibration data if provided (ensure integer times)
-                    ...(timeSeconds > 0 && {
-                        calibrationTime: Math.round(timeSeconds),
-                        calibrationDistance,
-                        calibrationActivityId: calibrationMode === 'activity' ? selectedActivityId : undefined,
-                        calibrationFactor,
-                    }),
-                }),
+                body: JSON.stringify(body),
             });
             if (!res.ok) throw new Error('Failed to create goal');
             return res.json();
@@ -685,29 +753,103 @@ export default function PlanSetupForm({
                 raceActivities={raceActivities}
             />
 
-            <GoalTimeRenderer
-                mode={mode}
-                effectiveVO2max={effectiveVO2max}
-                calibrationFactor={calibrationFactor}
-                raceType={raceType}
-                computedPlanWeeks={computedPlanWeeks}
-                runsPerWeek={runsPerWeek}
-                weeklyMileage={weeklyMileage}
-                taperWeeks={taperWeeks}
-                peakWeeks={peakWeeks}
-                buildWeeks={buildWeeks}
-                shapePercent={shapePercent}
-                goalTimeSeconds={goalTimeSeconds}
-                setGoalTimeSeconds={setGoalTimeSeconds}
-                goalTimeHours={goalTimeHours}
-                setGoalTimeHours={setGoalTimeHours}
-                goalTimeMinutes={goalTimeMinutes}
-                setGoalTimeMinutes={setGoalTimeMinutes}
-                goalTimeSecs={goalTimeSecs}
-                setGoalTimeSecs={setGoalTimeSecs}
-                isEditingGoalTime={isEditingGoalTime}
-                setIsEditingGoalTime={setIsEditingGoalTime}
-            />
+            {TRIATHLON_RACE_TYPES.has(raceType) && (
+                <TriathlonGoalTimeRenderer
+                    vdot={effectiveVO2max * calibrationFactor}
+                    raceType={raceType}
+                    goalTimeSeconds={triGoalTimeSeconds}
+                    onGoalTimeChange={setTriGoalTimeSeconds}
+                    planWeeks={computedPlanWeeks}
+                    runsPerWeek={runsPerWeek}
+                    weeklyMileageGoal={weeklyMileage}
+                />
+            )}
+
+            {!TRIATHLON_RACE_TYPES.has(raceType) && raceType !== 'BACKYARD_ULTRA' && !['TWELVE_HOUR', 'TWENTY_FOUR_HOUR'].includes(raceType) && (
+                <GoalTimeRenderer
+                    mode={mode}
+                    effectiveVO2max={effectiveVO2max}
+                    calibrationFactor={calibrationFactor}
+                    raceType={raceType}
+                    computedPlanWeeks={computedPlanWeeks}
+                    runsPerWeek={runsPerWeek}
+                    weeklyMileage={weeklyMileage}
+                    taperWeeks={taperWeeks}
+                    peakWeeks={peakWeeks}
+                    buildWeeks={buildWeeks}
+                    shapePercent={shapePercent}
+                    goalTimeSeconds={goalTimeSeconds}
+                    setGoalTimeSeconds={setGoalTimeSeconds}
+                    goalTimeHours={goalTimeHours}
+                    setGoalTimeHours={setGoalTimeHours}
+                    goalTimeMinutes={goalTimeMinutes}
+                    setGoalTimeMinutes={setGoalTimeMinutes}
+                    goalTimeSecs={goalTimeSecs}
+                    setGoalTimeSecs={setGoalTimeSecs}
+                    isEditingGoalTime={isEditingGoalTime}
+                    setIsEditingGoalTime={setIsEditingGoalTime}
+                    distanceOverrideM={ULTRA_DISTANCE_MAP[raceType]}
+                />
+            )}
+
+            {raceType === 'BACKYARD_ULTRA' && (
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-accent-orange mb-2">
+                        <Target className="w-5 h-5" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide">Backyard Ultra Setup</h3>
+                    </div>
+                    <div>
+                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Loop Distance (meters)</label>
+                        <input
+                            type="number"
+                            value={backyardLoopDistM || ''}
+                            onChange={(e) => setBackyardLoopDistM(parseFloat(e.target.value) || 0)}
+                            placeholder="e.g. 6706"
+                            min={100}
+                            className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Target Laps: {targetLaps}</label>
+                        <input
+                            type="range"
+                            min={1}
+                            max={100}
+                            step={1}
+                            value={targetLaps}
+                            onChange={(e) => setTargetLaps(parseInt(e.target.value))}
+                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                        />
+                        <div className="flex justify-between text-xs text-foreground-muted mt-1">
+                            <span>1</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    {backyardLoopDistM > 0 && (
+                        <div className="text-xs text-foreground-muted">
+                            Total distance: <span className="text-foreground font-medium">{((backyardLoopDistM * targetLaps) / 1000).toFixed(1)} km</span>
+                        </div>
+                    )}
+                    {backyardLoopDistM > 0 && effectiveVO2max > 0 && (() => {
+                        const progressionFactor = calculateProgressionCoefficient(computedPlanWeeks, runsPerWeek, weeklyMileage);
+                        const projectedVdot = effectiveVO2max * calibrationFactor * progressionFactor;
+                        const projection = estimateBackyardUltraTime({ vdot: projectedVdot, loopDistM: backyardLoopDistM, targetLaps });
+                        if (!projection) return null;
+                        const fmt = (s: number) => `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+                        return (
+                            <div className="text-xs bg-surface border border-glass-border rounded-lg p-3 space-y-1">
+                                <div className="text-foreground-muted">Estimated finish time:</div>
+                                <div className="text-green-400 font-medium">Optimal: {fmt(projection.optimal.totalSeconds)}</div>
+                                <div className="text-accent-orange font-medium">Projected: {fmt(projection.projected.totalSeconds)}</div>
+                                <div className="text-red-400 font-medium">Conservative: {fmt(projection.conservative.totalSeconds)}</div>
+                            </div>
+                        );
+                    })()}
+                    {backyardLoopDistM > 0 && (
+                        <div className="text-[10px] text-foreground-muted">Estimated based on running fitness</div>
+                    )}
+                </div>
+            )}
 
             <PlanVolumeSection
                 runsPerWeek={runsPerWeek}

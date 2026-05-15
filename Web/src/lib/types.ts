@@ -132,7 +132,24 @@ export interface ActivityForCalculation {
 // Goal Types
 // ============================================
 
-export type RaceType = 'FIVE_K' | 'TEN_K' | 'HALF_MARATHON' | 'MARATHON';
+export type RaceType =
+    | 'FIVE_K'
+    | 'TEN_K'
+    | 'HALF_MARATHON'
+    | 'MARATHON'
+    | 'FIFTY_K'
+    | 'FIFTY_MILE'
+    | 'HUNDRED_K'
+    | 'HUNDRED_MILE'
+    | 'TWELVE_HOUR'
+    | 'TWENTY_FOUR_HOUR'
+    | 'BACKYARD_ULTRA'
+    | 'CUSTOM_DISTANCE'
+    | 'SPRINT_TRI'
+    | 'OLYMPIC_TRI'
+    | 'HALF_IRONMAN'
+    | 'FULL_IRONMAN'
+    | 'CUSTOM_TRI';
 
 export interface Goal {
     id: string;
@@ -192,6 +209,7 @@ export interface Workout {
     scheduledDate: string | Date;
     workoutType: WorkoutType;
     description: string;
+    displayDesc?: string | null;
     targetDistance: number | null;
     targetDuration: number | null;
     targetPace: number | null;

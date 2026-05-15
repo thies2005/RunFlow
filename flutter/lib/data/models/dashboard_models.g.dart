@@ -153,6 +153,11 @@ _Workout _$WorkoutFromJson(Map<String, dynamic> json) => _Workout(
       ? null
       : DateTime.parse(json['completedAt'] as String),
   activityId: json['activityId'] as String?,
+  sport: json['sport'] as String? ?? 'RUN',
+  displayDescription: json['displayDesc'] as String?,
+  intensityZone: json['intensityZone'] as String?,
+  phase: json['phase'] as String?,
+  targetHrZone: (json['targetHrZone'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$WorkoutToJson(_Workout instance) => <String, dynamic>{
@@ -167,6 +172,11 @@ Map<String, dynamic> _$WorkoutToJson(_Workout instance) => <String, dynamic>{
   'isCompleted': instance.isCompleted,
   'completedAt': instance.completedAt?.toIso8601String(),
   'activityId': instance.activityId,
+  'sport': instance.sport,
+  'displayDesc': instance.displayDescription,
+  'intensityZone': instance.intensityZone,
+  'phase': instance.phase,
+  'targetHrZone': instance.targetHrZone,
 };
 
 _Goal _$GoalFromJson(Map<String, dynamic> json) => _Goal(
@@ -174,7 +184,9 @@ _Goal _$GoalFromJson(Map<String, dynamic> json) => _Goal(
   userId: json['userId'] as String? ?? '',
   name: json['name'] as String,
   raceType: $enumDecodeNullable(_$RaceTypeEnumMap, json['raceType']),
-  raceDate: DateTime.parse(json['raceDate'] as String),
+  raceDate: json['raceDate'] == null
+      ? null
+      : DateTime.parse(json['raceDate'] as String),
   targetTime: (json['targetTime'] as num?)?.toInt(),
   weeklyMileageGoal: (json['weeklyMileageGoal'] as num?)?.toDouble(),
   planWeeks: (json['planWeeks'] as num?)?.toInt() ?? 12,
@@ -196,6 +208,19 @@ _Goal _$GoalFromJson(Map<String, dynamic> json) => _Goal(
       const [],
   backyardLoopDistM: (json['backyardLoopDistM'] as num?)?.toDouble(),
   targetLaps: (json['targetLaps'] as num?)?.toInt(),
+  sport: json['sport'] as String? ?? 'RUN',
+  planSource: json['planSource'] as String? ?? 'standard',
+  ridesPerWeek: (json['ridesPerWeek'] as num?)?.toInt() ?? 0,
+  swimsPerWeek: (json['swimsPerWeek'] as num?)?.toInt() ?? 0,
+  strengthPerWeek: (json['strengthPerWeek'] as num?)?.toInt() ?? 0,
+  taperWeeks: (json['taperWeeks'] as num?)?.toInt() ?? 2,
+  peakWeeks: (json['peakWeeks'] as num?)?.toInt() ?? 4,
+  buildWeeks: (json['buildWeeks'] as num?)?.toInt() ?? 4,
+  restDays:
+      (json['restDays'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$GoalToJson(_Goal instance) => <String, dynamic>{
@@ -203,7 +228,7 @@ Map<String, dynamic> _$GoalToJson(_Goal instance) => <String, dynamic>{
   'userId': instance.userId,
   'name': instance.name,
   'raceType': _$RaceTypeEnumMap[instance.raceType],
-  'raceDate': instance.raceDate.toIso8601String(),
+  'raceDate': instance.raceDate?.toIso8601String(),
   'targetTime': instance.targetTime,
   'weeklyMileageGoal': instance.weeklyMileageGoal,
   'planWeeks': instance.planWeeks,
@@ -219,6 +244,15 @@ Map<String, dynamic> _$GoalToJson(_Goal instance) => <String, dynamic>{
   'workouts': instance.workouts,
   'backyardLoopDistM': instance.backyardLoopDistM,
   'targetLaps': instance.targetLaps,
+  'sport': instance.sport,
+  'planSource': instance.planSource,
+  'ridesPerWeek': instance.ridesPerWeek,
+  'swimsPerWeek': instance.swimsPerWeek,
+  'strengthPerWeek': instance.strengthPerWeek,
+  'taperWeeks': instance.taperWeeks,
+  'peakWeeks': instance.peakWeeks,
+  'buildWeeks': instance.buildWeeks,
+  'restDays': instance.restDays,
 };
 
 const _$RaceTypeEnumMap = {

@@ -62,55 +62,78 @@ String? compatibilitySexToJson(CompatibilitySex? value) {
 
 enum CompatibilityWorkoutType {
   easy,
-  long,
+  longRun,
   tempo,
-  interval,
+  intervals,
+  fartlek,
+  repetitions,
   recovery,
   race,
+  rest,
+  crossTrain,
+  ride,
+  swim,
+  strength,
   other,
+  brick,
+  openWaterSwim,
+  longRide,
+  rideIntervals,
+  swimDrill,
+  transitionPractice,
+  doubleDay,
 }
 
 CompatibilityWorkoutType compatibilityWorkoutTypeFromJson(Object? value) {
   final normalized = _asString(value)?.trim().toUpperCase();
 
-  switch (normalized) {
-    case 'EASY':
-      return CompatibilityWorkoutType.easy;
-    case 'LONG':
-    case 'LONG_RUN':
-      return CompatibilityWorkoutType.long;
-    case 'TEMPO':
-    case 'THRESHOLD':
-      return CompatibilityWorkoutType.tempo;
-    case 'INTERVAL':
-    case 'INTERVALS':
-    case 'REPETITIONS':
-      return CompatibilityWorkoutType.interval;
-    case 'RECOVERY':
-    case 'REST':
-      return CompatibilityWorkoutType.recovery;
-    case 'RACE':
-      return CompatibilityWorkoutType.race;
-    default:
-      return CompatibilityWorkoutType.other;
-  }
+  return switch (normalized) {
+    'EASY' => CompatibilityWorkoutType.easy,
+    'LONG' || 'LONG_RUN' => CompatibilityWorkoutType.longRun,
+    'TEMPO' || 'THRESHOLD' => CompatibilityWorkoutType.tempo,
+    'INTERVAL' || 'INTERVALS' => CompatibilityWorkoutType.intervals,
+    'FARTLEK' => CompatibilityWorkoutType.fartlek,
+    'REPETITIONS' || 'REPS' => CompatibilityWorkoutType.repetitions,
+    'RECOVERY' => CompatibilityWorkoutType.recovery,
+    'RACE' => CompatibilityWorkoutType.race,
+    'REST' => CompatibilityWorkoutType.rest,
+    'CROSS_TRAIN' || 'CROSS' => CompatibilityWorkoutType.crossTrain,
+    'RIDE' => CompatibilityWorkoutType.ride,
+    'SWIM' => CompatibilityWorkoutType.swim,
+    'STRENGTH' => CompatibilityWorkoutType.strength,
+    'BRICK' => CompatibilityWorkoutType.brick,
+    'OPEN_WATER_SWIM' || 'OWS' => CompatibilityWorkoutType.openWaterSwim,
+    'LONG_RIDE' => CompatibilityWorkoutType.longRide,
+    'RIDE_INTERVALS' => CompatibilityWorkoutType.rideIntervals,
+    'SWIM_DRILL' => CompatibilityWorkoutType.swimDrill,
+    'TRANSITION_PRACTICE' => CompatibilityWorkoutType.transitionPractice,
+    'DOUBLE_DAY' => CompatibilityWorkoutType.doubleDay,
+    _ => CompatibilityWorkoutType.other,
+  };
 }
 
 String compatibilityWorkoutTypeToJson(CompatibilityWorkoutType value) {
-  switch (value) {
-    case CompatibilityWorkoutType.easy:
-      return 'EASY';
-    case CompatibilityWorkoutType.long:
-      return 'LONG_RUN';
-    case CompatibilityWorkoutType.tempo:
-      return 'TEMPO';
-    case CompatibilityWorkoutType.interval:
-      return 'INTERVALS';
-    case CompatibilityWorkoutType.recovery:
-      return 'RECOVERY';
-    case CompatibilityWorkoutType.race:
-      return 'RACE';
-    case CompatibilityWorkoutType.other:
-      return 'OTHER';
-  }
+  return switch (value) {
+    CompatibilityWorkoutType.easy => 'EASY',
+    CompatibilityWorkoutType.longRun => 'LONG_RUN',
+    CompatibilityWorkoutType.tempo => 'TEMPO',
+    CompatibilityWorkoutType.intervals => 'INTERVALS',
+    CompatibilityWorkoutType.fartlek => 'FARTLEK',
+    CompatibilityWorkoutType.repetitions => 'REPETITIONS',
+    CompatibilityWorkoutType.recovery => 'RECOVERY',
+    CompatibilityWorkoutType.race => 'RACE',
+    CompatibilityWorkoutType.rest => 'REST',
+    CompatibilityWorkoutType.crossTrain => 'CROSS_TRAIN',
+    CompatibilityWorkoutType.ride => 'RIDE',
+    CompatibilityWorkoutType.swim => 'SWIM',
+    CompatibilityWorkoutType.strength => 'STRENGTH',
+    CompatibilityWorkoutType.other => 'OTHER',
+    CompatibilityWorkoutType.brick => 'BRICK',
+    CompatibilityWorkoutType.openWaterSwim => 'OPEN_WATER_SWIM',
+    CompatibilityWorkoutType.longRide => 'LONG_RIDE',
+    CompatibilityWorkoutType.rideIntervals => 'RIDE_INTERVALS',
+    CompatibilityWorkoutType.swimDrill => 'SWIM_DRILL',
+    CompatibilityWorkoutType.transitionPractice => 'TRANSITION_PRACTICE',
+    CompatibilityWorkoutType.doubleDay => 'DOUBLE_DAY',
+  };
 }

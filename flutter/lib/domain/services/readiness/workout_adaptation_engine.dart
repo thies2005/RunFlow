@@ -46,7 +46,7 @@ class WorkoutAdaptationEngine {
       return null;
     }
 
-    if (type == WorkoutType.interval || type == WorkoutType.tempo) {
+    if (type == WorkoutType.intervals || type == WorkoutType.tempo) {
       return AdaptedWorkout(
         id: 'adapt_${workout.id}',
         originalWorkoutId: workout.id,
@@ -69,7 +69,7 @@ class WorkoutAdaptationEngine {
       );
     }
 
-    if (type == WorkoutType.long) {
+    if (type == WorkoutType.longRun) {
       return AdaptedWorkout(
         id: 'adapt_${workout.id}',
         originalWorkoutId: workout.id,

@@ -89,7 +89,7 @@ class _PastRaceCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _raceTypeLabel(goal.raceType),
+                        _raceTypeLabel(goal.raceType ?? RaceType.customDistance),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -119,7 +119,7 @@ class _PastRaceCard extends StatelessWidget {
               children: [
                 _InfoChip(
                   icon: Icons.event,
-                  label: formatRelativeDate(goal.raceDate),
+                  label: formatRelativeDate(goal.raceDate ?? goal.createdAt),
                 ),
                 const SizedBox(width: 12),
                 if (goal.targetTime != null)

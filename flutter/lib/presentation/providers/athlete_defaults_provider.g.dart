@@ -49,4 +49,4 @@ final class AthleteDefaultsProvider
   }
 }
 
-String _$athleteDefaultsHash() => r'8a553d9578d0f98f0f727389f7d02be5eca720eb';
+String _$athleteDefaultsHash() => r'78fb5375640cafda4773bcbd94b4349a484fe57d';

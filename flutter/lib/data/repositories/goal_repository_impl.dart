@@ -33,7 +33,7 @@ class GoalRepositoryImpl implements GoalRepository {
   }
 
   Future<domain.GoalsResponse> _fetchGoalsFromApi() async {
-    final response = await dio.get(ApiConstants.goalsPath);
+    final response = await dio.get(ApiConstants.plansUrl);
     return GoalsResponse.fromJson(
       response.data as Map<String, dynamic>,
     ).toDomain();
@@ -43,7 +43,7 @@ class GoalRepositoryImpl implements GoalRepository {
   Future<domain.Goal> createGoal(domain.CreateGoalRequest request) async {
     try {
       final response = await dio.post(
-        ApiConstants.goalsPath,
+        ApiConstants.plansUrl,
         data: request.toData().toJson(),
       );
       await cacheDatasource.remove(CacheKeys.goals);
@@ -77,7 +77,7 @@ class GoalRepositoryImpl implements GoalRepository {
   }
 
   Future<domain.Goal> _fetchGoalFromApi(String id) async {
-    final response = await dio.get('${ApiConstants.goalsPath}/$id');
+    final response = await dio.get(ApiConstants.planUrl(id));
     return Goal.fromJson(
       unwrapPayload(
         Map<String, dynamic>.from(response.data as Map),
@@ -90,7 +90,7 @@ class GoalRepositoryImpl implements GoalRepository {
   Future<domain.Goal> updateGoal(String id, domain.UpdateGoalRequest request) async {
     try {
       final response = await dio.put(
-        '${ApiConstants.goalsPath}/$id',
+        ApiConstants.planUrl(id),
         data: request.toData().toJson(),
       );
       await cacheDatasource.remove(CacheKeys.goals);
@@ -114,7 +114,7 @@ class GoalRepositoryImpl implements GoalRepository {
   @override
   Future<bool> deleteGoal(String id) async {
     try {
-      final response = await dio.delete('${ApiConstants.goalsPath}/$id');
+      final response = await dio.delete(ApiConstants.planUrl(id));
       final data = response.data as Map<String, dynamic>;
       await cacheDatasource.remove(CacheKeys.goals);
       await cacheDatasource.remove('${CacheKeys.goalPrefix}$id');

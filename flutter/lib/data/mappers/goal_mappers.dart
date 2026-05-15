@@ -52,6 +52,9 @@ extension CreateGoalRequestMapper on CreateGoalRequest {
         calibrationFactor: calibrationFactor,
         backyardLoopDistM: backyardLoopDistM,
         targetLaps: targetLaps,
+        sport: sport,
+        athleteCssOverride: athleteCssOverride,
+        athleteBikeSpeedOverride: athleteBikeSpeedOverride,
       );
 }
 
@@ -81,6 +84,9 @@ extension DomainCreateGoalRequestMapper on domain.CreateGoalRequest {
         calibrationFactor: calibrationFactor,
         backyardLoopDistM: backyardLoopDistM,
         targetLaps: targetLaps,
+        sport: sport,
+        athleteCssOverride: athleteCssOverride,
+        athleteBikeSpeedOverride: athleteBikeSpeedOverride,
       );
 }
 

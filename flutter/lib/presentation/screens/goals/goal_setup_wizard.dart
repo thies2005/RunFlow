@@ -9,6 +9,7 @@ import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/goal_projection.dart';
 import 'package:runflow_flutter/core/utils/triathlon_estimator.dart';
 import 'package:runflow_flutter/core/utils/athlete_defaults.dart';
+import 'package:runflow_flutter/core/utils/race_defaults.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
@@ -34,11 +35,11 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   int _ridesPerWeek = 0;
   int _swimsPerWeek = 0;
   int _strengthPerWeek = 0;
-  double _weeklyMileageGoal = 30.0;
-  double _maxLongRunKm = 21.0;
+  double _weeklyMileageGoal = 28.0;
+  double _maxLongRunKm = 18.0;
   int _planWeeks = 12;
-  int _taperWeeks = 2;
-  int _peakWeeks = 4;
+  int _taperWeeks = 1;
+  int _peakWeeks = 2;
   int _buildWeeks = 4;
   int _longRunDay = 0;
   int _qualityDay = 3;
@@ -1247,6 +1248,13 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
             : null,
         targetLaps:
             _selectedRaceType == RaceType.backyardUltra ? _targetLaps : null,
+        sport: _selectedRaceType.isTriathlon ? 'TRIATHLON' : 'RUN',
+        athleteCssOverride: _selectedRaceType.isTriathlon
+            ? ref.read(athleteDefaultsProvider).estimatedCssSecPer100m
+            : null,
+        athleteBikeSpeedOverride: _selectedRaceType.isTriathlon
+            ? ref.read(athleteDefaultsProvider).estimatedFlatBikeSpeedMs
+            : null,
       );
 
       final goal = await ref.read(goalsProvider.notifier).createGoal(request);
@@ -1324,60 +1332,26 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                       _hoursController.clear();
                       _minutesController.clear();
                       _secondsController.clear();
-                      if (type.isTriathlon) {
-                        if (type == RaceType.fullIronman) {
-                          _runsPerWeek = 3;
-                          _ridesPerWeek = 3;
-                          _swimsPerWeek = 2;
-                          _strengthPerWeek = 2;
-                          _maxLongRunKm = 32.0;
-                          _weeklyMileageGoal = 50.0;
-                        } else if (type == RaceType.halfIronman) {
-                          _runsPerWeek = 3;
-                          _ridesPerWeek = 3;
-                          _swimsPerWeek = 2;
-                          _strengthPerWeek = 1;
-                          _maxLongRunKm = 22.0;
-                          _weeklyMileageGoal = 40.0;
-                        } else {
-                          _runsPerWeek = 3;
-                          _ridesPerWeek = 2;
-                          _swimsPerWeek = 2;
-                          _strengthPerWeek = 1;
-                          _maxLongRunKm = 15.0;
-                          _weeklyMileageGoal = 30.0;
-                        }
-                        _taperWeeks = type == RaceType.fullIronman ? 3 : 2;
-                        _peakWeeks = type == RaceType.fullIronman ? 4 : 3;
-                        _buildWeeks = 4;
-                      } else if (type == RaceType.backyardUltra) {
-                        _runsPerWeek = 4;
-                        _ridesPerWeek = 0;
-                        _swimsPerWeek = 0;
-                        _strengthPerWeek = 1;
-                        _maxLongRunKm = 30.0;
-                        _weeklyMileageGoal = 50.0;
-                      } else if (type.isTimedEvent) {
-                        _runsPerWeek = 5;
-                        _ridesPerWeek = 0;
-                        _swimsPerWeek = 0;
-                        _strengthPerWeek = 1;
-                        _maxLongRunKm = 35.0;
-                        _weeklyMileageGoal = 60.0;
-                      } else {
-                        _runsPerWeek = 4;
-                        _ridesPerWeek = 0;
-                        _swimsPerWeek = 0;
-                        _strengthPerWeek = 0;
-                        _maxLongRunKm = type == RaceType.marathon
-                            ? 32.0
-                            : type == RaceType.halfMarathon
-                                ? 22.0
-                                : 21.0;
-                        _weeklyMileageGoal = 30.0;
-                        _taperWeeks = 2;
-                        _peakWeeks = 4;
-                        _buildWeeks = 4;
+                      final vdot = ref.read(analyticsStatsProvider).value?.effectiveVO2max ?? 0;
+                      var d = getRaceDefaults(type);
+                      if (vdot > 0) {
+                        d = adjustDefaultsForVdot(d, vdot);
+                      }
+                      _runsPerWeek = d.runsPerWeek;
+                      _ridesPerWeek = d.ridesPerWeek;
+                      _swimsPerWeek = d.swimsPerWeek;
+                      _strengthPerWeek = d.strengthPerWeek;
+                      _weeklyMileageGoal = d.weeklyVolumeKm;
+                      _maxLongRunKm = d.maxLongRunKm;
+                      _taperWeeks = d.taperWeeks;
+                      _peakWeeks = d.peakWeeks;
+                      _buildWeeks = d.buildWeeks;
+                      if (d.backyardLoopDistM != null) {
+                        _backyardLoopDistM = d.backyardLoopDistM!.toDouble();
+                        _backyardLoopDistController.text = '${d.backyardLoopDistM}';
+                      }
+                      if (d.targetLaps != null) {
+                        _targetLaps = d.targetLaps!;
                       }
                     });
                   },

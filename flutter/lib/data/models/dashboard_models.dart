@@ -96,12 +96,26 @@ enum RaceType {
 
 enum WorkoutType {
   easy,
-  long,
+  longRun,
   tempo,
-  interval,
+  intervals,
+  fartlek,
+  repetitions,
   recovery,
   race,
+  rest,
+  crossTrain,
+  ride,
+  swim,
+  strength,
   other,
+  brick,
+  openWaterSwim,
+  longRide,
+  rideIntervals,
+  swimDrill,
+  transitionPractice,
+  doubleDay,
 }
 
 @Freezed(copyWith: true)
@@ -204,6 +218,11 @@ sealed class Workout with _$Workout {
     @Default(false) bool isCompleted,
     required DateTime? completedAt,
     required String? activityId,
+    @Default('RUN') String sport,
+    @JsonKey(name: 'displayDesc') String? displayDescription,
+    @JsonKey(name: 'intensityZone') String? intensityZone,
+    @JsonKey(name: 'phase') String? phase,
+    @JsonKey(name: 'targetHrZone') int? targetHrZone,
   }) = _Workout;
   const Workout._();
 
@@ -218,7 +237,7 @@ sealed class Goal with _$Goal {
     @Default('') String userId,
     required String name,
     RaceType? raceType,
-    required DateTime raceDate,
+    DateTime? raceDate,
     required int? targetTime,
     required double? weeklyMileageGoal,
     @Default(12) int planWeeks,
@@ -234,6 +253,15 @@ sealed class Goal with _$Goal {
     @Default([]) List<Workout> workouts,
     double? backyardLoopDistM,
     int? targetLaps,
+    @Default('RUN') String sport,
+    @Default('standard') String planSource,
+    @Default(0) int ridesPerWeek,
+    @Default(0) int swimsPerWeek,
+    @Default(0) int strengthPerWeek,
+    @Default(2) int taperWeeks,
+    @Default(4) int peakWeeks,
+    @Default(4) int buildWeeks,
+    @Default([]) List<int> restDays,
   }) = _Goal;
   const Goal._();
 
@@ -259,23 +287,51 @@ sealed class DashboardResponse with _$DashboardResponse {
 WorkoutType workoutTypeFromJson(Object? value) {
   return switch (compatibilityWorkoutTypeFromJson(value)) {
     CompatibilityWorkoutType.easy => WorkoutType.easy,
-    CompatibilityWorkoutType.long => WorkoutType.long,
+    CompatibilityWorkoutType.longRun => WorkoutType.longRun,
     CompatibilityWorkoutType.tempo => WorkoutType.tempo,
-    CompatibilityWorkoutType.interval => WorkoutType.interval,
+    CompatibilityWorkoutType.intervals => WorkoutType.intervals,
+    CompatibilityWorkoutType.fartlek => WorkoutType.fartlek,
+    CompatibilityWorkoutType.repetitions => WorkoutType.repetitions,
     CompatibilityWorkoutType.recovery => WorkoutType.recovery,
     CompatibilityWorkoutType.race => WorkoutType.race,
+    CompatibilityWorkoutType.rest => WorkoutType.rest,
+    CompatibilityWorkoutType.crossTrain => WorkoutType.crossTrain,
+    CompatibilityWorkoutType.ride => WorkoutType.ride,
+    CompatibilityWorkoutType.swim => WorkoutType.swim,
+    CompatibilityWorkoutType.strength => WorkoutType.strength,
     CompatibilityWorkoutType.other => WorkoutType.other,
+    CompatibilityWorkoutType.brick => WorkoutType.brick,
+    CompatibilityWorkoutType.openWaterSwim => WorkoutType.openWaterSwim,
+    CompatibilityWorkoutType.longRide => WorkoutType.longRide,
+    CompatibilityWorkoutType.rideIntervals => WorkoutType.rideIntervals,
+    CompatibilityWorkoutType.swimDrill => WorkoutType.swimDrill,
+    CompatibilityWorkoutType.transitionPractice => WorkoutType.transitionPractice,
+    CompatibilityWorkoutType.doubleDay => WorkoutType.doubleDay,
   };
 }
 
 String workoutTypeToJson(WorkoutType value) {
-  return switch (value) {
-    WorkoutType.easy => compatibilityWorkoutTypeToJson(CompatibilityWorkoutType.easy),
-    WorkoutType.long => compatibilityWorkoutTypeToJson(CompatibilityWorkoutType.long),
-    WorkoutType.tempo => compatibilityWorkoutTypeToJson(CompatibilityWorkoutType.tempo),
-    WorkoutType.interval => compatibilityWorkoutTypeToJson(CompatibilityWorkoutType.interval),
-    WorkoutType.recovery => compatibilityWorkoutTypeToJson(CompatibilityWorkoutType.recovery),
-    WorkoutType.race => compatibilityWorkoutTypeToJson(CompatibilityWorkoutType.race),
-    WorkoutType.other => compatibilityWorkoutTypeToJson(CompatibilityWorkoutType.other),
-  };
+  return compatibilityWorkoutTypeToJson(switch (value) {
+    WorkoutType.easy => CompatibilityWorkoutType.easy,
+    WorkoutType.longRun => CompatibilityWorkoutType.longRun,
+    WorkoutType.tempo => CompatibilityWorkoutType.tempo,
+    WorkoutType.intervals => CompatibilityWorkoutType.intervals,
+    WorkoutType.fartlek => CompatibilityWorkoutType.fartlek,
+    WorkoutType.repetitions => CompatibilityWorkoutType.repetitions,
+    WorkoutType.recovery => CompatibilityWorkoutType.recovery,
+    WorkoutType.race => CompatibilityWorkoutType.race,
+    WorkoutType.rest => CompatibilityWorkoutType.rest,
+    WorkoutType.crossTrain => CompatibilityWorkoutType.crossTrain,
+    WorkoutType.ride => CompatibilityWorkoutType.ride,
+    WorkoutType.swim => CompatibilityWorkoutType.swim,
+    WorkoutType.strength => CompatibilityWorkoutType.strength,
+    WorkoutType.other => CompatibilityWorkoutType.other,
+    WorkoutType.brick => CompatibilityWorkoutType.brick,
+    WorkoutType.openWaterSwim => CompatibilityWorkoutType.openWaterSwim,
+    WorkoutType.longRide => CompatibilityWorkoutType.longRide,
+    WorkoutType.rideIntervals => CompatibilityWorkoutType.rideIntervals,
+    WorkoutType.swimDrill => CompatibilityWorkoutType.swimDrill,
+    WorkoutType.transitionPractice => CompatibilityWorkoutType.transitionPractice,
+    WorkoutType.doubleDay => CompatibilityWorkoutType.doubleDay,
+  });
 }

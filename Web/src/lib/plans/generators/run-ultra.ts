@@ -1,7 +1,8 @@
-import { WorkoutType, RaceType } from '@/generated/prisma/browser';
+import { WorkoutType, RaceType, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
 import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
+import { enrichWorkoutsWithDescriptions } from '../descriptions';
 
 type UltraPhase = 'BASE' | 'BUILD' | 'ENDURANCE' | 'MENTAL_PREP' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 
@@ -16,13 +17,13 @@ const ULTRA_CONSTANTS = {
         BACKYARD_ULTRA: 60000,
     } as Partial<Record<RaceType, number>>,
     MAX_LONG_RUN_DIST: {
-        FIFTY_K: 40000,
-        FIFTY_MILE: 55000,
-        HUNDRED_K: 65000,
-        HUNDRED_MILE: 80000,
-        TWELVE_HOUR: 50000,
-        TWENTY_FOUR_HOUR: 60000,
-        BACKYARD_ULTRA: 50000,
+        FIFTY_K: 35000,
+        FIFTY_MILE: 40000,
+        HUNDRED_K: 45000,
+        HUNDRED_MILE: 50000,
+        TWELVE_HOUR: 40000,
+        TWENTY_FOUR_HOUR: 50000,
+        BACKYARD_ULTRA: 35000,
     } as Partial<Record<RaceType, number>>,
     MAX_TIME_ON_FEET_SECONDS: 25200,
     BACK_TO_BACK_RATIO: 0.6,
@@ -160,6 +161,7 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
                     totalDistance: w.totalDistance,
                     targetPace: w.targetPace,
                     targetDuration: w.targetDuration,
+                    phase: 'RACE_WEEK' as PlanPhase,
                 });
             });
             currentDate.setDate(currentDate.getDate() + 7);
@@ -246,17 +248,20 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
                 totalDistance: w.totalDistance,
                 targetPace: w.targetPace,
                 targetDuration: w.targetDuration,
+                phase: phase as PlanPhase,
             });
         });
 
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
-    return fixBackToBackSameType(workouts, {
+    const result = fixBackToBackSameType(workouts, {
         raceDate,
         restDays: config.restDays,
         protectedTypes: [WorkoutType.RACE, WorkoutType.LONG_RUN],
     });
+    enrichWorkoutsWithDescriptions(result, ultraEasyPace);
+    return result;
 }
 
 function getUltraPhase(

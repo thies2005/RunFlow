@@ -26,7 +26,7 @@ List<RaceCountdownData> raceCountdown(Ref ref) {
 
       return activeGoals.map((goal) {
         final now = DateTime.now();
-        final daysToRace = goal.raceDate.difference(now).inDays;
+        final daysToRace = goal.raceDate?.difference(now).inDays ?? 999;
         final weeksToRace = (daysToRace / 7).floor();
         final totalWeeks = goal.planWeeks;
         final weeksCompleted = (totalWeeks - weeksToRace).clamp(0, totalWeeks);
@@ -41,12 +41,14 @@ List<RaceCountdownData> raceCountdown(Ref ref) {
         final stats = data.stats;
         final vo2max = stats.effectiveVO2max;
 
+        final goalRaceType = goal.raceType;
+
         int? projectedTimeSeconds;
         double? projectedVdot;
-        if (vo2max > 0 && daysToRace > 0) {
-          if (goal.raceType.isTriathlon) {
+        if (vo2max > 0 && daysToRace > 0 && goalRaceType != null) {
+          if (goalRaceType.isTriathlon) {
             final defaults = ref.watch(athleteDefaultsProvider);
-            final key = triRaceTypeKey(goal.raceType);
+            final key = triRaceTypeKey(goalRaceType);
             final fitnessGain =
                 0.3 * log(1 + weeksToRace) / log(2);
             projectedVdot = min(vo2max + fitnessGain, vo2max + 5.0);
@@ -59,7 +61,7 @@ List<RaceCountdownData> raceCountdown(Ref ref) {
             );
             projectedTimeSeconds = projection?.projected.totalSeconds;
           } else {
-            final distance = raceTypeDistance(goal.raceType);
+            final distance = raceTypeDistance(goalRaceType);
             final basePrediction = racePrediction(vo2max, distance);
             if (basePrediction > 0) {
               final fitnessGain =
@@ -87,8 +89,8 @@ List<RaceCountdownData> raceCountdown(Ref ref) {
         return RaceCountdownData(
           goalId: goal.id,
           goalName: goal.name,
-          raceType: raceTypeLabel(goal.raceType),
-          raceDate: goal.raceDate,
+          raceType: goalRaceType != null ? raceTypeLabel(goalRaceType) : 'Training',
+          raceDate: goal.raceDate ?? now,
           daysToRace: daysToRace,
           weeksToRace: weeksToRace,
           planWeeks: totalWeeks,

@@ -163,6 +163,11 @@ extension WorkoutMapper on Workout {
         isCompleted: isCompleted,
         completedAt: completedAt,
         activityId: activityId,
+        sport: sport,
+        displayDescription: displayDescription,
+        intensityZone: intensityZone,
+        phase: phase,
+        targetHrZone: targetHrZone,
       );
 }
 
@@ -179,6 +184,11 @@ extension DomainWorkoutMapper on domain.Workout {
         isCompleted: isCompleted,
         completedAt: completedAt,
         activityId: activityId,
+        sport: sport,
+        displayDescription: displayDescription,
+        intensityZone: intensityZone,
+        phase: phase,
+        targetHrZone: targetHrZone,
       );
 }
 
@@ -187,7 +197,7 @@ extension GoalMapper on Goal {
         id: id,
         userId: userId,
         name: name,
-        raceType: raceType?.toDomain() ?? domain.RaceType.customDistance,
+        raceType: raceType?.toDomain(),
         raceDate: raceDate,
         targetTime: targetTime,
         weeklyMileageGoal: weeklyMileageGoal,
@@ -204,6 +214,15 @@ extension GoalMapper on Goal {
         workouts: workouts.map((w) => w.toDomain()).toList(),
         backyardLoopDistM: backyardLoopDistM,
         targetLaps: targetLaps,
+        sport: sport,
+        planSource: planSource,
+        ridesPerWeek: ridesPerWeek,
+        swimsPerWeek: swimsPerWeek,
+        strengthPerWeek: strengthPerWeek,
+        taperWeeks: taperWeeks,
+        peakWeeks: peakWeeks,
+        buildWeeks: buildWeeks,
+        restDays: restDays,
       );
 }
 
@@ -212,7 +231,7 @@ extension DomainGoalMapper on domain.Goal {
         id: id,
         userId: userId,
         name: name,
-        raceType: raceType.toData(),
+        raceType: raceType?.toData(),
         raceDate: raceDate,
         targetTime: targetTime,
         weeklyMileageGoal: weeklyMileageGoal,
@@ -229,6 +248,15 @@ extension DomainGoalMapper on domain.Goal {
         workouts: workouts.map((w) => w.toData()).toList(),
         backyardLoopDistM: backyardLoopDistM,
         targetLaps: targetLaps,
+        sport: sport,
+        planSource: planSource,
+        ridesPerWeek: ridesPerWeek,
+        swimsPerWeek: swimsPerWeek,
+        strengthPerWeek: strengthPerWeek,
+        taperWeeks: taperWeeks,
+        peakWeeks: peakWeeks,
+        buildWeeks: buildWeeks,
+        restDays: restDays,
       );
 }
 

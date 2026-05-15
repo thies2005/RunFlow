@@ -476,12 +476,26 @@ class _TodayWorkoutCard extends ConsumerWidget {
   IconData _workoutTypeIcon(WorkoutType type) {
     return switch (type) {
       WorkoutType.easy => Icons.directions_run,
-      WorkoutType.long => Icons.route,
+      WorkoutType.longRun => Icons.route,
       WorkoutType.tempo => Icons.timer,
-      WorkoutType.interval => Icons.flash_on,
+      WorkoutType.intervals => Icons.flash_on,
+      WorkoutType.fartlek => Icons.shuffle,
+      WorkoutType.repetitions => Icons.repeat,
       WorkoutType.recovery => Icons.healing,
       WorkoutType.race => Icons.flag,
+      WorkoutType.rest => Icons.bedtime,
+      WorkoutType.crossTrain => Icons.directions_bike,
+      WorkoutType.ride => Icons.directions_bike,
+      WorkoutType.swim => Icons.pool,
+      WorkoutType.strength => Icons.fitness_center,
       WorkoutType.other => Icons.fitness_center,
+      WorkoutType.brick => Icons.add_circle,
+      WorkoutType.openWaterSwim => Icons.waves,
+      WorkoutType.longRide => Icons.directions_bike,
+      WorkoutType.rideIntervals => Icons.flash_on,
+      WorkoutType.swimDrill => Icons.pool,
+      WorkoutType.transitionPractice => Icons.swap_horiz,
+      WorkoutType.doubleDay => Icons.calendar_today,
     };
   }
 
@@ -567,12 +581,26 @@ class _WorkoutSwitcherSheet extends StatelessWidget {
   IconData _workoutTypeIcon(WorkoutType type) {
     return switch (type) {
       WorkoutType.easy => Icons.directions_run,
-      WorkoutType.long => Icons.route,
+      WorkoutType.longRun => Icons.route,
       WorkoutType.tempo => Icons.timer,
-      WorkoutType.interval => Icons.flash_on,
+      WorkoutType.intervals => Icons.flash_on,
+      WorkoutType.fartlek => Icons.shuffle,
+      WorkoutType.repetitions => Icons.repeat,
       WorkoutType.recovery => Icons.healing,
       WorkoutType.race => Icons.flag,
+      WorkoutType.rest => Icons.bedtime,
+      WorkoutType.crossTrain => Icons.directions_bike,
+      WorkoutType.ride => Icons.directions_bike,
+      WorkoutType.swim => Icons.pool,
+      WorkoutType.strength => Icons.fitness_center,
       WorkoutType.other => Icons.fitness_center,
+      WorkoutType.brick => Icons.add_circle,
+      WorkoutType.openWaterSwim => Icons.waves,
+      WorkoutType.longRide => Icons.directions_bike,
+      WorkoutType.rideIntervals => Icons.flash_on,
+      WorkoutType.swimDrill => Icons.pool,
+      WorkoutType.transitionPractice => Icons.swap_horiz,
+      WorkoutType.doubleDay => Icons.calendar_today,
     };
   }
 }

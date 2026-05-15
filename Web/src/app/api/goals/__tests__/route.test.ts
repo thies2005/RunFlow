@@ -13,6 +13,8 @@ jest.mock('@/lib/db', () => ({
     prisma: {
         goal: {
             findMany: jest.fn(),
+            findFirst: jest.fn(),
+            findUnique: jest.fn(),
             create: jest.fn(),
             updateMany: jest.fn(),
             update: jest.fn(),
@@ -63,11 +65,27 @@ jest.mock('@/lib/metrics/vdot', () => ({
             'MARATHON': 11400,
         },
     })),
+    calculateVdot: jest.fn(() => 45),
     predictRaceTime: jest.fn(() => 11400),
 }));
 
 jest.mock('@/lib/plans', () => ({
     generateTrainingPlan: jest.fn(() => []),
+}));
+
+jest.mock('@/lib/services/analytics', () => ({
+    AnalyticsService: {
+        calculateVO2max: jest.fn(() => ({ effectiveVO2max: 45 })),
+    },
+}));
+
+jest.mock('@/lib/metrics/goalProjection', () => ({
+    calculateProjectedGoalTime: jest.fn(() => ({ projectedTime: 11400 })),
+    calculateWeeksUntilRace: jest.fn(() => 12),
+}));
+
+jest.mock('@/lib/logging/logger', () => ({
+    logger: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
 
 import { auth } from '@/auth';
@@ -183,6 +201,15 @@ describe('POST /api/goals', () => {
             raceType: 'MARATHON',
             raceDate: new Date('2024-04-15'),
             currentVdot: 45,
+        });
+        (prisma.goal.findFirst as jest.Mock).mockResolvedValue(null);
+        (prisma.goal.findUnique as jest.Mock).mockResolvedValue({
+            id: 'goal-1',
+            name: 'Marathon Goal',
+            raceType: 'MARATHON',
+            raceDate: new Date('2024-04-15'),
+            currentVdot: 45,
+            workouts: [],
         });
         (prisma.goal.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
         (prisma.activity.findFirst as jest.Mock).mockResolvedValue(null);

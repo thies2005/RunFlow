@@ -99,7 +99,7 @@ export function DraggableWorkout({
                         <Settings className="w-3 h-3 text-foreground-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                 </div>
-                <p className="text-xs text-foreground-muted truncate">{workout.description}</p>
+                <p className="text-xs text-foreground-muted truncate">{workout.displayDesc || workout.description}</p>
 
                 {/* Linked Activity Data */}
                 {linkedActivity && (

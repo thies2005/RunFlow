@@ -180,7 +180,7 @@ void main() {
 
       expect(restored.workouts.length, original.workouts.length);
       expect(restored.workouts.first.id, 'w1');
-      expect(restored.workouts.first.workoutType, WorkoutType.long);
+      expect(restored.workouts.first.workoutType, WorkoutType.longRun);
     });
 
     test('maps newer backend workout types compatibly', () {
@@ -228,9 +228,9 @@ void main() {
         ],
       });
 
-      expect(response.workouts[0].workoutType, WorkoutType.long);
-      expect(response.workouts[1].workoutType, WorkoutType.interval);
-      expect(response.workouts[2].workoutType, WorkoutType.other);
+      expect(response.workouts[0].workoutType, WorkoutType.longRun);
+      expect(response.workouts[1].workoutType, WorkoutType.intervals);
+      expect(response.workouts[2].workoutType, WorkoutType.strength);
     });
   });
 

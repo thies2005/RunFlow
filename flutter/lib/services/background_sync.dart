@@ -154,8 +154,12 @@ Future<bool> performBackgroundSync({
               final goalsRes = await goalRepo.listGoals();
               if (goalsRes.goals.isNotEmpty) {
                 final activeGoal = goalsRes.goals.firstWhere((g) => g.isActive, orElse: () => goalsRes.goals.first);
-                raceWeeks = activeGoal.raceDate.difference(now).inDays ~/ 7;
-                if (raceWeeks < 0) raceWeeks = 0;
+                raceWeeks = activeGoal.raceDate?.difference(now).inDays ?? 0;
+                if (raceWeeks > 0) {
+                  raceWeeks = raceWeeks ~/ 7;
+                } else {
+                  raceWeeks = 0;
+                }
               }
             } catch (_) {}
 

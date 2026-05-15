@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
 import { generateTrainingPlan } from '@/lib/plans';
-import { RaceType, WorkoutType } from '@/generated/prisma/browser';
+import { RaceType } from '@/generated/prisma/browser';
+import { mapWorkoutsForDb } from '@/lib/services/plan-creation';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 
@@ -146,19 +147,11 @@ export async function POST(req: Request, ctx: RouteContext) {
 
                         if (filteredWorkouts.length > 0) {
                             await prisma.workout.createMany({
-                                data: filteredWorkouts.map(w => ({
-                                    goalId: goalId, // Workouts belong to the parent goal
-                                    subGoalId: subGoal.id, // Tagged to the sub-goal
-                                    scheduledDate: w.date,
-                                    workoutType: w.type as WorkoutType,
-                                    description: `[${name.trim()}] ${w.description}`,
-                                    targetDistance: w.totalDistance,
-                                    targetPace: w.targetPace ?? 0,
-                                    targetDuration: w.targetDuration ?? 0,
-                                    targetHrZone: w.targetHrZone ?? null,
-                                    phase: w.phase ?? 'BASE',
-                                    isCompleted: false,
-                                })),
+                                data: mapWorkoutsForDb(filteredWorkouts, {
+                                    goalId: goalId,
+                                    subGoalId: subGoal.id,
+                                    descriptionPrefix: `[${name.trim()}] `,
+                                }),
                             });
                             workoutsCreated = filteredWorkouts.length;
                         }

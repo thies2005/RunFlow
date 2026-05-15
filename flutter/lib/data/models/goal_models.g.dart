@@ -60,6 +60,10 @@ _CreateGoalRequest _$CreateGoalRequestFromJson(Map<String, dynamic> json) =>
       calibrationFactor: (json['calibrationFactor'] as num?)?.toDouble(),
       backyardLoopDistM: (json['backyardLoopDistM'] as num?)?.toDouble(),
       targetLaps: (json['targetLaps'] as num?)?.toInt(),
+      sport: json['sport'] as String?,
+      athleteCssOverride: (json['athleteCssOverride'] as num?)?.toDouble(),
+      athleteBikeSpeedOverride: (json['athleteBikeSpeedOverride'] as num?)
+          ?.toDouble(),
     );
 
 Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
@@ -88,6 +92,9 @@ Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
       'calibrationFactor': instance.calibrationFactor,
       'backyardLoopDistM': instance.backyardLoopDistM,
       'targetLaps': instance.targetLaps,
+      'sport': instance.sport,
+      'athleteCssOverride': instance.athleteCssOverride,
+      'athleteBikeSpeedOverride': instance.athleteBikeSpeedOverride,
     };
 
 const _$RaceTypeEnumMap = {
@@ -150,10 +157,24 @@ Map<String, dynamic> _$UpdateWorkoutRequestToJson(
 
 const _$WorkoutTypeEnumMap = {
   WorkoutType.easy: 'easy',
-  WorkoutType.long: 'long',
+  WorkoutType.longRun: 'longRun',
   WorkoutType.tempo: 'tempo',
-  WorkoutType.interval: 'interval',
+  WorkoutType.intervals: 'intervals',
+  WorkoutType.fartlek: 'fartlek',
+  WorkoutType.repetitions: 'repetitions',
   WorkoutType.recovery: 'recovery',
   WorkoutType.race: 'race',
+  WorkoutType.rest: 'rest',
+  WorkoutType.crossTrain: 'crossTrain',
+  WorkoutType.ride: 'ride',
+  WorkoutType.swim: 'swim',
+  WorkoutType.strength: 'strength',
   WorkoutType.other: 'other',
+  WorkoutType.brick: 'brick',
+  WorkoutType.openWaterSwim: 'openWaterSwim',
+  WorkoutType.longRide: 'longRide',
+  WorkoutType.rideIntervals: 'rideIntervals',
+  WorkoutType.swimDrill: 'swimDrill',
+  WorkoutType.transitionPractice: 'transitionPractice',
+  WorkoutType.doubleDay: 'doubleDay',
 };

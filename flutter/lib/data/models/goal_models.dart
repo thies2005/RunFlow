@@ -53,6 +53,9 @@ sealed class CreateGoalRequest with _$CreateGoalRequest {
     double? calibrationFactor,
     double? backyardLoopDistM,
     int? targetLaps,
+    String? sport,
+    @JsonKey(name: 'athleteCssOverride') double? athleteCssOverride,
+    @JsonKey(name: 'athleteBikeSpeedOverride') double? athleteBikeSpeedOverride,
   }) = _CreateGoalRequest;
   const CreateGoalRequest._();
 

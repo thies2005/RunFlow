@@ -84,7 +84,7 @@ class TestDashboardData {
               id: 'w1',
               goalId: 'goal1',
               scheduledDate: DateTime(2024, 6, 16),
-              workoutType: WorkoutType.long,
+              workoutType: WorkoutType.longRun,
               description: 'Long Run 18km',
               targetDistance: 18000.0,
               targetPace: 360.0,

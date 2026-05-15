@@ -1,9 +1,10 @@
-import { WorkoutType, RaceType } from '@/generated/prisma/browser';
+import { WorkoutType, RaceType, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
 import { estimateSwimPaceFromVdot } from '../swim-pace';
 import { estimateBikeFtpFromVdot, calculateBikeZones } from '../bike-zones';
 import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
+import { enrichWorkoutsWithDescriptions, getRacePace } from '../descriptions';
 
 type TriPhase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 
@@ -55,7 +56,7 @@ const TRI_MAX_LONG_RUN: Partial<Record<RaceType, number>> = {
     SPRINT_TRI: 15000,
     OLYMPIC_TRI: 18000,
     HALF_IRONMAN: 22000,
-    FULL_IRONMAN: 32000,
+    FULL_IRONMAN: 30000,
 };
 
 const TRI_RACE_SWIM_DIST: Partial<Record<RaceType, number>> = {
@@ -169,6 +170,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
                     totalDistance: w.totalDistance,
                     targetPace: w.targetPace,
                     targetDuration: w.targetDuration,
+                    phase: 'RACE_WEEK' as PlanPhase,
                 });
             });
             currentDate.setDate(currentDate.getDate() + 7);
@@ -237,13 +239,17 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
                 totalDistance: w.totalDistance,
                 targetPace: w.targetPace,
                 targetDuration: w.targetDuration,
+                phase: phase as PlanPhase,
             });
         });
 
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
-    return fixBackToBackSameType(workouts, { raceDate, restDays: config.restDays });
+    const result = fixBackToBackSameType(workouts, { raceDate, restDays: config.restDays });
+    const racePace = getRacePace(raceType, paces);
+    enrichWorkoutsWithDescriptions(result, racePace);
+    return result;
 }
 
 function getTriPhase(

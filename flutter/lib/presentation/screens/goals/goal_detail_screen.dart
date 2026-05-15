@@ -83,7 +83,7 @@ class _GoalDetailContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final daysUntilRace = goal.raceDate.difference(DateTime.now()).inDays;
+    final daysUntilRace = goal.raceDate?.difference(DateTime.now()).inDays ?? 0;
     final completedWorkouts =
         goal.workouts.where((w) => w.isCompleted).length;
     final totalWorkouts = goal.workouts.length;
@@ -173,7 +173,7 @@ class _GoalHeader extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    raceTypeLabel(goal.raceType),
+                    raceTypeLabel(goal.raceType ?? RaceType.customDistance),
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,
@@ -192,7 +192,7 @@ class _GoalHeader extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  _formatDate(goal.raceDate),
+                  _formatDate(goal.raceDate ?? goal.createdAt),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -358,16 +358,44 @@ class _WorkoutCard extends ConsumerWidget {
     switch (workout.workoutType) {
       case WorkoutType.easy:
         return AppColors.success;
-      case WorkoutType.long:
+      case WorkoutType.longRun:
         return const Color(0xFF2196F3);
       case WorkoutType.tempo:
         return const Color(0xFFFF9800);
-      case WorkoutType.interval:
+      case WorkoutType.intervals:
         return const Color(0xFFF44336);
+      case WorkoutType.fartlek:
+        return const Color(0xFFFF5722);
+      case WorkoutType.repetitions:
+        return const Color(0xFFE91E63);
       case WorkoutType.recovery:
         return const Color(0xFF009688);
       case WorkoutType.race:
         return const Color(0xFF9C27B0);
+      case WorkoutType.rest:
+        return const Color(0xFF607D8B);
+      case WorkoutType.crossTrain:
+        return const Color(0xFF00BCD4);
+      case WorkoutType.ride:
+        return const Color(0xFF3F51B5);
+      case WorkoutType.swim:
+        return const Color(0xFF0288D1);
+      case WorkoutType.strength:
+        return const Color(0xFF795548);
+      case WorkoutType.brick:
+        return const Color(0xFF673AB7);
+      case WorkoutType.openWaterSwim:
+        return const Color(0xFF0097A7);
+      case WorkoutType.longRide:
+        return const Color(0xFF1565C0);
+      case WorkoutType.rideIntervals:
+        return const Color(0xFF283593);
+      case WorkoutType.swimDrill:
+        return const Color(0xFF00838F);
+      case WorkoutType.transitionPractice:
+        return const Color(0xFF546E7A);
+      case WorkoutType.doubleDay:
+        return const Color(0xFF6D4C41);
       case WorkoutType.other:
         return AppColors.onSurfaceVariant;
     }
@@ -377,16 +405,44 @@ class _WorkoutCard extends ConsumerWidget {
     switch (workout.workoutType) {
       case WorkoutType.easy:
         return Icons.directions_run;
-      case WorkoutType.long:
+      case WorkoutType.longRun:
         return Icons.route;
       case WorkoutType.tempo:
         return Icons.speed;
-      case WorkoutType.interval:
+      case WorkoutType.intervals:
         return Icons.flash_on;
+      case WorkoutType.fartlek:
+        return Icons.shuffle;
+      case WorkoutType.repetitions:
+        return Icons.repeat;
       case WorkoutType.recovery:
         return Icons.self_improvement;
       case WorkoutType.race:
         return Icons.emoji_events;
+      case WorkoutType.rest:
+        return Icons.bedtime;
+      case WorkoutType.crossTrain:
+        return Icons.directions_bike;
+      case WorkoutType.ride:
+        return Icons.directions_bike;
+      case WorkoutType.swim:
+        return Icons.pool;
+      case WorkoutType.strength:
+        return Icons.fitness_center;
+      case WorkoutType.brick:
+        return Icons.add_circle;
+      case WorkoutType.openWaterSwim:
+        return Icons.waves;
+      case WorkoutType.longRide:
+        return Icons.directions_bike;
+      case WorkoutType.rideIntervals:
+        return Icons.flash_on;
+      case WorkoutType.swimDrill:
+        return Icons.pool;
+      case WorkoutType.transitionPractice:
+        return Icons.swap_horiz;
+      case WorkoutType.doubleDay:
+        return Icons.calendar_today;
       case WorkoutType.other:
         return Icons.fitness_center;
     }
@@ -396,11 +452,11 @@ class _WorkoutCard extends ConsumerWidget {
     switch (workout.workoutType) {
       case WorkoutType.easy:
         return S.of(context).workoutTypeEasy;
-      case WorkoutType.long:
+      case WorkoutType.longRun:
         return S.of(context).workoutTypeLong;
       case WorkoutType.tempo:
         return S.of(context).workoutTypeTempo;
-      case WorkoutType.interval:
+      case WorkoutType.intervals:
         return S.of(context).workoutTypeInterval;
       case WorkoutType.recovery:
         return S.of(context).workoutTypeRecovery;
@@ -408,6 +464,34 @@ class _WorkoutCard extends ConsumerWidget {
         return S.of(context).workoutTypeRace;
       case WorkoutType.other:
         return S.of(context).workoutTypeOther;
+      case WorkoutType.fartlek:
+        return 'Fartlek';
+      case WorkoutType.repetitions:
+        return 'Reps';
+      case WorkoutType.rest:
+        return 'Rest';
+      case WorkoutType.crossTrain:
+        return 'Cross Train';
+      case WorkoutType.ride:
+        return 'Ride';
+      case WorkoutType.swim:
+        return 'Swim';
+      case WorkoutType.strength:
+        return 'Strength';
+      case WorkoutType.brick:
+        return 'Brick';
+      case WorkoutType.openWaterSwim:
+        return 'OWS';
+      case WorkoutType.longRide:
+        return 'Long Ride';
+      case WorkoutType.rideIntervals:
+        return 'Ride Intervals';
+      case WorkoutType.swimDrill:
+        return 'Swim Drill';
+      case WorkoutType.transitionPractice:
+        return 'Transition';
+      case WorkoutType.doubleDay:
+        return 'Double';
     }
   }
 

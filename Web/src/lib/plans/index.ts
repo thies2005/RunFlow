@@ -4,6 +4,7 @@ import { generateUltraPlan } from './generators/run-ultra';
 import { generateTriathlonPlan } from './generators/triathlon';
 import { generateNoRacePlan } from './generators/no-race';
 import { fixBackToBackSameType } from './schedule-utils';
+import { enrichWorkoutsWithDescriptions, getRacePace } from './descriptions';
 
 export const ULTRA_RACE_TYPES: RaceType[] = [
     'FIFTY_K', 'FIFTY_MILE', 'HUNDRED_K', 'HUNDRED_MILE',
@@ -25,7 +26,7 @@ export const PLAN_CONSTANTS = {
         FIVE_K: 18000,
         TEN_K: 22000,
         HALF_MARATHON: 24000,
-        MARATHON: 34000,
+        MARATHON: 32000,
     } as Partial<Record<RaceType, number>>,
     DYNAMIC_LONG_RUN_RATIO: 0.55,
     MIN_LONG_RUN: 6000,
@@ -81,6 +82,9 @@ export type GeneratedWorkout = {
     targetDuration?: number;
     phase?: PlanPhase;
     targetHrZone?: number;
+    displayDescription?: string;
+    sport?: string;
+    intensityZone?: string | null;
 };
 
 type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
@@ -277,10 +281,13 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
-    return fixBackToBackSameType(workouts, {
+    const result = fixBackToBackSameType(workouts, {
         raceDate,
         restDays: config.restDays,
     });
+    const racePace = getRacePace(raceType, paces);
+    enrichWorkoutsWithDescriptions(result, racePace);
+    return result;
 }
 
 function getPhase(

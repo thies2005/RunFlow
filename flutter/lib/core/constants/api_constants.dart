@@ -20,7 +20,6 @@ class ApiConstants {
   static const String forgotPasswordPath = '/auth/forgot-password';
   static const String dashboardPath = '/dashboard';
   static const String activitiesPath = '/activities';
-  static const String goalsPath = '/goals';
   static const String workoutsPath = '/workouts';
   static const String syncPath = '/sync';
   static const String analyticsStatsPath = '/analytics/stats';
@@ -61,6 +60,8 @@ class ApiConstants {
   static const String readinessHistoryPath = '/readiness/history';
   static const String readinessBaselinePath = '/readiness/baseline';
   static const String readinessWeeklyPath = '/readiness/weekly';
+  static String get plansUrl => '$baseUrl/api/plans';
+  static String planUrl(String id) => '$baseUrl/api/plans/$id';
 }
 
 class AppConstants {

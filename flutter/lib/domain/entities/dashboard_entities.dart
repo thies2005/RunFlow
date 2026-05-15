@@ -23,7 +23,29 @@ enum RaceType {
   customTri,
 }
 
-enum WorkoutType { easy, long, tempo, interval, recovery, race, other }
+enum WorkoutType {
+  easy,
+  longRun,
+  tempo,
+  intervals,
+  fartlek,
+  repetitions,
+  recovery,
+  race,
+  rest,
+  crossTrain,
+  ride,
+  swim,
+  strength,
+  other,
+  brick,
+  openWaterSwim,
+  longRide,
+  rideIntervals,
+  swimDrill,
+  transitionPractice,
+  doubleDay,
+}
 
 class AnalyticsStats {
   const AnalyticsStats({
@@ -378,6 +400,11 @@ class Workout {
     required this.isCompleted,
     required this.completedAt,
     required this.activityId,
+    this.sport = 'RUN',
+    this.displayDescription,
+    this.intensityZone,
+    this.phase,
+    this.targetHrZone,
   });
 
   final String id;
@@ -391,6 +418,11 @@ class Workout {
   final bool isCompleted;
   final DateTime? completedAt;
   final String? activityId;
+  final String sport;
+  final String? displayDescription;
+  final String? intensityZone;
+  final String? phase;
+  final int? targetHrZone;
 
   Workout copyWith({
     String? id,
@@ -404,6 +436,11 @@ class Workout {
     bool? isCompleted,
     DateTime? completedAt,
     String? activityId,
+    String? sport,
+    String? displayDescription,
+    String? intensityZone,
+    String? phase,
+    int? targetHrZone,
   }) {
     return Workout(
       id: id ?? this.id,
@@ -417,6 +454,11 @@ class Workout {
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
       activityId: activityId ?? this.activityId,
+      sport: sport ?? this.sport,
+      displayDescription: displayDescription ?? this.displayDescription,
+      intensityZone: intensityZone ?? this.intensityZone,
+      phase: phase ?? this.phase,
+      targetHrZone: targetHrZone ?? this.targetHrZone,
     );
   }
 
@@ -435,7 +477,12 @@ class Workout {
           targetDuration == other.targetDuration &&
           isCompleted == other.isCompleted &&
           completedAt == other.completedAt &&
-          activityId == other.activityId;
+          activityId == other.activityId &&
+          sport == other.sport &&
+          displayDescription == other.displayDescription &&
+          intensityZone == other.intensityZone &&
+          phase == other.phase &&
+          targetHrZone == other.targetHrZone;
 
   @override
   int get hashCode => Object.hash(
@@ -450,6 +497,11 @@ class Workout {
         isCompleted,
         completedAt,
         activityId,
+        sport,
+        displayDescription,
+        intensityZone,
+        phase,
+        targetHrZone,
       );
 }
 
@@ -475,13 +527,22 @@ class Goal {
     required this.workouts,
     this.backyardLoopDistM,
     this.targetLaps,
+    this.sport = 'RUN',
+    this.planSource = 'standard',
+    this.ridesPerWeek = 0,
+    this.swimsPerWeek = 0,
+    this.strengthPerWeek = 0,
+    this.taperWeeks = 2,
+    this.peakWeeks = 4,
+    this.buildWeeks = 4,
+    this.restDays = const [],
   });
 
   final String id;
   final String userId;
   final String name;
-  final RaceType raceType;
-  final DateTime raceDate;
+  final RaceType? raceType;
+  final DateTime? raceDate;
   final int? targetTime;
   final double? weeklyMileageGoal;
   final int planWeeks;
@@ -497,6 +558,15 @@ class Goal {
   final List<Workout> workouts;
   final double? backyardLoopDistM;
   final int? targetLaps;
+  final String sport;
+  final String planSource;
+  final int ridesPerWeek;
+  final int swimsPerWeek;
+  final int strengthPerWeek;
+  final int taperWeeks;
+  final int peakWeeks;
+  final int buildWeeks;
+  final List<int> restDays;
 
   Goal copyWith({
     String? id,
@@ -519,6 +589,15 @@ class Goal {
     List<Workout>? workouts,
     double? backyardLoopDistM,
     int? targetLaps,
+    String? sport,
+    String? planSource,
+    int? ridesPerWeek,
+    int? swimsPerWeek,
+    int? strengthPerWeek,
+    int? taperWeeks,
+    int? peakWeeks,
+    int? buildWeeks,
+    List<int>? restDays,
   }) {
     return Goal(
       id: id ?? this.id,
@@ -541,6 +620,15 @@ class Goal {
       workouts: workouts ?? this.workouts,
       backyardLoopDistM: backyardLoopDistM ?? this.backyardLoopDistM,
       targetLaps: targetLaps ?? this.targetLaps,
+      sport: sport ?? this.sport,
+      planSource: planSource ?? this.planSource,
+      ridesPerWeek: ridesPerWeek ?? this.ridesPerWeek,
+      swimsPerWeek: swimsPerWeek ?? this.swimsPerWeek,
+      strengthPerWeek: strengthPerWeek ?? this.strengthPerWeek,
+      taperWeeks: taperWeeks ?? this.taperWeeks,
+      peakWeeks: peakWeeks ?? this.peakWeeks,
+      buildWeeks: buildWeeks ?? this.buildWeeks,
+      restDays: restDays ?? this.restDays,
     );
   }
 
@@ -568,30 +656,52 @@ class Goal {
           completedAt == other.completedAt &&
           listEquals(workouts, other.workouts) &&
           backyardLoopDistM == other.backyardLoopDistM &&
-          targetLaps == other.targetLaps;
+          targetLaps == other.targetLaps &&
+          sport == other.sport &&
+          planSource == other.planSource &&
+          ridesPerWeek == other.ridesPerWeek &&
+          swimsPerWeek == other.swimsPerWeek &&
+          strengthPerWeek == other.strengthPerWeek &&
+          taperWeeks == other.taperWeeks &&
+          peakWeeks == other.peakWeeks &&
+          buildWeeks == other.buildWeeks &&
+          listEquals(restDays, other.restDays);
 
   @override
   int get hashCode => Object.hash(
-        id,
-        userId,
-        name,
-        raceType,
-        raceDate,
-        targetTime,
-        weeklyMileageGoal,
-        planWeeks,
-        runsPerWeek,
-        longRunDay,
-        workoutDay,
-        currentVdot,
-        predictedTime,
-        isActive,
-        createdAt,
-        updatedAt,
-        completedAt,
-        Object.hashAll(workouts),
-        backyardLoopDistM,
-        targetLaps,
+        Object.hash(
+          id,
+          userId,
+          name,
+          raceType,
+          raceDate,
+          targetTime,
+          weeklyMileageGoal,
+          planWeeks,
+          runsPerWeek,
+          longRunDay,
+          workoutDay,
+          currentVdot,
+          predictedTime,
+          isActive,
+          createdAt,
+          updatedAt,
+          completedAt,
+          Object.hashAll(workouts),
+          backyardLoopDistM,
+          targetLaps,
+        ),
+        Object.hash(
+          sport,
+          planSource,
+          ridesPerWeek,
+          swimsPerWeek,
+          strengthPerWeek,
+          taperWeeks,
+          peakWeeks,
+          buildWeeks,
+          Object.hashAll(restDays),
+        ),
       );
 }
 

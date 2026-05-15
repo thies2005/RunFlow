@@ -67,6 +67,9 @@ class CreateGoalRequest {
     this.calibrationFactor,
     this.backyardLoopDistM,
     this.targetLaps,
+    this.sport,
+    this.athleteCssOverride,
+    this.athleteBikeSpeedOverride,
   });
 
   final String name;
@@ -93,6 +96,9 @@ class CreateGoalRequest {
   final double? calibrationFactor;
   final double? backyardLoopDistM;
   final int? targetLaps;
+  final String? sport;
+  final double? athleteCssOverride;
+  final double? athleteBikeSpeedOverride;
 
   CreateGoalRequest copyWith({
     String? name,
@@ -119,6 +125,9 @@ class CreateGoalRequest {
     double? calibrationFactor,
     double? backyardLoopDistM,
     int? targetLaps,
+    String? sport,
+    double? athleteCssOverride,
+    double? athleteBikeSpeedOverride,
   }) {
     return CreateGoalRequest(
       name: name ?? this.name,
@@ -145,6 +154,9 @@ class CreateGoalRequest {
       calibrationFactor: calibrationFactor ?? this.calibrationFactor,
       backyardLoopDistM: backyardLoopDistM ?? this.backyardLoopDistM,
       targetLaps: targetLaps ?? this.targetLaps,
+      sport: sport ?? this.sport,
+      athleteCssOverride: athleteCssOverride ?? this.athleteCssOverride,
+      athleteBikeSpeedOverride: athleteBikeSpeedOverride ?? this.athleteBikeSpeedOverride,
     );
   }
 
@@ -176,7 +188,10 @@ class CreateGoalRequest {
           calibrationDistance == other.calibrationDistance &&
           calibrationFactor == other.calibrationFactor &&
           backyardLoopDistM == other.backyardLoopDistM &&
-          targetLaps == other.targetLaps;
+          targetLaps == other.targetLaps &&
+          sport == other.sport &&
+          athleteCssOverride == other.athleteCssOverride &&
+          athleteBikeSpeedOverride == other.athleteBikeSpeedOverride;
 
   @override
   int get hashCode => Object.hashAll([
@@ -204,6 +219,9 @@ class CreateGoalRequest {
     calibrationFactor,
     backyardLoopDistM,
     targetLaps,
+    sport,
+    athleteCssOverride,
+    athleteBikeSpeedOverride,
   ]);
 }
 

@@ -1,7 +1,8 @@
-import { WorkoutType } from '@/generated/prisma/browser';
+import { WorkoutType, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
 import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
+import { enrichWorkoutsWithDescriptions } from '../descriptions';
 
 type NoRacePhase = 'BASE' | 'BUILD' | 'MAINTAIN';
 
@@ -96,13 +97,16 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
                 totalDistance: w.totalDistance,
                 targetPace: w.targetPace,
                 targetDuration: w.targetDuration,
+                phase: phase as PlanPhase,
             });
         });
 
         currentDate.setDate(currentDate.getDate() + 7);
     }
 
-    return fixBackToBackSameType(workouts, { restDays: config.restDays });
+    const result = fixBackToBackSameType(workouts, { restDays: config.restDays });
+    enrichWorkoutsWithDescriptions(result);
+    return result;
 }
 
 function getNoRacePhase(

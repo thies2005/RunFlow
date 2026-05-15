@@ -99,7 +99,7 @@ class _GoalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final daysUntilRace = goal.raceDate.difference(DateTime.now()).inDays;
+    final daysUntilRace = goal.raceDate?.difference(DateTime.now()).inDays ?? 0;
     final completedWorkouts =
         goal.workouts.where((w) => w.isCompleted).length;
     final totalWorkouts = goal.workouts.length;
@@ -143,7 +143,7 @@ class _GoalCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      raceTypeLabel(goal.raceType),
+                      raceTypeLabel(goal.raceType ?? RaceType.customDistance),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: isCompleted
                             ? AppColors.onSurfaceVariant

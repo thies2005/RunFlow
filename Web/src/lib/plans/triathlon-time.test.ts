@@ -25,8 +25,8 @@ describe('estimateTriathlonTime', () => {
     it('Full Ironman vdot=40 total is reasonable', () => {
         const result = estimateTriathlonTime({ vdot: 40, raceType: RaceType.FULL_IRONMAN });
         expect(result).not.toBeNull();
-        expect(result!.optimal.totalSeconds).toBeGreaterThan(100000);
-        expect(result!.optimal.totalSeconds).toBeLessThan(200000);
+        expect(result!.optimal.totalSeconds).toBeGreaterThan(36000);  // > 10 hours
+        expect(result!.optimal.totalSeconds).toBeLessThan(72000);   // < 20 hours
     });
 
     it('uses custom distances when provided and > 0', () => {

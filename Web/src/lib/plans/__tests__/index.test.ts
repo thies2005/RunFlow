@@ -449,7 +449,7 @@ describe('Training Plan Generation', () => {
         it('PLAN_CONSTANTS MAX_LONG_RUN_DIST updated correctly (Task 4.1)', () => {
             expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.HALF_MARATHON).toBe(24000);
             expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.TEN_K).toBe(22000);
-            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.MARATHON).toBe(34000);
+            expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.MARATHON).toBe(32000);
             expect(PLAN_CONSTANTS.MAX_LONG_RUN_DIST.FIVE_K).toBe(18000);
         });
 

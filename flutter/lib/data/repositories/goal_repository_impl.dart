@@ -230,11 +230,11 @@ class GoalRepositoryImpl implements GoalRepository {
         ApiConstants.subGoalsUrl(goalId),
         data: {
           'name': name,
-          if (raceType != null) 'raceType': raceType,
-          if (raceDate != null) 'raceDate': raceDate.toIso8601String(),
-          if (priority != null) 'priority': priority,
-          if (sport != null) 'sport': sport,
-          if (targetTime != null) 'targetTime': targetTime,
+          'raceType': ?raceType,
+          'raceDate': ?raceDate?.toIso8601String(),
+          'priority': ?priority,
+          'sport': ?sport,
+          'targetTime': ?targetTime,
           'generateWorkouts': generateWorkouts,
         },
       );

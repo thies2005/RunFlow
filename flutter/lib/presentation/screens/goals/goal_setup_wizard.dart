@@ -63,7 +63,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   final _minutesController = TextEditingController();
   final _secondsController = TextEditingController();
 
-  static const int _totalSteps = 8;
+  static const int _totalSteps = 9;
 
   int get _maxPlanWeeks => _selectedDate.difference(_planStartDate).inDays ~/ 7;
   int get _planWeeksCap => max(4, min(24, _maxPlanWeeks));
@@ -100,6 +100,8 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
       case 0:
         return _nameFormKey.currentState?.validate() ?? false;
       case 1:
+        return true;
+      case 2:
         final now = DateTime.now();
         if (_selectedDate.isBefore(DateTime(now.year, now.month, now.day))) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -116,11 +118,11 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
           return false;
         }
         return true;
-      case 2:
-        return true;
       case 3:
         return true;
       case 4:
+        return true;
+      case 5:
         if (_taperWeeks + _peakWeeks + _buildWeeks > _effectivePlanWeeks) {
           final phases = _clampedPhases(_effectivePlanWeeks);
           setState(() {
@@ -130,11 +132,11 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
           });
         }
         return true;
-      case 5:
-        return true;
       case 6:
         return true;
       case 7:
+        return true;
+      case 8:
         return true;
       default:
         return true;
@@ -1420,9 +1422,11 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
             child: IndexedStack(
               index: _currentStep,
               children: [
-                _NameStep(
+                _NameOnlyStep(
                   controller: _nameController,
                   formKey: _nameFormKey,
+                ),
+                _RaceTypeStep(
                   selectedRaceType: _selectedRaceType,
                   onRaceTypeSelected: (type) {
                     setState(() {
@@ -1637,18 +1641,14 @@ class _NavigationButtons extends StatelessWidget {
   }
 }
 
-class _NameStep extends StatelessWidget {
-  const _NameStep({
+class _NameOnlyStep extends StatelessWidget {
+  const _NameOnlyStep({
     required this.controller,
     required this.formKey,
-    required this.selectedRaceType,
-    required this.onRaceTypeSelected,
   });
 
   final TextEditingController controller;
   final GlobalKey<FormState> formKey;
-  final RaceType selectedRaceType;
-  final ValueChanged<RaceType> onRaceTypeSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -1660,7 +1660,7 @@ class _NameStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            S.of(context).goalWizardNameRaceType,
+            S.of(context).goalWizardGoalName,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -1693,151 +1693,197 @@ class _NameStep extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(height: 24),
-          Text(
-            S.of(context).goalWizardRaceTypeLabel,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ExpansionTile(
-            title: Text(S.of(context).raceCategoryRunning),
-            initiallyExpanded: true,
-            children: [
-              _buildRaceOption(RaceType.fiveK),
-              _buildRaceOption(RaceType.tenK),
-              _buildRaceOption(RaceType.halfMarathon),
-              _buildRaceOption(RaceType.marathon),
-            ],
-          ),
-          ExpansionTile(
-            title: Text(S.of(context).raceCategoryUltra),
-            initiallyExpanded: false,
-            children: [
-              _buildRaceOption(RaceType.fiftyK),
-              _buildRaceOption(RaceType.fiftyMile),
-              _buildRaceOption(RaceType.hundredK),
-              _buildRaceOption(RaceType.hundredMile),
-              _buildRaceOption(RaceType.twelveHour),
-              _buildRaceOption(RaceType.twentyFourHour),
-              _buildRaceOption(RaceType.backyardUltra),
-              _buildRaceOption(RaceType.customDistance),
-            ],
-          ),
-          ExpansionTile(
-            title: Text(S.of(context).raceCategoryTriathlon),
-            initiallyExpanded: false,
-            children: [
-              _buildRaceOption(RaceType.sprintTri),
-              _buildRaceOption(RaceType.olympicTri),
-              _buildRaceOption(RaceType.halfIronman),
-              _buildRaceOption(RaceType.fullIronman),
-              _buildRaceOption(RaceType.customTri),
-            ],
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildRaceOption(RaceType type) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: _RaceTypeOption(
-        type: type,
-        isSelected: type == selectedRaceType,
-        onTap: () => onRaceTypeSelected(type),
       ),
     );
   }
 }
 
-class _RaceTypeOption extends StatelessWidget {
-  const _RaceTypeOption({
-    required this.type,
-    required this.isSelected,
-    required this.onTap,
+class _RaceTypeStep extends StatelessWidget {
+  const _RaceTypeStep({
+    required this.selectedRaceType,
+    required this.onRaceTypeSelected,
   });
 
-  final RaceType type;
-  final bool isSelected;
-  final VoidCallback onTap;
+  final RaceType selectedRaceType;
+  final ValueChanged<RaceType> onRaceTypeSelected;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final s = S.of(context);
 
-    return Material(
-      color: isSelected
-          ? AppColors.primary.withValues(alpha: 0.1)
-          : theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isSelected ? AppColors.primary : Colors.transparent,
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.onSurfaceVariant,
-                    width: 2,
-                  ),
-                ),
-                child: isSelected
-                    ? const Icon(
-                        Icons.check,
-                        size: 14,
-                        color: AppColors.onPrimary,
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      raceTypeLabel(type),
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      S
-                          .of(context)
-                          .goalWizardRaceDistance(_formatRaceDistance(type)),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            s.goalWizardRaceTypeLabel,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            s.goalWizardNameRaceTypeDesc,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _RaceCategoryCard(
+            icon: Icons.directions_run,
+            title: s.raceCategoryRunning,
+            color: AppColors.primary,
+            options: const [
+              RaceType.fiveK,
+              RaceType.tenK,
+              RaceType.halfMarathon,
+              RaceType.marathon,
+            ],
+            selectedRaceType: selectedRaceType,
+            onSelected: onRaceTypeSelected,
+          ),
+          const SizedBox(height: 12),
+          _RaceCategoryCard(
+            icon: Icons.terrain,
+            title: s.raceCategoryUltra,
+            color: const Color(0xFF795548),
+            options: const [
+              RaceType.fiftyK,
+              RaceType.fiftyMile,
+              RaceType.hundredK,
+              RaceType.hundredMile,
+              RaceType.twelveHour,
+              RaceType.twentyFourHour,
+              RaceType.backyardUltra,
+              RaceType.customDistance,
+            ],
+            selectedRaceType: selectedRaceType,
+            onSelected: onRaceTypeSelected,
+          ),
+          const SizedBox(height: 12),
+          _RaceCategoryCard(
+            icon: Icons.directions_bike,
+            title: s.raceCategoryTriathlon,
+            color: const Color(0xFF0097A7),
+            options: const [
+              RaceType.sprintTri,
+              RaceType.olympicTri,
+              RaceType.halfIronman,
+              RaceType.fullIronman,
+              RaceType.customTri,
+            ],
+            selectedRaceType: selectedRaceType,
+            onSelected: onRaceTypeSelected,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RaceCategoryCard extends StatelessWidget {
+  const _RaceCategoryCard({
+    required this.icon,
+    required this.title,
+    required this.color,
+    required this.options,
+    required this.selectedRaceType,
+    required this.onSelected,
+  });
+
+  final IconData icon;
+  final String title;
+  final Color color;
+  final List<RaceType> options;
+  final RaceType selectedRaceType;
+  final ValueChanged<RaceType> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasSelection = options.contains(selectedRaceType);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          leading: Icon(icon, color: hasSelection ? color : null),
+          title: Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          trailing: hasSelection
+              ? Icon(Icons.check_circle, color: color, size: 20)
+              : const Icon(Icons.expand_more),
+          initiallyExpanded: hasSelection,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          children: [
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: options.map((type) {
+                final isSelected = type == selectedRaceType;
+                return InkWell(
+                  onTap: () => onSelected(type),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? color.withValues(alpha: 0.15)
+                          : theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                      border: isSelected
+                          ? Border.all(color: color, width: 1.5)
+                          : null,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          raceTypeLabel(type),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected ? color : null,
+                          ),
+                        ),
+                        Text(
+                          _formatDistance(type),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  String _formatRaceDistance(RaceType type) {
+  String _formatDistance(RaceType type) {
     if (type.isTimedEvent) {
-      return type == RaceType.twelveHour ? '12 hours' : '24 hours';
+      return type == RaceType.twelveHour ? '12h' : '24h';
     }
-    if (type.isTriathlon) return 'Swim \u00b7 Bike \u00b7 Run';
-    if (type == RaceType.backyardUltra) return 'Variable distance';
-    if (type == RaceType.customDistance) return 'Custom distance';
-    if (type == RaceType.customTri) return 'Custom triathlon';
+    if (type.isTriathlon) return 'Swim·Bike·Run';
+    if (type == RaceType.backyardUltra) return 'Variable';
+    if (type == RaceType.customDistance) return 'Custom';
+    if (type == RaceType.customTri) return 'Custom';
     final distance = raceTypeDistance(type);
     return '${(distance / 1000).toStringAsFixed(1)} km';
   }

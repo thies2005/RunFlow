@@ -7,19 +7,14 @@ import 'package:runflow_flutter/presentation/screens/goals/goal_setup_wizard.dar
 
 void main() {
   group('GoalSetupWizard', () {
-    testWidgets('renders first step with name and race type', (
+    testWidgets('renders first step with name input', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
       expect(find.text('New Goal'), findsOneWidget);
-      expect(find.text('Name & Race Type'), findsOneWidget);
-      expect(find.text('Goal Name'), findsOneWidget);
-      expect(find.text('5K'), findsOneWidget);
-      expect(find.text('10K'), findsOneWidget);
-      expect(find.text('Half Marathon'), findsOneWidget);
-      expect(find.text('Marathon'), findsOneWidget);
+      expect(find.text('Goal Name'), findsWidgets);
     });
 
     testWidgets('has close button in app bar', (WidgetTester tester) async {
@@ -46,7 +41,7 @@ void main() {
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Race Date'), findsOneWidget);
+      expect(find.text('Race Type'), findsOneWidget);
       expect(find.text('Back'), findsOneWidget);
     });
 
@@ -55,6 +50,11 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextFormField).first, 'My Goal');
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Race Type'), findsOneWidget);
+
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
 
@@ -100,12 +100,12 @@ void main() {
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Race Date'), findsOneWidget);
+      expect(find.text('Race Type'), findsOneWidget);
 
       await tester.tap(find.text('Back'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Name & Race Type'), findsOneWidget);
+      expect(find.text('Goal Name'), findsWidgets);
     });
 
     testWidgets('shows progress indicators', (WidgetTester tester) async {
@@ -115,14 +115,22 @@ void main() {
       expect(find.byType(ClipRRect), findsWidgets);
     });
 
-    testWidgets('allows race type selection', (WidgetTester tester) async {
+    testWidgets('allows race type selection on step 2', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(const ProviderScope(child: _TestApp()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Half Marathon'));
+      await tester.enterText(find.byType(TextFormField).first, 'My Goal');
+      await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.check), findsOneWidget);
+      expect(find.text('Race Type'), findsOneWidget);
+      expect(find.text('5K'), findsOneWidget);
+      expect(find.text('Half Marathon'), findsOneWidget);
+
+      await tester.tap(find.text('Half Marathon'));
+      await tester.pumpAndSettle();
     });
   });
 }

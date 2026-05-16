@@ -109,6 +109,10 @@ export async function PUT(
             data: updateData,
             include: {
                 workouts: { orderBy: { scheduledDate: 'asc' } },
+                subGoals: {
+                    where: { deletedAt: null },
+                    orderBy: { createdAt: 'asc' },
+                },
             },
         });
 

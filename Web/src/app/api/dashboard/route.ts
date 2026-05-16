@@ -91,7 +91,11 @@ export async function GET(req: NextRequest) {
                         }
                     },
                     orderBy: { scheduledDate: 'asc' }
-                }
+                },
+                subGoals: {
+                    where: { deletedAt: null },
+                    orderBy: { createdAt: 'asc' },
+                },
             }
         });
 

@@ -60,7 +60,11 @@ export async function GET(request: NextRequest) {
                         }
                     },
                     orderBy: { scheduledDate: 'asc' }
-                }
+                },
+                subGoals: {
+                    where: { deletedAt: null },
+                    orderBy: { createdAt: 'asc' },
+                },
             }
         });
 
@@ -175,7 +179,14 @@ export async function GET(request: NextRequest) {
                 createdAt: w.createdAt.toISOString(),
                 updatedAt: w.updatedAt.toISOString(),
                 completedAt: w.completedAt?.toISOString() || null
-            }))
+            })),
+            subGoals: (g.subGoals ?? []).map((s: any) => ({
+                ...s,
+                createdAt: s.createdAt.toISOString(),
+                updatedAt: s.updatedAt.toISOString(),
+                completedAt: s.completedAt?.toISOString() || null,
+                raceDate: s.raceDate?.toISOString() ?? null,
+            })),
         }));
 
         // Find today's workout (first incomplete workout for today, or first incomplete workout of the week)

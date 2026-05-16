@@ -389,8 +389,12 @@ class FoodSearch extends _$FoodSearch {
       final apiRepo = ref.read(healthApiRepositoryProvider);
       return apiRepo.searchFood(query);
     } catch (_) {
-      final repo = ref.read(healthRepositoryProvider);
-      return repo.searchFoodItems(query);
+      try {
+        final repo = ref.read(healthRepositoryProvider);
+        return repo.searchFoodItems(query);
+      } catch (_) {
+        return [];
+      }
     }
   }
 

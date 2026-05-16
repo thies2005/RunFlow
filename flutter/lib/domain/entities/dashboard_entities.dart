@@ -505,6 +505,94 @@ class Workout {
       );
 }
 
+class SubGoal {
+  const SubGoal({
+    required this.id,
+    required this.userId,
+    required this.name,
+    this.raceType,
+    this.raceDate,
+    this.targetTime,
+    this.sport = 'RUN',
+    this.priority = 'SECONDARY',
+    required this.createdAt,
+    required this.updatedAt,
+    this.completedAt,
+    this.isActive = true,
+  });
+
+  final String id;
+  final String userId;
+  final String name;
+  final RaceType? raceType;
+  final DateTime? raceDate;
+  final int? targetTime;
+  final String sport;
+  final String priority;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? completedAt;
+  final bool isActive;
+
+  SubGoal copyWith({
+    String? id,
+    String? userId,
+    String? name,
+    RaceType? raceType,
+    DateTime? raceDate,
+    int? targetTime,
+    String? sport,
+    String? priority,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? completedAt,
+    bool? isActive,
+  }) {
+    return SubGoal(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      raceType: raceType ?? this.raceType,
+      raceDate: raceDate ?? this.raceDate,
+      targetTime: targetTime ?? this.targetTime,
+      sport: sport ?? this.sport,
+      priority: priority ?? this.priority,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      completedAt: completedAt ?? this.completedAt,
+      isActive: isActive ?? this.isActive,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SubGoal &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          userId == other.userId &&
+          name == other.name &&
+          raceType == other.raceType &&
+          raceDate == other.raceDate &&
+          targetTime == other.targetTime &&
+          sport == other.sport &&
+          priority == other.priority &&
+          isActive == other.isActive;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        userId,
+        name,
+        raceType,
+        raceDate,
+        targetTime,
+        sport,
+        priority,
+        isActive,
+      );
+}
+
 class Goal {
   const Goal({
     required this.id,
@@ -536,6 +624,8 @@ class Goal {
     this.peakWeeks = 4,
     this.buildWeeks = 4,
     this.restDays = const [],
+    this.parentGoalId,
+    this.subGoals = const [],
   });
 
   final String id;
@@ -567,6 +657,8 @@ class Goal {
   final int peakWeeks;
   final int buildWeeks;
   final List<int> restDays;
+  final String? parentGoalId;
+  final List<SubGoal> subGoals;
 
   Goal copyWith({
     String? id,
@@ -598,6 +690,8 @@ class Goal {
     int? peakWeeks,
     int? buildWeeks,
     List<int>? restDays,
+    String? parentGoalId,
+    List<SubGoal>? subGoals,
   }) {
     return Goal(
       id: id ?? this.id,
@@ -629,6 +723,8 @@ class Goal {
       peakWeeks: peakWeeks ?? this.peakWeeks,
       buildWeeks: buildWeeks ?? this.buildWeeks,
       restDays: restDays ?? this.restDays,
+      parentGoalId: parentGoalId ?? this.parentGoalId,
+      subGoals: subGoals ?? this.subGoals,
     );
   }
 
@@ -665,7 +761,9 @@ class Goal {
           taperWeeks == other.taperWeeks &&
           peakWeeks == other.peakWeeks &&
           buildWeeks == other.buildWeeks &&
-          listEquals(restDays, other.restDays);
+          listEquals(restDays, other.restDays) &&
+          parentGoalId == other.parentGoalId &&
+          listEquals(subGoals, other.subGoals);
 
   @override
   int get hashCode => Object.hash(
@@ -691,17 +789,19 @@ class Goal {
           backyardLoopDistM,
           targetLaps,
         ),
-        Object.hash(
-          sport,
-          planSource,
-          ridesPerWeek,
-          swimsPerWeek,
-          strengthPerWeek,
-          taperWeeks,
-          peakWeeks,
-          buildWeeks,
-          Object.hashAll(restDays),
-        ),
+          Object.hash(
+            sport,
+            planSource,
+            ridesPerWeek,
+            swimsPerWeek,
+            strengthPerWeek,
+            taperWeeks,
+            peakWeeks,
+            buildWeeks,
+            Object.hashAll(restDays),
+            parentGoalId,
+            Object.hashAll(subGoals),
+          ),
       );
 }
 

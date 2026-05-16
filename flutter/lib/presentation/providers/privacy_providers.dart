@@ -21,7 +21,7 @@ class PrivacyConsent extends _$PrivacyConsent {
     final prefs = await SharedPreferences.getInstance();
     state = PrivacyConsentState(
       dataProcessingConsent: prefs.getBool(_dataProcessingKey) ?? true,
-      analyticsConsent: prefs.getBool(_analyticsKey) ?? true,
+      analyticsConsent: prefs.getBool(_analyticsKey) ?? false,
       marketingConsent: prefs.getBool(_marketingKey) ?? false,
       termsAccepted: prefs.getBool(_termsAcceptedKey) ?? false,
       privacyPolicyAccepted:
@@ -68,7 +68,7 @@ class PrivacyConsent extends _$PrivacyConsent {
 class PrivacyConsentState {
   const PrivacyConsentState({
     this.dataProcessingConsent = true,
-    this.analyticsConsent = true,
+    this.analyticsConsent = false,
     this.marketingConsent = false,
     this.termsAccepted = false,
     this.privacyPolicyAccepted = false,

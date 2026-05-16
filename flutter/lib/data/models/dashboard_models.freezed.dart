@@ -1474,9 +1474,299 @@ as int?,
 
 
 /// @nodoc
+mixin _$SubGoal {
+
+ String get id; String get userId; String get name; RaceType? get raceType; DateTime? get raceDate; int? get targetTime; String get sport; String get priority; DateTime get createdAt; DateTime get updatedAt; DateTime? get completedAt; bool get isActive;
+/// Create a copy of SubGoal
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SubGoalCopyWith<SubGoal> get copyWith => _$SubGoalCopyWithImpl<SubGoal>(this as SubGoal, _$identity);
+
+  /// Serializes this SubGoal to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SubGoal&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name)&&(identical(other.raceType, raceType) || other.raceType == raceType)&&(identical(other.raceDate, raceDate) || other.raceDate == raceDate)&&(identical(other.targetTime, targetTime) || other.targetTime == targetTime)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,userId,name,raceType,raceDate,targetTime,sport,priority,createdAt,updatedAt,completedAt,isActive);
+
+@override
+String toString() {
+  return 'SubGoal(id: $id, userId: $userId, name: $name, raceType: $raceType, raceDate: $raceDate, targetTime: $targetTime, sport: $sport, priority: $priority, createdAt: $createdAt, updatedAt: $updatedAt, completedAt: $completedAt, isActive: $isActive)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SubGoalCopyWith<$Res>  {
+  factory $SubGoalCopyWith(SubGoal value, $Res Function(SubGoal) _then) = _$SubGoalCopyWithImpl;
+@useResult
+$Res call({
+ String id, String userId, String name, RaceType? raceType, DateTime? raceDate, int? targetTime, String sport, String priority, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, bool isActive
+});
+
+
+
+
+}
+/// @nodoc
+class _$SubGoalCopyWithImpl<$Res>
+    implements $SubGoalCopyWith<$Res> {
+  _$SubGoalCopyWithImpl(this._self, this._then);
+
+  final SubGoal _self;
+  final $Res Function(SubGoal) _then;
+
+/// Create a copy of SubGoal
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = freezed,Object? raceDate = freezed,Object? targetTime = freezed,Object? sport = null,Object? priority = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? isActive = null,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,raceType: freezed == raceType ? _self.raceType : raceType // ignore: cast_nullable_to_non_nullable
+as RaceType?,raceDate: freezed == raceDate ? _self.raceDate : raceDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,targetTime: freezed == targetTime ? _self.targetTime : targetTime // ignore: cast_nullable_to_non_nullable
+as int?,sport: null == sport ? _self.sport : sport // ignore: cast_nullable_to_non_nullable
+as String,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,completedAt: freezed == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SubGoal].
+extension SubGoalPatterns on SubGoal {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SubGoal value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SubGoal() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SubGoal value)  $default,){
+final _that = this;
+switch (_that) {
+case _SubGoal():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SubGoal value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SubGoal() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime? raceDate,  int? targetTime,  String sport,  String priority,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SubGoal() when $default != null:
+return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.sport,_that.priority,_that.createdAt,_that.updatedAt,_that.completedAt,_that.isActive);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime? raceDate,  int? targetTime,  String sport,  String priority,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  bool isActive)  $default,) {final _that = this;
+switch (_that) {
+case _SubGoal():
+return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.sport,_that.priority,_that.createdAt,_that.updatedAt,_that.completedAt,_that.isActive);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime? raceDate,  int? targetTime,  String sport,  String priority,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  bool isActive)?  $default,) {final _that = this;
+switch (_that) {
+case _SubGoal() when $default != null:
+return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.sport,_that.priority,_that.createdAt,_that.updatedAt,_that.completedAt,_that.isActive);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _SubGoal extends SubGoal {
+  const _SubGoal({required this.id, this.userId = '', required this.name, this.raceType, this.raceDate, this.targetTime, this.sport = 'RUN', this.priority = 'SECONDARY', required this.createdAt, required this.updatedAt, this.completedAt, this.isActive = true}): super._();
+  factory _SubGoal.fromJson(Map<String, dynamic> json) => _$SubGoalFromJson(json);
+
+@override final  String id;
+@override@JsonKey() final  String userId;
+@override final  String name;
+@override final  RaceType? raceType;
+@override final  DateTime? raceDate;
+@override final  int? targetTime;
+@override@JsonKey() final  String sport;
+@override@JsonKey() final  String priority;
+@override final  DateTime createdAt;
+@override final  DateTime updatedAt;
+@override final  DateTime? completedAt;
+@override@JsonKey() final  bool isActive;
+
+/// Create a copy of SubGoal
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SubGoalCopyWith<_SubGoal> get copyWith => __$SubGoalCopyWithImpl<_SubGoal>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$SubGoalToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SubGoal&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name)&&(identical(other.raceType, raceType) || other.raceType == raceType)&&(identical(other.raceDate, raceDate) || other.raceDate == raceDate)&&(identical(other.targetTime, targetTime) || other.targetTime == targetTime)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,userId,name,raceType,raceDate,targetTime,sport,priority,createdAt,updatedAt,completedAt,isActive);
+
+@override
+String toString() {
+  return 'SubGoal(id: $id, userId: $userId, name: $name, raceType: $raceType, raceDate: $raceDate, targetTime: $targetTime, sport: $sport, priority: $priority, createdAt: $createdAt, updatedAt: $updatedAt, completedAt: $completedAt, isActive: $isActive)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SubGoalCopyWith<$Res> implements $SubGoalCopyWith<$Res> {
+  factory _$SubGoalCopyWith(_SubGoal value, $Res Function(_SubGoal) _then) = __$SubGoalCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String userId, String name, RaceType? raceType, DateTime? raceDate, int? targetTime, String sport, String priority, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, bool isActive
+});
+
+
+
+
+}
+/// @nodoc
+class __$SubGoalCopyWithImpl<$Res>
+    implements _$SubGoalCopyWith<$Res> {
+  __$SubGoalCopyWithImpl(this._self, this._then);
+
+  final _SubGoal _self;
+  final $Res Function(_SubGoal) _then;
+
+/// Create a copy of SubGoal
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = freezed,Object? raceDate = freezed,Object? targetTime = freezed,Object? sport = null,Object? priority = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? isActive = null,}) {
+  return _then(_SubGoal(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,raceType: freezed == raceType ? _self.raceType : raceType // ignore: cast_nullable_to_non_nullable
+as RaceType?,raceDate: freezed == raceDate ? _self.raceDate : raceDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,targetTime: freezed == targetTime ? _self.targetTime : targetTime // ignore: cast_nullable_to_non_nullable
+as int?,sport: null == sport ? _self.sport : sport // ignore: cast_nullable_to_non_nullable
+as String,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,completedAt: freezed == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$Goal {
 
- String get id; String get userId; String get name; RaceType? get raceType; DateTime? get raceDate; int? get targetTime; double? get weeklyMileageGoal; int get planWeeks; int get runsPerWeek; int get longRunDay; int get workoutDay; double? get currentVdot; int? get predictedTime; bool get isActive; DateTime get createdAt; DateTime get updatedAt; DateTime? get completedAt; List<Workout> get workouts; double? get backyardLoopDistM; int? get targetLaps; String get sport; String get planSource; int get ridesPerWeek; int get swimsPerWeek; int get strengthPerWeek; int get taperWeeks; int get peakWeeks; int get buildWeeks; List<int> get restDays;
+ String get id; String get userId; String get name; RaceType? get raceType; DateTime? get raceDate; int? get targetTime; double? get weeklyMileageGoal; int get planWeeks; int get runsPerWeek; int get longRunDay; int get workoutDay; double? get currentVdot; int? get predictedTime; bool get isActive; DateTime get createdAt; DateTime get updatedAt; DateTime? get completedAt; List<Workout> get workouts; double? get backyardLoopDistM; int? get targetLaps; String get sport; String get planSource; int get ridesPerWeek; int get swimsPerWeek; int get strengthPerWeek; int get taperWeeks; int get peakWeeks; int get buildWeeks; List<int> get restDays; String? get parentGoalId; List<SubGoal> get subGoals;
 /// Create a copy of Goal
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1489,16 +1779,16 @@ $GoalCopyWith<Goal> get copyWith => _$GoalCopyWithImpl<Goal>(this as Goal, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Goal&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name)&&(identical(other.raceType, raceType) || other.raceType == raceType)&&(identical(other.raceDate, raceDate) || other.raceDate == raceDate)&&(identical(other.targetTime, targetTime) || other.targetTime == targetTime)&&(identical(other.weeklyMileageGoal, weeklyMileageGoal) || other.weeklyMileageGoal == weeklyMileageGoal)&&(identical(other.planWeeks, planWeeks) || other.planWeeks == planWeeks)&&(identical(other.runsPerWeek, runsPerWeek) || other.runsPerWeek == runsPerWeek)&&(identical(other.longRunDay, longRunDay) || other.longRunDay == longRunDay)&&(identical(other.workoutDay, workoutDay) || other.workoutDay == workoutDay)&&(identical(other.currentVdot, currentVdot) || other.currentVdot == currentVdot)&&(identical(other.predictedTime, predictedTime) || other.predictedTime == predictedTime)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&const DeepCollectionEquality().equals(other.workouts, workouts)&&(identical(other.backyardLoopDistM, backyardLoopDistM) || other.backyardLoopDistM == backyardLoopDistM)&&(identical(other.targetLaps, targetLaps) || other.targetLaps == targetLaps)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.planSource, planSource) || other.planSource == planSource)&&(identical(other.ridesPerWeek, ridesPerWeek) || other.ridesPerWeek == ridesPerWeek)&&(identical(other.swimsPerWeek, swimsPerWeek) || other.swimsPerWeek == swimsPerWeek)&&(identical(other.strengthPerWeek, strengthPerWeek) || other.strengthPerWeek == strengthPerWeek)&&(identical(other.taperWeeks, taperWeeks) || other.taperWeeks == taperWeeks)&&(identical(other.peakWeeks, peakWeeks) || other.peakWeeks == peakWeeks)&&(identical(other.buildWeeks, buildWeeks) || other.buildWeeks == buildWeeks)&&const DeepCollectionEquality().equals(other.restDays, restDays));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Goal&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name)&&(identical(other.raceType, raceType) || other.raceType == raceType)&&(identical(other.raceDate, raceDate) || other.raceDate == raceDate)&&(identical(other.targetTime, targetTime) || other.targetTime == targetTime)&&(identical(other.weeklyMileageGoal, weeklyMileageGoal) || other.weeklyMileageGoal == weeklyMileageGoal)&&(identical(other.planWeeks, planWeeks) || other.planWeeks == planWeeks)&&(identical(other.runsPerWeek, runsPerWeek) || other.runsPerWeek == runsPerWeek)&&(identical(other.longRunDay, longRunDay) || other.longRunDay == longRunDay)&&(identical(other.workoutDay, workoutDay) || other.workoutDay == workoutDay)&&(identical(other.currentVdot, currentVdot) || other.currentVdot == currentVdot)&&(identical(other.predictedTime, predictedTime) || other.predictedTime == predictedTime)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&const DeepCollectionEquality().equals(other.workouts, workouts)&&(identical(other.backyardLoopDistM, backyardLoopDistM) || other.backyardLoopDistM == backyardLoopDistM)&&(identical(other.targetLaps, targetLaps) || other.targetLaps == targetLaps)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.planSource, planSource) || other.planSource == planSource)&&(identical(other.ridesPerWeek, ridesPerWeek) || other.ridesPerWeek == ridesPerWeek)&&(identical(other.swimsPerWeek, swimsPerWeek) || other.swimsPerWeek == swimsPerWeek)&&(identical(other.strengthPerWeek, strengthPerWeek) || other.strengthPerWeek == strengthPerWeek)&&(identical(other.taperWeeks, taperWeeks) || other.taperWeeks == taperWeeks)&&(identical(other.peakWeeks, peakWeeks) || other.peakWeeks == peakWeeks)&&(identical(other.buildWeeks, buildWeeks) || other.buildWeeks == buildWeeks)&&const DeepCollectionEquality().equals(other.restDays, restDays)&&(identical(other.parentGoalId, parentGoalId) || other.parentGoalId == parentGoalId)&&const DeepCollectionEquality().equals(other.subGoals, subGoals));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,userId,name,raceType,raceDate,targetTime,weeklyMileageGoal,planWeeks,runsPerWeek,longRunDay,workoutDay,currentVdot,predictedTime,isActive,createdAt,updatedAt,completedAt,const DeepCollectionEquality().hash(workouts),backyardLoopDistM,targetLaps,sport,planSource,ridesPerWeek,swimsPerWeek,strengthPerWeek,taperWeeks,peakWeeks,buildWeeks,const DeepCollectionEquality().hash(restDays)]);
+int get hashCode => Object.hashAll([runtimeType,id,userId,name,raceType,raceDate,targetTime,weeklyMileageGoal,planWeeks,runsPerWeek,longRunDay,workoutDay,currentVdot,predictedTime,isActive,createdAt,updatedAt,completedAt,const DeepCollectionEquality().hash(workouts),backyardLoopDistM,targetLaps,sport,planSource,ridesPerWeek,swimsPerWeek,strengthPerWeek,taperWeeks,peakWeeks,buildWeeks,const DeepCollectionEquality().hash(restDays),parentGoalId,const DeepCollectionEquality().hash(subGoals)]);
 
 @override
 String toString() {
-  return 'Goal(id: $id, userId: $userId, name: $name, raceType: $raceType, raceDate: $raceDate, targetTime: $targetTime, weeklyMileageGoal: $weeklyMileageGoal, planWeeks: $planWeeks, runsPerWeek: $runsPerWeek, longRunDay: $longRunDay, workoutDay: $workoutDay, currentVdot: $currentVdot, predictedTime: $predictedTime, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt, completedAt: $completedAt, workouts: $workouts, backyardLoopDistM: $backyardLoopDistM, targetLaps: $targetLaps, sport: $sport, planSource: $planSource, ridesPerWeek: $ridesPerWeek, swimsPerWeek: $swimsPerWeek, strengthPerWeek: $strengthPerWeek, taperWeeks: $taperWeeks, peakWeeks: $peakWeeks, buildWeeks: $buildWeeks, restDays: $restDays)';
+  return 'Goal(id: $id, userId: $userId, name: $name, raceType: $raceType, raceDate: $raceDate, targetTime: $targetTime, weeklyMileageGoal: $weeklyMileageGoal, planWeeks: $planWeeks, runsPerWeek: $runsPerWeek, longRunDay: $longRunDay, workoutDay: $workoutDay, currentVdot: $currentVdot, predictedTime: $predictedTime, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt, completedAt: $completedAt, workouts: $workouts, backyardLoopDistM: $backyardLoopDistM, targetLaps: $targetLaps, sport: $sport, planSource: $planSource, ridesPerWeek: $ridesPerWeek, swimsPerWeek: $swimsPerWeek, strengthPerWeek: $strengthPerWeek, taperWeeks: $taperWeeks, peakWeeks: $peakWeeks, buildWeeks: $buildWeeks, restDays: $restDays, parentGoalId: $parentGoalId, subGoals: $subGoals)';
 }
 
 
@@ -1509,7 +1799,7 @@ abstract mixin class $GoalCopyWith<$Res>  {
   factory $GoalCopyWith(Goal value, $Res Function(Goal) _then) = _$GoalCopyWithImpl;
 @useResult
 $Res call({
- String id, String userId, String name, RaceType? raceType, DateTime? raceDate, int? targetTime, double? weeklyMileageGoal, int planWeeks, int runsPerWeek, int longRunDay, int workoutDay, double? currentVdot, int? predictedTime, bool isActive, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, List<Workout> workouts, double? backyardLoopDistM, int? targetLaps, String sport, String planSource, int ridesPerWeek, int swimsPerWeek, int strengthPerWeek, int taperWeeks, int peakWeeks, int buildWeeks, List<int> restDays
+ String id, String userId, String name, RaceType? raceType, DateTime? raceDate, int? targetTime, double? weeklyMileageGoal, int planWeeks, int runsPerWeek, int longRunDay, int workoutDay, double? currentVdot, int? predictedTime, bool isActive, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, List<Workout> workouts, double? backyardLoopDistM, int? targetLaps, String sport, String planSource, int ridesPerWeek, int swimsPerWeek, int strengthPerWeek, int taperWeeks, int peakWeeks, int buildWeeks, List<int> restDays, String? parentGoalId, List<SubGoal> subGoals
 });
 
 
@@ -1526,7 +1816,7 @@ class _$GoalCopyWithImpl<$Res>
 
 /// Create a copy of Goal
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = freezed,Object? raceDate = freezed,Object? targetTime = freezed,Object? weeklyMileageGoal = freezed,Object? planWeeks = null,Object? runsPerWeek = null,Object? longRunDay = null,Object? workoutDay = null,Object? currentVdot = freezed,Object? predictedTime = freezed,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? workouts = null,Object? backyardLoopDistM = freezed,Object? targetLaps = freezed,Object? sport = null,Object? planSource = null,Object? ridesPerWeek = null,Object? swimsPerWeek = null,Object? strengthPerWeek = null,Object? taperWeeks = null,Object? peakWeeks = null,Object? buildWeeks = null,Object? restDays = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = freezed,Object? raceDate = freezed,Object? targetTime = freezed,Object? weeklyMileageGoal = freezed,Object? planWeeks = null,Object? runsPerWeek = null,Object? longRunDay = null,Object? workoutDay = null,Object? currentVdot = freezed,Object? predictedTime = freezed,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? workouts = null,Object? backyardLoopDistM = freezed,Object? targetLaps = freezed,Object? sport = null,Object? planSource = null,Object? ridesPerWeek = null,Object? swimsPerWeek = null,Object? strengthPerWeek = null,Object? taperWeeks = null,Object? peakWeeks = null,Object? buildWeeks = null,Object? restDays = null,Object? parentGoalId = freezed,Object? subGoals = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
@@ -1557,7 +1847,9 @@ as int,taperWeeks: null == taperWeeks ? _self.taperWeeks : taperWeeks // ignore:
 as int,peakWeeks: null == peakWeeks ? _self.peakWeeks : peakWeeks // ignore: cast_nullable_to_non_nullable
 as int,buildWeeks: null == buildWeeks ? _self.buildWeeks : buildWeeks // ignore: cast_nullable_to_non_nullable
 as int,restDays: null == restDays ? _self.restDays : restDays // ignore: cast_nullable_to_non_nullable
-as List<int>,
+as List<int>,parentGoalId: freezed == parentGoalId ? _self.parentGoalId : parentGoalId // ignore: cast_nullable_to_non_nullable
+as String?,subGoals: null == subGoals ? _self.subGoals : subGoals // ignore: cast_nullable_to_non_nullable
+as List<SubGoal>,
   ));
 }
 
@@ -1639,10 +1931,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime? raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps,  String sport,  String planSource,  int ridesPerWeek,  int swimsPerWeek,  int strengthPerWeek,  int taperWeeks,  int peakWeeks,  int buildWeeks,  List<int> restDays)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime? raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps,  String sport,  String planSource,  int ridesPerWeek,  int swimsPerWeek,  int strengthPerWeek,  int taperWeeks,  int peakWeeks,  int buildWeeks,  List<int> restDays,  String? parentGoalId,  List<SubGoal> subGoals)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Goal() when $default != null:
-return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.weeklyMileageGoal,_that.planWeeks,_that.runsPerWeek,_that.longRunDay,_that.workoutDay,_that.currentVdot,_that.predictedTime,_that.isActive,_that.createdAt,_that.updatedAt,_that.completedAt,_that.workouts,_that.backyardLoopDistM,_that.targetLaps,_that.sport,_that.planSource,_that.ridesPerWeek,_that.swimsPerWeek,_that.strengthPerWeek,_that.taperWeeks,_that.peakWeeks,_that.buildWeeks,_that.restDays);case _:
+return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.weeklyMileageGoal,_that.planWeeks,_that.runsPerWeek,_that.longRunDay,_that.workoutDay,_that.currentVdot,_that.predictedTime,_that.isActive,_that.createdAt,_that.updatedAt,_that.completedAt,_that.workouts,_that.backyardLoopDistM,_that.targetLaps,_that.sport,_that.planSource,_that.ridesPerWeek,_that.swimsPerWeek,_that.strengthPerWeek,_that.taperWeeks,_that.peakWeeks,_that.buildWeeks,_that.restDays,_that.parentGoalId,_that.subGoals);case _:
   return orElse();
 
 }
@@ -1660,10 +1952,10 @@ return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime? raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps,  String sport,  String planSource,  int ridesPerWeek,  int swimsPerWeek,  int strengthPerWeek,  int taperWeeks,  int peakWeeks,  int buildWeeks,  List<int> restDays)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime? raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps,  String sport,  String planSource,  int ridesPerWeek,  int swimsPerWeek,  int strengthPerWeek,  int taperWeeks,  int peakWeeks,  int buildWeeks,  List<int> restDays,  String? parentGoalId,  List<SubGoal> subGoals)  $default,) {final _that = this;
 switch (_that) {
 case _Goal():
-return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.weeklyMileageGoal,_that.planWeeks,_that.runsPerWeek,_that.longRunDay,_that.workoutDay,_that.currentVdot,_that.predictedTime,_that.isActive,_that.createdAt,_that.updatedAt,_that.completedAt,_that.workouts,_that.backyardLoopDistM,_that.targetLaps,_that.sport,_that.planSource,_that.ridesPerWeek,_that.swimsPerWeek,_that.strengthPerWeek,_that.taperWeeks,_that.peakWeeks,_that.buildWeeks,_that.restDays);}
+return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.weeklyMileageGoal,_that.planWeeks,_that.runsPerWeek,_that.longRunDay,_that.workoutDay,_that.currentVdot,_that.predictedTime,_that.isActive,_that.createdAt,_that.updatedAt,_that.completedAt,_that.workouts,_that.backyardLoopDistM,_that.targetLaps,_that.sport,_that.planSource,_that.ridesPerWeek,_that.swimsPerWeek,_that.strengthPerWeek,_that.taperWeeks,_that.peakWeeks,_that.buildWeeks,_that.restDays,_that.parentGoalId,_that.subGoals);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1677,10 +1969,10 @@ return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime? raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps,  String sport,  String planSource,  int ridesPerWeek,  int swimsPerWeek,  int strengthPerWeek,  int taperWeeks,  int peakWeeks,  int buildWeeks,  List<int> restDays)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String name,  RaceType? raceType,  DateTime? raceDate,  int? targetTime,  double? weeklyMileageGoal,  int planWeeks,  int runsPerWeek,  int longRunDay,  int workoutDay,  double? currentVdot,  int? predictedTime,  bool isActive,  DateTime createdAt,  DateTime updatedAt,  DateTime? completedAt,  List<Workout> workouts,  double? backyardLoopDistM,  int? targetLaps,  String sport,  String planSource,  int ridesPerWeek,  int swimsPerWeek,  int strengthPerWeek,  int taperWeeks,  int peakWeeks,  int buildWeeks,  List<int> restDays,  String? parentGoalId,  List<SubGoal> subGoals)?  $default,) {final _that = this;
 switch (_that) {
 case _Goal() when $default != null:
-return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.weeklyMileageGoal,_that.planWeeks,_that.runsPerWeek,_that.longRunDay,_that.workoutDay,_that.currentVdot,_that.predictedTime,_that.isActive,_that.createdAt,_that.updatedAt,_that.completedAt,_that.workouts,_that.backyardLoopDistM,_that.targetLaps,_that.sport,_that.planSource,_that.ridesPerWeek,_that.swimsPerWeek,_that.strengthPerWeek,_that.taperWeeks,_that.peakWeeks,_that.buildWeeks,_that.restDays);case _:
+return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_that.targetTime,_that.weeklyMileageGoal,_that.planWeeks,_that.runsPerWeek,_that.longRunDay,_that.workoutDay,_that.currentVdot,_that.predictedTime,_that.isActive,_that.createdAt,_that.updatedAt,_that.completedAt,_that.workouts,_that.backyardLoopDistM,_that.targetLaps,_that.sport,_that.planSource,_that.ridesPerWeek,_that.swimsPerWeek,_that.strengthPerWeek,_that.taperWeeks,_that.peakWeeks,_that.buildWeeks,_that.restDays,_that.parentGoalId,_that.subGoals);case _:
   return null;
 
 }
@@ -1692,7 +1984,7 @@ return $default(_that.id,_that.userId,_that.name,_that.raceType,_that.raceDate,_
 @JsonSerializable()
 
 class _Goal extends Goal {
-  const _Goal({required this.id, this.userId = '', required this.name, this.raceType, this.raceDate, required this.targetTime, required this.weeklyMileageGoal, this.planWeeks = 12, this.runsPerWeek = 4, this.longRunDay = 0, this.workoutDay = 3, required this.currentVdot, required this.predictedTime, this.isActive = true, required this.createdAt, required this.updatedAt, required this.completedAt, final  List<Workout> workouts = const [], this.backyardLoopDistM, this.targetLaps, this.sport = 'RUN', this.planSource = 'standard', this.ridesPerWeek = 0, this.swimsPerWeek = 0, this.strengthPerWeek = 0, this.taperWeeks = 2, this.peakWeeks = 4, this.buildWeeks = 4, final  List<int> restDays = const []}): _workouts = workouts,_restDays = restDays,super._();
+  const _Goal({required this.id, this.userId = '', required this.name, this.raceType, this.raceDate, required this.targetTime, required this.weeklyMileageGoal, this.planWeeks = 12, this.runsPerWeek = 4, this.longRunDay = 0, this.workoutDay = 3, required this.currentVdot, required this.predictedTime, this.isActive = true, required this.createdAt, required this.updatedAt, required this.completedAt, final  List<Workout> workouts = const [], this.backyardLoopDistM, this.targetLaps, this.sport = 'RUN', this.planSource = 'standard', this.ridesPerWeek = 0, this.swimsPerWeek = 0, this.strengthPerWeek = 0, this.taperWeeks = 2, this.peakWeeks = 4, this.buildWeeks = 4, final  List<int> restDays = const [], this.parentGoalId, final  List<SubGoal> subGoals = const []}): _workouts = workouts,_restDays = restDays,_subGoals = subGoals,super._();
   factory _Goal.fromJson(Map<String, dynamic> json) => _$GoalFromJson(json);
 
 @override final  String id;
@@ -1736,6 +2028,14 @@ class _Goal extends Goal {
   return EqualUnmodifiableListView(_restDays);
 }
 
+@override final  String? parentGoalId;
+ final  List<SubGoal> _subGoals;
+@override@JsonKey() List<SubGoal> get subGoals {
+  if (_subGoals is EqualUnmodifiableListView) return _subGoals;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_subGoals);
+}
+
 
 /// Create a copy of Goal
 /// with the given fields replaced by the non-null parameter values.
@@ -1750,16 +2050,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Goal&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name)&&(identical(other.raceType, raceType) || other.raceType == raceType)&&(identical(other.raceDate, raceDate) || other.raceDate == raceDate)&&(identical(other.targetTime, targetTime) || other.targetTime == targetTime)&&(identical(other.weeklyMileageGoal, weeklyMileageGoal) || other.weeklyMileageGoal == weeklyMileageGoal)&&(identical(other.planWeeks, planWeeks) || other.planWeeks == planWeeks)&&(identical(other.runsPerWeek, runsPerWeek) || other.runsPerWeek == runsPerWeek)&&(identical(other.longRunDay, longRunDay) || other.longRunDay == longRunDay)&&(identical(other.workoutDay, workoutDay) || other.workoutDay == workoutDay)&&(identical(other.currentVdot, currentVdot) || other.currentVdot == currentVdot)&&(identical(other.predictedTime, predictedTime) || other.predictedTime == predictedTime)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&const DeepCollectionEquality().equals(other._workouts, _workouts)&&(identical(other.backyardLoopDistM, backyardLoopDistM) || other.backyardLoopDistM == backyardLoopDistM)&&(identical(other.targetLaps, targetLaps) || other.targetLaps == targetLaps)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.planSource, planSource) || other.planSource == planSource)&&(identical(other.ridesPerWeek, ridesPerWeek) || other.ridesPerWeek == ridesPerWeek)&&(identical(other.swimsPerWeek, swimsPerWeek) || other.swimsPerWeek == swimsPerWeek)&&(identical(other.strengthPerWeek, strengthPerWeek) || other.strengthPerWeek == strengthPerWeek)&&(identical(other.taperWeeks, taperWeeks) || other.taperWeeks == taperWeeks)&&(identical(other.peakWeeks, peakWeeks) || other.peakWeeks == peakWeeks)&&(identical(other.buildWeeks, buildWeeks) || other.buildWeeks == buildWeeks)&&const DeepCollectionEquality().equals(other._restDays, _restDays));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Goal&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.name, name) || other.name == name)&&(identical(other.raceType, raceType) || other.raceType == raceType)&&(identical(other.raceDate, raceDate) || other.raceDate == raceDate)&&(identical(other.targetTime, targetTime) || other.targetTime == targetTime)&&(identical(other.weeklyMileageGoal, weeklyMileageGoal) || other.weeklyMileageGoal == weeklyMileageGoal)&&(identical(other.planWeeks, planWeeks) || other.planWeeks == planWeeks)&&(identical(other.runsPerWeek, runsPerWeek) || other.runsPerWeek == runsPerWeek)&&(identical(other.longRunDay, longRunDay) || other.longRunDay == longRunDay)&&(identical(other.workoutDay, workoutDay) || other.workoutDay == workoutDay)&&(identical(other.currentVdot, currentVdot) || other.currentVdot == currentVdot)&&(identical(other.predictedTime, predictedTime) || other.predictedTime == predictedTime)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&const DeepCollectionEquality().equals(other._workouts, _workouts)&&(identical(other.backyardLoopDistM, backyardLoopDistM) || other.backyardLoopDistM == backyardLoopDistM)&&(identical(other.targetLaps, targetLaps) || other.targetLaps == targetLaps)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.planSource, planSource) || other.planSource == planSource)&&(identical(other.ridesPerWeek, ridesPerWeek) || other.ridesPerWeek == ridesPerWeek)&&(identical(other.swimsPerWeek, swimsPerWeek) || other.swimsPerWeek == swimsPerWeek)&&(identical(other.strengthPerWeek, strengthPerWeek) || other.strengthPerWeek == strengthPerWeek)&&(identical(other.taperWeeks, taperWeeks) || other.taperWeeks == taperWeeks)&&(identical(other.peakWeeks, peakWeeks) || other.peakWeeks == peakWeeks)&&(identical(other.buildWeeks, buildWeeks) || other.buildWeeks == buildWeeks)&&const DeepCollectionEquality().equals(other._restDays, _restDays)&&(identical(other.parentGoalId, parentGoalId) || other.parentGoalId == parentGoalId)&&const DeepCollectionEquality().equals(other._subGoals, _subGoals));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,userId,name,raceType,raceDate,targetTime,weeklyMileageGoal,planWeeks,runsPerWeek,longRunDay,workoutDay,currentVdot,predictedTime,isActive,createdAt,updatedAt,completedAt,const DeepCollectionEquality().hash(_workouts),backyardLoopDistM,targetLaps,sport,planSource,ridesPerWeek,swimsPerWeek,strengthPerWeek,taperWeeks,peakWeeks,buildWeeks,const DeepCollectionEquality().hash(_restDays)]);
+int get hashCode => Object.hashAll([runtimeType,id,userId,name,raceType,raceDate,targetTime,weeklyMileageGoal,planWeeks,runsPerWeek,longRunDay,workoutDay,currentVdot,predictedTime,isActive,createdAt,updatedAt,completedAt,const DeepCollectionEquality().hash(_workouts),backyardLoopDistM,targetLaps,sport,planSource,ridesPerWeek,swimsPerWeek,strengthPerWeek,taperWeeks,peakWeeks,buildWeeks,const DeepCollectionEquality().hash(_restDays),parentGoalId,const DeepCollectionEquality().hash(_subGoals)]);
 
 @override
 String toString() {
-  return 'Goal(id: $id, userId: $userId, name: $name, raceType: $raceType, raceDate: $raceDate, targetTime: $targetTime, weeklyMileageGoal: $weeklyMileageGoal, planWeeks: $planWeeks, runsPerWeek: $runsPerWeek, longRunDay: $longRunDay, workoutDay: $workoutDay, currentVdot: $currentVdot, predictedTime: $predictedTime, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt, completedAt: $completedAt, workouts: $workouts, backyardLoopDistM: $backyardLoopDistM, targetLaps: $targetLaps, sport: $sport, planSource: $planSource, ridesPerWeek: $ridesPerWeek, swimsPerWeek: $swimsPerWeek, strengthPerWeek: $strengthPerWeek, taperWeeks: $taperWeeks, peakWeeks: $peakWeeks, buildWeeks: $buildWeeks, restDays: $restDays)';
+  return 'Goal(id: $id, userId: $userId, name: $name, raceType: $raceType, raceDate: $raceDate, targetTime: $targetTime, weeklyMileageGoal: $weeklyMileageGoal, planWeeks: $planWeeks, runsPerWeek: $runsPerWeek, longRunDay: $longRunDay, workoutDay: $workoutDay, currentVdot: $currentVdot, predictedTime: $predictedTime, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt, completedAt: $completedAt, workouts: $workouts, backyardLoopDistM: $backyardLoopDistM, targetLaps: $targetLaps, sport: $sport, planSource: $planSource, ridesPerWeek: $ridesPerWeek, swimsPerWeek: $swimsPerWeek, strengthPerWeek: $strengthPerWeek, taperWeeks: $taperWeeks, peakWeeks: $peakWeeks, buildWeeks: $buildWeeks, restDays: $restDays, parentGoalId: $parentGoalId, subGoals: $subGoals)';
 }
 
 
@@ -1770,7 +2070,7 @@ abstract mixin class _$GoalCopyWith<$Res> implements $GoalCopyWith<$Res> {
   factory _$GoalCopyWith(_Goal value, $Res Function(_Goal) _then) = __$GoalCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String userId, String name, RaceType? raceType, DateTime? raceDate, int? targetTime, double? weeklyMileageGoal, int planWeeks, int runsPerWeek, int longRunDay, int workoutDay, double? currentVdot, int? predictedTime, bool isActive, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, List<Workout> workouts, double? backyardLoopDistM, int? targetLaps, String sport, String planSource, int ridesPerWeek, int swimsPerWeek, int strengthPerWeek, int taperWeeks, int peakWeeks, int buildWeeks, List<int> restDays
+ String id, String userId, String name, RaceType? raceType, DateTime? raceDate, int? targetTime, double? weeklyMileageGoal, int planWeeks, int runsPerWeek, int longRunDay, int workoutDay, double? currentVdot, int? predictedTime, bool isActive, DateTime createdAt, DateTime updatedAt, DateTime? completedAt, List<Workout> workouts, double? backyardLoopDistM, int? targetLaps, String sport, String planSource, int ridesPerWeek, int swimsPerWeek, int strengthPerWeek, int taperWeeks, int peakWeeks, int buildWeeks, List<int> restDays, String? parentGoalId, List<SubGoal> subGoals
 });
 
 
@@ -1787,7 +2087,7 @@ class __$GoalCopyWithImpl<$Res>
 
 /// Create a copy of Goal
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = freezed,Object? raceDate = freezed,Object? targetTime = freezed,Object? weeklyMileageGoal = freezed,Object? planWeeks = null,Object? runsPerWeek = null,Object? longRunDay = null,Object? workoutDay = null,Object? currentVdot = freezed,Object? predictedTime = freezed,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? workouts = null,Object? backyardLoopDistM = freezed,Object? targetLaps = freezed,Object? sport = null,Object? planSource = null,Object? ridesPerWeek = null,Object? swimsPerWeek = null,Object? strengthPerWeek = null,Object? taperWeeks = null,Object? peakWeeks = null,Object? buildWeeks = null,Object? restDays = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? name = null,Object? raceType = freezed,Object? raceDate = freezed,Object? targetTime = freezed,Object? weeklyMileageGoal = freezed,Object? planWeeks = null,Object? runsPerWeek = null,Object? longRunDay = null,Object? workoutDay = null,Object? currentVdot = freezed,Object? predictedTime = freezed,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,Object? completedAt = freezed,Object? workouts = null,Object? backyardLoopDistM = freezed,Object? targetLaps = freezed,Object? sport = null,Object? planSource = null,Object? ridesPerWeek = null,Object? swimsPerWeek = null,Object? strengthPerWeek = null,Object? taperWeeks = null,Object? peakWeeks = null,Object? buildWeeks = null,Object? restDays = null,Object? parentGoalId = freezed,Object? subGoals = null,}) {
   return _then(_Goal(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
@@ -1818,7 +2118,9 @@ as int,taperWeeks: null == taperWeeks ? _self.taperWeeks : taperWeeks // ignore:
 as int,peakWeeks: null == peakWeeks ? _self.peakWeeks : peakWeeks // ignore: cast_nullable_to_non_nullable
 as int,buildWeeks: null == buildWeeks ? _self.buildWeeks : buildWeeks // ignore: cast_nullable_to_non_nullable
 as int,restDays: null == restDays ? _self._restDays : restDays // ignore: cast_nullable_to_non_nullable
-as List<int>,
+as List<int>,parentGoalId: freezed == parentGoalId ? _self.parentGoalId : parentGoalId // ignore: cast_nullable_to_non_nullable
+as String?,subGoals: null == subGoals ? _self._subGoals : subGoals // ignore: cast_nullable_to_non_nullable
+as List<SubGoal>,
   ));
 }
 

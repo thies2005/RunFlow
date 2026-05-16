@@ -4333,6 +4333,84 @@ abstract class S {
   /// **'{completed}/{total} workouts'**
   String goalWorkoutsCount(int completed, int total);
 
+  /// No description provided for @goalSubGoalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub Goals'**
+  String get goalSubGoalsTitle;
+
+  /// No description provided for @goalSubGoalsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sub goals yet. Add milestones or secondary targets.'**
+  String get goalSubGoalsEmpty;
+
+  /// No description provided for @goalSubGoalAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Sub Goal'**
+  String get goalSubGoalAdd;
+
+  /// No description provided for @goalSubGoalName.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub Goal Name'**
+  String get goalSubGoalName;
+
+  /// No description provided for @goalSubGoalNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Run a 10K tune-up race'**
+  String get goalSubGoalNameHint;
+
+  /// No description provided for @goalSubGoalPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get goalSubGoalPriority;
+
+  /// No description provided for @goalSubGoalPrioritySecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary'**
+  String get goalSubGoalPrioritySecondary;
+
+  /// No description provided for @goalSubGoalPriorityTuneUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Tune-Up'**
+  String get goalSubGoalPriorityTuneUp;
+
+  /// No description provided for @goalSubGoalPriorityMilestone.
+  ///
+  /// In en, this message translates to:
+  /// **'Milestone'**
+  String get goalSubGoalPriorityMilestone;
+
+  /// No description provided for @goalSubGoalCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub goal created'**
+  String get goalSubGoalCreated;
+
+  /// No description provided for @goalSubGoalCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create sub goal: {error}'**
+  String goalSubGoalCreateFailed(String error);
+
+  /// No description provided for @goalSubGoalDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Sub Goal'**
+  String get goalSubGoalDelete;
+
+  /// No description provided for @goalSubGoalDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this sub goal?'**
+  String get goalSubGoalDeleteConfirm;
+
   /// No description provided for @goalCreateSubtitle.
   ///
   /// In en, this message translates to:

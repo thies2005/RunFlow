@@ -223,6 +223,42 @@ extension GoalMapper on Goal {
         peakWeeks: peakWeeks,
         buildWeeks: buildWeeks,
         restDays: restDays,
+        parentGoalId: parentGoalId,
+        subGoals: subGoals.map((s) => s.toDomain()).toList(),
+      );
+}
+
+extension SubGoalMapper on SubGoal {
+  domain.SubGoal toDomain() => domain.SubGoal(
+        id: id,
+        userId: userId,
+        name: name,
+        raceType: raceType?.toDomain(),
+        raceDate: raceDate,
+        targetTime: targetTime,
+        sport: sport,
+        priority: priority,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+        completedAt: completedAt,
+        isActive: isActive,
+      );
+}
+
+extension DomainSubGoalMapper on domain.SubGoal {
+  SubGoal toData() => SubGoal(
+        id: id,
+        userId: userId,
+        name: name,
+        raceType: raceType?.toData(),
+        raceDate: raceDate,
+        targetTime: targetTime,
+        sport: sport,
+        priority: priority,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+        completedAt: completedAt,
+        isActive: isActive,
       );
 }
 
@@ -257,6 +293,8 @@ extension DomainGoalMapper on domain.Goal {
         peakWeeks: peakWeeks,
         buildWeeks: buildWeeks,
         restDays: restDays,
+        parentGoalId: parentGoalId,
+        subGoals: subGoals.map((s) => s.toData()).toList(),
       );
 }
 

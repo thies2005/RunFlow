@@ -62,6 +62,7 @@ class ApiConstants {
   static const String readinessWeeklyPath = '/readiness/weekly';
   static String get plansUrl => '$baseUrl/api/plans';
   static String planUrl(String id) => '$baseUrl/api/plans/$id';
+  static String subGoalsUrl(String goalId) => '$baseUrl/api/plan-advanced/$goalId/sub-goals';
 }
 
 class AppConstants {

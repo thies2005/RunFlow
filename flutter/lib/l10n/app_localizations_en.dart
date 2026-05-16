@@ -2305,6 +2305,48 @@ class SEn extends S {
   }
 
   @override
+  String get goalSubGoalsTitle => 'Sub Goals';
+
+  @override
+  String get goalSubGoalsEmpty =>
+      'No sub goals yet. Add milestones or secondary targets.';
+
+  @override
+  String get goalSubGoalAdd => 'Add Sub Goal';
+
+  @override
+  String get goalSubGoalName => 'Sub Goal Name';
+
+  @override
+  String get goalSubGoalNameHint => 'e.g. Run a 10K tune-up race';
+
+  @override
+  String get goalSubGoalPriority => 'Priority';
+
+  @override
+  String get goalSubGoalPrioritySecondary => 'Secondary';
+
+  @override
+  String get goalSubGoalPriorityTuneUp => 'Tune-Up';
+
+  @override
+  String get goalSubGoalPriorityMilestone => 'Milestone';
+
+  @override
+  String get goalSubGoalCreated => 'Sub goal created';
+
+  @override
+  String goalSubGoalCreateFailed(String error) {
+    return 'Failed to create sub goal: $error';
+  }
+
+  @override
+  String get goalSubGoalDelete => 'Remove Sub Goal';
+
+  @override
+  String get goalSubGoalDeleteConfirm => 'Remove this sub goal?';
+
+  @override
   String get goalCreateSubtitle =>
       'Create a training goal to start your journey to race day.';
 

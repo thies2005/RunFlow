@@ -2329,6 +2329,48 @@ class SDe extends S {
   }
 
   @override
+  String get goalSubGoalsTitle => 'Unterziele';
+
+  @override
+  String get goalSubGoalsEmpty =>
+      'Noch keine Unterziele. Füge Meilensteine oder sekundäre Ziele hinzu.';
+
+  @override
+  String get goalSubGoalAdd => 'Unterziel hinzufügen';
+
+  @override
+  String get goalSubGoalName => 'Name des Unterziels';
+
+  @override
+  String get goalSubGoalNameHint => 'z.B. 10K Testrennen laufen';
+
+  @override
+  String get goalSubGoalPriority => 'Priorität';
+
+  @override
+  String get goalSubGoalPrioritySecondary => 'Sekundär';
+
+  @override
+  String get goalSubGoalPriorityTuneUp => 'Vorbereitung';
+
+  @override
+  String get goalSubGoalPriorityMilestone => 'Meilenstein';
+
+  @override
+  String get goalSubGoalCreated => 'Unterziel erstellt';
+
+  @override
+  String goalSubGoalCreateFailed(String error) {
+    return 'Unterziel konnte nicht erstellt werden: $error';
+  }
+
+  @override
+  String get goalSubGoalDelete => 'Unterziel entfernen';
+
+  @override
+  String get goalSubGoalDeleteConfirm => 'Dieses Unterziel entfernen?';
+
+  @override
   String get goalCreateSubtitle =>
       'Erstelle ein Trainingsziel und starte deine Reise zum Renntag.';
 

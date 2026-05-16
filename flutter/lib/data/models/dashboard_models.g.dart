@@ -179,6 +179,60 @@ Map<String, dynamic> _$WorkoutToJson(_Workout instance) => <String, dynamic>{
   'targetHrZone': instance.targetHrZone,
 };
 
+_SubGoal _$SubGoalFromJson(Map<String, dynamic> json) => _SubGoal(
+  id: json['id'] as String,
+  userId: json['userId'] as String? ?? '',
+  name: json['name'] as String,
+  raceType: $enumDecodeNullable(_$RaceTypeEnumMap, json['raceType']),
+  raceDate: json['raceDate'] == null
+      ? null
+      : DateTime.parse(json['raceDate'] as String),
+  targetTime: (json['targetTime'] as num?)?.toInt(),
+  sport: json['sport'] as String? ?? 'RUN',
+  priority: json['priority'] as String? ?? 'SECONDARY',
+  createdAt: DateTime.parse(json['createdAt'] as String),
+  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  completedAt: json['completedAt'] == null
+      ? null
+      : DateTime.parse(json['completedAt'] as String),
+  isActive: json['isActive'] as bool? ?? true,
+);
+
+Map<String, dynamic> _$SubGoalToJson(_SubGoal instance) => <String, dynamic>{
+  'id': instance.id,
+  'userId': instance.userId,
+  'name': instance.name,
+  'raceType': _$RaceTypeEnumMap[instance.raceType],
+  'raceDate': instance.raceDate?.toIso8601String(),
+  'targetTime': instance.targetTime,
+  'sport': instance.sport,
+  'priority': instance.priority,
+  'createdAt': instance.createdAt.toIso8601String(),
+  'updatedAt': instance.updatedAt.toIso8601String(),
+  'completedAt': instance.completedAt?.toIso8601String(),
+  'isActive': instance.isActive,
+};
+
+const _$RaceTypeEnumMap = {
+  RaceType.fiveK: 'FIVE_K',
+  RaceType.tenK: 'TEN_K',
+  RaceType.halfMarathon: 'HALF_MARATHON',
+  RaceType.marathon: 'MARATHON',
+  RaceType.fiftyK: 'FIFTY_K',
+  RaceType.fiftyMile: 'FIFTY_MILE',
+  RaceType.hundredK: 'HUNDRED_K',
+  RaceType.hundredMile: 'HUNDRED_MILE',
+  RaceType.twelveHour: 'TWELVE_HOUR',
+  RaceType.twentyFourHour: 'TWENTY_FOUR_HOUR',
+  RaceType.backyardUltra: 'BACKYARD_ULTRA',
+  RaceType.customDistance: 'CUSTOM_DISTANCE',
+  RaceType.sprintTri: 'SPRINT_TRI',
+  RaceType.olympicTri: 'OLYMPIC_TRI',
+  RaceType.halfIronman: 'HALF_IRONMAN',
+  RaceType.fullIronman: 'FULL_IRONMAN',
+  RaceType.customTri: 'CUSTOM_TRI',
+};
+
 _Goal _$GoalFromJson(Map<String, dynamic> json) => _Goal(
   id: json['id'] as String,
   userId: json['userId'] as String? ?? '',
@@ -221,6 +275,12 @@ _Goal _$GoalFromJson(Map<String, dynamic> json) => _Goal(
           ?.map((e) => (e as num).toInt())
           .toList() ??
       const [],
+  parentGoalId: json['parentGoalId'] as String?,
+  subGoals:
+      (json['subGoals'] as List<dynamic>?)
+          ?.map((e) => SubGoal.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$GoalToJson(_Goal instance) => <String, dynamic>{
@@ -253,26 +313,8 @@ Map<String, dynamic> _$GoalToJson(_Goal instance) => <String, dynamic>{
   'peakWeeks': instance.peakWeeks,
   'buildWeeks': instance.buildWeeks,
   'restDays': instance.restDays,
-};
-
-const _$RaceTypeEnumMap = {
-  RaceType.fiveK: 'FIVE_K',
-  RaceType.tenK: 'TEN_K',
-  RaceType.halfMarathon: 'HALF_MARATHON',
-  RaceType.marathon: 'MARATHON',
-  RaceType.fiftyK: 'FIFTY_K',
-  RaceType.fiftyMile: 'FIFTY_MILE',
-  RaceType.hundredK: 'HUNDRED_K',
-  RaceType.hundredMile: 'HUNDRED_MILE',
-  RaceType.twelveHour: 'TWELVE_HOUR',
-  RaceType.twentyFourHour: 'TWENTY_FOUR_HOUR',
-  RaceType.backyardUltra: 'BACKYARD_ULTRA',
-  RaceType.customDistance: 'CUSTOM_DISTANCE',
-  RaceType.sprintTri: 'SPRINT_TRI',
-  RaceType.olympicTri: 'OLYMPIC_TRI',
-  RaceType.halfIronman: 'HALF_IRONMAN',
-  RaceType.fullIronman: 'FULL_IRONMAN',
-  RaceType.customTri: 'CUSTOM_TRI',
+  'parentGoalId': instance.parentGoalId,
+  'subGoals': instance.subGoals,
 };
 
 _DashboardResponse _$DashboardResponseFromJson(Map<String, dynamic> json) =>

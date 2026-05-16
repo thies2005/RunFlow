@@ -101,6 +101,10 @@ class _GoalDetailContent extends ConsumerWidget {
           completedWorkouts: completedWorkouts,
           totalWorkouts: totalWorkouts,
         ),
+        if (goal.subGoals.isNotEmpty || goal.parentGoalId == null) ...[
+          const SizedBox(height: 16),
+          _SubGoalsSection(goal: goal),
+        ],
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -134,6 +138,229 @@ class _GoalDetailContent extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _SubGoalsSection extends ConsumerWidget {
+  const _SubGoalsSection({required this.goal});
+
+  final Goal goal;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final s = S.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  s.goalSubGoalsTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline, size: 22),
+                onPressed: () => _showAddSubGoalDialog(context, ref),
+                tooltip: s.goalSubGoalAdd,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        if (goal.subGoals.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  s.goalSubGoalsEmpty,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          )
+        else
+          ...goal.subGoals.map(
+            (subGoal) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+              child: Card(
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(
+                    subGoal.priority == 'MILESTONE'
+                        ? Icons.flag
+                        : subGoal.priority == 'TUNE_UP'
+                            ? Icons.directions_run
+                            : Icons.subdirectory_arrow_right,
+                    size: 20,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: Text(
+                    subGoal.name,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  subtitle: subGoal.raceDate != null
+                      ? Text(
+                          '${subGoal.raceDate!.day.toString().padLeft(2, '0')}/${subGoal.raceDate!.month.toString().padLeft(2, '0')}/${subGoal.raceDate!.year}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        )
+                      : null,
+                  trailing: IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () => _confirmDeleteSubGoal(
+                      context,
+                      ref,
+                      subGoal,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _confirmDeleteSubGoal(
+    BuildContext context,
+    WidgetRef ref,
+    SubGoal subGoal,
+  ) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(S.of(context).goalSubGoalDelete),
+        content: Text(S.of(context).goalSubGoalDeleteConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(S.of(context).actionCancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              try {
+                final repo = ref.read(goalRepositoryProvider);
+                await repo.deleteSubGoal(goal.id, subGoal.id);
+                ref.invalidate(goalDetailProvider(goal.id));
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(e.toString())),
+                  );
+                }
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: Text(S.of(context).actionDelete),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddSubGoalDialog(BuildContext context, WidgetRef ref) {
+    final nameController = TextEditingController();
+    final s = S.of(context);
+    String selectedPriority = 'SECONDARY';
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(s.goalSubGoalAdd),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: s.goalSubGoalName,
+                  hintText: s.goalSubGoalNameHint,
+                  border: const OutlineInputBorder(),
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                initialValue: selectedPriority,
+                decoration: InputDecoration(
+                  labelText: s.goalSubGoalPriority,
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: 'SECONDARY',
+                    child: Text(s.goalSubGoalPrioritySecondary),
+                  ),
+                  DropdownMenuItem(
+                    value: 'TUNE_UP',
+                    child: Text(s.goalSubGoalPriorityTuneUp),
+                  ),
+                  DropdownMenuItem(
+                    value: 'MILESTONE',
+                    child: Text(s.goalSubGoalPriorityMilestone),
+                  ),
+                ],
+                onChanged: (v) {
+                  if (v != null) setDialogState(() => selectedPriority = v);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(s.actionCancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+                if (name.isEmpty) return;
+                Navigator.of(dialogContext).pop();
+                try {
+                  final repo = ref.read(goalRepositoryProvider);
+                  await repo.createSubGoal(
+                    goal.id,
+                    name: name,
+                    priority: selectedPriority,
+                    sport: goal.sport,
+                  );
+                  ref.invalidate(goalDetailProvider(goal.id));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(s.goalSubGoalCreated)),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(s.goalSubGoalCreateFailed(e.toString())),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Text(s.actionSave),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

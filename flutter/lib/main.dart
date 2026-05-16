@@ -12,6 +12,7 @@ import 'package:runflow_flutter/data/datasources/local/app_database.dart';
 import 'package:runflow_flutter/presentation/providers/notification_providers.dart';
 import 'package:runflow_flutter/presentation/router/app_router.dart';
 import 'package:runflow_flutter/services/background_sync.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 final container = ProviderContainer();
@@ -22,7 +23,10 @@ Future<void> main() async {
 
   await _initializeServices();
 
-  if (kReleaseMode && AppConstants.sentryDsn.isNotEmpty) {
+  final prefs = await SharedPreferences.getInstance();
+  final analyticsConsent = prefs.getBool('privacy_analytics') ?? false;
+
+  if (kReleaseMode && AppConstants.sentryDsn.isNotEmpty && analyticsConsent) {
     await SentryFlutter.init(
       (options) {
         options.dsn = AppConstants.sentryDsn;

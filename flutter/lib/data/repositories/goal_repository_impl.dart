@@ -214,6 +214,63 @@ class GoalRepositoryImpl implements GoalRepository {
     }
   }
 
+  @override
+  Future<domain.SubGoal> createSubGoal(
+    String goalId, {
+    required String name,
+    String? raceType,
+    DateTime? raceDate,
+    String? priority,
+    String? sport,
+    int? targetTime,
+    bool generateWorkouts = false,
+  }) async {
+    try {
+      final response = await dio.post(
+        ApiConstants.subGoalsUrl(goalId),
+        data: {
+          'name': name,
+          if (raceType != null) 'raceType': raceType,
+          if (raceDate != null) 'raceDate': raceDate.toIso8601String(),
+          if (priority != null) 'priority': priority,
+          if (sport != null) 'sport': sport,
+          if (targetTime != null) 'targetTime': targetTime,
+          'generateWorkouts': generateWorkouts,
+        },
+      );
+      await cacheDatasource.remove(CacheKeys.goals);
+      await cacheDatasource.remove('${CacheKeys.goalPrefix}$goalId');
+      final data = response.data as Map<String, dynamic>;
+      final subGoalData = data['subGoal'] as Map<String, dynamic>;
+      return SubGoal.fromJson(subGoalData).toDomain();
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : ServerException(
+              message: 'Failed to create sub goal.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
+  @override
+  Future<void> deleteSubGoal(String goalId, String subGoalId) async {
+    try {
+      await dio.delete(
+        '${ApiConstants.subGoalsUrl(goalId)}/$subGoalId',
+      );
+      await cacheDatasource.remove(CacheKeys.goals);
+      await cacheDatasource.remove('${CacheKeys.goalPrefix}$goalId');
+    } on DioException catch (e) {
+      throw e.error is AppException
+          ? e.error as AppException
+          : ServerException(
+              message: 'Failed to delete sub goal.',
+              statusCode: e.response?.statusCode,
+            );
+    }
+  }
+
   Future<T> _cacheFirst<T>({
     required String cacheKey,
     required Future<T> Function() fetch,

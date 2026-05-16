@@ -74,7 +74,8 @@ function handleCors(request: NextRequest): NextResponse | null {
     if (origin && !allowedOrigins.includes(origin) && !isSameOrigin && request.nextUrl.pathname.startsWith('/api/')) {
         // Allow webhooks and auth endpoints without origin check (they validate differently)
         if (!request.nextUrl.pathname.startsWith('/api/webhooks') &&
-            !request.nextUrl.pathname.startsWith('/api/auth')) {
+            !request.nextUrl.pathname.startsWith('/api/auth') &&
+            !request.nextUrl.pathname.startsWith('/api/public')) {
             console.warn(`[CORS] Blocked request from origin: ${origin}`);
             return new NextResponse('Forbidden', { status: 403 });
         }

@@ -1,26 +1,34 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
 import { generateTrainingPlan } from '@/lib/plans';
 import { RaceType } from '@/generated/prisma/browser';
 import { mapWorkoutsForDb } from '@/lib/services/plan-creation';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 
 type RouteContext = { params: Promise<{ goalId: string }> };
 
+async function authenticateUser(request: NextRequest | Request): Promise<string | null> {
+    const user = await getAuthenticatedUser(request as NextRequest);
+    if (user) return user.id;
+    const session = await auth();
+    return session?.user?.id ?? null;
+}
+
 export async function GET(req: Request, ctx: RouteContext) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = await authenticateUser(req);
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId },
         });
 
         if (!goal) {
@@ -44,8 +52,8 @@ export async function GET(req: Request, ctx: RouteContext) {
 
 export async function POST(req: Request, ctx: RouteContext) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = await authenticateUser(req);
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -61,7 +69,7 @@ export async function POST(req: Request, ctx: RouteContext) {
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId },
         });
 
         if (!goal) {
@@ -75,11 +83,15 @@ export async function POST(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'Sub-goal name is required' }, { status: 400 });
         }
 
-        await createSnapshot(goalId, 'Before adding sub-goal', 'add_sub_goal');
+        try {
+            await createSnapshot(goalId, 'Before adding sub-goal', 'add_sub_goal');
+        } catch {
+            // Snapshot creation is optional
+        }
 
         const subGoal = await prisma.goal.create({
             data: {
-                userId: session.user.id,
+                userId,
                 name: name.trim(),
                 parentGoalId: goalId,
                 sport: sport || goal.sport,
@@ -87,7 +99,7 @@ export async function POST(req: Request, ctx: RouteContext) {
                 raceDate: raceDate ? new Date(raceDate) : null,
                 targetTime: targetTime || null,
                 priority: priority || 'SECONDARY',
-                planSource: 'advanced',
+                planSource: goal.planSource || 'standard',
                 creationMode: 'EXPERT_MANUAL',
                 currentVdot: goal.currentVdot,
                 runsPerWeek: goal.runsPerWeek,
@@ -100,26 +112,18 @@ export async function POST(req: Request, ctx: RouteContext) {
 
         let workoutsCreated = 0;
 
-        // Generate workouts for the sub-goal if requested and we have enough info
         if (generateWorkouts && raceType && raceDate) {
             try {
                 const subRaceDate = new Date(raceDate);
                 const parentRaceDate = goal.raceDate ? new Date(goal.raceDate) : null;
 
-                // Determine start date for sub-goal training block
-                // Start from now or the parent plan start, whichever is later
                 const now = new Date();
                 const planStart = goal.planStartDate ? new Date(goal.planStartDate) : now;
                 const startDate = planStart > now ? planStart : now;
 
-                // Only generate if the race date is in the future
                 if (subRaceDate > now) {
                     const vdot = goal.currentVdot || 30;
-
-                    // Calculate weeks available for this sub-goal
                     const weeksAvailable = Math.max(1, Math.ceil((subRaceDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
-
-                    // Scale taper based on available weeks and priority
                     const taperWeeks = priority === 'TUNE_UP' ? 1 : Math.min(2, Math.floor(weeksAvailable / 4));
 
                     const workouts = generateTrainingPlan({
@@ -140,7 +144,6 @@ export async function POST(req: Request, ctx: RouteContext) {
                     });
 
                     if (workouts.length > 0) {
-                        // Filter: if there's a parent race date, don't generate workouts past it
                         const filteredWorkouts = parentRaceDate
                             ? workouts.filter(w => w.date <= parentRaceDate)
                             : workouts;
@@ -159,7 +162,6 @@ export async function POST(req: Request, ctx: RouteContext) {
                 }
             } catch (genError) {
                 console.error('Failed to generate sub-goal workouts:', genError);
-                // Don't fail the sub-goal creation if workout generation fails
             }
         }
 

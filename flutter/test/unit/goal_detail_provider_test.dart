@@ -53,6 +53,25 @@ class _FakeGoalRepository implements GoalRepository {
   Future<void> reorderWorkout(String workoutId, DateTime newDate) async {
     throw UnimplementedError();
   }
+
+  @override
+  Future<SubGoal> createSubGoal(
+    String goalId, {
+    required String name,
+    String? raceType,
+    DateTime? raceDate,
+    String? priority,
+    String? sport,
+    int? targetTime,
+    bool generateWorkouts = false,
+  }) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> deleteSubGoal(String goalId, String subGoalId) async {
+    throw UnimplementedError();
+  }
 }
 
 Goal _createTestGoal({required bool workoutCompleted}) {

@@ -118,9 +118,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ],
       ),
-      body: sessionId != null
-          ? _buildChatBody(sessionId, theme)
-          : _buildEmptyState(theme, s),
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: AppColors.primary.withValues(alpha: 0.1),
+            width: double.infinity,
+            child: Text(
+              'You are interacting with an AI system. This is for educational purposes and is not medical advice.',
+              style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primary),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Expanded(
+            child: sessionId != null
+                ? _buildChatBody(sessionId, theme)
+                : _buildEmptyState(theme, s),
+          ),
+        ],
+      ),
     );
   }
 

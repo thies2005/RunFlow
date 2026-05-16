@@ -231,6 +231,28 @@ sealed class Workout with _$Workout {
 }
 
 @Freezed(copyWith: true)
+sealed class SubGoal with _$SubGoal {
+  const factory SubGoal({
+    required String id,
+    @Default('') String userId,
+    required String name,
+    RaceType? raceType,
+    DateTime? raceDate,
+    int? targetTime,
+    @Default('RUN') String sport,
+    @Default('SECONDARY') String priority,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    DateTime? completedAt,
+    @Default(true) bool isActive,
+  }) = _SubGoal;
+  const SubGoal._();
+
+  factory SubGoal.fromJson(Map<String, dynamic> json) =>
+      _$SubGoalFromJson(json);
+}
+
+@Freezed(copyWith: true)
 sealed class Goal with _$Goal {
   const factory Goal({
     required String id,
@@ -262,6 +284,8 @@ sealed class Goal with _$Goal {
     @Default(4) int peakWeeks,
     @Default(4) int buildWeeks,
     @Default([]) List<int> restDays,
+    String? parentGoalId,
+    @Default([]) List<SubGoal> subGoals,
   }) = _Goal;
   const Goal._();
 

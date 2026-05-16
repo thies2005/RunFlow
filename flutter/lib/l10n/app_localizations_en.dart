@@ -1272,7 +1272,8 @@ class SEn extends S {
   String get foodSearchNoResults => 'No results found';
 
   @override
-  String get foodSearchNoResultsMessage => 'Try a different search term or add the food manually.';
+  String get foodSearchNoResultsMessage =>
+      'Try a different search term or add the food manually.';
 
   @override
   String get foodAddManually => 'Add Manually';

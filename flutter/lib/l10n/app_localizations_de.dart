@@ -1287,7 +1287,8 @@ class SDe extends S {
   String get foodSearchNoResults => 'Keine Ergebnisse gefunden';
 
   @override
-  String get foodSearchNoResultsMessage => 'Versuchen Sie einen anderen Suchbegriff oder fügen Sie das Lebensmittel manuell hinzu.';
+  String get foodSearchNoResultsMessage =>
+      'Versuchen Sie einen anderen Suchbegriff oder fügen Sie das Lebensmittel manuell hinzu.';
 
   @override
   String get foodAddManually => 'Manuell hinzufügen';

@@ -468,19 +468,19 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         weeksTotal: resolvedPlanWeeks,
     };
 
-    try {
-        const workouts = generateTrainingPlan(planConfig);
+    const workouts = generateTrainingPlan(planConfig);
 
-        if (workouts.length > 0) {
-            await prisma.workout.createMany({
-                data: mapWorkoutsForDb(workouts, { goalId: goal.id }),
-            });
-        }
-    } catch (error) {
-        logger.error('Failed to generate training plan', {
+    if (workouts.length > 0) {
+        await prisma.workout.createMany({
+            data: mapWorkoutsForDb(workouts, { goalId: goal.id }),
+        });
+    } else {
+        logger.warn('Plan generation returned 0 workouts', {
             userId,
             goalId: goal.id,
-            error: error instanceof Error ? error.message : String(error),
+            vdot: effectiveVdot,
+            raceType,
+            planWeeks: phases.planWeeks,
         });
     }
 
@@ -515,59 +515,50 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
             createdSubGoals.push(subGoal);
 
             if (sg.raceType && sg.raceDate) {
-                try {
-                    const subRaceDate = new Date(sg.raceDate);
-                    if (subRaceDate > now) {
-                        const weeksAvailable = Math.max(1, Math.ceil((subRaceDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
-                        const priority = sg.priority || 'SECONDARY';
-                        const subPhaseWeeks = Math.max(1, weeksAvailable - 1);
-                        const subTaper = Math.min(priority === 'TUNE_UP' ? 1 : phases.taperWeeks, subPhaseWeeks);
-                        const subPeak = Math.min(phases.peakWeeks, Math.max(0, Math.floor(subPhaseWeeks / 3)));
-                        const subBuild = Math.min(phases.buildWeeks, Math.max(0, subPhaseWeeks - subTaper - subPeak));
+                const subRaceDate = new Date(sg.raceDate);
+                if (subRaceDate > now) {
+                    const weeksAvailable = Math.max(1, Math.ceil((subRaceDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+                    const priority = sg.priority || 'SECONDARY';
+                    const subPhaseWeeks = Math.max(1, weeksAvailable - 1);
+                    const subTaper = Math.min(priority === 'TUNE_UP' ? 1 : phases.taperWeeks, subPhaseWeeks);
+                    const subPeak = Math.min(phases.peakWeeks, Math.max(0, Math.floor(subPhaseWeeks / 3)));
+                    const subBuild = Math.min(phases.buildWeeks, Math.max(0, subPhaseWeeks - subTaper - subPeak));
 
-                        const subWorkouts = generateTrainingPlan({
-                            vdot: effectiveVdot,
-                            raceType: sg.raceType as RaceType,
-                            raceDate: subRaceDate,
-                            startDate,
-                            sport: subGoalSport,
-                            runsPerWeek: runsPerWeek ?? 4,
-                            ridesPerWeek: ridesPerWeek ?? (subGoalSport === 'TRIATHLON' ? 2 : 0),
-                            swimsPerWeek: swimsPerWeek ?? (subGoalSport === 'TRIATHLON' ? 2 : 0),
-                            strengthPerWeek: strengthPerWeek ?? 0,
-                            weeklyMileageGoal: weeklyMileageGoal ?? null,
-                            taperWeeks: subTaper,
-                            peakWeeks: subPeak,
-                            buildWeeks: subBuild,
-                            longRunDay: longRunDay ?? 0,
-                            workoutDay: workoutDay ?? 3,
-                            swimDay: swimDay ?? undefined,
-                            restDays: restDays ?? undefined,
-                            weeksTotal: weeksAvailable,
-                        });
-
-                        const parentRaceDate = raceDate ? new Date(raceDate) : null;
-                        const filteredWorkouts = parentRaceDate
-                            ? subWorkouts.filter(w => w.date <= parentRaceDate)
-                            : subWorkouts;
-
-                        if (filteredWorkouts.length > 0) {
-                            await prisma.workout.createMany({
-                                data: mapWorkoutsForDb(filteredWorkouts, {
-                                    goalId: goal.id,
-                                    subGoalId: subGoal.id,
-                                    descriptionPrefix: `[${sg.name.trim()}] `,
-                                }),
-                            });
-                        }
-                    }
-                } catch (err) {
-                    logger.error('Failed to generate sub-goal workouts', {
-                        userId,
-                        goalId: goal.id,
-                        subGoalName: sg.name,
-                        error: err instanceof Error ? err.message : String(err),
+                    const subWorkouts = generateTrainingPlan({
+                        vdot: effectiveVdot,
+                        raceType: sg.raceType as RaceType,
+                        raceDate: subRaceDate,
+                        startDate,
+                        sport: subGoalSport,
+                        runsPerWeek: runsPerWeek ?? 4,
+                        ridesPerWeek: ridesPerWeek ?? (subGoalSport === 'TRIATHLON' ? 2 : 0),
+                        swimsPerWeek: swimsPerWeek ?? (subGoalSport === 'TRIATHLON' ? 2 : 0),
+                        strengthPerWeek: strengthPerWeek ?? 0,
+                        weeklyMileageGoal: weeklyMileageGoal ?? null,
+                        taperWeeks: subTaper,
+                        peakWeeks: subPeak,
+                        buildWeeks: subBuild,
+                        longRunDay: longRunDay ?? 0,
+                        workoutDay: workoutDay ?? 3,
+                        swimDay: swimDay ?? undefined,
+                        restDays: restDays ?? undefined,
+                        weeksTotal: weeksAvailable,
                     });
+
+                    const parentRaceDate = raceDate ? new Date(raceDate) : null;
+                    const filteredWorkouts = parentRaceDate
+                        ? subWorkouts.filter(w => w.date <= parentRaceDate)
+                        : subWorkouts;
+
+                    if (filteredWorkouts.length > 0) {
+                        await prisma.workout.createMany({
+                            data: mapWorkoutsForDb(filteredWorkouts, {
+                                goalId: goal.id,
+                                subGoalId: subGoal.id,
+                                descriptionPrefix: `[${sg.name.trim()}] `,
+                            }),
+                        });
+                    }
                 }
             }
         }

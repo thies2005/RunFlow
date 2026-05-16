@@ -1,16 +1,24 @@
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { createSnapshot } from '@/lib/plan/snapshot';
+import { getAuthenticatedUser } from '@/lib/mobile/auth';
 
 type RouteContext = { params: Promise<{ goalId: string; subGoalId: string }> };
 
+async function authenticateUser(request: NextRequest): Promise<string | null> {
+    const user = await getAuthenticatedUser(request);
+    if (user) return user.id;
+    const session = await auth();
+    return session?.user?.id ?? null;
+}
+
 export async function PATCH(req: Request, ctx: RouteContext) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = await authenticateUser(req);
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -26,7 +34,7 @@ export async function PATCH(req: Request, ctx: RouteContext) {
         const { goalId, subGoalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId },
         });
 
         if (!goal) {
@@ -71,8 +79,8 @@ export async function PATCH(req: Request, ctx: RouteContext) {
 
 export async function DELETE(req: Request, ctx: RouteContext) {
     try {
-        const session = await auth();
-        if (!session?.user?.id) {
+        const userId = await authenticateUser(req);
+        if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -88,7 +96,7 @@ export async function DELETE(req: Request, ctx: RouteContext) {
         const { goalId, subGoalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId },
         });
 
         if (!goal) {
@@ -105,11 +113,18 @@ export async function DELETE(req: Request, ctx: RouteContext) {
 
         await createSnapshot(goalId, 'Before sub-goal delete', 'delete_sub_goal');
 
-        await prisma.workout.deleteMany({ where: { subGoalId } });
+        const now = new Date();
+        await prisma.workout.deleteMany({
+            where: {
+                subGoalId,
+                isCompleted: false,
+                scheduledDate: { gte: now },
+            },
+        });
 
         await prisma.goal.update({
             where: { id: subGoalId },
-            data: { deletedAt: new Date(), isActive: false },
+            data: { deletedAt: now, isActive: false },
         });
 
         return NextResponse.json({ success: true });

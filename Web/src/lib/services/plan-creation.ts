@@ -30,9 +30,6 @@ export function mapWorkoutsForDb(
         targetDuration: w.targetDuration ?? 0,
         targetHrZone: w.targetHrZone ?? null,
         phase: w.phase ?? 'BASE',
-        sport: w.sport ?? 'RUN',
-        displayDesc: w.displayDescription ?? null,
-        intensityZone: w.intensityZone ?? null,
         isCompleted: false,
     }));
 }

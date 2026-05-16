@@ -56,23 +56,10 @@ export async function getRedisClient(): Promise<RedisClient | null> {
 
     try {
         const ioredis = (await import('ioredis')).default;
-
-        let url = redisUrl;
         const redisPassword = process.env.REDIS_PASSWORD;
 
-        if (redisPassword) {
-            try {
-                const parsed = new URL(url);
-                if (parsed.password !== redisPassword) {
-                    parsed.password = redisPassword;
-                    url = parsed.toString();
-                }
-            } catch {
-                url = `redis://:${redisPassword}@${url.replace(/^redis:\/\//, '')}`;
-            }
-        }
-
-        const client = new ioredis(url, {
+        const client = new ioredis(redisUrl, {
+            password: redisPassword || undefined,
             maxRetriesPerRequest: 1,
             retryStrategy(times) {
                 // Keep retrying in the background indefinitely, backing off to 5 seconds

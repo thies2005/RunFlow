@@ -69,8 +69,19 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.dashboard),
+          onPressed: () => context.go('/dashboard'),
+          tooltip: S.of(context).dashboardTitle,
+        ),
         title: Text(goal.name),
         actions: [
+          if (!_reorderMode)
+            IconButton(
+              icon: const Icon(Icons.analytics_outlined),
+              onPressed: () => context.push('/analytics'),
+              tooltip: 'Analysis',
+            ),
           if (!_reorderMode)
             FilledButton.tonal(
               onPressed: () => setState(() => _reorderMode = true),
@@ -95,11 +106,20 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
           if (!_reorderMode)
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'delete') {
+                if (value == 'create_new') {
+                  _confirmCreateNew();
+                } else if (value == 'delete') {
                   _confirmDelete();
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'create_new',
+                  child: ListTile(
+                    leading: const Icon(Icons.add_circle_outline),
+                    title: Text(S.of(context).planCreateGoal),
+                  ),
+                ),
                 PopupMenuItem(
                   value: 'delete',
                   child: ListTile(
@@ -301,6 +321,42 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
             }),
         ],
       ),
+      ),
+    );
+  }
+
+  void _confirmCreateNew() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Create New Plan'),
+        content: const Text('This will delete your current plan and all its workouts. Are you sure you want to continue?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(S.of(context).actionCancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              try {
+                await ref.read(goalsProvider.notifier).deleteGoal(widget.goal.id);
+                if (!mounted) return;
+                await context.push('/goals/new');
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(S.of(context).goalDeleteFailed(e.toString()))),
+                  );
+                }
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: const Text('Create New'),
+          ),
+        ],
       ),
     );
   }

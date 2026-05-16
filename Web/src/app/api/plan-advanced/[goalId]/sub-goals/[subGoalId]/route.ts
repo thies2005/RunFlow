@@ -15,7 +15,7 @@ async function authenticateUser(request: NextRequest): Promise<string | null> {
     return session?.user?.id ?? null;
 }
 
-export async function PATCH(req: Request, ctx: RouteContext) {
+export async function PATCH(req: NextRequest, ctx: RouteContext) {
     try {
         const userId = await authenticateUser(req);
         if (!userId) {
@@ -77,7 +77,7 @@ export async function PATCH(req: Request, ctx: RouteContext) {
     }
 }
 
-export async function DELETE(req: Request, ctx: RouteContext) {
+export async function DELETE(req: NextRequest, ctx: RouteContext) {
     try {
         const userId = await authenticateUser(req);
         if (!userId) {

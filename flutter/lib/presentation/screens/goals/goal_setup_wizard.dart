@@ -869,8 +869,8 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                 TextButton.icon(
                   onPressed: () =>
                       setState(() => _isManualMode = !_isManualMode),
-                  icon: Icon(_isManualMode ? Icons.tune : Icons.edit),
-                  label: Text(_isManualMode ? 'Prediction' : 'Manual'),
+                  icon: Icon(_isManualMode ? Icons.tune : Icons.auto_awesome),
+                  label: Text(_isManualMode ? 'Guided' : 'AI Assisted'),
                 ),
                 if (_sliderGoalTimeSeconds != null)
                   TextButton(
@@ -2177,8 +2177,8 @@ class _TargetTimeStep extends StatelessWidget {
             children: [
               TextButton.icon(
                 onPressed: () => onManualModeChanged(!isManualMode),
-                icon: Icon(isManualMode ? Icons.tune : Icons.edit),
-                label: Text(isManualMode ? 'Prediction' : 'Manual'),
+                icon: Icon(isManualMode ? Icons.tune : Icons.auto_awesome),
+                label: Text(isManualMode ? 'Guided' : 'AI Assisted'),
               ),
               if (sliderGoalTimeSeconds != null)
                 TextButton(

@@ -1275,6 +1275,27 @@ class SDe extends S {
   String get nutritionScan => 'Scannen';
 
   @override
+  String get nutritionManual => 'Manuell';
+
+  @override
+  String get foodSearchTitle => 'Lebensmittel hinzufügen';
+
+  @override
+  String get foodSearchHint => 'Nach einem Lebensmittel suchen...';
+
+  @override
+  String get foodSearchNoResults => 'Keine Ergebnisse gefunden';
+
+  @override
+  String get foodSearchNoResultsMessage => 'Versuchen Sie einen anderen Suchbegriff oder fügen Sie das Lebensmittel manuell hinzu.';
+
+  @override
+  String get foodAddManually => 'Manuell hinzufügen';
+
+  @override
+  String get nutritionPortion => 'Portion';
+
+  @override
   String nutritionKcalRemaining(int kcal) {
     return '$kcal kcal verbleibend';
   }

@@ -1260,6 +1260,27 @@ class SEn extends S {
   String get nutritionScan => 'Scan';
 
   @override
+  String get nutritionManual => 'Manual';
+
+  @override
+  String get foodSearchTitle => 'Add Food';
+
+  @override
+  String get foodSearchHint => 'Search for a food...';
+
+  @override
+  String get foodSearchNoResults => 'No results found';
+
+  @override
+  String get foodSearchNoResultsMessage => 'Try a different search term or add the food manually.';
+
+  @override
+  String get foodAddManually => 'Add Manually';
+
+  @override
+  String get nutritionPortion => 'Portion';
+
+  @override
   String nutritionKcalRemaining(int kcal) {
     return '$kcal kcal remaining';
   }

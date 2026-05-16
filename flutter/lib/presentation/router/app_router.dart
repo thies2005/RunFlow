@@ -30,6 +30,7 @@ import 'package:runflow_flutter/presentation/screens/settings/logs_screen.dart';
 import 'package:runflow_flutter/presentation/screens/chat/chat_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/health_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/barcode_scanner_screen.dart';
+import 'package:runflow_flutter/presentation/screens/health/food_search_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/nutrition_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/supplements_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/body_screen.dart';
@@ -134,6 +135,11 @@ GoRouter createRouter(Ref ref) {
         builder: (context, state) => const BarcodeScannerScreen(),
       ),
       GoRoute(
+        path: '/health/food-search',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const FoodSearchScreen(),
+      ),
+      GoRoute(
         path: '/health/nutrition',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const NutritionScreen(),
@@ -172,11 +178,6 @@ GoRouter createRouter(Ref ref) {
         path: '/health/ai-scan',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AiScanScreen(),
-      ),
-      GoRoute(
-        path: '/health/readiness',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const ReadinessDetailScreen(),
       ),
       GoRoute(
         path: '/profile/edit',

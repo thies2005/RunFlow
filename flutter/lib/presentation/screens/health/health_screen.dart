@@ -243,7 +243,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
             _QuickActionChip(
               icon: Icons.add,
               label: S.of(context).healthLogFood,
-              onTap: () => context.push('/health/nutrition'),
+              onTap: () => context.push('/health/food-search'),
             ),
           ],
         ),

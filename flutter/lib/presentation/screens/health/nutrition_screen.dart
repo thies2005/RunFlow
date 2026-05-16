@@ -72,9 +72,7 @@ class NutritionScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => nutritionAsync.whenData(
-          (n) => _showAddFoodDialog(context, ref, n),
-        ),
+        onPressed: () => context.push('/health/food-search'),
         icon: const Icon(Icons.add),
         label: Text(S.of(context).nutritionAddFood),
         backgroundColor: AppColors.primary,
@@ -263,128 +261,6 @@ class NutritionScreen extends ConsumerWidget {
     });
   }
 
-  void _showAddFoodDialog(BuildContext context, WidgetRef ref, NutritionLog nutrition) {
-    final nameCtl = TextEditingController();
-    final calCtl = TextEditingController();
-    final proteinCtl = TextEditingController();
-    final carbsCtl = TextEditingController();
-    final fatCtl = TextEditingController();
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 24, right: 24, top: 24,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.onSurfaceVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(S.of(context).nutritionAddFood, style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 16),
-            TextField(controller: nameCtl, decoration: InputDecoration(labelText: S.of(context).nutritionFoodName, prefixIcon: const Icon(Icons.restaurant))),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(child: TextField(controller: calCtl, decoration: InputDecoration(labelText: S.of(context).nutritionCaloriesKcal), keyboardType: TextInputType.number)),
-                const SizedBox(width: 8),
-                Expanded(child: TextField(controller: proteinCtl, decoration: InputDecoration(labelText: S.of(context).nutritionProteinG), keyboardType: TextInputType.number)),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(child: TextField(controller: carbsCtl, decoration: InputDecoration(labelText: S.of(context).nutritionCarbsG), keyboardType: TextInputType.number)),
-                const SizedBox(width: 8),
-                Expanded(child: TextField(controller: fatCtl, decoration: InputDecoration(labelText: S.of(context).nutritionFatG), keyboardType: TextInputType.number)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final result = await ctx.push<FoodItem?>('/health/scan');
-                      if (result != null) {
-                        nameCtl.text = result.name;
-                        calCtl.text = result.calories.toString();
-                        proteinCtl.text = result.protein.toString();
-                        carbsCtl.text = result.carbs.toString();
-                        fatCtl.text = result.fat.toString();
-                      }
-                    },
-                    icon: const Icon(Icons.qr_code_scanner),
-                    label: Text(S.of(context).nutritionScan),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final result = await ctx.push<FoodItem?>('/health/ai-scan');
-                      if (result != null) {
-                        nameCtl.text = result.name;
-                        calCtl.text = result.calories.toString();
-                        proteinCtl.text = result.protein.toString();
-                        carbsCtl.text = result.carbs.toString();
-                        fatCtl.text = result.fat.toString();
-                      }
-                    },
-                    icon: const Icon(Icons.auto_awesome),
-                    label: Text(S.of(context).healthAiFoodScan),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () {
-                  final food = FoodItem(
-                    id: 0,
-                    name: nameCtl.text.isNotEmpty ? nameCtl.text : 'Manual Entry',
-                    calories: double.tryParse(calCtl.text) ?? 0,
-                    protein: double.tryParse(proteinCtl.text) ?? 0,
-                    carbs: double.tryParse(carbsCtl.text) ?? 0,
-                    fat: double.tryParse(fatCtl.text) ?? 0,
-                    servingSize: 100,
-                  );
-                  ref.read(nutritionProvider(today).notifier).logFood(food);
-                  Navigator.pop(ctx);
-                },
-                child: Text(S.of(context).actionAdd),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).whenComplete(() {
-      nameCtl.dispose();
-      calCtl.dispose();
-      proteinCtl.dispose();
-      carbsCtl.dispose();
-      fatCtl.dispose();
-    });
-  }
 }
 
 class _NutritionContent extends StatelessWidget {

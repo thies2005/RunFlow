@@ -2461,6 +2461,48 @@ abstract class S {
   /// **'Scan'**
   String get nutritionScan;
 
+  /// No description provided for @nutritionManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get nutritionManual;
+
+  /// No description provided for @foodSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Food'**
+  String get foodSearchTitle;
+
+  /// No description provided for @foodSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a food...'**
+  String get foodSearchHint;
+
+  /// No description provided for @foodSearchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get foodSearchNoResults;
+
+  /// No description provided for @foodSearchNoResultsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search term or add the food manually.'**
+  String get foodSearchNoResultsMessage;
+
+  /// No description provided for @foodAddManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Manually'**
+  String get foodAddManually;
+
+  /// No description provided for @nutritionPortion.
+  ///
+  /// In en, this message translates to:
+  /// **'Portion'**
+  String get nutritionPortion;
+
   /// No description provided for @nutritionKcalRemaining.
   ///
   /// In en, this message translates to:

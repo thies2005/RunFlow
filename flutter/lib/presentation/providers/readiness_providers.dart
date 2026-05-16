@@ -204,5 +204,63 @@ Future<List<DailyReadinessRecord>> readinessHistory(
   ReadinessHistoryRange range,
 ) async {
   final repo = await ref.read(readinessRepositoryProvider.future);
-  return repo.getHistory(range.start, range.end);
+  final records = await repo.getHistory(range.start, range.end);
+
+  final totalDays = range.end.difference(range.start).inDays + 1;
+  final existingDates = <DateTime>{};
+  for (final r in records) {
+    existingDates.add(DateTime(r.date.year, r.date.month, r.date.day));
+  }
+
+  final missingDays = <DateTime>[];
+  for (var i = 0; i < totalDays; i++) {
+    final date = DateTime(
+      range.start.year,
+      range.start.month,
+      range.start.day,
+    ).add(Duration(days: i));
+    if (!existingDates.contains(date)) {
+      missingDays.add(date);
+    }
+  }
+
+  if (missingDays.isEmpty) return records;
+
+  try {
+    final orchestrator = ref.read(readinessOrchestratorProvider);
+    final rhrHistory =
+        await orchestrator.healthConnect.readRestingHeartRateHistory(30);
+    final sleepHistory =
+        await orchestrator.healthConnect.readSleepHistory(28);
+
+    for (final missingDate in missingDays) {
+      final inputs = await orchestrator.collectInputsForDate(
+        targetDate: missingDate,
+        rhrHistory: rhrHistory,
+        sleepHistory: sleepHistory,
+      );
+      final result = await orchestrator.computeReadiness(inputs: inputs);
+
+      if (result.state == ReadinessState.unavailable) continue;
+
+      final record = DailyReadinessRecord(
+        date: missingDate,
+        rhr: inputs.rhr,
+        sleep: inputs.sleep,
+        load: inputs.load,
+        componentScores: result.componentScores,
+        compositeScore: result.compositeScore,
+        state: result.state,
+        confidence: result.confidence,
+        reasons: result.reasons,
+        computedAt: DateTime.now(),
+      );
+
+      await repo.saveDailyRecord(record);
+    }
+
+    return repo.getHistory(range.start, range.end);
+  } catch (_) {
+    return records;
+  }
 }

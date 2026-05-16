@@ -52,6 +52,40 @@ String _confidenceLabel(DataConfidence confidence) {
   }
 }
 
+List<FlSpot> _interpolateSpots(Map<int, double> scoreMap, int totalDays) {
+  if (scoreMap.isEmpty) return [];
+
+  final offsets = scoreMap.keys.toList()..sort();
+  final spots = <FlSpot>[];
+
+  for (var i = 0; i < totalDays; i++) {
+    if (scoreMap.containsKey(i)) {
+      spots.add(FlSpot(i.toDouble(), scoreMap[i]!));
+      continue;
+    }
+
+    int? prev, next;
+    for (final o in offsets) {
+      if (o < i) prev = o;
+      if (o > i && next == null) next = o;
+    }
+
+    double value;
+    if (prev != null && next != null) {
+      final t = (i - prev) / (next - prev);
+      value = scoreMap[prev]! + (scoreMap[next]! - scoreMap[prev]!) * t;
+    } else if (prev != null) {
+      value = scoreMap[prev]!;
+    } else {
+      value = scoreMap[next!]!;
+    }
+
+    spots.add(FlSpot(i.toDouble(), value));
+  }
+
+  return spots;
+}
+
 class ReadinessDetailScreen extends ConsumerStatefulWidget {
   const ReadinessDetailScreen({super.key});
 
@@ -538,9 +572,11 @@ class _HistoryChart extends ConsumerWidget {
                 );
               }
 
-              final spots = dayMap.entries
-                  .map((e) => FlSpot(e.key.toDouble(), e.value.compositeScore))
-                  .toList();
+              final scoreMap = <int, double>{};
+              for (final e in dayMap.entries) {
+                scoreMap[e.key] = e.value.compositeScore;
+              }
+              final spots = _interpolateSpots(scoreMap, 7);
 
               return LineChart(
                 LineChartData(

@@ -843,6 +843,9 @@
   "goalWizardMileageRecommendation": "Empfohlene Wochenkilometer basierend auf deiner Renndistanz",
   "goalWizardPlanStartDateLabel": "Planstartdatum",
   "goalWizardPlanStartDateAfterRace": "Das Planstartdatum muss vor dem Renndatum liegen",
+  "goalWizardTargetTimeRequired": "Bitte gib eine gültige Zielzeit größer als Null ein",
+  "goalWizardVolumeTooLow": "Wochenkilometer müssen mindestens 5 km betragen bei mindestens 1 Lauf pro Woche",
+  "goalWizardScheduleConflict": "Langer Lauf und Qualitätseinheit können nicht am selben Tag stattfinden",
 
   "authStravaNotConfigured": "Strava-Anmeldung ist für diesen Build nicht konfiguriert.",
   "authEnterEmailPassword": "Bitte E-Mail und Passwort eingeben.",
@@ -994,5 +997,8 @@
   "raceTypeOlympicTri": "Olympischer Triathlon",
   "raceTypeHalfIronman": "Half-Ironman",
   "raceTypeFullIronman": "Ironman",
-  "raceTypeCustomTri": "Benutzerdefinierter Triathlon"
+  "raceTypeCustomTri": "Benutzerdefinierter Triathlon",
+
+  "goalWeeklyMileageDisplay": "{value} km/Wo.",
+  "goalRunsPerWeekDisplay": "{count}x / Wo."
 }

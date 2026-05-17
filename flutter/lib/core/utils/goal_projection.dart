@@ -83,12 +83,39 @@ class ProjectedGoalResult {
   final double shapeImprovementPercent;
 }
 
+/// Calculates the expected VDOT improvement ratio based on training parameters.
+///
+/// Returns a coefficient in the range [1.0, 1.15] representing how much a
+/// runner's VDOT is expected to improve over the training plan. A value of
+/// 1.0 means no improvement; 1.15 means up to 15% improvement.
+///
+/// The model uses a linear approximation of the training adaptation curves
+/// described in Daniels (2014), *Daniels' Running Formula*, combining three
+/// independent contributions:
+///
+/// - **Duration** ([durationWeeks]): longer plans allow more adaptation.
+/// - **Frequency** ([runsPerWeek]): more sessions per week accelerate gains.
+/// - **Volume** ([weeklyVolumeKm]): higher weekly mileage builds aerobic base.
+///
+/// An assertion + clamp guardrail at 1.20 catches unexpected inputs while
+/// still returning a safe value in release builds.
+///
+/// **Parameters:**
+/// - [durationWeeks] – plan length in weeks (int, >= 0).
+/// - [runsPerWeek]   – scheduled runs per week (int, >= 0).
+/// - [weeklyVolumeKm] – target weekly mileage in kilometres (double, >= 0).
+///
+/// **Output range:** 1.0 (no improvement) … 1.15 (maximum 15% improvement).
+///
+/// **Scientific basis:** linear approximation of Daniels (2014) training
+/// adaptation curves, with empirically-tuned per-contribution rates.
 double calculateProgressionCoefficient(
   int durationWeeks,
   int runsPerWeek,
   double weeklyVolumeKm,
 ) {
   if (durationWeeks <= 0) return 1.0;
+  if (runsPerWeek <= 0) return 1.0;
 
   final durationContribution =
       (durationWeeks / 4) * _durationImprovementRate;
@@ -100,7 +127,11 @@ double calculateProgressionCoefficient(
   final progressionFactor =
       1 + durationContribution + frequencyContribution + volumeContribution;
 
-  return min(progressionFactor, _maxImprovementFactor);
+  final result = min(progressionFactor, _maxImprovementFactor);
+
+  assert(result >= 1.0 && result <= 1.20,
+      'Progression coefficient $result out of expected range [1.0, 1.20]');
+  return result.clamp(1.0, 1.20);
 }
 
 double calculateShapePenalty(

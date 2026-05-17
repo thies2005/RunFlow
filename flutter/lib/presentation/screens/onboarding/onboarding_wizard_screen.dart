@@ -362,7 +362,8 @@ class _SyncDataStepState extends ConsumerState<_SyncDataStep> {
       await service.readActivities();
       ref.read(onboardingProvider.notifier).setSyncing(false);
       await ref.read(onboardingProvider.notifier).markSynced();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('OnboardingWizard: Health Connect sync failed: $e');
       ref.read(onboardingProvider.notifier).setSyncing(false);
     }
   }

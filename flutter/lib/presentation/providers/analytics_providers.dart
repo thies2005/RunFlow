@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/domain/entities/analytics_entities.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
@@ -41,7 +42,9 @@ Future<AnalyticsStats> analyticsStats(Ref ref) async {
               : stats.tsb,
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('AnalyticsStats: Failed to enrich stats from history: $e');
+    }
   }
 
   return stats;

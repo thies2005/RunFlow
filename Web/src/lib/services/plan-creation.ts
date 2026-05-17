@@ -309,9 +309,18 @@ function resolveSubGoalSport(
     return resolveDbSport(parentSport);
 }
 
+/**
+ * Creates a training plan with workouts.
+ *
+ * UNIT CONTRACT:
+ * - weeklyMileageGoal: METERS (stored in DB as meters)
+ * - maxLongRunKm: KILOMETERS (despite the km suffix, converted internally)
+ * - All workout targetDistance: METERS
+ * - All workout targetPace: SECONDS PER KM
+ */
 export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<CreatePlanResult> {
     const {
-        userId, name, raceType, raceDate, targetTime, weeklyMileageGoal,
+        userId, name, raceType, raceDate, targetTime,
         runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
         maxLongRunKm,
         longRunDay, workoutDay, swimDay, restDays,
@@ -323,8 +332,17 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         subGoals,
     } = input;
 
+    let weeklyMileageGoal = input.weeklyMileageGoal ?? null;
+
+    // Sanity check: weeklyMileageGoal should be in meters (> 1000 for any
+    // reasonable training plan). If it's < 200, it was likely passed in km.
+    if (weeklyMileageGoal && weeklyMileageGoal > 0 && weeklyMileageGoal < 200) {
+        console.warn(`weeklyMileageGoal=${weeklyMileageGoal} appears to be in km, not meters. Auto-converting.`);
+        weeklyMileageGoal = weeklyMileageGoal * 1000;
+    }
+
     const isNoRace = !raceType;
-    const effectiveSport = sport ?? (isNoRace ? 'RUN' : 'RUN');
+    const effectiveSport = sport || 'RUN';
 
     if (deactivateExisting) {
         await prisma.goal.updateMany({

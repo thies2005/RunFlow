@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -59,7 +60,8 @@ class NotificationServiceImpl implements NotificationService {
       final tzName = 'Etc/GMT$sign$h${m != '00' ? ':$m' : ''}';
       try {
         tz.setLocalLocation(tz.getLocation(tzName));
-      } catch (_) {
+      } catch (e) {
+        debugPrint('NotificationService: Failed to set local timezone: $e');
         tz.setLocalLocation(tz.getLocation('UTC'));
       }
 
@@ -81,7 +83,8 @@ class NotificationServiceImpl implements NotificationService {
         onDidReceiveNotificationResponse: _onNotificationResponse,
       );
       _initialized = true;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('NotificationService: Failed to initialize: $e');
       _initialized = false;
     }
   }

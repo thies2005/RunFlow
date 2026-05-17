@@ -9,6 +9,7 @@ import 'package:runflow_flutter/core/utils/formatters.dart';
 import 'package:runflow_flutter/core/utils/goal_projection.dart';
 import 'package:runflow_flutter/core/utils/triathlon_estimator.dart';
 import 'package:runflow_flutter/core/utils/athlete_defaults.dart';
+import 'package:runflow_flutter/core/utils/plan_defaults.dart';
 import 'package:runflow_flutter/core/utils/race_defaults.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
@@ -27,20 +28,24 @@ class GoalSetupWizard extends ConsumerStatefulWidget {
 class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   int _currentStep = 0;
   final _nameController = TextEditingController();
-  RaceType _selectedRaceType = RaceType.fiveK;
+  static const RaceType _initialRaceType = RaceType.fiveK;
+  static final RaceDefaults _initialDefaults =
+      PlanDefaults.resolve(_initialRaceType);
+
+  RaceType _selectedRaceType = _initialRaceType;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 42));
   DateTime _planStartDate = DateTime.now();
   bool _hasTargetTime = false;
-  int _runsPerWeek = 4;
-  int _ridesPerWeek = 0;
-  int _swimsPerWeek = 0;
-  int _strengthPerWeek = 0;
-  double _weeklyMileageGoal = 28.0;
-  double _maxLongRunKm = 18.0;
+  int _runsPerWeek = _initialDefaults.runsPerWeek;
+  int _ridesPerWeek = _initialDefaults.ridesPerWeek;
+  int _swimsPerWeek = _initialDefaults.swimsPerWeek;
+  int _strengthPerWeek = _initialDefaults.strengthPerWeek;
+  double _weeklyMileageGoal = _initialDefaults.weeklyVolumeKm;
+  double _maxLongRunKm = _initialDefaults.maxLongRunKm;
   int _planWeeks = 12;
-  int _taperWeeks = 1;
-  int _peakWeeks = 2;
-  int _buildWeeks = 4;
+  int _taperWeeks = _initialDefaults.taperWeeks;
+  int _peakWeeks = _initialDefaults.peakWeeks;
+  int _buildWeeks = _initialDefaults.buildWeeks;
   int _longRunDay = 0;
   int _qualityDay = 3;
   int _swimDay = 1;
@@ -119,8 +124,34 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         }
         return true;
       case 3:
+        if (_hasTargetTime) {
+          final stats = ref.read(analyticsStatsProvider).value;
+          final vo2max = stats?.effectiveVO2max ?? 0;
+          if (vo2max <= 0) {
+            final hours = int.tryParse(_hoursController.text) ?? 0;
+            final minutes = int.tryParse(_minutesController.text) ?? 0;
+            final seconds = int.tryParse(_secondsController.text) ?? 0;
+            final total = hours * 3600 + minutes * 60 + seconds;
+            if (total <= 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(S.of(context).goalWizardTargetTimeRequired),
+                ),
+              );
+              return false;
+            }
+          }
+        }
         return true;
       case 4:
+        if (_weeklyMileageGoal < 5.0 || _runsPerWeek < 1) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(S.of(context).goalWizardVolumeTooLow),
+            ),
+          );
+          return false;
+        }
         return true;
       case 5:
         if (_taperWeeks + _peakWeeks + _buildWeeks > _effectivePlanWeeks) {
@@ -133,6 +164,14 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         }
         return true;
       case 6:
+        if (_longRunDay == _qualityDay) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(S.of(context).goalWizardScheduleConflict),
+            ),
+          );
+          return false;
+        }
         return true;
       case 7:
         return true;

@@ -2597,6 +2597,18 @@ class SDe extends S {
       'Das Planstartdatum muss vor dem Renndatum liegen';
 
   @override
+  String get goalWizardTargetTimeRequired =>
+      'Bitte gib eine gültige Zielzeit größer als Null ein';
+
+  @override
+  String get goalWizardVolumeTooLow =>
+      'Wochenkilometer müssen mindestens 5 km betragen bei mindestens 1 Lauf pro Woche';
+
+  @override
+  String get goalWizardScheduleConflict =>
+      'Langer Lauf und Qualitätseinheit können nicht am selben Tag stattfinden';
+
+  @override
   String get authStravaNotConfigured =>
       'Strava-Anmeldung ist für diesen Build nicht konfiguriert.';
 
@@ -3132,4 +3144,14 @@ class SDe extends S {
 
   @override
   String get raceTypeCustomTri => 'Benutzerdefinierter Triathlon';
+
+  @override
+  String goalWeeklyMileageDisplay(String value) {
+    return '$value km/Wo.';
+  }
+
+  @override
+  String goalRunsPerWeekDisplay(int count) {
+    return '${count}x / Wo.';
+  }
 }

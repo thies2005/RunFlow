@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/data/repositories/consent_repository_impl.dart';
 import 'package:runflow_flutter/domain/entities/consent_entities.dart';
@@ -14,7 +15,8 @@ final consentStatusProvider = FutureProvider<ConsentStatus>((ref) async {
   try {
     final repo = ref.read(consentRepositoryProvider);
     return repo.checkConsent();
-  } catch (_) {
+  } catch (e) {
+    debugPrint('ConsentProviders: Failed to check consent: $e');
     return const ConsentStatus(needsReconsent: false);
   }
 });
@@ -33,7 +35,9 @@ class ConsentNotifier extends Notifier<ConsentStatus> {
       final repo = ref.read(consentRepositoryProvider);
       final status = await repo.checkConsent();
       state = status;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ConsentNotifier: Failed to check consent status: $e');
+    }
   }
 
   Future<bool> acceptAll() async {
@@ -45,7 +49,8 @@ class ConsentNotifier extends Notifier<ConsentStatus> {
       await prefs.setBool(_consentGivenKey, true);
       state = state.copyWith(needsReconsent: false);
       return true;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('ConsentNotifier: Failed to accept all consents: $e');
       return false;
     }
   }
@@ -56,7 +61,8 @@ class ConsentNotifier extends Notifier<ConsentStatus> {
       await repo.withdrawConsent(consentType);
       await _checkStatus();
       return true;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('ConsentNotifier: Failed to withdraw consent: $e');
       return false;
     }
   }

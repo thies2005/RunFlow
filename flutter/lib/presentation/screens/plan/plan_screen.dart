@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/core/utils/workout_theme.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
@@ -511,7 +512,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final color = _workoutColor();
+    final color = WorkoutTheme.color(workout.workoutType);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -528,7 +529,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
                     ? AppColors.success.withValues(alpha: 0.15)
                     : color.withValues(alpha: 0.15),
                 child: Icon(
-                  workout.isCompleted ? Icons.check : _workoutIcon(),
+                  workout.isCompleted ? Icons.check : WorkoutTheme.icon(workout.workoutType),
                   color: workout.isCompleted ? AppColors.success : color,
                   size: 18,
                 ),
@@ -547,7 +548,7 @@ class _PlanWorkoutCard extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            _workoutLabel(context),
+                            WorkoutTheme.label(context, workout.workoutType),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: color,
                               fontWeight: FontWeight.w600,
@@ -687,84 +688,6 @@ class _PlanWorkoutCard extends ConsumerWidget {
     );
   }
 
-  Color _workoutColor() {
-    return switch (workout.workoutType) {
-      WorkoutType.easy => AppColors.success,
-      WorkoutType.longRun => const Color(0xFF2196F3),
-      WorkoutType.tempo => const Color(0xFFFF9800),
-      WorkoutType.intervals => const Color(0xFFF44336),
-      WorkoutType.fartlek => const Color(0xFFFF5722),
-      WorkoutType.repetitions => const Color(0xFFE91E63),
-      WorkoutType.recovery => const Color(0xFF009688),
-      WorkoutType.race => const Color(0xFF9C27B0),
-      WorkoutType.rest => const Color(0xFF607D8B),
-      WorkoutType.crossTrain => const Color(0xFF00BCD4),
-      WorkoutType.ride => const Color(0xFF3F51B5),
-      WorkoutType.swim => const Color(0xFF0288D1),
-      WorkoutType.strength => const Color(0xFF795548),
-      WorkoutType.other => AppColors.onSurfaceVariant,
-      WorkoutType.brick => const Color(0xFF673AB7),
-      WorkoutType.openWaterSwim => const Color(0xFF0097A7),
-      WorkoutType.longRide => const Color(0xFF1565C0),
-      WorkoutType.rideIntervals => const Color(0xFF283593),
-      WorkoutType.swimDrill => const Color(0xFF00838F),
-      WorkoutType.transitionPractice => const Color(0xFF546E7A),
-      WorkoutType.doubleDay => const Color(0xFF6D4C41),
-    };
-  }
-
-  IconData _workoutIcon() {
-    return switch (workout.workoutType) {
-      WorkoutType.easy => Icons.directions_run,
-      WorkoutType.longRun => Icons.route,
-      WorkoutType.tempo => Icons.speed,
-      WorkoutType.intervals => Icons.flash_on,
-      WorkoutType.fartlek => Icons.shuffle,
-      WorkoutType.repetitions => Icons.repeat,
-      WorkoutType.recovery => Icons.self_improvement,
-      WorkoutType.race => Icons.emoji_events,
-      WorkoutType.rest => Icons.bedtime,
-      WorkoutType.crossTrain => Icons.directions_bike,
-      WorkoutType.ride => Icons.directions_bike,
-      WorkoutType.swim => Icons.pool,
-      WorkoutType.strength => Icons.fitness_center,
-      WorkoutType.other => Icons.fitness_center,
-      WorkoutType.brick => Icons.add_circle,
-      WorkoutType.openWaterSwim => Icons.waves,
-      WorkoutType.longRide => Icons.directions_bike,
-      WorkoutType.rideIntervals => Icons.flash_on,
-      WorkoutType.swimDrill => Icons.pool,
-      WorkoutType.transitionPractice => Icons.swap_horiz,
-      WorkoutType.doubleDay => Icons.calendar_today,
-    };
-  }
-
-  String _workoutLabel(BuildContext context) {
-    final s = S.of(context);
-    return switch (workout.workoutType) {
-      WorkoutType.easy => s.workoutTypeEasy,
-      WorkoutType.longRun => s.workoutTypeLong,
-      WorkoutType.tempo => s.workoutTypeTempo,
-      WorkoutType.intervals => s.workoutTypeInterval,
-      WorkoutType.recovery => s.workoutTypeRecovery,
-      WorkoutType.race => s.workoutTypeRace,
-      WorkoutType.other => s.workoutTypeOther,
-      WorkoutType.fartlek => 'Fartlek',
-      WorkoutType.repetitions => 'Reps',
-      WorkoutType.rest => 'Rest',
-      WorkoutType.crossTrain => 'Cross Train',
-      WorkoutType.ride => 'Ride',
-      WorkoutType.swim => 'Swim',
-      WorkoutType.strength => 'Strength',
-      WorkoutType.brick => 'Brick',
-      WorkoutType.openWaterSwim => 'OWS',
-      WorkoutType.longRide => 'Long Ride',
-      WorkoutType.rideIntervals => 'Ride Intervals',
-      WorkoutType.swimDrill => 'Swim Drill',
-      WorkoutType.transitionPractice => 'Transition',
-      WorkoutType.doubleDay => 'Double',
-    };
-  }
 }
 
 class _NoPlanState extends StatelessWidget {

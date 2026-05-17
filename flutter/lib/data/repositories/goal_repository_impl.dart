@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/constants/cache_keys.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
@@ -181,6 +182,7 @@ class GoalRepositoryImpl implements GoalRepository {
         '${ApiConstants.workoutsPath}/$id',
         data: request.toData().toJson(),
       );
+      await cacheDatasource.remove(CacheKeys.goals);
       return Workout.fromJson(
         response.data as Map<String, dynamic>,
       ).toDomain();
@@ -204,6 +206,7 @@ class GoalRepositoryImpl implements GoalRepository {
           'newDate': newDate.toIso8601String(),
         },
       );
+      await cacheDatasource.remove(CacheKeys.goals);
     } on DioException catch (e) {
       throw e.error is AppException
           ? e.error as AppException
@@ -302,6 +305,8 @@ class GoalRepositoryImpl implements GoalRepository {
     try {
       final result = await fetch();
       await cacheDatasource.set(key, encode(result));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Background cache refresh failed for $key: $e');
+    }
   }
 }

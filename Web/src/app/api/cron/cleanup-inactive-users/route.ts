@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/logging/logger';
 
 export async function GET(request: Request) {
-    // Only allow cron job requests (e.g. from Vercel)
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+        return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+    }
     const authHeader = request.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
+        const { searchParams } = new URL(request.url);
+        const dryRun = searchParams.get('dryRun') === 'true';
+
         // Find users inactive for more than 3 years (1095 days)
         const threeYearsAgo = new Date();
         threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
@@ -17,6 +24,13 @@ export async function GET(request: Request) {
             where: {
                 updatedAt: {
                     lt: threeYearsAgo,
+                },
+                sessions: {
+                    none: {
+                        expires: {
+                            gte: threeYearsAgo,
+                        },
+                    },
                 },
             },
             select: {
@@ -30,7 +44,16 @@ export async function GET(request: Request) {
 
         const userIds = inactiveUsers.map(u => u.id);
 
-        // Delete them (Casade will take care of related data)
+        if (dryRun) {
+            return NextResponse.json({
+                message: `Dry run: ${userIds.length} inactive users would be deleted.`,
+                userIds,
+            });
+        }
+
+        logger.info('Deleting inactive users for GDPR compliance', { userIds });
+
+        // Delete them (Cascade will take care of related data)
         const deleteResult = await prisma.user.deleteMany({
             where: {
                 id: {

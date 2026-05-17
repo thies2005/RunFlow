@@ -4813,6 +4813,24 @@ abstract class S {
   /// **'Plan start date must be before race date'**
   String get goalWizardPlanStartDateAfterRace;
 
+  /// No description provided for @goalWizardTargetTimeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid target time greater than zero'**
+  String get goalWizardTargetTimeRequired;
+
+  /// No description provided for @goalWizardVolumeTooLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly mileage must be at least 5 km with at least 1 run per week'**
+  String get goalWizardVolumeTooLow;
+
+  /// No description provided for @goalWizardScheduleConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Long run and quality workout cannot be on the same day'**
+  String get goalWizardScheduleConflict;
+
   /// No description provided for @authStravaNotConfigured.
   ///
   /// In en, this message translates to:
@@ -5814,6 +5832,18 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Custom Triathlon'**
   String get raceTypeCustomTri;
+
+  /// No description provided for @goalWeeklyMileageDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} km/wk'**
+  String goalWeeklyMileageDisplay(String value);
+
+  /// No description provided for @goalRunsPerWeekDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}x / wk'**
+  String goalRunsPerWeekDisplay(int count);
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

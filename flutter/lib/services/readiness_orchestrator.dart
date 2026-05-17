@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/domain/entities/readiness/readiness_entities.dart';
 import 'package:runflow_flutter/domain/repositories/activity_repository.dart';
 import 'package:runflow_flutter/domain/services/readiness/readiness_scoring_service.dart';
@@ -30,14 +31,18 @@ class ReadinessOrchestrator {
       if (rhrHistory.isNotEmpty) {
         rhrMetrics = _computeRhrMetrics(rhrHistory);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ReadinessOrchestrator: Failed to collect RHR inputs: $e');
+    }
 
     try {
       final sleepHistory = await healthConnect.readSleepHistory(28);
       if (sleepHistory.isNotEmpty) {
         sleepMetrics = _computeSleepMetrics(sleepHistory);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ReadinessOrchestrator: Failed to collect sleep inputs: $e');
+    }
 
     LoadMetrics load = const LoadMetrics(trimpStrategy: TrimpStrategy.unavailable);
     try {
@@ -83,7 +88,9 @@ class ReadinessOrchestrator {
           tsb: tsb,
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ReadinessOrchestrator: Failed to collect load inputs: $e');
+    }
 
     return ReadinessInputs(
       date: DateTime.now(),
@@ -127,7 +134,9 @@ class ReadinessOrchestrator {
           trendDirection: trendDirection,
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ReadinessOrchestrator: Failed to collect RHR inputs for date: $e');
+    }
 
     SleepMetrics? sleepMetrics;
     try {
@@ -163,7 +172,9 @@ class ReadinessOrchestrator {
           sleepEfficiency: sleepEfficiency,
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ReadinessOrchestrator: Failed to collect sleep inputs for date: $e');
+    }
 
     LoadMetrics load = const LoadMetrics(trimpStrategy: TrimpStrategy.unavailable);
     try {
@@ -217,7 +228,9 @@ class ReadinessOrchestrator {
           workloadRatio: workloadRatio,
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ReadinessOrchestrator: Failed to collect load inputs for date: $e');
+    }
 
     return ReadinessInputs(
       date: targetDate,

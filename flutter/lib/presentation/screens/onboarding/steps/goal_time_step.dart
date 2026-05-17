@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/core/utils/goal_projection.dart';
 import 'package:runflow_flutter/core/utils/vdot_calculator.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
@@ -26,23 +27,18 @@ class _GoalTimeStepState extends ConsumerState<GoalTimeStep> {
     final effectiveVO2max = statsAsync.value?.effectiveVO2max ?? 0;
     final shapePercent = (statsAsync.value?.marathonShape ?? 0) * 100;
 
-    final String raceDistanceKey = raceTypeToDistanceKey(
-      onboarding.raceType.name,
-    );
-
     ProjectedGoalResult? projection;
     if (effectiveVO2max > 0) {
       final calibratedVO2max = effectiveVO2max * onboarding.calibrationFactor;
       projection = calculateProjectedGoalTime(
         calibratedVO2max,
-        raceDistanceKey,
-        onboarding.computedPlanWeeks,
-        onboarding.runsPerWeek,
-        onboarding.weeklyMileage,
-        onboarding.taperWeeks,
-        onboarding.peakWeeks,
-        onboarding.buildWeeks,
-        shapePercent,
+        PlanSettings(
+          durationWeeks: onboarding.computedPlanWeeks,
+          runsPerWeek: onboarding.runsPerWeek,
+          weeklyMileageGoal: onboarding.weeklyMileage,
+          raceDistance: onboarding.raceType,
+        ),
+        currentShapePercent: shapePercent,
       );
     }
 

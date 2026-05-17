@@ -1,9 +1,8 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/core/utils/vdot.dart';
 import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 
 class TrainingPacesCard extends ConsumerWidget {
@@ -23,23 +22,23 @@ class TrainingPacesCard extends ConsumerWidget {
 
         final maxHr = stats.hrMax;
 
-        final easyFast = _velocityToPace(
-          _velocityAtPercentVO2max(vdot, 0.79),
+        final easyFast = velocityToPace(
+          velocityAtPercentVO2max(vdot, 0.79),
         );
-        final easySlow = _velocityToPace(
-          _velocityAtPercentVO2max(vdot, 0.65),
+        final easySlow = velocityToPace(
+          velocityAtPercentVO2max(vdot, 0.65),
         );
-        final marathon = _velocityToPace(
-          _velocityAtPercentVO2max(vdot, 0.78),
+        final marathon = velocityToPace(
+          velocityAtPercentVO2max(vdot, 0.78),
         );
-        final threshold = _velocityToPace(
-          _velocityAtPercentVO2max(vdot, 0.88),
+        final threshold = velocityToPace(
+          velocityAtPercentVO2max(vdot, 0.88),
         );
-        final interval = _velocityToPace(
-          _velocityAtPercentVO2max(vdot, 1.0),
+        final interval = velocityToPace(
+          velocityAtPercentVO2max(vdot, 1.0),
         );
-        final repetition = _velocityToPace(
-          _velocityAtPercentVO2max(vdot, 1.05),
+        final repetition = velocityToPace(
+          velocityAtPercentVO2max(vdot, 1.05),
         );
 
         final zones = <_PaceZone>[
@@ -153,20 +152,6 @@ class TrainingPacesCard extends ConsumerWidget {
     );
   }
 
-  double _velocityAtPercentVO2max(double vdot, double percentVO2max) {
-    final vo2 = vdot * percentVO2max;
-    const b = 0.182258;
-    const a = 0.000104;
-    final c = -4.60 - vo2;
-    final discriminant = b * b - 4 * a * c;
-    if (discriminant < 0) return 0;
-    return (-b + sqrt(discriminant)) / (2 * a);
-  }
-
-  double _velocityToPace(double velocityMetersPerMin) {
-    if (velocityMetersPerMin <= 0) return 0;
-    return (1000 / velocityMetersPerMin) * 60;
-  }
 }
 
 class _PaceZone {

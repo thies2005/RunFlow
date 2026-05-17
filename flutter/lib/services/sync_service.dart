@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/utils/api_payload.dart';
 import 'package:runflow_flutter/data/models/dashboard_models.dart';
@@ -37,7 +38,8 @@ class SyncServiceImpl implements SyncService {
         ),
       );
       return status.lastSyncAt;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('SyncService: Failed to get last sync time: $e');
       return null;
     }
   }

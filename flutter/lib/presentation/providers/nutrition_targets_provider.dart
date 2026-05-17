@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:runflow_flutter/domain/entities/health_entities.dart';
@@ -16,7 +17,8 @@ final nutritionTargetsProvider =
     await prefs.setDouble('nutrition_target_water', targets.water);
     await prefs.setBool('nutrition_water_tracking_enabled', targets.waterTrackingEnabled);
     return targets;
-  } catch (_) {
+  } catch (e) {
+    debugPrint('NutritionTargets: API load failed, falling back to local prefs: $e');
     final prefs = await SharedPreferences.getInstance();
     return NutritionTargets(
       calories: prefs.getInt('nutrition_target_calories') ?? NutritionTargets.defaults.calories,
@@ -41,6 +43,8 @@ Future<void> updateNutritionTargets(
   try {
     final apiRepo = ref.read(healthApiRepositoryProvider);
     await apiRepo.setNutritionTargets(targets);
-  } catch (_) {}
+  } catch (e) {
+    debugPrint('NutritionTargets: Failed to sync targets to API: $e');
+  }
   ref.invalidate(nutritionTargetsProvider);
 }

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/models/race_models.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
@@ -250,7 +251,8 @@ class RaceResultFlow extends _$RaceResultFlow {
           mode: RaceResultMode.suggest,
         );
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('RaceResultFlow: Failed to load race suggestions: $e');
       state = state.copyWith(isLoading: false);
     }
   }
@@ -331,7 +333,8 @@ class RaceResultFlow extends _$RaceResultFlow {
       ref.invalidate(dashboardProvider);
       state = state.copyWith(isSaving: false);
       return true;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('RaceResultFlow: Failed to complete race: $e');
       state = state.copyWith(isSaving: false);
       return false;
     }

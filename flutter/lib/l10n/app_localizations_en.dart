@@ -2572,6 +2572,18 @@ class SEn extends S {
       'Plan start date must be before race date';
 
   @override
+  String get goalWizardTargetTimeRequired =>
+      'Please enter a valid target time greater than zero';
+
+  @override
+  String get goalWizardVolumeTooLow =>
+      'Weekly mileage must be at least 5 km with at least 1 run per week';
+
+  @override
+  String get goalWizardScheduleConflict =>
+      'Long run and quality workout cannot be on the same day';
+
+  @override
   String get authStravaNotConfigured =>
       'Strava sign-in is not configured for this build.';
 
@@ -3096,4 +3108,14 @@ class SEn extends S {
 
   @override
   String get raceTypeCustomTri => 'Custom Triathlon';
+
+  @override
+  String goalWeeklyMileageDisplay(String value) {
+    return '$value km/wk';
+  }
+
+  @override
+  String goalRunsPerWeekDisplay(int count) {
+    return '${count}x / wk';
+  }
 }

@@ -14,33 +14,36 @@ export async function POST(request: Request) {
 
         const userId = session.user.id;
 
-        await prisma.account.deleteMany({
-            where: {
-                userId,
-                provider: 'strava'
-            }
-        });
-
-        await prisma.user.update({
-            where: { id: userId },
-            data: {
-                stravaAccessToken: null,
-                stravaRefreshToken: null,
-                stravaTokenExpiry: null,
-                stravaId: null,
-            }
-        });
-
         let deletedActivitiesCount = 0;
-        if (deleteActivities) {
-            const deleteResult = await prisma.activity.deleteMany({
+
+        await prisma.$transaction(async (tx) => {
+            await tx.account.deleteMany({
                 where: {
                     userId,
-                    stravaId: { gt: BigInt(0) }
+                    provider: 'strava'
                 }
             });
-            deletedActivitiesCount = deleteResult.count;
-        }
+
+            await tx.user.update({
+                where: { id: userId },
+                data: {
+                    stravaAccessToken: null,
+                    stravaRefreshToken: null,
+                    stravaTokenExpiry: null,
+                    stravaId: null,
+                }
+            });
+
+            if (deleteActivities) {
+                const deleteResult = await tx.activity.deleteMany({
+                    where: {
+                        userId,
+                        stravaId: { gt: BigInt(0) }
+                    }
+                });
+                deletedActivitiesCount = deleteResult.count;
+            }
+        });
 
         return NextResponse.json({
             message: 'Strava disconnected successfully',

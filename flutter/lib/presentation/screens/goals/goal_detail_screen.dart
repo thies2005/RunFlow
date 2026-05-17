@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/activity_type_helper.dart';
 import 'package:runflow_flutter/core/utils/formatters.dart';
+import 'package:runflow_flutter/core/utils/workout_theme.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/goal_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
@@ -475,10 +476,112 @@ class _GoalHeader extends StatelessWidget {
                 ],
               ),
             ],
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 14,
+              runSpacing: 6,
+              children: _buildPlanMetadata(context, theme),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildPlanMetadata(BuildContext context, ThemeData theme) {
+    final s = S.of(context);
+    final items = <Widget>[];
+
+    if (goal.weeklyMileageGoal != null && goal.weeklyMileageGoal! > 0) {
+      items.add(_planMetadataChip(
+        Icons.straighten,
+        s.goalWeeklyMileageDisplay(goal.weeklyMileageGoal!.toStringAsFixed(0)),
+        theme,
+      ));
+    }
+
+    items.add(_planMetadataChip(
+      Icons.schedule,
+      s.onboardingWeeksCount(goal.planWeeks),
+      theme,
+    ));
+
+    items.add(_planMetadataChip(
+      Icons.directions_run,
+      s.goalRunsPerWeekDisplay(goal.runsPerWeek),
+      theme,
+    ));
+
+    final phase = _deriveCurrentPhase();
+    if (phase != null) {
+      items.add(_planMetadataChip(
+        Icons.fitness_center,
+        _phaseLabel(phase, s),
+        theme,
+        isHighlighted: true,
+      ));
+    }
+
+    return items;
+  }
+
+  Widget _planMetadataChip(
+    IconData icon,
+    String label,
+    ThemeData theme, {
+    bool isHighlighted = false,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: isHighlighted ? AppColors.primary : AppColors.onSurfaceVariant,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: isHighlighted ? AppColors.primary : AppColors.onSurfaceVariant,
+            fontWeight: isHighlighted ? FontWeight.w600 : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String? _deriveCurrentPhase() {
+    final now = DateTime.now();
+    Workout? closest;
+    for (final w in goal.workouts) {
+      if (w.phase == null || w.phase!.isEmpty) continue;
+      if (closest == null ||
+          w.scheduledDate.difference(now).abs() <
+              closest.scheduledDate.difference(now).abs()) {
+        closest = w;
+      }
+    }
+    return closest?.phase;
+  }
+
+  String _phaseLabel(String phase, S s) {
+    switch (phase.toUpperCase()) {
+      case 'BASE':
+        return s.trainingPhaseBase;
+      case 'BUILD':
+        return s.trainingPhaseBuild;
+      case 'PEAK':
+        return s.trainingPhasePeak;
+      case 'TAPER':
+        return s.trainingPhaseTaper;
+      case 'RACE':
+        return s.trainingPhaseRace;
+      case 'RECOVERY':
+        return s.trainingPhaseRecovery;
+      default:
+        return phase;
+    }
   }
 
   String _formatDate(DateTime date) {
@@ -581,151 +684,10 @@ class _WorkoutCard extends ConsumerWidget {
   final Workout workout;
   final String goalId;
 
-  Color _workoutColor() {
-    switch (workout.workoutType) {
-      case WorkoutType.easy:
-        return AppColors.success;
-      case WorkoutType.longRun:
-        return const Color(0xFF2196F3);
-      case WorkoutType.tempo:
-        return const Color(0xFFFF9800);
-      case WorkoutType.intervals:
-        return const Color(0xFFF44336);
-      case WorkoutType.fartlek:
-        return const Color(0xFFFF5722);
-      case WorkoutType.repetitions:
-        return const Color(0xFFE91E63);
-      case WorkoutType.recovery:
-        return const Color(0xFF009688);
-      case WorkoutType.race:
-        return const Color(0xFF9C27B0);
-      case WorkoutType.rest:
-        return const Color(0xFF607D8B);
-      case WorkoutType.crossTrain:
-        return const Color(0xFF00BCD4);
-      case WorkoutType.ride:
-        return const Color(0xFF3F51B5);
-      case WorkoutType.swim:
-        return const Color(0xFF0288D1);
-      case WorkoutType.strength:
-        return const Color(0xFF795548);
-      case WorkoutType.brick:
-        return const Color(0xFF673AB7);
-      case WorkoutType.openWaterSwim:
-        return const Color(0xFF0097A7);
-      case WorkoutType.longRide:
-        return const Color(0xFF1565C0);
-      case WorkoutType.rideIntervals:
-        return const Color(0xFF283593);
-      case WorkoutType.swimDrill:
-        return const Color(0xFF00838F);
-      case WorkoutType.transitionPractice:
-        return const Color(0xFF546E7A);
-      case WorkoutType.doubleDay:
-        return const Color(0xFF6D4C41);
-      case WorkoutType.other:
-        return AppColors.onSurfaceVariant;
-    }
-  }
-
-  IconData _workoutIcon() {
-    switch (workout.workoutType) {
-      case WorkoutType.easy:
-        return Icons.directions_run;
-      case WorkoutType.longRun:
-        return Icons.route;
-      case WorkoutType.tempo:
-        return Icons.speed;
-      case WorkoutType.intervals:
-        return Icons.flash_on;
-      case WorkoutType.fartlek:
-        return Icons.shuffle;
-      case WorkoutType.repetitions:
-        return Icons.repeat;
-      case WorkoutType.recovery:
-        return Icons.self_improvement;
-      case WorkoutType.race:
-        return Icons.emoji_events;
-      case WorkoutType.rest:
-        return Icons.bedtime;
-      case WorkoutType.crossTrain:
-        return Icons.directions_bike;
-      case WorkoutType.ride:
-        return Icons.directions_bike;
-      case WorkoutType.swim:
-        return Icons.pool;
-      case WorkoutType.strength:
-        return Icons.fitness_center;
-      case WorkoutType.brick:
-        return Icons.add_circle;
-      case WorkoutType.openWaterSwim:
-        return Icons.waves;
-      case WorkoutType.longRide:
-        return Icons.directions_bike;
-      case WorkoutType.rideIntervals:
-        return Icons.flash_on;
-      case WorkoutType.swimDrill:
-        return Icons.pool;
-      case WorkoutType.transitionPractice:
-        return Icons.swap_horiz;
-      case WorkoutType.doubleDay:
-        return Icons.calendar_today;
-      case WorkoutType.other:
-        return Icons.fitness_center;
-    }
-  }
-
-  String _workoutLabel(BuildContext context) {
-    switch (workout.workoutType) {
-      case WorkoutType.easy:
-        return S.of(context).workoutTypeEasy;
-      case WorkoutType.longRun:
-        return S.of(context).workoutTypeLong;
-      case WorkoutType.tempo:
-        return S.of(context).workoutTypeTempo;
-      case WorkoutType.intervals:
-        return S.of(context).workoutTypeInterval;
-      case WorkoutType.recovery:
-        return S.of(context).workoutTypeRecovery;
-      case WorkoutType.race:
-        return S.of(context).workoutTypeRace;
-      case WorkoutType.other:
-        return S.of(context).workoutTypeOther;
-      case WorkoutType.fartlek:
-        return 'Fartlek';
-      case WorkoutType.repetitions:
-        return 'Reps';
-      case WorkoutType.rest:
-        return 'Rest';
-      case WorkoutType.crossTrain:
-        return 'Cross Train';
-      case WorkoutType.ride:
-        return 'Ride';
-      case WorkoutType.swim:
-        return 'Swim';
-      case WorkoutType.strength:
-        return 'Strength';
-      case WorkoutType.brick:
-        return 'Brick';
-      case WorkoutType.openWaterSwim:
-        return 'OWS';
-      case WorkoutType.longRide:
-        return 'Long Ride';
-      case WorkoutType.rideIntervals:
-        return 'Ride Intervals';
-      case WorkoutType.swimDrill:
-        return 'Swim Drill';
-      case WorkoutType.transitionPractice:
-        return 'Transition';
-      case WorkoutType.doubleDay:
-        return 'Double';
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final color = _workoutColor();
+    final color = WorkoutTheme.color(workout.workoutType);
 
     return Card(
       child: Padding(
@@ -735,7 +697,7 @@ class _WorkoutCard extends ConsumerWidget {
             CircleAvatar(
               backgroundColor: color.withValues(alpha: 0.15),
               child: Icon(
-                _workoutIcon(),
+                WorkoutTheme.icon(workout.workoutType),
                 color: color,
                 size: 20,
               ),
@@ -757,7 +719,7 @@ class _WorkoutCard extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          _workoutLabel(context),
+                          WorkoutTheme.label(context, workout.workoutType),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: color,
                             fontWeight: FontWeight.w600,

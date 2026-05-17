@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/constants/cache_keys.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
@@ -101,7 +102,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
           return SyncStatus.fromJson(
             jsonDecode(cached.data) as Map<String, dynamic>,
           ).toDomain();
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('DashboardRepository: Failed to decode cached sync status: $e');
+        }
       }
       throw e.error is AppException
           ? e.error as AppException
@@ -143,6 +146,8 @@ class DashboardRepositoryImpl implements DashboardRepository {
     try {
       final result = await fetch();
       await cacheDatasource.set(key, encode(result));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('DashboardRepository: Background cache refresh failed for $key: $e');
+    }
   }
 }

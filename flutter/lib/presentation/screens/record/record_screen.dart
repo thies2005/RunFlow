@@ -82,7 +82,9 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
       if (workout != null && mounted) {
         setState(() => _plannedWorkout = workout);
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('RecordScreen: Failed to load workout details: $e');
+    }
   }
 
   Future<void> _loadTemplate() async {
@@ -98,7 +100,9 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
           _executionEngine = engine;
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('RecordScreen: Failed to load template: $e');
+    }
   }
 
   void _startCoachEvalTimer() {

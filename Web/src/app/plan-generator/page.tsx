@@ -179,6 +179,7 @@ export default function PlanGeneratorPage() {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         } catch {
+            setError('Export failed. Please try again.');
         } finally {
             setExporting(null);
         }

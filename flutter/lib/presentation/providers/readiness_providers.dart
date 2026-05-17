@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/datasources/local/readiness_local_datasource.dart';
 import 'package:runflow_flutter/data/datasources/remote/readiness_remote_datasource.dart';
@@ -133,7 +134,9 @@ class ReadinessNotifier extends _$ReadinessNotifier {
     try {
       final repo = await ref.read(readinessRepositoryProvider.future);
       await repo.saveDailyRecord(updated);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ReadinessNotifier: Failed to save subjective input: $e');
+    }
 
     await refresh();
   }
@@ -160,7 +163,9 @@ class ReadinessNotifier extends _$ReadinessNotifier {
       final repo = await ref.read(readinessRepositoryProvider.future);
       final updated = await repo.updateOverride(current.date, override);
       state = AsyncValue.data(updated);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ReadinessNotifier: Failed to override harder: $e');
+    }
   }
 
   Future<void> overrideEasier(String? note) async {
@@ -177,7 +182,9 @@ class ReadinessNotifier extends _$ReadinessNotifier {
       final repo = await ref.read(readinessRepositoryProvider.future);
       final updated = await repo.updateOverride(current.date, override);
       state = AsyncValue.data(updated);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ReadinessNotifier: Failed to override easier: $e');
+    }
   }
 }
 
@@ -260,7 +267,8 @@ Future<List<DailyReadinessRecord>> readinessHistory(
     }
 
     return repo.getHistory(range.start, range.end);
-  } catch (_) {
+  } catch (e) {
+    debugPrint('ReadinessHistory: Failed to compute missing readiness history: $e');
     return records;
   }
 }

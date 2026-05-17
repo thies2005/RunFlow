@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/constants/cache_keys.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
@@ -167,6 +168,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       final result = await fetch();
       await cacheDatasource.set(key, encode(result));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('ProfileRepository: Background cache refresh failed for $key: $e');
+    }
   }
 }

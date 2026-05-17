@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/errors/exceptions.dart';
@@ -238,7 +239,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await getCurrentUser();
       return user?.emailVerified ?? false;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('AuthRepository: Failed to check email verified: $e');
       return false;
     }
   }

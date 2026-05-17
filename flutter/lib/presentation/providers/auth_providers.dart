@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:runflow_flutter/data/datasources/local/app_database.dart';
@@ -93,7 +94,8 @@ class AuthState extends _$AuthState {
       final repo = ref.read(authRepositoryProvider);
       await repo.restoreSession();
       return repo.getCurrentUser();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('AuthState: Failed to restore session: $e');
       return null;
     }
   }

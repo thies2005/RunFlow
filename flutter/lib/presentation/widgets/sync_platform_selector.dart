@@ -215,7 +215,8 @@ class _SyncPlatformSelectorState extends ConsumerState<SyncPlatformSelector> {
         await ref.read(onboardingProvider.notifier).connectStrava(code);
         widget.onPlatformConnected?.call('strava');
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('SyncPlatformSelector: Strava auth failed: $e');
     } finally {
       if (mounted) {
         setState(() => _stravaConnecting = false);
@@ -260,7 +261,9 @@ class _SyncPlatformSelectorState extends ConsumerState<SyncPlatformSelector> {
       if (activities.isNotEmpty) {
         try {
           await ref.read(healthSyncServiceProvider).syncHistoricalHealth();
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('SyncPlatformSelector: Health Connect historical sync failed: $e');
+        }
         setState(() => _healthConnectSynced = true);
         widget.onPlatformConnected?.call('health-connect');
       } else {

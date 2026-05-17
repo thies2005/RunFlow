@@ -51,6 +51,11 @@ type PlanWeek = {
     totalDistanceKm: string;
 };
 
+function escapeHtml(str: string): string {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function formatPace(secPerKm: number | undefined): string {
     if (!secPerKm || secPerKm <= 0) return '-';
     const mins = Math.floor(secPerKm / 60);
@@ -179,13 +184,13 @@ export async function POST(request: NextRequest) {
 
         const totalDistance = rawWorkouts.reduce((s, w) => s + w.totalDistance, 0);
         const totalWeeks = weeks.length;
-        const raceTypeLabel = raceType.replace(/_/g, ' ').toLowerCase();
+        const raceTypeLabel = escapeHtml(raceType.replace(/_/g, ' ').toLowerCase());
 
         return NextResponse.json({
             plan: {
                 raceType: raceTypeLabel,
-                raceDate: raceDateObj.toISOString().split('T')[0],
-                fitnessLevel,
+                raceDate: escapeHtml(raceDateObj.toISOString().split('T')[0]),
+                fitnessLevel: escapeHtml(fitnessLevel),
                 vdot,
                 totalWeeks,
                 totalDistanceKm: (totalDistance / 1000).toFixed(1),
@@ -202,14 +207,4 @@ export async function POST(request: NextRequest) {
     }
 }
 
-export async function OPTIONS() {
-    return new NextResponse(null, {
-        status: 204,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Max-Age': '86400',
-        },
-    });
-}
+

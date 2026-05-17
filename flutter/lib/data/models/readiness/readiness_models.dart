@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'readiness_models.freezed.dart';
@@ -125,7 +126,9 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             ? raw
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         rhr = RhrMetricsModel.fromJson(map);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('DailyReadinessRecordModel: Failed to parse rhr: $e');
+      }
     }
 
     SleepMetricsModel? sleep;
@@ -136,7 +139,9 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             ? raw
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         sleep = SleepMetricsModel.fromJson(map);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('DailyReadinessRecordModel: Failed to parse sleep: $e');
+      }
     }
 
     LoadMetricsModel? load;
@@ -147,7 +152,9 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             ? raw
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         load = LoadMetricsModel.fromJson(map);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('DailyReadinessRecordModel: Failed to parse load: $e');
+      }
     }
 
     SubjectiveInputModel? subjective;
@@ -158,7 +165,9 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             ? raw
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         subjective = SubjectiveInputModel.fromJson(map);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('DailyReadinessRecordModel: Failed to parse subjective: $e');
+      }
     }
 
     List<ComponentScoreModel> componentScores = [];
@@ -174,7 +183,9 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             .map((e) => ComponentScoreModel.fromJson(
                 Map<String, dynamic>.from(e as Map)))
             .toList();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('DailyReadinessRecordModel: Failed to parse componentScores: $e');
+      }
     }
 
     List<String> reasons = [];
@@ -187,7 +198,9 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
                 ? raw
                 : [];
         reasons = list.map((e) => e.toString()).toList();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('DailyReadinessRecordModel: Failed to parse reasons: $e');
+      }
     }
 
     ReadinessOverrideModel? override;
@@ -198,7 +211,9 @@ sealed class DailyReadinessRecordModel with _$DailyReadinessRecordModel {
             ? raw
             : Map<String, dynamic>.from(jsonDecode(raw.toString()) as Map);
         override = ReadinessOverrideModel.fromJson(map);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('DailyReadinessRecordModel: Failed to parse readinessOverride: $e');
+      }
     }
 
     return DailyReadinessRecordModel(
@@ -255,7 +270,8 @@ sealed class ReadinessBaselineModel with _$ReadinessBaselineModel {
       if (lastUpdated.isNotEmpty) {
         DateTime.parse(lastUpdated);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('ReadinessBaselineModel: Failed to parse lastUpdated: $e');
       lastUpdated = '';
     }
     return ReadinessBaselineModel(
@@ -303,7 +319,8 @@ sealed class AdaptedWorkoutModel with _$AdaptedWorkoutModel {
       if (createdAt.isNotEmpty) {
         DateTime.parse(createdAt);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('AdaptedWorkoutModel: Failed to parse createdAt: $e');
       createdAt = '';
     }
     return AdaptedWorkoutModel(
@@ -380,7 +397,8 @@ sealed class WeeklyReconciliationRecordModel
       if (createdAt.isNotEmpty) {
         DateTime.parse(createdAt);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('WeeklyReconciliationRecordModel: Failed to parse createdAt: $e');
       createdAt = '';
     }
     return WeeklyReconciliationRecordModel(

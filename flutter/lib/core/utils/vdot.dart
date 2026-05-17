@@ -101,3 +101,106 @@ double _pctVo2maxDerivative(double t) {
 double _vo2FromVelocity(double v) {
   return -4.60 + 0.182258 * v + 0.000104 * v * v;
 }
+
+const Map<String, double> raceDistances = {
+  '5K': 5000,
+  '10K': 10000,
+  'HALF': 21097.5,
+  'MARATHON': 42195,
+};
+
+double calculateVdotFromRace({
+  required String distanceKey,
+  required int timeSeconds,
+}) {
+  if (timeSeconds <= 0) return 0;
+  final distanceMeters = raceDistances[distanceKey] ?? 42195;
+  return calculateVdot(distanceMeters, timeSeconds / 60.0);
+}
+
+int predictRaceTime(double vdot, String distanceKey) {
+  if (vdot <= 0) return 0;
+  final distanceMeters = raceDistances[distanceKey] ?? 42195;
+  return _predictRaceTimeBinarySearch(vdot, distanceMeters);
+}
+
+int _predictRaceTimeBinarySearch(double vdot, double distanceMeters) {
+  double low = 600;
+  double high = 18000;
+
+  for (int i = 0; i < 50; i++) {
+    final mid = (low + high) / 2;
+    final testVdot = calculateVdot(distanceMeters, mid / 60.0);
+
+    if ((testVdot - vdot).abs() < 0.01) {
+      return mid.round();
+    }
+
+    if (testVdot > vdot) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+
+  return ((low + high) / 2).round();
+}
+
+double velocityAtPercentVO2max(double vdot, double percentVO2max) {
+  final vo2 = vdot * percentVO2max;
+  const a = 0.000104;
+  const b = 0.182258;
+  final c = -4.60 - vo2;
+
+  final discriminant = b * b - 4 * a * c;
+  if (discriminant < 0) return 0;
+
+  return (-b + sqrt(discriminant)) / (2 * a);
+}
+
+double velocityToPace(double velocityMetersPerMin) {
+  if (velocityMetersPerMin <= 0) return 0;
+  return (1000 / velocityMetersPerMin) * 60;
+}
+
+int velocityToPaceSeconds(double velocityMetersPerMin) {
+  if (velocityMetersPerMin <= 0) return 0;
+  final secondsPerKm = (1000 / velocityMetersPerMin) * 60;
+  return secondsPerKm.round();
+}
+
+TrainingPaces calculateTrainingPaces(double vdot) {
+  final easyMinVelocity = velocityAtPercentVO2max(vdot, 0.65);
+  final easyMaxVelocity = velocityAtPercentVO2max(vdot, 0.79);
+  final marathonVelocity = velocityAtPercentVO2max(vdot, 0.78);
+  final thresholdVelocity = velocityAtPercentVO2max(vdot, 0.88);
+  final intervalVelocity = velocityAtPercentVO2max(vdot, 1.0);
+  final repVelocity = velocityAtPercentVO2max(vdot, 1.05);
+
+  return TrainingPaces(
+    easyMin: velocityToPaceSeconds(easyMaxVelocity),
+    easyMax: velocityToPaceSeconds(easyMinVelocity),
+    marathon: velocityToPaceSeconds(marathonVelocity),
+    threshold: velocityToPaceSeconds(thresholdVelocity),
+    interval: velocityToPaceSeconds(intervalVelocity),
+    repetition: velocityToPaceSeconds(repVelocity),
+  );
+}
+
+class TrainingPaces {
+  const TrainingPaces({
+    required this.easyMin,
+    required this.easyMax,
+    required this.marathon,
+    required this.threshold,
+    required this.interval,
+    required this.repetition,
+  });
+
+  final int easyMin;
+  final int easyMax;
+  final int marathon;
+  final int threshold;
+  final int interval;
+  final int repetition;
+}

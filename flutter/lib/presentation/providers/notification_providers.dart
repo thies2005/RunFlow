@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runflow_flutter/services/notification_service.dart';
 import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
@@ -73,7 +74,9 @@ class WorkoutReminderNotifier extends Notifier<bool> {
             body: 'Time for your $name workout!',
             scheduledDate: scheduledTime,
           );
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('WorkoutReminder: Failed to schedule notification: $e');
+        }
       }
     }
     state = true;

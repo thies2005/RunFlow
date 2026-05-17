@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -27,7 +28,8 @@ Future<bool> registerPushToken({
     if (statusCode == 404) return true;
     if (statusCode != null && statusCode >= 500) return false;
     return false;
-  } catch (_) {
+  } catch (e) {
+    debugPrint('FcmService: Failed to register push token: $e');
     return false;
   }
 }
@@ -58,7 +60,8 @@ class FcmService {
       _tokenRefreshSubscription = messaging.onTokenRefresh.listen(
         (token) => _sendTokenToServer(token),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('FcmService: Failed to initialize: $e');
       _initialized = false;
     }
   }
@@ -77,7 +80,8 @@ class FcmService {
     try {
       _token = await FirebaseMessaging.instance.getToken();
       return _token;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('FcmService: Failed to get FCM token: $e');
       return _token;
     }
   }

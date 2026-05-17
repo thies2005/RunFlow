@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 import 'package:runflow_flutter/core/utils/logger.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -161,7 +162,9 @@ Future<bool> performBackgroundSync({
                   raceWeeks = 0;
                 }
               }
-            } catch (_) {}
+            } catch (e) {
+              debugPrint('BackgroundSync: Failed to fetch goals for weekly reconciliation: $e');
+            }
 
             final service = WeeklyReconciliationService();
             final record = service.reconcile(
@@ -213,7 +216,8 @@ Future<bool> performBackgroundSync({
     if (statusCode == 401) return true;
     if (statusCode != null && statusCode >= 500) return false;
     return false;
-  } catch (_) {
+  } catch (e) {
+    debugPrint('BackgroundSync: Unexpected error during sync: $e');
     return false;
   }
 }

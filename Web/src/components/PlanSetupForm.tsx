@@ -98,7 +98,7 @@ export default function PlanSetupForm({
     const [selectedActivityId, setSelectedActivityId] = useState<string>('');
 
     // Manual Entry
-    const [calibrationDistance, setCalibrationDistance] = useState('MARATHON');
+    const [calibrationDistance, setCalibrationDistance] = useState('FIVE_K');
     const [hours, setHours] = useState('');
     const [minutes, setMinutes] = useState('');
     const [seconds, setSeconds] = useState('');

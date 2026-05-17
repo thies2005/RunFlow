@@ -105,7 +105,7 @@ export function PlanLanding() {
 
     const [calibrationMode, setCalibrationMode] = useState<'activity' | 'manual'>('manual');
     const [selectedActivityId, setSelectedActivityId] = useState('');
-    const [calibrationDistance, setCalibrationDistance] = useState('MARATHON');
+    const [calibrationDistance, setCalibrationDistance] = useState('FIVE_K');
     const [hours, setHours] = useState('');
     const [minutes, setMinutes] = useState('');
     const [seconds, setSeconds] = useState('');
@@ -114,7 +114,7 @@ export function PlanLanding() {
     const [runsPerWeek, setRunsPerWeek] = useState(4);
     const [ridesPerWeek, setRidesPerWeek] = useState(0);
     const [swimsPerWeek, setSwimsPerWeek] = useState(0);
-    const [strengthPerWeek, setStrengthPerWeek] = useState(0);
+    const [strengthPerWeek, setStrengthPerWeek] = useState(1);
     const [weeklyMileage, setWeeklyMileage] = useState(28);
     const [maxLongRunKm, setMaxLongRunKm] = useState(18);
     const [taperWeeks, setTaperWeeks] = useState(1);

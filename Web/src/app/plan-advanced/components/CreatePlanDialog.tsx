@@ -98,7 +98,7 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
         setPlanName('');
         setPlanStartDate('');
         setRaceDate('');
-        setDurationWeeks('12');
+        setDurationWeeks('8');
         setRunsPerWeek(4);
         setRidesPerWeek(0);
         setSwimsPerWeek(0);

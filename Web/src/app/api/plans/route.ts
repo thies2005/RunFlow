@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
 import { createPlanWithWorkouts } from '@/lib/services/plan-creation';
-import { inferSport } from '@/lib/plans/descriptions';
+import { enrichWorkoutForResponse } from '@/lib/api/workoutSerializer';
 import { z } from 'zod';
 import { RaceType, PlanSport } from '@/generated/prisma/browser';
 
@@ -46,25 +46,6 @@ const createPlanSchema = z.object({
     customBikeDistM: z.number().positive().nullable().optional(),
     customRunDistM: z.number().positive().nullable().optional(),
 });
-
-const INTENSITY_NOTE_PREFIX = '[auto] intensity:';
-
-function extractIntensityZone(notes?: string | null): string | null {
-    if (!notes) return null;
-    if (!notes.startsWith(INTENSITY_NOTE_PREFIX)) return null;
-    return notes.slice(INTENSITY_NOTE_PREFIX.length).trim() || null;
-}
-
-function mapWorkoutForResponse<T extends { customName?: string | null; notes?: string | null; workoutType: string }>(
-    workout: T,
-) {
-    return {
-        ...workout,
-        displayDesc: workout.customName ?? null,
-        intensityZone: extractIntensityZone(workout.notes),
-        sport: inferSport(workout.workoutType),
-    };
-}
 
 async function authenticate(request: NextRequest): Promise<string | null> {
     const session = await auth();
@@ -112,7 +93,7 @@ export async function GET(request: NextRequest) {
 
         const enrichedGoals = goals.map(goal => ({
             ...goal,
-            workouts: goal.workouts.map(mapWorkoutForResponse),
+            workouts: goal.workouts.map(enrichWorkoutForResponse),
         }));
 
         return NextResponse.json({ goals: enrichedGoals }, { headers: rateLimitHeaders(rateLimitResult) });
@@ -179,7 +160,7 @@ export async function POST(request: NextRequest) {
 
         const enrichedGoal = {
             ...goal,
-            ...(goal.workouts && { workouts: goal.workouts.map(mapWorkoutForResponse) }),
+            ...(goal.workouts && { workouts: goal.workouts.map(enrichWorkoutForResponse) }),
         };
 
         return NextResponse.json({ goal: enrichedGoal }, {

@@ -13,6 +13,7 @@ import { prisma } from '@/lib/db';
 import { startOfWeek, endOfWeek, parseISO } from 'date-fns';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { enrichWorkoutForResponse } from '@/lib/api/workoutSerializer';
 
 export async function GET(request: NextRequest) {
     try {
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
 
         // Serialize
         const serialized = workouts.map(w => ({
-            ...w,
+            ...enrichWorkoutForResponse(w),
             scheduledDate: w.scheduledDate.toISOString(),
             createdAt: w.createdAt.toISOString(),
             updatedAt: w.updatedAt.toISOString(),

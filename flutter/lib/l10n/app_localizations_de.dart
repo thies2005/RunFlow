@@ -2557,13 +2557,13 @@ class SDe extends S {
   String get goalWizardBuildWeeks => 'Aufbauwochen';
 
   @override
-  String goalWizardPhasesTotalLabel(int current, int total) {
-    return 'Gesamt: $current von $total Wochen';
+  String goalWizardPhasesExceedPlan(int current, int total) {
+    return 'Phasen gesamt ($current) überschreiten den Plan ($total Wochen). Passe Phasen oder Plandauer an.';
   }
 
   @override
-  String goalWizardPhasesExceedPlan(int current, int total) {
-    return 'Phasen gesamt ($current) überschreiten den Plan ($total Wochen). Passe Phasen oder Plandauer an.';
+  String goalWizardPhasesTotalWithBase(int total, int planWeeks, int base) {
+    return '$total von $planWeeks Wochen ($base Basistrainingsphase)';
   }
 
   @override

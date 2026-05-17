@@ -14,19 +14,19 @@ export type RaceDefaults = {
 
 export const RACE_DEFAULTS: Record<string, RaceDefaults> = {
     FIVE_K: {
-        runsPerWeek: 4, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 0,
+        runsPerWeek: 4, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 1,
         weeklyVolumeKm: 28, maxLongRunKm: 18, taperWeeks: 1, peakWeeks: 2, buildWeeks: 4,
     },
     TEN_K: {
-        runsPerWeek: 4, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 0,
+        runsPerWeek: 4, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 1,
         weeklyVolumeKm: 35, maxLongRunKm: 22, taperWeeks: 2, peakWeeks: 2, buildWeeks: 4,
     },
     HALF_MARATHON: {
-        runsPerWeek: 4, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 0,
+        runsPerWeek: 4, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 1,
         weeklyVolumeKm: 45, maxLongRunKm: 24, taperWeeks: 2, peakWeeks: 2, buildWeeks: 4,
     },
     MARATHON: {
-        runsPerWeek: 5, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 0,
+        runsPerWeek: 5, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 1,
         weeklyVolumeKm: 58, maxLongRunKm: 32, taperWeeks: 2, peakWeeks: 3, buildWeeks: 4,
     },
     FIFTY_K: {
@@ -59,27 +59,27 @@ export const RACE_DEFAULTS: Record<string, RaceDefaults> = {
         backyardLoopDistM: 6706, targetLaps: 2,
     },
     SPRINT_TRI: {
-        runsPerWeek: 3, ridesPerWeek: 2, swimsPerWeek: 2, strengthPerWeek: 1,
+        runsPerWeek: 3, ridesPerWeek: 2, swimsPerWeek: 2, strengthPerWeek: 2,
         weeklyVolumeKm: 25, maxLongRunKm: 15, taperWeeks: 2, peakWeeks: 2, buildWeeks: 4,
     },
     OLYMPIC_TRI: {
-        runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 2, strengthPerWeek: 1,
+        runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 2, strengthPerWeek: 2,
         weeklyVolumeKm: 30, maxLongRunKm: 18, taperWeeks: 2, peakWeeks: 2, buildWeeks: 4,
     },
     HALF_IRONMAN: {
-        runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 2, strengthPerWeek: 1,
+        runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 2, strengthPerWeek: 2,
         weeklyVolumeKm: 35, maxLongRunKm: 22, taperWeeks: 2, peakWeeks: 3, buildWeeks: 4,
     },
     FULL_IRONMAN: {
-        runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 2, strengthPerWeek: 2,
+        runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 2, strengthPerWeek: 3,
         weeklyVolumeKm: 40, maxLongRunKm: 30, taperWeeks: 3, peakWeeks: 4, buildWeeks: 4,
     },
     CUSTOM_TRI: {
-        runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 2, strengthPerWeek: 1,
+        runsPerWeek: 3, ridesPerWeek: 3, swimsPerWeek: 2, strengthPerWeek: 2,
         weeklyVolumeKm: 35, maxLongRunKm: 22, taperWeeks: 2, peakWeeks: 3, buildWeeks: 4,
     },
     CUSTOM_DISTANCE: {
-        runsPerWeek: 4, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 0,
+        runsPerWeek: 4, ridesPerWeek: 0, swimsPerWeek: 0, strengthPerWeek: 1,
         weeklyVolumeKm: 40, maxLongRunKm: 25, taperWeeks: 2, peakWeeks: 2, buildWeeks: 4,
     },
 };
@@ -103,6 +103,25 @@ export function adjustDefaultsForVdot(defaults: RaceDefaults, vdot: number): Rac
     return {
         ...defaults,
         weeklyVolumeKm: Math.round(defaults.weeklyVolumeKm * volumeFactor),
-        runsPerWeek: vdot < 30 ? Math.max(3, defaults.runsPerWeek - 1) : defaults.runsPerWeek,
+        runsPerWeek: vdot < 30 ? Math.min(7, Math.max(3, defaults.runsPerWeek - 1)) : defaults.runsPerWeek,
     };
+}
+
+export function getScaledPhaseDefaults(
+  raceType: string,
+  planWeeks: number
+): { taperWeeks: number; peakWeeks: number; buildWeeks: number } {
+  const defaults = getRaceDefaults(raceType);
+  let taper = defaults.taperWeeks;
+  let peak = defaults.peakWeeks;
+  let build = defaults.buildWeeks;
+  const total = taper + peak + build;
+  if (total <= planWeeks || total === 0) {
+    return { taperWeeks: taper, peakWeeks: peak, buildWeeks: build };
+  }
+  const proportion = planWeeks / total;
+  const clampedTaper = Math.max(1, Math.round(taper * proportion));
+  const clampedPeak = Math.max(1, Math.round(peak * proportion));
+  const clampedBuild = Math.max(0, planWeeks - clampedTaper - clampedPeak);
+  return { taperWeeks: clampedTaper, peakWeeks: clampedPeak, buildWeeks: clampedBuild };
 }

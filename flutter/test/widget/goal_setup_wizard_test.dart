@@ -83,11 +83,6 @@ void main() {
       await tester.tap(find.text('Next'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Training Plan'), findsOneWidget);
-
-      await tester.tap(find.text('Next'));
-      await tester.pumpAndSettle();
-
       expect(find.text('Review'), findsOneWidget);
       expect(find.text('Create Goal'), findsOneWidget);
     });

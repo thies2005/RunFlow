@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -22,6 +22,7 @@ import GoalTimeRenderer from '@/components/setup/GoalTimeRenderer';
 import TriathlonGoalTimeRenderer from '@/components/setup/TriathlonGoalTimeRenderer';
 import PlanVolumeSection from '@/components/setup/PlanVolumeSection';
 import { estimateBackyardUltraTime } from '@/lib/plans/backyard-time';
+import { getRaceDefaults, getScaledPhaseDefaults } from '@/lib/plans/defaults';
 import { calculateProgressionCoefficient } from '@/lib/metrics/goalProjection';
 
 type Sport = 'RUN' | 'TRIATHLON' | 'NO_RACE';
@@ -88,7 +89,7 @@ export function PlanLanding() {
     const queryClient = useQueryClient();
 
     const [sport, setSport] = useState<Sport>('RUN');
-    const [raceType, setRaceType] = useState('MARATHON');
+    const [raceType, setRaceType] = useState('FIVE_K');
     const [planName, setPlanName] = useState('');
     const [planStartDate, setPlanStartDate] = useState('');
     const [raceDate, setRaceDate] = useState('');
@@ -114,10 +115,10 @@ export function PlanLanding() {
     const [ridesPerWeek, setRidesPerWeek] = useState(0);
     const [swimsPerWeek, setSwimsPerWeek] = useState(0);
     const [strengthPerWeek, setStrengthPerWeek] = useState(0);
-    const [weeklyMileage, setWeeklyMileage] = useState(40);
-    const [maxLongRunKm, setMaxLongRunKm] = useState(22);
-    const [taperWeeks, setTaperWeeks] = useState(2);
-    const [peakWeeks, setPeakWeeks] = useState(4);
+    const [weeklyMileage, setWeeklyMileage] = useState(28);
+    const [maxLongRunKm, setMaxLongRunKm] = useState(18);
+    const [taperWeeks, setTaperWeeks] = useState(1);
+    const [peakWeeks, setPeakWeeks] = useState(2);
     const [buildWeeks, setBuildWeeks] = useState(4);
     const [showSchedulingSettings, setShowSchedulingSettings] = useState(false);
     const [longRunDay, setLongRunDay] = useState(0);
@@ -165,6 +166,22 @@ export function PlanLanding() {
         : raceDate && planStartDate
             ? Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (7 * 24 * 60 * 60 * 1000)))
             : 12;
+
+    useEffect(() => {
+        const defaults = getRaceDefaults(raceType);
+        const scaled = getScaledPhaseDefaults(raceType, computedPlanWeeks);
+        setRunsPerWeek(defaults.runsPerWeek);
+        setRidesPerWeek(defaults.ridesPerWeek);
+        setSwimsPerWeek(defaults.swimsPerWeek);
+        setStrengthPerWeek(defaults.strengthPerWeek);
+        setWeeklyMileage(defaults.weeklyVolumeKm);
+        setMaxLongRunKm(defaults.maxLongRunKm);
+        setTaperWeeks(scaled.taperWeeks);
+        setPeakWeeks(scaled.peakWeeks);
+        setBuildWeeks(scaled.buildWeeks);
+        if (defaults.backyardLoopDistM) setBackyardLoopDistM(defaults.backyardLoopDistM);
+        if (defaults.targetLaps) setTargetLaps(defaults.targetLaps);
+    }, [raceType, computedPlanWeeks]);
 
     const backyardProgressionFactor = calculateProgressionCoefficient(computedPlanWeeks, runsPerWeek, weeklyMileage);
     const backyardVdot = effectiveVO2max * calibrationFactor * backyardProgressionFactor;
@@ -295,7 +312,7 @@ export function PlanLanding() {
                                 onClick={() => {
                                     setSport(value);
                                     if (value === 'TRIATHLON') setRaceType('SPRINT_TRI');
-                                    else if (value === 'RUN') setRaceType('MARATHON');
+                                    else if (value === 'RUN') setRaceType('FIVE_K');
                                 }}
                                 className={`p-3 rounded-lg border text-left transition-colors ${
                                     sport === value
@@ -522,6 +539,7 @@ export function PlanLanding() {
                         setSwimDay={setSwimDay}
                         restDays={restDays}
                         setRestDays={setRestDays}
+                        computedPlanWeeks={computedPlanWeeks}
                     />
                 </div>
 

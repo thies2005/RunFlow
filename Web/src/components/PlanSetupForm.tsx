@@ -19,7 +19,7 @@ import TriathlonGoalTimeRenderer from './setup/TriathlonGoalTimeRenderer';
 import PlanVolumeSection from './setup/PlanVolumeSection';
 import HeartRateZonesSection from './setup/HeartRateZonesSection';
 import { estimateBackyardUltraTime } from '@/lib/plans/backyard-time';
-import { getRaceDefaults, adjustDefaultsForVdot } from '@/lib/plans/defaults';
+import { getRaceDefaults, adjustDefaultsForVdot, getScaledPhaseDefaults } from '@/lib/plans/defaults';
 
 
 interface RaceActivity {
@@ -85,9 +85,9 @@ export default function PlanSetupForm({
 
     // Target Race (onboarding only)
     const [goalName, setGoalName] = useState('My First Race');
-    const [raceType, setRaceType] = useState('MARATHON');
+    const [raceType, setRaceType] = useState('FIVE_K');
     const [raceDate, setRaceDate] = useState(
-        new Date(Date.now() + 12 * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        new Date(Date.now() + 8 * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     );
     const [planStartDate, setPlanStartDate] = useState(
         new Date().toISOString().split('T')[0]
@@ -104,18 +104,18 @@ export default function PlanSetupForm({
     const [seconds, setSeconds] = useState('');
 
     // Plan Volume
-    const marathonDefaults = getRaceDefaults('MARATHON');
-    const [runsPerWeek, setRunsPerWeek] = useState(marathonDefaults.runsPerWeek);
-    const [ridesPerWeek, setRidesPerWeek] = useState(marathonDefaults.ridesPerWeek);
-    const [swimsPerWeek, setSwimsPerWeek] = useState(marathonDefaults.swimsPerWeek);
-    const [strengthPerWeek, setStrengthPerWeek] = useState(marathonDefaults.strengthPerWeek);
-    const [weeklyMileage, setWeeklyMileage] = useState(marathonDefaults.weeklyVolumeKm);
-    const [maxLongRunKm, setMaxLongRunKm] = useState(() => getDefaultMaxLongRunKm('MARATHON', marathonDefaults.weeklyVolumeKm));
+    const fiveKDefaults = getRaceDefaults('FIVE_K');
+    const [runsPerWeek, setRunsPerWeek] = useState(fiveKDefaults.runsPerWeek);
+    const [ridesPerWeek, setRidesPerWeek] = useState(fiveKDefaults.ridesPerWeek);
+    const [swimsPerWeek, setSwimsPerWeek] = useState(fiveKDefaults.swimsPerWeek);
+    const [strengthPerWeek, setStrengthPerWeek] = useState(fiveKDefaults.strengthPerWeek);
+    const [weeklyMileage, setWeeklyMileage] = useState(fiveKDefaults.weeklyVolumeKm);
+    const [maxLongRunKm, setMaxLongRunKm] = useState(() => getDefaultMaxLongRunKm('FIVE_K', fiveKDefaults.weeklyVolumeKm));
 
     // Phase Settings
-    const [taperWeeks, setTaperWeeks] = useState(marathonDefaults.taperWeeks);
-    const [peakWeeks, setPeakWeeks] = useState(marathonDefaults.peakWeeks);
-    const [buildWeeks, setBuildWeeks] = useState(marathonDefaults.buildWeeks);
+    const [taperWeeks, setTaperWeeks] = useState(fiveKDefaults.taperWeeks);
+    const [peakWeeks, setPeakWeeks] = useState(fiveKDefaults.peakWeeks);
+    const [buildWeeks, setBuildWeeks] = useState(fiveKDefaults.buildWeeks);
 
     // Workout Day Scheduling (hidden/advanced section)
     const [showSchedulingSettings, setShowSchedulingSettings] = useState(false);
@@ -298,6 +298,9 @@ export default function PlanSetupForm({
         }
     }, [thresholdHR]);
 
+    const msPerWeek: number = 1000 * 60 * 60 * 24 * 7;
+    const computedPlanWeeks: number = Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek));
+
     useEffect(() => {
         setMaxLongRunKm(getDefaultMaxLongRunKm(raceType, weeklyMileage));
     }, [raceType, weeklyMileage]);
@@ -307,14 +310,15 @@ export default function PlanSetupForm({
         if (effectiveVO2max > 0) {
             defaults = adjustDefaultsForVdot(defaults, effectiveVO2max);
         }
+        const scaled = getScaledPhaseDefaults(raceType, computedPlanWeeks);
         setRunsPerWeek(defaults.runsPerWeek);
         setRidesPerWeek(defaults.ridesPerWeek);
         setSwimsPerWeek(defaults.swimsPerWeek);
         setStrengthPerWeek(defaults.strengthPerWeek);
         setWeeklyMileage(defaults.weeklyVolumeKm);
-        setTaperWeeks(defaults.taperWeeks);
-        setPeakWeeks(defaults.peakWeeks);
-        setBuildWeeks(defaults.buildWeeks);
+        setTaperWeeks(scaled.taperWeeks);
+        setPeakWeeks(scaled.peakWeeks);
+        setBuildWeeks(scaled.buildWeeks);
         if (defaults.backyardLoopDistM) {
             setBackyardLoopDistM(defaults.backyardLoopDistM);
         }
@@ -322,7 +326,7 @@ export default function PlanSetupForm({
             setTargetLaps(defaults.targetLaps);
         }
         setTriGoalTimeSeconds(null);
-    }, [raceType, mode]);
+    }, [raceType, mode, computedPlanWeeks]);
 
     // Auto-prefill threshold values from calibration data while still allowing manual overrides.
     useEffect(() => {
@@ -488,10 +492,6 @@ export default function PlanSetupForm({
             }
         }
     }, [selectedActivityId, activitiesData, calibrationDistance, effectiveVO2max]); // Re-run when dist changes
-
-    // Auto-calculate dynamic Plan Weeks
-    const msPerWeek: number = 1000 * 60 * 60 * 24 * 7;
-    const computedPlanWeeks: number = Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek));
 
     // Clamp Training Phases if they exceed available plan weeks
     useEffect(() => {
@@ -934,6 +934,7 @@ export default function PlanSetupForm({
                 setSwimDay={setSwimDay}
                 restDays={restDays}
                 setRestDays={setRestDays}
+                computedPlanWeeks={computedPlanWeeks}
             />
 
             <HeartRateZonesSection

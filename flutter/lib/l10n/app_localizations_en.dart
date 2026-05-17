@@ -2532,13 +2532,13 @@ class SEn extends S {
   String get goalWizardBuildWeeks => 'Build Weeks';
 
   @override
-  String goalWizardPhasesTotalLabel(int current, int total) {
-    return 'Total: $current of $total weeks';
+  String goalWizardPhasesExceedPlan(int current, int total) {
+    return 'Phases total ($current) exceeds plan ($total weeks). Adjust phases or plan duration.';
   }
 
   @override
-  String goalWizardPhasesExceedPlan(int current, int total) {
-    return 'Phases total ($current) exceeds plan ($total weeks). Adjust phases or plan duration.';
+  String goalWizardPhasesTotalWithBase(int total, int planWeeks, int base) {
+    return '$total of $planWeeks weeks ($base base phase)';
   }
 
   @override

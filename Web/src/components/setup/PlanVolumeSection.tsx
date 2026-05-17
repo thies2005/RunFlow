@@ -30,6 +30,7 @@ interface PlanVolumeSectionProps {
     setSwimDay: (_val: number) => void;
     restDays: number[];
     setRestDays: (_val: number[]) => void;
+    computedPlanWeeks?: number;
 }
 
 export default function PlanVolumeSection({
@@ -61,15 +62,17 @@ export default function PlanVolumeSection({
     swimDay,
     setSwimDay,
     restDays,
-    setRestDays
+    setRestDays,
+    computedPlanWeeks
 }: PlanVolumeSectionProps) {
-    const maxLongRunKmCap = raceType === 'FIVE_K'
-        ? 18
-        : raceType === 'TEN_K'
-            ? 22
-            : raceType === 'HALF_MARATHON'
-                ? 24
-                : 32;
+    const LONG_RUN_CAPS: Record<string, number> = {
+        FIVE_K: 21, TEN_K: 25, HALF_MARATHON: 27, MARATHON: 35,
+        FIFTY_K: 38, FIFTY_MILE: 43, HUNDRED_K: 48, HUNDRED_MILE: 53,
+        TWELVE_HOUR: 43, TWENTY_FOUR_HOUR: 53, BACKYARD_ULTRA: 38,
+        SPRINT_TRI: 18, OLYMPIC_TRI: 21, HALF_IRONMAN: 25, FULL_IRONMAN: 33,
+        CUSTOM_TRI: 25, CUSTOM_DISTANCE: 28,
+    };
+    const maxLongRunKmCap = LONG_RUN_CAPS[raceType] ?? 35;
 
     return (
         <>
@@ -252,14 +255,14 @@ export default function PlanVolumeSection({
                         </div>
                         <input
                             type="range"
-                            min="1"
-                            max="3"
+                            min="0"
+                            max="4"
                             value={taperWeeks}
                             onChange={(e) => setTaperWeeks(parseInt(e.target.value))}
                             aria-label="Taper weeks"
                             aria-valuenow={taperWeeks}
-                            aria-valuemin={1}
-                            aria-valuemax={3}
+                            aria-valuemin={0}
+                            aria-valuemax={4}
                             className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-teal-500"
                         />
                     </div>
@@ -270,13 +273,13 @@ export default function PlanVolumeSection({
                         </div>
                         <input
                             type="range"
-                            min="2"
+                            min="0"
                             max="6"
                             value={peakWeeks}
                             onChange={(e) => setPeakWeeks(parseInt(e.target.value))}
                             aria-label="Peak weeks"
                             aria-valuenow={peakWeeks}
-                            aria-valuemin={2}
+                            aria-valuemin={0}
                             aria-valuemax={6}
                             className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-purple-500"
                         />
@@ -288,19 +291,25 @@ export default function PlanVolumeSection({
                         </div>
                         <input
                             type="range"
-                            min="2"
-                            max="8"
+                            min="0"
+                            max="10"
                             value={buildWeeks}
                             onChange={(e) => setBuildWeeks(parseInt(e.target.value))}
                             aria-label="Build weeks"
                             aria-valuenow={buildWeeks}
-                            aria-valuemin={2}
-                            aria-valuemax={8}
+                            aria-valuemin={0}
+                            aria-valuemax={10}
                             className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-orange-500"
                         />
                     </div>
                 </div>
-                <p className="text-xs text-foreground-muted mt-2">Remaining weeks will be Base phase.</p>
+                {computedPlanWeeks ? (
+                    <span className="text-xs text-foreground-muted mt-2">
+                        {Math.max(0, computedPlanWeeks - taperWeeks - peakWeeks - buildWeeks)} weeks base phase (remaining)
+                    </span>
+                ) : (
+                    <p className="text-xs text-foreground-muted mt-2">Remaining weeks will be Base phase.</p>
+                )}
             </div>
 
             {/* Workout Scheduling (Collapsible - Advanced) */}

@@ -46,7 +46,7 @@ const TRIATHLON_DISTANCES = [
 export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialogProps) {
     const queryClient = useQueryClient();
     const [sport, setSport] = useState<Sport>('RUN');
-    const [raceType, setRaceType] = useState('MARATHON');
+    const [raceType, setRaceType] = useState('FIVE_K');
     const [planName, setPlanName] = useState('');
     const [planStartDate, setPlanStartDate] = useState('');
     const [raceDate, setRaceDate] = useState('');
@@ -54,7 +54,7 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
     const [runsPerWeek, setRunsPerWeek] = useState(4);
     const [ridesPerWeek, setRidesPerWeek] = useState(0);
     const [swimsPerWeek, setSwimsPerWeek] = useState(0);
-    const [weeklyMileage, setWeeklyMileage] = useState(40);
+    const [weeklyMileage, setWeeklyMileage] = useState(28);
     const [customSwimDistM, setCustomSwimDistM] = useState('');
     const [customBikeDistM, setCustomBikeDistM] = useState('');
     const [customRunDistM, setCustomRunDistM] = useState('');
@@ -94,7 +94,7 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
 
     const resetForm = () => {
         setSport('RUN');
-        setRaceType('MARATHON');
+        setRaceType('FIVE_K');
         setPlanName('');
         setPlanStartDate('');
         setRaceDate('');
@@ -102,7 +102,7 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
         setRunsPerWeek(4);
         setRidesPerWeek(0);
         setSwimsPerWeek(0);
-        setWeeklyMileage(40);
+        setWeeklyMileage(28);
         setCustomSwimDistM('');
         setCustomBikeDistM('');
         setCustomRunDistM('');
@@ -179,7 +179,7 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
                                     onClick={() => {
                                         setSport(value);
                                         if (value === 'TRIATHLON') setRaceType('SPRINT_TRI');
-                                        else if (value === 'RUN') setRaceType('MARATHON');
+                                        else if (value === 'RUN') setRaceType('FIVE_K');
                                     }}
                                     className={`p-2 rounded-md border text-center text-xs font-medium transition-colors ${
                                         sport === value

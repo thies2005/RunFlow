@@ -4747,17 +4747,17 @@ abstract class S {
   /// **'Build Weeks'**
   String get goalWizardBuildWeeks;
 
-  /// No description provided for @goalWizardPhasesTotalLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Total: {current} of {total} weeks'**
-  String goalWizardPhasesTotalLabel(int current, int total);
-
   /// No description provided for @goalWizardPhasesExceedPlan.
   ///
   /// In en, this message translates to:
   /// **'Phases total ({current}) exceeds plan ({total} weeks). Adjust phases or plan duration.'**
   String goalWizardPhasesExceedPlan(int current, int total);
+
+  /// No description provided for @goalWizardPhasesTotalWithBase.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} of {planWeeks} weeks ({base} base phase)'**
+  String goalWizardPhasesTotalWithBase(int total, int planWeeks, int base);
 
   /// No description provided for @goalWizardWorkoutSchedulingTitle.
   ///

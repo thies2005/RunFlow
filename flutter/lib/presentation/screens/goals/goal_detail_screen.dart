@@ -21,6 +21,16 @@ class GoalDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/goals');
+            }
+          },
+        ),
         title: Text(S.of(context).goalDetailsTitle),
         actions: [
           IconButton(

@@ -42,7 +42,6 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   int _strengthPerWeek = _initialDefaults.strengthPerWeek;
   double _weeklyMileageGoal = _initialDefaults.weeklyVolumeKm;
   double _maxLongRunKm = _initialDefaults.maxLongRunKm;
-  int _planWeeks = 12;
   int _taperWeeks = _initialDefaults.taperWeeks;
   int _peakWeeks = _initialDefaults.peakWeeks;
   int _buildWeeks = _initialDefaults.buildWeeks;
@@ -68,11 +67,10 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   final _minutesController = TextEditingController();
   final _secondsController = TextEditingController();
 
-  static const int _totalSteps = 9;
+  static const int _totalSteps = 8;
 
   int get _maxPlanWeeks => _selectedDate.difference(_planStartDate).inDays ~/ 7;
   int get _planWeeksCap => max(4, min(24, _maxPlanWeeks));
-  int get _effectivePlanWeeks => _planWeeks.clamp(4, _planWeeksCap).toInt();
 
   List<int> _clampedPhases(int planWeeks) {
     final total = _taperWeeks + _peakWeeks + _buildWeeks;
@@ -122,6 +120,12 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
           );
           return false;
         }
+        if (_planWeeksCap < 4) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(S.of(context).goalWizardFutureRaceDate)),
+          );
+          return false;
+        }
         return true;
       case 3:
         if (_hasTargetTime) {
@@ -154,8 +158,8 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         }
         return true;
       case 5:
-        if (_taperWeeks + _peakWeeks + _buildWeeks > _effectivePlanWeeks) {
-          final phases = _clampedPhases(_effectivePlanWeeks);
+        if (_taperWeeks + _peakWeeks + _buildWeeks > _planWeeksCap) {
+          final phases = _clampedPhases(_planWeeksCap);
           setState(() {
             _taperWeeks = phases[0];
             _peakWeeks = phases[1];
@@ -174,8 +178,6 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         }
         return true;
       case 7:
-        return true;
-      case 8:
         return true;
       default:
         return true;
@@ -239,7 +241,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     final projection = calculateProjectedGoalTime(
       stats.effectiveVO2max,
       PlanSettings(
-        durationWeeks: _planWeeks,
+        durationWeeks: _planWeeksCap,
         runsPerWeek: _runsPerWeek,
         weeklyMileageGoal: _weeklyMileageGoal,
         raceDistance: _selectedRaceType,
@@ -255,7 +257,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     final stats = ref.read(analyticsStatsProvider).value;
     if (stats == null || stats.effectiveVO2max <= 0) return null;
     final progressionFactor = calculateProgressionCoefficient(
-      _planWeeks,
+      _planWeeksCap,
       _runsPerWeek,
       _weeklyMileageGoal,
     );
@@ -277,7 +279,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     final vdot = stats?.effectiveVO2max ?? 0;
     if (vdot <= 0 || _backyardLoopDistM <= 0) return null;
     final progressionFactor = calculateProgressionCoefficient(
-      _planWeeks,
+      _planWeeksCap,
       _runsPerWeek,
       _weeklyMileageGoal,
     );
@@ -314,7 +316,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     final fixedSeconds =
         _selectedRaceType == RaceType.twelveHour ? 43200 : 86400;
     final progressionFactor = calculateProgressionCoefficient(
-      _planWeeks,
+      _planWeeksCap,
       _runsPerWeek,
       _weeklyMileageGoal,
     );
@@ -349,7 +351,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
       effectiveVO2max: effectiveVO2max,
       marathonShape: marathonShape,
       selectedRaceType: _selectedRaceType,
-      planWeeks: _planWeeks,
+      planWeeks: _planWeeksCap,
       runsPerWeek: _runsPerWeek,
       weeklyMileageGoal: _weeklyMileageGoal,
       isManualMode: _isManualMode,
@@ -378,7 +380,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     BackyardProjection? projection;
     if (vdot > 0 && _backyardLoopDistM > 0) {
       final progressionFactor = calculateProgressionCoefficient(
-        _planWeeks,
+        _planWeeksCap,
         _runsPerWeek,
         _weeklyMileageGoal,
       );
@@ -588,7 +590,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     TriathlonProjection? triProjection;
     if (vdot > 0) {
       final progressionFactor = calculateProgressionCoefficient(
-        _planWeeks,
+        _planWeeksCap,
         _runsPerWeek,
         _weeklyMileageGoal,
       );
@@ -1184,7 +1186,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     String? pacePerKm;
     if (vdot > 0) {
       final progressionFactor = calculateProgressionCoefficient(
-        _planWeeks,
+        _planWeeksCap,
         _runsPerWeek,
         _weeklyMileageGoal,
       );
@@ -1353,8 +1355,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
     });
 
     try {
-      final planWeeksCap = max(4, min(24, maxPlanWeeks));
-      final effectivePlanWeeks = _planWeeks.clamp(4, planWeeksCap).toInt();
+      final effectivePlanWeeks = _planWeeksCap;
       final phases = _clampedPhases(effectivePlanWeeks);
 
       final request = CreateGoalRequest(
@@ -1419,8 +1420,6 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
 
   @override
   Widget build(BuildContext context) {
-    final planWeeksCap = _planWeeksCap;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(S.of(context).goalWizardNewGoal),
@@ -1509,23 +1508,11 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                       if (_planStartDate.isAfter(date)) {
                         _planStartDate = date;
                       }
-                      final mw = date.difference(_planStartDate).inDays ~/ 7;
-                      final cap = max(4, min(24, mw));
-                      if (_planWeeks > cap) {
-                        _planWeeks = cap;
-                      }
                     });
                   },
                   onPlanStartDateSelected: (date) {
                     setState(() {
                       _planStartDate = date;
-                      final cap = max(
-                        4,
-                        min(24, _selectedDate.difference(date).inDays ~/ 7),
-                      );
-                      if (_planWeeks > cap) {
-                        _planWeeks = cap;
-                      }
                     });
                   },
                 ),
@@ -1553,7 +1540,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                   taperWeeks: _taperWeeks,
                   peakWeeks: _peakWeeks,
                   buildWeeks: _buildWeeks,
-                  planWeeks: _planWeeks,
+                  planWeeks: _planWeeksCap,
                   onTaperWeeksChanged: (v) => setState(() => _taperWeeks = v),
                   onPeakWeeksChanged: (v) => setState(() => _peakWeeks = v),
                   onBuildWeeksChanged: (v) => setState(() => _buildWeeks = v),
@@ -1568,16 +1555,6 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                   onSwimDayChanged: (v) => setState(() => _swimDay = v),
                   onRestDaysChanged: (v) => setState(() => _restDays = v),
                 ),
-                _PlanDurationStep(
-                  planWeeks: _planWeeks.clamp(4, planWeeksCap).toInt(),
-                  selectedDate: _selectedDate,
-                  planStartDate: _planStartDate,
-                  onPlanWeeksChanged: (value) {
-                    setState(() {
-                      _planWeeks = value;
-                    });
-                  },
-                ),
                 _ReviewStep(
                   name: _nameController.text,
                   raceType: _selectedRaceType,
@@ -1590,7 +1567,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                   strengthPerWeek: _strengthPerWeek,
                   weeklyMileageGoal: _weeklyMileageGoal,
                   maxLongRunKm: _maxLongRunKm,
-                  planWeeks: _planWeeks.clamp(4, planWeeksCap).toInt(),
+                  planWeeks: _planWeeksCap,
                   taperWeeks: _taperWeeks,
                   peakWeeks: _peakWeeks,
                   buildWeeks: _buildWeeks,
@@ -2718,6 +2695,7 @@ class _TrainingPhasesStep extends StatelessWidget {
             theme: theme,
             label: s.goalWizardTaperWeeks,
             value: taperWeeks,
+            maxValue: 4,
             onChanged: onTaperWeeksChanged,
           ),
           const SizedBox(height: 12),
@@ -2725,6 +2703,7 @@ class _TrainingPhasesStep extends StatelessWidget {
             theme: theme,
             label: s.goalWizardPeakWeeks,
             value: peakWeeks,
+            maxValue: 6,
             onChanged: onPeakWeeksChanged,
           ),
           const SizedBox(height: 12),
@@ -2732,6 +2711,7 @@ class _TrainingPhasesStep extends StatelessWidget {
             theme: theme,
             label: s.goalWizardBuildWeeks,
             value: buildWeeks,
+            maxValue: 10,
             onChanged: onBuildWeeksChanged,
           ),
           const SizedBox(height: 16),
@@ -2753,7 +2733,7 @@ class _TrainingPhasesStep extends StatelessWidget {
                     child: Text(
                       exceedsPlan
                           ? s.goalWizardPhasesExceedPlan(total, planWeeks)
-                          : s.goalWizardPhasesTotalLabel(total, planWeeks),
+                          : s.goalWizardPhasesTotalWithBase(total, planWeeks, planWeeks - total),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: exceedsPlan
                             ? AppColors.warning
@@ -2775,6 +2755,7 @@ class _TrainingPhasesStep extends StatelessWidget {
     required ThemeData theme,
     required String label,
     required int value,
+    required int maxValue,
     required ValueChanged<int> onChanged,
   }) {
     return Card(
@@ -2805,8 +2786,8 @@ class _TrainingPhasesStep extends StatelessWidget {
             Slider(
               value: value.toDouble(),
               min: 0,
-              max: 8,
-              divisions: 8,
+              max: maxValue.toDouble(),
+              divisions: maxValue,
               label: '$value',
               onChanged: (v) => onChanged(v.round()),
             ),
@@ -2979,120 +2960,6 @@ class _WorkoutSchedulingStep extends StatelessWidget {
           },
         ),
       ],
-    );
-  }
-}
-
-class _PlanDurationStep extends StatelessWidget {
-  const _PlanDurationStep({
-    required this.planWeeks,
-    required this.selectedDate,
-    required this.planStartDate,
-    required this.onPlanWeeksChanged,
-  });
-
-  final int planWeeks;
-  final DateTime selectedDate;
-  final DateTime planStartDate;
-  final ValueChanged<int> onPlanWeeksChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final maxPlanWeeks = selectedDate.difference(planStartDate).inDays ~/ 7;
-    final effectiveMax = max(4, min(24, maxPlanWeeks));
-    final isInsufficientTime = maxPlanWeeks < 4;
-    final divisions = (effectiveMax - 4).clamp(1, 20).toInt();
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            S.of(context).goalWizardTrainingPlanTitle,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            S.of(context).goalWizardTrainingPlanDesc,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_month,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          S.of(context).goalWizardPlanDuration,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        S.of(context).goalWizardWeeksCount(planWeeks),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (isInsufficientTime) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.warning_amber,
-                          color: AppColors.warning,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            'Race date is too close for a training plan. Consider choosing a later date.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppColors.warning,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                  Slider(
-                    value: planWeeks
-                        .toDouble()
-                        .clamp(4.0, effectiveMax.toDouble())
-                        .toDouble(),
-                    min: 4,
-                    max: effectiveMax.toDouble(),
-                    divisions: divisions,
-                    label: S.of(context).goalWizardWeeksCount(planWeeks),
-                    onChanged: isInsufficientTime
-                        ? null
-                        : (value) => onPlanWeeksChanged(value.round()),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -3293,15 +3160,9 @@ class _ReviewStep extends StatelessWidget {
                   ),
                   const Divider(height: 24),
                   _ReviewRow(
-                    icon: Icons.calendar_month,
-                    label: s.goalWizardPlanDurationLabel,
-                    value: s.goalWizardWeeksCount(planWeeks),
-                  ),
-                  const Divider(height: 24),
-                  _ReviewRow(
                     icon: Icons.show_chart,
                     label: s.goalWizardTrainingPhasesTitle,
-                    value: 'B$buildWeeks / P$peakWeeks / T$taperWeeks',
+                    value: '${planWeeks - buildWeeks - peakWeeks - taperWeeks} base / $buildWeeks build / $peakWeeks peak / $taperWeeks taper',
                   ),
                   const Divider(height: 24),
                   _ReviewRow(

@@ -888,10 +888,16 @@
   "goalWizardTaperWeeks": "Taper Weeks",
   "goalWizardPeakWeeks": "Peak Weeks",
   "goalWizardBuildWeeks": "Build Weeks",
-  "goalWizardPhasesTotalLabel": "Total: {current} of {total} weeks",
-  "@goalWizardPhasesTotalLabel": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } },
   "goalWizardPhasesExceedPlan": "Phases total ({current}) exceeds plan ({total} weeks). Adjust phases or plan duration.",
   "@goalWizardPhasesExceedPlan": { "placeholders": { "current": { "type": "int" }, "total": { "type": "int" } } },
+  "goalWizardPhasesTotalWithBase": "{total} of {planWeeks} weeks ({base} base phase)",
+  "@goalWizardPhasesTotalWithBase": {
+    "placeholders": {
+      "total": { "type": "int" },
+      "planWeeks": { "type": "int" },
+      "base": { "type": "int" }
+    }
+  },
   "goalWizardWorkoutSchedulingTitle": "Workout Scheduling",
   "goalWizardWorkoutSchedulingDesc": "Choose which days to schedule key workouts and rest.",
   "goalWizardLongRunDay": "Long Run Day",

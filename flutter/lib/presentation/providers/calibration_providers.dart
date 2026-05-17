@@ -79,7 +79,7 @@ class Calibration extends _$Calibration {
       );
     } else if ((distanceMeters - 42195).abs() < 1000) {
       state = state.copyWith(
-        raceType: CalibrationRaceType.marathon,
+        raceType: CalibrationRaceType.fiveK,
         isCustomDistance: false,
       );
     } else {

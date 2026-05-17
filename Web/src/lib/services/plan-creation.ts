@@ -59,7 +59,7 @@ export const PlanCreateInputSchema = z.object({
 
     // Calibration
     calibrationTime: z.number().int().positive().optional(),
-    calibrationDistance: z.enum(['5K', '10K', 'HALF', 'MARATHON']).optional(),
+    calibrationDistance: z.enum(['5K', 'FIVE_K', '10K', 'TEN_K', 'HALF', 'HALF_MARATHON', 'MARATHON']).optional(),
     calibrationFactor: z.number().min(0.5).max(2.0).optional(),
 
     // Advanced fields
@@ -238,8 +238,11 @@ const RACE_TYPE_TO_VDOT_DIST: Record<string, RaceDistance> = {
 
 export const CALIB_DISTANCE_MAP: Record<string, RaceDistance> = {
     '5K': '5K',
+    'FIVE_K': '5K',
     '10K': '10K',
+    'TEN_K': '10K',
     'HALF': 'HALF',
+    'HALF_MARATHON': 'HALF',
     'MARATHON': 'MARATHON',
 };
 

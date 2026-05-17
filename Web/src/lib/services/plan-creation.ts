@@ -17,21 +17,27 @@ export function mapWorkoutsForDb(
     workouts: GeneratedWorkout[],
     options: MapWorkoutsOptions,
 ) {
-    return workouts.map(w => ({
-        goalId: options.goalId,
-        ...(options.subGoalId && { subGoalId: options.subGoalId }),
-        scheduledDate: w.date,
-        workoutType: w.type as WorkoutType,
-        description: options.descriptionPrefix
-            ? `${options.descriptionPrefix}${w.description}`
-            : w.description,
-        targetDistance: w.totalDistance,
-        targetPace: w.targetPace ?? 0,
-        targetDuration: w.targetDuration ?? 0,
-        targetHrZone: w.targetHrZone ?? null,
-        phase: w.phase ?? 'BASE',
-        isCompleted: false,
-    }));
+    return workouts.map(w => {
+        const displayDesc = w.displayDescription ?? null;
+        const intensityZone = w.intensityZone ?? null;
+        return {
+            goalId: options.goalId,
+            ...(options.subGoalId && { subGoalId: options.subGoalId }),
+            scheduledDate: w.date,
+            workoutType: w.type as WorkoutType,
+            description: options.descriptionPrefix
+                ? `${options.descriptionPrefix}${w.description}`
+                : w.description,
+            targetDistance: w.totalDistance,
+            targetPace: w.targetPace ?? 0,
+            targetDuration: w.targetDuration ?? 0,
+            targetHrZone: w.targetHrZone ?? null,
+            phase: w.phase ?? 'BASE',
+            isCompleted: false,
+            ...(displayDesc && { customName: displayDesc }),
+            ...(intensityZone && { notes: `[auto] intensity:${intensityZone}` }),
+        };
+    });
 }
 
 const RACE_DISTANCE_MAP: Record<string, number> = {

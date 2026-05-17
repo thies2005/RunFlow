@@ -8,10 +8,10 @@ import { PlanLanding } from './components/PlanLanding';
 export default function PlanAdvancedPage() {
     const router = useRouter();
 
-    const { data, isLoading } = useQuery<{ plans: Array<{ id: string; isActive: boolean }> }>({
-        queryKey: ['plan-advanced'],
+    const { data, isLoading } = useQuery<{ goals: Array<{ id: string; isActive: boolean }> }>({
+        queryKey: ['plans', { planSource: 'advanced' }],
         queryFn: async () => {
-            const res = await fetch('/api/plan-advanced');
+            const res = await fetch('/api/plans?planSource=advanced&parentOnly=true');
             if (!res.ok) throw new Error('Failed to fetch plans');
             return res.json();
         },
@@ -19,7 +19,7 @@ export default function PlanAdvancedPage() {
 
     useEffect(() => {
         if (data) {
-            const activePlan = data.plans?.find((p) => p.isActive);
+            const activePlan = data.goals?.find((p) => p.isActive);
             if (activePlan) {
                 router.replace(`/plan-advanced/${activePlan.id}`);
             }
@@ -34,7 +34,7 @@ export default function PlanAdvancedPage() {
         );
     }
 
-    if (data?.plans?.find((p) => p.isActive)) {
+    if (data?.goals?.find((p) => p.isActive)) {
         return (
             <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
                 <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-100 rounded-full animate-spin" />

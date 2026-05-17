@@ -108,7 +108,7 @@ export default function PlanAdvancedLayout({ children }: { children: React.React
     const { data: userTier, isLoading } = useQuery<{ tier: string; isAdmin: boolean }>({
         queryKey: ['user-tier'],
         queryFn: async () => {
-            const res = await fetch('/api/plan-advanced');
+            const res = await fetch('/api/plans?planSource=advanced&parentOnly=true');
             if (res.status === 403) return { tier: 'none', isAdmin: false };
             if (res.ok) return { tier: 'ok', isAdmin: false };
             return { tier: 'none', isAdmin: false };

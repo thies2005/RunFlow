@@ -4,8 +4,190 @@ import { AnalyticsService } from '@/lib/services/analytics';
 import { type ActivityForShape } from '@/lib/metrics/runalyze';
 import { calculateProjectedGoalTime, type PlanSettings } from '@/lib/metrics/goalProjection';
 import { generateTrainingPlan, type PlanConfig, type GeneratedWorkout } from '@/lib/plans';
-import { WorkoutType, type RaceType, type PlanSport, type PlanCreationMode } from '@/generated/prisma/browser';
+import { WorkoutType, RaceType, PlanSport, PlanCreationMode } from '@/generated/prisma/browser';
 import { logger } from '@/lib/logging/logger';
+import { z } from 'zod';
+import { getRaceDefaults } from '@/lib/plans/defaults';
+
+// ─── Shared Plan Creation Schema (superset for onboarding + advanced) ───
+
+const dateStringSchema = z.string().refine((value) => !Number.isNaN(new Date(value).getTime()), {
+    message: 'Invalid date',
+});
+
+export const SubGoalSchema = z.object({
+    name: z.string().min(1).max(255),
+    sport: z.enum(['RUN', 'TRIATHLON', 'NO_RACE']).optional(),
+    raceType: z.nativeEnum(RaceType).nullable().optional(),
+    raceDate: dateStringSchema.nullable().optional(),
+    priority: z.enum(['SECONDARY', 'TUNE_UP', 'MILESTONE']).optional(),
+    targetTime: z.number().int().positive().optional(),
+});
+
+export const PlanCreateInputSchema = z.object({
+    // Required
+    name: z.string().min(1).max(255),
+
+    // Sport / race configuration
+    sport: z.enum(['RUN', 'TRIATHLON', 'NO_RACE']).optional(),
+    raceType: z.nativeEnum(RaceType).nullable().optional(),
+    raceDate: dateStringSchema.nullable().optional(),
+    planStartDate: dateStringSchema.nullable().optional(),
+    durationWeeks: z.number().int().min(4).max(52).optional(),
+
+    // Volume
+    runsPerWeek: z.number().int().nonnegative().max(7).optional(),
+    ridesPerWeek: z.number().int().nonnegative().max(7).optional(),
+    swimsPerWeek: z.number().int().nonnegative().max(7).optional(),
+    strengthPerWeek: z.number().int().nonnegative().max(7).optional(),
+    weeklyMileageGoal: z.number().positive().nullable().optional(),
+    maxLongRunKm: z.number().min(6).max(200).optional(),
+
+    // Phases
+    taperWeeks: z.number().int().nonnegative().optional(),
+    peakWeeks: z.number().int().nonnegative().optional(),
+    buildWeeks: z.number().int().nonnegative().optional(),
+
+    // Scheduling
+    longRunDay: z.number().int().min(0).max(6).optional(),
+    workoutDay: z.number().int().min(0).max(6).optional(),
+    swimDay: z.number().int().min(0).max(6).optional(),
+    restDays: z.array(z.number().int().min(0).max(6)).optional(),
+
+    // Goal time
+    targetTime: z.number().int().positive().optional(),
+
+    // Calibration
+    calibrationTime: z.number().int().positive().optional(),
+    calibrationDistance: z.enum(['5K', '10K', 'HALF', 'MARATHON']).optional(),
+    calibrationFactor: z.number().min(0.5).max(2.0).optional(),
+
+    // Advanced fields
+    planWeeks: z.number().int().positive().nullable().optional(),
+    planSource: z.string().optional(),
+    creationMode: z.nativeEnum(PlanCreationMode).optional(),
+    backyardLoopDistM: z.number().min(100).nullable().optional(),
+    backyardLoopTimeS: z.number().nullable().optional(),
+    targetLaps: z.number().int().min(1).max(100).nullable().optional(),
+    customDistanceM: z.number().nullable().optional(),
+    customSwimDistM: z.number().nullable().optional(),
+    customBikeDistM: z.number().nullable().optional(),
+    customRunDistM: z.number().nullable().optional(),
+    subGoals: z.array(SubGoalSchema).optional(),
+});
+
+export type PlanCreateInput = z.infer<typeof PlanCreateInputSchema>;
+
+// ─── Normalizer: converts API input → CreatePlanInput ───
+
+export interface NormalizedPlanParams extends Omit<CreatePlanInput, 'userId' | 'name'> {
+    userId: string;
+    name: string;
+}
+
+export function normalizePlanInput(
+    raw: PlanCreateInput,
+    userId: string,
+): NormalizedPlanParams {
+    const {
+        name, sport, raceType, raceDate, planStartDate, durationWeeks,
+        runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek,
+        weeklyMileageGoal, maxLongRunKm,
+        taperWeeks, peakWeeks, buildWeeks,
+        longRunDay, workoutDay, swimDay, restDays,
+        targetTime,
+        calibrationTime, calibrationDistance, calibrationFactor,
+        planWeeks, planSource, creationMode,
+        backyardLoopDistM, backyardLoopTimeS, targetLaps,
+        customDistanceM, customSwimDistM, customBikeDistM, customRunDistM,
+        subGoals,
+    } = raw;
+
+    // Resolve sport: default to RUN
+    const resolvedSport: 'RUN' | 'TRIATHLON' | 'NO_RACE' = sport ?? 'RUN';
+    const isNoRace = resolvedSport === 'NO_RACE';
+
+    // Resolve race type / date for NO_RACE
+    const resolvedRaceType: RaceType | null = isNoRace ? null : (raceType ?? null);
+    const resolvedRaceDate: string | null = isNoRace ? null : (raceDate ?? null);
+
+    // Resolve plan weeks
+    let resolvedPlanWeeks: number | null = planWeeks ?? null;
+    if (!resolvedPlanWeeks && isNoRace && durationWeeks) {
+        resolvedPlanWeeks = durationWeeks;
+    }
+    if (!resolvedPlanWeeks && resolvedRaceDate && planStartDate) {
+        const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+        const weeks = Math.max(4, Math.ceil(
+            (new Date(resolvedRaceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek,
+        ));
+        resolvedPlanWeeks = weeks;
+    }
+    if (!resolvedPlanWeeks) {
+        resolvedPlanWeeks = 12;
+    }
+
+    // Unit guard: weeklyMileageGoal < 200 → likely km, convert to meters
+    let resolvedWeeklyMileage = weeklyMileageGoal ?? null;
+    if (resolvedWeeklyMileage && resolvedWeeklyMileage > 0 && resolvedWeeklyMileage < 200) {
+        resolvedWeeklyMileage = resolvedWeeklyMileage * 1000;
+    }
+
+    // Defaults from race defaults when missing
+    const raceTypeKey = resolvedRaceType ?? 'MARATHON';
+    const defaults = getRaceDefaults(raceTypeKey);
+
+    const resolvedRunsPerWeek = runsPerWeek ?? defaults.runsPerWeek;
+    const resolvedRidesPerWeek = ridesPerWeek ?? defaults.ridesPerWeek;
+    const resolvedSwimsPerWeek = swimsPerWeek ?? defaults.swimsPerWeek;
+    const resolvedStrengthPerWeek = strengthPerWeek ?? defaults.strengthPerWeek;
+
+    // Clean sub-goals
+    const resolvedSubGoals = (subGoals ?? [])
+        .filter(sg => sg.name?.trim())
+        .map(sg => ({
+            ...sg,
+            name: sg.name.trim(),
+        }));
+
+    return {
+        userId,
+        name: name.trim(),
+        raceType: resolvedRaceType,
+        raceDate: resolvedRaceDate,
+        planStartDate: planStartDate ?? null,
+        targetTime: targetTime ?? null,
+        weeklyMileageGoal: resolvedWeeklyMileage,
+        planWeeks: resolvedPlanWeeks,
+        runsPerWeek: resolvedRunsPerWeek,
+        ridesPerWeek: resolvedRidesPerWeek,
+        swimsPerWeek: resolvedSwimsPerWeek,
+        strengthPerWeek: resolvedStrengthPerWeek,
+        taperWeeks: taperWeeks ?? null,
+        peakWeeks: peakWeeks ?? null,
+        buildWeeks: buildWeeks ?? null,
+        maxLongRunKm: maxLongRunKm ?? null,
+        longRunDay: longRunDay ?? 0,
+        workoutDay: workoutDay ?? 3,
+        swimDay: swimDay ?? null,
+        restDays: restDays ?? null,
+        calibrationTime: calibrationTime ?? null,
+        calibrationDistance: calibrationDistance ?? null,
+        calibrationFactor: calibrationFactor ?? null,
+        deactivateExisting: planSource !== 'advanced',
+        sport: resolvedSport === 'NO_RACE' ? 'RUN' : resolvedSport,
+        planSource: planSource ?? undefined,
+        creationMode: creationMode ?? undefined,
+        backyardLoopDistM: backyardLoopDistM ?? null,
+        backyardLoopTimeS: backyardLoopTimeS ?? null,
+        targetLaps: targetLaps ?? null,
+        customDistanceM: customDistanceM ?? null,
+        customSwimDistM: customSwimDistM ?? null,
+        customBikeDistM: customBikeDistM ?? null,
+        customRunDistM: customRunDistM ?? null,
+        subGoals: resolvedSubGoals,
+    };
+}
 
 export interface MapWorkoutsOptions {
     goalId: string;

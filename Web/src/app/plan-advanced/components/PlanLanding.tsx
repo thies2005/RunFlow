@@ -174,7 +174,7 @@ export function PlanLanding() {
 
     const createMutation = useMutation({
         mutationFn: async (body: Record<string, unknown>) => {
-            const res = await fetch('/api/plan-advanced', {
+            const res = await fetch('/api/plans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
@@ -187,8 +187,8 @@ export function PlanLanding() {
         },
         onSuccess: (data) => {
             toast.success('Plan created!');
-            queryClient.invalidateQueries({ queryKey: ['plan-advanced'] });
-            router.push(`/plan-advanced/${data.plan.id}`);
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+            router.push(`/plan-advanced/${data.plan?.id ?? data.goal?.id}`);
         },
         onError: (err) => {
             toast.error(err.message);
@@ -224,6 +224,8 @@ export function PlanLanding() {
             workoutDay: qualityDay,
             swimDay,
             restDays,
+            planSource: 'advanced',
+            creationMode: 'EXPERT_MANUAL',
             ...((goalTimeSeconds || triGoalTimeSeconds) && { targetTime: goalTimeSeconds || triGoalTimeSeconds }),
             ...(raceType === 'BACKYARD_ULTRA' && backyardLoopDistM && backyardLoopDistM > 0 && {
                 backyardLoopDistM,
@@ -659,7 +661,7 @@ export function PlanLanding() {
                     <button
                         type="button"
                         onClick={async () => {
-                            const res = await fetch('/api/plan-advanced', {
+                            const res = await fetch('/api/plans', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -673,7 +675,7 @@ export function PlanLanding() {
                             });
                             if (res.ok) {
                                 const data = await res.json();
-                                router.push(`/plan-advanced/${data.plan.id}`);
+                                router.push(`/plan-advanced/${data.plan?.id ?? data.goal?.id}`);
                             } else {
                                 toast.error('Failed to create plan for import');
                             }

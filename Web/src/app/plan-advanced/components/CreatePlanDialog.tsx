@@ -69,7 +69,7 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
 
     const createMutation = useMutation({
         mutationFn: async (body: Record<string, unknown>) => {
-            const res = await fetch('/api/plan-advanced', {
+            const res = await fetch('/api/plans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
@@ -82,8 +82,8 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
         },
         onSuccess: (data) => {
             toast.success('Plan created!');
-            queryClient.invalidateQueries({ queryKey: ['plan-advanced'] });
-            onCreated(data.plan.id);
+            queryClient.invalidateQueries({ queryKey: ['plans'] });
+            onCreated(data.plan?.id ?? data.goal?.id);
             resetForm();
             onClose();
         },
@@ -126,6 +126,8 @@ export function CreatePlanDialog({ isOpen, onClose, onCreated }: CreatePlanDialo
             ridesPerWeek,
             swimsPerWeek,
             weeklyMileageGoal: weeklyMileage * 1000,
+            planSource: 'advanced',
+            creationMode: 'EXPERT_MANUAL',
             ...(raceType === 'CUSTOM_TRI' && {
                 customSwimDistM: parseInt(customSwimDistM) || undefined,
                 customBikeDistM: parseInt(customBikeDistM) || undefined,

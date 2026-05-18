@@ -52,7 +52,7 @@ sealed class FoodItem with _$FoodItem {
       protein: (json['protein'] as num?)?.toDouble() ?? 0,
       carbs: (json['carbs'] as num?)?.toDouble() ?? 0,
       fat: (json['fat'] as num?)?.toDouble() ?? (json['fats'] as num?)?.toDouble() ?? 0,
-      servingSize: (json['servingSize'] as num?)?.toDouble() ?? 0,
+      servingSize: _parseServingSize(json['servingSize']),
       brand: json['brand'] as String?,
       barcode: json['barcode'] as String?,
       favoriteId: json['favoriteId'] as String?,
@@ -71,6 +71,15 @@ sealed class FoodItem with _$FoodItem {
     'barcode': barcode,
     'favoriteId': favoriteId,
   };
+}
+
+double _parseServingSize(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) {
+    final numeric = double.tryParse(value.replaceAll(RegExp(r'[^0-9.]'), ''));
+    return numeric ?? 0.0;
+  }
+  return 0.0;
 }
 
 @Freezed(copyWith: true)

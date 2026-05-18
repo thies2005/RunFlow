@@ -7,7 +7,10 @@ async function getFatSecretToken(): Promise<string | null> {
     const clientId = process.env.FATSECRET_CLIENT_ID;
     const clientSecret = process.env.FATSECRET_CLIENT_SECRET;
 
-    if (!clientId || !clientSecret) return null;
+    if (!clientId || !clientSecret) {
+        console.warn('[FatSecret] Missing FATSECRET_CLIENT_ID or FATSECRET_CLIENT_SECRET env vars');
+        return null;
+    }
 
     if (fatsecretAccessToken && Date.now() < tokenExpiryTime) {
         return fatsecretAccessToken;
@@ -57,7 +60,7 @@ export async function searchOpenFoodFacts(query: string): Promise<Array<Record<s
 
     try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 15000);
+        const timer = setTimeout(() => controller.abort(), 25000);
 
         const offUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20`;
         const offRes = await fetch(offUrl, {
@@ -68,7 +71,10 @@ export async function searchOpenFoodFacts(query: string): Promise<Array<Record<s
 
         clearTimeout(timer);
 
-        if (!offRes.ok) return [];
+        if (!offRes.ok) {
+            console.error(`[OFF Search] HTTP ${offRes.status} for query="${query}"`);
+            return [];
+        }
 
         const offData = await offRes.json();
         const offProducts = offData.products || [];
@@ -110,7 +116,8 @@ export async function searchOpenFoodFacts(query: string): Promise<Array<Record<s
         }
 
         return results;
-    } catch {
+    } catch (err) {
+        console.error(`[OFF Search] Error for query="${query}":`, err instanceof Error ? err.message : err);
         return [];
     }
 }
@@ -217,7 +224,8 @@ export async function searchFatSecret(query: string): Promise<Array<Record<strin
         }
 
         return mapped;
-    } catch {
+    } catch (err) {
+        console.error(`[FatSecret Search] Error for query="${query}":`, err instanceof Error ? err.message : err);
         return [];
     }
 }

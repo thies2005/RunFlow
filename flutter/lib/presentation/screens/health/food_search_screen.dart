@@ -72,12 +72,21 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     context.pop();
   }
 
+  void _toggleFavorite(FoodItem food) {
+    final favProvider = ref.read(foodFavoritesProvider.notifier);
+    final currentFood = food.copyWith(
+      favoriteId: favProvider.favoriteIdFor(food.name, brand: food.brand),
+    );
+    favProvider.toggleFavorite(currentFood);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final resultsAsync = _debouncedQuery.isEmpty
         ? const AsyncValue<List<FoodItem>>.data([])
         : ref.watch(foodSearchProvider(_debouncedQuery));
+    final favoritesAsync = ref.watch(foodFavoritesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -117,7 +126,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
             child: resultsAsync.when(
               data: (results) {
                 if (_debouncedQuery.isEmpty) {
-                  return _buildInitialState(theme);
+                  return _buildInitialState(theme, favoritesAsync);
                 }
                 if (results.isEmpty) {
                   return _buildNoResultsState(theme);
@@ -134,20 +143,100 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     );
   }
 
-  Widget _buildInitialState(ThemeData theme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search, size: 48, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
-          const SizedBox(height: 12),
-          Text(
-            S.of(context).foodSearchHint,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.onSurfaceVariant,
+  Widget _buildInitialState(ThemeData theme, AsyncValue<List<FoodItem>> favoritesAsync) {
+    return favoritesAsync.when(
+      data: (favorites) {
+        if (favorites.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.search, size: 48, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
+                const SizedBox(height: 12),
+                Text(
+                  S.of(context).foodSearchHint,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Row(
+                children: [
+                  const Icon(Icons.star, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Favorites',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${favorites.length}',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                itemCount: favorites.length,
+                itemBuilder: (context, index) {
+                  final food = favorites[index];
+                  return _FoodResultTile(
+                    food: food.copyWith(favoriteId: food.favoriteId),
+                    multiplier: _portionMultiplier,
+                    onMultiplierChanged: (v) => setState(() => _portionMultiplier = v),
+                    onLog: () => _logFood(food),
+                    onToggleFavorite: () => _toggleFavorite(food),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search, size: 48, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
+            const SizedBox(height: 12),
+            Text(
+              S.of(context).foodSearchHint,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+      error: (_, _) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search, size: 48, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
+            const SizedBox(height: 12),
+            Text(
+              S.of(context).foodSearchHint,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -188,6 +277,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   }
 
   Widget _buildResultsList(List<FoodItem> results, ThemeData theme) {
+    final favNotifier = ref.read(foodFavoritesProvider.notifier);
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       itemCount: results.length + 1,
@@ -205,11 +295,15 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
           );
         }
         final food = results[index];
+        final enrichedFood = food.copyWith(
+          favoriteId: favNotifier.favoriteIdFor(food.name, brand: food.brand),
+        );
         return _FoodResultTile(
-          food: food,
+          food: enrichedFood,
           multiplier: _portionMultiplier,
           onMultiplierChanged: (v) => setState(() => _portionMultiplier = v),
           onLog: () => _logFood(food),
+          onToggleFavorite: () => _toggleFavorite(food),
         );
       },
     );
@@ -316,12 +410,14 @@ class _FoodResultTile extends StatefulWidget {
     required this.multiplier,
     required this.onMultiplierChanged,
     required this.onLog,
+    required this.onToggleFavorite,
   });
 
   final FoodItem food;
   final double multiplier;
   final ValueChanged<double> onMultiplierChanged;
   final VoidCallback onLog;
+  final VoidCallback onToggleFavorite;
 
   @override
   State<_FoodResultTile> createState() => _FoodResultTileState();
@@ -351,9 +447,21 @@ class _FoodResultTileState extends State<_FoodResultTile> {
           children: [
             ListTile(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              title: Text(
-                food.name,
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              title: Row(
+                children: [
+                  Expanded(child: Text(
+                    food.name,
+                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  )),
+                  GestureDetector(
+                    onTap: widget.onToggleFavorite,
+                    child: Icon(
+                      food.isFavorite ? Icons.star : Icons.star_border,
+                      size: 20,
+                      color: food.isFavorite ? AppColors.primary : AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                ],
               ),
               subtitle: Row(
                 children: [

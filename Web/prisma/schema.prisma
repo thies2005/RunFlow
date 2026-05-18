@@ -74,6 +74,7 @@ model User {
   healthInsights        HealthInsight[]
   deviceTokens          DeviceToken[]
   dailyReadinessRecords DailyReadinessRecord[]
+  foodFavorites         FoodFavorite[]
   readinessBaselines    ReadinessBaseline[]
   adaptedWorkouts       AdaptedWorkout[]
   weeklyReconciliationRecords WeeklyReconciliationRecord[]
@@ -873,6 +874,26 @@ model FatSecretFoodCache {
 
   @@index([query])
   @@index([updatedAt])
+}
+
+model FoodFavorite {
+  id          String   @id @default(cuid())
+  userId      String
+  foodName    String
+  brand       String   @default("")
+  calories    Float
+  protein     Float
+  carbs       Float
+  fats        Float
+  servingSize String?
+  barcode     String?
+  source      String?
+  sourceId    String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, foodName, brand])
+  @@index([userId])
 }
 
 enum Sex {

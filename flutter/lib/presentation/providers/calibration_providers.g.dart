@@ -41,7 +41,7 @@ final class CalibrationProvider
   }
 }
 
-String _$calibrationHash() => r'190f451ae85c3436ba7b0458a03b84d660ac789a';
+String _$calibrationHash() => r'603748c30eef86cbf14d056094f9e1865369833c';
 
 abstract class _$Calibration extends $Notifier<CalibrationState> {
   CalibrationState build();

@@ -41,7 +41,7 @@ final class PrivacyConsentProvider
   }
 }
 
-String _$privacyConsentHash() => r'5e1383ab366c3c2d30b5d2a9780b37a052f3841a';
+String _$privacyConsentHash() => r'eb325e528c582206786d171ed5c7cd6f4cda9363';
 
 abstract class _$PrivacyConsent extends $Notifier<PrivacyConsentState> {
   PrivacyConsentState build();

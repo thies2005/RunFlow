@@ -498,3 +498,60 @@ class StackRenameMap extends _$StackRenameMap {
     return state[stackId] ?? stackId;
   }
 }
+
+@riverpod
+class FoodFavorites extends _$FoodFavorites {
+  @override
+  FutureOr<List<FoodItem>> build() async {
+    try {
+      final apiRepo = ref.read(healthApiRepositoryProvider);
+      return apiRepo.getFoodFavorites();
+    } catch (e) {
+      debugPrint('HealthProviders: Failed to load food favorites: $e');
+      return [];
+    }
+  }
+
+  Future<void> toggleFavorite(FoodItem food) async {
+    try {
+      final apiRepo = ref.read(healthApiRepositoryProvider);
+      if (food.favoriteId != null) {
+        await apiRepo.removeFoodFavorite(food.favoriteId!);
+        final current = state.asData?.value ?? [];
+        state = AsyncValue.data(
+          current.where((f) => f.favoriteId != food.favoriteId).toList(),
+        );
+      } else {
+        final favorited = await apiRepo.addFoodFavorite(food);
+        final current = state.asData?.value ?? [];
+        state = AsyncValue.data([favorited, ...current]);
+      }
+    } catch (e) {
+      debugPrint('HealthProviders: Failed to toggle favorite: $e');
+    }
+  }
+
+  bool isFavorite(String name, {String? brand}) {
+    final favorites = state.asData?.value ?? [];
+    final normalizedName = name.toLowerCase();
+    final normalizedBrand = (brand ?? '').toLowerCase();
+    return favorites.any((f) =>
+        f.name.toLowerCase() == normalizedName &&
+        (f.brand ?? '').toLowerCase() == normalizedBrand);
+  }
+
+  String? favoriteIdFor(String name, {String? brand}) {
+    final favorites = state.asData?.value ?? [];
+    final normalizedName = name.toLowerCase();
+    final normalizedBrand = (brand ?? '').toLowerCase();
+    try {
+      return favorites
+          .firstWhere((f) =>
+              f.name.toLowerCase() == normalizedName &&
+              (f.brand ?? '').toLowerCase() == normalizedBrand)
+          .favoriteId;
+    } catch (_) {
+      return null;
+    }
+  }
+}

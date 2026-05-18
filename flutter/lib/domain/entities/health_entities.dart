@@ -85,7 +85,9 @@ class FoodItem {
     required this.carbs,
     required this.fat,
     required this.servingSize,
+    this.brand,
     this.barcode,
+    this.favoriteId,
   });
 
   final int id;
@@ -95,7 +97,11 @@ class FoodItem {
   final double carbs;
   final double fat;
   final double servingSize;
+  final String? brand;
   final String? barcode;
+  final String? favoriteId;
+
+  bool get isFavorite => favoriteId != null;
 
   FoodItem copyWith({
     int? id,
@@ -105,7 +111,9 @@ class FoodItem {
     double? carbs,
     double? fat,
     double? servingSize,
+    String? brand,
     String? barcode,
+    String? favoriteId,
   }) {
     return FoodItem(
       id: id ?? this.id,
@@ -115,7 +123,9 @@ class FoodItem {
       carbs: carbs ?? this.carbs,
       fat: fat ?? this.fat,
       servingSize: servingSize ?? this.servingSize,
+      brand: brand ?? this.brand,
       barcode: barcode ?? this.barcode,
+      favoriteId: favoriteId ?? this.favoriteId,
     );
   }
 
@@ -131,7 +141,9 @@ class FoodItem {
           carbs == other.carbs &&
           fat == other.fat &&
           servingSize == other.servingSize &&
-          barcode == other.barcode;
+          brand == other.brand &&
+          barcode == other.barcode &&
+          favoriteId == other.favoriteId;
 
   @override
   int get hashCode => Object.hashAll([
@@ -142,7 +154,9 @@ class FoodItem {
     carbs,
     fat,
     servingSize,
+    brand,
     barcode,
+    favoriteId,
   ]);
 }
 

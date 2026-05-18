@@ -33,4 +33,7 @@ abstract class HealthApiRepository {
     required double remainingCarbs,
     required double remainingFats,
   });
+  Future<List<FoodItem>> getFoodFavorites();
+  Future<FoodItem> addFoodFavorite(FoodItem food);
+  Future<void> removeFoodFavorite(String favoriteId);
 }

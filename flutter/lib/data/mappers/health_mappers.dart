@@ -38,7 +38,9 @@ extension FoodItemMapper on FoodItem {
         carbs: carbs,
         fat: fat,
         servingSize: servingSize,
+        brand: brand,
         barcode: barcode,
+        favoriteId: favoriteId,
       );
 }
 
@@ -51,7 +53,9 @@ extension DomainFoodItemMapper on domain.FoodItem {
         carbs: carbs,
         fat: fat,
         servingSize: servingSize,
+        brand: brand,
         barcode: barcode,
+        favoriteId: favoriteId,
       );
 }
 

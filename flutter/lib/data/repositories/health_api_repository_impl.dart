@@ -562,4 +562,55 @@ class HealthApiRepositoryImpl implements HealthApiRepository {
             statusCode: e.response?.statusCode,
           );
   }
+
+  @override
+  Future<List<domain.FoodItem>> getFoodFavorites() async {
+    try {
+      final response = await dio.get(ApiConstants.nutritionFavoritesPath);
+      final data = response.data;
+      if (data is List) {
+        return data
+            .map((dynamic item) =>
+                FoodItem.fromJson(item as Map<String, dynamic>).toDomain())
+            .toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw _mapException(e, 'Failed to get food favorites.');
+    }
+  }
+
+  @override
+  Future<domain.FoodItem> addFoodFavorite(domain.FoodItem food) async {
+    try {
+      final response = await dio.post(
+        ApiConstants.nutritionFavoritesPath,
+        data: {
+          'name': food.name,
+          'brand': food.brand ?? '',
+          'calories': food.calories,
+          'protein': food.protein,
+          'carbs': food.carbs,
+          'fats': food.fat,
+          'servingSize': '${food.servingSize.toInt()}g',
+          'barcode': food.barcode,
+        },
+      );
+      return FoodItem.fromJson(response.data as Map<String, dynamic>).toDomain();
+    } on DioException catch (e) {
+      throw _mapException(e, 'Failed to add food favorite.');
+    }
+  }
+
+  @override
+  Future<void> removeFoodFavorite(String favoriteId) async {
+    try {
+      await dio.delete(
+        ApiConstants.nutritionFavoritesPath,
+        queryParameters: {'id': favoriteId},
+      );
+    } on DioException catch (e) {
+      throw _mapException(e, 'Failed to remove food favorite.');
+    }
+  }
 }

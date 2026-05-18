@@ -35,7 +35,9 @@ sealed class FoodItem with _$FoodItem {
     required double carbs,
     required double fat,
     required double servingSize,
+    String? brand,
     String? barcode,
+    String? favoriteId,
   }) = _FoodItem;
   const FoodItem._();
 
@@ -49,9 +51,11 @@ sealed class FoodItem with _$FoodItem {
       calories: (json['calories'] as num?)?.toDouble() ?? 0,
       protein: (json['protein'] as num?)?.toDouble() ?? 0,
       carbs: (json['carbs'] as num?)?.toDouble() ?? 0,
-      fat: (json['fat'] as num?)?.toDouble() ?? 0,
+      fat: (json['fat'] as num?)?.toDouble() ?? (json['fats'] as num?)?.toDouble() ?? 0,
       servingSize: (json['servingSize'] as num?)?.toDouble() ?? 0,
+      brand: json['brand'] as String?,
       barcode: json['barcode'] as String?,
+      favoriteId: json['favoriteId'] as String?,
     );
   }
 
@@ -63,7 +67,9 @@ sealed class FoodItem with _$FoodItem {
     'carbs': carbs,
     'fat': fat,
     'servingSize': servingSize,
+    'brand': brand,
     'barcode': barcode,
+    'favoriteId': favoriteId,
   };
 }
 

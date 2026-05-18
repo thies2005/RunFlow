@@ -215,7 +215,7 @@ final class BodyMeasurementsProvider
   }
 }
 
-String _$bodyMeasurementsHash() => r'a2971c548d1ffb148da0e6e7cb2ddc5d5f55170e';
+String _$bodyMeasurementsHash() => r'a4693721978e95a4bd481f4afbce3cfaf537091e';
 
 @ProviderFor(dailyHealth)
 final dailyHealthProvider = DailyHealthFamily._();
@@ -272,7 +272,7 @@ final class DailyHealthProvider
   }
 }
 
-String _$dailyHealthHash() => r'4495fc6b14904e25f17ca0e4a1743297fe631dfb';
+String _$dailyHealthHash() => r'3cbdddc55663e52a214a63168c69633287740fee';
 
 final class DailyHealthFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<DailyHealthLog>, DateTime> {
@@ -317,7 +317,7 @@ final class TakenSupplementIdsProvider
 }
 
 String _$takenSupplementIdsHash() =>
-    r'97c81f49e050dc785cc29d56cc0a6f91e820c67d';
+    r'040ca3aefb92aba838389a7c2f955d494cbf113d';
 
 abstract class _$TakenSupplementIds extends $AsyncNotifier<Set<String>> {
   FutureOr<Set<String>> build();
@@ -414,7 +414,7 @@ final class FastingScheduleNotifierProvider
 }
 
 String _$fastingScheduleNotifierHash() =>
-    r'36d1b81e0ed360a89aa3f4a0a8734b08dc321da6';
+    r'77eab94f7d33d07ac6a107b9ccb908619c722b42';
 
 abstract class _$FastingScheduleNotifier extends $Notifier<FastingSchedule> {
   FastingSchedule build();
@@ -458,7 +458,7 @@ final class SupplementListProvider
   SupplementList create() => SupplementList();
 }
 
-String _$supplementListHash() => r'b51a1ee22a8def615bb8767e0b17ecc8050efa40';
+String _$supplementListHash() => r'7bd66f42920e49bd97f58abf0e5bcbe8cba620c3';
 
 abstract class _$SupplementList extends $AsyncNotifier<List<Supplement>> {
   FutureOr<List<Supplement>> build();
@@ -520,7 +520,7 @@ final class NutritionNotifierProvider
   }
 }
 
-String _$nutritionNotifierHash() => r'50fda113ba64a47b569dae9bb2bfb482cb71ab90';
+String _$nutritionNotifierHash() => r'07cfb182f7010702c28cf190d8ef612147a82b91';
 
 final class NutritionNotifierFamily extends $Family
     with
@@ -652,7 +652,7 @@ final class NutritionAnalyticsProvider
 }
 
 String _$nutritionAnalyticsHash() =>
-    r'4b5c3df4cd581b733d5ba0671cb12e8a6832249f';
+    r'fbba81fc7e515c2322cd7f20836c95a9355a9e58';
 
 @ProviderFor(supplementAnalytics)
 final supplementAnalyticsProvider = SupplementAnalyticsProvider._();
@@ -694,7 +694,7 @@ final class SupplementAnalyticsProvider
 }
 
 String _$supplementAnalyticsHash() =>
-    r'650d90d703c575a28b43de55433688a350170bb6';
+    r'297fe920077c57b93fa5e52857f4ac2ebb2e81b5';
 
 @ProviderFor(healthHistory)
 final healthHistoryProvider = HealthHistoryFamily._();
@@ -751,7 +751,7 @@ final class HealthHistoryProvider
   }
 }
 
-String _$healthHistoryHash() => r'e189bcf6719737695a05ed28da098ee8febe41b9';
+String _$healthHistoryHash() => r'63069a428f2c65b9bb63b52d18498ef0bc1eb287';
 
 final class HealthHistoryFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<HealthHistory>, String> {
@@ -812,7 +812,7 @@ final class FoodSearchProvider
   }
 }
 
-String _$foodSearchHash() => r'3c1f9ec515cd5effebc67d410fd20583beae831d';
+String _$foodSearchHash() => r'2d3ae4237b87733f2bb850a44b8bb7350bc71e44';
 
 final class FoodSearchFamily extends $Family
     with
@@ -957,6 +957,50 @@ abstract class _$StackRenameMap extends $Notifier<Map<String, String>> {
             as $ClassProviderElement<
               AnyNotifier<Map<String, String>, Map<String, String>>,
               Map<String, String>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(FoodFavorites)
+final foodFavoritesProvider = FoodFavoritesProvider._();
+
+final class FoodFavoritesProvider
+    extends $AsyncNotifierProvider<FoodFavorites, List<FoodItem>> {
+  FoodFavoritesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'foodFavoritesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$foodFavoritesHash();
+
+  @$internal
+  @override
+  FoodFavorites create() => FoodFavorites();
+}
+
+String _$foodFavoritesHash() => r'd375030345f712fc9da2eedeb87088e3121f9c40';
+
+abstract class _$FoodFavorites extends $AsyncNotifier<List<FoodItem>> {
+  FutureOr<List<FoodItem>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<List<FoodItem>>, List<FoodItem>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<FoodItem>>, List<FoodItem>>,
+              AsyncValue<List<FoodItem>>,
               Object?,
               Object?
             >;

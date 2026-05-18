@@ -295,7 +295,7 @@ as DateTime,
 /// @nodoc
 mixin _$FoodItem {
 
- int get id; String get name; double get calories; double get protein; double get carbs; double get fat; double get servingSize; String? get barcode;
+ int get id; String get name; double get calories; double get protein; double get carbs; double get fat; double get servingSize; String? get brand; String? get barcode; String? get favoriteId;
 /// Create a copy of FoodItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -306,16 +306,16 @@ $FoodItemCopyWith<FoodItem> get copyWith => _$FoodItemCopyWithImpl<FoodItem>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FoodItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.protein, protein) || other.protein == protein)&&(identical(other.carbs, carbs) || other.carbs == carbs)&&(identical(other.fat, fat) || other.fat == fat)&&(identical(other.servingSize, servingSize) || other.servingSize == servingSize)&&(identical(other.barcode, barcode) || other.barcode == barcode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FoodItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.protein, protein) || other.protein == protein)&&(identical(other.carbs, carbs) || other.carbs == carbs)&&(identical(other.fat, fat) || other.fat == fat)&&(identical(other.servingSize, servingSize) || other.servingSize == servingSize)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.barcode, barcode) || other.barcode == barcode)&&(identical(other.favoriteId, favoriteId) || other.favoriteId == favoriteId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,calories,protein,carbs,fat,servingSize,barcode);
+int get hashCode => Object.hash(runtimeType,id,name,calories,protein,carbs,fat,servingSize,brand,barcode,favoriteId);
 
 @override
 String toString() {
-  return 'FoodItem(id: $id, name: $name, calories: $calories, protein: $protein, carbs: $carbs, fat: $fat, servingSize: $servingSize, barcode: $barcode)';
+  return 'FoodItem(id: $id, name: $name, calories: $calories, protein: $protein, carbs: $carbs, fat: $fat, servingSize: $servingSize, brand: $brand, barcode: $barcode, favoriteId: $favoriteId)';
 }
 
 
@@ -326,7 +326,7 @@ abstract mixin class $FoodItemCopyWith<$Res>  {
   factory $FoodItemCopyWith(FoodItem value, $Res Function(FoodItem) _then) = _$FoodItemCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, double calories, double protein, double carbs, double fat, double servingSize, String? barcode
+ int id, String name, double calories, double protein, double carbs, double fat, double servingSize, String? brand, String? barcode, String? favoriteId
 });
 
 
@@ -343,7 +343,7 @@ class _$FoodItemCopyWithImpl<$Res>
 
 /// Create a copy of FoodItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? calories = null,Object? protein = null,Object? carbs = null,Object? fat = null,Object? servingSize = null,Object? barcode = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? calories = null,Object? protein = null,Object? carbs = null,Object? fat = null,Object? servingSize = null,Object? brand = freezed,Object? barcode = freezed,Object? favoriteId = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -352,7 +352,9 @@ as double,protein: null == protein ? _self.protein : protein // ignore: cast_nul
 as double,carbs: null == carbs ? _self.carbs : carbs // ignore: cast_nullable_to_non_nullable
 as double,fat: null == fat ? _self.fat : fat // ignore: cast_nullable_to_non_nullable
 as double,servingSize: null == servingSize ? _self.servingSize : servingSize // ignore: cast_nullable_to_non_nullable
-as double,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
+as double,brand: freezed == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
+as String?,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
+as String?,favoriteId: freezed == favoriteId ? _self.favoriteId : favoriteId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -435,10 +437,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  double calories,  double protein,  double carbs,  double fat,  double servingSize,  String? barcode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  double calories,  double protein,  double carbs,  double fat,  double servingSize,  String? brand,  String? barcode,  String? favoriteId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FoodItem() when $default != null:
-return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_that.fat,_that.servingSize,_that.barcode);case _:
+return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_that.fat,_that.servingSize,_that.brand,_that.barcode,_that.favoriteId);case _:
   return orElse();
 
 }
@@ -456,10 +458,10 @@ return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  double calories,  double protein,  double carbs,  double fat,  double servingSize,  String? barcode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  double calories,  double protein,  double carbs,  double fat,  double servingSize,  String? brand,  String? barcode,  String? favoriteId)  $default,) {final _that = this;
 switch (_that) {
 case _FoodItem():
-return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_that.fat,_that.servingSize,_that.barcode);}
+return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_that.fat,_that.servingSize,_that.brand,_that.barcode,_that.favoriteId);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -473,10 +475,10 @@ return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  double calories,  double protein,  double carbs,  double fat,  double servingSize,  String? barcode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  double calories,  double protein,  double carbs,  double fat,  double servingSize,  String? brand,  String? barcode,  String? favoriteId)?  $default,) {final _that = this;
 switch (_that) {
 case _FoodItem() when $default != null:
-return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_that.fat,_that.servingSize,_that.barcode);case _:
+return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_that.fat,_that.servingSize,_that.brand,_that.barcode,_that.favoriteId);case _:
   return null;
 
 }
@@ -488,7 +490,7 @@ return $default(_that.id,_that.name,_that.calories,_that.protein,_that.carbs,_th
 
 
 class _FoodItem extends FoodItem {
-  const _FoodItem({required this.id, required this.name, required this.calories, required this.protein, required this.carbs, required this.fat, required this.servingSize, this.barcode}): super._();
+  const _FoodItem({required this.id, required this.name, required this.calories, required this.protein, required this.carbs, required this.fat, required this.servingSize, this.brand, this.barcode, this.favoriteId}): super._();
   
 
 @override final  int id;
@@ -498,7 +500,9 @@ class _FoodItem extends FoodItem {
 @override final  double carbs;
 @override final  double fat;
 @override final  double servingSize;
+@override final  String? brand;
 @override final  String? barcode;
+@override final  String? favoriteId;
 
 /// Create a copy of FoodItem
 /// with the given fields replaced by the non-null parameter values.
@@ -510,16 +514,16 @@ _$FoodItemCopyWith<_FoodItem> get copyWith => __$FoodItemCopyWithImpl<_FoodItem>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FoodItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.protein, protein) || other.protein == protein)&&(identical(other.carbs, carbs) || other.carbs == carbs)&&(identical(other.fat, fat) || other.fat == fat)&&(identical(other.servingSize, servingSize) || other.servingSize == servingSize)&&(identical(other.barcode, barcode) || other.barcode == barcode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FoodItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.calories, calories) || other.calories == calories)&&(identical(other.protein, protein) || other.protein == protein)&&(identical(other.carbs, carbs) || other.carbs == carbs)&&(identical(other.fat, fat) || other.fat == fat)&&(identical(other.servingSize, servingSize) || other.servingSize == servingSize)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.barcode, barcode) || other.barcode == barcode)&&(identical(other.favoriteId, favoriteId) || other.favoriteId == favoriteId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,calories,protein,carbs,fat,servingSize,barcode);
+int get hashCode => Object.hash(runtimeType,id,name,calories,protein,carbs,fat,servingSize,brand,barcode,favoriteId);
 
 @override
 String toString() {
-  return 'FoodItem(id: $id, name: $name, calories: $calories, protein: $protein, carbs: $carbs, fat: $fat, servingSize: $servingSize, barcode: $barcode)';
+  return 'FoodItem(id: $id, name: $name, calories: $calories, protein: $protein, carbs: $carbs, fat: $fat, servingSize: $servingSize, brand: $brand, barcode: $barcode, favoriteId: $favoriteId)';
 }
 
 
@@ -530,7 +534,7 @@ abstract mixin class _$FoodItemCopyWith<$Res> implements $FoodItemCopyWith<$Res>
   factory _$FoodItemCopyWith(_FoodItem value, $Res Function(_FoodItem) _then) = __$FoodItemCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, double calories, double protein, double carbs, double fat, double servingSize, String? barcode
+ int id, String name, double calories, double protein, double carbs, double fat, double servingSize, String? brand, String? barcode, String? favoriteId
 });
 
 
@@ -547,7 +551,7 @@ class __$FoodItemCopyWithImpl<$Res>
 
 /// Create a copy of FoodItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? calories = null,Object? protein = null,Object? carbs = null,Object? fat = null,Object? servingSize = null,Object? barcode = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? calories = null,Object? protein = null,Object? carbs = null,Object? fat = null,Object? servingSize = null,Object? brand = freezed,Object? barcode = freezed,Object? favoriteId = freezed,}) {
   return _then(_FoodItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -556,7 +560,9 @@ as double,protein: null == protein ? _self.protein : protein // ignore: cast_nul
 as double,carbs: null == carbs ? _self.carbs : carbs // ignore: cast_nullable_to_non_nullable
 as double,fat: null == fat ? _self.fat : fat // ignore: cast_nullable_to_non_nullable
 as double,servingSize: null == servingSize ? _self.servingSize : servingSize // ignore: cast_nullable_to_non_nullable
-as double,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
+as double,brand: freezed == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
+as String?,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
+as String?,favoriteId: freezed == favoriteId ? _self.favoriteId : favoriteId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

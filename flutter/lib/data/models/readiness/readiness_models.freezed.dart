@@ -13,7 +13,7 @@ part of 'readiness_models.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$RhrMetricsModel {
+mixin _$RhrMetricsModel implements DiagnosticableTreeMixin {
 
  double? get todayRhr; double? get baselineRhr; double? get rhrDelta; int? get trendDirection;
 /// Create a copy of RhrMetricsModel
@@ -25,6 +25,12 @@ $RhrMetricsModelCopyWith<RhrMetricsModel> get copyWith => _$RhrMetricsModelCopyW
   /// Serializes this RhrMetricsModel to a JSON map.
   Map<String, dynamic> toJson();
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'RhrMetricsModel'))
+    ..add(DiagnosticsProperty('todayRhr', todayRhr))..add(DiagnosticsProperty('baselineRhr', baselineRhr))..add(DiagnosticsProperty('rhrDelta', rhrDelta))..add(DiagnosticsProperty('trendDirection', trendDirection));
+}
 
 @override
 bool operator ==(Object other) {
@@ -36,7 +42,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,todayRhr,baselineRhr,rhrDelta,trendDirection);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'RhrMetricsModel(todayRhr: $todayRhr, baselineRhr: $baselineRhr, rhrDelta: $rhrDelta, trendDirection: $trendDirection)';
 }
 
@@ -205,7 +211,7 @@ return $default(_that.todayRhr,_that.baselineRhr,_that.rhrDelta,_that.trendDirec
 /// @nodoc
 @JsonSerializable()
 
-class _RhrMetricsModel extends RhrMetricsModel {
+class _RhrMetricsModel extends RhrMetricsModel with DiagnosticableTreeMixin {
   const _RhrMetricsModel({this.todayRhr, this.baselineRhr, this.rhrDelta, this.trendDirection}): super._();
   factory _RhrMetricsModel.fromJson(Map<String, dynamic> json) => _$RhrMetricsModelFromJson(json);
 
@@ -224,6 +230,12 @@ _$RhrMetricsModelCopyWith<_RhrMetricsModel> get copyWith => __$RhrMetricsModelCo
 Map<String, dynamic> toJson() {
   return _$RhrMetricsModelToJson(this, );
 }
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'RhrMetricsModel'))
+    ..add(DiagnosticsProperty('todayRhr', todayRhr))..add(DiagnosticsProperty('baselineRhr', baselineRhr))..add(DiagnosticsProperty('rhrDelta', rhrDelta))..add(DiagnosticsProperty('trendDirection', trendDirection));
+}
 
 @override
 bool operator ==(Object other) {
@@ -235,7 +247,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,todayRhr,baselineRhr,rhrDelta,trendDirection);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'RhrMetricsModel(todayRhr: $todayRhr, baselineRhr: $baselineRhr, rhrDelta: $rhrDelta, trendDirection: $trendDirection)';
 }
 
@@ -279,7 +291,7 @@ as int?,
 
 
 /// @nodoc
-mixin _$SleepMetricsModel {
+mixin _$SleepMetricsModel implements DiagnosticableTreeMixin {
 
  double? get totalDurationMinutes; double? get deepMinutes; double? get remMinutes; double? get lightMinutes; double? get deepPercent; double? get remPercent; double? get sleepEfficiency;
 /// Create a copy of SleepMetricsModel
@@ -291,6 +303,12 @@ $SleepMetricsModelCopyWith<SleepMetricsModel> get copyWith => _$SleepMetricsMode
   /// Serializes this SleepMetricsModel to a JSON map.
   Map<String, dynamic> toJson();
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SleepMetricsModel'))
+    ..add(DiagnosticsProperty('totalDurationMinutes', totalDurationMinutes))..add(DiagnosticsProperty('deepMinutes', deepMinutes))..add(DiagnosticsProperty('remMinutes', remMinutes))..add(DiagnosticsProperty('lightMinutes', lightMinutes))..add(DiagnosticsProperty('deepPercent', deepPercent))..add(DiagnosticsProperty('remPercent', remPercent))..add(DiagnosticsProperty('sleepEfficiency', sleepEfficiency));
+}
 
 @override
 bool operator ==(Object other) {
@@ -302,7 +320,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,totalDurationMinutes,deepMinutes,remMinutes,lightMinutes,deepPercent,remPercent,sleepEfficiency);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'SleepMetricsModel(totalDurationMinutes: $totalDurationMinutes, deepMinutes: $deepMinutes, remMinutes: $remMinutes, lightMinutes: $lightMinutes, deepPercent: $deepPercent, remPercent: $remPercent, sleepEfficiency: $sleepEfficiency)';
 }
 
@@ -474,7 +492,7 @@ return $default(_that.totalDurationMinutes,_that.deepMinutes,_that.remMinutes,_t
 /// @nodoc
 @JsonSerializable()
 
-class _SleepMetricsModel extends SleepMetricsModel {
+class _SleepMetricsModel extends SleepMetricsModel with DiagnosticableTreeMixin {
   const _SleepMetricsModel({this.totalDurationMinutes, this.deepMinutes, this.remMinutes, this.lightMinutes, this.deepPercent, this.remPercent, this.sleepEfficiency}): super._();
   factory _SleepMetricsModel.fromJson(Map<String, dynamic> json) => _$SleepMetricsModelFromJson(json);
 
@@ -496,6 +514,12 @@ _$SleepMetricsModelCopyWith<_SleepMetricsModel> get copyWith => __$SleepMetricsM
 Map<String, dynamic> toJson() {
   return _$SleepMetricsModelToJson(this, );
 }
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SleepMetricsModel'))
+    ..add(DiagnosticsProperty('totalDurationMinutes', totalDurationMinutes))..add(DiagnosticsProperty('deepMinutes', deepMinutes))..add(DiagnosticsProperty('remMinutes', remMinutes))..add(DiagnosticsProperty('lightMinutes', lightMinutes))..add(DiagnosticsProperty('deepPercent', deepPercent))..add(DiagnosticsProperty('remPercent', remPercent))..add(DiagnosticsProperty('sleepEfficiency', sleepEfficiency));
+}
 
 @override
 bool operator ==(Object other) {
@@ -507,7 +531,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,totalDurationMinutes,deepMinutes,remMinutes,lightMinutes,deepPercent,remPercent,sleepEfficiency);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'SleepMetricsModel(totalDurationMinutes: $totalDurationMinutes, deepMinutes: $deepMinutes, remMinutes: $remMinutes, lightMinutes: $lightMinutes, deepPercent: $deepPercent, remPercent: $remPercent, sleepEfficiency: $sleepEfficiency)';
 }
 
@@ -554,7 +578,7 @@ as double?,
 
 
 /// @nodoc
-mixin _$LoadMetricsModel {
+mixin _$LoadMetricsModel implements DiagnosticableTreeMixin {
 
  double? get todayTrimp; double? get atl; double? get ctl; double? get tsb; double? get workloadRatio; String? get trimpStrategy; double? get sevenDayTrimpTotal;
 /// Create a copy of LoadMetricsModel
@@ -566,6 +590,12 @@ $LoadMetricsModelCopyWith<LoadMetricsModel> get copyWith => _$LoadMetricsModelCo
   /// Serializes this LoadMetricsModel to a JSON map.
   Map<String, dynamic> toJson();
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'LoadMetricsModel'))
+    ..add(DiagnosticsProperty('todayTrimp', todayTrimp))..add(DiagnosticsProperty('atl', atl))..add(DiagnosticsProperty('ctl', ctl))..add(DiagnosticsProperty('tsb', tsb))..add(DiagnosticsProperty('workloadRatio', workloadRatio))..add(DiagnosticsProperty('trimpStrategy', trimpStrategy))..add(DiagnosticsProperty('sevenDayTrimpTotal', sevenDayTrimpTotal));
+}
 
 @override
 bool operator ==(Object other) {
@@ -577,7 +607,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,todayTrimp,atl,ctl,tsb,workloadRatio,trimpStrategy,sevenDayTrimpTotal);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'LoadMetricsModel(todayTrimp: $todayTrimp, atl: $atl, ctl: $ctl, tsb: $tsb, workloadRatio: $workloadRatio, trimpStrategy: $trimpStrategy, sevenDayTrimpTotal: $sevenDayTrimpTotal)';
 }
 
@@ -749,7 +779,7 @@ return $default(_that.todayTrimp,_that.atl,_that.ctl,_that.tsb,_that.workloadRat
 /// @nodoc
 @JsonSerializable()
 
-class _LoadMetricsModel extends LoadMetricsModel {
+class _LoadMetricsModel extends LoadMetricsModel with DiagnosticableTreeMixin {
   const _LoadMetricsModel({this.todayTrimp, this.atl, this.ctl, this.tsb, this.workloadRatio, this.trimpStrategy, this.sevenDayTrimpTotal}): super._();
   factory _LoadMetricsModel.fromJson(Map<String, dynamic> json) => _$LoadMetricsModelFromJson(json);
 
@@ -771,6 +801,12 @@ _$LoadMetricsModelCopyWith<_LoadMetricsModel> get copyWith => __$LoadMetricsMode
 Map<String, dynamic> toJson() {
   return _$LoadMetricsModelToJson(this, );
 }
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'LoadMetricsModel'))
+    ..add(DiagnosticsProperty('todayTrimp', todayTrimp))..add(DiagnosticsProperty('atl', atl))..add(DiagnosticsProperty('ctl', ctl))..add(DiagnosticsProperty('tsb', tsb))..add(DiagnosticsProperty('workloadRatio', workloadRatio))..add(DiagnosticsProperty('trimpStrategy', trimpStrategy))..add(DiagnosticsProperty('sevenDayTrimpTotal', sevenDayTrimpTotal));
+}
 
 @override
 bool operator ==(Object other) {
@@ -782,7 +818,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,todayTrimp,atl,ctl,tsb,workloadRatio,trimpStrategy,sevenDayTrimpTotal);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'LoadMetricsModel(todayTrimp: $todayTrimp, atl: $atl, ctl: $ctl, tsb: $tsb, workloadRatio: $workloadRatio, trimpStrategy: $trimpStrategy, sevenDayTrimpTotal: $sevenDayTrimpTotal)';
 }
 
@@ -829,7 +865,7 @@ as double?,
 
 
 /// @nodoc
-mixin _$SubjectiveInputModel {
+mixin _$SubjectiveInputModel implements DiagnosticableTreeMixin {
 
  int? get exhaustionLevel; int? get muscleSoreness; int? get stressLevel; String? get note; String? get enteredAt;
 /// Create a copy of SubjectiveInputModel
@@ -841,6 +877,12 @@ $SubjectiveInputModelCopyWith<SubjectiveInputModel> get copyWith => _$Subjective
   /// Serializes this SubjectiveInputModel to a JSON map.
   Map<String, dynamic> toJson();
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SubjectiveInputModel'))
+    ..add(DiagnosticsProperty('exhaustionLevel', exhaustionLevel))..add(DiagnosticsProperty('muscleSoreness', muscleSoreness))..add(DiagnosticsProperty('stressLevel', stressLevel))..add(DiagnosticsProperty('note', note))..add(DiagnosticsProperty('enteredAt', enteredAt));
+}
 
 @override
 bool operator ==(Object other) {
@@ -852,7 +894,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,exhaustionLevel,muscleSoreness,stressLevel,note,enteredAt);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'SubjectiveInputModel(exhaustionLevel: $exhaustionLevel, muscleSoreness: $muscleSoreness, stressLevel: $stressLevel, note: $note, enteredAt: $enteredAt)';
 }
 
@@ -1022,7 +1064,7 @@ return $default(_that.exhaustionLevel,_that.muscleSoreness,_that.stressLevel,_th
 /// @nodoc
 @JsonSerializable()
 
-class _SubjectiveInputModel extends SubjectiveInputModel {
+class _SubjectiveInputModel extends SubjectiveInputModel with DiagnosticableTreeMixin {
   const _SubjectiveInputModel({this.exhaustionLevel, this.muscleSoreness, this.stressLevel, this.note, this.enteredAt}): super._();
   factory _SubjectiveInputModel.fromJson(Map<String, dynamic> json) => _$SubjectiveInputModelFromJson(json);
 
@@ -1042,6 +1084,12 @@ _$SubjectiveInputModelCopyWith<_SubjectiveInputModel> get copyWith => __$Subject
 Map<String, dynamic> toJson() {
   return _$SubjectiveInputModelToJson(this, );
 }
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'SubjectiveInputModel'))
+    ..add(DiagnosticsProperty('exhaustionLevel', exhaustionLevel))..add(DiagnosticsProperty('muscleSoreness', muscleSoreness))..add(DiagnosticsProperty('stressLevel', stressLevel))..add(DiagnosticsProperty('note', note))..add(DiagnosticsProperty('enteredAt', enteredAt));
+}
 
 @override
 bool operator ==(Object other) {
@@ -1053,7 +1101,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,exhaustionLevel,muscleSoreness,stressLevel,note,enteredAt);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'SubjectiveInputModel(exhaustionLevel: $exhaustionLevel, muscleSoreness: $muscleSoreness, stressLevel: $stressLevel, note: $note, enteredAt: $enteredAt)';
 }
 
@@ -1098,7 +1146,7 @@ as String?,
 
 
 /// @nodoc
-mixin _$ComponentScoreModel {
+mixin _$ComponentScoreModel implements DiagnosticableTreeMixin {
 
  String get component; double get score; bool get isAvailable; String? get reason;
 /// Create a copy of ComponentScoreModel
@@ -1110,6 +1158,12 @@ $ComponentScoreModelCopyWith<ComponentScoreModel> get copyWith => _$ComponentSco
   /// Serializes this ComponentScoreModel to a JSON map.
   Map<String, dynamic> toJson();
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'ComponentScoreModel'))
+    ..add(DiagnosticsProperty('component', component))..add(DiagnosticsProperty('score', score))..add(DiagnosticsProperty('isAvailable', isAvailable))..add(DiagnosticsProperty('reason', reason));
+}
 
 @override
 bool operator ==(Object other) {
@@ -1121,7 +1175,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,component,score,isAvailable,reason);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'ComponentScoreModel(component: $component, score: $score, isAvailable: $isAvailable, reason: $reason)';
 }
 
@@ -1290,7 +1344,7 @@ return $default(_that.component,_that.score,_that.isAvailable,_that.reason);case
 /// @nodoc
 @JsonSerializable()
 
-class _ComponentScoreModel extends ComponentScoreModel {
+class _ComponentScoreModel extends ComponentScoreModel with DiagnosticableTreeMixin {
   const _ComponentScoreModel({required this.component, required this.score, required this.isAvailable, this.reason}): super._();
   factory _ComponentScoreModel.fromJson(Map<String, dynamic> json) => _$ComponentScoreModelFromJson(json);
 
@@ -1309,6 +1363,12 @@ _$ComponentScoreModelCopyWith<_ComponentScoreModel> get copyWith => __$Component
 Map<String, dynamic> toJson() {
   return _$ComponentScoreModelToJson(this, );
 }
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'ComponentScoreModel'))
+    ..add(DiagnosticsProperty('component', component))..add(DiagnosticsProperty('score', score))..add(DiagnosticsProperty('isAvailable', isAvailable))..add(DiagnosticsProperty('reason', reason));
+}
 
 @override
 bool operator ==(Object other) {
@@ -1320,7 +1380,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,component,score,isAvailable,reason);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'ComponentScoreModel(component: $component, score: $score, isAvailable: $isAvailable, reason: $reason)';
 }
 
@@ -1364,7 +1424,7 @@ as String?,
 
 
 /// @nodoc
-mixin _$ReadinessOverrideModel {
+mixin _$ReadinessOverrideModel implements DiagnosticableTreeMixin {
 
  String get state; String? get note; String? get overriddenAt;
 /// Create a copy of ReadinessOverrideModel
@@ -1376,6 +1436,12 @@ $ReadinessOverrideModelCopyWith<ReadinessOverrideModel> get copyWith => _$Readin
   /// Serializes this ReadinessOverrideModel to a JSON map.
   Map<String, dynamic> toJson();
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'ReadinessOverrideModel'))
+    ..add(DiagnosticsProperty('state', state))..add(DiagnosticsProperty('note', note))..add(DiagnosticsProperty('overriddenAt', overriddenAt));
+}
 
 @override
 bool operator ==(Object other) {
@@ -1387,7 +1453,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,state,note,overriddenAt);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'ReadinessOverrideModel(state: $state, note: $note, overriddenAt: $overriddenAt)';
 }
 
@@ -1555,7 +1621,7 @@ return $default(_that.state,_that.note,_that.overriddenAt);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _ReadinessOverrideModel extends ReadinessOverrideModel {
+class _ReadinessOverrideModel extends ReadinessOverrideModel with DiagnosticableTreeMixin {
   const _ReadinessOverrideModel({required this.state, this.note, this.overriddenAt}): super._();
   factory _ReadinessOverrideModel.fromJson(Map<String, dynamic> json) => _$ReadinessOverrideModelFromJson(json);
 
@@ -1573,6 +1639,12 @@ _$ReadinessOverrideModelCopyWith<_ReadinessOverrideModel> get copyWith => __$Rea
 Map<String, dynamic> toJson() {
   return _$ReadinessOverrideModelToJson(this, );
 }
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'ReadinessOverrideModel'))
+    ..add(DiagnosticsProperty('state', state))..add(DiagnosticsProperty('note', note))..add(DiagnosticsProperty('overriddenAt', overriddenAt));
+}
 
 @override
 bool operator ==(Object other) {
@@ -1584,7 +1656,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,state,note,overriddenAt);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'ReadinessOverrideModel(state: $state, note: $note, overriddenAt: $overriddenAt)';
 }
 
@@ -1626,7 +1698,7 @@ as String?,
 }
 
 /// @nodoc
-mixin _$DailyReadinessRecordModel {
+mixin _$DailyReadinessRecordModel implements DiagnosticableTreeMixin {
 
  String get date; RhrMetricsModel? get rhr; SleepMetricsModel? get sleep; LoadMetricsModel? get load; SubjectiveInputModel? get subjective; List<ComponentScoreModel> get componentScores; double get compositeScore; String get state; String get confidence; List<String> get reasons; ReadinessOverrideModel? get readinessOverride; String? get computedAt; String? get syncedAt; int? get maxHr; int? get restingHr;
 /// Create a copy of DailyReadinessRecordModel
@@ -1636,6 +1708,12 @@ mixin _$DailyReadinessRecordModel {
 $DailyReadinessRecordModelCopyWith<DailyReadinessRecordModel> get copyWith => _$DailyReadinessRecordModelCopyWithImpl<DailyReadinessRecordModel>(this as DailyReadinessRecordModel, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'DailyReadinessRecordModel'))
+    ..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('rhr', rhr))..add(DiagnosticsProperty('sleep', sleep))..add(DiagnosticsProperty('load', load))..add(DiagnosticsProperty('subjective', subjective))..add(DiagnosticsProperty('componentScores', componentScores))..add(DiagnosticsProperty('compositeScore', compositeScore))..add(DiagnosticsProperty('state', state))..add(DiagnosticsProperty('confidence', confidence))..add(DiagnosticsProperty('reasons', reasons))..add(DiagnosticsProperty('readinessOverride', readinessOverride))..add(DiagnosticsProperty('computedAt', computedAt))..add(DiagnosticsProperty('syncedAt', syncedAt))..add(DiagnosticsProperty('maxHr', maxHr))..add(DiagnosticsProperty('restingHr', restingHr));
+}
 
 @override
 bool operator ==(Object other) {
@@ -1647,7 +1725,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,date,rhr,sleep,load,subjective,const DeepCollectionEquality().hash(componentScores),compositeScore,state,confidence,const DeepCollectionEquality().hash(reasons),readinessOverride,computedAt,syncedAt,maxHr,restingHr);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'DailyReadinessRecordModel(date: $date, rhr: $rhr, sleep: $sleep, load: $load, subjective: $subjective, componentScores: $componentScores, compositeScore: $compositeScore, state: $state, confidence: $confidence, reasons: $reasons, readinessOverride: $readinessOverride, computedAt: $computedAt, syncedAt: $syncedAt, maxHr: $maxHr, restingHr: $restingHr)';
 }
 
@@ -1887,7 +1965,7 @@ return $default(_that.date,_that.rhr,_that.sleep,_that.load,_that.subjective,_th
 /// @nodoc
 
 
-class _DailyReadinessRecordModel extends DailyReadinessRecordModel {
+class _DailyReadinessRecordModel extends DailyReadinessRecordModel with DiagnosticableTreeMixin {
   const _DailyReadinessRecordModel({required this.date, this.rhr, this.sleep, this.load, this.subjective, final  List<ComponentScoreModel> componentScores = const [], this.compositeScore = 0, this.state = 'unavailable', this.confidence = 'unavailable', final  List<String> reasons = const [], this.readinessOverride, this.computedAt, this.syncedAt, this.maxHr, this.restingHr}): _componentScores = componentScores,_reasons = reasons,super._();
   
 
@@ -1926,6 +2004,12 @@ class _DailyReadinessRecordModel extends DailyReadinessRecordModel {
 _$DailyReadinessRecordModelCopyWith<_DailyReadinessRecordModel> get copyWith => __$DailyReadinessRecordModelCopyWithImpl<_DailyReadinessRecordModel>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'DailyReadinessRecordModel'))
+    ..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('rhr', rhr))..add(DiagnosticsProperty('sleep', sleep))..add(DiagnosticsProperty('load', load))..add(DiagnosticsProperty('subjective', subjective))..add(DiagnosticsProperty('componentScores', componentScores))..add(DiagnosticsProperty('compositeScore', compositeScore))..add(DiagnosticsProperty('state', state))..add(DiagnosticsProperty('confidence', confidence))..add(DiagnosticsProperty('reasons', reasons))..add(DiagnosticsProperty('readinessOverride', readinessOverride))..add(DiagnosticsProperty('computedAt', computedAt))..add(DiagnosticsProperty('syncedAt', syncedAt))..add(DiagnosticsProperty('maxHr', maxHr))..add(DiagnosticsProperty('restingHr', restingHr));
+}
 
 @override
 bool operator ==(Object other) {
@@ -1937,7 +2021,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,date,rhr,sleep,load,subjective,const DeepCollectionEquality().hash(_componentScores),compositeScore,state,confidence,const DeepCollectionEquality().hash(_reasons),readinessOverride,computedAt,syncedAt,maxHr,restingHr);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'DailyReadinessRecordModel(date: $date, rhr: $rhr, sleep: $sleep, load: $load, subjective: $subjective, componentScores: $componentScores, compositeScore: $compositeScore, state: $state, confidence: $confidence, reasons: $reasons, readinessOverride: $readinessOverride, computedAt: $computedAt, syncedAt: $syncedAt, maxHr: $maxHr, restingHr: $restingHr)';
 }
 
@@ -2051,7 +2135,7 @@ $ReadinessOverrideModelCopyWith<$Res>? get readinessOverride {
 }
 
 /// @nodoc
-mixin _$ReadinessBaselineModel {
+mixin _$ReadinessBaselineModel implements DiagnosticableTreeMixin {
 
  double? get rhrMedian30Day; double? get sleepAverage28Day; String get lastUpdated;
 /// Create a copy of ReadinessBaselineModel
@@ -2061,6 +2145,12 @@ mixin _$ReadinessBaselineModel {
 $ReadinessBaselineModelCopyWith<ReadinessBaselineModel> get copyWith => _$ReadinessBaselineModelCopyWithImpl<ReadinessBaselineModel>(this as ReadinessBaselineModel, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'ReadinessBaselineModel'))
+    ..add(DiagnosticsProperty('rhrMedian30Day', rhrMedian30Day))..add(DiagnosticsProperty('sleepAverage28Day', sleepAverage28Day))..add(DiagnosticsProperty('lastUpdated', lastUpdated));
+}
 
 @override
 bool operator ==(Object other) {
@@ -2072,7 +2162,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,rhrMedian30Day,sleepAverage28Day,lastUpdated);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'ReadinessBaselineModel(rhrMedian30Day: $rhrMedian30Day, sleepAverage28Day: $sleepAverage28Day, lastUpdated: $lastUpdated)';
 }
 
@@ -2240,7 +2330,7 @@ return $default(_that.rhrMedian30Day,_that.sleepAverage28Day,_that.lastUpdated);
 /// @nodoc
 
 
-class _ReadinessBaselineModel extends ReadinessBaselineModel {
+class _ReadinessBaselineModel extends ReadinessBaselineModel with DiagnosticableTreeMixin {
   const _ReadinessBaselineModel({this.rhrMedian30Day, this.sleepAverage28Day, required this.lastUpdated}): super._();
   
 
@@ -2255,6 +2345,12 @@ class _ReadinessBaselineModel extends ReadinessBaselineModel {
 _$ReadinessBaselineModelCopyWith<_ReadinessBaselineModel> get copyWith => __$ReadinessBaselineModelCopyWithImpl<_ReadinessBaselineModel>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'ReadinessBaselineModel'))
+    ..add(DiagnosticsProperty('rhrMedian30Day', rhrMedian30Day))..add(DiagnosticsProperty('sleepAverage28Day', sleepAverage28Day))..add(DiagnosticsProperty('lastUpdated', lastUpdated));
+}
 
 @override
 bool operator ==(Object other) {
@@ -2266,7 +2362,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,rhrMedian30Day,sleepAverage28Day,lastUpdated);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'ReadinessBaselineModel(rhrMedian30Day: $rhrMedian30Day, sleepAverage28Day: $sleepAverage28Day, lastUpdated: $lastUpdated)';
 }
 
@@ -2308,7 +2404,7 @@ as String,
 }
 
 /// @nodoc
-mixin _$AdaptedWorkoutModel {
+mixin _$AdaptedWorkoutModel implements DiagnosticableTreeMixin {
 
  String get id; String get originalWorkoutId; String get date; String get originalType; String get adaptedType; String get adaptationType; double get originalTargetDistance; double? get adaptedTargetDistance; int get originalTargetDuration; int? get adaptedTargetDuration; double get originalTargetPace; double? get adaptedTargetPace; String get reason; double get readinessScore; String get readinessState; bool get isAccepted; String get createdAt; String? get syncedAt;
 /// Create a copy of AdaptedWorkoutModel
@@ -2318,6 +2414,12 @@ mixin _$AdaptedWorkoutModel {
 $AdaptedWorkoutModelCopyWith<AdaptedWorkoutModel> get copyWith => _$AdaptedWorkoutModelCopyWithImpl<AdaptedWorkoutModel>(this as AdaptedWorkoutModel, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AdaptedWorkoutModel'))
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('originalWorkoutId', originalWorkoutId))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('originalType', originalType))..add(DiagnosticsProperty('adaptedType', adaptedType))..add(DiagnosticsProperty('adaptationType', adaptationType))..add(DiagnosticsProperty('originalTargetDistance', originalTargetDistance))..add(DiagnosticsProperty('adaptedTargetDistance', adaptedTargetDistance))..add(DiagnosticsProperty('originalTargetDuration', originalTargetDuration))..add(DiagnosticsProperty('adaptedTargetDuration', adaptedTargetDuration))..add(DiagnosticsProperty('originalTargetPace', originalTargetPace))..add(DiagnosticsProperty('adaptedTargetPace', adaptedTargetPace))..add(DiagnosticsProperty('reason', reason))..add(DiagnosticsProperty('readinessScore', readinessScore))..add(DiagnosticsProperty('readinessState', readinessState))..add(DiagnosticsProperty('isAccepted', isAccepted))..add(DiagnosticsProperty('createdAt', createdAt))..add(DiagnosticsProperty('syncedAt', syncedAt));
+}
 
 @override
 bool operator ==(Object other) {
@@ -2329,7 +2431,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,originalWorkoutId,date,originalType,adaptedType,adaptationType,originalTargetDistance,adaptedTargetDistance,originalTargetDuration,adaptedTargetDuration,originalTargetPace,adaptedTargetPace,reason,readinessScore,readinessState,isAccepted,createdAt,syncedAt);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'AdaptedWorkoutModel(id: $id, originalWorkoutId: $originalWorkoutId, date: $date, originalType: $originalType, adaptedType: $adaptedType, adaptationType: $adaptationType, originalTargetDistance: $originalTargetDistance, adaptedTargetDistance: $adaptedTargetDistance, originalTargetDuration: $originalTargetDuration, adaptedTargetDuration: $adaptedTargetDuration, originalTargetPace: $originalTargetPace, adaptedTargetPace: $adaptedTargetPace, reason: $reason, readinessScore: $readinessScore, readinessState: $readinessState, isAccepted: $isAccepted, createdAt: $createdAt, syncedAt: $syncedAt)';
 }
 
@@ -2512,7 +2614,7 @@ return $default(_that.id,_that.originalWorkoutId,_that.date,_that.originalType,_
 /// @nodoc
 
 
-class _AdaptedWorkoutModel extends AdaptedWorkoutModel {
+class _AdaptedWorkoutModel extends AdaptedWorkoutModel with DiagnosticableTreeMixin {
   const _AdaptedWorkoutModel({required this.id, required this.originalWorkoutId, required this.date, required this.originalType, required this.adaptedType, required this.adaptationType, required this.originalTargetDistance, this.adaptedTargetDistance, required this.originalTargetDuration, this.adaptedTargetDuration, required this.originalTargetPace, this.adaptedTargetPace, required this.reason, required this.readinessScore, required this.readinessState, required this.isAccepted, required this.createdAt, this.syncedAt}): super._();
   
 
@@ -2542,6 +2644,12 @@ class _AdaptedWorkoutModel extends AdaptedWorkoutModel {
 _$AdaptedWorkoutModelCopyWith<_AdaptedWorkoutModel> get copyWith => __$AdaptedWorkoutModelCopyWithImpl<_AdaptedWorkoutModel>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'AdaptedWorkoutModel'))
+    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('originalWorkoutId', originalWorkoutId))..add(DiagnosticsProperty('date', date))..add(DiagnosticsProperty('originalType', originalType))..add(DiagnosticsProperty('adaptedType', adaptedType))..add(DiagnosticsProperty('adaptationType', adaptationType))..add(DiagnosticsProperty('originalTargetDistance', originalTargetDistance))..add(DiagnosticsProperty('adaptedTargetDistance', adaptedTargetDistance))..add(DiagnosticsProperty('originalTargetDuration', originalTargetDuration))..add(DiagnosticsProperty('adaptedTargetDuration', adaptedTargetDuration))..add(DiagnosticsProperty('originalTargetPace', originalTargetPace))..add(DiagnosticsProperty('adaptedTargetPace', adaptedTargetPace))..add(DiagnosticsProperty('reason', reason))..add(DiagnosticsProperty('readinessScore', readinessScore))..add(DiagnosticsProperty('readinessState', readinessState))..add(DiagnosticsProperty('isAccepted', isAccepted))..add(DiagnosticsProperty('createdAt', createdAt))..add(DiagnosticsProperty('syncedAt', syncedAt));
+}
 
 @override
 bool operator ==(Object other) {
@@ -2553,7 +2661,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,id,originalWorkoutId,date,originalType,adaptedType,adaptationType,originalTargetDistance,adaptedTargetDistance,originalTargetDuration,adaptedTargetDuration,originalTargetPace,adaptedTargetPace,reason,readinessScore,readinessState,isAccepted,createdAt,syncedAt);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'AdaptedWorkoutModel(id: $id, originalWorkoutId: $originalWorkoutId, date: $date, originalType: $originalType, adaptedType: $adaptedType, adaptationType: $adaptationType, originalTargetDistance: $originalTargetDistance, adaptedTargetDistance: $adaptedTargetDistance, originalTargetDuration: $originalTargetDuration, adaptedTargetDuration: $adaptedTargetDuration, originalTargetPace: $originalTargetPace, adaptedTargetPace: $adaptedTargetPace, reason: $reason, readinessScore: $readinessScore, readinessState: $readinessState, isAccepted: $isAccepted, createdAt: $createdAt, syncedAt: $syncedAt)';
 }
 
@@ -2610,7 +2718,7 @@ as String?,
 }
 
 /// @nodoc
-mixin _$WeeklyReconciliationRecordModel {
+mixin _$WeeklyReconciliationRecordModel implements DiagnosticableTreeMixin {
 
  String get weekStartDate; double get plannedLoad; double get actualLoad; double get adaptedLoad; double get deficitPercent; double get surplusPercent; String? get adjustmentDescription; bool get isApplied; int? get raceWeeksRemaining; bool get requiresReview; String get createdAt; String? get syncedAt;
 /// Create a copy of WeeklyReconciliationRecordModel
@@ -2620,6 +2728,12 @@ mixin _$WeeklyReconciliationRecordModel {
 $WeeklyReconciliationRecordModelCopyWith<WeeklyReconciliationRecordModel> get copyWith => _$WeeklyReconciliationRecordModelCopyWithImpl<WeeklyReconciliationRecordModel>(this as WeeklyReconciliationRecordModel, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'WeeklyReconciliationRecordModel'))
+    ..add(DiagnosticsProperty('weekStartDate', weekStartDate))..add(DiagnosticsProperty('plannedLoad', plannedLoad))..add(DiagnosticsProperty('actualLoad', actualLoad))..add(DiagnosticsProperty('adaptedLoad', adaptedLoad))..add(DiagnosticsProperty('deficitPercent', deficitPercent))..add(DiagnosticsProperty('surplusPercent', surplusPercent))..add(DiagnosticsProperty('adjustmentDescription', adjustmentDescription))..add(DiagnosticsProperty('isApplied', isApplied))..add(DiagnosticsProperty('raceWeeksRemaining', raceWeeksRemaining))..add(DiagnosticsProperty('requiresReview', requiresReview))..add(DiagnosticsProperty('createdAt', createdAt))..add(DiagnosticsProperty('syncedAt', syncedAt));
+}
 
 @override
 bool operator ==(Object other) {
@@ -2631,7 +2745,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,weekStartDate,plannedLoad,actualLoad,adaptedLoad,deficitPercent,surplusPercent,adjustmentDescription,isApplied,raceWeeksRemaining,requiresReview,createdAt,syncedAt);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'WeeklyReconciliationRecordModel(weekStartDate: $weekStartDate, plannedLoad: $plannedLoad, actualLoad: $actualLoad, adaptedLoad: $adaptedLoad, deficitPercent: $deficitPercent, surplusPercent: $surplusPercent, adjustmentDescription: $adjustmentDescription, isApplied: $isApplied, raceWeeksRemaining: $raceWeeksRemaining, requiresReview: $requiresReview, createdAt: $createdAt, syncedAt: $syncedAt)';
 }
 
@@ -2808,7 +2922,7 @@ return $default(_that.weekStartDate,_that.plannedLoad,_that.actualLoad,_that.ada
 /// @nodoc
 
 
-class _WeeklyReconciliationRecordModel extends WeeklyReconciliationRecordModel {
+class _WeeklyReconciliationRecordModel extends WeeklyReconciliationRecordModel with DiagnosticableTreeMixin {
   const _WeeklyReconciliationRecordModel({required this.weekStartDate, this.plannedLoad = 0, this.actualLoad = 0, this.adaptedLoad = 0, this.deficitPercent = 0, this.surplusPercent = 0, this.adjustmentDescription, this.isApplied = false, this.raceWeeksRemaining, this.requiresReview = false, required this.createdAt, this.syncedAt}): super._();
   
 
@@ -2832,6 +2946,12 @@ class _WeeklyReconciliationRecordModel extends WeeklyReconciliationRecordModel {
 _$WeeklyReconciliationRecordModelCopyWith<_WeeklyReconciliationRecordModel> get copyWith => __$WeeklyReconciliationRecordModelCopyWithImpl<_WeeklyReconciliationRecordModel>(this, _$identity);
 
 
+@override
+void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+  properties
+    ..add(DiagnosticsProperty('type', 'WeeklyReconciliationRecordModel'))
+    ..add(DiagnosticsProperty('weekStartDate', weekStartDate))..add(DiagnosticsProperty('plannedLoad', plannedLoad))..add(DiagnosticsProperty('actualLoad', actualLoad))..add(DiagnosticsProperty('adaptedLoad', adaptedLoad))..add(DiagnosticsProperty('deficitPercent', deficitPercent))..add(DiagnosticsProperty('surplusPercent', surplusPercent))..add(DiagnosticsProperty('adjustmentDescription', adjustmentDescription))..add(DiagnosticsProperty('isApplied', isApplied))..add(DiagnosticsProperty('raceWeeksRemaining', raceWeeksRemaining))..add(DiagnosticsProperty('requiresReview', requiresReview))..add(DiagnosticsProperty('createdAt', createdAt))..add(DiagnosticsProperty('syncedAt', syncedAt));
+}
 
 @override
 bool operator ==(Object other) {
@@ -2843,7 +2963,7 @@ bool operator ==(Object other) {
 int get hashCode => Object.hash(runtimeType,weekStartDate,plannedLoad,actualLoad,adaptedLoad,deficitPercent,surplusPercent,adjustmentDescription,isApplied,raceWeeksRemaining,requiresReview,createdAt,syncedAt);
 
 @override
-String toString() {
+String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
   return 'WeeklyReconciliationRecordModel(weekStartDate: $weekStartDate, plannedLoad: $plannedLoad, actualLoad: $actualLoad, adaptedLoad: $adaptedLoad, deficitPercent: $deficitPercent, surplusPercent: $surplusPercent, adjustmentDescription: $adjustmentDescription, isApplied: $isApplied, raceWeeksRemaining: $raceWeeksRemaining, requiresReview: $requiresReview, createdAt: $createdAt, syncedAt: $syncedAt)';
 }
 

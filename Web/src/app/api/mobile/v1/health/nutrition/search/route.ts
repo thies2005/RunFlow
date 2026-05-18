@@ -72,6 +72,8 @@ export async function GET(request: NextRequest) {
         addResults(offResults as SearchResultItem[], 'off');
         addResults(fsResults as SearchResultItem[], 'fs');
 
+        console.log(`[Mobile Nutrition Search] Query="${query}" local=${localItems.length} bls=${blsResults.length} off=${offResults.length} fs=${fsResults.length} total=${combined.length}`);
+
         const queryLower = query.toLowerCase();
         const regex = new RegExp(`(?:^|[\\s,;(])${escapeRegex(queryLower)}`);
 
@@ -100,6 +102,7 @@ export async function GET(request: NextRequest) {
             { headers: rateLimitHeaders(rateLimitResult) }
         );
     } catch (error) {
+        console.error('[Mobile Nutrition Search] Error:', error);
         return handleApiError(error, { path: '/api/mobile/v1/health/nutrition/search' });
     }
 }

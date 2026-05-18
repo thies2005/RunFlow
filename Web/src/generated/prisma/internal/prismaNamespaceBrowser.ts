@@ -92,6 +92,7 @@ export const ModelName = {
   SavedMealItem: 'SavedMealItem',
   OffFoodCache: 'OffFoodCache',
   FatSecretFoodCache: 'FatSecretFoodCache',
+  FoodFavorite: 'FoodFavorite',
   ApiRouteMetric: 'ApiRouteMetric',
   ErrorLog: 'ErrorLog',
   PerformanceSummary: 'PerformanceSummary',
@@ -622,7 +623,10 @@ export const WorkoutScalarFieldEnum = {
   intervalProgressionId: 'intervalProgressionId',
   structuredSteps: 'structuredSteps',
   groupId: 'groupId',
-  subGoalId: 'subGoalId'
+  subGoalId: 'subGoalId',
+  sport: 'sport',
+  displayDesc: 'displayDesc',
+  intensityZone: 'intensityZone'
 } as const
 
 export type WorkoutScalarFieldEnum = (typeof WorkoutScalarFieldEnum)[keyof typeof WorkoutScalarFieldEnum]
@@ -910,6 +914,25 @@ export const FatSecretFoodCacheScalarFieldEnum = {
 } as const
 
 export type FatSecretFoodCacheScalarFieldEnum = (typeof FatSecretFoodCacheScalarFieldEnum)[keyof typeof FatSecretFoodCacheScalarFieldEnum]
+
+
+export const FoodFavoriteScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  foodName: 'foodName',
+  brand: 'brand',
+  calories: 'calories',
+  protein: 'protein',
+  carbs: 'carbs',
+  fats: 'fats',
+  servingSize: 'servingSize',
+  barcode: 'barcode',
+  source: 'source',
+  sourceId: 'sourceId',
+  createdAt: 'createdAt'
+} as const
+
+export type FoodFavoriteScalarFieldEnum = (typeof FoodFavoriteScalarFieldEnum)[keyof typeof FoodFavoriteScalarFieldEnum]
 
 
 export const ApiRouteMetricScalarFieldEnum = {

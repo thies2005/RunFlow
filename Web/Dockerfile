@@ -27,9 +27,8 @@ ENV DATABASE_URL=$DATABASE_URL
 
 COPY . .
 
-# Generate Prisma client (cached across builds when schema unchanged)
-RUN --mount=type=cache,target=/app/src/generated \
-    npx prisma generate
+# Generate Prisma client
+RUN npx prisma generate
 
 # Build Next.js with cache and memory limit
 ENV NEXT_TELEMETRY_DISABLED=1

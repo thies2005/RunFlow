@@ -247,6 +247,11 @@ export type OffFoodCache = Prisma.OffFoodCacheModel
  */
 export type FatSecretFoodCache = Prisma.FatSecretFoodCacheModel
 /**
+ * Model FoodFavorite
+ * 
+ */
+export type FoodFavorite = Prisma.FoodFavoriteModel
+/**
  * Model ApiRouteMetric
  * 
  */

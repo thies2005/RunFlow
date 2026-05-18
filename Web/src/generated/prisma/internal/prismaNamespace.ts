@@ -425,6 +425,7 @@ export const ModelName = {
   SavedMealItem: 'SavedMealItem',
   OffFoodCache: 'OffFoodCache',
   FatSecretFoodCache: 'FatSecretFoodCache',
+  FoodFavorite: 'FoodFavorite',
   ApiRouteMetric: 'ApiRouteMetric',
   ErrorLog: 'ErrorLog',
   PerformanceSummary: 'PerformanceSummary',
@@ -456,7 +457,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord" | "planSnapshot" | "weekTemplate" | "intervalProgression" | "aiPlanAnalysis" | "planPaceProfile" | "guidedPlanSession"
+    modelProps: "user" | "userConsent" | "adminAuditLog" | "globalAiSettings" | "aiProvider" | "userAiSettings" | "activityAiFeedback" | "feedbackJob" | "account" | "session" | "verificationToken" | "authCode" | "activity" | "lap" | "split" | "dailyFitness" | "supplementStack" | "supplement" | "supplementLog" | "dailyHealthLog" | "goal" | "raceResult" | "workout" | "notification" | "pushSubscription" | "reminderSettings" | "apiKey" | "chatMessage" | "chatSession" | "aiDailyTokenUsage" | "aiUsageHistory" | "foodItem" | "nutritionLog" | "userNutritionTarget" | "bodyMeasurement" | "fastingSession" | "healthInsight" | "savedMeal" | "savedMealItem" | "offFoodCache" | "fatSecretFoodCache" | "foodFavorite" | "apiRouteMetric" | "errorLog" | "performanceSummary" | "sessionReplay" | "deviceToken" | "release" | "dailyReadinessRecord" | "readinessBaseline" | "adaptedWorkout" | "weeklyReconciliationRecord" | "planSnapshot" | "weekTemplate" | "intervalProgression" | "aiPlanAnalysis" | "planPaceProfile" | "guidedPlanSession"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3494,6 +3495,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    FoodFavorite: {
+      payload: Prisma.$FoodFavoritePayload<ExtArgs>
+      fields: Prisma.FoodFavoriteFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FoodFavoriteFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FoodFavoriteFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload>
+        }
+        findFirst: {
+          args: Prisma.FoodFavoriteFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FoodFavoriteFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload>
+        }
+        findMany: {
+          args: Prisma.FoodFavoriteFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload>[]
+        }
+        create: {
+          args: Prisma.FoodFavoriteCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload>
+        }
+        createMany: {
+          args: Prisma.FoodFavoriteCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FoodFavoriteCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload>[]
+        }
+        delete: {
+          args: Prisma.FoodFavoriteDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload>
+        }
+        update: {
+          args: Prisma.FoodFavoriteUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload>
+        }
+        deleteMany: {
+          args: Prisma.FoodFavoriteDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FoodFavoriteUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FoodFavoriteUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload>[]
+        }
+        upsert: {
+          args: Prisma.FoodFavoriteUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FoodFavoritePayload>
+        }
+        aggregate: {
+          args: Prisma.FoodFavoriteAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFoodFavorite>
+        }
+        groupBy: {
+          args: Prisma.FoodFavoriteGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FoodFavoriteGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FoodFavoriteCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FoodFavoriteCountAggregateOutputType> | number
+        }
+      }
+    }
     ApiRouteMetric: {
       payload: Prisma.$ApiRouteMetricPayload<ExtArgs>
       fields: Prisma.ApiRouteMetricFieldRefs
@@ -5213,7 +5288,10 @@ export const WorkoutScalarFieldEnum = {
   intervalProgressionId: 'intervalProgressionId',
   structuredSteps: 'structuredSteps',
   groupId: 'groupId',
-  subGoalId: 'subGoalId'
+  subGoalId: 'subGoalId',
+  sport: 'sport',
+  displayDesc: 'displayDesc',
+  intensityZone: 'intensityZone'
 } as const
 
 export type WorkoutScalarFieldEnum = (typeof WorkoutScalarFieldEnum)[keyof typeof WorkoutScalarFieldEnum]
@@ -5501,6 +5579,25 @@ export const FatSecretFoodCacheScalarFieldEnum = {
 } as const
 
 export type FatSecretFoodCacheScalarFieldEnum = (typeof FatSecretFoodCacheScalarFieldEnum)[keyof typeof FatSecretFoodCacheScalarFieldEnum]
+
+
+export const FoodFavoriteScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  foodName: 'foodName',
+  brand: 'brand',
+  calories: 'calories',
+  protein: 'protein',
+  carbs: 'carbs',
+  fats: 'fats',
+  servingSize: 'servingSize',
+  barcode: 'barcode',
+  source: 'source',
+  sourceId: 'sourceId',
+  createdAt: 'createdAt'
+} as const
+
+export type FoodFavoriteScalarFieldEnum = (typeof FoodFavoriteScalarFieldEnum)[keyof typeof FoodFavoriteScalarFieldEnum]
 
 
 export const ApiRouteMetricScalarFieldEnum = {
@@ -6184,6 +6281,7 @@ export type GlobalOmitConfig = {
   savedMealItem?: Prisma.SavedMealItemOmit
   offFoodCache?: Prisma.OffFoodCacheOmit
   fatSecretFoodCache?: Prisma.FatSecretFoodCacheOmit
+  foodFavorite?: Prisma.FoodFavoriteOmit
   apiRouteMetric?: Prisma.ApiRouteMetricOmit
   errorLog?: Prisma.ErrorLogOmit
   performanceSummary?: Prisma.PerformanceSummaryOmit

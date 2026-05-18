@@ -88,8 +88,9 @@ services:
         max-file: "3"
 
   migrator:
-    image: node:24-alpine
+    build: .
     container_name: runflow-migrator
+    working_dir: /app
     command: sh -c "npx prisma migrate deploy"
     restart: "no"
     environment:

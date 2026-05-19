@@ -806,6 +806,9 @@ async function handleError(response: Response) {
     if (response.status === 429) {
         throw new Error('AI provider rate limited (429)');
     }
+    if (response.status === 503) {
+        throw new Error('AI API error: 503 - The AI model is temporarily overloaded. Please try again in a few minutes.');
+    }
     let errorMessage = `AI API error: ${response.status}`;
     try {
         const data = await response.json();

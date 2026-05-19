@@ -11,6 +11,7 @@ export interface RedisClient {
 
 let redisClient: RedisClient | null = null;
 let redisInitialized = false;
+let redisPermanentlyFailed = false;
 
 function createIoredisAdapter(ioredis: InstanceType<typeof import('ioredis').default>): RedisClient {
     return {
@@ -45,6 +46,7 @@ function createIoredisAdapter(ioredis: InstanceType<typeof import('ioredis').def
 }
 
 export async function getRedisClient(): Promise<RedisClient | null> {
+    if (redisPermanentlyFailed) return null;
     if (redisInitialized) return redisClient;
 
     const redisUrl = process.env.REDIS_URL;
@@ -62,22 +64,31 @@ export async function getRedisClient(): Promise<RedisClient | null> {
             password: redisPassword || undefined,
             maxRetriesPerRequest: 1,
             retryStrategy(times) {
-                // Keep retrying in the background indefinitely, backing off to 5 seconds
+                if (redisPermanentlyFailed) return null;
                 const delay = Math.min(times * 500, 5000);
                 return delay;
             },
-            enableOfflineQueue: false, // Fail fast if disconnected, allowing immediate fallback to memory
-            lazyConnect: true, // Don't block startup
+            enableOfflineQueue: false,
+            lazyConnect: true,
         });
 
+        let authFailLogged = false;
         client.on('error', (err: Error) => {
+            if (err.message.includes('WRONGPASS') || err.message.includes('invalid username-password')) {
+                redisPermanentlyFailed = true;
+                if (!authFailLogged) {
+                    authFailLogged = true;
+                    logger.error('Redis authentication failed permanently - disabling Redis. Check REDIS_URL and REDIS_PASSWORD.', { error: err.message });
+                }
+                try { client.disconnect(); } catch { /* ignore */ }
+                redisClient = null;
+                redisInitialized = true;
+                return;
+            }
             logger.warn('Redis connection error (will retry automatically)', { error: err.message });
         });
 
-        // Trigger background connection attempt without blocking
-        client.connect().catch(() => {
-            // Catch initial connection error; retryStrategy will handle subsequent attempts
-        });
+        client.connect().catch(() => {});
 
         redisClient = createIoredisAdapter(client);
         logger.info('Redis client initialized with auto-reconnect');

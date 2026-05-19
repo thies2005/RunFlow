@@ -156,7 +156,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         }
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId: session.user.id },
         });
 
         if (!goal) {

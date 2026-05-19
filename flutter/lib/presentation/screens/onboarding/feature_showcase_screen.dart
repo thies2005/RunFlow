@@ -1,22 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FeatureShowcaseScreen extends StatefulWidget {
   const FeatureShowcaseScreen({super.key});
-
-  static Future<bool> isCompleted() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(AppConstants.onboardingCompletedKey) ?? false;
-  }
-
-  static Future<void> markCompleted() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(AppConstants.onboardingCompletedKey, true);
-  }
 
   @override
   State<FeatureShowcaseScreen> createState() => _FeatureShowcaseScreenState();
@@ -130,9 +119,12 @@ class _FeatureShowcaseScreenState extends State<FeatureShowcaseScreen> {
     }
   }
 
-  void _finish() {
-    FeatureShowcaseScreen.markCompleted();
-    context.go('/login');
+  Future<void> _finish() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('showcase_completed', true);
+    if (mounted) {
+      context.go('/onboarding/wizard');
+    }
   }
 }
 

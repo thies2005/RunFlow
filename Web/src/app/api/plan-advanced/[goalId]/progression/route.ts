@@ -17,7 +17,7 @@ export async function GET(req: Request, ctx: RouteContext) {
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId: session.user.id },
         });
 
         if (!goal) {
@@ -55,7 +55,7 @@ export async function POST(req: Request, ctx: RouteContext) {
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId: session.user.id },
         });
 
         if (!goal) {
@@ -122,7 +122,7 @@ export async function PUT(req: Request, ctx: RouteContext) {
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId: session.user.id },
         });
 
         if (!goal) {

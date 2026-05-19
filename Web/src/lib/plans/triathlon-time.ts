@@ -31,7 +31,7 @@ const TRI_RACE_SWIM: Partial<Record<RaceType, number>> = {
     OLYMPIC_TRI: 1500,
     HALF_IRONMAN: 1900,
     FULL_IRONMAN: 3800,
-    CUSTOM_TRI: 1500,
+    CUSTOM_TRI: 750,
 };
 
 const TRI_RACE_BIKE: Partial<Record<RaceType, number>> = {
@@ -39,7 +39,7 @@ const TRI_RACE_BIKE: Partial<Record<RaceType, number>> = {
     OLYMPIC_TRI: 40000,
     HALF_IRONMAN: 90000,
     FULL_IRONMAN: 180000,
-    CUSTOM_TRI: 40000,
+    CUSTOM_TRI: 20000,
 };
 
 const TRI_RACE_RUN: Partial<Record<RaceType, number>> = {
@@ -47,7 +47,7 @@ const TRI_RACE_RUN: Partial<Record<RaceType, number>> = {
     OLYMPIC_TRI: 10000,
     HALF_IRONMAN: 21097,
     FULL_IRONMAN: 42195,
-    CUSTOM_TRI: 10000,
+    CUSTOM_TRI: 5000,
 };
 
 type TransitionTimes = { t1: number; t2: number };

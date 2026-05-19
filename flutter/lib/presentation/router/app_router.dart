@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:runflow_flutter/core/constants/api_constants.dart';
 import 'package:runflow_flutter/domain/entities/auth_entities.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:runflow_flutter/presentation/providers/auth_providers.dart';
 import 'package:runflow_flutter/presentation/screens/auth/login_screen.dart';
 import 'package:runflow_flutter/presentation/screens/auth/register_screen.dart';
@@ -17,7 +19,7 @@ import 'package:runflow_flutter/presentation/screens/analytics/heatmap_screen.da
 import 'package:runflow_flutter/presentation/screens/goals/goal_list_screen.dart';
 import 'package:runflow_flutter/presentation/screens/plan/plan_screen.dart';
 import 'package:runflow_flutter/presentation/screens/goals/goal_detail_screen.dart';
-import 'package:runflow_flutter/presentation/screens/goals/goal_setup_wizard.dart';
+import 'package:runflow_flutter/presentation/screens/onboarding/unified_plan_wizard.dart';
 import 'package:runflow_flutter/presentation/screens/profile/profile_screen.dart';
 import 'package:runflow_flutter/presentation/screens/profile/edit_profile_screen.dart';
 import 'package:runflow_flutter/presentation/screens/profile/hr_zone_editor_screen.dart';
@@ -57,22 +59,33 @@ GoRouter createRouter(Ref ref) {
     observers: kReleaseMode ? [SentryNavigatorObserver()] : null,
     redirect: (context, state) async {
       final authState = ref.read(authStateProvider);
-      final onboardingComplete = await FeatureShowcaseScreen.isCompleted();
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingComplete =
+          prefs.getBool(AppConstants.onboardingCompletedKey) ?? false;
+      final showcaseComplete =
+          prefs.getBool('showcase_completed') ?? false;
       final isStartup = state.matchedLocation == '/startup';
       final isLoggingIn = state.matchedLocation == '/login';
       final isOnboarding = state.matchedLocation == '/onboarding';
+      final isOnboardingWizard =
+          state.matchedLocation == '/onboarding/wizard';
       final isRegistering = state.matchedLocation == '/register';
       final isForgotPassword = state.matchedLocation == '/forgot-password';
       final isPublicAuth = isLoggingIn || isRegistering || isForgotPassword;
       final isAuthenticated =
           authState is AsyncData<User?> && authState.value != null;
 
-      if (!onboardingComplete) {
-        return isOnboarding ? null : '/onboarding';
-      }
-
-      if (isOnboarding) {
-        return isAuthenticated ? '/dashboard' : '/login';
+      if (onboardingComplete) {
+        if (isOnboarding || isOnboardingWizard) {
+          return isAuthenticated ? '/dashboard' : '/login';
+        }
+      } else if (showcaseComplete) {
+        if (isOnboardingWizard) return null;
+        if (isOnboarding) return '/onboarding/wizard';
+        return '/onboarding/wizard';
+      } else {
+        if (isOnboarding) return null;
+        return '/onboarding';
       }
 
       if (authState.isLoading) {
@@ -99,6 +112,11 @@ GoRouter createRouter(Ref ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const FeatureShowcaseScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/wizard',
+        builder: (context, state) =>
+            const UnifiedPlanWizard(isFromOnboarding: true),
       ),
       GoRoute(
         path: '/login',
@@ -241,7 +259,8 @@ GoRouter createRouter(Ref ref) {
       GoRoute(
         path: '/goals/new',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const GoalSetupWizard(),
+        builder: (context, state) =>
+            const UnifiedPlanWizard(isFromOnboarding: false),
       ),
       GoRoute(
         path: '/goals/:id',

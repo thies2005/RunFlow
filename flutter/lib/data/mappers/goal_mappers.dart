@@ -34,6 +34,7 @@ extension CreateGoalRequestMapper on CreateGoalRequest {
         planStartDate: planStartDate,
         targetTime: targetTime,
         weeklyMileageGoal: weeklyMileageGoal,
+        startWeeklyMileage: startWeeklyMileage,
         planWeeks: planWeeks,
         runsPerWeek: runsPerWeek,
         ridesPerWeek: ridesPerWeek,
@@ -55,6 +56,9 @@ extension CreateGoalRequestMapper on CreateGoalRequest {
         sport: sport,
         athleteCssOverride: athleteCssOverride,
         athleteBikeSpeedOverride: athleteBikeSpeedOverride,
+        customSwimDistM: customSwimDistM,
+        customBikeDistM: customBikeDistM,
+        customRunDistM: customRunDistM,
       );
 }
 
@@ -66,6 +70,7 @@ extension DomainCreateGoalRequestMapper on domain.CreateGoalRequest {
         planStartDate: planStartDate,
         targetTime: targetTime,
         weeklyMileageGoal: weeklyMileageGoal,
+        startWeeklyMileage: startWeeklyMileage,
         planWeeks: planWeeks,
         runsPerWeek: runsPerWeek,
         ridesPerWeek: ridesPerWeek,

@@ -1,9 +1,10 @@
 import { Target, Check } from 'lucide-react';
 import { formatTime, type RaceDistance } from '@/lib/metrics/vdot';
-import { calculateProjectedGoalTime, calculateProjectedGoalTimeForDistance, type PlanSettings } from '@/lib/metrics/goalProjection';
+import { calculateProjectedGoalTime, calculateProjectedGoalTimeForDistance, calculateProgressionCoefficient, type PlanSettings } from '@/lib/metrics/goalProjection';
+import { estimateBackyardUltraTime } from '@/lib/plans/backyard-time';
 
 interface GoalTimeRendererProps {
-    mode: 'onboarding' | 'settings';
+    mode: 'onboarding' | 'advanced' | 'modal' | 'settings';
     effectiveVO2max: number;
     calibrationFactor: number;
     raceType: string;
@@ -25,6 +26,27 @@ interface GoalTimeRendererProps {
     isEditingGoalTime: boolean;
     setIsEditingGoalTime: (_val: boolean) => void;
     distanceOverrideM?: number;
+    backyardLoopDistM?: number;
+    setBackyardLoopDistM?: (_val: number) => void;
+    targetLaps?: number;
+    setTargetLaps?: (_val: number) => void;
+}
+
+function estimateDistanceForTime(vdot: number, timeSeconds: number): number {
+    let lo = 1000;
+    let hi = 500000;
+    while (hi - lo > 100) {
+        const mid = (lo + hi) >> 1;
+        const estVelocity = vdot > 0 ? -4.60 + 0.182258 * (mid / (timeSeconds / 60)) + 0.000104 * Math.pow(mid / (timeSeconds / 60), 2) : 0;
+        const pctVo2 = 0.8 + 0.1894393 * Math.exp(-0.012778 * (timeSeconds / 60)) + 0.2989558 * Math.exp(-0.1932605 * (timeSeconds / 60));
+        const testVdot = estVelocity / pctVo2;
+        if (testVdot > vdot) {
+            hi = mid;
+        } else {
+            lo = mid;
+        }
+    }
+    return lo;
 }
 
 export default function GoalTimeRenderer({
@@ -49,9 +71,151 @@ export default function GoalTimeRenderer({
     setGoalTimeSecs,
     isEditingGoalTime,
     setIsEditingGoalTime,
-    distanceOverrideM
+    distanceOverrideM,
+    backyardLoopDistM: backyardLoopDistMProp,
+    setBackyardLoopDistM,
+    targetLaps: targetLapsProp,
+    setTargetLaps,
 }: GoalTimeRendererProps) {
     if (mode !== 'onboarding') return null;
+
+    if (raceType === 'BACKYARD_ULTRA') {
+        const backyardLoopDistM = backyardLoopDistMProp ?? 6706;
+        const targetLaps = targetLapsProp ?? 2;
+        const calibratedVO2max = effectiveVO2max * calibrationFactor;
+        const totalDistKm = (backyardLoopDistM * targetLaps) / 1000;
+
+        let projection: ReturnType<typeof estimateBackyardUltraTime> | null = null;
+        if (calibratedVO2max > 0 && backyardLoopDistM > 0) {
+            const progressionFactor = calculateProgressionCoefficient(computedPlanWeeks, runsPerWeek, weeklyMileage);
+            const projectedVdot = calibratedVO2max * progressionFactor;
+            projection = estimateBackyardUltraTime({ vdot: projectedVdot, loopDistM: backyardLoopDistM, targetLaps });
+        }
+
+        return (
+            <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
+                <div className="flex items-center gap-2 text-accent-orange mb-3">
+                    <Target className="w-5 h-5" />
+                    <h3 className="text-sm font-semibold uppercase tracking-wide">Backyard Ultra Setup</h3>
+                </div>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1 uppercase">Loop Distance (meters)</label>
+                        <input
+                            type="number"
+                            value={backyardLoopDistM || ''}
+                            onChange={(e) => setBackyardLoopDistM?.(parseFloat(e.target.value) || 0)}
+                            placeholder="e.g. 6706"
+                            min={100}
+                            className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Standard backyard ultra: 6706m (4.167 miles)</p>
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1 uppercase">Target Laps: {targetLaps}</label>
+                        <input
+                            type="range"
+                            min={1}
+                            max={100}
+                            step={1}
+                            value={targetLaps}
+                            onChange={(e) => setTargetLaps?.(parseInt(e.target.value))}
+                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-accent-orange"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>1</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    {backyardLoopDistM > 0 && (
+                        <div className="text-xs text-foreground-muted">
+                            Total distance: <span className="text-foreground font-medium">{totalDistKm.toFixed(1)} km</span>
+                        </div>
+                    )}
+                    {projection && (
+                        <div className="text-xs bg-surface border border-glass-border rounded-lg p-3 space-y-1">
+                            <div className="text-foreground-muted">Estimated finish time:</div>
+                            <div className="text-green-400 font-medium">Optimal: {formatTime(projection.optimal.totalSeconds)}</div>
+                            <div className="text-accent-orange font-medium">Projected: {formatTime(projection.projected.totalSeconds)}</div>
+                            <div className="text-red-400 font-medium">Conservative: {formatTime(projection.conservative.totalSeconds)}</div>
+                        </div>
+                    )}
+                    {calibratedVO2max > 0 && (
+                        <div className="grid grid-cols-2 gap-3 text-xs bg-white/5 rounded-lg p-3">
+                            <div>
+                                <span className="text-gray-400 block mb-1">VO2max</span>
+                                <span className="text-white font-semibold">{calibratedVO2max.toFixed(1)}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-400 block mb-1">Marathon Shape</span>
+                                <span className="text-white font-semibold">{shapePercent}%</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    if (raceType === 'TWELVE_HOUR' || raceType === 'TWENTY_FOUR_HOUR') {
+        const fixedSeconds = raceType === 'TWELVE_HOUR' ? 43200 : 86400;
+        const durationLabel = raceType === 'TWELVE_HOUR' ? '12 hours' : '24 hours';
+        const calibratedVO2max = effectiveVO2max * calibrationFactor;
+
+        let estimatedDistance: string | null = null;
+        let projectedPace: string | null = null;
+        if (calibratedVO2max > 0) {
+            const progressionFactor = calculateProgressionCoefficient(computedPlanWeeks, runsPerWeek, weeklyMileage);
+            const projectedVdot = calibratedVO2max * progressionFactor;
+            const distM = estimateDistanceForTime(projectedVdot, fixedSeconds);
+            estimatedDistance = `${(distM / 1000).toFixed(1)} km`;
+            const paceSecPerKm = fixedSeconds / (distM / 1000);
+            const paceMin = Math.floor(paceSecPerKm / 60);
+            const paceSec = Math.round(paceSecPerKm % 60);
+            projectedPace = `${paceMin}:${paceSec.toString().padStart(2, '0')} /km`;
+        }
+
+        return (
+            <div className="mt-6 p-5 bg-gradient-to-br from-accent-orange/10 via-transparent to-accent-cyan/5 rounded-xl border border-glass-border">
+                <div className="flex items-center gap-2 text-accent-orange mb-3">
+                    <Target className="w-5 h-5" />
+                    <h3 className="text-sm font-semibold uppercase tracking-wide">Timed Event ({durationLabel})</h3>
+                </div>
+                <div className="text-center mb-4">
+                    <div className="text-3xl font-bold text-foreground mb-1">
+                        {formatTime(fixedSeconds)}
+                    </div>
+                    <p className="text-xs text-gray-400">Fixed duration: {durationLabel}</p>
+                </div>
+                {estimatedDistance && (
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center text-xs bg-surface border border-glass-border rounded-lg p-3">
+                            <span className="text-foreground-muted">Estimated distance</span>
+                            <span className="text-foreground font-semibold">{estimatedDistance}</span>
+                        </div>
+                        {projectedPace && (
+                            <div className="flex justify-between items-center text-xs bg-surface border border-glass-border rounded-lg p-3">
+                                <span className="text-foreground-muted">Projected pace</span>
+                                <span className="text-accent-orange font-semibold">{projectedPace}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+                {calibratedVO2max > 0 && (
+                    <div className="grid grid-cols-2 gap-3 text-xs bg-white/5 rounded-lg p-3 mt-3">
+                        <div>
+                            <span className="text-gray-400 block mb-1">VO2max</span>
+                            <span className="text-white font-semibold">{calibratedVO2max.toFixed(1)}</span>
+                        </div>
+                        <div>
+                            <span className="text-gray-400 block mb-1">Marathon Shape</span>
+                            <span className="text-white font-semibold">{shapePercent}%</span>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     if (effectiveVO2max <= 0) {
         return (

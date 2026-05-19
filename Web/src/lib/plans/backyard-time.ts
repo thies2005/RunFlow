@@ -32,6 +32,20 @@ function predictTimeForDistance(vdot: number, distanceM: number): number {
     return Math.round((low + high) / 2);
 }
 
+function computeTotalWithFatigue(baseLoop: number, laps: number, totalDistM: number, fatigueRate: number): BackyardTimeResult {
+    let totalSeconds = 0;
+    for (let lap = 1; lap <= laps; lap++) {
+        const fatigueMultiplier = lap <= 3 ? 1.0 : 1 + (lap - 3) * fatigueRate;
+        totalSeconds += baseLoop * fatigueMultiplier;
+    }
+    return {
+        perLoopSeconds: baseLoop,
+        totalSeconds: Math.round(totalSeconds),
+        totalDistM,
+        targetLaps: laps,
+    };
+}
+
 export function estimateBackyardUltraTime(input: BackyardTimeInput): BackyardTimeProjection | null {
     if (input.vdot <= 0 || input.loopDistM <= 0 || input.targetLaps < 1) return null;
 
@@ -39,24 +53,9 @@ export function estimateBackyardUltraTime(input: BackyardTimeInput): BackyardTim
     const totalDistM = input.loopDistM * input.targetLaps;
 
     return {
-        optimal: {
-            perLoopSeconds: baseLoop,
-            totalSeconds: input.targetLaps * 3600,
-            totalDistM,
-            targetLaps: input.targetLaps,
-        },
-        projected: {
-            perLoopSeconds: baseLoop,
-            totalSeconds: input.targetLaps * 3600,
-            totalDistM,
-            targetLaps: input.targetLaps,
-        },
-        conservative: {
-            perLoopSeconds: baseLoop,
-            totalSeconds: input.targetLaps * 3600,
-            totalDistM,
-            targetLaps: input.targetLaps,
-        },
+        optimal: computeTotalWithFatigue(baseLoop, input.targetLaps, totalDistM, 0.03),
+        projected: computeTotalWithFatigue(baseLoop, input.targetLaps, totalDistM, 0.05),
+        conservative: computeTotalWithFatigue(baseLoop, input.targetLaps, totalDistM, 0.07),
     };
 }
 

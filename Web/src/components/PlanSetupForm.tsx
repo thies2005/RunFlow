@@ -3,13 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    AlertCircle, Save, Check, Trash2, Loader2, Target
+    AlertCircle, Save, Check, Trash2, Loader2, Target, Plus, Upload, X, Zap, Waves, Clock
 } from 'lucide-react';
 import { calculateAllRacePredictions } from '@/lib/metrics/runalyze';
 import { calculateVdot, calculateTrainingPaces, predictRaceTime, type RaceDistance, DISTANCES } from '@/lib/metrics/vdot';
 import {
     calculateProjectedGoalTime,
-    calculateProgressionCoefficient,
     type PlanSettings
 } from '@/lib/metrics/goalProjection';
 import TargetRaceSection from './setup/TargetRaceSection';
@@ -18,7 +17,6 @@ import GoalTimeRenderer from './setup/GoalTimeRenderer';
 import TriathlonGoalTimeRenderer from './setup/TriathlonGoalTimeRenderer';
 import PlanVolumeSection from './setup/PlanVolumeSection';
 import HeartRateZonesSection from './setup/HeartRateZonesSection';
-import { estimateBackyardUltraTime } from '@/lib/plans/backyard-time';
 import { getRaceDefaults, adjustDefaultsForVdot, getScaledPhaseDefaults } from '@/lib/plans/defaults';
 
 
@@ -30,12 +28,23 @@ interface RaceActivity {
     startDate: string;
 }
 
+interface SubGoalForm {
+    name: string;
+    sport: string;
+    raceType: string;
+    raceDate: string;
+    targetTime?: number;
+}
+
 interface PlanSetupFormProps {
-    mode: 'onboarding' | 'settings';
+    mode: 'onboarding' | 'advanced' | 'modal' | 'settings';
     onSuccess?: () => void;
     onCancel?: () => void;
     effectiveVO2max?: number;
     shapePercent?: number;
+    planSource?: string;
+    creationMode?: string;
+    initialExperienceLevel?: string;
 }
 
 const MAX_LONG_RUN_KM_BY_RACE: Record<string, number> = {
@@ -79,7 +88,10 @@ export default function PlanSetupForm({
     mode,
     onSuccess,
     effectiveVO2max: propEffectiveVO2max = 0,
-    shapePercent: propShapePercent = 0
+    shapePercent: propShapePercent = 0,
+    planSource: propPlanSource,
+    creationMode: propCreationMode,
+    initialExperienceLevel,
 }: PlanSetupFormProps) {
     const queryClient = useQueryClient();
 
@@ -163,6 +175,25 @@ export default function PlanSetupForm({
     const [customBikeDistM, setCustomBikeDistM] = useState<number>(0);
     const [customRunDistM, setCustomRunDistM] = useState<number>(0);
 
+    // Start Weekly Mileage
+    const [startWeeklyMileage, setStartWeeklyMileage] = useState<number>(0);
+
+    // Experience Level
+    const [experienceLevel, setExperienceLevel] = useState<string>('INTERMEDIATE');
+
+    // Sport / NO_RACE
+    const [sport, setSport] = useState<string>('RUN');
+    const [durationWeeks, setDurationWeeks] = useState<string>('12');
+
+    // Athlete overrides
+    const [athleteCssOverride, setAthleteCssOverride] = useState<number | null>(null);
+    const [athleteBikeSpeedOverride, setAthleteBikeSpeedOverride] = useState<number | null>(null);
+
+    // Sub-Goals (advanced mode)
+    const [subGoals, setSubGoals] = useState<SubGoalForm[]>([]);
+    const [showSubGoalForm, setShowSubGoalForm] = useState(false);
+    const [newSubGoal, setNewSubGoal] = useState<SubGoalForm>({ name: '', sport: 'RUN', raceType: '', raceDate: '' });
+
     // Calibration Result
     const [calibrationFactor, setCalibrationFactor] = useState<number>(1.0);
     const lastAutoTime = useRef<number>(0);
@@ -170,6 +201,40 @@ export default function PlanSetupForm({
 
     const [message, setMessage] = useState('');
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        if (initialExperienceLevel) {
+            adjustDefaultsForExperience(initialExperienceLevel);
+        }
+    }, [initialExperienceLevel]);
+
+    const adjustDefaultsForExperience = (level: string) => {
+        setExperienceLevel(level);
+        const defaults = getRaceDefaults(raceType);
+        switch (level) {
+            case 'BEGINNER':
+                setRunsPerWeek(3);
+                setWeeklyMileage(25);
+                setTaperWeeks(3);
+                setPeakWeeks(3);
+                setBuildWeeks(4);
+                break;
+            case 'INTERMEDIATE':
+                setRunsPerWeek(4);
+                setWeeklyMileage(40);
+                setTaperWeeks(2);
+                setPeakWeeks(4);
+                setBuildWeeks(5);
+                break;
+            case 'ADVANCED':
+                setRunsPerWeek(5);
+                setWeeklyMileage(60);
+                setTaperWeeks(2);
+                setPeakWeeks(5);
+                setBuildWeeks(6);
+                break;
+        }
+    };
 
     // Fetch race-eligible activities
     const { data: activitiesData } = useQuery({
@@ -299,7 +364,9 @@ export default function PlanSetupForm({
     }, [thresholdHR]);
 
     const msPerWeek: number = 1000 * 60 * 60 * 24 * 7;
-    const computedPlanWeeks: number = Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek));
+    const computedPlanWeeks: number = sport === 'NO_RACE'
+        ? (parseInt(durationWeeks) || 12)
+        : Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / msPerWeek));
 
     useEffect(() => {
         setMaxLongRunKm(getDefaultMaxLongRunKm(raceType, weeklyMileage));
@@ -521,7 +588,7 @@ export default function PlanSetupForm({
             const timeSeconds = (parseInt(hours) || 0) * 3600 + (parseInt(minutes) || 0) * 60 + (parseInt(seconds) || 0);
 
             const isTriathlon = TRIATHLON_RACE_TYPES.has(raceType);
-            const sport = isTriathlon ? 'TRIATHLON' : 'RUN';
+            const effectiveSport = sport || (isTriathlon ? 'TRIATHLON' : 'RUN');
 
             let computedTargetTime: number | null = goalTimeSeconds;
             if (isTriathlon) {
@@ -552,10 +619,12 @@ export default function PlanSetupForm({
 
             const body: Record<string, unknown> = {
                 name: goalName,
-                raceType,
-                raceDate: new Date(raceDate).toISOString(),
+                raceType: effectiveSport === 'NO_RACE' ? null : raceType,
+                raceDate: effectiveSport === 'NO_RACE' ? null : new Date(raceDate).toISOString(),
                 planStartDate: new Date(planStartDate).toISOString(),
-                planWeeks: Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (1000 * 60 * 60 * 24 * 7))),
+                planWeeks: effectiveSport === 'NO_RACE'
+                    ? (parseInt(durationWeeks) || 12)
+                    : Math.max(4, Math.floor((new Date(raceDate).getTime() - new Date(planStartDate).getTime()) / (1000 * 60 * 60 * 24 * 7))),
                 runsPerWeek,
                 ridesPerWeek,
                 swimsPerWeek,
@@ -564,12 +633,13 @@ export default function PlanSetupForm({
                 peakWeeks,
                 buildWeeks,
                 weeklyMileageGoal: weeklyMileage * 1000,
+                startWeeklyMileage: startWeeklyMileage > 0 ? startWeeklyMileage * 1000 : undefined,
                 maxLongRunKm,
                 longRunDay,
                 workoutDay: qualityDay,
                 swimDay,
                 restDays,
-                sport,
+                sport: effectiveSport,
                 ...(computedTargetTime && { targetTime: Math.round(computedTargetTime) }),
                 ...(timeSeconds > 0 && {
                     calibrationTime: Math.round(timeSeconds),
@@ -584,6 +654,22 @@ export default function PlanSetupForm({
                 ...(raceType === 'CUSTOM_TRI' && customSwimDistM > 0 && { customSwimDistM }),
                 ...(raceType === 'CUSTOM_TRI' && customBikeDistM > 0 && { customBikeDistM }),
                 ...(raceType === 'CUSTOM_TRI' && customRunDistM > 0 && { customRunDistM }),
+                ...(athleteCssOverride != null && { athleteCssOverride }),
+                ...(athleteBikeSpeedOverride != null && { athleteBikeSpeedOverride }),
+                ...(sport === 'NO_RACE' && { durationWeeks: parseInt(durationWeeks) || 12 }),
+                ...((mode === 'advanced' || mode === 'modal') && {
+                    planSource: 'advanced',
+                    creationMode: 'EXPERT_MANUAL',
+                }),
+                ...(subGoals.length > 0 && {
+                    subGoals: subGoals.filter((sg) => sg.name.trim()).map((sg) => ({
+                        name: sg.name.trim(),
+                        sport: sg.sport,
+                        raceType: sg.raceType || null,
+                        raceDate: sg.raceDate || null,
+                        ...(sg.targetTime && { targetTime: sg.targetTime }),
+                    })),
+                }),
             };
 
             const res = await fetch('/api/plans', {
@@ -670,9 +756,9 @@ export default function PlanSetupForm({
 
     const handleSubmit = () => {
         const errors: Record<string, string> = {};
-        if (mode === 'onboarding') {
+        if (mode === 'onboarding' || mode === 'advanced' || mode === 'modal') {
             if (!goalName.trim()) errors.goalName = "Goal name is required";
-            if (!raceDate) errors.raceDate = "Race date is required";
+            if (sport !== 'NO_RACE' && !raceDate) errors.raceDate = "Race date is required";
             if (!planStartDate) errors.planStartDate = "Plan start date is required";
         }
 
@@ -685,7 +771,7 @@ export default function PlanSetupForm({
         setFormErrors({});
         setMessage('');
 
-        if (mode === 'onboarding') {
+        if (mode === 'onboarding' || mode === 'advanced' || mode === 'modal') {
             createGoalMutation.mutate();
         } else {
             updateSettingsMutation.mutate();
@@ -738,6 +824,12 @@ export default function PlanSetupForm({
                 planStartDate={planStartDate}
                 setPlanStartDate={setPlanStartDate}
                 formErrors={formErrors}
+                sport={sport}
+                setSport={setSport}
+                durationWeeks={durationWeeks}
+                setDurationWeeks={setDurationWeeks}
+                experienceLevel={experienceLevel}
+                setExperienceLevel={adjustDefaultsForExperience}
             />
 
             <CalibrationSection
@@ -845,65 +937,6 @@ export default function PlanSetupForm({
                 />
             )}
 
-            {raceType === 'BACKYARD_ULTRA' && (
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-accent-orange mb-2">
-                        <Target className="w-5 h-5" />
-                        <h3 className="text-sm font-semibold uppercase tracking-wide">Backyard Ultra Setup</h3>
-                    </div>
-                    <div>
-                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Loop Distance (meters)</label>
-                        <input
-                            type="number"
-                            value={backyardLoopDistM || ''}
-                            onChange={(e) => setBackyardLoopDistM(parseFloat(e.target.value) || 0)}
-                            placeholder="e.g. 6706"
-                            min={100}
-                            className="bg-surface border border-glass-border rounded-lg p-3 text-foreground w-full outline-hidden focus:ring-2 focus:ring-accent-orange transition-all"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs text-foreground-muted mb-1 uppercase">Target Laps: {targetLaps}</label>
-                        <input
-                            type="range"
-                            min={1}
-                            max={100}
-                            step={1}
-                            value={targetLaps}
-                            onChange={(e) => setTargetLaps(parseInt(e.target.value))}
-                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                        />
-                        <div className="flex justify-between text-xs text-foreground-muted mt-1">
-                            <span>1</span>
-                            <span>100</span>
-                        </div>
-                    </div>
-                    {backyardLoopDistM > 0 && (
-                        <div className="text-xs text-foreground-muted">
-                            Total distance: <span className="text-foreground font-medium">{((backyardLoopDistM * targetLaps) / 1000).toFixed(1)} km</span>
-                        </div>
-                    )}
-                    {backyardLoopDistM > 0 && effectiveVO2max > 0 && (() => {
-                        const progressionFactor = calculateProgressionCoefficient(computedPlanWeeks, runsPerWeek, weeklyMileage);
-                        const projectedVdot = effectiveVO2max * calibrationFactor * progressionFactor;
-                        const projection = estimateBackyardUltraTime({ vdot: projectedVdot, loopDistM: backyardLoopDistM, targetLaps });
-                        if (!projection) return null;
-                        const fmt = (s: number) => `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
-                        return (
-                            <div className="text-xs bg-surface border border-glass-border rounded-lg p-3 space-y-1">
-                                <div className="text-foreground-muted">Estimated finish time:</div>
-                                <div className="text-green-400 font-medium">Optimal: {fmt(projection.optimal.totalSeconds)}</div>
-                                <div className="text-accent-orange font-medium">Projected: {fmt(projection.projected.totalSeconds)}</div>
-                                <div className="text-red-400 font-medium">Conservative: {fmt(projection.conservative.totalSeconds)}</div>
-                            </div>
-                        );
-                    })()}
-                    {backyardLoopDistM > 0 && (
-                        <div className="text-[10px] text-foreground-muted">Estimated based on running fitness</div>
-                    )}
-                </div>
-            )}
-
             <PlanVolumeSection
                 runsPerWeek={runsPerWeek}
                 setRunsPerWeek={setRunsPerWeek}
@@ -966,6 +999,136 @@ export default function PlanSetupForm({
                 zone6Max={zone6Max}
                 setZone6Max={setZone6Max}
             />
+
+            {/* Start Weekly Mileage */}
+            <div className="border-t border-glass-border pt-6">
+                <div className="flex justify-between mb-2">
+                    <label className="text-xs text-foreground-muted uppercase">Start Weekly Mileage</label>
+                    <span className="text-green-400 font-bold">{startWeeklyMileage} km</span>
+                </div>
+                <input
+                    type="range"
+                    min={0}
+                    max={Math.round(weeklyMileage)}
+                    step="5"
+                    value={startWeeklyMileage}
+                    onChange={(e) => setStartWeeklyMileage(parseInt(e.target.value))}
+                    className="w-full h-2 bg-glass-border rounded-lg appearance-none cursor-pointer accent-green-500"
+                />
+                <div className="flex justify-between text-xs text-foreground-muted mt-1">
+                    <span>0km</span>
+                    <span>{Math.round(weeklyMileage / 2)}km</span>
+                    <span>{Math.round(weeklyMileage)}km</span>
+                </div>
+                <p className="text-xs text-foreground-muted mt-1">Your current weekly mileage at the start of the plan.</p>
+            </div>
+
+            {/* Sub-Goals (advanced mode only) */}
+            {mode === 'advanced' && (
+                <div className="border-t border-glass-border pt-6">
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-medium text-foreground-muted uppercase">Sub-Goals</label>
+                        {!showSubGoalForm && (
+                            <button
+                                type="button"
+                                onClick={() => setShowSubGoalForm(true)}
+                                className="flex items-center gap-1 text-xs text-foreground-muted hover:text-foreground transition-colors"
+                            >
+                                <Plus className="w-3 h-3" />
+                                Add Sub-Goal
+                            </button>
+                        )}
+                    </div>
+                    {subGoals.length > 0 && (
+                        <div className="space-y-1.5 mb-2">
+                            {subGoals.map((sg, i) => (
+                                <div key={i} className="flex items-center justify-between bg-surface border border-glass-border rounded-lg px-3 py-2">
+                                    <div>
+                                        <span className="text-xs text-foreground">{sg.name}</span>
+                                        {sg.raceDate && <span className="text-[10px] text-foreground-muted ml-2">{sg.raceDate}</span>}
+                                    </div>
+                                    <button type="button" onClick={() => setSubGoals(subGoals.filter((_, idx) => idx !== i))} className="text-foreground-muted hover:text-red-400 transition-colors">
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {showSubGoalForm && (
+                        <div className="bg-surface border border-glass-border rounded-lg p-3 space-y-2">
+                            <input
+                                type="text"
+                                value={newSubGoal.name}
+                                onChange={(e) => setNewSubGoal((p) => ({ ...p, name: e.target.value }))}
+                                placeholder="Sub-goal name"
+                                className="w-full bg-surface border border-glass-border rounded-md px-2.5 py-1.5 text-sm text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-accent-orange"
+                            />
+                            <div className="flex gap-2">
+                                <select
+                                    value={newSubGoal.raceType}
+                                    onChange={(e) => setNewSubGoal((p) => ({ ...p, raceType: e.target.value }))}
+                                    className="bg-surface border border-glass-border rounded-md px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange flex-1"
+                                >
+                                    <option value="">Distance / Type</option>
+                                    <optgroup label="Running">
+                                        <option value="FIVE_K">5K</option>
+                                        <option value="TEN_K">10K</option>
+                                        <option value="HALF_MARATHON">Half Marathon</option>
+                                        <option value="MARATHON">Marathon</option>
+                                    </optgroup>
+                                    <optgroup label="Triathlon">
+                                        <option value="SPRINT_TRI">Sprint Triathlon</option>
+                                        <option value="OLYMPIC_TRI">Olympic Triathlon</option>
+                                        <option value="HALF_IRONMAN">Half Ironman</option>
+                                        <option value="FULL_IRONMAN">Full Ironman</option>
+                                    </optgroup>
+                                </select>
+                                <input
+                                    type="date"
+                                    value={newSubGoal.raceDate}
+                                    onChange={(e) => setNewSubGoal((p) => ({ ...p, raceDate: e.target.value }))}
+                                    className="bg-surface border border-glass-border rounded-md px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent-orange"
+                                />
+                            </div>
+                            <div className="flex gap-2 justify-end">
+                                <button type="button" onClick={() => { setShowSubGoalForm(false); setNewSubGoal({ name: '', sport: 'RUN', raceType: '', raceDate: '' }); }} className="px-2.5 py-1 rounded-md text-xs text-foreground-muted hover:text-foreground transition-colors">Cancel</button>
+                                <button type="button" onClick={() => { if (!newSubGoal.name.trim()) return; setSubGoals([...subGoals, { ...newSubGoal }]); setNewSubGoal({ name: '', sport: 'RUN', raceType: '', raceDate: '' }); setShowSubGoalForm(false); }} className="px-2.5 py-1 rounded-md text-xs bg-surface-hover text-foreground hover:bg-glass-border transition-colors">Add</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* CSV Import (advanced mode only) */}
+            {mode === 'advanced' && (
+                <div className="pt-2">
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            const res = await fetch('/api/plans', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    name: 'Imported Plan',
+                                    sport: 'NO_RACE',
+                                    raceType: null,
+                                    raceDate: null,
+                                    durationWeeks: 12,
+                                    planSource: 'advanced',
+                                }),
+                            });
+                            if (res.ok) {
+                                const data = await res.json();
+                                window.location.href = `/plan-advanced/${data.plan?.id ?? data.goal?.id}`;
+                            }
+                        }}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-glass-border text-foreground-muted hover:text-foreground hover:border-foreground-muted text-sm transition-colors"
+                    >
+                        <Upload className="w-4 h-4" />
+                        Import CSV
+                    </button>
+                </div>
+            )}
 
             {/* Message */}
             {

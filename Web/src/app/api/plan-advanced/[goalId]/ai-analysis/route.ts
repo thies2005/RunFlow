@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { decryptToken } from '@/lib/crypto';
-import { safeFetch, validateBaseUrl, generateCompletion, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
+import { validateBaseUrl, generateCompletion, type ChatMessage, type AiConfig } from '@/lib/ai/providers';
 
 async function checkPremium(userId: string) {
     const user = await prisma.user.findUnique({
@@ -104,7 +104,7 @@ export async function GET(req: Request, ctx: RouteContext) {
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId: session.user.id },
         });
 
         if (!goal) {
@@ -120,6 +120,46 @@ export async function GET(req: Request, ctx: RouteContext) {
         console.error('Get AI analysis error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
+}
+
+function getProviderErrorMessage(error: unknown): { message: string; status: number } {
+    if (error instanceof Error) {
+        const msg = error.message;
+        if (msg.includes('503')) {
+            return {
+                message: 'The AI model is temporarily unavailable due to high demand. Please try again in a few minutes.',
+                status: 503,
+            };
+        }
+        if (msg.includes('429') || msg.includes('rate limited')) {
+            return {
+                message: 'AI provider rate limit reached. Please wait a moment before trying again.',
+                status: 429,
+            };
+        }
+        if (msg.includes('502')) {
+            return {
+                message: 'The AI provider is experiencing issues. Please try again shortly.',
+                status: 502,
+            };
+        }
+        if (msg.includes('fetch failed') || msg.includes('Failed to connect')) {
+            return {
+                message: 'Could not reach the AI provider. Please check your network and try again.',
+                status: 502,
+            };
+        }
+        if (msg.includes('AI API error')) {
+            return {
+                message: `AI provider error: ${msg.replace('AI API error: ', '')}`,
+                status: 502,
+            };
+        }
+    }
+    return {
+        message: 'Failed to generate analysis. Please try again.',
+        status: 500,
+    };
 }
 
 export async function POST(req: Request, ctx: RouteContext) {
@@ -145,7 +185,7 @@ export async function POST(req: Request, ctx: RouteContext) {
         const { goalId } = await ctx.params;
 
         const goal = await prisma.goal.findFirst({
-            where: { id: goalId, userId: session.user.id, planSource: 'advanced' },
+            where: { id: goalId, userId: session.user.id },
         });
 
         if (!goal) {
@@ -241,6 +281,7 @@ export async function POST(req: Request, ctx: RouteContext) {
         return NextResponse.json({ analysis });
     } catch (error) {
         console.error('AI plan analysis error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        const { message, status } = getProviderErrorMessage(error);
+        return NextResponse.json({ error: message }, { status });
     }
 }

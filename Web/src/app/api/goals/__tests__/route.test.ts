@@ -69,19 +69,18 @@ jest.mock('@/lib/metrics/vdot', () => ({
     predictRaceTime: jest.fn(() => 11400),
 }));
 
-jest.mock('@/lib/plans', () => ({
-    generateTrainingPlan: jest.fn(() => []),
-}));
-
-jest.mock('@/lib/services/analytics', () => ({
-    AnalyticsService: {
-        calculateVO2max: jest.fn(() => ({ effectiveVO2max: 45 })),
-    },
-}));
-
-jest.mock('@/lib/metrics/goalProjection', () => ({
-    calculateProjectedGoalTime: jest.fn(() => ({ projectedTime: 11400 })),
-    calculateWeeksUntilRace: jest.fn(() => 12),
+jest.mock('@/lib/services/plan-creation', () => ({
+    createPlanWithWorkouts: jest.fn(() => Promise.resolve({
+        goal: {
+            id: 'goal-1',
+            name: 'Marathon Goal',
+            raceType: 'MARATHON',
+            raceDate: new Date('2024-04-15'),
+            currentVdot: 45,
+            workouts: [],
+        },
+        vdot: 45,
+    })),
 }));
 
 jest.mock('@/lib/logging/logger', () => ({
@@ -94,6 +93,7 @@ import { checkRateLimitAsync, getClientIdentifier } from '@/lib/rateLimit';
 import { cachedResponse } from '@/lib/api/apiResponse';
 import { validateBody } from '@/lib/validation/validator';
 import { handleError } from '@/lib/errors/handler';
+import { createPlanWithWorkouts } from '@/lib/services/plan-creation';
 
 describe('GET /api/goals', () => {
     beforeEach(() => {
@@ -321,7 +321,7 @@ describe('POST /api/goals', () => {
     });
 
     it('should handle errors gracefully', async () => {
-        (prisma.goal.create as jest.Mock).mockRejectedValue(new Error('Database error'));
+        (createPlanWithWorkouts as jest.Mock).mockRejectedValue(new Error('Database error'));
         (handleError as jest.Mock).mockReturnValue(new Response(JSON.stringify({ error: 'Internal error' }), { status: 500 }));
 
         const mockRequest = new NextRequest('http://localhost:3000/api/goals', {

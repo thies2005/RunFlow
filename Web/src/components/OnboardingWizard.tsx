@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, RefreshCw, Calendar, Link2 } from 'lucide-react';
+import { ArrowRight, RefreshCw, Calendar, Link2, Zap } from 'lucide-react';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import PlanSetupForm from './PlanSetupForm';
 import SyncPlatformSelector from './SyncPlatformSelector';
@@ -23,6 +23,9 @@ export default function OnboardingWizard() {
         // If user has Strava, start at step 1 (sync), otherwise step 0 (platform selection)
         return hasStrava ? 1 : 0;
     });
+
+    const [experienceLevel, setExperienceLevel] = useState<string>('INTERMEDIATE');
+    const [adjustDefaults] = useState<((level: string) => void) | null>(null);
 
     // Update step when session loads
     useEffect(() => {
@@ -91,7 +94,7 @@ export default function OnboardingWizard() {
             <div className="w-full h-1 bg-gray-800">
                 <div
                     className="h-full bg-accent-orange transition-all duration-500 ease-out"
-                    style={{ width: `${((step + 1) / 4) * 100}%` }}
+                    style={{ width: `${((step + 1) / 5) * 100}%` }}
                 />
             </div>
 
@@ -219,8 +222,53 @@ export default function OnboardingWizard() {
                     </div>
                 )}
 
-                {/* Step 3: Plan Setup - Using unified PlanSetupForm */}
+                {/* Step 3: Experience Level */}
                 {step === 3 && (
+                    <div className="max-w-md mx-auto text-center space-y-6 animate-fade-in">
+                        <div className="w-16 h-16 rounded-2xl bg-green-500/20 text-green-400 flex items-center justify-center mx-auto mb-6">
+                            <Zap className="w-8 h-8" />
+                        </div>
+
+                        <h1 className="text-3xl font-bold">Experience Level</h1>
+                        <p className="text-gray-400">
+                            Tell us about your running experience so we can tailor your plan.
+                        </p>
+
+                        <div className="space-y-3">
+                            {[
+                                { value: 'BEGINNER', label: 'Beginner', desc: 'New to running or less than 1 year' },
+                                { value: 'INTERMEDIATE', label: 'Intermediate', desc: 'Running 1-3 years, regular training' },
+                                { value: 'ADVANCED', label: 'Advanced', desc: '3+ years, experienced racer' },
+                            ].map(({ value, label, desc }) => (
+                                <button
+                                    key={value}
+                                    onClick={() => setExperienceLevel(value)}
+                                    className={`w-full p-4 rounded-xl border text-left transition-all ${
+                                        experienceLevel === value
+                                            ? 'border-accent-orange bg-accent-orange/10 text-white'
+                                            : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'
+                                    }`}
+                                >
+                                    <div className="font-semibold">{label}</div>
+                                    <div className="text-xs mt-1 opacity-70">{desc}</div>
+                                </button>
+                            ))}
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                if (adjustDefaults) adjustDefaults(experienceLevel);
+                                setStep(4);
+                            }}
+                            className="btn-primary w-full py-3 flex items-center justify-center gap-2"
+                        >
+                            Continue <ArrowRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+
+                {/* Step 4: Plan Setup - Using unified PlanSetupForm */}
+                {step === 4 && (
                     <div className="max-w-xl mx-auto animate-fade-in">
                         <div className="text-center mb-8">
                             <Calendar className="w-12 h-12 text-accent-orange mx-auto mb-4" />
@@ -234,6 +282,7 @@ export default function OnboardingWizard() {
                                 onSuccess={() => router.push('/')}
                                 effectiveVO2max={effectiveVO2max}
                                 shapePercent={shapePercent}
+                                initialExperienceLevel={experienceLevel}
                             />
                         </div>
                     </div>

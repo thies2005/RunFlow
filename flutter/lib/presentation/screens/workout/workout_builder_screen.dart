@@ -56,6 +56,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     buildDefaultDragHandles: false,
                     itemCount: _nodes.length,
+                    // ignore: deprecated_member_use
                     onReorder: (oldIndex, newIndex) {
                       if (newIndex > oldIndex) newIndex--;
                       final item = _nodes.removeAt(oldIndex);

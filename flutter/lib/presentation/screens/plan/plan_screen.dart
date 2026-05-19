@@ -411,6 +411,7 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: allWorkouts.length,
+      // ignore: deprecated_member_use
       onReorder: (oldIndex, newIndex) {
         if (newIndex > oldIndex) newIndex--;
         if (oldIndex == newIndex) return;

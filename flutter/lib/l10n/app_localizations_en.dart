@@ -928,6 +928,13 @@ class SEn extends S {
   String get onboardingRunsPerWeek => 'Runs per week';
 
   @override
+  String get onboardingStartWeeklyMileage => 'Start weekly mileage';
+
+  @override
+  String get onboardingStartWeeklyMileageAuto =>
+      'Based on your last 3 months of running';
+
+  @override
   String onboardingRunsPerWeekCount(int count) {
     return '$count';
   }
@@ -2455,6 +2462,13 @@ class SEn extends S {
 
   @override
   String get goalWizardWeeklyMileageGoal => 'Weekly mileage goal';
+
+  @override
+  String get goalWizardStartWeeklyMileage => 'Current weekly mileage';
+
+  @override
+  String get goalWizardStartWeeklyMileageHelp =>
+      'Your plan will ramp up from this level';
 
   @override
   String get goalWizardPlanDuration => 'Plan duration';

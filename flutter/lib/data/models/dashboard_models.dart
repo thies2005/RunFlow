@@ -132,6 +132,7 @@ sealed class AnalyticsStats with _$AnalyticsStats {
     @JsonKey(fromJson: _parseDouble) required double tsb,
     @JsonKey(fromJson: _parseDouble) required double workloadRatio,
     @JsonKey(fromJson: _parseDouble) required double easyTrimp,
+    @JsonKey(fromJson: _parseDoubleNullable) @Default(null) double? avgWeeklyKmLast3Months,
     @JsonKey(fromJson: _parseIntSafe) @Default(0) int hrMax,
   }) = _AnalyticsStats;
   const AnalyticsStats._();

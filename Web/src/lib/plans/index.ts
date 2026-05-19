@@ -31,6 +31,25 @@ export const PLAN_CONSTANTS = {
     DYNAMIC_LONG_RUN_RATIO: 0.55,
     MIN_LONG_RUN: 6000,
     MIN_VOLUME_START: 15000,
+    MIN_START_VOLUME: {
+        FIVE_K: 8000,
+        TEN_K: 10000,
+        HALF_MARATHON: 12000,
+        MARATHON: 15000,
+        FIFTY_K: 20000,
+        FIFTY_MILE: 25000,
+        HUNDRED_K: 25000,
+        HUNDRED_MILE: 30000,
+        TWELVE_HOUR: 20000,
+        TWENTY_FOUR_HOUR: 25000,
+        BACKYARD_ULTRA: 20000,
+        SPRINT_TRI: 10000,
+        OLYMPIC_TRI: 10000,
+        HALF_IRONMAN: 12000,
+        FULL_IRONMAN: 15000,
+        CUSTOM_TRI: 10000,
+        CUSTOM_DISTANCE: 10000,
+    } as Partial<Record<RaceType, number>>,
     EASY_RUN_MIN: 4000,
     EASY_RUN_MAX: 12000,
     LONG_RUN_RATIO: 0.50,
@@ -51,6 +70,13 @@ const TAPER_FRACTIONS: Partial<Record<RaceType, number[]>> = {
     MARATHON: [0.80, 0.65, 0.45],
 };
 
+export function getMinStartVolume(raceType: RaceType | null): number {
+    if (raceType && PLAN_CONSTANTS.MIN_START_VOLUME[raceType]) {
+        return PLAN_CONSTANTS.MIN_START_VOLUME[raceType]!;
+    }
+    return PLAN_CONSTANTS.MIN_VOLUME_START;
+}
+
 export type PlanConfig = {
     vdot: number;
     raceType: RaceType | null;
@@ -62,6 +88,7 @@ export type PlanConfig = {
     strengthPerWeek?: number;
     swimsPerWeek?: number;
     weeklyMileageGoal?: number | null;
+    startWeeklyMileage?: number | null;
     taperWeeks?: number;
     peakWeeks?: number;
     buildWeeks?: number;
@@ -130,9 +157,16 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     const timeDiff = raceDate.getTime() - currentDate.getTime();
     const totalWeeks = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)));
 
-    let startVolume = peakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
-    if (startVolume < PLAN_CONSTANTS.MIN_VOLUME_START) {
-        startVolume = Math.min(PLAN_CONSTANTS.MIN_VOLUME_START, peakVolume);
+    const minStart = getMinStartVolume(config.raceType ?? null);
+    let startVolume: number;
+    if (config.startWeeklyMileage && config.startWeeklyMileage > 0) {
+        startVolume = Math.max(config.startWeeklyMileage, minStart);
+        startVolume = Math.min(startVolume, peakVolume);
+    } else {
+        startVolume = peakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
+        if (startVolume < minStart) {
+            startVolume = Math.min(minStart, peakVolume);
+        }
     }
 
     const paces = calculateTrainingPaces(vdot);

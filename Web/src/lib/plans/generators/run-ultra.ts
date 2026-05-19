@@ -1,6 +1,6 @@
 import { WorkoutType, RaceType, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
-import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS } from '../index';
+import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
 import { enrichWorkoutsWithDescriptions } from '../descriptions';
 
@@ -82,9 +82,16 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
     const timeDiff = raceDate.getTime() - currentDate.getTime();
     const totalWeeks = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)));
 
-    let startVolume = peakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
-    if (startVolume < PLAN_CONSTANTS.MIN_VOLUME_START) {
-        startVolume = Math.min(PLAN_CONSTANTS.MIN_VOLUME_START, peakVolume);
+    const minStart = getMinStartVolume(config.raceType ?? null);
+    let startVolume: number;
+    if (config.startWeeklyMileage && config.startWeeklyMileage > 0) {
+        startVolume = Math.max(config.startWeeklyMileage, minStart);
+        startVolume = Math.min(startVolume, peakVolume);
+    } else {
+        startVolume = peakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
+        if (startVolume < minStart) {
+            startVolume = Math.min(minStart, peakVolume);
+        }
     }
 
     const paces = calculateTrainingPaces(vdot);

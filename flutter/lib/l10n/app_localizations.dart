@@ -1837,6 +1837,18 @@ abstract class S {
   /// **'Runs per week'**
   String get onboardingRunsPerWeek;
 
+  /// No description provided for @onboardingStartWeeklyMileage.
+  ///
+  /// In en, this message translates to:
+  /// **'Start weekly mileage'**
+  String get onboardingStartWeeklyMileage;
+
+  /// No description provided for @onboardingStartWeeklyMileageAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your last 3 months of running'**
+  String get onboardingStartWeeklyMileageAuto;
+
   /// No description provided for @onboardingRunsPerWeekCount.
   ///
   /// In en, this message translates to:
@@ -4608,6 +4620,18 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Weekly mileage goal'**
   String get goalWizardWeeklyMileageGoal;
+
+  /// No description provided for @goalWizardStartWeeklyMileage.
+  ///
+  /// In en, this message translates to:
+  /// **'Current weekly mileage'**
+  String get goalWizardStartWeeklyMileage;
+
+  /// No description provided for @goalWizardStartWeeklyMileageHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan will ramp up from this level'**
+  String get goalWizardStartWeeklyMileageHelp;
 
   /// No description provided for @goalWizardPlanDuration.
   ///

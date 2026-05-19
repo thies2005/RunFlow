@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
 
         // Try Redis Cache
         const redisClient = await getRedisClient();
-        const cacheKey = `dashboard:v2:${userId}:${validRefDate.toISOString().split('T')[0]}`;
+        const cacheKey = `dashboard:v3:${userId}:${validRefDate.toISOString().split('T')[0]}`;
 
         try {
             const cachedData = await redisClient?.get(cacheKey);
@@ -216,6 +216,24 @@ export async function GET(req: NextRequest) {
         );
 
         const currentWeekMileage = AnalyticsService.calculateCurrentWeekMileage(runActivities);
+
+        const twelveWeeksAgo = new Date();
+        twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+        const threeMonthRunDist = runActivities
+            .filter(a => new Date(a.startDate) >= twelveWeeksAgo)
+            .reduce((sum, a) => sum + (a.distance || 0), 0);
+        const monday = (date: Date) => {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            d.setDate(d.getDate() + diff);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        };
+        const threeMonthPeriodStart = monday(twelveWeeksAgo);
+        const threeMonthPeriodEnd = monday(new Date());
+        const weeksInThreeMonths = Math.max(1, Math.round((threeMonthPeriodEnd.getTime() - threeMonthPeriodStart.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+        const avgWeeklyKmLast3Months = Math.round(((threeMonthRunDist / weeksInThreeMonths / 1000) * 10)) / 10;
         let { rawVO2max, effectiveVO2max } = AnalyticsService.calculateVO2max(runActivities, maxHR, vdotCorrectionFactor);
 
         if (!hasExplicitCalibration && autoRevolvingVo2max && autoRevolvingVo2max > 0) {
@@ -286,6 +304,7 @@ export async function GET(req: NextRequest) {
             hrMax: maxHR,
             maxCtl,
             maxAtl,
+            avgWeeklyKmLast3Months,
             healthTrackingEnabled: user?.healthTrackingEnabled ?? false
         };
 

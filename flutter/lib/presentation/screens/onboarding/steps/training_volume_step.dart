@@ -4,6 +4,7 @@ import 'package:runflow_flutter/core/theme/app_theme.dart';
 import 'package:runflow_flutter/core/utils/vdot_calculator.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/onboarding_providers.dart';
+import 'package:runflow_flutter/presentation/providers/analytics_providers.dart';
 
 class TrainingVolumeStep extends ConsumerWidget {
   const TrainingVolumeStep({super.key});
@@ -13,6 +14,7 @@ class TrainingVolumeStep extends ConsumerWidget {
     final theme = Theme.of(context);
     final onboarding = ref.watch(onboardingProvider);
     final notifier = ref.read(onboardingProvider.notifier);
+    final stats = ref.watch(analyticsStatsProvider).value;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -63,8 +65,30 @@ class TrainingVolumeStep extends ConsumerWidget {
                     divisions: 5,
                      displayValue: S.of(context).onboardingRunsPerWeekCount(onboarding.runsPerWeek),
                     onChanged: (v) => notifier.setRunsPerWeek(v.round()),
-                  ),
-                  const SizedBox(height: 16),
+                   ),
+                   const SizedBox(height: 16),
+                   _VolumeSlider(
+                     icon: Icons.play_arrow,
+                     label: S.of(context).onboardingStartWeeklyMileage,
+                     value: (onboarding.startWeeklyMileage ?? stats?.avgWeeklyKmLast3Months ?? onboarding.weeklyMileage * 0.6).clamp(8.0, onboarding.weeklyMileage),
+                     min: 8,
+                     max: onboarding.weeklyMileage,
+                     divisions: (onboarding.weeklyMileage - 8).clamp(1, 112).toInt(),
+                     displayValue:
+                         '${(onboarding.startWeeklyMileage ?? stats?.avgWeeklyKmLast3Months ?? onboarding.weeklyMileage * 0.6).clamp(8.0, onboarding.weeklyMileage).toStringAsFixed(0)} ${S.of(context).kmUnit}',
+                     onChanged: (v) => notifier.setStartWeeklyMileage(v),
+                   ),
+                   if (stats?.avgWeeklyKmLast3Months != null && onboarding.startWeeklyMileage == null)
+                     Padding(
+                       padding: const EdgeInsets.only(top: 4),
+                       child: Text(
+                         S.of(context).onboardingStartWeeklyMileageAuto,
+                         style: theme.textTheme.bodySmall?.copyWith(
+                           color: AppColors.onSurfaceVariant,
+                         ),
+                       ),
+                     ),
+                   const SizedBox(height: 16),
                   _VolumeSlider(
                     icon: Icons.straighten,
                      label: S.of(context).onboardingWeeklyMileage,

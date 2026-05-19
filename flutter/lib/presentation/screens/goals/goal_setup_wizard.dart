@@ -41,6 +41,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
   int _swimsPerWeek = _initialDefaults.swimsPerWeek;
   int _strengthPerWeek = _initialDefaults.strengthPerWeek;
   double _weeklyMileageGoal = _initialDefaults.weeklyVolumeKm;
+  double? _startWeeklyMileage;
   double _maxLongRunKm = _initialDefaults.maxLongRunKm;
   int _taperWeeks = _initialDefaults.taperWeeks;
   int _peakWeeks = _initialDefaults.peakWeeks;
@@ -1365,6 +1366,9 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
         planStartDate: _planStartDate,
         targetTime: _targetTimeInSeconds,
         weeklyMileageGoal: (_weeklyMileageGoal * 1000).roundToDouble(),
+        startWeeklyMileage: _startWeeklyMileage != null
+            ? (_startWeeklyMileage! * 1000).roundToDouble()
+            : null,
         planWeeks: effectivePlanWeeks,
         runsPerWeek: _runsPerWeek,
         ridesPerWeek: _ridesPerWeek,
@@ -1485,6 +1489,7 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                       _swimsPerWeek = d.swimsPerWeek;
                       _strengthPerWeek = d.strengthPerWeek;
                       _weeklyMileageGoal = d.weeklyVolumeKm;
+                      _startWeeklyMileage = null;
                       _maxLongRunKm = d.maxLongRunKm;
                       _taperWeeks = d.taperWeeks;
                       _peakWeeks = d.peakWeeks;
@@ -1524,6 +1529,8 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                   strengthPerWeek: _strengthPerWeek,
                   weeklyMileageGoal: _weeklyMileageGoal,
                   maxLongRunKm: _maxLongRunKm,
+                  startWeeklyMileage: _startWeeklyMileage,
+                  avgWeeklyKmLast3Months: ref.watch(analyticsStatsProvider).value?.avgWeeklyKmLast3Months,
                   onRunsPerWeekChanged: (v) => setState(() => _runsPerWeek = v),
                   onRidesPerWeekChanged: (v) =>
                       setState(() => _ridesPerWeek = v),
@@ -1535,6 +1542,8 @@ class _GoalSetupWizardState extends ConsumerState<GoalSetupWizard> {
                       setState(() => _weeklyMileageGoal = v),
                   onMaxLongRunKmChanged: (v) =>
                       setState(() => _maxLongRunKm = v),
+                  onStartWeeklyMileageChanged: (v) =>
+                      setState(() => _startWeeklyMileage = v),
                 ),
                 _TrainingPhasesStep(
                   taperWeeks: _taperWeeks,
@@ -2436,12 +2445,15 @@ class _TrainingVolumeStep extends StatelessWidget {
     required this.strengthPerWeek,
     required this.weeklyMileageGoal,
     required this.maxLongRunKm,
+    this.startWeeklyMileage,
+    this.avgWeeklyKmLast3Months,
     required this.onRunsPerWeekChanged,
     required this.onRidesPerWeekChanged,
     required this.onSwimsPerWeekChanged,
     required this.onStrengthPerWeekChanged,
     required this.onWeeklyMileageGoalChanged,
     required this.onMaxLongRunKmChanged,
+    required this.onStartWeeklyMileageChanged,
   });
 
   final int runsPerWeek;
@@ -2450,12 +2462,15 @@ class _TrainingVolumeStep extends StatelessWidget {
   final int strengthPerWeek;
   final double weeklyMileageGoal;
   final double maxLongRunKm;
+  final double? startWeeklyMileage;
+  final double? avgWeeklyKmLast3Months;
   final ValueChanged<int> onRunsPerWeekChanged;
   final ValueChanged<int> onRidesPerWeekChanged;
   final ValueChanged<int> onSwimsPerWeekChanged;
   final ValueChanged<int> onStrengthPerWeekChanged;
   final ValueChanged<double> onWeeklyMileageGoalChanged;
   final ValueChanged<double> onMaxLongRunKmChanged;
+  final ValueChanged<double?> onStartWeeklyMileageChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -2511,6 +2526,53 @@ class _TrainingVolumeStep extends StatelessWidget {
             label: s.goalWizardStrengthPerWeek,
             value: strengthPerWeek,
             onChanged: onStrengthPerWeekChanged,
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.play_arrow, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          s.goalWizardStartWeeklyMileage,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${(startWeeklyMileage ?? avgWeeklyKmLast3Months ?? weeklyMileageGoal * 0.6).clamp(8.0, weeklyMileageGoal).toStringAsFixed(0)} km',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: (startWeeklyMileage ?? avgWeeklyKmLast3Months ?? weeklyMileageGoal * 0.6).clamp(8.0, weeklyMileageGoal),
+                    min: 8,
+                    max: weeklyMileageGoal,
+                    divisions: (weeklyMileageGoal - 8).clamp(1, 112).toInt(),
+                    label: '${(startWeeklyMileage ?? avgWeeklyKmLast3Months ?? weeklyMileageGoal * 0.6).clamp(8.0, weeklyMileageGoal).toStringAsFixed(0)} km',
+                    onChanged: (v) => onStartWeeklyMileageChanged(v),
+                  ),
+                  if (avgWeeklyKmLast3Months != null && startWeeklyMileage == null)
+                    Text(
+                      s.goalWizardStartWeeklyMileageHelp,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           Card(

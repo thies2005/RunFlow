@@ -3,7 +3,7 @@ import { analyzeRace, calculateVdot, type RaceDistance } from '@/lib/metrics/vdo
 import { AnalyticsService } from '@/lib/services/analytics';
 import { type ActivityForShape } from '@/lib/metrics/runalyze';
 import { calculateProjectedGoalTime, type PlanSettings } from '@/lib/metrics/goalProjection';
-import { generateTrainingPlan, type PlanConfig, type GeneratedWorkout } from '@/lib/plans';
+import { generateTrainingPlan, type PlanConfig, type GeneratedWorkout, getMinStartVolume } from '@/lib/plans';
 import { WorkoutType, RaceType, PlanSport, PlanCreationMode } from '@/generated/prisma/browser';
 import { logger } from '@/lib/logging/logger';
 import { z } from 'zod';
@@ -41,6 +41,7 @@ export const PlanCreateInputSchema = z.object({
     swimsPerWeek: z.number().int().nonnegative().max(7).optional(),
     strengthPerWeek: z.number().int().nonnegative().max(7).optional(),
     weeklyMileageGoal: z.number().positive().nullable().optional(),
+    startWeeklyMileage: z.number().positive().nullable().optional(),
     maxLongRunKm: z.number().min(6).max(200).optional(),
 
     // Phases
@@ -93,6 +94,7 @@ export function normalizePlanInput(
         name, sport, raceType, raceDate, planStartDate, durationWeeks,
         runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek,
         weeklyMileageGoal, maxLongRunKm,
+        startWeeklyMileage,
         taperWeeks, peakWeeks, buildWeeks,
         longRunDay, workoutDay, swimDay, restDays,
         targetTime,
@@ -133,6 +135,11 @@ export function normalizePlanInput(
         resolvedWeeklyMileage = resolvedWeeklyMileage * 1000;
     }
 
+    let resolvedStartMileage = startWeeklyMileage ?? null;
+    if (resolvedStartMileage && resolvedStartMileage > 0 && resolvedStartMileage < 200) {
+        resolvedStartMileage = resolvedStartMileage * 1000;
+    }
+
     // Defaults from race defaults when missing
     const raceTypeKey = resolvedRaceType ?? 'MARATHON';
     const defaults = getRaceDefaults(raceTypeKey);
@@ -158,6 +165,7 @@ export function normalizePlanInput(
         planStartDate: planStartDate ?? null,
         targetTime: targetTime ?? null,
         weeklyMileageGoal: resolvedWeeklyMileage,
+        startWeeklyMileage: resolvedStartMileage,
         planWeeks: resolvedPlanWeeks,
         runsPerWeek: resolvedRunsPerWeek,
         ridesPerWeek: resolvedRidesPerWeek,
@@ -423,6 +431,51 @@ export function resolvePhases(input: ResolvePhasesInput): ResolvePhasesResult {
     };
 }
 
+export async function resolveStartWeeklyMileage(
+    userId: string,
+    providedValue: number | null | undefined,
+    raceType: RaceType | null,
+): Promise<number> {
+    const minStart = getMinStartVolume(raceType);
+
+    if (providedValue && providedValue > 0) {
+        return Math.max(providedValue, minStart);
+    }
+
+    const twelveWeeksAgo = new Date();
+    twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+
+    const result = await prisma.activity.aggregate({
+        where: {
+            userId,
+            type: 'RUN',
+            startDate: { gte: twelveWeeksAgo },
+        },
+        _sum: { distance: true },
+    });
+
+    const totalDistanceMeters = result._sum.distance ?? 0;
+
+    const monday = (date: Date) => {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        d.setDate(d.getDate() + diff);
+        d.setHours(0, 0, 0, 0);
+        return d;
+    };
+    const periodStart = monday(twelveWeeksAgo);
+    const periodEnd = monday(new Date());
+    const weeksInPeriod = Math.max(
+        1,
+        Math.round((periodEnd.getTime() - periodStart.getTime()) / (7 * 24 * 60 * 60 * 1000)),
+    );
+
+    const avgWeeklyMeters = totalDistanceMeters / weeksInPeriod;
+
+    return Math.max(avgWeeklyMeters, minStart);
+}
+
 export interface SubGoalInput {
     name: string;
     sport?: 'RUN' | 'TRIATHLON' | 'NO_RACE';
@@ -439,6 +492,7 @@ export interface CreatePlanInput {
     raceDate?: string | null;
     targetTime?: number | null;
     weeklyMileageGoal?: number | null;
+    startWeeklyMileage?: number | null;
     planWeeks?: number | null;
     runsPerWeek?: number | null;
     ridesPerWeek?: number | null;
@@ -515,6 +569,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         backyardLoopDistM, backyardLoopTimeS, targetLaps, customDistanceM,
         customSwimDistM, customBikeDistM, customRunDistM,
         subGoals,
+        startWeeklyMileage,
     } = input;
 
     let weeklyMileageGoal = input.weeklyMileageGoal ?? null;
@@ -612,6 +667,12 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
 
     const finalRaceDate = raceDate ? new Date(raceDate) : new Date(startDate.getTime() + resolvedPlanWeeks * 7 * 24 * 60 * 60 * 1000);
 
+    const resolvedStartMileage = await resolveStartWeeklyMileage(
+        userId,
+        startWeeklyMileage,
+        raceType ?? null,
+    );
+
     const computedBackyardLoopTimeS = backyardLoopDistM && backyardLoopDistM > 0
         ? predictTimeForDist(effectiveVdot, backyardLoopDistM)
         : null;
@@ -663,6 +724,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         strengthPerWeek: strengthPerWeek ?? 0,
         swimsPerWeek: swimsPerWeek ?? (effectiveSport === 'TRIATHLON' ? 2 : 0),
         weeklyMileageGoal: weeklyMileageGoal || null,
+        startWeeklyMileage: resolvedStartMileage,
         taperWeeks: phases.taperWeeks,
         peakWeeks: phases.peakWeeks,
         buildWeeks: phases.buildWeeks,
@@ -741,6 +803,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                         swimsPerWeek: swimsPerWeek ?? (subGoalSport === 'TRIATHLON' ? 2 : 0),
                         strengthPerWeek: strengthPerWeek ?? 0,
                         weeklyMileageGoal: weeklyMileageGoal ?? null,
+                        startWeeklyMileage: resolvedStartMileage,
                         taperWeeks: subTaper,
                         peakWeeks: subPeak,
                         buildWeeks: subBuild,

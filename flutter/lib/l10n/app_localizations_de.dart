@@ -941,6 +941,13 @@ class SDe extends S {
   String get onboardingRunsPerWeek => 'Läufe pro Woche';
 
   @override
+  String get onboardingStartWeeklyMileage => 'Wöchentliche Startkilometer';
+
+  @override
+  String get onboardingStartWeeklyMileageAuto =>
+      'Basierend auf den letzten 3 Monaten';
+
+  @override
   String onboardingRunsPerWeekCount(int count) {
     return '$count';
   }
@@ -2480,6 +2487,13 @@ class SDe extends S {
 
   @override
   String get goalWizardWeeklyMileageGoal => 'Wochenkilometerziel';
+
+  @override
+  String get goalWizardStartWeeklyMileage => 'Aktuelle wöchentliche Kilometer';
+
+  @override
+  String get goalWizardStartWeeklyMileageHelp =>
+      'Der Plan steigert sich ausgehend von diesem Level';
 
   @override
   String get goalWizardPlanDuration => 'Plandauer';

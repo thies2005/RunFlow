@@ -49,6 +49,7 @@ class CreateGoalRequest {
     this.planStartDate,
     this.targetTime,
     this.weeklyMileageGoal,
+    this.startWeeklyMileage,
     this.planWeeks = 12,
     this.runsPerWeek = 4,
     this.ridesPerWeek = 0,
@@ -81,6 +82,7 @@ class CreateGoalRequest {
   final DateTime? planStartDate;
   final int? targetTime;
   final double? weeklyMileageGoal;
+  final double? startWeeklyMileage;
   final int planWeeks;
   final int runsPerWeek;
   final int ridesPerWeek;
@@ -113,6 +115,7 @@ class CreateGoalRequest {
     DateTime? planStartDate,
     int? targetTime,
     double? weeklyMileageGoal,
+    double? startWeeklyMileage,
     int? planWeeks,
     int? runsPerWeek,
     int? ridesPerWeek,
@@ -145,6 +148,7 @@ class CreateGoalRequest {
       planStartDate: planStartDate ?? this.planStartDate,
       targetTime: targetTime ?? this.targetTime,
       weeklyMileageGoal: weeklyMileageGoal ?? this.weeklyMileageGoal,
+      startWeeklyMileage: startWeeklyMileage ?? this.startWeeklyMileage,
       planWeeks: planWeeks ?? this.planWeeks,
       runsPerWeek: runsPerWeek ?? this.runsPerWeek,
       ridesPerWeek: ridesPerWeek ?? this.ridesPerWeek,
@@ -183,6 +187,7 @@ class CreateGoalRequest {
           planStartDate == other.planStartDate &&
           targetTime == other.targetTime &&
           weeklyMileageGoal == other.weeklyMileageGoal &&
+          startWeeklyMileage == other.startWeeklyMileage &&
           planWeeks == other.planWeeks &&
           runsPerWeek == other.runsPerWeek &&
           ridesPerWeek == other.ridesPerWeek &&
@@ -216,6 +221,7 @@ class CreateGoalRequest {
     planStartDate,
     targetTime,
     weeklyMileageGoal,
+    startWeeklyMileage,
     planWeeks,
     runsPerWeek,
     ridesPerWeek,

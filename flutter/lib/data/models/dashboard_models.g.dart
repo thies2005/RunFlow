@@ -19,6 +19,9 @@ _AnalyticsStats _$AnalyticsStatsFromJson(Map<String, dynamic> json) =>
       tsb: _parseDouble(json['tsb']),
       workloadRatio: _parseDouble(json['workloadRatio']),
       easyTrimp: _parseDouble(json['easyTrimp']),
+      avgWeeklyKmLast3Months: json['avgWeeklyKmLast3Months'] == null
+          ? null
+          : _parseDoubleNullable(json['avgWeeklyKmLast3Months']),
       hrMax: json['hrMax'] == null ? 0 : _parseIntSafe(json['hrMax']),
     );
 
@@ -35,6 +38,7 @@ Map<String, dynamic> _$AnalyticsStatsToJson(_AnalyticsStats instance) =>
       'tsb': instance.tsb,
       'workloadRatio': instance.workloadRatio,
       'easyTrimp': instance.easyTrimp,
+      'avgWeeklyKmLast3Months': instance.avgWeeklyKmLast3Months,
       'hrMax': instance.hrMax,
     };
 

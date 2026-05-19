@@ -159,6 +159,24 @@ export async function GET(request: NextRequest) {
 
         const easyTrimp = AnalyticsService.calculateEasyTrimp(runActivities);
 
+        const twelveWeeksAgo = new Date();
+        twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+        const threeMonthRunDist = runActivities
+            .filter(a => new Date(a.startDate) >= twelveWeeksAgo)
+            .reduce((sum, a) => sum + (a.distance || 0), 0);
+        const monday = (date: Date) => {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            d.setDate(d.getDate() + diff);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        };
+        const threeMonthPeriodStart = monday(twelveWeeksAgo);
+        const threeMonthPeriodEnd = monday(new Date());
+        const weeksInThreeMonths = Math.max(1, Math.round((threeMonthPeriodEnd.getTime() - threeMonthPeriodStart.getTime()) / (7 * 24 * 60 * 60 * 1000)));
+        const avgWeeklyKmLast3Months = Math.round(((threeMonthRunDist / weeksInThreeMonths / 1000) * 10)) / 10;
+
         // Serialize BigInt for activities
         const serializedActivities = recentActivities.map(a => ({
             ...a,
@@ -242,6 +260,7 @@ export async function GET(request: NextRequest) {
                 tsb,
                 workloadRatio,
                 easyTrimp,
+                avgWeeklyKmLast3Months,
                 hrMax: maxHR
             },
             recentActivities: serializedActivities,

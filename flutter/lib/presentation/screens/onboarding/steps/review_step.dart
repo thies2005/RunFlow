@@ -198,6 +198,9 @@ class ReviewStep extends ConsumerWidget {
           planStartDate: onboarding.planStartDate,
           targetTime: onboarding.goalTimeSeconds,
           weeklyMileageGoal: onboarding.weeklyMileage * 1000,
+          startWeeklyMileage: onboarding.startWeeklyMileage != null
+              ? (onboarding.startWeeklyMileage! * 1000).roundToDouble()
+              : null,
           planWeeks: onboarding.computedPlanWeeks,
           runsPerWeek: onboarding.runsPerWeek,
           taperWeeks: onboarding.taperWeeks,

@@ -60,6 +60,7 @@ class AnalyticsStats {
     required this.tsb,
     required this.workloadRatio,
     required this.easyTrimp,
+    this.avgWeeklyKmLast3Months,
     required this.hrMax,
   });
 
@@ -74,6 +75,7 @@ class AnalyticsStats {
   final double tsb;
   final double workloadRatio;
   final double easyTrimp;
+  final double? avgWeeklyKmLast3Months;
   final int hrMax;
 
   AnalyticsStats copyWith({
@@ -88,6 +90,7 @@ class AnalyticsStats {
     double? tsb,
     double? workloadRatio,
     double? easyTrimp,
+    double? avgWeeklyKmLast3Months,
     int? hrMax,
   }) {
     return AnalyticsStats(
@@ -102,6 +105,7 @@ class AnalyticsStats {
       tsb: tsb ?? this.tsb,
       workloadRatio: workloadRatio ?? this.workloadRatio,
       easyTrimp: easyTrimp ?? this.easyTrimp,
+      avgWeeklyKmLast3Months: avgWeeklyKmLast3Months ?? this.avgWeeklyKmLast3Months,
       hrMax: hrMax ?? this.hrMax,
     );
   }
@@ -122,6 +126,7 @@ class AnalyticsStats {
           tsb == other.tsb &&
           workloadRatio == other.workloadRatio &&
           easyTrimp == other.easyTrimp &&
+          avgWeeklyKmLast3Months == other.avgWeeklyKmLast3Months &&
           hrMax == other.hrMax;
 
   @override
@@ -137,6 +142,7 @@ class AnalyticsStats {
         tsb,
         workloadRatio,
         easyTrimp,
+        avgWeeklyKmLast3Months,
         hrMax,
       );
 }

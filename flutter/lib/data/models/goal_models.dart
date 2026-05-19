@@ -35,6 +35,7 @@ sealed class CreateGoalRequest with _$CreateGoalRequest {
     DateTime? planStartDate,
     int? targetTime,
     double? weeklyMileageGoal,
+    double? startWeeklyMileage,
     @Default(12) int planWeeks,
     @Default(4) int runsPerWeek,
     @Default(0) int ridesPerWeek,

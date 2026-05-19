@@ -1,6 +1,6 @@
 import { WorkoutType, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces } from '@/lib/metrics/vdot';
-import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS } from '../index';
+import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
 import { enrichWorkoutsWithDescriptions } from '../descriptions';
 
@@ -20,7 +20,17 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
 
     const peakVolume = config.weeklyMileageGoal || 40000;
-    const startVolume = peakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
+    const minStart = getMinStartVolume(config.raceType ?? null);
+    let startVolume: number;
+    if (config.startWeeklyMileage && config.startWeeklyMileage > 0) {
+        startVolume = Math.max(config.startWeeklyMileage, minStart);
+        startVolume = Math.min(startVolume, peakVolume);
+    } else {
+        startVolume = peakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
+        if (startVolume < minStart) {
+            startVolume = Math.min(minStart, peakVolume);
+        }
+    }
     const maintainVolume = peakVolume;
 
     const totalWeeks = config.weeksTotal ?? Math.max(8, Math.ceil(
@@ -68,7 +78,7 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
             }
         }
 
-        weekVolumeCap = Math.max(PLAN_CONSTANTS.MIN_VOLUME_START, weekVolumeCap);
+        weekVolumeCap = Math.max(minStart, weekVolumeCap);
 
         const weekSchedule = generateNoRaceWeek({
             phase,

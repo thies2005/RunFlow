@@ -179,6 +179,10 @@ class Onboarding extends _$Onboarding {
     state = state.copyWith(weeklyMileage: mileage);
   }
 
+  void setStartWeeklyMileage(double? km) {
+    state = state.copyWith(startWeeklyMileage: km);
+  }
+
   void setMaxLongRunKm(double km) {
     state = state.copyWith(maxLongRunKm: km);
   }
@@ -258,6 +262,7 @@ class OnboardingState {
     this.calibrationFactor = 1.0,
     this.runsPerWeek = 4,
     this.weeklyMileage = 28.0,
+    this.startWeeklyMileage,
     this.maxLongRunKm = 18.0,
     this.taperWeeks = 1,
     this.peakWeeks = 2,
@@ -300,6 +305,7 @@ class OnboardingState {
 
   final int runsPerWeek;
   final double weeklyMileage;
+  final double? startWeeklyMileage;
   final double maxLongRunKm;
   final int taperWeeks;
   final int peakWeeks;
@@ -344,6 +350,7 @@ class OnboardingState {
     double? calibrationFactor,
     int? runsPerWeek,
     double? weeklyMileage,
+    double? startWeeklyMileage,
     double? maxLongRunKm,
     int? taperWeeks,
     int? peakWeeks,
@@ -383,6 +390,7 @@ class OnboardingState {
       calibrationFactor: calibrationFactor ?? this.calibrationFactor,
       runsPerWeek: runsPerWeek ?? this.runsPerWeek,
       weeklyMileage: weeklyMileage ?? this.weeklyMileage,
+      startWeeklyMileage: startWeeklyMileage ?? this.startWeeklyMileage,
       maxLongRunKm: maxLongRunKm ?? this.maxLongRunKm,
       taperWeeks: taperWeeks ?? this.taperWeeks,
       peakWeeks: peakWeeks ?? this.peakWeeks,

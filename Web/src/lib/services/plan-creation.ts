@@ -280,6 +280,7 @@ export interface ResolveVdotInput {
 export interface ResolveVdotResult {
     currentVdot: number;
     predictedTime: number | null;
+    vdotFromActivities: boolean;
 }
 
 export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotResult> {
@@ -287,6 +288,7 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
 
     let currentVdot: number | null = null;
     let predictedTime: number | null = null;
+    let vdotFromActivities = false;
 
     if (calibrationTime && calibrationTime > 0 && calibrationDistance) {
         const calDist = CALIB_DISTANCE_MAP[calibrationDistance] || '5K';
@@ -364,6 +366,7 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
             );
             if (effectiveVO2max > 0) {
                 currentVdot = effectiveVO2max;
+                vdotFromActivities = true;
             }
         }
     }
@@ -377,12 +380,23 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
         currentVdot = result.vdot;
     }
 
+    if (currentVdot && !vdotFromActivities && userId) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { vdotCorrectionFactor: true },
+        });
+        const correctionFactor = user?.vdotCorrectionFactor ?? 1.0;
+        if (correctionFactor !== 1.0) {
+            currentVdot = Math.round(currentVdot * correctionFactor * 10) / 10;
+        }
+    }
+
     if (!currentVdot) {
         logger.info('No VDOT data available. Defaulting to VDOT 30.', { userId });
         currentVdot = 30.0;
     }
 
-    return { currentVdot, predictedTime };
+    return { currentVdot, predictedTime, vdotFromActivities };
 }
 
 export interface ResolvePhasesInput {
@@ -629,7 +643,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         isTriathlon: effectiveSport === 'TRIATHLON',
     });
 
-    const { currentVdot } = await resolveVdot({
+    const { currentVdot, vdotFromActivities } = await resolveVdot({
         userId,
         raceType: raceType ?? null,
         calibrationTime,
@@ -640,13 +654,8 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
     });
 
     let effectiveVdot = currentVdot;
-    if (calibrationFactor && calibrationFactor > 0 && !calibrationTime) {
-        const recentGoal = await prisma.goal.findFirst({
-            where: { userId, currentVdot: { not: null } },
-            orderBy: { createdAt: 'desc' },
-        });
-        const baseVdot = recentGoal?.currentVdot || 30.0;
-        effectiveVdot = baseVdot * calibrationFactor;
+    if (calibrationFactor && calibrationFactor > 0 && vdotFromActivities) {
+        effectiveVdot = Math.round(currentVdot * calibrationFactor * 10) / 10;
     }
 
     let calculatedTargetTime: number | null = null;

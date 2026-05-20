@@ -26,8 +26,8 @@ import type { PlanPhase } from './Editor/PhaseSelector';
 import type { Workout } from './Editor/WorkoutDetailPanel';
 import type { Goal } from './Progression/types';
 
-const AiAnalysisPanel = lazy(() =>
-    import('./AI/AiAnalysisPanel').then((mod) => ({ default: mod.AiAnalysisPanel }))
+const AnalysisView = lazy(() =>
+    import('./Analysis/AnalysisView').then((mod) => ({ default: mod.AnalysisView }))
 );
 
 const AiChatPanel = lazy(() =>
@@ -68,7 +68,6 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
     const [addSubGoalOpen, setAddSubGoalOpen] = useState(false);
     const [editingSubGoal, setEditingSubGoal] = useState<Goal | null>(null);
     const [removingSubGoalId, setRemovingSubGoalId] = useState<string | null>(null);
-    const [analysisOpen, setAnalysisOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'calendar' | 'analysis'>('calendar');
     const [chatOpen, setChatOpen] = useState(false);
     const [dismissedGuidedTips, setDismissedGuidedTips] = useState<Set<string>>(new Set());
@@ -81,25 +80,17 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
     const { mode, setMode, isGuided, isAiAssisted } = usePlanMode(goalId);
     const { isPremium } = useIsPremium();
 
-    // Sync view mode toggle with analysis panel
     const handleViewModeChange = useCallback((vm: 'calendar' | 'analysis') => {
         if (vm === 'analysis') {
             if (isPremium) {
                 setViewMode('analysis');
-                setAnalysisOpen(true);
             } else {
                 toast.info('Upgrade to premium to access AI plan analysis.');
             }
         } else {
             setViewMode('calendar');
-            setAnalysisOpen(false);
         }
     }, [isPremium]);
-
-    // Keep viewMode in sync when panel is closed via X button
-    useEffect(() => {
-        if (!analysisOpen) setViewMode('calendar');
-    }, [analysisOpen]);
 
     // Auto-toggle chat panel based on mode (premium only)
     useEffect(() => {
@@ -367,32 +358,39 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
             )}
 
             <div className="flex-1 flex overflow-hidden">
-                {calendarOpen && (
-                    <div className="w-64 border-r border-zinc-800 overflow-y-auto shrink-0">
-                        <MiniCalendar workouts={workouts} raceDate={raceDate} onDayClick={handleDayClick} />
-                    </div>
-                )}
+                {viewMode === 'calendar' ? (
+                    <>
+                        {calendarOpen && (
+                            <div className="w-64 border-r border-zinc-800 overflow-y-auto shrink-0">
+                                <MiniCalendar workouts={workouts} raceDate={raceDate} onDayClick={handleDayClick} />
+                            </div>
+                        )}
 
-                <div className="flex-1 overflow-y-auto py-3" ref={mainScrollRef}>
-                    <InfiniteScroll
-                        items={weeks}
-                        renderItem={renderWeek}
-                        estimateSize={320}
-                        className="h-full"
-                    />
-                    {weeks.length === 0 && (
-                        <div className="flex items-center justify-center h-full text-zinc-600 text-sm">
-                            No workouts yet. Start by adding workouts to your plan.
+                        <div className="flex-1 overflow-y-auto py-3" ref={mainScrollRef}>
+                            <InfiniteScroll
+                                items={weeks}
+                                renderItem={renderWeek}
+                                estimateSize={320}
+                                className="h-full"
+                            />
+                            {weeks.length === 0 && (
+                                <div className="flex items-center justify-center h-full text-zinc-600 text-sm">
+                                    No workouts yet. Start by adding workouts to your plan.
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
-
-                {isPremium && (
-                    <Suspense fallback={null}>
-                        <AiAnalysisPanel
+                    </>
+                ) : (
+                    <Suspense fallback={
+                        <div className="flex-1 flex items-center justify-center">
+                            <div className="w-6 h-6 border-2 border-zinc-600 border-t-zinc-100 rounded-full animate-spin" />
+                        </div>
+                    }>
+                        <AnalysisView
+                            workouts={workouts}
                             goalId={goalId}
-                            isOpen={analysisOpen}
-                            onClose={() => setAnalysisOpen(false)}
+                            raceDate={raceDate}
+                            raceType={raceType}
                             isNoRace={isNoRace}
                         />
                     </Suspense>
@@ -418,7 +416,7 @@ function EditorContent({ goalId, planName, workouts, raceDate, raceType, goals, 
                 )}
             </div>
 
-            <MassEditToolbar goalId={goalId} onOperationComplete={handleOperationComplete} />
+            {viewMode === 'calendar' && <MassEditToolbar goalId={goalId} onOperationComplete={handleOperationComplete} />}
 
             <AddSubGoalDialog
                 parentGoalId={goalId}

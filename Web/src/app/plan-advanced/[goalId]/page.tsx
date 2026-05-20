@@ -73,6 +73,7 @@ export default function GoalEditorPage() {
 
     const plan = data.plan;
     const raceDate = plan.raceDate ? new Date(plan.raceDate) : null;
+    const planStartDate = plan.planStartDate ? new Date(plan.planStartDate) : null;
 
     return (
         <PlanEditorLayout
@@ -81,6 +82,7 @@ export default function GoalEditorPage() {
             workouts={plan.workouts || []}
             raceDate={raceDate}
             raceType={plan.raceType}
+            planStartDate={planStartDate}
             currentVdot={plan.currentVdot}
         />
     );

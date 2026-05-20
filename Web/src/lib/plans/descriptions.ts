@@ -71,11 +71,17 @@ function isGoalPace(workout: WorkoutInput, racePace?: number): boolean {
 
 function extractRepDetail(description?: string): string {
   if (!description) return '';
-  const repMatch = description.match(/(\d+x\d+(?:\.\d+)?(?:km|m)(?:\s*@\s*)?)/);
+  const repMatch = description.match(/(\d+x\d+(?:\.\d+)?(?:km|m))(?:\s*@\s*)?/);
   if (repMatch) return repMatch[1].trim();
   const distAtMatch = description.match(/(\d+(?:\.\d+)?km)\s*@/);
   if (distAtMatch) return distAtMatch[1];
   return '';
+}
+
+function extractFartlekStructure(description?: string): string {
+  if (!description) return '';
+  const match = description.match(/Fartlek:\s*\d+(?:\.\d+)?km\s*\((.+)\)/);
+  return match ? match[1] : '';
 }
 
 export function generateDisplayDescription(workout: WorkoutInput, racePace?: number): string {
@@ -111,14 +117,33 @@ function generateRunDescription(workout: WorkoutInput, racePace?: number): strin
     }
     case WorkoutType.RECOVERY:
       return `Recovery Run: ${dist}`;
-    case WorkoutType.TEMPO:
-      return `Tempo Run: ${dist} @ T Zone`;
-    case WorkoutType.INTERVALS:
-      return `Intervals: ${dist} @ I Zone`;
-    case WorkoutType.REPETITIONS:
-      return `Reps: ${dist} @ R Zone`;
-    case WorkoutType.FARTLEK:
-      return `Fartlek: ${dist}`;
+    case WorkoutType.TEMPO: {
+      const mpSegMatch = workout.description?.match(/MP Segments:\s*(.+)/);
+      if (mpSegMatch) {
+        return `MP Segments: ${mpSegMatch[1]}`;
+      }
+      const steadyMatch = workout.description?.match(/^Steady(?:\s+State)?:\s*(.+)/);
+      if (steadyMatch) {
+        return `Steady Run: ${steadyMatch[1]}`;
+      }
+      const thresholdRep = extractRepDetail(workout.description);
+      if (thresholdRep) {
+        return `Threshold: ${thresholdRep}`;
+      }
+      return `Threshold: ${dist}`;
+    }
+    case WorkoutType.INTERVALS: {
+      const rep = extractRepDetail(workout.description);
+      return rep ? `Intervals: ${rep}` : `Intervals: ${dist}`;
+    }
+    case WorkoutType.REPETITIONS: {
+      const rep = extractRepDetail(workout.description);
+      return rep ? `Reps: ${rep}` : `Reps: ${dist}`;
+    }
+    case WorkoutType.FARTLEK: {
+      const structure = extractFartlekStructure(workout.description);
+      return structure ? `Fartlek: ${structure}` : `Fartlek: ${dist}`;
+    }
     default:
       return `Run: ${dist}`;
   }
@@ -176,7 +201,18 @@ function generateOtherDescription(workout: WorkoutInput): string {
   }
 }
 
-export function inferIntensityZone(workoutType: string): string | null {
+export function inferIntensityZone(workoutType: string, description?: string): string | null {
+  if (description) {
+    if (workoutType === WorkoutType.TEMPO) {
+      if (description.includes('MP Segments')) return 'MP/Race Pace';
+      if (description.match(/^Steady(?:\s+State)?:/)) return 'Steady';
+      if (description.includes('Ultra Threshold')) return 'Steady';
+      if (description.includes('Target Race Pace')) return 'Race Pace';
+    }
+    if (workoutType === WorkoutType.LONG_RUN && description.match(/@\s*(?:MP|Race Pace|Ultra Pace)/)) {
+      return 'E + MP';
+    }
+  }
   switch (workoutType) {
     case WorkoutType.EASY: return 'E Zone';
     case WorkoutType.LONG_RUN: return 'E Zone';
@@ -225,6 +261,6 @@ export function enrichWorkoutsWithDescriptions(workouts: EnrichableWorkout[], ra
       phase: w.phase,
       description: w.description,
     }, racePace);
-    w.intensityZone = inferIntensityZone(w.type);
+    w.intensityZone = inferIntensityZone(w.type, w.description);
   }
 }

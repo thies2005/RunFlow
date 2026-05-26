@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
             });
         }
         const body = await request.json();
-        const { message, activityId, sessionId: requestedSessionId } = body as { message: string; activityId?: string; sessionId?: string };
+        const { message, activityId, sessionId: requestedSessionId, clientLocalDate } = body as { message: string; activityId?: string; sessionId?: string; clientLocalDate?: string };
 
         if (!message || typeof message !== 'string') {
             return new Response(JSON.stringify({ error: 'Message is required' }), {
@@ -266,7 +266,9 @@ export async function POST(request: NextRequest) {
                             if (match) {
                                 try {
                                     const parsed = JSON.parse(match[1]);
-                                    const todayStr = new Date().toISOString().split('T')[0];
+                                    const todayStr = clientLocalDate && /^\d{4}-\d{2}-\d{2}$/.test(clientLocalDate)
+                                        ? clientLocalDate
+                                        : new Date().toISOString().split('T')[0];
                                     
                                     if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
                                         // Log individual items
@@ -336,8 +338,14 @@ export async function POST(request: NextRequest) {
                                     const amountLiters = parseFloat(String(parsed.amount || 0.25));
                                     // Convert liters to milliliters since waterIntake is Int (stored in mL)
                                     const amountMl = Math.round(amountLiters * 1000);
-                                    const today = new Date();
-                                    const date = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+                                    let date: Date;
+                                    if (clientLocalDate && /^\d{4}-\d{2}-\d{2}$/.test(clientLocalDate)) {
+                                        const [yr, mo, dy] = clientLocalDate.split('-').map(Number);
+                                        date = new Date(Date.UTC(yr, mo - 1, dy));
+                                    } else {
+                                        const today = new Date();
+                                        date = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+                                    }
 
                                     const existing = await prisma.dailyHealthLog.findUnique({
                                         where: {

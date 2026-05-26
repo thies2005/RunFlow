@@ -1108,5 +1108,8 @@
   "nutritionReset": "Reset",
 
   "chatWaterIntakeLogged": "Water Intake Logged",
-  "chatAddedToToday": "Added to today's totals"
+  "chatAddedToToday": "Added to today's totals",
+  "recipeMatchesTitle": "Recipe Matches",
+  "nutritionKcalEaten": "kcal eaten",
+  "settingsRecipeManagers": "Recipe Managers"
 }

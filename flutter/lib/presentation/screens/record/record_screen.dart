@@ -8,6 +8,7 @@ import 'package:runflow_flutter/domain/entities/dashboard_entities.dart';
 import 'package:runflow_flutter/domain/entities/pace_zone.dart';
 import 'package:runflow_flutter/domain/entities/recording_entities.dart';
 import 'package:runflow_flutter/data/datasources/local/workout_template_local_datasource.dart';
+import 'package:runflow_flutter/domain/entities/workout_step.dart';
 import 'package:runflow_flutter/domain/services/workout_step_execution_engine.dart';
 import 'package:runflow_flutter/presentation/providers/activity_providers.dart';
 import 'package:runflow_flutter/presentation/providers/goal_providers.dart';
@@ -80,11 +81,70 @@ class _RecordScreenState extends ConsumerState<RecordScreen> {
       final response = await repo.listWorkouts();
       final workout = response.workouts.where((w) => w.id == widget.workoutId).firstOrNull;
       if (workout != null && mounted) {
-        setState(() => _plannedWorkout = workout);
+        setState(() {
+          _plannedWorkout = workout;
+          if (workout.structuredSteps != null) {
+            final parsedWorkout = _parseStructuredWorkout(workout.structuredSteps!);
+            final engine = WorkoutStepExecutionEngine(workout: parsedWorkout);
+            engine.initialize();
+            _executionEngine = engine;
+          }
+        });
       }
     } catch (e) {
       debugPrint('RecordScreen: Failed to load workout details: $e');
     }
+  }
+
+  StructuredWorkout _parseStructuredWorkout(Map<String, dynamic> json) {
+    return StructuredWorkout(
+      id: json['id'] as String? ?? widget.workoutId ?? 'temp_workout',
+      name: json['name'] as String? ?? _plannedWorkout?.description ?? 'Workout',
+      steps: (json['steps'] as List?)
+              ?.map((e) => _stepNodeFromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      totalEstimatedDurationSeconds: json['totalEstimatedDurationSeconds'] as int?,
+      totalEstimatedDistanceMeters: (json['totalEstimatedDistanceMeters'] as num?)?.toDouble(),
+    );
+  }
+
+  StepNode _stepNodeFromJson(Map<String, dynamic> json) {
+    if (json['type'] == 'step') {
+      final s = json['step'] as Map<String, dynamic>;
+      return StepNode.step(WorkoutStep(
+        id: s['id'] as String? ?? 'step_${UniqueKey().toString()}',
+        type: StepType.values.firstWhere(
+          (e) => e.name == s['stepType'],
+          orElse: () => StepType.interval,
+        ),
+        name: s['name'] as String? ?? 'Interval',
+        durationType: s['durationType'] != null
+            ? StepDurationType.values.firstWhere(
+                (e) => e.name == s['durationType'],
+                orElse: () => StepDurationType.time,
+              )
+            : null,
+        durationSeconds: s['durationSeconds'] as int?,
+        distanceMeters: (s['distanceMeters'] as num?)?.toDouble(),
+        paceTarget: s['paceTarget'] != null
+            ? PaceTarget(
+                minPaceSecondsPerKm: (s['paceTarget']['minPace'] as num?)?.toDouble(),
+                maxPaceSecondsPerKm: (s['paceTarget']['maxPace'] as num?)?.toDouble(),
+              )
+            : null,
+      ));
+    }
+    final g = json['group'] as Map<String, dynamic>;
+    return StepNode.group(StepGroup(
+      id: g['id'] as String? ?? 'group_${UniqueKey().toString()}',
+      name: g['name'] as String?,
+      repeatCount: g['repeatCount'] as int? ?? 1,
+      children: (g['children'] as List?)
+              ?.map((e) => _stepNodeFromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    ));
   }
 
   Future<void> _loadTemplate() async {

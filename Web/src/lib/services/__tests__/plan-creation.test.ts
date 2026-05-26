@@ -26,15 +26,16 @@ describe('plan creation guardrails', () => {
         expect(result.trainingVdot).toBe(70);
     });
 
-    it('does not cap realistic target times', () => {
+    it('does not cap realistic target times but scales progressively', () => {
         const result = resolveTrainingVdotForGoal({
-            currentVdot: 50,
-            targetTime: 20 * 60,
+            currentVdot: 40,
+            targetTime: 23 * 60, // VDOT for 23:00 5K is around 42.6
             raceType: 'FIVE_K',
             hasFitnessBaseline: true,
         });
 
         expect(result.wasCapped).toBe(false);
-        expect(result.trainingVdot).toBe(50);
+        expect(result.trainingVdot).toBeGreaterThan(40);
+        expect(result.trainingVdot).toBeLessThan(46); // Cap is 40 * 1.15 = 46
     });
 });

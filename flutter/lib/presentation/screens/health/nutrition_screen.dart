@@ -478,7 +478,7 @@ class _CalorieRing extends StatelessWidget {
                   '${nutrition.calories.toInt()} / ${goal.toInt()}',
                   style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
-                Text('kcal eaten', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant)),
+                Text(S.of(context).nutritionKcalEaten, style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant)),
                 const SizedBox(height: 4),
                 Text(
                   S.of(context).nutritionKcalRemaining((goal - nutrition.calories).clamp(0, goal).toInt()),

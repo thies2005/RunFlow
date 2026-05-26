@@ -6036,6 +6036,24 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Added to today\'s totals'**
   String get chatAddedToToday;
+
+  /// No description provided for @recipeMatchesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe Matches'**
+  String get recipeMatchesTitle;
+
+  /// No description provided for @nutritionKcalEaten.
+  ///
+  /// In en, this message translates to:
+  /// **'kcal eaten'**
+  String get nutritionKcalEaten;
+
+  /// No description provided for @settingsRecipeManagers.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe Managers'**
+  String get settingsRecipeManagers;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

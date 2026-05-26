@@ -130,9 +130,15 @@ class ChatRepositoryImpl implements ChatRepository {
     final cancelToken = CancelToken();
     _activeToken = cancelToken;
     try {
+      final now = DateTime.now();
+      final localDateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
       final response = await dio.post(
         ApiConstants.aiChatStreamUrl,
-        data: {'message': content, 'sessionId': sessionId},
+        data: {
+          'message': content,
+          'sessionId': sessionId,
+          'clientLocalDate': localDateStr,
+        },
         options: Options(
           responseType: ResponseType.stream,
           headers: {'Accept': 'text/event-stream'},

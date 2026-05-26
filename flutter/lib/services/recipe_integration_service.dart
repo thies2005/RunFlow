@@ -112,7 +112,9 @@ class RecipeIntegrationService {
         }
 
         final List<FoodItem> items = [];
-        for (final rec in recipesList) {
+        for (final dynamic recVal in recipesList) {
+          if (recVal is! Map<String, dynamic>) continue;
+          final rec = recVal;
           final name = rec['name'] as String? ?? 'Mealie Recipe';
           final slug = rec['slug'] as String? ?? '';
           
@@ -167,7 +169,9 @@ class RecipeIntegrationService {
         }
 
         final List<FoodItem> items = [];
-        for (final rec in recipesList) {
+        for (final dynamic recVal in recipesList) {
+          if (recVal is! Map<String, dynamic>) continue;
+          final rec = recVal;
           final name = rec['name'] as String? ?? 'Tandoor Recipe';
           final id = rec['id']?.toString() ?? '';
           

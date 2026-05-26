@@ -87,15 +87,14 @@ export async function recalculateWorkoutPaces(
     const hrZones = hrInput ? resolveHrZones(hrInput).zones : null;
 
     let updatedCount = 0;
-    let skippedCount = 0;
     const warnings: string[] = [];
 
-    // Batch updates by workout type to avoid N+1 queries
+    const updatedIds = new Set<string>();
+
     const types = ['EASY', 'LONG_RUN', 'RECOVERY', 'TEMPO', 'INTERVALS', 'REPETITIONS', 'FARTLEK'];
     for (const type of types) {
         const newPace = getPaceForType(paces, type);
         if (newPace === null) {
-            skippedCount++;
             continue;
         }
 
@@ -123,13 +122,14 @@ export async function recalculateWorkoutPaces(
                     }),
                 },
             });
+            updatedIds.add(workout.id);
             updatedCount++;
         }
     }
 
     if (hrZones) {
         const remaining = await prisma.workout.findMany({
-            where: { goalId, isCompleted: false, targetHrZone: { not: null } },
+            where: { goalId, isCompleted: false, targetHrZone: { not: null }, id: { notIn: Array.from(updatedIds) } },
             select: { id: true, targetHrZone: true },
         });
         for (const workout of remaining) {
@@ -143,6 +143,7 @@ export async function recalculateWorkoutPaces(
                     targetHrMaxBpm: hrTarget.max,
                 },
             });
+            updatedCount++;
         }
     }
 
@@ -160,5 +161,5 @@ export async function recalculateWorkoutPaces(
         data: { currentVdot: newVdot },
     });
 
-    return { updatedCount, skippedCount, warnings };
+    return { updatedCount, skippedCount: 0, warnings };
 }

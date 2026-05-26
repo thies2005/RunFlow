@@ -1,6 +1,6 @@
 import { WorkoutType, RaceType, PlanSport, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '../metrics/vdot';
-import { getZoneTarget, resolveHrZones, type HrZoneInput } from '../metrics/hr-zones';
+import { getZoneTarget, resolveHrZones } from '../metrics/hr-zones';
 import { generateUltraPlan } from './generators/run-ultra';
 import { generateTriathlonPlan } from './generators/triathlon';
 import { generateNoRacePlan } from './generators/no-race';
@@ -1426,18 +1426,18 @@ function updateDescription(type: WorkoutType, distance: number, pace: number): s
 function enrichWorkoutsWithTargets(
     workouts: GeneratedWorkout[],
     paces: TrainingPaces,
-    config: Pick<PlanConfig, 'thresholdHeartRate' | 'hrZoneMethod'>,
+    config: Pick<PlanConfig, 'thresholdHeartRate' | 'hrZoneMethod' | 'hrZone1Max' | 'hrZone2Max' | 'hrZone3Max' | 'hrZone4Max' | 'hrZone5Max' | 'hrZone6Max' | 'hrMax' | 'hrRest'>,
 ): void {
     const hrZones = resolveHrZones({
         thresholdHeartRate: config.thresholdHeartRate ?? null,
-        hrZone1Max: (config as HrZoneInput).hrZone1Max ?? null,
-        hrZone2Max: (config as HrZoneInput).hrZone2Max ?? null,
-        hrZone3Max: (config as HrZoneInput).hrZone3Max ?? null,
-        hrZone4Max: (config as HrZoneInput).hrZone4Max ?? null,
-        hrZone5Max: (config as HrZoneInput).hrZone5Max ?? null,
-        hrZone6Max: (config as HrZoneInput).hrZone6Max ?? null,
-        hrMax: (config as HrZoneInput).hrMax ?? null,
-        hrRest: (config as HrZoneInput).hrRest ?? null,
+        hrZone1Max: config.hrZone1Max ?? null,
+        hrZone2Max: config.hrZone2Max ?? null,
+        hrZone3Max: config.hrZone3Max ?? null,
+        hrZone4Max: config.hrZone4Max ?? null,
+        hrZone5Max: config.hrZone5Max ?? null,
+        hrZone6Max: config.hrZone6Max ?? null,
+        hrMax: config.hrMax ?? null,
+        hrRest: config.hrRest ?? null,
     }).zones;
     for (const workout of workouts) {
         const paceTarget = getPaceTarget(workout, paces);

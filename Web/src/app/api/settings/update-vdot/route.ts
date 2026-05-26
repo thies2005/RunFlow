@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
             userUpdateData.weight = parsedWeight;
         }
 
-        // HR Zone thresholds: 40-100%
+        // HR Zone thresholds: 40-250 BPM (also accepts legacy percent values 40-100)
         const validateZone = (val: unknown): number | null => {
             if (typeof val !== 'number') return null;
             if (val >= 40 && val <= 250) return Math.round(val);
@@ -173,6 +173,16 @@ export async function POST(req: NextRequest) {
         if (typeof thresholdPace === 'number' && thresholdPace >= 120 && thresholdPace <= 900) {
             userUpdateData.thresholdPace = Math.round(thresholdPace);
         }
+
+        // Fetch current user profile for HR zone fallback values
+        const currentUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: {
+                hrMax: true, hrRest: true, thresholdHeartRate: true,
+                hrZone1Max: true, hrZone2Max: true, hrZone3Max: true,
+                hrZone4Max: true, hrZone5Max: true, hrZone6Max: true,
+            },
+        });
 
         // Update user if there's anything to update
         if (Object.keys(userUpdateData).length > 0) {
@@ -254,15 +264,15 @@ export async function POST(req: NextRequest) {
             });
 
             const result = await recalculateWorkoutPaces(activeGoal.id, newVdot, {
-                thresholdHeartRate: typeof thresholdHeartRate === 'number' ? Math.round(thresholdHeartRate) : user?.thresholdHeartRate ?? null,
-                hrZone1Max: typeof hrZone1Max === 'number' ? Math.round(hrZone1Max) : user?.hrZone1Max ?? null,
-                hrZone2Max: typeof hrZone2Max === 'number' ? Math.round(hrZone2Max) : user?.hrZone2Max ?? null,
-                hrZone3Max: typeof hrZone3Max === 'number' ? Math.round(hrZone3Max) : user?.hrZone3Max ?? null,
-                hrZone4Max: typeof hrZone4Max === 'number' ? Math.round(hrZone4Max) : user?.hrZone4Max ?? null,
-                hrZone5Max: typeof hrZone5Max === 'number' ? Math.round(hrZone5Max) : user?.hrZone5Max ?? null,
-                hrZone6Max: typeof hrZone6Max === 'number' ? Math.round(hrZone6Max) : user?.hrZone6Max ?? null,
-                hrMax: typeof maxHeartRate === 'number' ? Math.round(maxHeartRate) : user?.hrMax ?? null,
-                hrRest: typeof restingHeartRate === 'number' ? Math.round(restingHeartRate) : user?.hrRest ?? null,
+                thresholdHeartRate: typeof thresholdHeartRate === 'number' ? Math.round(thresholdHeartRate) : currentUser?.thresholdHeartRate ?? null,
+                hrZone1Max: typeof hrZone1Max === 'number' ? Math.round(hrZone1Max) : currentUser?.hrZone1Max ?? null,
+                hrZone2Max: typeof hrZone2Max === 'number' ? Math.round(hrZone2Max) : currentUser?.hrZone2Max ?? null,
+                hrZone3Max: typeof hrZone3Max === 'number' ? Math.round(hrZone3Max) : currentUser?.hrZone3Max ?? null,
+                hrZone4Max: typeof hrZone4Max === 'number' ? Math.round(hrZone4Max) : currentUser?.hrZone4Max ?? null,
+                hrZone5Max: typeof hrZone5Max === 'number' ? Math.round(hrZone5Max) : currentUser?.hrZone5Max ?? null,
+                hrZone6Max: typeof hrZone6Max === 'number' ? Math.round(hrZone6Max) : currentUser?.hrZone6Max ?? null,
+                hrMax: typeof maxHeartRate === 'number' ? Math.round(maxHeartRate) : currentUser?.hrMax ?? null,
+                hrRest: typeof restingHeartRate === 'number' ? Math.round(restingHeartRate) : currentUser?.hrRest ?? null,
             });
             console.log(`Pace recalculation complete: ${result.updatedCount} updated, ${result.skippedCount} skipped`);
         }

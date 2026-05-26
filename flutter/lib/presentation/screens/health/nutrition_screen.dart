@@ -136,7 +136,61 @@ class NutritionScreen extends ConsumerWidget {
                     decoration: InputDecoration(
                         labelText: S.of(context).nutritionCaloriesKcal),
                     keyboardType: TextInputType.number),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
+                Text(
+                  S.of(context).nutritionMacroPresets,
+                  style: Theme.of(ctx).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildPresetChip(
+                        context: ctx,
+                        label: S.of(context).nutritionBalancedPreset,
+                        onTap: () {
+                          final cal = double.tryParse(calCtl.text) ?? 2000.0;
+                          setDialogState(() {
+                            proteinCtl.text = ((cal * 0.30) / 4).round().toString();
+                            carbsCtl.text = ((cal * 0.40) / 4).round().toString();
+                            fatCtl.text = ((cal * 0.30) / 9).round().toString();
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _buildPresetChip(
+                        context: ctx,
+                        label: S.of(context).nutritionLowCarbPreset,
+                        onTap: () {
+                          final cal = double.tryParse(calCtl.text) ?? 2000.0;
+                          setDialogState(() {
+                            proteinCtl.text = ((cal * 0.30) / 4).round().toString();
+                            carbsCtl.text = ((cal * 0.10) / 4).round().toString();
+                            fatCtl.text = ((cal * 0.60) / 9).round().toString();
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      _buildPresetChip(
+                        context: ctx,
+                        label: S.of(context).nutritionHighProteinPreset,
+                        onTap: () {
+                          final cal = double.tryParse(calCtl.text) ?? 2000.0;
+                          setDialogState(() {
+                            proteinCtl.text = ((cal * 0.40) / 4).round().toString();
+                            carbsCtl.text = ((cal * 0.35) / 4).round().toString();
+                            fatCtl.text = ((cal * 0.25) / 9).round().toString();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
@@ -176,7 +230,7 @@ class NutritionScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 10),
                 SwitchListTile(
-                  title: const Text('Track Water'),
+                  title: Text(S.of(context).nutritionTrackWater),
                   value: waterTrackingEnabled,
                   onChanged: (val) => setDialogState(() => waterTrackingEnabled = val),
                   contentPadding: EdgeInsets.zero,
@@ -261,6 +315,25 @@ class NutritionScreen extends ConsumerWidget {
     });
   }
 
+  Widget _buildPresetChip({
+    required BuildContext context,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return ActionChip(
+      label: Text(label),
+      onPressed: onTap,
+      labelStyle: theme.textTheme.labelMedium?.copyWith(
+        fontSize: 11,
+        color: AppColors.primary,
+        fontWeight: FontWeight.w600,
+      ),
+      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+      side: const BorderSide(color: AppColors.primary, width: 0.5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    );
+  }
 }
 
 class _NutritionContent extends StatelessWidget {
@@ -323,8 +396,10 @@ class _NutritionContent extends StatelessWidget {
             _WaterTracker(
               currentWater: nutrition.water,
               waterGoal: targets.water,
-              onAdd: () {
-                final updated = nutrition.copyWith(water: nutrition.water + 0.25);
+              onUpdate: (amount) {
+                final updated = nutrition.copyWith(
+                  water: (nutrition.water + amount).clamp(0.0, double.infinity),
+                );
                 ref.read(nutritionProvider(today).notifier).save(updated);
               },
             ),
@@ -346,44 +421,73 @@ class _CalorieRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final goal = targets.calories.toDouble();
     final pct = (nutrition.calories / goal).clamp(0.0, 1.0);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 80,
-            height: 80,
-            child: CircularProgressIndicator(
-              value: pct,
-              strokeWidth: 8,
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, childWidget) {
+        return Transform.translate(
+          offset: Offset(0.0, 30.0 * (1.0 - value)),
+          child: Opacity(
+            opacity: value,
+            child: childWidget,
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          // Glassmorphic background
+          color: isDark
+              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.65)
+              : theme.colorScheme.surface.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
-          ),
-          const SizedBox(width: 20),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${nutrition.calories.toInt()} / ${goal.toInt()}',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ],
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 80,
+              height: 80,
+              child: CircularProgressIndicator(
+                value: pct,
+                strokeWidth: 8,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                valueColor: const AlwaysStoppedAnimation(AppColors.primary),
               ),
-              Text('kcal eaten', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant)),
-              const SizedBox(height: 4),
-              Text(
-                S.of(context).nutritionKcalRemaining((goal - nutrition.calories).clamp(0, goal).toInt()),
-                style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primary),
-              ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(width: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${nutrition.calories.toInt()} / ${goal.toInt()}',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text('kcal eaten', style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant)),
+                const SizedBox(height: 4),
+                Text(
+                  S.of(context).nutritionKcalRemaining((goal - nutrition.calories).clamp(0, goal).toInt()),
+                  style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primary),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -430,33 +534,154 @@ class _MacroBar extends StatelessWidget {
   }
 }
 
-class _WaterTracker extends StatelessWidget {
-  const _WaterTracker({required this.currentWater, required this.onAdd, required this.waterGoal});
+class _WaterTracker extends StatefulWidget {
+  const _WaterTracker({
+    required this.currentWater,
+    required this.waterGoal,
+    required this.onUpdate,
+  });
+
   final double currentWater;
-  final VoidCallback onAdd;
   final double waterGoal;
+  final ValueChanged<double> onUpdate;
+
+  @override
+  State<_WaterTracker> createState() => _WaterTrackerState();
+}
+
+class _WaterTrackerState extends State<_WaterTracker> {
+  double _selectedGlassSize = 0.25; // default 250ml
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final glasses = (currentWater / 0.25).floor();
+    final goal = widget.waterGoal;
+    final current = widget.currentWater;
+    
+    // Number of cups/drops to show
+    final totalDrops = (goal / _selectedGlassSize).ceil().clamp(1, 16);
+    final filledDrops = (current / _selectedGlassSize).floor();
+
     return _SectionCard(
       title: S.of(context).nutritionWaterIntake,
       trailing: Text(
-        '${currentWater.toStringAsFixed(2)}L / ${waterGoal.toStringAsFixed(1)}L',
-        style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+        '${current.toStringAsFixed(2)}L / ${goal.toStringAsFixed(1)}L',
+        style: theme.textTheme.bodySmall?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: AppColors.peaked,
+        ),
       ),
-      child: Row(
-        children: List.generate(12, (i) => Expanded(
-          child: GestureDetector(
-            onTap: onAdd,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 1),
-              child: Icon(Icons.water_drop, size: 20,
-                  color: i < glasses ? AppColors.peaked : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)),
-            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Quick glass size selector
+          Row(
+            children: [
+              Text(
+                S.of(context).nutritionCupSize,
+                style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+              ),
+              const SizedBox(width: 8),
+              Wrap(
+                spacing: 6,
+                children: [0.25, 0.33, 0.50].map((size) {
+                  final isSelected = (_selectedGlassSize - size).abs() < 0.01;
+                  final sizeName = size >= 1.0 ? '${size}L' : '${(size * 1000).round()}ml';
+                  return ChoiceChip(
+                    label: Text(sizeName),
+                    selected: isSelected,
+                    onSelected: (val) {
+                      if (val) {
+                        setState(() {
+                          _selectedGlassSize = size;
+                        });
+                      }
+                    },
+                    visualDensity: VisualDensity.compact,
+                    labelStyle: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : AppColors.onSurfaceVariant,
+                    ),
+                    selectedColor: AppColors.peaked,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    side: BorderSide.none,
+                  );
+                }).toList(),
+              ),
+            ],
           ),
-        )),
+          const SizedBox(height: 12),
+          // Interactive dynamic water drops grid
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 8,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+            ),
+            itemCount: totalDrops,
+            itemBuilder: (context, i) {
+              final isFilled = i < filledDrops;
+              return GestureDetector(
+                onTap: () {
+                  if (isFilled) {
+                    widget.onUpdate(-_selectedGlassSize);
+                  } else {
+                    widget.onUpdate(_selectedGlassSize);
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color: isFilled 
+                        ? AppColors.peaked.withValues(alpha: 0.15) 
+                        : theme.colorScheme.surfaceContainerHighest,
+                    border: Border.all(
+                      color: isFilled ? AppColors.peaked : Colors.transparent,
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.water_drop,
+                    size: 20,
+                    color: isFilled 
+                        ? AppColors.peaked 
+                        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          // Quick action buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => widget.onUpdate(_selectedGlassSize),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.peaked),
+                    foregroundColor: AppColors.peaked,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  icon: const Icon(Icons.add, size: 16),
+                  label: Text(S.of(context).nutritionAddMl(( _selectedGlassSize * 1000 ).round())),
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                onPressed: current > 0 ? () => widget.onUpdate(-current) : null,
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: Text(S.of(context).nutritionReset),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -535,27 +760,64 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final trailingWidgets = trailing == null ? const <Widget>[] : <Widget>[trailing!];
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-              const Spacer(),
-              ...trailingWidgets,
-            ],
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, childWidget) {
+        return Transform.translate(
+          offset: Offset(0.0, 30.0 * (1.0 - value)),
+          child: Opacity(
+            opacity: value,
+            child: childWidget,
           ),
-          const SizedBox(height: 12),
-          child,
-        ],
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          // Glassmorphic background
+          color: isDark
+              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.65)
+              : theme.colorScheme.surface.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.08),
+            width: 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const Spacer(),
+                ...trailingWidgets,
+              ],
+            ),
+            const SizedBox(height: 14),
+            child,
+          ],
+        ),
       ),
     );
   }

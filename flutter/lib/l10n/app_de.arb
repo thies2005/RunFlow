@@ -1010,5 +1010,37 @@
   "raceTypeCustomTri": "Benutzerdefinierter Triathlon",
 
   "goalWeeklyMileageDisplay": "{value} km/Wo.",
-  "goalRunsPerWeekDisplay": "{count}x / Wo."
+  "goalRunsPerWeekDisplay": "{count}x / Wo.",
+
+  "settingsRecipeIntegrations": "Rezept-Integrationen",
+  "settingsConnectSelfHosted": "Selbstgehostete Manager verbinden",
+  "settingsRecipeIntegrationSubtitle": "Importieren Sie geplante Rezepte, Zutaten und benutzerdefinierte Lebensmittel-Makros direkt aus Ihren selbstgehosteten Mealie- oder Tandoor-Instanzen.",
+  "settingsEnableIntegration": "Integration aktivieren",
+  "settingsRecipeIntegrationDesc": "Suchen und Importieren externer Rezepte erlauben",
+  "settingsServiceType": "Diensttyp",
+  "settingsServerCredentials": "Server-Anmeldedaten",
+  "settingsServerBaseUrl": "Server-Basis-URL",
+  "settingsMealieExample": "https://mealie.example.com",
+  "settingsEnterServerUrl": "Bitte geben Sie eine Server-URL ein",
+  "settingsApiAccessToken": "API-Zugriffstoken",
+  "settingsEnterApiKey": "Geben Sie den API-Schlüssel oder das Bearer-Token ein",
+  "settingsEnterApiToken": "Bitte geben Sie ein API-Token ein",
+  "settingsConnecting": "Verbindung wird hergestellt...",
+  "settingsTestConnection": "Verbindung testen",
+  "settingsConnectionSuccessful": "Verbindung erfolgreich!",
+  "settingsConnectionFailed": "Verbindung fehlgeschlagen. Bitte überprüfen Sie die Angaben.",
+  "settingsSavedSuccessfully": "Einstellungen für die Rezept-Integration erfolgreich gespeichert.",
+
+  "nutritionTrackWater": "Wasser tracken",
+  "nutritionMacroPresets": "Makro-Voreinstellungen (basierend auf Kalorien):",
+  "nutritionBalancedPreset": "Ausgewogen (30/40/30)",
+  "nutritionLowCarbPreset": "Low-Carb (30/10/60)",
+  "nutritionHighProteinPreset": "High-Protein (40/35/25)",
+  "nutritionCupSize": "Tassengröße:",
+  "nutritionAddMl": "{amount}ml hinzufügen",
+  "@nutritionAddMl": { "placeholders": { "amount": { "type": "int" } } },
+  "nutritionReset": "Zurücksetzen",
+
+  "chatWaterIntakeLogged": "Wasseraufnahme erfasst",
+  "chatAddedToToday": "Zu den heutigen Gesamtwerten hinzugefügt"
 }

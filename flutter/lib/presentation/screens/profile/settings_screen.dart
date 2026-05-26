@@ -304,6 +304,33 @@ class SettingsScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
+               'External Integrations',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.receipt_long),
+              title: const Text('Recipe Managers'),
+              subtitle: Text(
+                'Connect to Mealie or Tandoor self-hosted servers',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                context.push('/settings/recipe');
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
                S.of(context).settingsApiAccess,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,

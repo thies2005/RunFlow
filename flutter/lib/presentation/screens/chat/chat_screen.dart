@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -629,8 +630,38 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUser = message.role == ChatMessageRole.user;
     final cleanedContent = isUser ? message.content : _cleanChatContent(message.content);
+    
+    // Check for standard camera snaps
     final isMealLogged = cleanedContent.contains('<!-- MEAL_LOGGED_WIDGET -->');
-    final finalContent = cleanedContent.replaceAll('<!-- MEAL_LOGGED_WIDGET -->', '').trim();
+    var finalContent = cleanedContent.replaceAll('<!-- MEAL_LOGGED_WIDGET -->', '').trim();
+
+    // Check for our new conversational JSON-rich comment payloads
+    Map<String, dynamic>? mealPayload;
+    Map<String, dynamic>? waterPayload;
+
+    if (finalContent.contains('<!-- MEAL_LOGGED_WIDGET:')) {
+      final start = finalContent.indexOf('<!-- MEAL_LOGGED_WIDGET:');
+      final end = finalContent.indexOf('-->', start);
+      if (start != -1 && end != -1) {
+        final rawJson = finalContent.substring(start + '<!-- MEAL_LOGGED_WIDGET:'.length, end).trim();
+        try {
+          mealPayload = jsonDecode(rawJson) as Map<String, dynamic>;
+        } catch (_) {}
+        finalContent = finalContent.replaceAll(finalContent.substring(start, end + 3), '').trim();
+      }
+    }
+
+    if (finalContent.contains('<!-- WATER_LOGGED_WIDGET:')) {
+      final start = finalContent.indexOf('<!-- WATER_LOGGED_WIDGET:');
+      final end = finalContent.indexOf('-->', start);
+      if (start != -1 && end != -1) {
+        final rawJson = finalContent.substring(start + '<!-- WATER_LOGGED_WIDGET:'.length, end).trim();
+        try {
+          waterPayload = jsonDecode(rawJson) as Map<String, dynamic>;
+        } catch (_) {}
+        finalContent = finalContent.replaceAll(finalContent.substring(start, end + 3), '').trim();
+      }
+    }
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -689,6 +720,10 @@ class _MessageBubble extends StatelessWidget {
                   ],
                 ),
               ),
+            if (mealPayload != null)
+              _buildMealLoggedCard(context, mealPayload),
+            if (waterPayload != null)
+              _buildWaterLoggedCard(context, waterPayload),
             const SizedBox(height: 4),
             Text(
               _formatTimeAgo(message.createdAt, S.of(context)),
@@ -700,6 +735,184 @@ class _MessageBubble extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMealLoggedCard(BuildContext context, Map<String, dynamic> payload) {
+    final name = payload['name'] ?? 'Meal Logged';
+    final calories = (payload['calories'] as num?)?.toDouble() ?? 0.0;
+    final protein = (payload['protein'] as num?)?.toDouble() ?? 0.0;
+    final carbs = (payload['carbs'] as num?)?.toDouble() ?? 0.0;
+    final fats = (payload['fats'] as num?)?.toDouble() ?? (payload['fat'] as num?)?.toDouble() ?? 0.0;
+    final items = payload['items'] as List<dynamic>? ?? [];
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.tertiaryContainer.withValues(alpha: 0.25),
+        border: Border.all(color: theme.colorScheme.tertiaryContainer, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.restaurant, color: theme.colorScheme.primary, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  name,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${calories.round()} kcal',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Macros
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildMacroChip('Prot', '${protein.round()}g', AppColors.success),
+              _buildMacroChip('Carb', '${carbs.round()}g', AppColors.warning),
+              _buildMacroChip('Fat', '${fats.round()}g', AppColors.fatigued),
+            ],
+          ),
+          if (items.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            const Divider(height: 16),
+            ...items.map((it) {
+              final itName = it['name'] ?? 'Item';
+              final itCal = (it['calories'] as num?)?.toDouble() ?? 0.0;
+              final itGrams = (it['estimatedGrams'] as num?)?.toDouble();
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '• $itName${itGrams != null ? " (${itGrams.round()}g)" : ""}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${itCal.round()} kcal',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMacroChip(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontSize: 8,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWaterLoggedCard(BuildContext context, Map<String, dynamic> payload) {
+    final amount = (payload['amount'] as num?)?.toDouble() ?? 0.25;
+    final amountText = amount >= 1.0 ? '${amount.toStringAsFixed(1)} L' : '${(amount * 1000).round()} mL';
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.peaked.withValues(alpha: 0.15),
+        border: Border.all(color: AppColors.peaked.withValues(alpha: 0.5), width: 1.5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.water_drop, color: AppColors.peaked, size: 24),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  S.of(context).chatWaterIntakeLogged,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  S.of(context).chatAddedToToday,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.peaked,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              amountText,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

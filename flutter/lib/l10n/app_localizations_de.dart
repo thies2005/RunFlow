@@ -3168,4 +3168,90 @@ class SDe extends S {
   String goalRunsPerWeekDisplay(int count) {
     return '${count}x / Wo.';
   }
+
+  @override
+  String get settingsRecipeIntegrations => 'Rezept-Integrationen';
+
+  @override
+  String get settingsConnectSelfHosted => 'Selbstgehostete Manager verbinden';
+
+  @override
+  String get settingsRecipeIntegrationSubtitle => 'Importieren Sie geplante Rezepte, Zutaten und benutzerdefinierte Lebensmittel-Makros direkt aus Ihren selbstgehosteten Mealie- oder Tandoor-Instanzen.';
+
+  @override
+  String get settingsEnableIntegration => 'Integration aktivieren';
+
+  @override
+  String get settingsRecipeIntegrationDesc => 'Suchen und Importieren externer Rezepte erlauben';
+
+  @override
+  String get settingsServiceType => 'Diensttyp';
+
+  @override
+  String get settingsServerCredentials => 'Server-Anmeldedaten';
+
+  @override
+  String get settingsServerBaseUrl => 'Server-Basis-URL';
+
+  @override
+  String get settingsMealieExample => 'https://mealie.example.com';
+
+  @override
+  String get settingsEnterServerUrl => 'Bitte geben Sie eine Server-URL ein';
+
+  @override
+  String get settingsApiAccessToken => 'API-Zugriffstoken';
+
+  @override
+  String get settingsEnterApiKey => 'Geben Sie den API-Schlüssel oder das Bearer-Token ein';
+
+  @override
+  String get settingsEnterApiToken => 'Bitte geben Sie ein API-Token ein';
+
+  @override
+  String get settingsConnecting => 'Verbindung wird hergestellt...';
+
+  @override
+  String get settingsTestConnection => 'Verbindung testen';
+
+  @override
+  String get settingsConnectionSuccessful => 'Verbindung erfolgreich!';
+
+  @override
+  String get settingsConnectionFailed => 'Verbindung fehlgeschlagen. Bitte überprüfen Sie die Angaben.';
+
+  @override
+  String get settingsSavedSuccessfully => 'Einstellungen für die Rezept-Integration erfolgreich gespeichert.';
+
+  @override
+  String get nutritionTrackWater => 'Wasser tracken';
+
+  @override
+  String get nutritionMacroPresets => 'Makro-Voreinstellungen (basierend auf Kalorien):';
+
+  @override
+  String get nutritionBalancedPreset => 'Ausgewogen (30/40/30)';
+
+  @override
+  String get nutritionLowCarbPreset => 'Low-Carb (30/10/60)';
+
+  @override
+  String get nutritionHighProteinPreset => 'High-Protein (40/35/25)';
+
+  @override
+  String get nutritionCupSize => 'Tassengröße:';
+
+  @override
+  String nutritionAddMl(int amount) {
+    return '$amount ml hinzufügen';
+  }
+
+  @override
+  String get nutritionReset => 'Zurücksetzen';
+
+  @override
+  String get chatWaterIntakeLogged => 'Wasseraufnahme erfasst';
+
+  @override
+  String get chatAddedToToday => 'Zu den heutigen Gesamtwerten hinzugefügt';
 }

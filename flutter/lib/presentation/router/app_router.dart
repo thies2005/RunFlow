@@ -29,6 +29,7 @@ import 'package:runflow_flutter/presentation/screens/settings/ai_settings_screen
 import 'package:runflow_flutter/presentation/screens/settings/api_key_screen.dart';
 import 'package:runflow_flutter/presentation/screens/settings/consent_management_screen.dart';
 import 'package:runflow_flutter/presentation/screens/settings/logs_screen.dart';
+import 'package:runflow_flutter/presentation/screens/settings/recipe_settings_screen.dart';
 import 'package:runflow_flutter/presentation/screens/chat/chat_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/health_screen.dart';
 import 'package:runflow_flutter/presentation/screens/health/barcode_scanner_screen.dart';
@@ -221,6 +222,11 @@ GoRouter createRouter(Ref ref) {
         path: '/settings/ai',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AiSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/recipe',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const RecipeSettingsScreen(),
       ),
       GoRoute(
         path: '/settings/logs',

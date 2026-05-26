@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { searchBLS } from '@/lib/data/blsSearch';
-import { searchOpenFoodFacts, searchFatSecret } from '@/lib/data/externalFoodSearch';
+import { searchOpenFoodFacts, searchFatSecret, searchUSDA, searchNutritionix } from '@/lib/data/externalFoodSearch';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
@@ -64,15 +64,19 @@ export async function GET(request: NextRequest) {
         addResults(localItems as SearchResultItem[], 'local');
         addResults(blsResults as SearchResultItem[], 'bls');
 
-        const [offResults, fsResults] = await Promise.all([
+        const [offResults, fsResults, usdaResults, nixResults] = await Promise.all([
             searchOpenFoodFacts(query).catch(() => []),
             searchFatSecret(query).catch(() => []),
+            searchUSDA(query).catch(() => []),
+            searchNutritionix(query).catch(() => []),
         ]);
 
         addResults(offResults as SearchResultItem[], 'off');
         addResults(fsResults as SearchResultItem[], 'fs');
+        addResults(usdaResults as SearchResultItem[], 'usda');
+        addResults(nixResults as SearchResultItem[], 'nix');
 
-        console.log(`[Mobile Nutrition Search] Query="${query}" local=${localItems.length} bls=${blsResults.length} off=${offResults.length} fs=${fsResults.length} total=${combined.length}`);
+        console.log(`[Mobile Nutrition Search] Query="${query}" local=${localItems.length} bls=${blsResults.length} off=${offResults.length} fs=${fsResults.length} usda=${usdaResults.length} nix=${nixResults.length} total=${combined.length}`);
 
         const queryLower = query.toLowerCase();
         const regex = new RegExp(`(?:^|[\\s,;(])${escapeRegex(queryLower)}`);
@@ -83,6 +87,8 @@ export async function GET(request: NextRequest) {
 
             if (item.source === 'local') score += 10;
             else if (item.source === 'bls') score += 5;
+            else if (item.source === 'usda') score += 4;
+            else if (item.source === 'nix') score += 3;
             else if (item.source === 'off') score += 3;
             else if (item.source === 'fs') score += 3;
 

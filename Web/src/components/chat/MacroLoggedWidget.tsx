@@ -9,6 +9,7 @@ interface MacroLoggedWidgetProps {
     protein: number;
     carbs: number;
     fats: number;
+    items?: Array<{ name: string; calories: number; estimatedGrams?: number }>;
     onEditMacros?: () => void;
 }
 
@@ -18,6 +19,7 @@ export default function MacroLoggedWidget({
     protein,
     carbs,
     fats,
+    items,
     onEditMacros,
 }: MacroLoggedWidgetProps) {
     return (
@@ -68,6 +70,21 @@ export default function MacroLoggedWidget({
                         <p className="text-lg font-bold text-purple-400">{fats}<span className="text-xs font-normal">g</span></p>
                     </div>
                 </div>
+
+                {items && items.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                        {items.map((item, i) => (
+                            <div key={i} className="flex justify-between items-center py-1">
+                                <span className="text-xs text-gray-400">
+                                    • {item.name}{item.estimatedGrams ? ` (${item.estimatedGrams}g)` : ''}
+                                </span>
+                                <span className="text-xs font-semibold text-gray-400">
+                                    {item.calories} kcal
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div className="bg-black/30 p-2 text-center border-t border-white/5">

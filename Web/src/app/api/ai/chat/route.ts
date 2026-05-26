@@ -260,6 +260,113 @@ export async function POST(request: NextRequest) {
 
                     // 4. Post-stream processing (Saving AI response to DB)
                     try {
+                        // Check if the AI output contains meal or water logging payloads
+                        if (fullResponse.includes('<!-- MEAL_LOGGED_WIDGET:')) {
+                            const match = fullResponse.match(/<!-- MEAL_LOGGED_WIDGET:\s*(\{[\s\S]*?\})\s*-->/);
+                            if (match) {
+                                try {
+                                    const parsed = JSON.parse(match[1]);
+                                    const todayStr = new Date().toISOString().split('T')[0];
+                                    
+                                    if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
+                                        // Log individual items
+                                        for (const item of parsed.items) {
+                                            const dbFoodItem = await prisma.foodItem.create({
+                                                data: {
+                                                    name: item.name || 'Unknown Food',
+                                                    calories: parseFloat(String(item.calories || 0)),
+                                                    protein: parseFloat(String(item.protein || 0)),
+                                                    carbs: parseFloat(String(item.carbs || 0)),
+                                                    fats: parseFloat(String(item.fats || item.fat || 0)),
+                                                    servingSize: item.estimatedGrams ? `${item.estimatedGrams}g` : '100g',
+                                                }
+                                            });
+                                            await prisma.nutritionLog.create({
+                                                data: {
+                                                    userId: userId!,
+                                                    date: todayStr,
+                                                    mealType: 'snack',
+                                                    quantity: 1.0,
+                                                    calories: dbFoodItem.calories,
+                                                    protein: dbFoodItem.protein,
+                                                    carbs: dbFoodItem.carbs,
+                                                    fats: dbFoodItem.fats,
+                                                    foodItemId: dbFoodItem.id,
+                                                }
+                                            });
+                                        }
+                                    } else {
+                                        // Log as a single meal
+                                        const dbFoodItem = await prisma.foodItem.create({
+                                            data: {
+                                                name: parsed.name || 'Logged Meal',
+                                                calories: parseFloat(String(parsed.calories || 0)),
+                                                protein: parseFloat(String(parsed.protein || 0)),
+                                                carbs: parseFloat(String(parsed.carbs || 0)),
+                                                fats: parseFloat(String(parsed.fats || parsed.fat || 0)),
+                                                servingSize: '1 serving',
+                                            }
+                                        });
+                                        await prisma.nutritionLog.create({
+                                            data: {
+                                                userId: userId!,
+                                                date: todayStr,
+                                                mealType: 'snack',
+                                                quantity: 1.0,
+                                                calories: dbFoodItem.calories,
+                                                protein: dbFoodItem.protein,
+                                                carbs: dbFoodItem.carbs,
+                                                fats: dbFoodItem.fats,
+                                                foodItemId: dbFoodItem.id,
+                                            }
+                                        });
+                                    }
+                                    logger.info('AI Chat: Handled conversational food logging successfully', { userId, sessionId });
+                                } catch (e) {
+                                    logger.error('AI Chat: Failed to parse conversational food log JSON', { error: String(e) });
+                                }
+                            }
+                        }
+
+                        if (fullResponse.includes('<!-- WATER_LOGGED_WIDGET:')) {
+                            const match = fullResponse.match(/<!-- WATER_LOGGED_WIDGET:\s*(\{[\s\S]*?\})\s*-->/);
+                            if (match) {
+                                try {
+                                    const parsed = JSON.parse(match[1]);
+                                    const amountLiters = parseFloat(String(parsed.amount || 0.25));
+                                    // Convert liters to milliliters since waterIntake is Int (stored in mL)
+                                    const amountMl = Math.round(amountLiters * 1000);
+                                    const today = new Date();
+                                    const date = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+
+                                    const existing = await prisma.dailyHealthLog.findUnique({
+                                        where: {
+                                            userId_date: { userId: userId!, date }
+                                        }
+                                    });
+
+                                    const newAmount = Math.max(0, (existing?.waterIntake || 0) + amountMl);
+
+                                    await prisma.dailyHealthLog.upsert({
+                                        where: {
+                                            userId_date: { userId: userId!, date }
+                                        },
+                                        update: {
+                                            waterIntake: newAmount
+                                        },
+                                        create: {
+                                            userId: userId!,
+                                            date,
+                                            waterIntake: newAmount
+                                        }
+                                    });
+                                    logger.info('AI Chat: Handled conversational water logging successfully', { userId, sessionId, amount: newAmount });
+                                } catch (e) {
+                                    logger.error('AI Chat: Failed to parse water log JSON', { error: String(e) });
+                                }
+                            }
+                        }
+
                         await prisma.chatMessage.create({
                             data: { userId: userId!, role: 'assistant', content: fullResponse, activityId, sessionId },
                         });

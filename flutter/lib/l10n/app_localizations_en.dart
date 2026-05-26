@@ -3132,4 +3132,90 @@ class SEn extends S {
   String goalRunsPerWeekDisplay(int count) {
     return '${count}x / wk';
   }
+
+  @override
+  String get settingsRecipeIntegrations => 'Recipe Integrations';
+
+  @override
+  String get settingsConnectSelfHosted => 'Connect Self-Hosted Managers';
+
+  @override
+  String get settingsRecipeIntegrationSubtitle => 'Import planned recipes, ingredients, and custom food macros directly from your self-hosted Mealie or Tandoor instances.';
+
+  @override
+  String get settingsEnableIntegration => 'Enable Integration';
+
+  @override
+  String get settingsRecipeIntegrationDesc => 'Allow searching and importing external recipes';
+
+  @override
+  String get settingsServiceType => 'Service Type';
+
+  @override
+  String get settingsServerCredentials => 'Server Credentials';
+
+  @override
+  String get settingsServerBaseUrl => 'Server Base URL';
+
+  @override
+  String get settingsMealieExample => 'https://mealie.example.com';
+
+  @override
+  String get settingsEnterServerUrl => 'Please enter a server URL';
+
+  @override
+  String get settingsApiAccessToken => 'API Access Token';
+
+  @override
+  String get settingsEnterApiKey => 'Enter API key or Bearer token';
+
+  @override
+  String get settingsEnterApiToken => 'Please enter an API token';
+
+  @override
+  String get settingsConnecting => 'Connecting...';
+
+  @override
+  String get settingsTestConnection => 'Test Connection';
+
+  @override
+  String get settingsConnectionSuccessful => 'Connection successful!';
+
+  @override
+  String get settingsConnectionFailed => 'Connection failed. Please check details.';
+
+  @override
+  String get settingsSavedSuccessfully => 'Recipe integration settings saved successfully.';
+
+  @override
+  String get nutritionTrackWater => 'Track Water';
+
+  @override
+  String get nutritionMacroPresets => 'Macro Presets (based on calories):';
+
+  @override
+  String get nutritionBalancedPreset => 'Balanced (30/40/30)';
+
+  @override
+  String get nutritionLowCarbPreset => 'Low-Carb (30/10/60)';
+
+  @override
+  String get nutritionHighProteinPreset => 'High-Protein (40/35/25)';
+
+  @override
+  String get nutritionCupSize => 'Cup Size:';
+
+  @override
+  String nutritionAddMl(int amount) {
+    return 'Add ${amount}ml';
+  }
+
+  @override
+  String get nutritionReset => 'Reset';
+
+  @override
+  String get chatWaterIntakeLogged => 'Water Intake Logged';
+
+  @override
+  String get chatAddedToToday => 'Added to today\'s totals';
 }

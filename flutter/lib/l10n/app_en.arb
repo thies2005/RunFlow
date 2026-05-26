@@ -1076,5 +1076,37 @@
   "goalWeeklyMileageDisplay": "{value} km/wk",
   "@goalWeeklyMileageDisplay": { "placeholders": { "value": { "type": "String" } } },
   "goalRunsPerWeekDisplay": "{count}x / wk",
-  "@goalRunsPerWeekDisplay": { "placeholders": { "count": { "type": "int" } } }
+  "@goalRunsPerWeekDisplay": { "placeholders": { "count": { "type": "int" } } },
+
+  "settingsRecipeIntegrations": "Recipe Integrations",
+  "settingsConnectSelfHosted": "Connect Self-Hosted Managers",
+  "settingsRecipeIntegrationSubtitle": "Import planned recipes, ingredients, and custom food macros directly from your self-hosted Mealie or Tandoor instances.",
+  "settingsEnableIntegration": "Enable Integration",
+  "settingsRecipeIntegrationDesc": "Allow searching and importing external recipes",
+  "settingsServiceType": "Service Type",
+  "settingsServerCredentials": "Server Credentials",
+  "settingsServerBaseUrl": "Server Base URL",
+  "settingsMealieExample": "https://mealie.example.com",
+  "settingsEnterServerUrl": "Please enter a server URL",
+  "settingsApiAccessToken": "API Access Token",
+  "settingsEnterApiKey": "Enter API key or Bearer token",
+  "settingsEnterApiToken": "Please enter an API token",
+  "settingsConnecting": "Connecting...",
+  "settingsTestConnection": "Test Connection",
+  "settingsConnectionSuccessful": "Connection successful!",
+  "settingsConnectionFailed": "Connection failed. Please check details.",
+  "settingsSavedSuccessfully": "Recipe integration settings saved successfully.",
+
+  "nutritionTrackWater": "Track Water",
+  "nutritionMacroPresets": "Macro Presets (based on calories):",
+  "nutritionBalancedPreset": "Balanced (30/40/30)",
+  "nutritionLowCarbPreset": "Low-Carb (30/10/60)",
+  "nutritionHighProteinPreset": "High-Protein (40/35/25)",
+  "nutritionCupSize": "Cup Size:",
+  "nutritionAddMl": "Add {amount}ml",
+  "@nutritionAddMl": { "placeholders": { "amount": { "type": "int" } } },
+  "nutritionReset": "Reset",
+
+  "chatWaterIntakeLogged": "Water Intake Logged",
+  "chatAddedToToday": "Added to today's totals"
 }

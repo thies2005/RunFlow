@@ -5868,6 +5868,174 @@ abstract class S {
   /// In en, this message translates to:
   /// **'{count}x / wk'**
   String goalRunsPerWeekDisplay(int count);
+
+  /// No description provided for @settingsRecipeIntegrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe Integrations'**
+  String get settingsRecipeIntegrations;
+
+  /// No description provided for @settingsConnectSelfHosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Self-Hosted Managers'**
+  String get settingsConnectSelfHosted;
+
+  /// No description provided for @settingsRecipeIntegrationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import planned recipes, ingredients, and custom food macros directly from your self-hosted Mealie or Tandoor instances.'**
+  String get settingsRecipeIntegrationSubtitle;
+
+  /// No description provided for @settingsEnableIntegration.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Integration'**
+  String get settingsEnableIntegration;
+
+  /// No description provided for @settingsRecipeIntegrationDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow searching and importing external recipes'**
+  String get settingsRecipeIntegrationDesc;
+
+  /// No description provided for @settingsServiceType.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Type'**
+  String get settingsServiceType;
+
+  /// No description provided for @settingsServerCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Credentials'**
+  String get settingsServerCredentials;
+
+  /// No description provided for @settingsServerBaseUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Base URL'**
+  String get settingsServerBaseUrl;
+
+  /// No description provided for @settingsMealieExample.
+  ///
+  /// In en, this message translates to:
+  /// **'https://mealie.example.com'**
+  String get settingsMealieExample;
+
+  /// No description provided for @settingsEnterServerUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a server URL'**
+  String get settingsEnterServerUrl;
+
+  /// No description provided for @settingsApiAccessToken.
+  ///
+  /// In en, this message translates to:
+  /// **'API Access Token'**
+  String get settingsApiAccessToken;
+
+  /// No description provided for @settingsEnterApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter API key or Bearer token'**
+  String get settingsEnterApiKey;
+
+  /// No description provided for @settingsEnterApiToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter an API token'**
+  String get settingsEnterApiToken;
+
+  /// No description provided for @settingsConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting...'**
+  String get settingsConnecting;
+
+  /// No description provided for @settingsTestConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Connection'**
+  String get settingsTestConnection;
+
+  /// No description provided for @settingsConnectionSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection successful!'**
+  String get settingsConnectionSuccessful;
+
+  /// No description provided for @settingsConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed. Please check details.'**
+  String get settingsConnectionFailed;
+
+  /// No description provided for @settingsSavedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe integration settings saved successfully.'**
+  String get settingsSavedSuccessfully;
+
+  /// No description provided for @nutritionTrackWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Track Water'**
+  String get nutritionTrackWater;
+
+  /// No description provided for @nutritionMacroPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Macro Presets (based on calories):'**
+  String get nutritionMacroPresets;
+
+  /// No description provided for @nutritionBalancedPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced (30/40/30)'**
+  String get nutritionBalancedPreset;
+
+  /// No description provided for @nutritionLowCarbPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Low-Carb (30/10/60)'**
+  String get nutritionLowCarbPreset;
+
+  /// No description provided for @nutritionHighProteinPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'High-Protein (40/35/25)'**
+  String get nutritionHighProteinPreset;
+
+  /// No description provided for @nutritionCupSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Cup Size:'**
+  String get nutritionCupSize;
+
+  /// No description provided for @nutritionAddMl.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {amount}ml'**
+  String nutritionAddMl(int amount);
+
+  /// No description provided for @nutritionReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get nutritionReset;
+
+  /// No description provided for @chatWaterIntakeLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Water Intake Logged'**
+  String get chatWaterIntakeLogged;
+
+  /// No description provided for @chatAddedToToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to today\'s totals'**
+  String get chatAddedToToday;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

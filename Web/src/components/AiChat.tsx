@@ -12,6 +12,7 @@ import PromptLibrary from './PromptLibrary';
 import ProactiveRunWidget from './chat/ProactiveRunWidget';
 import ProactiveCalorieSnapWidget from './chat/ProactiveCalorieSnapWidget';
 import MacroLoggedWidget from './chat/MacroLoggedWidget';
+import WaterLoggedWidget from './chat/WaterLoggedWidget';
 import TimelineNode from './chat/TimelineNode';
 import { FoodScannerModal } from './views/FoodScannerModal';
 
@@ -49,14 +50,24 @@ const cleanContent = (content: string) => {
 };
 
 // Helper to parse streamed meal log data safely
-const parseMealLoggedData = (content: string): { mealName: string; calories: number; protein: number; carbs: number; fats: number } | null => {
+const parseMealLoggedData = (content: string): { mealName: string; calories: number; protein: number; carbs: number; fats: number; items?: Array<{ name: string; calories: number; estimatedGrams?: number }> } | null => {
     try {
-        // Primary: explicit HTML-comment widget trigger
-        const match = content.match(/<!-- MEAL_LOGGED_WIDGET (.*?) -->/);
+        // Primary: match both "<!-- MEAL_LOGGED_WIDGET: {...} -->" (new format with colon)
+        // and legacy "<!-- MEAL_LOGGED_WIDGET {...} -->" (old format with space)
+        const match = content.match(/<!-- MEAL_LOGGED_WIDGET[:\s]\s*([\s\S]*?)\s*-->/);
         if (match && match[1]) {
             const data = JSON.parse(match[1]);
-            if (data.mealName && typeof data.calories === 'number') {
-                return { mealName: data.mealName, calories: data.calories, protein: data.protein ?? 0, carbs: data.carbs ?? 0, fats: data.fats ?? 0 };
+            // Support both 'name' (new backend) and 'mealName' (legacy) fields
+            const mealName = data.mealName || data.name;
+            if (mealName && typeof data.calories === 'number') {
+                return {
+                    mealName,
+                    calories: data.calories,
+                    protein: data.protein ?? 0,
+                    carbs: data.carbs ?? 0,
+                    fats: data.fats ?? data.fat ?? 0,
+                    items: data.items,
+                };
             }
         }
 
@@ -64,8 +75,9 @@ const parseMealLoggedData = (content: string): { mealName: string; calories: num
         const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
         if (jsonMatch && jsonMatch[1]) {
             const data = JSON.parse(jsonMatch[1]);
-            if (data.MEAL_LOGGED && data.mealName && typeof data.calories === 'number') {
-                return { mealName: data.mealName, calories: data.calories, protein: data.protein ?? 0, carbs: data.carbs ?? 0, fats: data.fats ?? 0 };
+            const mealName = data.mealName || data.name;
+            if (data.MEAL_LOGGED && mealName && typeof data.calories === 'number') {
+                return { mealName, calories: data.calories, protein: data.protein ?? 0, carbs: data.carbs ?? 0, fats: data.fats ?? data.fat ?? 0, items: data.items };
             }
         }
     } catch {
@@ -73,6 +85,30 @@ const parseMealLoggedData = (content: string): { mealName: string; calories: num
         return null;
     }
     return null;
+};
+
+// Helper to parse water logged data
+const parseWaterLoggedData = (content: string): { amount: number } | null => {
+    try {
+        const match = content.match(/<!-- WATER_LOGGED_WIDGET[:\s]\s*([\s\S]*?)\s*-->/);
+        if (match && match[1]) {
+            const data = JSON.parse(match[1]);
+            if (typeof data.amount === 'number') {
+                return { amount: data.amount };
+            }
+        }
+    } catch {
+        return null;
+    }
+    return null;
+};
+
+// Strip widget comment tags from content for clean markdown rendering
+const stripWidgetComments = (content: string): string => {
+    return content
+        .replace(/<!-- MEAL_LOGGED_WIDGET[:\s][\s\S]*?-->/g, '')
+        .replace(/<!-- WATER_LOGGED_WIDGET[:\s][\s\S]*?-->/g, '')
+        .trim();
 };
 
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -486,45 +522,50 @@ function AiChatInner({ activityId, sessionId, compact = false, onOpenSettings, i
                                                     </div>
                                                 ) : (() => {
                                                     const mealData = parseMealLoggedData(cleanedContent);
-                                                    if (mealData && msg.role === 'assistant') {
-                                                        return <MacroLoggedWidget {...mealData} />;
-                                                    }
+                                                    const waterData = parseWaterLoggedData(cleanedContent);
+                                                    const displayContent = stripWidgetComments(cleanedContent);
                                                     return (
-                                                        <ReactMarkdown
-                                                            remarkPlugins={[remarkGfm]}
-                                                            rehypePlugins={[rehypeSanitize]}
-                                                            components={{
-                                                                h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
-                                                                h2: ({ node: _node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
-                                                                h3: ({ node: _node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
-                                                                p: ({ node: _node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
-                                                                ul: ({ node: _node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
-                                                                ol: ({ node: _node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
-                                                                li: ({ node: _node, ...props }) => <li className="pl-1" {...props} />,
-                                                                code: ({ node: _node, inline, className, children, ...props }: React.HTMLAttributes<HTMLElement> & { node?: unknown; inline?: boolean }) => {
-                                                                    const _match = /language-(\w+)/.exec(className || '');
-                                                                    return !inline ? (
-                                                                        <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
-                                                                            <code className={className} {...props}>
-                                                                                {children}
-                                                                            </code>
-                                                                        </pre>
-                                                                    ) : (
-                                                                        <code className="bg-black/30 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
-                                                                            {children}
-                                                                        </code>
-                                                                    );
-                                                                },
-                                                                table: ({ node: _node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
-                                                                thead: ({ node: _node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
-                                                                th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
-                                                                td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
-                                                                blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
-                                                                a: ({ node: _node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                                                            }}
-                                                        >
-                                                            {DOMPurify.sanitize(cleanedContent)}
-                                                        </ReactMarkdown>
+                                                        <>
+                                                            {displayContent && (
+                                                                <ReactMarkdown
+                                                                    remarkPlugins={[remarkGfm]}
+                                                                    rehypePlugins={[rehypeSanitize]}
+                                                                    components={{
+                                                                        h1: ({ node: _node, ...props }) => <h1 className="text-lg font-bold mb-2 border-b border-gray-700 pb-1" {...props} />,
+                                                                        h2: ({ node: _node, ...props }) => <h2 className="text-md font-bold mb-2" {...props} />,
+                                                                        h3: ({ node: _node, ...props }) => <h3 className="text-sm font-bold mb-1" {...props} />,
+                                                                        p: ({ node: _node, ...props }) => <p className="mb-3 last:mb-0 leading-relaxed" {...props} />,
+                                                                        ul: ({ node: _node, ...props }) => <ul className="list-disc ml-5 mb-3 space-y-1" {...props} />,
+                                                                        ol: ({ node: _node, ...props }) => <ol className="list-decimal ml-5 mb-3 space-y-1" {...props} />,
+                                                                        li: ({ node: _node, ...props }) => <li className="pl-1" {...props} />,
+                                                                        code: ({ node: _node, inline, className, children, ...props }: React.HTMLAttributes<HTMLElement> & { node?: unknown; inline?: boolean }) => {
+                                                                            const _match = /language-(\w+)/.exec(className || '');
+                                                                            return !inline ? (
+                                                                                <pre className="bg-black/40 p-3 rounded-lg my-3 overflow-x-auto border border-white/5">
+                                                                                    <code className={className} {...props}>
+                                                                                        {children}
+                                                                                    </code>
+                                                                                </pre>
+                                                                            ) : (
+                                                                                <code className="bg-black/30 rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
+                                                                                    {children}
+                                                                                </code>
+                                                                            );
+                                                                        },
+                                                                        table: ({ node: _node, ...props }) => <div className="overflow-x-auto my-4"><table className="min-w-full divide-y divide-gray-700 border border-gray-700 rounded-lg" {...props} /></div>,
+                                                                        thead: ({ node: _node, ...props }) => <thead className="bg-gray-800/50" {...props} />,
+                                                                        th: ({ node: _node, ...props }) => <th className="px-3 py-2 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider" {...props} />,
+                                                                        td: ({ node: _node, ...props }) => <td className="px-3 py-2 text-sm text-gray-400 border-t border-gray-700" {...props} />,
+                                                                        blockquote: ({ node: _node, ...props }) => <blockquote className="border-l-4 border-purple-500 pl-4 py-1 my-3 bg-purple-500/5 italic" {...props} />,
+                                                                        a: ({ node: _node, ...props }) => <a className="text-purple-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                                    }}
+                                                                >
+                                                                    {DOMPurify.sanitize(displayContent)}
+                                                                </ReactMarkdown>
+                                                            )}
+                                                            {mealData && <MacroLoggedWidget {...mealData} />}
+                                                            {waterData && <WaterLoggedWidget {...waterData} />}
+                                                        </>
                                                     );
                                                 })()}
                                             </div>

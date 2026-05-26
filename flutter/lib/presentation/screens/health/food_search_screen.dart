@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:runflow_flutter/core/theme/app_theme.dart';
+import 'package:runflow_flutter/services/recipe_integration_service.dart';
 import 'package:runflow_flutter/domain/entities/health_entities.dart';
 import 'package:runflow_flutter/l10n/app_localizations.dart';
 import 'package:runflow_flutter/presentation/providers/health_providers.dart';
@@ -21,7 +22,11 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   final _searchFocus = FocusNode();
   String _debouncedQuery = '';
   Timer? _debounce;
-  double _portionMultiplier = 1.0;
+
+  // Recipe Integration variables
+  bool _recipeEnabled = false;
+  List<FoodItem> _recipeResults = [];
+  bool _loadingRecipes = false;
 
   @override
   void initState() {
@@ -29,7 +34,17 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     _searchCtl.addListener(_onSearchChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _searchFocus.requestFocus();
+      _checkRecipeEnabled();
     });
+  }
+
+  Future<void> _checkRecipeEnabled() async {
+    final settings = await RecipeIntegrationService.instance.getSettings();
+    if (mounted) {
+      setState(() {
+        _recipeEnabled = settings['enabled'] == 'true';
+      });
+    }
   }
 
   @override
@@ -45,24 +60,46 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
+        final query = _searchCtl.text.trim();
         setState(() {
-          _debouncedQuery = _searchCtl.text.trim();
-          _portionMultiplier = 1.0;
+          _debouncedQuery = query;
         });
+
+        // Trigger recipe search if enabled
+        if (_recipeEnabled && query.isNotEmpty) {
+          setState(() => _loadingRecipes = true);
+          RecipeIntegrationService.instance.searchRecipes(query).then((recipes) {
+            if (mounted && _searchCtl.text.trim() == query) {
+              setState(() {
+                _recipeResults = recipes;
+                _loadingRecipes = false;
+              });
+            }
+          }).catchError((_) {
+            if (mounted) {
+              setState(() => _loadingRecipes = false);
+            }
+          });
+        } else {
+          setState(() {
+            _recipeResults = [];
+            _loadingRecipes = false;
+          });
+        }
       }
     });
   }
 
-  void _logFood(FoodItem food) {
+  void _logFood(FoodItem food, double multiplier) {
     final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     final scaled = FoodItem(
       id: food.id,
       name: food.name,
-      calories: (food.calories * _portionMultiplier).roundToDouble(),
-      protein: (food.protein * _portionMultiplier).roundToDouble(),
-      carbs: (food.carbs * _portionMultiplier).roundToDouble(),
-      fat: (food.fat * _portionMultiplier).roundToDouble(),
-      servingSize: (food.servingSize * _portionMultiplier).roundToDouble(),
+      calories: (food.calories * multiplier).roundToDouble(),
+      protein: (food.protein * multiplier).roundToDouble(),
+      carbs: (food.carbs * multiplier).roundToDouble(),
+      fat: (food.fat * multiplier).roundToDouble(),
+      servingSize: (food.servingSize * multiplier).roundToDouble(),
       barcode: food.barcode,
     );
     ref.read(nutritionProvider(today).notifier).logFood(scaled);
@@ -113,7 +150,6 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                       _searchCtl.clear();
                       setState(() {
                         _debouncedQuery = '';
-                        _portionMultiplier = 1.0;
                       });
                     },
                   ),
@@ -121,7 +157,13 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
               onChanged: (_) => setState(() {}),
             ),
           ),
-          const SizedBox(height: 8),
+          if (_loadingRecipes)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+              child: LinearProgressIndicator(minHeight: 2, backgroundColor: Colors.transparent),
+            )
+          else
+            const SizedBox(height: 8),
           Expanded(
             child: resultsAsync.when(
               data: (results) {
@@ -197,9 +239,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                   final food = favorites[index];
                   return _FoodResultTile(
                     food: food.copyWith(favoriteId: food.favoriteId),
-                    multiplier: _portionMultiplier,
-                    onMultiplierChanged: (v) => setState(() => _portionMultiplier = v),
-                    onLog: () => _logFood(food),
+                    onLog: (m) => _logFood(food, m),
                     onToggleFavorite: () => _toggleFavorite(food),
                   );
                 },
@@ -278,11 +318,35 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
 
   Widget _buildResultsList(List<FoodItem> results, ThemeData theme) {
     final favNotifier = ref.read(foodFavoritesProvider.notifier);
+    final allResults = [..._recipeResults, ...results];
+
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      itemCount: results.length + 1,
+      itemCount: allResults.length + 1 + (_recipeResults.isNotEmpty ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == results.length) {
+        if (_recipeResults.isNotEmpty) {
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.receipt_long, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Recipe Matches',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          index = index - 1;
+        }
+
+        if (index == allResults.length) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Center(
@@ -294,15 +358,13 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
             ),
           );
         }
-        final food = results[index];
+        final food = allResults[index];
         final enrichedFood = food.copyWith(
           favoriteId: favNotifier.favoriteIdFor(food.name, brand: food.brand),
         );
         return _FoodResultTile(
           food: enrichedFood,
-          multiplier: _portionMultiplier,
-          onMultiplierChanged: (v) => setState(() => _portionMultiplier = v),
-          onLog: () => _logFood(food),
+          onLog: (m) => _logFood(food, m),
           onToggleFavorite: () => _toggleFavorite(food),
         );
       },
@@ -371,7 +433,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                 onPressed: () async {
                   final result = await context.push<FoodItem?>('/health/scan');
                   if (result != null && mounted) {
-                    _logFood(result);
+                    _logFood(result, 1.0);
                   }
                 },
                 icon: const Icon(Icons.qr_code_scanner, size: 18),
@@ -387,7 +449,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                 onPressed: () async {
                   final result = await context.push<FoodItem?>('/health/ai-scan');
                   if (result != null && mounted) {
-                    _logFood(result);
+                    _logFood(result, 1.0);
                   }
                 },
                 icon: const Icon(Icons.auto_awesome, size: 18),
@@ -407,16 +469,12 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
 class _FoodResultTile extends StatefulWidget {
   const _FoodResultTile({
     required this.food,
-    required this.multiplier,
-    required this.onMultiplierChanged,
     required this.onLog,
     required this.onToggleFavorite,
   });
 
   final FoodItem food;
-  final double multiplier;
-  final ValueChanged<double> onMultiplierChanged;
-  final VoidCallback onLog;
+  final ValueChanged<double> onLog;
   final VoidCallback onToggleFavorite;
 
   @override
@@ -425,12 +483,13 @@ class _FoodResultTile extends StatefulWidget {
 
 class _FoodResultTileState extends State<_FoodResultTile> {
   bool _expanded = false;
+  double _multiplier = 1.0;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final food = widget.food;
-    final m = widget.multiplier;
+    final m = _multiplier;
     final scaledCal = (food.calories * m).round();
     final scaledProtein = (food.protein * m).round();
     final scaledCarbs = (food.carbs * m).round();
@@ -484,13 +543,13 @@ class _FoodResultTileState extends State<_FoodResultTile> {
                   children: [
                     _PortionControl(
                       multiplier: m,
-                      onChanged: widget.onMultiplierChanged,
+                      onChanged: (v) => setState(() => _multiplier = v),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
-                        onPressed: widget.onLog,
+                        onPressed: () => widget.onLog(m),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(

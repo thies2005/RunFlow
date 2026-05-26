@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/mobile/auth';
 import { checkRateLimitAsync, getClientIdentifier, RATE_LIMITS, rateLimitHeaders } from '@/lib/rateLimit';
 import { errorResponses, handleApiError } from '@/lib/api/apiResponse';
+import { lookupNutritionixBarcode } from '@/lib/data/externalFoodSearch';
 
 const BARCODE_REGEX = /^\d{8,14}$/;
 
@@ -69,6 +70,10 @@ export async function GET(request: NextRequest) {
         }
 
         if (data.status !== 1 || !data.product) {
+            const nixResult = await lookupNutritionixBarcode(barcode).catch(() => null);
+            if (nixResult) {
+                return NextResponse.json(nixResult, { headers: rateLimitHeaders(rateLimitResult) });
+            }
             return errorResponses.notFound('Product');
         }
 

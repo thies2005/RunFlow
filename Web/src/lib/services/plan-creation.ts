@@ -3,7 +3,7 @@ import { analyzeRace, calculateVdot, type RaceDistance } from '@/lib/metrics/vdo
 import { AnalyticsService } from '@/lib/services/analytics';
 import { type ActivityForShape } from '@/lib/metrics/runalyze';
 import { calculateProjectedGoalTime, type PlanSettings } from '@/lib/metrics/goalProjection';
-import { generateTrainingPlan, type PlanConfig, type GeneratedWorkout, getMinStartVolume } from '@/lib/plans';
+import { buildStructuredStepsForWorkout, generateTrainingPlan, type PlanConfig, type GeneratedWorkout, getMinStartVolume } from '@/lib/plans';
 import { WorkoutType, RaceType, PlanSport, PlanCreationMode } from '@/generated/prisma/browser';
 import { logger } from '@/lib/logging/logger';
 import { z } from 'zod';
@@ -224,6 +224,7 @@ export function mapWorkoutsForDb(
     return workouts.map(w => {
         const displayDesc = w.displayDescription ?? null;
         const intensityZone = w.intensityZone ?? null;
+        const structuredSteps = w.structuredSteps ?? buildStructuredStepsForWorkout(w);
         return {
             goalId: options.goalId,
             ...(options.subGoalId && { subGoalId: options.subGoalId }),
@@ -238,6 +239,7 @@ export function mapWorkoutsForDb(
             targetHrZone: w.targetHrZone ?? null,
             phase: w.phase ?? 'BASE',
             isCompleted: false,
+            ...(structuredSteps && { structuredSteps }),
             ...(displayDesc && { customName: displayDesc }),
             ...(intensityZone && { notes: `[auto] intensity:${intensityZone}` }),
         };
@@ -257,6 +259,28 @@ const RACE_TYPE_TO_VDOT_DIST: Record<string, RaceDistance> = {
     'HALF_MARATHON': 'HALF',
     'MARATHON': 'MARATHON',
 };
+
+export function resolveTrainingVdotForGoal(params: {
+    currentVdot: number;
+    targetTime?: number | null;
+    raceType?: RaceType | null;
+    hasFitnessBaseline: boolean;
+    maxImprovementFactor?: number;
+}): { trainingVdot: number; targetVdot?: number; wasCapped: boolean } {
+    const maxImprovementFactor = params.maxImprovementFactor ?? 1.15;
+    const distance = params.raceType ? RACE_TYPE_TO_VDOT_DIST[params.raceType] : undefined;
+    if (!params.targetTime || !distance || !params.hasFitnessBaseline) {
+        return { trainingVdot: params.currentVdot, wasCapped: false };
+    }
+
+    const targetVdot = calculateVdot({ distance, timeSeconds: params.targetTime });
+    const maxTrainingVdot = Math.round(params.currentVdot * maxImprovementFactor * 10) / 10;
+    if (targetVdot > maxTrainingVdot) {
+        return { trainingVdot: maxTrainingVdot, targetVdot, wasCapped: true };
+    }
+
+    return { trainingVdot: params.currentVdot, targetVdot, wasCapped: false };
+}
 
 export const CALIB_DISTANCE_MAP: Record<string, RaceDistance> = {
     '5K': '5K',
@@ -677,6 +701,23 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         effectiveVdot = Math.round(currentVdot * calibrationFactor * 10) / 10;
     }
 
+    const trainingVdotResult = resolveTrainingVdotForGoal({
+        currentVdot: effectiveVdot,
+        targetTime,
+        raceType: raceType ?? null,
+        hasFitnessBaseline: Boolean(vdotFromActivities || calibrationTime),
+    });
+    const trainingVdot = trainingVdotResult.trainingVdot;
+    if (trainingVdotResult.wasCapped) {
+        logger.warn('Target time VDOT exceeds safe progression cap; capping training paces', {
+            userId,
+            raceType,
+            currentVdot: effectiveVdot,
+            targetVdot: trainingVdotResult.targetVdot,
+            trainingVdot,
+        });
+    }
+
     let calculatedTargetTime: number | null = null;
     if (!targetTime && currentVdot && raceType) {
         const projectionDistance = RACE_TYPE_TO_VDOT_DIST[raceType] || 'MARATHON';
@@ -742,7 +783,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
     const goal = await prisma.goal.create({ data: goalData });
 
     const planConfig: PlanConfig = {
-        vdot: effectiveVdot,
+        vdot: trainingVdot,
         raceType: raceType ?? null,
         raceDate: finalRaceDate,
         startDate,
@@ -821,7 +862,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                     const subBuild = Math.min(phases.buildWeeks, Math.max(0, subPhaseWeeks - subTaper - subPeak));
 
                     const subWorkouts = generateTrainingPlan({
-                        vdot: effectiveVdot,
+                        vdot: trainingVdot,
                         raceType: sg.raceType as RaceType,
                         raceDate: subRaceDate,
                         startDate,

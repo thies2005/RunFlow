@@ -112,6 +112,22 @@ export type GeneratedWorkout = {
     displayDescription?: string;
     sport?: string;
     intensityZone?: string | null;
+    structuredSteps?: StructuredWorkoutPlan | null;
+};
+
+export type StructuredWorkoutPlan = {
+    version: 1;
+    source: 'generated-plan';
+    steps: StructuredWorkoutStep[];
+};
+
+export type StructuredWorkoutStep = {
+    type: 'warmup' | 'work' | 'recovery' | 'cooldown' | 'steady';
+    name: string;
+    distanceMeters?: number;
+    durationSeconds?: number;
+    paceSecondsPerKm?: number;
+    hrZone?: number;
 };
 
 type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
@@ -543,7 +559,7 @@ function generateWeek(params: {
 
     const hasQuality = runsPerWeek >= 2 && phase !== 'TAPER';
     const qualitySession = hasQuality
-        ? getQualitySession(raceType, paces, phase)
+        ? getQualitySession(raceType, paces, phase, weeklyVolume)
         : null;
     const qualityDist = qualitySession ? qualitySession.totalDistance : 0;
 
@@ -918,18 +934,46 @@ function getLongRunDistance(
 function getQualitySession(
     raceType: RaceType,
     paces: TrainingPaces,
-    phase: Phase
+    phase: Phase,
+    weeklyVolume: number,
 ): { type: WorkoutType; description: string; totalDistance: number; targetPace: number } {
+    const scale = (session: { type: WorkoutType; description: string; totalDistance: number; targetPace: number }) => ({
+        ...session,
+        totalDistance: scaleQualitySessionDistance(session.type, session.totalDistance, weeklyVolume, raceType),
+    });
+
     if (raceType === 'FIVE_K') {
-        return get5KQualitySession(paces, phase);
+        return scale(get5KQualitySession(paces, phase));
     }
     if (raceType === 'TEN_K') {
-        return get10KQualitySession(paces, phase);
+        return scale(get10KQualitySession(paces, phase));
     }
     if (raceType === 'HALF_MARATHON') {
-        return getHalfMarathonQualitySession(paces, phase);
+        return scale(getHalfMarathonQualitySession(paces, phase));
     }
-    return getMarathonQualitySession(paces, phase);
+    return scale(getMarathonQualitySession(paces, phase));
+}
+
+export function scaleQualitySessionDistance(
+    type: WorkoutType,
+    baseDistance: number,
+    weeklyVolume: number,
+    raceType: RaceType,
+): number {
+    const qualityFraction = (() => {
+        switch (type) {
+            case WorkoutType.REPETITIONS: return 0.18;
+            case WorkoutType.INTERVALS: return 0.22;
+            case WorkoutType.FARTLEK: return 0.22;
+            case WorkoutType.TEMPO:
+                return raceType === 'MARATHON' || raceType === 'HALF_MARATHON' ? 0.28 : 0.25;
+            default: return 0.22;
+        }
+    })();
+    const raceFloor = raceType === 'FIVE_K' ? 6000 : raceType === 'TEN_K' ? 7000 : 8000;
+    const raceCeiling = raceType === 'MARATHON' ? 18000 : raceType === 'HALF_MARATHON' ? 15000 : raceType === 'TEN_K' ? 12000 : 10000;
+    const scaled = Math.round((weeklyVolume * qualityFraction) / 500) * 500;
+    return Math.max(raceFloor, Math.min(scaled, Math.min(baseDistance, raceCeiling)));
 }
 
 function getFartlekHardPace(paces: TrainingPaces): number {
@@ -1296,6 +1340,48 @@ export function getQualityFraction(type: WorkoutType): number {
         case WorkoutType.FARTLEK: return 0.45;
         default: return 0.5;
     }
+}
+
+export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, 'type' | 'description' | 'totalDistance' | 'targetPace' | 'targetDuration' | 'targetHrZone'>): StructuredWorkoutPlan | null {
+    if (workout.totalDistance <= 0 && (!workout.targetDuration || workout.targetDuration <= 0)) return null;
+
+    const targetPace = workout.targetPace && workout.targetPace > 0 ? workout.targetPace : undefined;
+    const hrZone = workout.targetHrZone;
+    const warmupDistance = workout.totalDistance >= 5000 ? 1500 : 0;
+    const cooldownDistance = workout.totalDistance >= 5000 ? 1000 : 0;
+    const remainingDistance = Math.max(0, workout.totalDistance - warmupDistance - cooldownDistance);
+
+    if (workout.type === WorkoutType.EASY || workout.type === WorkoutType.RECOVERY || workout.type === WorkoutType.LONG_RUN) {
+        return {
+            version: 1,
+            source: 'generated-plan',
+            steps: [{
+                type: 'steady',
+                name: workout.type === WorkoutType.RECOVERY ? 'Recovery run' : workout.type === WorkoutType.LONG_RUN ? 'Long run' : 'Easy run',
+                distanceMeters: workout.totalDistance || undefined,
+                durationSeconds: workout.targetDuration || undefined,
+                paceSecondsPerKm: targetPace,
+                hrZone,
+            }],
+        };
+    }
+
+    const steps: StructuredWorkoutStep[] = [];
+    if (warmupDistance > 0) {
+        steps.push({ type: 'warmup', name: 'Warm up', distanceMeters: warmupDistance, hrZone: 1 });
+    }
+    steps.push({
+        type: 'work',
+        name: workout.description.split(':')[0] || 'Main set',
+        distanceMeters: remainingDistance || workout.totalDistance || undefined,
+        paceSecondsPerKm: targetPace,
+        hrZone,
+    });
+    if (cooldownDistance > 0) {
+        steps.push({ type: 'cooldown', name: 'Cool down', distanceMeters: cooldownDistance, hrZone: 1 });
+    }
+
+    return { version: 1, source: 'generated-plan', steps };
 }
 
 function updateDescription(type: WorkoutType, distance: number, pace: number): string {

@@ -1,4 +1,4 @@
-import { generateTrainingPlan, PLAN_CONSTANTS, getRaceWeekRunVolumeCap } from '../index';
+import { buildStructuredStepsForWorkout, generateTrainingPlan, getRaceWeekRunVolumeCap, PLAN_CONSTANTS, scaleQualitySessionDistance } from '../index';
 import { calculateTrainingPaces } from '../../metrics/vdot';
 import { WorkoutType } from '@/generated/prisma/browser';
 
@@ -669,6 +669,60 @@ describe('Training Plan Generation', () => {
                 expect(w.description).toContain('5x1km');
                 expect(w.description).not.toContain('Total');
             }
+        });
+
+        it('scales 5K interval session distance down for low-volume athletes', () => {
+            const lowVolume = scaleQualitySessionDistance(WorkoutType.INTERVALS, 10000, 20000, 'FIVE_K');
+            const highVolume = scaleQualitySessionDistance(WorkoutType.INTERVALS, 10000, 60000, 'FIVE_K');
+
+            expect(lowVolume).toBeLessThan(highVolume);
+            expect(lowVolume).toBe(6000);
+            expect(highVolume).toBe(10000);
+        });
+
+        it('scales marathon tempo sessions by weekly volume within safe bounds', () => {
+            const lowVolume = scaleQualitySessionDistance(WorkoutType.TEMPO, 18000, 40000, 'MARATHON');
+            const highVolume = scaleQualitySessionDistance(WorkoutType.TEMPO, 18000, 90000, 'MARATHON');
+
+            expect(lowVolume).toBeGreaterThanOrEqual(8000);
+            expect(lowVolume).toBeLessThan(highVolume);
+            expect(highVolume).toBeLessThanOrEqual(18000);
+        });
+
+        it('builds structured steps for quality workouts', () => {
+            const steps = buildStructuredStepsForWorkout({
+                type: WorkoutType.INTERVALS,
+                description: 'Intervals: 5x1km @ 4:00/km',
+                totalDistance: 9000,
+                targetPace: 240,
+                targetHrZone: 4,
+            });
+
+            expect(steps).not.toBeNull();
+            expect(steps?.source).toBe('generated-plan');
+            expect(steps?.steps.map(s => s.type)).toEqual(['warmup', 'work', 'cooldown']);
+            expect(steps?.steps[1].paceSecondsPerKm).toBe(240);
+            expect(steps?.steps[1].hrZone).toBe(4);
+        });
+
+        it('builds single steady step for easy workouts', () => {
+            const steps = buildStructuredStepsForWorkout({
+                type: WorkoutType.EASY,
+                description: 'Easy Run: 8km',
+                totalDistance: 8000,
+                targetPace: 360,
+                targetDuration: 2880,
+                targetHrZone: 2,
+            });
+
+            expect(steps?.steps).toHaveLength(1);
+            expect(steps?.steps[0]).toMatchObject({
+                type: 'steady',
+                distanceMeters: 8000,
+                durationSeconds: 2880,
+                paceSecondsPerKm: 360,
+                hrZone: 2,
+            });
         });
 
         it('5K fartlek description pattern is preserved after scaling', () => {

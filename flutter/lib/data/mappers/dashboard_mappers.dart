@@ -172,6 +172,7 @@ extension WorkoutMapper on Workout {
         intensityZone: intensityZone,
         phase: phase,
         targetHrZone: targetHrZone,
+        structuredSteps: structuredSteps,
       );
 }
 
@@ -193,6 +194,7 @@ extension DomainWorkoutMapper on domain.Workout {
         intensityZone: intensityZone,
         phase: phase,
         targetHrZone: targetHrZone,
+        structuredSteps: structuredSteps,
       );
 }
 

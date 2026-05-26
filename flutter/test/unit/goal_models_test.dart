@@ -126,6 +126,13 @@ void main() {
             'isCompleted': false,
             'completedAt': null,
             'activityId': null,
+            'structuredSteps': {
+              'version': 1,
+              'source': 'generated-plan',
+              'steps': [
+                {'type': 'steady', 'name': 'Easy run', 'distanceMeters': 5000}
+              ],
+            },
           },
           {
             'id': 'w2',
@@ -148,6 +155,7 @@ void main() {
       expect(response.workouts.length, 2);
       expect(response.workouts.first.workoutType, WorkoutType.easy);
       expect(response.workouts.first.isCompleted, false);
+      expect(response.workouts.first.structuredSteps?['source'], 'generated-plan');
       expect(response.workouts.last.workoutType, WorkoutType.tempo);
       expect(response.workouts.last.isCompleted, true);
       expect(response.workouts.last.activityId, 'act1');

@@ -423,6 +423,7 @@ class Workout {
     this.intensityZone,
     this.phase,
     this.targetHrZone,
+    this.structuredSteps,
   });
 
   final String id;
@@ -441,6 +442,7 @@ class Workout {
   final String? intensityZone;
   final String? phase;
   final int? targetHrZone;
+  final Map<String, dynamic>? structuredSteps;
 
   Workout copyWith({
     String? id,
@@ -459,6 +461,7 @@ class Workout {
     String? intensityZone,
     String? phase,
     int? targetHrZone,
+    Map<String, dynamic>? structuredSteps,
   }) {
     return Workout(
       id: id ?? this.id,
@@ -477,6 +480,7 @@ class Workout {
       intensityZone: intensityZone ?? this.intensityZone,
       phase: phase ?? this.phase,
       targetHrZone: targetHrZone ?? this.targetHrZone,
+      structuredSteps: structuredSteps ?? this.structuredSteps,
     );
   }
 
@@ -500,7 +504,8 @@ class Workout {
           displayDescription == other.displayDescription &&
           intensityZone == other.intensityZone &&
           phase == other.phase &&
-          targetHrZone == other.targetHrZone;
+          targetHrZone == other.targetHrZone &&
+          mapEquals(structuredSteps, other.structuredSteps);
 
   @override
   int get hashCode => Object.hash(
@@ -520,6 +525,7 @@ class Workout {
         intensityZone,
         phase,
         targetHrZone,
+        structuredSteps,
       );
 }
 

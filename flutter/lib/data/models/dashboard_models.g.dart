@@ -166,6 +166,7 @@ _Workout _$WorkoutFromJson(Map<String, dynamic> json) => _Workout(
   intensityZone: json['intensityZone'] as String?,
   phase: json['phase'] as String?,
   targetHrZone: (json['targetHrZone'] as num?)?.toInt(),
+  structuredSteps: json['structuredSteps'] as Map<String, dynamic>?,
 );
 
 Map<String, dynamic> _$WorkoutToJson(_Workout instance) => <String, dynamic>{
@@ -185,6 +186,7 @@ Map<String, dynamic> _$WorkoutToJson(_Workout instance) => <String, dynamic>{
   'intensityZone': instance.intensityZone,
   'phase': instance.phase,
   'targetHrZone': instance.targetHrZone,
+  'structuredSteps': instance.structuredSteps,
 };
 
 _SubGoal _$SubGoalFromJson(Map<String, dynamic> json) => _SubGoal(

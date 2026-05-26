@@ -3176,13 +3176,15 @@ class SDe extends S {
   String get settingsConnectSelfHosted => 'Selbstgehostete Manager verbinden';
 
   @override
-  String get settingsRecipeIntegrationSubtitle => 'Importieren Sie geplante Rezepte, Zutaten und benutzerdefinierte Lebensmittel-Makros direkt aus Ihren selbstgehosteten Mealie- oder Tandoor-Instanzen.';
+  String get settingsRecipeIntegrationSubtitle =>
+      'Importieren Sie geplante Rezepte, Zutaten und benutzerdefinierte Lebensmittel-Makros direkt aus Ihren selbstgehosteten Mealie- oder Tandoor-Instanzen.';
 
   @override
   String get settingsEnableIntegration => 'Integration aktivieren';
 
   @override
-  String get settingsRecipeIntegrationDesc => 'Suchen und Importieren externer Rezepte erlauben';
+  String get settingsRecipeIntegrationDesc =>
+      'Suchen und Importieren externer Rezepte erlauben';
 
   @override
   String get settingsServiceType => 'Diensttyp';
@@ -3203,7 +3205,8 @@ class SDe extends S {
   String get settingsApiAccessToken => 'API-Zugriffstoken';
 
   @override
-  String get settingsEnterApiKey => 'Geben Sie den API-Schlüssel oder das Bearer-Token ein';
+  String get settingsEnterApiKey =>
+      'Geben Sie den API-Schlüssel oder das Bearer-Token ein';
 
   @override
   String get settingsEnterApiToken => 'Bitte geben Sie ein API-Token ein';
@@ -3218,16 +3221,19 @@ class SDe extends S {
   String get settingsConnectionSuccessful => 'Verbindung erfolgreich!';
 
   @override
-  String get settingsConnectionFailed => 'Verbindung fehlgeschlagen. Bitte überprüfen Sie die Angaben.';
+  String get settingsConnectionFailed =>
+      'Verbindung fehlgeschlagen. Bitte überprüfen Sie die Angaben.';
 
   @override
-  String get settingsSavedSuccessfully => 'Einstellungen für die Rezept-Integration erfolgreich gespeichert.';
+  String get settingsSavedSuccessfully =>
+      'Einstellungen für die Rezept-Integration erfolgreich gespeichert.';
 
   @override
   String get nutritionTrackWater => 'Wasser tracken';
 
   @override
-  String get nutritionMacroPresets => 'Makro-Voreinstellungen (basierend auf Kalorien):';
+  String get nutritionMacroPresets =>
+      'Makro-Voreinstellungen (basierend auf Kalorien):';
 
   @override
   String get nutritionBalancedPreset => 'Ausgewogen (30/40/30)';
@@ -3243,7 +3249,7 @@ class SDe extends S {
 
   @override
   String nutritionAddMl(int amount) {
-    return '$amount ml hinzufügen';
+    return '${amount}ml hinzufügen';
   }
 
   @override
@@ -3254,4 +3260,13 @@ class SDe extends S {
 
   @override
   String get chatAddedToToday => 'Zu den heutigen Gesamtwerten hinzugefügt';
+
+  @override
+  String get recipeMatchesTitle => 'Rezept-Treffer';
+
+  @override
+  String get nutritionKcalEaten => 'kcal gegessen';
+
+  @override
+  String get settingsRecipeManagers => 'Rezept-Manager';
 }

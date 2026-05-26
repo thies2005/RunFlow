@@ -3140,13 +3140,15 @@ class SEn extends S {
   String get settingsConnectSelfHosted => 'Connect Self-Hosted Managers';
 
   @override
-  String get settingsRecipeIntegrationSubtitle => 'Import planned recipes, ingredients, and custom food macros directly from your self-hosted Mealie or Tandoor instances.';
+  String get settingsRecipeIntegrationSubtitle =>
+      'Import planned recipes, ingredients, and custom food macros directly from your self-hosted Mealie or Tandoor instances.';
 
   @override
   String get settingsEnableIntegration => 'Enable Integration';
 
   @override
-  String get settingsRecipeIntegrationDesc => 'Allow searching and importing external recipes';
+  String get settingsRecipeIntegrationDesc =>
+      'Allow searching and importing external recipes';
 
   @override
   String get settingsServiceType => 'Service Type';
@@ -3182,10 +3184,12 @@ class SEn extends S {
   String get settingsConnectionSuccessful => 'Connection successful!';
 
   @override
-  String get settingsConnectionFailed => 'Connection failed. Please check details.';
+  String get settingsConnectionFailed =>
+      'Connection failed. Please check details.';
 
   @override
-  String get settingsSavedSuccessfully => 'Recipe integration settings saved successfully.';
+  String get settingsSavedSuccessfully =>
+      'Recipe integration settings saved successfully.';
 
   @override
   String get nutritionTrackWater => 'Track Water';
@@ -3218,4 +3222,13 @@ class SEn extends S {
 
   @override
   String get chatAddedToToday => 'Added to today\'s totals';
+
+  @override
+  String get recipeMatchesTitle => 'Recipe Matches';
+
+  @override
+  String get nutritionKcalEaten => 'kcal eaten';
+
+  @override
+  String get settingsRecipeManagers => 'Recipe Managers';
 }

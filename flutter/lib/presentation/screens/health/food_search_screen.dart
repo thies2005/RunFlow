@@ -333,7 +333,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                   const Icon(Icons.receipt_long, size: 16, color: AppColors.primary),
                   const SizedBox(width: 6),
                   Text(
-                    'Recipe Matches',
+                    S.of(context).recipeMatchesTitle,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,

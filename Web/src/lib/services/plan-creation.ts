@@ -285,7 +285,7 @@ export function resolveTrainingVdotForGoal(params: {
         return { trainingVdot: maxTrainingVdot, targetVdot, wasCapped: true };
     }
 
-    return { trainingVdot: params.currentVdot, targetVdot, wasCapped: false };
+    return { trainingVdot: Math.max(params.currentVdot, targetVdot), targetVdot, wasCapped: false };
 }
 
 export const CALIB_DISTANCE_MAP: Record<string, RaceDistance> = {

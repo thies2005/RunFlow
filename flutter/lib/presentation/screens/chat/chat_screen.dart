@@ -636,32 +636,33 @@ class _MessageBubble extends StatelessWidget {
     var finalContent = cleanedContent.replaceAll('<!-- MEAL_LOGGED_WIDGET -->', '').trim();
 
     // Check for our new conversational JSON-rich comment payloads
-    Map<String, dynamic>? mealPayload;
-    Map<String, dynamic>? waterPayload;
+    final List<Widget> loggedWidgets = [];
 
-    if (finalContent.contains('<!-- MEAL_LOGGED_WIDGET:')) {
-      final start = finalContent.indexOf('<!-- MEAL_LOGGED_WIDGET:');
-      final end = finalContent.indexOf('-->', start);
-      if (start != -1 && end != -1) {
-        final rawJson = finalContent.substring(start + '<!-- MEAL_LOGGED_WIDGET:'.length, end).trim();
+    final mealRegExp = RegExp(r'<!-- MEAL_LOGGED_WIDGET:\s*(\{[\s\S]*?\})\s*-->');
+    final mealMatches = mealRegExp.allMatches(finalContent).toList();
+    for (final match in mealMatches) {
+      final rawJson = match.group(1);
+      if (rawJson != null) {
         try {
-          mealPayload = jsonDecode(rawJson) as Map<String, dynamic>;
+          final payload = jsonDecode(rawJson) as Map<String, dynamic>;
+          loggedWidgets.add(_buildMealLoggedCard(context, payload));
         } catch (_) {}
-        finalContent = finalContent.replaceAll(finalContent.substring(start, end + 3), '').trim();
       }
     }
+    finalContent = finalContent.replaceAll(mealRegExp, '').trim();
 
-    if (finalContent.contains('<!-- WATER_LOGGED_WIDGET:')) {
-      final start = finalContent.indexOf('<!-- WATER_LOGGED_WIDGET:');
-      final end = finalContent.indexOf('-->', start);
-      if (start != -1 && end != -1) {
-        final rawJson = finalContent.substring(start + '<!-- WATER_LOGGED_WIDGET:'.length, end).trim();
+    final waterRegExp = RegExp(r'<!-- WATER_LOGGED_WIDGET:\s*(\{[\s\S]*?\})\s*-->');
+    final waterMatches = waterRegExp.allMatches(finalContent).toList();
+    for (final match in waterMatches) {
+      final rawJson = match.group(1);
+      if (rawJson != null) {
         try {
-          waterPayload = jsonDecode(rawJson) as Map<String, dynamic>;
+          final payload = jsonDecode(rawJson) as Map<String, dynamic>;
+          loggedWidgets.add(_buildWaterLoggedCard(context, payload));
         } catch (_) {}
-        finalContent = finalContent.replaceAll(finalContent.substring(start, end + 3), '').trim();
       }
     }
+    finalContent = finalContent.replaceAll(waterRegExp, '').trim();
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -720,10 +721,7 @@ class _MessageBubble extends StatelessWidget {
                   ],
                 ),
               ),
-            if (mealPayload != null)
-              _buildMealLoggedCard(context, mealPayload),
-            if (waterPayload != null)
-              _buildWaterLoggedCard(context, waterPayload),
+            ...loggedWidgets,
             const SizedBox(height: 4),
             Text(
               _formatTimeAgo(message.createdAt, S.of(context)),
@@ -740,7 +738,7 @@ class _MessageBubble extends StatelessWidget {
   }
 
   Widget _buildMealLoggedCard(BuildContext context, Map<String, dynamic> payload) {
-    final name = payload['name'] ?? 'Meal Logged';
+    final name = (payload['name'] as String?) ?? 'Meal Logged';
     final calories = (payload['calories'] as num?)?.toDouble() ?? 0.0;
     final protein = (payload['protein'] as num?)?.toDouble() ?? 0.0;
     final carbs = (payload['carbs'] as num?)?.toDouble() ?? 0.0;
@@ -801,7 +799,7 @@ class _MessageBubble extends StatelessWidget {
             const SizedBox(height: 8),
             const Divider(height: 16),
             ...items.map((it) {
-              final itName = it['name'] ?? 'Item';
+              final itName = (it['name'] as String?) ?? 'Item';
               final itCal = (it['calories'] as num?)?.toDouble() ?? 0.0;
               final itGrams = (it['estimatedGrams'] as num?)?.toDouble();
               return Padding(

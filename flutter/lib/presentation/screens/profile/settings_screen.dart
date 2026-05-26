@@ -314,7 +314,7 @@ class SettingsScreen extends ConsumerWidget {
           Card(
             child: ListTile(
               leading: const Icon(Icons.receipt_long),
-              title: const Text('Recipe Managers'),
+              title: Text(S.of(context).settingsRecipeManagers),
               subtitle: Text(
                 'Connect to Mealie or Tandoor self-hosted servers',
                 style: theme.textTheme.bodySmall?.copyWith(

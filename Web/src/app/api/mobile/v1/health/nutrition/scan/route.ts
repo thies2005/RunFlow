@@ -7,6 +7,35 @@ import { lookupNutritionixBarcode } from '@/lib/data/externalFoodSearch';
 
 const BARCODE_REGEX = /^\d{8,14}$/;
 
+async function cacheFoodItem(item: any) {
+    try {
+        await prisma.foodItem.upsert({
+            where: { barcode: item.barcode },
+            update: {},
+            create: {
+                name: item.name,
+                brand: item.brand,
+                barcode: item.barcode,
+                servingSize: item.servingSize,
+                calories: item.calories,
+                protein: item.protein,
+                carbs: item.carbs,
+                fats: item.fats,
+                fiber: item.fiber ?? 0,
+                sugar: item.sugar ?? 0,
+                saturatedFat: item.saturatedFat ?? 0,
+                sodium: item.sodium ?? 0,
+                potassium: item.potassium ?? 0,
+                cholesterol: item.cholesterol ?? 0,
+                calcium: item.calcium ?? 0,
+                iron: item.iron ?? 0,
+            }
+        });
+    } catch (e) {
+        console.error('[Scan Cache Write Failed]', e);
+    }
+}
+
 export async function GET(request: NextRequest) {
     try {
         const clientId = getClientIdentifier(request);
@@ -72,6 +101,7 @@ export async function GET(request: NextRequest) {
         if (data.status !== 1 || !data.product) {
             const nixResult = await lookupNutritionixBarcode(barcode).catch(() => null);
             if (nixResult) {
+                await cacheFoodItem(nixResult);
                 return NextResponse.json(nixResult, { headers: rateLimitHeaders(rateLimitResult) });
             }
             return errorResponses.notFound('Product');
@@ -98,6 +128,8 @@ export async function GET(request: NextRequest) {
             calcium: nutriments.calcium_100g || 0,
             iron: nutriments.iron_100g || 0,
         };
+
+        await cacheFoodItem(standardData);
 
         return NextResponse.json(standardData, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {

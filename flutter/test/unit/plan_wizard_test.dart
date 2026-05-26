@@ -156,6 +156,29 @@ void main() {
       expect(payload.customSwimDistM, 1500.0);
       expect(payload.customBikeDistM, 40000.0);
       expect(payload.customRunDistM, 10000.0);
+      expect(payload.maxHeartRate, 185);
+      expect(payload.restingHeartRate, 55);
+      expect(payload.thresholdHeartRate, isNull);
+      expect(payload.thresholdPaceSecondsPerKm, isNull);
+      expect(payload.hrZoneMethod, 'LTHR');
+    });
+
+    test('buildSubmitPayload includes HR values when set', () {
+      notifier
+        ..setName('HR Test')
+        ..setRaceType(RaceType.fiveK)
+        ..setRaceDate(DateTime(2025, 9, 28))
+        ..setMaxHeartRate(195)
+        ..setRestingHeartRate(50)
+        ..setThresholdHR(175)
+        ..setThresholdPace(300);
+
+      final payload = notifier.buildSubmitPayload();
+      expect(payload.maxHeartRate, 195);
+      expect(payload.restingHeartRate, 50);
+      expect(payload.thresholdHeartRate, 175);
+      expect(payload.thresholdPaceSecondsPerKm, 300.0);
+      expect(payload.hrZoneMethod, 'LTHR');
     });
 
     test('resetForRaceType clears relevant fields', () {
@@ -230,6 +253,11 @@ void main() {
         customSwimDistM: 1500.0,
         customBikeDistM: 40000.0,
         customRunDistM: 10000.0,
+        maxHeartRate: 195,
+        restingHeartRate: 50,
+        thresholdHeartRate: 175,
+        thresholdPaceSecondsPerKm: 300.0,
+        hrZoneMethod: 'LTHR',
       );
 
       final domainReq = dataReq.toDomain();
@@ -264,6 +292,11 @@ void main() {
       expect(roundTripped.customSwimDistM, dataReq.customSwimDistM);
       expect(roundTripped.customBikeDistM, dataReq.customBikeDistM);
       expect(roundTripped.customRunDistM, dataReq.customRunDistM);
+      expect(roundTripped.maxHeartRate, dataReq.maxHeartRate);
+      expect(roundTripped.restingHeartRate, dataReq.restingHeartRate);
+      expect(roundTripped.thresholdHeartRate, dataReq.thresholdHeartRate);
+      expect(roundTripped.thresholdPaceSecondsPerKm, dataReq.thresholdPaceSecondsPerKm);
+      expect(roundTripped.hrZoneMethod, dataReq.hrZoneMethod);
     });
   });
 }

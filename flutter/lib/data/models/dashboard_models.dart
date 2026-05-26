@@ -192,6 +192,8 @@ sealed class Activity with _$Activity {
     @JsonKey(name: 'hrZone3Time') @Default(0) int hrZone3Time,
     @JsonKey(name: 'hrZone4Time') @Default(0) int hrZone4Time,
     @JsonKey(name: 'hrZone5Time') @Default(0) int hrZone5Time,
+    @JsonKey(name: 'hrZone6Time') @Default(0) int hrZone6Time,
+    @JsonKey(name: 'hrZone7Time') @Default(0) int hrZone7Time,
     @JsonKey(name: 'streams') Map<String, dynamic>? streams,
     @JsonKey(name: 'calories') double? calories,
     @JsonKey(name: 'averageWatts') double? averageWatts,

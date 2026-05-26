@@ -251,6 +251,8 @@ class Activity {
     this.hrZone3Time = 0,
     this.hrZone4Time = 0,
     this.hrZone5Time = 0,
+    this.hrZone6Time = 0,
+    this.hrZone7Time = 0,
     this.streams,
     this.calories,
   });
@@ -277,6 +279,8 @@ class Activity {
   final int hrZone3Time;
   final int hrZone4Time;
   final int hrZone5Time;
+  final int hrZone6Time;
+  final int hrZone7Time;
   final Map<String, dynamic>? streams;
   final double? calories;
 
@@ -303,6 +307,8 @@ class Activity {
     int? hrZone3Time,
     int? hrZone4Time,
     int? hrZone5Time,
+    int? hrZone6Time,
+    int? hrZone7Time,
     Map<String, dynamic>? streams,
     double? calories,
   }) {
@@ -329,6 +335,8 @@ class Activity {
       hrZone3Time: hrZone3Time ?? this.hrZone3Time,
       hrZone4Time: hrZone4Time ?? this.hrZone4Time,
       hrZone5Time: hrZone5Time ?? this.hrZone5Time,
+      hrZone6Time: hrZone6Time ?? this.hrZone6Time,
+      hrZone7Time: hrZone7Time ?? this.hrZone7Time,
       streams: streams ?? this.streams,
       calories: calories ?? this.calories,
     );
@@ -361,6 +369,8 @@ class Activity {
           hrZone3Time == other.hrZone3Time &&
           hrZone4Time == other.hrZone4Time &&
           hrZone5Time == other.hrZone5Time &&
+          hrZone6Time == other.hrZone6Time &&
+          hrZone7Time == other.hrZone7Time &&
           streams == other.streams &&
           calories == other.calories;
 
@@ -388,6 +398,8 @@ class Activity {
         hrZone3Time,
         hrZone4Time,
         hrZone5Time,
+        hrZone6Time,
+        hrZone7Time,
         streams,
         calories,
       ]);

@@ -60,6 +60,11 @@ sealed class CreateGoalRequest with _$CreateGoalRequest {
     double? customSwimDistM,
     double? customBikeDistM,
     double? customRunDistM,
+    @JsonKey(name: 'maxHeartRate') int? maxHeartRate,
+    @JsonKey(name: 'restingHeartRate') int? restingHeartRate,
+    @JsonKey(name: 'thresholdHeartRate') int? thresholdHeartRate,
+    @JsonKey(name: 'thresholdPaceSecondsPerKm') double? thresholdPaceSecondsPerKm,
+    @JsonKey(name: 'hrZoneMethod') String? hrZoneMethod,
   }) = _CreateGoalRequest;
   const CreateGoalRequest._();
 

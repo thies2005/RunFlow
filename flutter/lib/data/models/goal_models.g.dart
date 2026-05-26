@@ -68,6 +68,12 @@ _CreateGoalRequest _$CreateGoalRequestFromJson(Map<String, dynamic> json) =>
       customSwimDistM: (json['customSwimDistM'] as num?)?.toDouble(),
       customBikeDistM: (json['customBikeDistM'] as num?)?.toDouble(),
       customRunDistM: (json['customRunDistM'] as num?)?.toDouble(),
+      maxHeartRate: (json['maxHeartRate'] as num?)?.toInt(),
+      restingHeartRate: (json['restingHeartRate'] as num?)?.toInt(),
+      thresholdHeartRate: (json['thresholdHeartRate'] as num?)?.toInt(),
+      thresholdPaceSecondsPerKm: (json['thresholdPaceSecondsPerKm'] as num?)
+          ?.toDouble(),
+      hrZoneMethod: json['hrZoneMethod'] as String?,
     );
 
 Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
@@ -103,6 +109,11 @@ Map<String, dynamic> _$CreateGoalRequestToJson(_CreateGoalRequest instance) =>
       'customSwimDistM': instance.customSwimDistM,
       'customBikeDistM': instance.customBikeDistM,
       'customRunDistM': instance.customRunDistM,
+      'maxHeartRate': instance.maxHeartRate,
+      'restingHeartRate': instance.restingHeartRate,
+      'thresholdHeartRate': instance.thresholdHeartRate,
+      'thresholdPaceSecondsPerKm': instance.thresholdPaceSecondsPerKm,
+      'hrZoneMethod': instance.hrZoneMethod,
     };
 
 const _$RaceTypeEnumMap = {

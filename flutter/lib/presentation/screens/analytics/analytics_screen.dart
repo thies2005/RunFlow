@@ -873,17 +873,19 @@ class _HrZoneDistributionSection extends ConsumerWidget {
             .where((a) => a.startDate.isAfter(cutoff) && a.hasHeartrate)
             .toList();
 
-        var z1 = 0, z2 = 0, z3 = 0, z4 = 0, z5 = 0;
+        var z1 = 0, z2 = 0, z3 = 0, z4 = 0, z5 = 0, z6 = 0, z7 = 0;
         for (final a in filtered) {
           z1 += a.hrZone1Time;
           z2 += a.hrZone2Time;
           z3 += a.hrZone3Time;
           z4 += a.hrZone4Time;
           z5 += a.hrZone5Time;
+          z6 += a.hrZone6Time;
+          z7 += a.hrZone7Time;
         }
 
         return HrZoneDistributionChart(
-          zoneTimes: [z1, z2, z3, z4, z5, 0, 0],
+          zoneTimes: [z1, z2, z3, z4, z5, z6, z7],
         );
       },
     );

@@ -75,6 +75,13 @@ export const PlanCreateInputSchema = z.object({
     customBikeDistM: z.number().nullable().optional(),
     customRunDistM: z.number().nullable().optional(),
     subGoals: z.array(SubGoalSchema).optional(),
+
+    // Heart rate profile
+    maxHeartRate: z.number().int().min(60).max(250).optional(),
+    restingHeartRate: z.number().int().min(20).max(100).optional(),
+    thresholdHeartRate: z.number().int().min(60).max(250).optional(),
+    thresholdPaceSecondsPerKm: z.number().positive().optional(),
+    hrZoneMethod: z.enum(['LTHR', 'KARVONEN', 'CUSTOM']).optional(),
 });
 
 export type PlanCreateInput = z.infer<typeof PlanCreateInputSchema>;
@@ -103,6 +110,8 @@ export function normalizePlanInput(
         backyardLoopDistM, backyardLoopTimeS, targetLaps,
         customDistanceM, customSwimDistM, customBikeDistM, customRunDistM,
         subGoals,
+        maxHeartRate, restingHeartRate, thresholdHeartRate,
+        thresholdPaceSecondsPerKm, hrZoneMethod,
     } = raw;
 
     // Resolve sport: default to RUN
@@ -194,6 +203,11 @@ export function normalizePlanInput(
         customBikeDistM: customBikeDistM ?? null,
         customRunDistM: customRunDistM ?? null,
         subGoals: resolvedSubGoals,
+        maxHeartRate: maxHeartRate ?? null,
+        restingHeartRate: restingHeartRate ?? null,
+        thresholdHeartRate: thresholdHeartRate ?? null,
+        thresholdPaceSecondsPerKm: thresholdPaceSecondsPerKm ?? null,
+        hrZoneMethod: hrZoneMethod ?? null,
     };
 }
 
@@ -536,6 +550,11 @@ export interface CreatePlanInput {
     customBikeDistM?: number | null;
     customRunDistM?: number | null;
     subGoals?: SubGoalInput[];
+    maxHeartRate?: number | null;
+    restingHeartRate?: number | null;
+    thresholdHeartRate?: number | null;
+    thresholdPaceSecondsPerKm?: number | null;
+    hrZoneMethod?: string | null;
 }
 
 export interface CreatePlanResult {

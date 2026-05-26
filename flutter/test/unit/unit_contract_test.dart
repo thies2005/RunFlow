@@ -592,4 +592,81 @@ void main() {
       }
     });
   });
+
+  group('Activity HR zone time fields', () {
+    test('domain Activity has 7 zone time fields defaulting to 0', () {
+      final activity = entities.Activity(
+        id: 'a1',
+        stravaId: 's1',
+        type: entities.ActivityType.run,
+        name: 'Test',
+        startDate: DateTime(2024, 6, 20),
+        distance: 5000.0,
+        movingTime: 1800,
+        averageSpeed: null,
+        averageHr: null,
+        maxHr: null,
+        averageCadence: null,
+        hasHeartrate: true,
+        totalElevation: 0.0,
+        trimp: null,
+        runningTss: null,
+        estimatedVdot: null,
+        trainingType: null,
+      );
+
+      expect(activity.hrZone1Time, 0);
+      expect(activity.hrZone2Time, 0);
+      expect(activity.hrZone3Time, 0);
+      expect(activity.hrZone4Time, 0);
+      expect(activity.hrZone5Time, 0);
+      expect(activity.hrZone6Time, 0);
+      expect(activity.hrZone7Time, 0);
+    });
+
+    test('Activity JSON round-trip preserves zones 6 and 7', () {
+      final json = {
+        'id': 'a1',
+        'stravaId': 's1',
+        'type': 'RUN',
+        'name': 'Test',
+        'startDate': '2024-06-20T00:00:00.000Z',
+        'distance': 5000.0,
+        'movingTime': 1800,
+        'averageSpeed': null,
+        'averageHr': null,
+        'maxHr': null,
+        'averageCadence': null,
+        'hasHeartrate': true,
+        'totalElevation': 0.0,
+        'trimp': null,
+        'runningTss': null,
+        'estimatedVdot': null,
+        'trainingType': null,
+        'hrZone1Time': 100,
+        'hrZone2Time': 200,
+        'hrZone3Time': 300,
+        'hrZone4Time': 400,
+        'hrZone5Time': 500,
+        'hrZone6Time': 600,
+        'hrZone7Time': 700,
+      };
+
+      final activity = Activity.fromJson(json);
+      expect(activity.hrZone1Time, 100);
+      expect(activity.hrZone2Time, 200);
+      expect(activity.hrZone3Time, 300);
+      expect(activity.hrZone4Time, 400);
+      expect(activity.hrZone5Time, 500);
+      expect(activity.hrZone6Time, 600);
+      expect(activity.hrZone7Time, 700);
+
+      final serialized = jsonEncode(activity.toJson());
+      final restored = Activity.fromJson(
+        jsonDecode(serialized) as Map<String, dynamic>,
+      );
+      expect(restored.hrZone6Time, 600);
+      expect(restored.hrZone7Time, 700);
+    });
+  });
 }

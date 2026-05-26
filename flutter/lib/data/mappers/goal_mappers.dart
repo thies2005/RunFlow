@@ -59,6 +59,11 @@ extension CreateGoalRequestMapper on CreateGoalRequest {
         customSwimDistM: customSwimDistM,
         customBikeDistM: customBikeDistM,
         customRunDistM: customRunDistM,
+        maxHeartRate: maxHeartRate,
+        restingHeartRate: restingHeartRate,
+        thresholdHeartRate: thresholdHeartRate,
+        thresholdPaceSecondsPerKm: thresholdPaceSecondsPerKm,
+        hrZoneMethod: hrZoneMethod,
       );
 }
 
@@ -95,6 +100,11 @@ extension DomainCreateGoalRequestMapper on domain.CreateGoalRequest {
         customSwimDistM: customSwimDistM,
         customBikeDistM: customBikeDistM,
         customRunDistM: customRunDistM,
+        maxHeartRate: maxHeartRate,
+        restingHeartRate: restingHeartRate,
+        thresholdHeartRate: thresholdHeartRate,
+        thresholdPaceSecondsPerKm: thresholdPaceSecondsPerKm,
+        hrZoneMethod: hrZoneMethod,
       );
 }
 

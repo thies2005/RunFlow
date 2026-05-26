@@ -116,6 +116,8 @@ extension ActivityMapper on Activity {
         hrZone3Time: hrZone3Time,
         hrZone4Time: hrZone4Time,
         hrZone5Time: hrZone5Time,
+        hrZone6Time: hrZone6Time,
+        hrZone7Time: hrZone7Time,
         streams: streams,
         calories: calories,
       );
@@ -145,6 +147,8 @@ extension DomainActivityMapper on domain.Activity {
         hrZone3Time: hrZone3Time,
         hrZone4Time: hrZone4Time,
         hrZone5Time: hrZone5Time,
+        hrZone6Time: hrZone6Time,
+        hrZone7Time: hrZone7Time,
         streams: streams,
         calories: calories,
       );

@@ -341,6 +341,11 @@ class PlanWizardNotifier extends Notifier<PlanWizardState> {
       customSwimDistM: state.customSwimDistM,
       customBikeDistM: state.customBikeDistM,
       customRunDistM: state.customRunDistM,
+      maxHeartRate: state.maxHeartRate,
+      restingHeartRate: state.restingHeartRate,
+      thresholdHeartRate: state.thresholdHR > 0 ? state.thresholdHR : null,
+      thresholdPaceSecondsPerKm: state.thresholdPace > 0 ? state.thresholdPace.toDouble() : null,
+      hrZoneMethod: 'LTHR',
     );
   }
 

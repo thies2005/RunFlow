@@ -244,6 +244,11 @@ void main() {
         weeklyMileageGoal: 60.0,
         planWeeks: 16,
         runsPerWeek: 5,
+        maxHeartRate: 190,
+        restingHeartRate: 55,
+        thresholdHeartRate: 172,
+        thresholdPaceSecondsPerKm: 300.0,
+        hrZoneMethod: 'LTHR',
       );
       final json = request.toJson();
 
@@ -253,6 +258,11 @@ void main() {
       expect(json['weeklyMileageGoal'], 60.0);
       expect(json['planWeeks'], 16);
       expect(json['runsPerWeek'], 5);
+      expect(json['maxHeartRate'], 190);
+      expect(json['restingHeartRate'], 55);
+      expect(json['thresholdHeartRate'], 172);
+      expect(json['thresholdPaceSecondsPerKm'], 300.0);
+      expect(json['hrZoneMethod'], 'LTHR');
     });
 
     test('serializes with default values', () {

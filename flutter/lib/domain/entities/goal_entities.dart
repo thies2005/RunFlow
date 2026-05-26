@@ -74,6 +74,11 @@ class CreateGoalRequest {
     this.customSwimDistM,
     this.customBikeDistM,
     this.customRunDistM,
+    this.maxHeartRate,
+    this.restingHeartRate,
+    this.thresholdHeartRate,
+    this.thresholdPaceSecondsPerKm,
+    this.hrZoneMethod,
   });
 
   final String name;
@@ -107,6 +112,11 @@ class CreateGoalRequest {
   final double? customSwimDistM;
   final double? customBikeDistM;
   final double? customRunDistM;
+  final int? maxHeartRate;
+  final int? restingHeartRate;
+  final int? thresholdHeartRate;
+  final double? thresholdPaceSecondsPerKm;
+  final String? hrZoneMethod;
 
   CreateGoalRequest copyWith({
     String? name,
@@ -140,6 +150,11 @@ class CreateGoalRequest {
     double? customSwimDistM,
     double? customBikeDistM,
     double? customRunDistM,
+    int? maxHeartRate,
+    int? restingHeartRate,
+    int? thresholdHeartRate,
+    double? thresholdPaceSecondsPerKm,
+    String? hrZoneMethod,
   }) {
     return CreateGoalRequest(
       name: name ?? this.name,
@@ -173,6 +188,11 @@ class CreateGoalRequest {
       customSwimDistM: customSwimDistM ?? this.customSwimDistM,
       customBikeDistM: customBikeDistM ?? this.customBikeDistM,
       customRunDistM: customRunDistM ?? this.customRunDistM,
+      maxHeartRate: maxHeartRate ?? this.maxHeartRate,
+      restingHeartRate: restingHeartRate ?? this.restingHeartRate,
+      thresholdHeartRate: thresholdHeartRate ?? this.thresholdHeartRate,
+      thresholdPaceSecondsPerKm: thresholdPaceSecondsPerKm ?? this.thresholdPaceSecondsPerKm,
+      hrZoneMethod: hrZoneMethod ?? this.hrZoneMethod,
     );
   }
 
@@ -211,7 +231,12 @@ class CreateGoalRequest {
           athleteBikeSpeedOverride == other.athleteBikeSpeedOverride &&
           customSwimDistM == other.customSwimDistM &&
           customBikeDistM == other.customBikeDistM &&
-          customRunDistM == other.customRunDistM;
+          customRunDistM == other.customRunDistM &&
+          maxHeartRate == other.maxHeartRate &&
+          restingHeartRate == other.restingHeartRate &&
+          thresholdHeartRate == other.thresholdHeartRate &&
+          thresholdPaceSecondsPerKm == other.thresholdPaceSecondsPerKm &&
+          hrZoneMethod == other.hrZoneMethod;
 
   @override
   int get hashCode => Object.hashAll([
@@ -246,6 +271,11 @@ class CreateGoalRequest {
     customSwimDistM,
     customBikeDistM,
     customRunDistM,
+    maxHeartRate,
+    restingHeartRate,
+    thresholdHeartRate,
+    thresholdPaceSecondsPerKm,
+    hrZoneMethod,
   ]);
 }
 

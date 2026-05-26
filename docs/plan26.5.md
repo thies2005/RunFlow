@@ -290,6 +290,25 @@ cd Web && npm run lint
 cd Web && npm run build
 ```
 
+## Implementation Status
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 1. Choose One HR Zone System | **Done** | LTHR-based zones confirmed as primary; Karvonen kept analytics-only |
+| 2. Send HR Profile Data | **Done** | HR fields added to CreateGoalRequest, wizard, backend schema/normalizer, with tests |
+| 3. Store Zone Targets Clearly | **Deferred** | Requires DB migration and UI design decisions; new fields are additive |
+| 4. Fix Zones 6-7 Data Loss | **Done** | `hrZone6Time`/`hrZone7Time` added to Activity model, mappers, analytics aggregation |
+| 5. Add Structured Steps | **Done** | Backend generates warmup/work/cooldown steps; Flutter preserves `structuredSteps` JSON |
+| 6. Scale Quality Distances | **Done** | `scaleQualitySessionDistance()` with per-type fractions, floor/ceiling bounds, 500m rounding |
+| 7. Goal Pace Guardrails | **Done** | `resolveTrainingVdotForGoal()` caps VDOT at `currentVdot * 1.15` when fitness baseline exists |
+| 8. Add Tests | **Done** | 56 new unit tests across Flutter and backend (VDOT, paces, zones, scaling, guardrails) |
+
+### Deferred Items
+
+- **Phase 3 (Store Zone Targets Clearly)**: Requires a DB migration for new columns on the `Workout` table and updated UI to display concrete bpm/pace ranges. The current zone-label fields (`targetHrZone`, `intensityZone`) continue to work.
+- **APK build**: Blocked in CI by missing `ANDROID_HOME` environment variable.
+- **Pre-existing Web test failures**: `ai/chat/history` and `admin/recalculate-fitness` routes have mock DB issues unrelated to this work.
+
 ## Recommended First PR
 
 Start with a small PR that does only this:

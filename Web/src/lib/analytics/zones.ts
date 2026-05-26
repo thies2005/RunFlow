@@ -1,4 +1,5 @@
 import { Activity } from '@/generated/prisma/browser';
+import { buildKarvonenZones, type HrZoneDefinition } from '../metrics/hr-zones';
 
 export type ZoneDistribution = {
     z1: number;
@@ -80,29 +81,28 @@ export function calculateZonePercentages(distribution: ZoneDistribution): ZonePe
     };
 }
 
-/**
- * Calculate user heart rate zones based on HR Max and Resting HR
- * Uses Karvonen formula: TargetHR = ((max - rest) * %Intensity) + rest
- */
 export function calculateUserZones(hrMax: number, hrRest: number) {
-    const hrr = hrMax - hrRest;
-
-    // Z1: 50-60% (Recovery)
-    // Z2: 60-70% (Aerobic)
-    // Z3: 70-80% (Tempo)
-    // Z4: 80-90% (Threshold)
-    // Z5: 90-95% (VO2max)
-    // Z6: 95-100% (Anaerobic)
-    // Z7: >100% (Neuromuscular)
-
+    const zones = buildKarvonenZones(hrMax, hrRest);
+    if (!zones) {
+        return {
+            z1: { min: 0, max: 0 },
+            z2: { min: 0, max: 0 },
+            z3: { min: 0, max: 0 },
+            z4: { min: 0, max: 0 },
+            z5: { min: 0, max: 0 },
+            z6: { min: 0, max: 0 },
+            z7: { min: 0, max: 0 },
+        };
+    }
+    const toZone = (z: HrZoneDefinition) => ({ min: z.min ?? 0, max: z.max ?? 0 });
     return {
-        z1: { min: Math.round(hrr * 0.5 + hrRest), max: Math.round(hrr * 0.6 + hrRest) },
-        z2: { min: Math.round(hrr * 0.6 + hrRest), max: Math.round(hrr * 0.7 + hrRest) },
-        z3: { min: Math.round(hrr * 0.7 + hrRest), max: Math.round(hrr * 0.8 + hrRest) },
-        z4: { min: Math.round(hrr * 0.8 + hrRest), max: Math.round(hrr * 0.9 + hrRest) },
-        z5: { min: Math.round(hrr * 0.9 + hrRest), max: Math.round(hrr * 0.95 + hrRest) },
-        z6: { min: Math.round(hrr * 0.95 + hrRest), max: Math.round(hrr * 1.0 + hrRest) },
-        z7: { min: Math.round(hrr * 1.0 + hrRest), max: hrMax },
+        z1: toZone(zones[0]),
+        z2: toZone(zones[1]),
+        z3: toZone(zones[2]),
+        z4: toZone(zones[3]),
+        z5: toZone(zones[4]),
+        z6: toZone(zones[5]),
+        z7: toZone(zones[6]),
     };
 }
 

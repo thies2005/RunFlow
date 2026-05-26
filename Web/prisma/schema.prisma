@@ -34,6 +34,7 @@ model User {
   hrZone4Max            Int                  @default(170)
   hrZone5Max            Int                  @default(178)
   hrZone6Max            Int                  @default(187)
+  hrZoneMethod          String?              @default("LTHR")
   vdotCorrectionFactor  Float                @default(1.0)
   vdotReferenceRaceDate DateTime?
   vdotReferenceRaceTime Int?
@@ -564,6 +565,12 @@ model Workout {
   targetDuration          Int?
   targetPace              Float?
   targetHrZone            Int?
+  targetHrZoneLabel       String?
+  targetHrMinBpm          Int?
+  targetHrMaxBpm          Int?
+  targetPaceZoneLabel     String?
+  targetPaceMinSecondsPerKm Float?
+  targetPaceMaxSecondsPerKm Float?
   isCompleted             Boolean               @default(false)
   completedAt             DateTime?
   linkedActivityId        String?

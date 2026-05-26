@@ -364,7 +364,7 @@ class _TodayWorkoutCard extends ConsumerWidget {
                   Expanded(
                     child: _StatItem(
                       label: S.of(context).targetPace,
-                      value: formatPace(workout.targetPace),
+                      value: _workoutPaceSummary(workout),
                       icon: Icons.speed,
                       color: AppColors.success,
                     ),
@@ -451,7 +451,8 @@ class _TodayWorkoutCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('${workout.workoutType.name.toUpperCase()} · ${(workout.targetDistance / 1000).toStringAsFixed(1)} km'),
-            if (workout.targetPace > 0) Text(S.of(context).dashboardTargetPaceLabel(formatPace(workout.targetPace))),
+            if (workout.targetPace > 0) Text(S.of(context).dashboardTargetPaceLabel(_workoutPaceSummary(workout))),
+            if (_workoutHrSummary(workout).isNotEmpty) Text(_workoutHrSummary(workout)),
             const SizedBox(height: 12),
             Text(S.of(context).dashboardGpsTrackingInfo),
           ],
@@ -507,6 +508,24 @@ class _TodayWorkoutCard extends ConsumerWidget {
     }
     return parts.join(' · ');
   }
+}
+
+String _workoutPaceSummary(Workout workout) {
+  final pace = formatPaceRange(
+    workout.targetPaceMinSecondsPerKm,
+    workout.targetPaceMaxSecondsPerKm,
+    fallbackSecondsPerKm: workout.targetPace,
+  );
+  return workout.targetPaceZoneLabel == null ? pace : '${workout.targetPaceZoneLabel}: $pace';
+}
+
+String _workoutHrSummary(Workout workout) {
+  return formatHrTarget(
+    workout.targetHrZoneLabel,
+    workout.targetHrMinBpm,
+    workout.targetHrMaxBpm,
+    workout.targetHrZone,
+  );
 }
 
 class _WorkoutSwitcherSheet extends StatelessWidget {

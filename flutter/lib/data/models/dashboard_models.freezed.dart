@@ -1183,7 +1183,7 @@ as bool,
 /// @nodoc
 mixin _$Workout {
 
- String get id; String get goalId; DateTime get scheduledDate;@JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) WorkoutType get workoutType; String get description; double get targetDistance; double get targetPace; int get targetDuration; bool get isCompleted; DateTime? get completedAt; String? get activityId; String get sport;@JsonKey(name: 'displayDesc') String? get displayDescription;@JsonKey(name: 'intensityZone') String? get intensityZone;@JsonKey(name: 'phase') String? get phase;@JsonKey(name: 'targetHrZone') int? get targetHrZone;@JsonKey(name: 'structuredSteps') Map<String, dynamic>? get structuredSteps;
+ String get id; String get goalId; DateTime get scheduledDate;@JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) WorkoutType get workoutType; String get description; double get targetDistance; double get targetPace; int get targetDuration; bool get isCompleted; DateTime? get completedAt; String? get activityId; String get sport;@JsonKey(name: 'displayDesc') String? get displayDescription;@JsonKey(name: 'intensityZone') String? get intensityZone;@JsonKey(name: 'phase') String? get phase;@JsonKey(name: 'targetHrZone') int? get targetHrZone;@JsonKey(name: 'targetHrZoneLabel') String? get targetHrZoneLabel;@JsonKey(name: 'targetHrMinBpm') int? get targetHrMinBpm;@JsonKey(name: 'targetHrMaxBpm') int? get targetHrMaxBpm;@JsonKey(name: 'targetPaceZoneLabel') String? get targetPaceZoneLabel;@JsonKey(name: 'targetPaceMinSecondsPerKm') double? get targetPaceMinSecondsPerKm;@JsonKey(name: 'targetPaceMaxSecondsPerKm') double? get targetPaceMaxSecondsPerKm;@JsonKey(name: 'structuredSteps') Map<String, dynamic>? get structuredSteps;
 /// Create a copy of Workout
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1196,16 +1196,16 @@ $WorkoutCopyWith<Workout> get copyWith => _$WorkoutCopyWithImpl<Workout>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Workout&&(identical(other.id, id) || other.id == id)&&(identical(other.goalId, goalId) || other.goalId == goalId)&&(identical(other.scheduledDate, scheduledDate) || other.scheduledDate == scheduledDate)&&(identical(other.workoutType, workoutType) || other.workoutType == workoutType)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetDistance, targetDistance) || other.targetDistance == targetDistance)&&(identical(other.targetPace, targetPace) || other.targetPace == targetPace)&&(identical(other.targetDuration, targetDuration) || other.targetDuration == targetDuration)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.activityId, activityId) || other.activityId == activityId)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.displayDescription, displayDescription) || other.displayDescription == displayDescription)&&(identical(other.intensityZone, intensityZone) || other.intensityZone == intensityZone)&&(identical(other.phase, phase) || other.phase == phase)&&(identical(other.targetHrZone, targetHrZone) || other.targetHrZone == targetHrZone)&&const DeepCollectionEquality().equals(other.structuredSteps, structuredSteps));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Workout&&(identical(other.id, id) || other.id == id)&&(identical(other.goalId, goalId) || other.goalId == goalId)&&(identical(other.scheduledDate, scheduledDate) || other.scheduledDate == scheduledDate)&&(identical(other.workoutType, workoutType) || other.workoutType == workoutType)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetDistance, targetDistance) || other.targetDistance == targetDistance)&&(identical(other.targetPace, targetPace) || other.targetPace == targetPace)&&(identical(other.targetDuration, targetDuration) || other.targetDuration == targetDuration)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.activityId, activityId) || other.activityId == activityId)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.displayDescription, displayDescription) || other.displayDescription == displayDescription)&&(identical(other.intensityZone, intensityZone) || other.intensityZone == intensityZone)&&(identical(other.phase, phase) || other.phase == phase)&&(identical(other.targetHrZone, targetHrZone) || other.targetHrZone == targetHrZone)&&(identical(other.targetHrZoneLabel, targetHrZoneLabel) || other.targetHrZoneLabel == targetHrZoneLabel)&&(identical(other.targetHrMinBpm, targetHrMinBpm) || other.targetHrMinBpm == targetHrMinBpm)&&(identical(other.targetHrMaxBpm, targetHrMaxBpm) || other.targetHrMaxBpm == targetHrMaxBpm)&&(identical(other.targetPaceZoneLabel, targetPaceZoneLabel) || other.targetPaceZoneLabel == targetPaceZoneLabel)&&(identical(other.targetPaceMinSecondsPerKm, targetPaceMinSecondsPerKm) || other.targetPaceMinSecondsPerKm == targetPaceMinSecondsPerKm)&&(identical(other.targetPaceMaxSecondsPerKm, targetPaceMaxSecondsPerKm) || other.targetPaceMaxSecondsPerKm == targetPaceMaxSecondsPerKm)&&const DeepCollectionEquality().equals(other.structuredSteps, structuredSteps));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,goalId,scheduledDate,workoutType,description,targetDistance,targetPace,targetDuration,isCompleted,completedAt,activityId,sport,displayDescription,intensityZone,phase,targetHrZone,const DeepCollectionEquality().hash(structuredSteps));
+int get hashCode => Object.hashAll([runtimeType,id,goalId,scheduledDate,workoutType,description,targetDistance,targetPace,targetDuration,isCompleted,completedAt,activityId,sport,displayDescription,intensityZone,phase,targetHrZone,targetHrZoneLabel,targetHrMinBpm,targetHrMaxBpm,targetPaceZoneLabel,targetPaceMinSecondsPerKm,targetPaceMaxSecondsPerKm,const DeepCollectionEquality().hash(structuredSteps)]);
 
 @override
 String toString() {
-  return 'Workout(id: $id, goalId: $goalId, scheduledDate: $scheduledDate, workoutType: $workoutType, description: $description, targetDistance: $targetDistance, targetPace: $targetPace, targetDuration: $targetDuration, isCompleted: $isCompleted, completedAt: $completedAt, activityId: $activityId, sport: $sport, displayDescription: $displayDescription, intensityZone: $intensityZone, phase: $phase, targetHrZone: $targetHrZone, structuredSteps: $structuredSteps)';
+  return 'Workout(id: $id, goalId: $goalId, scheduledDate: $scheduledDate, workoutType: $workoutType, description: $description, targetDistance: $targetDistance, targetPace: $targetPace, targetDuration: $targetDuration, isCompleted: $isCompleted, completedAt: $completedAt, activityId: $activityId, sport: $sport, displayDescription: $displayDescription, intensityZone: $intensityZone, phase: $phase, targetHrZone: $targetHrZone, targetHrZoneLabel: $targetHrZoneLabel, targetHrMinBpm: $targetHrMinBpm, targetHrMaxBpm: $targetHrMaxBpm, targetPaceZoneLabel: $targetPaceZoneLabel, targetPaceMinSecondsPerKm: $targetPaceMinSecondsPerKm, targetPaceMaxSecondsPerKm: $targetPaceMaxSecondsPerKm, structuredSteps: $structuredSteps)';
 }
 
 
@@ -1216,7 +1216,7 @@ abstract mixin class $WorkoutCopyWith<$Res>  {
   factory $WorkoutCopyWith(Workout value, $Res Function(Workout) _then) = _$WorkoutCopyWithImpl;
 @useResult
 $Res call({
- String id, String goalId, DateTime scheduledDate,@JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) WorkoutType workoutType, String description, double targetDistance, double targetPace, int targetDuration, bool isCompleted, DateTime? completedAt, String? activityId, String sport,@JsonKey(name: 'displayDesc') String? displayDescription,@JsonKey(name: 'intensityZone') String? intensityZone,@JsonKey(name: 'phase') String? phase,@JsonKey(name: 'targetHrZone') int? targetHrZone,@JsonKey(name: 'structuredSteps') Map<String, dynamic>? structuredSteps
+ String id, String goalId, DateTime scheduledDate,@JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) WorkoutType workoutType, String description, double targetDistance, double targetPace, int targetDuration, bool isCompleted, DateTime? completedAt, String? activityId, String sport,@JsonKey(name: 'displayDesc') String? displayDescription,@JsonKey(name: 'intensityZone') String? intensityZone,@JsonKey(name: 'phase') String? phase,@JsonKey(name: 'targetHrZone') int? targetHrZone,@JsonKey(name: 'targetHrZoneLabel') String? targetHrZoneLabel,@JsonKey(name: 'targetHrMinBpm') int? targetHrMinBpm,@JsonKey(name: 'targetHrMaxBpm') int? targetHrMaxBpm,@JsonKey(name: 'targetPaceZoneLabel') String? targetPaceZoneLabel,@JsonKey(name: 'targetPaceMinSecondsPerKm') double? targetPaceMinSecondsPerKm,@JsonKey(name: 'targetPaceMaxSecondsPerKm') double? targetPaceMaxSecondsPerKm,@JsonKey(name: 'structuredSteps') Map<String, dynamic>? structuredSteps
 });
 
 
@@ -1233,7 +1233,7 @@ class _$WorkoutCopyWithImpl<$Res>
 
 /// Create a copy of Workout
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? goalId = null,Object? scheduledDate = null,Object? workoutType = null,Object? description = null,Object? targetDistance = null,Object? targetPace = null,Object? targetDuration = null,Object? isCompleted = null,Object? completedAt = freezed,Object? activityId = freezed,Object? sport = null,Object? displayDescription = freezed,Object? intensityZone = freezed,Object? phase = freezed,Object? targetHrZone = freezed,Object? structuredSteps = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? goalId = null,Object? scheduledDate = null,Object? workoutType = null,Object? description = null,Object? targetDistance = null,Object? targetPace = null,Object? targetDuration = null,Object? isCompleted = null,Object? completedAt = freezed,Object? activityId = freezed,Object? sport = null,Object? displayDescription = freezed,Object? intensityZone = freezed,Object? phase = freezed,Object? targetHrZone = freezed,Object? targetHrZoneLabel = freezed,Object? targetHrMinBpm = freezed,Object? targetHrMaxBpm = freezed,Object? targetPaceZoneLabel = freezed,Object? targetPaceMinSecondsPerKm = freezed,Object? targetPaceMaxSecondsPerKm = freezed,Object? structuredSteps = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,goalId: null == goalId ? _self.goalId : goalId // ignore: cast_nullable_to_non_nullable
@@ -1251,7 +1251,13 @@ as String,displayDescription: freezed == displayDescription ? _self.displayDescr
 as String?,intensityZone: freezed == intensityZone ? _self.intensityZone : intensityZone // ignore: cast_nullable_to_non_nullable
 as String?,phase: freezed == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable
 as String?,targetHrZone: freezed == targetHrZone ? _self.targetHrZone : targetHrZone // ignore: cast_nullable_to_non_nullable
-as int?,structuredSteps: freezed == structuredSteps ? _self.structuredSteps : structuredSteps // ignore: cast_nullable_to_non_nullable
+as int?,targetHrZoneLabel: freezed == targetHrZoneLabel ? _self.targetHrZoneLabel : targetHrZoneLabel // ignore: cast_nullable_to_non_nullable
+as String?,targetHrMinBpm: freezed == targetHrMinBpm ? _self.targetHrMinBpm : targetHrMinBpm // ignore: cast_nullable_to_non_nullable
+as int?,targetHrMaxBpm: freezed == targetHrMaxBpm ? _self.targetHrMaxBpm : targetHrMaxBpm // ignore: cast_nullable_to_non_nullable
+as int?,targetPaceZoneLabel: freezed == targetPaceZoneLabel ? _self.targetPaceZoneLabel : targetPaceZoneLabel // ignore: cast_nullable_to_non_nullable
+as String?,targetPaceMinSecondsPerKm: freezed == targetPaceMinSecondsPerKm ? _self.targetPaceMinSecondsPerKm : targetPaceMinSecondsPerKm // ignore: cast_nullable_to_non_nullable
+as double?,targetPaceMaxSecondsPerKm: freezed == targetPaceMaxSecondsPerKm ? _self.targetPaceMaxSecondsPerKm : targetPaceMaxSecondsPerKm // ignore: cast_nullable_to_non_nullable
+as double?,structuredSteps: freezed == structuredSteps ? _self.structuredSteps : structuredSteps // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>?,
   ));
 }
@@ -1334,10 +1340,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String goalId,  DateTime scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson)  WorkoutType workoutType,  String description,  double targetDistance,  double targetPace,  int targetDuration,  bool isCompleted,  DateTime? completedAt,  String? activityId,  String sport, @JsonKey(name: 'displayDesc')  String? displayDescription, @JsonKey(name: 'intensityZone')  String? intensityZone, @JsonKey(name: 'phase')  String? phase, @JsonKey(name: 'targetHrZone')  int? targetHrZone, @JsonKey(name: 'structuredSteps')  Map<String, dynamic>? structuredSteps)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String goalId,  DateTime scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson)  WorkoutType workoutType,  String description,  double targetDistance,  double targetPace,  int targetDuration,  bool isCompleted,  DateTime? completedAt,  String? activityId,  String sport, @JsonKey(name: 'displayDesc')  String? displayDescription, @JsonKey(name: 'intensityZone')  String? intensityZone, @JsonKey(name: 'phase')  String? phase, @JsonKey(name: 'targetHrZone')  int? targetHrZone, @JsonKey(name: 'targetHrZoneLabel')  String? targetHrZoneLabel, @JsonKey(name: 'targetHrMinBpm')  int? targetHrMinBpm, @JsonKey(name: 'targetHrMaxBpm')  int? targetHrMaxBpm, @JsonKey(name: 'targetPaceZoneLabel')  String? targetPaceZoneLabel, @JsonKey(name: 'targetPaceMinSecondsPerKm')  double? targetPaceMinSecondsPerKm, @JsonKey(name: 'targetPaceMaxSecondsPerKm')  double? targetPaceMaxSecondsPerKm, @JsonKey(name: 'structuredSteps')  Map<String, dynamic>? structuredSteps)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Workout() when $default != null:
-return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_that.description,_that.targetDistance,_that.targetPace,_that.targetDuration,_that.isCompleted,_that.completedAt,_that.activityId,_that.sport,_that.displayDescription,_that.intensityZone,_that.phase,_that.targetHrZone,_that.structuredSteps);case _:
+return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_that.description,_that.targetDistance,_that.targetPace,_that.targetDuration,_that.isCompleted,_that.completedAt,_that.activityId,_that.sport,_that.displayDescription,_that.intensityZone,_that.phase,_that.targetHrZone,_that.targetHrZoneLabel,_that.targetHrMinBpm,_that.targetHrMaxBpm,_that.targetPaceZoneLabel,_that.targetPaceMinSecondsPerKm,_that.targetPaceMaxSecondsPerKm,_that.structuredSteps);case _:
   return orElse();
 
 }
@@ -1355,10 +1361,10 @@ return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String goalId,  DateTime scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson)  WorkoutType workoutType,  String description,  double targetDistance,  double targetPace,  int targetDuration,  bool isCompleted,  DateTime? completedAt,  String? activityId,  String sport, @JsonKey(name: 'displayDesc')  String? displayDescription, @JsonKey(name: 'intensityZone')  String? intensityZone, @JsonKey(name: 'phase')  String? phase, @JsonKey(name: 'targetHrZone')  int? targetHrZone, @JsonKey(name: 'structuredSteps')  Map<String, dynamic>? structuredSteps)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String goalId,  DateTime scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson)  WorkoutType workoutType,  String description,  double targetDistance,  double targetPace,  int targetDuration,  bool isCompleted,  DateTime? completedAt,  String? activityId,  String sport, @JsonKey(name: 'displayDesc')  String? displayDescription, @JsonKey(name: 'intensityZone')  String? intensityZone, @JsonKey(name: 'phase')  String? phase, @JsonKey(name: 'targetHrZone')  int? targetHrZone, @JsonKey(name: 'targetHrZoneLabel')  String? targetHrZoneLabel, @JsonKey(name: 'targetHrMinBpm')  int? targetHrMinBpm, @JsonKey(name: 'targetHrMaxBpm')  int? targetHrMaxBpm, @JsonKey(name: 'targetPaceZoneLabel')  String? targetPaceZoneLabel, @JsonKey(name: 'targetPaceMinSecondsPerKm')  double? targetPaceMinSecondsPerKm, @JsonKey(name: 'targetPaceMaxSecondsPerKm')  double? targetPaceMaxSecondsPerKm, @JsonKey(name: 'structuredSteps')  Map<String, dynamic>? structuredSteps)  $default,) {final _that = this;
 switch (_that) {
 case _Workout():
-return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_that.description,_that.targetDistance,_that.targetPace,_that.targetDuration,_that.isCompleted,_that.completedAt,_that.activityId,_that.sport,_that.displayDescription,_that.intensityZone,_that.phase,_that.targetHrZone,_that.structuredSteps);}
+return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_that.description,_that.targetDistance,_that.targetPace,_that.targetDuration,_that.isCompleted,_that.completedAt,_that.activityId,_that.sport,_that.displayDescription,_that.intensityZone,_that.phase,_that.targetHrZone,_that.targetHrZoneLabel,_that.targetHrMinBpm,_that.targetHrMaxBpm,_that.targetPaceZoneLabel,_that.targetPaceMinSecondsPerKm,_that.targetPaceMaxSecondsPerKm,_that.structuredSteps);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1372,10 +1378,10 @@ return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String goalId,  DateTime scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson)  WorkoutType workoutType,  String description,  double targetDistance,  double targetPace,  int targetDuration,  bool isCompleted,  DateTime? completedAt,  String? activityId,  String sport, @JsonKey(name: 'displayDesc')  String? displayDescription, @JsonKey(name: 'intensityZone')  String? intensityZone, @JsonKey(name: 'phase')  String? phase, @JsonKey(name: 'targetHrZone')  int? targetHrZone, @JsonKey(name: 'structuredSteps')  Map<String, dynamic>? structuredSteps)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String goalId,  DateTime scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson)  WorkoutType workoutType,  String description,  double targetDistance,  double targetPace,  int targetDuration,  bool isCompleted,  DateTime? completedAt,  String? activityId,  String sport, @JsonKey(name: 'displayDesc')  String? displayDescription, @JsonKey(name: 'intensityZone')  String? intensityZone, @JsonKey(name: 'phase')  String? phase, @JsonKey(name: 'targetHrZone')  int? targetHrZone, @JsonKey(name: 'targetHrZoneLabel')  String? targetHrZoneLabel, @JsonKey(name: 'targetHrMinBpm')  int? targetHrMinBpm, @JsonKey(name: 'targetHrMaxBpm')  int? targetHrMaxBpm, @JsonKey(name: 'targetPaceZoneLabel')  String? targetPaceZoneLabel, @JsonKey(name: 'targetPaceMinSecondsPerKm')  double? targetPaceMinSecondsPerKm, @JsonKey(name: 'targetPaceMaxSecondsPerKm')  double? targetPaceMaxSecondsPerKm, @JsonKey(name: 'structuredSteps')  Map<String, dynamic>? structuredSteps)?  $default,) {final _that = this;
 switch (_that) {
 case _Workout() when $default != null:
-return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_that.description,_that.targetDistance,_that.targetPace,_that.targetDuration,_that.isCompleted,_that.completedAt,_that.activityId,_that.sport,_that.displayDescription,_that.intensityZone,_that.phase,_that.targetHrZone,_that.structuredSteps);case _:
+return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_that.description,_that.targetDistance,_that.targetPace,_that.targetDuration,_that.isCompleted,_that.completedAt,_that.activityId,_that.sport,_that.displayDescription,_that.intensityZone,_that.phase,_that.targetHrZone,_that.targetHrZoneLabel,_that.targetHrMinBpm,_that.targetHrMaxBpm,_that.targetPaceZoneLabel,_that.targetPaceMinSecondsPerKm,_that.targetPaceMaxSecondsPerKm,_that.structuredSteps);case _:
   return null;
 
 }
@@ -1387,7 +1393,7 @@ return $default(_that.id,_that.goalId,_that.scheduledDate,_that.workoutType,_tha
 @JsonSerializable()
 
 class _Workout extends Workout {
-  const _Workout({required this.id, required this.goalId, required this.scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) required this.workoutType, this.description = '', this.targetDistance = 0.0, this.targetPace = 0.0, this.targetDuration = 0, this.isCompleted = false, required this.completedAt, required this.activityId, this.sport = 'RUN', @JsonKey(name: 'displayDesc') this.displayDescription, @JsonKey(name: 'intensityZone') this.intensityZone, @JsonKey(name: 'phase') this.phase, @JsonKey(name: 'targetHrZone') this.targetHrZone, @JsonKey(name: 'structuredSteps') final  Map<String, dynamic>? structuredSteps}): _structuredSteps = structuredSteps,super._();
+  const _Workout({required this.id, required this.goalId, required this.scheduledDate, @JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) required this.workoutType, this.description = '', this.targetDistance = 0.0, this.targetPace = 0.0, this.targetDuration = 0, this.isCompleted = false, required this.completedAt, required this.activityId, this.sport = 'RUN', @JsonKey(name: 'displayDesc') this.displayDescription, @JsonKey(name: 'intensityZone') this.intensityZone, @JsonKey(name: 'phase') this.phase, @JsonKey(name: 'targetHrZone') this.targetHrZone, @JsonKey(name: 'targetHrZoneLabel') this.targetHrZoneLabel, @JsonKey(name: 'targetHrMinBpm') this.targetHrMinBpm, @JsonKey(name: 'targetHrMaxBpm') this.targetHrMaxBpm, @JsonKey(name: 'targetPaceZoneLabel') this.targetPaceZoneLabel, @JsonKey(name: 'targetPaceMinSecondsPerKm') this.targetPaceMinSecondsPerKm, @JsonKey(name: 'targetPaceMaxSecondsPerKm') this.targetPaceMaxSecondsPerKm, @JsonKey(name: 'structuredSteps') final  Map<String, dynamic>? structuredSteps}): _structuredSteps = structuredSteps,super._();
   factory _Workout.fromJson(Map<String, dynamic> json) => _$WorkoutFromJson(json);
 
 @override final  String id;
@@ -1406,6 +1412,12 @@ class _Workout extends Workout {
 @override@JsonKey(name: 'intensityZone') final  String? intensityZone;
 @override@JsonKey(name: 'phase') final  String? phase;
 @override@JsonKey(name: 'targetHrZone') final  int? targetHrZone;
+@override@JsonKey(name: 'targetHrZoneLabel') final  String? targetHrZoneLabel;
+@override@JsonKey(name: 'targetHrMinBpm') final  int? targetHrMinBpm;
+@override@JsonKey(name: 'targetHrMaxBpm') final  int? targetHrMaxBpm;
+@override@JsonKey(name: 'targetPaceZoneLabel') final  String? targetPaceZoneLabel;
+@override@JsonKey(name: 'targetPaceMinSecondsPerKm') final  double? targetPaceMinSecondsPerKm;
+@override@JsonKey(name: 'targetPaceMaxSecondsPerKm') final  double? targetPaceMaxSecondsPerKm;
  final  Map<String, dynamic>? _structuredSteps;
 @override@JsonKey(name: 'structuredSteps') Map<String, dynamic>? get structuredSteps {
   final value = _structuredSteps;
@@ -1429,16 +1441,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Workout&&(identical(other.id, id) || other.id == id)&&(identical(other.goalId, goalId) || other.goalId == goalId)&&(identical(other.scheduledDate, scheduledDate) || other.scheduledDate == scheduledDate)&&(identical(other.workoutType, workoutType) || other.workoutType == workoutType)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetDistance, targetDistance) || other.targetDistance == targetDistance)&&(identical(other.targetPace, targetPace) || other.targetPace == targetPace)&&(identical(other.targetDuration, targetDuration) || other.targetDuration == targetDuration)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.activityId, activityId) || other.activityId == activityId)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.displayDescription, displayDescription) || other.displayDescription == displayDescription)&&(identical(other.intensityZone, intensityZone) || other.intensityZone == intensityZone)&&(identical(other.phase, phase) || other.phase == phase)&&(identical(other.targetHrZone, targetHrZone) || other.targetHrZone == targetHrZone)&&const DeepCollectionEquality().equals(other._structuredSteps, _structuredSteps));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Workout&&(identical(other.id, id) || other.id == id)&&(identical(other.goalId, goalId) || other.goalId == goalId)&&(identical(other.scheduledDate, scheduledDate) || other.scheduledDate == scheduledDate)&&(identical(other.workoutType, workoutType) || other.workoutType == workoutType)&&(identical(other.description, description) || other.description == description)&&(identical(other.targetDistance, targetDistance) || other.targetDistance == targetDistance)&&(identical(other.targetPace, targetPace) || other.targetPace == targetPace)&&(identical(other.targetDuration, targetDuration) || other.targetDuration == targetDuration)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.activityId, activityId) || other.activityId == activityId)&&(identical(other.sport, sport) || other.sport == sport)&&(identical(other.displayDescription, displayDescription) || other.displayDescription == displayDescription)&&(identical(other.intensityZone, intensityZone) || other.intensityZone == intensityZone)&&(identical(other.phase, phase) || other.phase == phase)&&(identical(other.targetHrZone, targetHrZone) || other.targetHrZone == targetHrZone)&&(identical(other.targetHrZoneLabel, targetHrZoneLabel) || other.targetHrZoneLabel == targetHrZoneLabel)&&(identical(other.targetHrMinBpm, targetHrMinBpm) || other.targetHrMinBpm == targetHrMinBpm)&&(identical(other.targetHrMaxBpm, targetHrMaxBpm) || other.targetHrMaxBpm == targetHrMaxBpm)&&(identical(other.targetPaceZoneLabel, targetPaceZoneLabel) || other.targetPaceZoneLabel == targetPaceZoneLabel)&&(identical(other.targetPaceMinSecondsPerKm, targetPaceMinSecondsPerKm) || other.targetPaceMinSecondsPerKm == targetPaceMinSecondsPerKm)&&(identical(other.targetPaceMaxSecondsPerKm, targetPaceMaxSecondsPerKm) || other.targetPaceMaxSecondsPerKm == targetPaceMaxSecondsPerKm)&&const DeepCollectionEquality().equals(other._structuredSteps, _structuredSteps));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,goalId,scheduledDate,workoutType,description,targetDistance,targetPace,targetDuration,isCompleted,completedAt,activityId,sport,displayDescription,intensityZone,phase,targetHrZone,const DeepCollectionEquality().hash(_structuredSteps));
+int get hashCode => Object.hashAll([runtimeType,id,goalId,scheduledDate,workoutType,description,targetDistance,targetPace,targetDuration,isCompleted,completedAt,activityId,sport,displayDescription,intensityZone,phase,targetHrZone,targetHrZoneLabel,targetHrMinBpm,targetHrMaxBpm,targetPaceZoneLabel,targetPaceMinSecondsPerKm,targetPaceMaxSecondsPerKm,const DeepCollectionEquality().hash(_structuredSteps)]);
 
 @override
 String toString() {
-  return 'Workout(id: $id, goalId: $goalId, scheduledDate: $scheduledDate, workoutType: $workoutType, description: $description, targetDistance: $targetDistance, targetPace: $targetPace, targetDuration: $targetDuration, isCompleted: $isCompleted, completedAt: $completedAt, activityId: $activityId, sport: $sport, displayDescription: $displayDescription, intensityZone: $intensityZone, phase: $phase, targetHrZone: $targetHrZone, structuredSteps: $structuredSteps)';
+  return 'Workout(id: $id, goalId: $goalId, scheduledDate: $scheduledDate, workoutType: $workoutType, description: $description, targetDistance: $targetDistance, targetPace: $targetPace, targetDuration: $targetDuration, isCompleted: $isCompleted, completedAt: $completedAt, activityId: $activityId, sport: $sport, displayDescription: $displayDescription, intensityZone: $intensityZone, phase: $phase, targetHrZone: $targetHrZone, targetHrZoneLabel: $targetHrZoneLabel, targetHrMinBpm: $targetHrMinBpm, targetHrMaxBpm: $targetHrMaxBpm, targetPaceZoneLabel: $targetPaceZoneLabel, targetPaceMinSecondsPerKm: $targetPaceMinSecondsPerKm, targetPaceMaxSecondsPerKm: $targetPaceMaxSecondsPerKm, structuredSteps: $structuredSteps)';
 }
 
 
@@ -1449,7 +1461,7 @@ abstract mixin class _$WorkoutCopyWith<$Res> implements $WorkoutCopyWith<$Res> {
   factory _$WorkoutCopyWith(_Workout value, $Res Function(_Workout) _then) = __$WorkoutCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String goalId, DateTime scheduledDate,@JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) WorkoutType workoutType, String description, double targetDistance, double targetPace, int targetDuration, bool isCompleted, DateTime? completedAt, String? activityId, String sport,@JsonKey(name: 'displayDesc') String? displayDescription,@JsonKey(name: 'intensityZone') String? intensityZone,@JsonKey(name: 'phase') String? phase,@JsonKey(name: 'targetHrZone') int? targetHrZone,@JsonKey(name: 'structuredSteps') Map<String, dynamic>? structuredSteps
+ String id, String goalId, DateTime scheduledDate,@JsonKey(fromJson: workoutTypeFromJson, toJson: workoutTypeToJson) WorkoutType workoutType, String description, double targetDistance, double targetPace, int targetDuration, bool isCompleted, DateTime? completedAt, String? activityId, String sport,@JsonKey(name: 'displayDesc') String? displayDescription,@JsonKey(name: 'intensityZone') String? intensityZone,@JsonKey(name: 'phase') String? phase,@JsonKey(name: 'targetHrZone') int? targetHrZone,@JsonKey(name: 'targetHrZoneLabel') String? targetHrZoneLabel,@JsonKey(name: 'targetHrMinBpm') int? targetHrMinBpm,@JsonKey(name: 'targetHrMaxBpm') int? targetHrMaxBpm,@JsonKey(name: 'targetPaceZoneLabel') String? targetPaceZoneLabel,@JsonKey(name: 'targetPaceMinSecondsPerKm') double? targetPaceMinSecondsPerKm,@JsonKey(name: 'targetPaceMaxSecondsPerKm') double? targetPaceMaxSecondsPerKm,@JsonKey(name: 'structuredSteps') Map<String, dynamic>? structuredSteps
 });
 
 
@@ -1466,7 +1478,7 @@ class __$WorkoutCopyWithImpl<$Res>
 
 /// Create a copy of Workout
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? goalId = null,Object? scheduledDate = null,Object? workoutType = null,Object? description = null,Object? targetDistance = null,Object? targetPace = null,Object? targetDuration = null,Object? isCompleted = null,Object? completedAt = freezed,Object? activityId = freezed,Object? sport = null,Object? displayDescription = freezed,Object? intensityZone = freezed,Object? phase = freezed,Object? targetHrZone = freezed,Object? structuredSteps = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? goalId = null,Object? scheduledDate = null,Object? workoutType = null,Object? description = null,Object? targetDistance = null,Object? targetPace = null,Object? targetDuration = null,Object? isCompleted = null,Object? completedAt = freezed,Object? activityId = freezed,Object? sport = null,Object? displayDescription = freezed,Object? intensityZone = freezed,Object? phase = freezed,Object? targetHrZone = freezed,Object? targetHrZoneLabel = freezed,Object? targetHrMinBpm = freezed,Object? targetHrMaxBpm = freezed,Object? targetPaceZoneLabel = freezed,Object? targetPaceMinSecondsPerKm = freezed,Object? targetPaceMaxSecondsPerKm = freezed,Object? structuredSteps = freezed,}) {
   return _then(_Workout(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,goalId: null == goalId ? _self.goalId : goalId // ignore: cast_nullable_to_non_nullable
@@ -1484,7 +1496,13 @@ as String,displayDescription: freezed == displayDescription ? _self.displayDescr
 as String?,intensityZone: freezed == intensityZone ? _self.intensityZone : intensityZone // ignore: cast_nullable_to_non_nullable
 as String?,phase: freezed == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable
 as String?,targetHrZone: freezed == targetHrZone ? _self.targetHrZone : targetHrZone // ignore: cast_nullable_to_non_nullable
-as int?,structuredSteps: freezed == structuredSteps ? _self._structuredSteps : structuredSteps // ignore: cast_nullable_to_non_nullable
+as int?,targetHrZoneLabel: freezed == targetHrZoneLabel ? _self.targetHrZoneLabel : targetHrZoneLabel // ignore: cast_nullable_to_non_nullable
+as String?,targetHrMinBpm: freezed == targetHrMinBpm ? _self.targetHrMinBpm : targetHrMinBpm // ignore: cast_nullable_to_non_nullable
+as int?,targetHrMaxBpm: freezed == targetHrMaxBpm ? _self.targetHrMaxBpm : targetHrMaxBpm // ignore: cast_nullable_to_non_nullable
+as int?,targetPaceZoneLabel: freezed == targetPaceZoneLabel ? _self.targetPaceZoneLabel : targetPaceZoneLabel // ignore: cast_nullable_to_non_nullable
+as String?,targetPaceMinSecondsPerKm: freezed == targetPaceMinSecondsPerKm ? _self.targetPaceMinSecondsPerKm : targetPaceMinSecondsPerKm // ignore: cast_nullable_to_non_nullable
+as double?,targetPaceMaxSecondsPerKm: freezed == targetPaceMaxSecondsPerKm ? _self.targetPaceMaxSecondsPerKm : targetPaceMaxSecondsPerKm // ignore: cast_nullable_to_non_nullable
+as double?,structuredSteps: freezed == structuredSteps ? _self._structuredSteps : structuredSteps // ignore: cast_nullable_to_non_nullable
 as Map<String, dynamic>?,
   ));
 }

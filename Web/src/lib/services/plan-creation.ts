@@ -237,6 +237,12 @@ export function mapWorkoutsForDb(
             targetPace: w.targetPace ?? 0,
             targetDuration: w.targetDuration ?? 0,
             targetHrZone: w.targetHrZone ?? null,
+            targetHrZoneLabel: w.targetHrZoneLabel ?? null,
+            targetHrMinBpm: w.targetHrMinBpm ?? null,
+            targetHrMaxBpm: w.targetHrMaxBpm ?? null,
+            targetPaceZoneLabel: w.targetPaceZoneLabel ?? null,
+            targetPaceMinSecondsPerKm: w.targetPaceMinSecondsPerKm ?? null,
+            targetPaceMaxSecondsPerKm: w.targetPaceMaxSecondsPerKm ?? null,
             phase: w.phase ?? 'BASE',
             isCompleted: false,
             ...(structuredSteps && { structuredSteps }),
@@ -579,6 +585,14 @@ export interface CreatePlanInput {
     thresholdHeartRate?: number | null;
     thresholdPaceSecondsPerKm?: number | null;
     hrZoneMethod?: string | null;
+    hrZone1Max?: number | null;
+    hrZone2Max?: number | null;
+    hrZone3Max?: number | null;
+    hrZone4Max?: number | null;
+    hrZone5Max?: number | null;
+    hrZone6Max?: number | null;
+    hrMax?: number | null;
+    hrRest?: number | null;
 }
 
 export interface CreatePlanResult {
@@ -627,6 +641,16 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         customSwimDistM, customBikeDistM, customRunDistM,
         subGoals,
         startWeeklyMileage,
+        thresholdHeartRate,
+        hrZoneMethod,
+        hrZone1Max,
+        hrZone2Max,
+        hrZone3Max,
+        hrZone4Max,
+        hrZone5Max,
+        hrZone6Max,
+        hrMax,
+        hrRest,
     } = input;
 
     let weeklyMileageGoal = input.weeklyMileageGoal ?? null;
@@ -803,6 +827,16 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         swimDay: typeof swimDay === 'number' ? swimDay : undefined,
         restDays: Array.isArray(restDays) ? restDays : undefined,
         weeksTotal: resolvedPlanWeeks,
+        thresholdHeartRate: thresholdHeartRate ?? null,
+        hrZoneMethod: hrZoneMethod ?? null,
+        hrZone1Max: hrZone1Max ?? null,
+        hrZone2Max: hrZone2Max ?? null,
+        hrZone3Max: hrZone3Max ?? null,
+        hrZone4Max: hrZone4Max ?? null,
+        hrZone5Max: hrZone5Max ?? null,
+        hrZone6Max: hrZone6Max ?? null,
+        hrMax: hrMax ?? null,
+        hrRest: hrRest ?? null,
     };
 
     const workouts = generateTrainingPlan(planConfig);
@@ -881,6 +915,16 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                         swimDay: swimDay ?? undefined,
                         restDays: restDays ?? undefined,
                         weeksTotal: weeksAvailable,
+                        thresholdHeartRate: thresholdHeartRate ?? null,
+                        hrZoneMethod: hrZoneMethod ?? null,
+                        hrZone1Max: hrZone1Max ?? null,
+                        hrZone2Max: hrZone2Max ?? null,
+                        hrZone3Max: hrZone3Max ?? null,
+                        hrZone4Max: hrZone4Max ?? null,
+                        hrZone5Max: hrZone5Max ?? null,
+                        hrZone6Max: hrZone6Max ?? null,
+                        hrMax: hrMax ?? null,
+                        hrRest: hrRest ?? null,
                     });
 
                     const parentRaceDate = raceDate ? new Date(raceDate) : null;

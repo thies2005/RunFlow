@@ -190,18 +190,18 @@ export default function HeartRateZonesSection({
                         </div>
                     )}
 
-                    {/* Manual Zone Overrides (% of Max HR) */}
+                    {/* Manual Zone Overrides (BPM) */}
                     <div>
-                        <p className="text-xs text-foreground-muted mb-3">Zone thresholds (% of Max HR) - Manual override</p>
+                        <p className="text-xs text-foreground-muted mb-3">Zone thresholds (BPM) - Manual override</p>
                         <div className="grid grid-cols-6 gap-2">
                             <div>
                                 <label className="block text-xs text-green-400 mb-1 text-center">Z1</label>
                                 <input
                                     type="number"
                                     value={zone1Max}
-                                    onChange={e => setZone1Max(parseInt(e.target.value) || 60)}
+                                    onChange={e => setZone1Max(parseInt(e.target.value) || 130)}
                                     className={`${inputClass} text-center text-sm px-1`}
-                                    min="50" max="70"
+                                    min="80" max="160"
                                 />
                             </div>
                             <div>
@@ -209,9 +209,9 @@ export default function HeartRateZonesSection({
                                 <input
                                     type="number"
                                     value={zone2Max}
-                                    onChange={e => setZone2Max(parseInt(e.target.value) || 70)}
+                                    onChange={e => setZone2Max(parseInt(e.target.value) || 148)}
                                     className={`${inputClass} text-center text-sm px-1`}
-                                    min="60" max="80"
+                                    min="100" max="175"
                                 />
                             </div>
                             <div>
@@ -219,9 +219,9 @@ export default function HeartRateZonesSection({
                                 <input
                                     type="number"
                                     value={zone3Max}
-                                    onChange={e => setZone3Max(parseInt(e.target.value) || 80)}
+                                    onChange={e => setZone3Max(parseInt(e.target.value) || 160)}
                                     className={`${inputClass} text-center text-sm px-1`}
-                                    min="70" max="90"
+                                    min="110" max="185"
                                 />
                             </div>
                             <div>
@@ -229,9 +229,9 @@ export default function HeartRateZonesSection({
                                 <input
                                     type="number"
                                     value={zone4Max}
-                                    onChange={e => setZone4Max(parseInt(e.target.value) || 90)}
+                                    onChange={e => setZone4Max(parseInt(e.target.value) || 170)}
                                     className={`${inputClass} text-center text-sm px-1`}
-                                    min="80" max="100"
+                                    min="120" max="200"
                                 />
                             </div>
                             <div>
@@ -239,9 +239,9 @@ export default function HeartRateZonesSection({
                                 <input
                                     type="number"
                                     value={zone5Max}
-                                    onChange={e => setZone5Max(parseInt(e.target.value) || 95)}
+                                    onChange={e => setZone5Max(parseInt(e.target.value) || 178)}
                                     className={`${inputClass} text-center text-sm px-1`}
-                                    min="85" max="105"
+                                    min="130" max="210"
                                 />
                             </div>
                             <div>
@@ -249,9 +249,9 @@ export default function HeartRateZonesSection({
                                 <input
                                     type="number"
                                     value={zone6Max}
-                                    onChange={e => setZone6Max(parseInt(e.target.value) || 100)}
+                                    onChange={e => setZone6Max(parseInt(e.target.value) || 187)}
                                     className={`${inputClass} text-center text-sm px-1`}
-                                    min="90" max="110"
+                                    min="140" max="220"
                                 />
                             </div>
                         </div>

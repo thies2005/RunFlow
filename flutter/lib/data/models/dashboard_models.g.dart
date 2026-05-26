@@ -166,6 +166,14 @@ _Workout _$WorkoutFromJson(Map<String, dynamic> json) => _Workout(
   intensityZone: json['intensityZone'] as String?,
   phase: json['phase'] as String?,
   targetHrZone: (json['targetHrZone'] as num?)?.toInt(),
+  targetHrZoneLabel: json['targetHrZoneLabel'] as String?,
+  targetHrMinBpm: (json['targetHrMinBpm'] as num?)?.toInt(),
+  targetHrMaxBpm: (json['targetHrMaxBpm'] as num?)?.toInt(),
+  targetPaceZoneLabel: json['targetPaceZoneLabel'] as String?,
+  targetPaceMinSecondsPerKm: (json['targetPaceMinSecondsPerKm'] as num?)
+      ?.toDouble(),
+  targetPaceMaxSecondsPerKm: (json['targetPaceMaxSecondsPerKm'] as num?)
+      ?.toDouble(),
   structuredSteps: json['structuredSteps'] as Map<String, dynamic>?,
 );
 
@@ -186,6 +194,12 @@ Map<String, dynamic> _$WorkoutToJson(_Workout instance) => <String, dynamic>{
   'intensityZone': instance.intensityZone,
   'phase': instance.phase,
   'targetHrZone': instance.targetHrZone,
+  'targetHrZoneLabel': instance.targetHrZoneLabel,
+  'targetHrMinBpm': instance.targetHrMinBpm,
+  'targetHrMaxBpm': instance.targetHrMaxBpm,
+  'targetPaceZoneLabel': instance.targetPaceZoneLabel,
+  'targetPaceMinSecondsPerKm': instance.targetPaceMinSecondsPerKm,
+  'targetPaceMaxSecondsPerKm': instance.targetPaceMaxSecondsPerKm,
   'structuredSteps': instance.structuredSteps,
 };
 

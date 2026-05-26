@@ -1,4 +1,5 @@
 import { calculateTrainingPaces, TrainingPaces } from '../metrics/vdot';
+import { getZoneTarget, resolveHrZones, type HrZoneInput } from '../metrics/hr-zones';
 import { prisma } from '@/lib/db';
 
 function getPaceForType(paces: TrainingPaces, type: string): number | null {
@@ -23,6 +24,54 @@ function getPaceForType(paces: TrainingPaces, type: string): number | null {
     }
 }
 
+function getPaceTargetLabel(type: string): string | null {
+    switch (type) {
+        case 'EASY':
+        case 'LONG_RUN':
+        case 'RECOVERY':
+            return 'Easy';
+        case 'TEMPO':
+            return 'Threshold';
+        case 'INTERVALS':
+            return 'Interval';
+        case 'REPETITIONS':
+            return 'Repetition';
+        case 'FARTLEK':
+            return 'Fartlek';
+        default:
+            return null;
+    }
+}
+
+function paceWindow(paceSecondsPerKm: number, fraction: number): { min: number; max: number } {
+    return {
+        min: Math.round(paceSecondsPerKm * (1 - fraction)),
+        max: Math.round(paceSecondsPerKm * (1 + fraction)),
+    };
+}
+
+function getPaceTargetRange(type: string, paces: TrainingPaces, targetPace: number): { min: number; max: number } | null {
+    switch (type) {
+        case 'EASY':
+        case 'LONG_RUN':
+        case 'RECOVERY':
+            return { min: paces.easy.min, max: paces.easy.max };
+        case 'TEMPO':
+            return paceWindow(paces.threshold, 0.03);
+        case 'INTERVALS':
+            return paceWindow(paces.interval, 0.02);
+        case 'REPETITIONS':
+            return paceWindow(paces.repetition, 0.02);
+        case 'FARTLEK':
+            return {
+                min: Math.min(paces.interval, paces.threshold),
+                max: Math.max(paces.interval, paces.threshold),
+            };
+        default:
+            return paceWindow(targetPace, 0.03);
+    }
+}
+
 interface RecalculationResult {
     updatedCount: number;
     skippedCount: number;
@@ -31,9 +80,11 @@ interface RecalculationResult {
 
 export async function recalculateWorkoutPaces(
     goalId: string,
-    newVdot: number
+    newVdot: number,
+    hrInput?: HrZoneInput
 ): Promise<RecalculationResult> {
     const paces = calculateTrainingPaces(newVdot);
+    const hrZones = hrInput ? resolveHrZones(hrInput).zones : null;
 
     let updatedCount = 0;
     let skippedCount = 0;
@@ -48,11 +99,51 @@ export async function recalculateWorkoutPaces(
             continue;
         }
 
-        const res = await prisma.workout.updateMany({
+        const workouts = await prisma.workout.findMany({
             where: { goalId, workoutType: type as any, isCompleted: false },
-            data: { targetPace: newPace },
+            select: { id: true, targetHrZone: true },
         });
-        updatedCount += res.count;
+        for (const workout of workouts) {
+            const hrTarget = getZoneTarget(workout.targetHrZone, hrZones);
+            const paceLabel = getPaceTargetLabel(type);
+            const paceRange = getPaceTargetRange(type, paces, newPace);
+            await prisma.workout.update({
+                where: { id: workout.id },
+                data: {
+                    targetPace: newPace,
+                    ...(paceLabel && { targetPaceZoneLabel: paceLabel }),
+                    ...(paceRange && {
+                        targetPaceMinSecondsPerKm: paceRange.min,
+                        targetPaceMaxSecondsPerKm: paceRange.max,
+                    }),
+                    ...(hrTarget && {
+                        targetHrZoneLabel: hrTarget.label,
+                        targetHrMinBpm: hrTarget.min,
+                        targetHrMaxBpm: hrTarget.max,
+                    }),
+                },
+            });
+            updatedCount++;
+        }
+    }
+
+    if (hrZones) {
+        const remaining = await prisma.workout.findMany({
+            where: { goalId, isCompleted: false, targetHrZone: { not: null } },
+            select: { id: true, targetHrZone: true },
+        });
+        for (const workout of remaining) {
+            const hrTarget = getZoneTarget(workout.targetHrZone, hrZones);
+            if (!hrTarget) continue;
+            await prisma.workout.update({
+                where: { id: workout.id },
+                data: {
+                    targetHrZoneLabel: hrTarget.label,
+                    targetHrMinBpm: hrTarget.min,
+                    targetHrMaxBpm: hrTarget.max,
+                },
+            });
+        }
     }
 
     await prisma.$executeRaw`

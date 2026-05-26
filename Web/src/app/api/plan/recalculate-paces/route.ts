@@ -39,7 +39,32 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Goal not found' }, { status: 404 });
         }
 
-        const result = await recalculateWorkoutPaces(goalId, newVdot);
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: {
+                hrMax: true,
+                hrRest: true,
+                thresholdHeartRate: true,
+                hrZone1Max: true,
+                hrZone2Max: true,
+                hrZone3Max: true,
+                hrZone4Max: true,
+                hrZone5Max: true,
+                hrZone6Max: true,
+            },
+        });
+
+        const result = await recalculateWorkoutPaces(goalId, newVdot, {
+            thresholdHeartRate: user?.thresholdHeartRate ?? null,
+            hrZone1Max: user?.hrZone1Max ?? null,
+            hrZone2Max: user?.hrZone2Max ?? null,
+            hrZone3Max: user?.hrZone3Max ?? null,
+            hrZone4Max: user?.hrZone4Max ?? null,
+            hrZone5Max: user?.hrZone5Max ?? null,
+            hrZone6Max: user?.hrZone6Max ?? null,
+            hrMax: user?.hrMax ?? null,
+            hrRest: user?.hrRest ?? null,
+        });
 
         return NextResponse.json(result, { headers: rateLimitHeaders(rateLimitResult) });
     } catch (error) {

@@ -123,6 +123,13 @@ void main() {
             'targetDistance': 5000.0,
             'targetPace': 360.0,
             'targetDuration': 1800,
+            'targetHrZone': 2,
+            'targetHrZoneLabel': 'Z2 Aerobic',
+            'targetHrMinBpm': 128,
+            'targetHrMaxBpm': 148,
+            'targetPaceZoneLabel': 'Easy',
+            'targetPaceMinSecondsPerKm': 330.0,
+            'targetPaceMaxSecondsPerKm': 390.0,
             'isCompleted': false,
             'completedAt': null,
             'activityId': null,
@@ -155,6 +162,12 @@ void main() {
       expect(response.workouts.length, 2);
       expect(response.workouts.first.workoutType, WorkoutType.easy);
       expect(response.workouts.first.isCompleted, false);
+      expect(response.workouts.first.targetHrZoneLabel, 'Z2 Aerobic');
+      expect(response.workouts.first.targetHrMinBpm, 128);
+      expect(response.workouts.first.targetHrMaxBpm, 148);
+      expect(response.workouts.first.targetPaceZoneLabel, 'Easy');
+      expect(response.workouts.first.targetPaceMinSecondsPerKm, 330.0);
+      expect(response.workouts.first.targetPaceMaxSecondsPerKm, 390.0);
       expect(response.workouts.first.structuredSteps?['source'], 'generated-plan');
       expect(response.workouts.last.workoutType, WorkoutType.tempo);
       expect(response.workouts.last.isCompleted, true);
@@ -173,6 +186,12 @@ void main() {
             'targetDistance': 18000.0,
             'targetPace': 360.0,
             'targetDuration': 6480,
+            'targetHrZoneLabel': 'Z2 Aerobic',
+            'targetHrMinBpm': 128,
+            'targetHrMaxBpm': 148,
+            'targetPaceZoneLabel': 'Easy',
+            'targetPaceMinSecondsPerKm': 330.0,
+            'targetPaceMaxSecondsPerKm': 390.0,
             'isCompleted': false,
             'completedAt': null,
             'activityId': null,
@@ -189,6 +208,9 @@ void main() {
       expect(restored.workouts.length, original.workouts.length);
       expect(restored.workouts.first.id, 'w1');
       expect(restored.workouts.first.workoutType, WorkoutType.longRun);
+      expect(restored.workouts.first.targetHrZoneLabel, 'Z2 Aerobic');
+      expect(restored.workouts.first.targetPaceZoneLabel, 'Easy');
+      expect(restored.workouts.first.targetPaceMinSecondsPerKm, 330.0);
     });
 
     test('maps newer backend workout types compatibly', () {

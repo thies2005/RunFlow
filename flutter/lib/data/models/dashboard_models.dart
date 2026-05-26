@@ -226,6 +226,12 @@ sealed class Workout with _$Workout {
     @JsonKey(name: 'intensityZone') String? intensityZone,
     @JsonKey(name: 'phase') String? phase,
     @JsonKey(name: 'targetHrZone') int? targetHrZone,
+    @JsonKey(name: 'targetHrZoneLabel') String? targetHrZoneLabel,
+    @JsonKey(name: 'targetHrMinBpm') int? targetHrMinBpm,
+    @JsonKey(name: 'targetHrMaxBpm') int? targetHrMaxBpm,
+    @JsonKey(name: 'targetPaceZoneLabel') String? targetPaceZoneLabel,
+    @JsonKey(name: 'targetPaceMinSecondsPerKm') double? targetPaceMinSecondsPerKm,
+    @JsonKey(name: 'targetPaceMaxSecondsPerKm') double? targetPaceMaxSecondsPerKm,
     @JsonKey(name: 'structuredSteps') Map<String, dynamic>? structuredSteps,
   }) = _Workout;
   const Workout._();

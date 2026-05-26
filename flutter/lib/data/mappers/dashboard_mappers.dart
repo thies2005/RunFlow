@@ -172,6 +172,12 @@ extension WorkoutMapper on Workout {
         intensityZone: intensityZone,
         phase: phase,
         targetHrZone: targetHrZone,
+        targetHrZoneLabel: targetHrZoneLabel,
+        targetHrMinBpm: targetHrMinBpm,
+        targetHrMaxBpm: targetHrMaxBpm,
+        targetPaceZoneLabel: targetPaceZoneLabel,
+        targetPaceMinSecondsPerKm: targetPaceMinSecondsPerKm,
+        targetPaceMaxSecondsPerKm: targetPaceMaxSecondsPerKm,
         structuredSteps: structuredSteps,
       );
 }
@@ -194,6 +200,12 @@ extension DomainWorkoutMapper on domain.Workout {
         intensityZone: intensityZone,
         phase: phase,
         targetHrZone: targetHrZone,
+        targetHrZoneLabel: targetHrZoneLabel,
+        targetHrMinBpm: targetHrMinBpm,
+        targetHrMaxBpm: targetHrMaxBpm,
+        targetPaceZoneLabel: targetPaceZoneLabel,
+        targetPaceMinSecondsPerKm: targetPaceMinSecondsPerKm,
+        targetPaceMaxSecondsPerKm: targetPaceMaxSecondsPerKm,
         structuredSteps: structuredSteps,
       );
 }

@@ -6,6 +6,29 @@ String formatPace(double? secondsPerKm) {
   return '$minutes:${seconds.toString().padLeft(2, '0')} /km';
 }
 
+String formatPaceRange(
+  double? minSecondsPerKm,
+  double? maxSecondsPerKm, {
+  double? fallbackSecondsPerKm,
+}) {
+  final min = minSecondsPerKm;
+  final max = maxSecondsPerKm;
+  if (min != null && min > 0 && max != null && max > 0) {
+    if ((min - max).abs() < 0.5) return formatPace(min);
+    return '${formatPace(min)} - ${formatPace(max)}';
+  }
+  return formatPace(fallbackSecondsPerKm);
+}
+
+String formatHrTarget(String? label, int? minBpm, int? maxBpm, int? fallbackZone) {
+  final resolvedLabel = label ?? (fallbackZone != null ? 'Z$fallbackZone' : null);
+  if (resolvedLabel == null) return '';
+  if (minBpm != null && maxBpm != null) return '$resolvedLabel, $minBpm-$maxBpm bpm';
+  if (minBpm != null) return '$resolvedLabel, $minBpm+ bpm';
+  if (maxBpm != null) return '$resolvedLabel, up to $maxBpm bpm';
+  return resolvedLabel;
+}
+
 String formatDistance(double meters) {
   if (meters >= 1000) {
     return '${(meters / 1000).toStringAsFixed(2)} km';

@@ -423,6 +423,12 @@ class Workout {
     this.intensityZone,
     this.phase,
     this.targetHrZone,
+    this.targetHrZoneLabel,
+    this.targetHrMinBpm,
+    this.targetHrMaxBpm,
+    this.targetPaceZoneLabel,
+    this.targetPaceMinSecondsPerKm,
+    this.targetPaceMaxSecondsPerKm,
     this.structuredSteps,
   });
 
@@ -442,6 +448,12 @@ class Workout {
   final String? intensityZone;
   final String? phase;
   final int? targetHrZone;
+  final String? targetHrZoneLabel;
+  final int? targetHrMinBpm;
+  final int? targetHrMaxBpm;
+  final String? targetPaceZoneLabel;
+  final double? targetPaceMinSecondsPerKm;
+  final double? targetPaceMaxSecondsPerKm;
   final Map<String, dynamic>? structuredSteps;
 
   Workout copyWith({
@@ -461,6 +473,12 @@ class Workout {
     String? intensityZone,
     String? phase,
     int? targetHrZone,
+    String? targetHrZoneLabel,
+    int? targetHrMinBpm,
+    int? targetHrMaxBpm,
+    String? targetPaceZoneLabel,
+    double? targetPaceMinSecondsPerKm,
+    double? targetPaceMaxSecondsPerKm,
     Map<String, dynamic>? structuredSteps,
   }) {
     return Workout(
@@ -480,6 +498,12 @@ class Workout {
       intensityZone: intensityZone ?? this.intensityZone,
       phase: phase ?? this.phase,
       targetHrZone: targetHrZone ?? this.targetHrZone,
+      targetHrZoneLabel: targetHrZoneLabel ?? this.targetHrZoneLabel,
+      targetHrMinBpm: targetHrMinBpm ?? this.targetHrMinBpm,
+      targetHrMaxBpm: targetHrMaxBpm ?? this.targetHrMaxBpm,
+      targetPaceZoneLabel: targetPaceZoneLabel ?? this.targetPaceZoneLabel,
+      targetPaceMinSecondsPerKm: targetPaceMinSecondsPerKm ?? this.targetPaceMinSecondsPerKm,
+      targetPaceMaxSecondsPerKm: targetPaceMaxSecondsPerKm ?? this.targetPaceMaxSecondsPerKm,
       structuredSteps: structuredSteps ?? this.structuredSteps,
     );
   }
@@ -505,10 +529,16 @@ class Workout {
           intensityZone == other.intensityZone &&
           phase == other.phase &&
           targetHrZone == other.targetHrZone &&
+          targetHrZoneLabel == other.targetHrZoneLabel &&
+          targetHrMinBpm == other.targetHrMinBpm &&
+          targetHrMaxBpm == other.targetHrMaxBpm &&
+          targetPaceZoneLabel == other.targetPaceZoneLabel &&
+          targetPaceMinSecondsPerKm == other.targetPaceMinSecondsPerKm &&
+          targetPaceMaxSecondsPerKm == other.targetPaceMaxSecondsPerKm &&
           mapEquals(structuredSteps, other.structuredSteps);
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
         id,
         goalId,
         scheduledDate,
@@ -525,8 +555,14 @@ class Workout {
         intensityZone,
         phase,
         targetHrZone,
+        targetHrZoneLabel,
+        targetHrMinBpm,
+        targetHrMaxBpm,
+        targetPaceZoneLabel,
+        targetPaceMinSecondsPerKm,
+        targetPaceMaxSecondsPerKm,
         structuredSteps,
-      );
+      ]);
 }
 
 class SubGoal {

@@ -32,6 +32,10 @@ export type WorkoutAvgAggregateOutputType = {
   targetDuration: number | null
   targetPace: number | null
   targetHrZone: number | null
+  targetHrMinBpm: number | null
+  targetHrMaxBpm: number | null
+  targetPaceMinSecondsPerKm: number | null
+  targetPaceMaxSecondsPerKm: number | null
 }
 
 export type WorkoutSumAggregateOutputType = {
@@ -40,6 +44,10 @@ export type WorkoutSumAggregateOutputType = {
   targetDuration: number | null
   targetPace: number | null
   targetHrZone: number | null
+  targetHrMinBpm: number | null
+  targetHrMaxBpm: number | null
+  targetPaceMinSecondsPerKm: number | null
+  targetPaceMaxSecondsPerKm: number | null
 }
 
 export type WorkoutMinAggregateOutputType = {
@@ -55,6 +63,12 @@ export type WorkoutMinAggregateOutputType = {
   targetDuration: number | null
   targetPace: number | null
   targetHrZone: number | null
+  targetHrZoneLabel: string | null
+  targetHrMinBpm: number | null
+  targetHrMaxBpm: number | null
+  targetPaceZoneLabel: string | null
+  targetPaceMinSecondsPerKm: number | null
+  targetPaceMaxSecondsPerKm: number | null
   isCompleted: boolean | null
   completedAt: Date | null
   linkedActivityId: string | null
@@ -83,6 +97,12 @@ export type WorkoutMaxAggregateOutputType = {
   targetDuration: number | null
   targetPace: number | null
   targetHrZone: number | null
+  targetHrZoneLabel: string | null
+  targetHrMinBpm: number | null
+  targetHrMaxBpm: number | null
+  targetPaceZoneLabel: string | null
+  targetPaceMinSecondsPerKm: number | null
+  targetPaceMaxSecondsPerKm: number | null
   isCompleted: boolean | null
   completedAt: Date | null
   linkedActivityId: string | null
@@ -111,6 +131,12 @@ export type WorkoutCountAggregateOutputType = {
   targetDuration: number
   targetPace: number
   targetHrZone: number
+  targetHrZoneLabel: number
+  targetHrMinBpm: number
+  targetHrMaxBpm: number
+  targetPaceZoneLabel: number
+  targetPaceMinSecondsPerKm: number
+  targetPaceMaxSecondsPerKm: number
   isCompleted: number
   completedAt: number
   linkedActivityId: number
@@ -135,6 +161,10 @@ export type WorkoutAvgAggregateInputType = {
   targetDuration?: true
   targetPace?: true
   targetHrZone?: true
+  targetHrMinBpm?: true
+  targetHrMaxBpm?: true
+  targetPaceMinSecondsPerKm?: true
+  targetPaceMaxSecondsPerKm?: true
 }
 
 export type WorkoutSumAggregateInputType = {
@@ -143,6 +173,10 @@ export type WorkoutSumAggregateInputType = {
   targetDuration?: true
   targetPace?: true
   targetHrZone?: true
+  targetHrMinBpm?: true
+  targetHrMaxBpm?: true
+  targetPaceMinSecondsPerKm?: true
+  targetPaceMaxSecondsPerKm?: true
 }
 
 export type WorkoutMinAggregateInputType = {
@@ -158,6 +192,12 @@ export type WorkoutMinAggregateInputType = {
   targetDuration?: true
   targetPace?: true
   targetHrZone?: true
+  targetHrZoneLabel?: true
+  targetHrMinBpm?: true
+  targetHrMaxBpm?: true
+  targetPaceZoneLabel?: true
+  targetPaceMinSecondsPerKm?: true
+  targetPaceMaxSecondsPerKm?: true
   isCompleted?: true
   completedAt?: true
   linkedActivityId?: true
@@ -186,6 +226,12 @@ export type WorkoutMaxAggregateInputType = {
   targetDuration?: true
   targetPace?: true
   targetHrZone?: true
+  targetHrZoneLabel?: true
+  targetHrMinBpm?: true
+  targetHrMaxBpm?: true
+  targetPaceZoneLabel?: true
+  targetPaceMinSecondsPerKm?: true
+  targetPaceMaxSecondsPerKm?: true
   isCompleted?: true
   completedAt?: true
   linkedActivityId?: true
@@ -214,6 +260,12 @@ export type WorkoutCountAggregateInputType = {
   targetDuration?: true
   targetPace?: true
   targetHrZone?: true
+  targetHrZoneLabel?: true
+  targetHrMinBpm?: true
+  targetHrMaxBpm?: true
+  targetPaceZoneLabel?: true
+  targetPaceMinSecondsPerKm?: true
+  targetPaceMaxSecondsPerKm?: true
   isCompleted?: true
   completedAt?: true
   linkedActivityId?: true
@@ -330,6 +382,12 @@ export type WorkoutGroupByOutputType = {
   targetDuration: number | null
   targetPace: number | null
   targetHrZone: number | null
+  targetHrZoneLabel: string | null
+  targetHrMinBpm: number | null
+  targetHrMaxBpm: number | null
+  targetPaceZoneLabel: string | null
+  targetPaceMinSecondsPerKm: number | null
+  targetPaceMaxSecondsPerKm: number | null
   isCompleted: boolean
   completedAt: Date | null
   linkedActivityId: string | null
@@ -382,6 +440,12 @@ export type WorkoutWhereInput = {
   targetDuration?: Prisma.IntNullableFilter<"Workout"> | number | null
   targetPace?: Prisma.FloatNullableFilter<"Workout"> | number | null
   targetHrZone?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetHrZoneLabel?: Prisma.StringNullableFilter<"Workout"> | string | null
+  targetHrMinBpm?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetHrMaxBpm?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPaceZoneLabel?: Prisma.StringNullableFilter<"Workout"> | string | null
+  targetPaceMinSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
   isCompleted?: Prisma.BoolFilter<"Workout"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Workout"> | Date | string | null
   linkedActivityId?: Prisma.StringNullableFilter<"Workout"> | string | null
@@ -415,6 +479,12 @@ export type WorkoutOrderByWithRelationInput = {
   targetDuration?: Prisma.SortOrderInput | Prisma.SortOrder
   targetPace?: Prisma.SortOrderInput | Prisma.SortOrder
   targetHrZone?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetHrZoneLabel?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetHrMinBpm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetHrMaxBpm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPaceZoneLabel?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPaceMinSecondsPerKm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPaceMaxSecondsPerKm?: Prisma.SortOrderInput | Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -451,6 +521,12 @@ export type WorkoutWhereUniqueInput = Prisma.AtLeast<{
   targetDuration?: Prisma.IntNullableFilter<"Workout"> | number | null
   targetPace?: Prisma.FloatNullableFilter<"Workout"> | number | null
   targetHrZone?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetHrZoneLabel?: Prisma.StringNullableFilter<"Workout"> | string | null
+  targetHrMinBpm?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetHrMaxBpm?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPaceZoneLabel?: Prisma.StringNullableFilter<"Workout"> | string | null
+  targetPaceMinSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
   isCompleted?: Prisma.BoolFilter<"Workout"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Workout"> | Date | string | null
   linkedActivityId?: Prisma.StringNullableFilter<"Workout"> | string | null
@@ -484,6 +560,12 @@ export type WorkoutOrderByWithAggregationInput = {
   targetDuration?: Prisma.SortOrderInput | Prisma.SortOrder
   targetPace?: Prisma.SortOrderInput | Prisma.SortOrder
   targetHrZone?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetHrZoneLabel?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetHrMinBpm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetHrMaxBpm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPaceZoneLabel?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPaceMinSecondsPerKm?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetPaceMaxSecondsPerKm?: Prisma.SortOrderInput | Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -521,6 +603,12 @@ export type WorkoutScalarWhereWithAggregatesInput = {
   targetDuration?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
   targetPace?: Prisma.FloatNullableWithAggregatesFilter<"Workout"> | number | null
   targetHrZone?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
+  targetHrZoneLabel?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
+  targetHrMinBpm?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
+  targetHrMaxBpm?: Prisma.IntNullableWithAggregatesFilter<"Workout"> | number | null
+  targetPaceZoneLabel?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
+  targetPaceMinSecondsPerKm?: Prisma.FloatNullableWithAggregatesFilter<"Workout"> | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.FloatNullableWithAggregatesFilter<"Workout"> | number | null
   isCompleted?: Prisma.BoolWithAggregatesFilter<"Workout"> | boolean
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Workout"> | Date | string | null
   linkedActivityId?: Prisma.StringNullableWithAggregatesFilter<"Workout"> | string | null
@@ -549,6 +637,12 @@ export type WorkoutCreateInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -579,6 +673,12 @@ export type WorkoutUncheckedCreateInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -607,6 +707,12 @@ export type WorkoutUpdateInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -637,6 +743,12 @@ export type WorkoutUncheckedUpdateInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -666,6 +778,12 @@ export type WorkoutCreateManyInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -694,6 +812,12 @@ export type WorkoutUpdateManyMutationInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -720,6 +844,12 @@ export type WorkoutUncheckedUpdateManyInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -759,6 +889,12 @@ export type WorkoutCountOrderByAggregateInput = {
   targetDuration?: Prisma.SortOrder
   targetPace?: Prisma.SortOrder
   targetHrZone?: Prisma.SortOrder
+  targetHrZoneLabel?: Prisma.SortOrder
+  targetHrMinBpm?: Prisma.SortOrder
+  targetHrMaxBpm?: Prisma.SortOrder
+  targetPaceZoneLabel?: Prisma.SortOrder
+  targetPaceMinSecondsPerKm?: Prisma.SortOrder
+  targetPaceMaxSecondsPerKm?: Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrder
@@ -781,6 +917,10 @@ export type WorkoutAvgOrderByAggregateInput = {
   targetDuration?: Prisma.SortOrder
   targetPace?: Prisma.SortOrder
   targetHrZone?: Prisma.SortOrder
+  targetHrMinBpm?: Prisma.SortOrder
+  targetHrMaxBpm?: Prisma.SortOrder
+  targetPaceMinSecondsPerKm?: Prisma.SortOrder
+  targetPaceMaxSecondsPerKm?: Prisma.SortOrder
 }
 
 export type WorkoutMaxOrderByAggregateInput = {
@@ -796,6 +936,12 @@ export type WorkoutMaxOrderByAggregateInput = {
   targetDuration?: Prisma.SortOrder
   targetPace?: Prisma.SortOrder
   targetHrZone?: Prisma.SortOrder
+  targetHrZoneLabel?: Prisma.SortOrder
+  targetHrMinBpm?: Prisma.SortOrder
+  targetHrMaxBpm?: Prisma.SortOrder
+  targetPaceZoneLabel?: Prisma.SortOrder
+  targetPaceMinSecondsPerKm?: Prisma.SortOrder
+  targetPaceMaxSecondsPerKm?: Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrder
@@ -824,6 +970,12 @@ export type WorkoutMinOrderByAggregateInput = {
   targetDuration?: Prisma.SortOrder
   targetPace?: Prisma.SortOrder
   targetHrZone?: Prisma.SortOrder
+  targetHrZoneLabel?: Prisma.SortOrder
+  targetHrMinBpm?: Prisma.SortOrder
+  targetHrMaxBpm?: Prisma.SortOrder
+  targetPaceZoneLabel?: Prisma.SortOrder
+  targetPaceMinSecondsPerKm?: Prisma.SortOrder
+  targetPaceMaxSecondsPerKm?: Prisma.SortOrder
   isCompleted?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   linkedActivityId?: Prisma.SortOrder
@@ -845,6 +997,10 @@ export type WorkoutSumOrderByAggregateInput = {
   targetDuration?: Prisma.SortOrder
   targetPace?: Prisma.SortOrder
   targetHrZone?: Prisma.SortOrder
+  targetHrMinBpm?: Prisma.SortOrder
+  targetHrMaxBpm?: Prisma.SortOrder
+  targetPaceMinSecondsPerKm?: Prisma.SortOrder
+  targetPaceMaxSecondsPerKm?: Prisma.SortOrder
 }
 
 export type WorkoutCreateNestedManyWithoutLinkedActivityInput = {
@@ -1035,6 +1191,12 @@ export type WorkoutCreateWithoutLinkedActivityInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1064,6 +1226,12 @@ export type WorkoutUncheckedCreateWithoutLinkedActivityInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1121,6 +1289,12 @@ export type WorkoutScalarWhereInput = {
   targetDuration?: Prisma.IntNullableFilter<"Workout"> | number | null
   targetPace?: Prisma.FloatNullableFilter<"Workout"> | number | null
   targetHrZone?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetHrZoneLabel?: Prisma.StringNullableFilter<"Workout"> | string | null
+  targetHrMinBpm?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetHrMaxBpm?: Prisma.IntNullableFilter<"Workout"> | number | null
+  targetPaceZoneLabel?: Prisma.StringNullableFilter<"Workout"> | string | null
+  targetPaceMinSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.FloatNullableFilter<"Workout"> | number | null
   isCompleted?: Prisma.BoolFilter<"Workout"> | boolean
   completedAt?: Prisma.DateTimeNullableFilter<"Workout"> | Date | string | null
   linkedActivityId?: Prisma.StringNullableFilter<"Workout"> | string | null
@@ -1149,6 +1323,12 @@ export type WorkoutCreateWithoutGoalInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1177,6 +1357,12 @@ export type WorkoutUncheckedCreateWithoutGoalInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1215,6 +1401,12 @@ export type WorkoutCreateWithoutSubGoalInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1244,6 +1436,12 @@ export type WorkoutUncheckedCreateWithoutSubGoalInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1313,6 +1511,12 @@ export type WorkoutCreateWithoutIntervalProgressionInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1342,6 +1546,12 @@ export type WorkoutUncheckedCreateWithoutIntervalProgressionInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1396,6 +1606,12 @@ export type WorkoutCreateManyLinkedActivityInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -1423,6 +1639,12 @@ export type WorkoutUpdateWithoutLinkedActivityInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1452,6 +1674,12 @@ export type WorkoutUncheckedUpdateWithoutLinkedActivityInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1480,6 +1708,12 @@ export type WorkoutUncheckedUpdateManyWithoutLinkedActivityInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1507,6 +1741,12 @@ export type WorkoutCreateManyGoalInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1536,6 +1776,12 @@ export type WorkoutCreateManySubGoalInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1563,6 +1809,12 @@ export type WorkoutUpdateWithoutGoalInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1591,6 +1843,12 @@ export type WorkoutUncheckedUpdateWithoutGoalInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1619,6 +1877,12 @@ export type WorkoutUncheckedUpdateManyWithoutGoalInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1647,6 +1911,12 @@ export type WorkoutUpdateWithoutSubGoalInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1676,6 +1946,12 @@ export type WorkoutUncheckedUpdateWithoutSubGoalInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1704,6 +1980,12 @@ export type WorkoutUncheckedUpdateManyWithoutSubGoalInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1732,6 +2014,12 @@ export type WorkoutCreateManyIntervalProgressionInput = {
   targetDuration?: number | null
   targetPace?: number | null
   targetHrZone?: number | null
+  targetHrZoneLabel?: string | null
+  targetHrMinBpm?: number | null
+  targetHrMaxBpm?: number | null
+  targetPaceZoneLabel?: string | null
+  targetPaceMinSecondsPerKm?: number | null
+  targetPaceMaxSecondsPerKm?: number | null
   isCompleted?: boolean
   completedAt?: Date | string | null
   linkedActivityId?: string | null
@@ -1759,6 +2047,12 @@ export type WorkoutUpdateWithoutIntervalProgressionInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1788,6 +2082,12 @@ export type WorkoutUncheckedUpdateWithoutIntervalProgressionInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1816,6 +2116,12 @@ export type WorkoutUncheckedUpdateManyWithoutIntervalProgressionInput = {
   targetDuration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   targetPace?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   targetHrZone?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHrMinBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetHrMaxBpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  targetPaceZoneLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetPaceMinSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  targetPaceMaxSecondsPerKm?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isCompleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   linkedActivityId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1846,6 +2152,12 @@ export type WorkoutSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   targetDuration?: boolean
   targetPace?: boolean
   targetHrZone?: boolean
+  targetHrZoneLabel?: boolean
+  targetHrMinBpm?: boolean
+  targetHrMaxBpm?: boolean
+  targetPaceZoneLabel?: boolean
+  targetPaceMinSecondsPerKm?: boolean
+  targetPaceMaxSecondsPerKm?: boolean
   isCompleted?: boolean
   completedAt?: boolean
   linkedActivityId?: boolean
@@ -1879,6 +2191,12 @@ export type WorkoutSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   targetDuration?: boolean
   targetPace?: boolean
   targetHrZone?: boolean
+  targetHrZoneLabel?: boolean
+  targetHrMinBpm?: boolean
+  targetHrMaxBpm?: boolean
+  targetPaceZoneLabel?: boolean
+  targetPaceMinSecondsPerKm?: boolean
+  targetPaceMaxSecondsPerKm?: boolean
   isCompleted?: boolean
   completedAt?: boolean
   linkedActivityId?: boolean
@@ -1912,6 +2230,12 @@ export type WorkoutSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   targetDuration?: boolean
   targetPace?: boolean
   targetHrZone?: boolean
+  targetHrZoneLabel?: boolean
+  targetHrMinBpm?: boolean
+  targetHrMaxBpm?: boolean
+  targetPaceZoneLabel?: boolean
+  targetPaceMinSecondsPerKm?: boolean
+  targetPaceMaxSecondsPerKm?: boolean
   isCompleted?: boolean
   completedAt?: boolean
   linkedActivityId?: boolean
@@ -1945,6 +2269,12 @@ export type WorkoutSelectScalar = {
   targetDuration?: boolean
   targetPace?: boolean
   targetHrZone?: boolean
+  targetHrZoneLabel?: boolean
+  targetHrMinBpm?: boolean
+  targetHrMaxBpm?: boolean
+  targetPaceZoneLabel?: boolean
+  targetPaceMinSecondsPerKm?: boolean
+  targetPaceMaxSecondsPerKm?: boolean
   isCompleted?: boolean
   completedAt?: boolean
   linkedActivityId?: boolean
@@ -1961,7 +2291,7 @@ export type WorkoutSelectScalar = {
   intensityZone?: boolean
 }
 
-export type WorkoutOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "goalId" | "scheduledDate" | "workoutType" | "description" | "phase" | "order" | "notes" | "targetDistance" | "targetDuration" | "targetPace" | "targetHrZone" | "isCompleted" | "completedAt" | "linkedActivityId" | "createdAt" | "updatedAt" | "customName" | "color" | "intervalProgressionId" | "structuredSteps" | "groupId" | "subGoalId" | "sport" | "displayDesc" | "intensityZone", ExtArgs["result"]["workout"]>
+export type WorkoutOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "goalId" | "scheduledDate" | "workoutType" | "description" | "phase" | "order" | "notes" | "targetDistance" | "targetDuration" | "targetPace" | "targetHrZone" | "targetHrZoneLabel" | "targetHrMinBpm" | "targetHrMaxBpm" | "targetPaceZoneLabel" | "targetPaceMinSecondsPerKm" | "targetPaceMaxSecondsPerKm" | "isCompleted" | "completedAt" | "linkedActivityId" | "createdAt" | "updatedAt" | "customName" | "color" | "intervalProgressionId" | "structuredSteps" | "groupId" | "subGoalId" | "sport" | "displayDesc" | "intensityZone", ExtArgs["result"]["workout"]>
 export type WorkoutInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   intervalProgression?: boolean | Prisma.Workout$intervalProgressionArgs<ExtArgs>
   goal?: boolean | Prisma.GoalDefaultArgs<ExtArgs>
@@ -2002,6 +2332,12 @@ export type $WorkoutPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     targetDuration: number | null
     targetPace: number | null
     targetHrZone: number | null
+    targetHrZoneLabel: string | null
+    targetHrMinBpm: number | null
+    targetHrMaxBpm: number | null
+    targetPaceZoneLabel: string | null
+    targetPaceMinSecondsPerKm: number | null
+    targetPaceMaxSecondsPerKm: number | null
     isCompleted: boolean
     completedAt: Date | null
     linkedActivityId: string | null
@@ -2455,6 +2791,12 @@ export interface WorkoutFieldRefs {
   readonly targetDuration: Prisma.FieldRef<"Workout", 'Int'>
   readonly targetPace: Prisma.FieldRef<"Workout", 'Float'>
   readonly targetHrZone: Prisma.FieldRef<"Workout", 'Int'>
+  readonly targetHrZoneLabel: Prisma.FieldRef<"Workout", 'String'>
+  readonly targetHrMinBpm: Prisma.FieldRef<"Workout", 'Int'>
+  readonly targetHrMaxBpm: Prisma.FieldRef<"Workout", 'Int'>
+  readonly targetPaceZoneLabel: Prisma.FieldRef<"Workout", 'String'>
+  readonly targetPaceMinSecondsPerKm: Prisma.FieldRef<"Workout", 'Float'>
+  readonly targetPaceMaxSecondsPerKm: Prisma.FieldRef<"Workout", 'Float'>
   readonly isCompleted: Prisma.FieldRef<"Workout", 'Boolean'>
   readonly completedAt: Prisma.FieldRef<"Workout", 'DateTime'>
   readonly linkedActivityId: Prisma.FieldRef<"Workout", 'String'>

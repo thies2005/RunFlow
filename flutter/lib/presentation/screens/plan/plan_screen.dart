@@ -453,7 +453,7 @@ class _PlanContentState extends ConsumerState<_PlanContent> {
               overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text(
-              '${formatDistance(workout.targetDistance)} · ${formatPace(workout.targetPace)}',
+              _workoutTargetSummary(workout),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: AppColors.onSurfaceVariant,
               ),
@@ -595,8 +595,20 @@ class _PlanWorkoutCard extends ConsumerWidget {
                           const Icon(Icons.speed, size: 14, color: AppColors.onSurfaceVariant),
                           const SizedBox(width: 4),
                           Text(
-                            formatPace(workout.targetPace),
+                            _workoutPaceSummary(workout),
                             style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        if (_workoutHrSummary(workout).isNotEmpty) ...[
+                          const Icon(Icons.favorite_border, size: 14, color: AppColors.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              _workoutHrSummary(workout),
+                              style: theme.textTheme.bodySmall?.copyWith(color: AppColors.onSurfaceVariant),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ],
@@ -731,6 +743,33 @@ class _NoPlanState extends StatelessWidget {
       ),
     );
   }
+}
+
+String _workoutTargetSummary(Workout workout) {
+  final parts = <String>[];
+  if (workout.targetDistance > 0) parts.add(formatDistance(workout.targetDistance));
+  if (workout.targetPace > 0) parts.add(_workoutPaceSummary(workout));
+  final hr = _workoutHrSummary(workout);
+  if (hr.isNotEmpty) parts.add(hr);
+  return parts.join(' · ');
+}
+
+String _workoutPaceSummary(Workout workout) {
+  final pace = formatPaceRange(
+    workout.targetPaceMinSecondsPerKm,
+    workout.targetPaceMaxSecondsPerKm,
+    fallbackSecondsPerKm: workout.targetPace,
+  );
+  return workout.targetPaceZoneLabel == null ? pace : '${workout.targetPaceZoneLabel}: $pace';
+}
+
+String _workoutHrSummary(Workout workout) {
+  return formatHrTarget(
+    workout.targetHrZoneLabel,
+    workout.targetHrMinBpm,
+    workout.targetHrMaxBpm,
+    workout.targetHrZone,
+  );
 }
 
 class _PlanError extends StatelessWidget {

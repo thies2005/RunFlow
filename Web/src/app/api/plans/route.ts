@@ -90,7 +90,34 @@ export async function POST(request: NextRequest) {
         }
 
         const normalized = normalizePlanInput(parsed.data, userId);
-        const { goal } = await createPlanWithWorkouts(normalized);
+        const userProfile = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                hrMax: true,
+                hrRest: true,
+                thresholdHeartRate: true,
+                hrZone1Max: true,
+                hrZone2Max: true,
+                hrZone3Max: true,
+                hrZone4Max: true,
+                hrZone5Max: true,
+                hrZone6Max: true,
+            },
+        });
+
+        const { goal } = await createPlanWithWorkouts({
+            ...normalized,
+            thresholdHeartRate: userProfile?.thresholdHeartRate ?? normalized.thresholdHeartRate ?? null,
+            hrZoneMethod: 'CUSTOM',
+            hrZone1Max: userProfile?.hrZone1Max ?? null,
+            hrZone2Max: userProfile?.hrZone2Max ?? null,
+            hrZone3Max: userProfile?.hrZone3Max ?? null,
+            hrZone4Max: userProfile?.hrZone4Max ?? null,
+            hrZone5Max: userProfile?.hrZone5Max ?? null,
+            hrZone6Max: userProfile?.hrZone6Max ?? null,
+            hrMax: userProfile?.hrMax ?? null,
+            hrRest: userProfile?.hrRest ?? null,
+        });
 
         const enrichedGoal = {
             ...goal,

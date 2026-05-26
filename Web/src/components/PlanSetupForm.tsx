@@ -141,12 +141,12 @@ export default function PlanSetupForm({
     const [maxHeartRate, setMaxHeartRate] = useState(185);
     const [restingHeartRate, setRestingHeartRate] = useState(55);
     const [weight, setWeight] = useState(70);
-    const [zone1Max, setZone1Max] = useState(60);
-    const [zone2Max, setZone2Max] = useState(70);
-    const [zone3Max, setZone3Max] = useState(80);
-    const [zone4Max, setZone4Max] = useState(90);
-    const [zone5Max, setZone5Max] = useState(95);
-    const [zone6Max, setZone6Max] = useState(100);
+    const [zone1Max, setZone1Max] = useState(130);
+    const [zone2Max, setZone2Max] = useState(148);
+    const [zone3Max, setZone3Max] = useState(160);
+    const [zone4Max, setZone4Max] = useState(170);
+    const [zone5Max, setZone5Max] = useState(178);
+    const [zone6Max, setZone6Max] = useState(187);
 
     // Threshold values for zone calculation
     const [thresholdHR, setThresholdHR] = useState<string>('');
@@ -288,12 +288,12 @@ export default function PlanSetupForm({
             setMaxHeartRate(settingsData.hrMax || 185);
             setRestingHeartRate(settingsData.hrRest || 55);
             setWeight(settingsData.weight || 70);
-            setZone1Max(settingsData.hrZone1Max || 60);
-            setZone2Max(settingsData.hrZone2Max || 70);
-            setZone3Max(settingsData.hrZone3Max || 80);
-            setZone4Max(settingsData.hrZone4Max || 90);
-            setZone5Max(settingsData.hrZone5Max || 95);
-            setZone6Max(settingsData.hrZone6Max || 100);
+            setZone1Max(settingsData.hrZone1Max || 130);
+            setZone2Max(settingsData.hrZone2Max || 148);
+            setZone3Max(settingsData.hrZone3Max || 160);
+            setZone4Max(settingsData.hrZone4Max || 170);
+            setZone5Max(settingsData.hrZone5Max || 178);
+            setZone6Max(settingsData.hrZone6Max || 187);
             setRunsPerWeek(settingsData.runsPerWeek || 4);
             setRidesPerWeek(settingsData.ridesPerWeek || 0);
             setSwimsPerWeek(settingsData.swimsPerWeek || 0);

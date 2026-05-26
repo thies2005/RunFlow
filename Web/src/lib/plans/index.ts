@@ -1,5 +1,6 @@
 import { WorkoutType, RaceType, PlanSport, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '../metrics/vdot';
+import { getZoneTarget, resolveHrZones, type HrZoneInput } from '../metrics/hr-zones';
 import { generateUltraPlan } from './generators/run-ultra';
 import { generateTriathlonPlan } from './generators/triathlon';
 import { generateNoRacePlan } from './generators/no-race';
@@ -98,6 +99,16 @@ export type PlanConfig = {
     swimDay?: number;
     restDays?: number[];
     weeksTotal?: number;
+    thresholdHeartRate?: number | null;
+    hrZoneMethod?: string | null;
+    hrZone1Max?: number | null;
+    hrZone2Max?: number | null;
+    hrZone3Max?: number | null;
+    hrZone4Max?: number | null;
+    hrZone5Max?: number | null;
+    hrZone6Max?: number | null;
+    hrMax?: number | null;
+    hrRest?: number | null;
 };
 
 export type GeneratedWorkout = {
@@ -113,6 +124,12 @@ export type GeneratedWorkout = {
     sport?: string;
     intensityZone?: string | null;
     structuredSteps?: StructuredWorkoutPlan | null;
+    targetHrZoneLabel?: string | null;
+    targetHrMinBpm?: number | null;
+    targetHrMaxBpm?: number | null;
+    targetPaceZoneLabel?: string | null;
+    targetPaceMinSecondsPerKm?: number | null;
+    targetPaceMaxSecondsPerKm?: number | null;
 };
 
 export type StructuredWorkoutPlan = {
@@ -135,19 +152,24 @@ type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RACE_WEEK';
 type ScheduledWorkout = Omit<GeneratedWorkout, 'date'> & { dayOffset: number };
 
 export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
+    const enrichTargets = (workouts: GeneratedWorkout[]) => {
+        enrichWorkoutsWithTargets(workouts, calculateTrainingPaces(config.vdot), config);
+        return workouts;
+    };
+
     if (config.sport === 'TRIATHLON' || (config.raceType && TRIATHLON_RACE_TYPES.includes(config.raceType))) {
-        return generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType });
+        return enrichTargets(generateTriathlonPlan({ ...config, raceType: config.raceType as RaceType }));
     }
 
     if (config.raceType === null) {
-        return generateNoRacePlan(config);
+        return enrichTargets(generateNoRacePlan(config));
     }
 
     if (config.raceType && ULTRA_RACE_TYPES.includes(config.raceType)) {
-        return generateUltraPlan(config);
+        return enrichTargets(generateUltraPlan(config));
     }
 
-    return generateStandardPlan(config);
+    return enrichTargets(generateStandardPlan(config));
 }
 
 function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
@@ -1399,4 +1421,74 @@ function updateDescription(type: WorkoutType, distance: number, pace: number): s
         case 'RACE': return `Race Day: ${distKm}km`;
         default: return `${type}: ${distKm}km`;
     }
+}
+
+function enrichWorkoutsWithTargets(
+    workouts: GeneratedWorkout[],
+    paces: TrainingPaces,
+    config: Pick<PlanConfig, 'thresholdHeartRate' | 'hrZoneMethod'>,
+): void {
+    const hrZones = resolveHrZones({
+        thresholdHeartRate: config.thresholdHeartRate ?? null,
+        hrZone1Max: (config as HrZoneInput).hrZone1Max ?? null,
+        hrZone2Max: (config as HrZoneInput).hrZone2Max ?? null,
+        hrZone3Max: (config as HrZoneInput).hrZone3Max ?? null,
+        hrZone4Max: (config as HrZoneInput).hrZone4Max ?? null,
+        hrZone5Max: (config as HrZoneInput).hrZone5Max ?? null,
+        hrZone6Max: (config as HrZoneInput).hrZone6Max ?? null,
+        hrMax: (config as HrZoneInput).hrMax ?? null,
+        hrRest: (config as HrZoneInput).hrRest ?? null,
+    }).zones;
+    for (const workout of workouts) {
+        const paceTarget = getPaceTarget(workout, paces);
+        workout.targetPaceZoneLabel = paceTarget?.label ?? null;
+        workout.targetPaceMinSecondsPerKm = paceTarget?.min ?? null;
+        workout.targetPaceMaxSecondsPerKm = paceTarget?.max ?? null;
+
+        const hrTarget = getZoneTarget(workout.targetHrZone, hrZones);
+        workout.targetHrZoneLabel = hrTarget?.label ?? null;
+        workout.targetHrMinBpm = hrTarget?.min ?? null;
+        workout.targetHrMaxBpm = hrTarget?.max ?? null;
+    }
+}
+
+function getPaceTarget(
+    workout: Pick<GeneratedWorkout, 'type' | 'description' | 'targetPace'>,
+    paces: TrainingPaces,
+): { label: string; min: number; max: number } | null {
+    if (!workout.targetPace || workout.targetPace <= 0) return null;
+
+    switch (workout.type) {
+        case WorkoutType.EASY:
+        case WorkoutType.LONG_RUN:
+        case WorkoutType.RECOVERY:
+            return { label: 'Easy', min: paces.easy.min, max: paces.easy.max };
+        case WorkoutType.TEMPO:
+            if (workout.description.includes('MP Segments')) {
+                return paceWindow('Marathon Pace', paces.marathon, 0.03);
+            }
+            return paceWindow('Threshold', paces.threshold, 0.03);
+        case WorkoutType.INTERVALS:
+            return paceWindow('Interval', paces.interval, 0.02);
+        case WorkoutType.REPETITIONS:
+            return paceWindow('Repetition', paces.repetition, 0.02);
+        case WorkoutType.FARTLEK:
+            return {
+                label: 'Fartlek',
+                min: Math.min(paces.interval, paces.threshold),
+                max: Math.max(paces.interval, paces.threshold),
+            };
+        case WorkoutType.RACE:
+            return paceWindow('Race Pace', workout.targetPace, 0.03);
+        default:
+            return paceWindow('Target Pace', workout.targetPace, 0.03);
+    }
+}
+
+function paceWindow(label: string, paceSecondsPerKm: number, fraction: number): { label: string; min: number; max: number } {
+    return {
+        label,
+        min: Math.round(paceSecondsPerKm * (1 - fraction)),
+        max: Math.round(paceSecondsPerKm * (1 + fraction)),
+    };
 }

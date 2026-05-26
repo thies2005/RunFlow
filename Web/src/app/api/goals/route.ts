@@ -91,6 +91,21 @@ export async function POST(request: NextRequest) {
             planStartDate
         } = validation.data;
 
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: {
+                hrMax: true,
+                hrRest: true,
+                thresholdHeartRate: true,
+                hrZone1Max: true,
+                hrZone2Max: true,
+                hrZone3Max: true,
+                hrZone4Max: true,
+                hrZone5Max: true,
+                hrZone6Max: true,
+            },
+        });
+
         const { goal } = await createPlanWithWorkouts({
             userId: session.user.id,
             name,
@@ -121,6 +136,16 @@ export async function POST(request: NextRequest) {
             calibrationFactor: calibrationFactor ?? null,
             planStartDate: planStartDate ?? null,
             deactivateExisting: true,
+            thresholdHeartRate: user?.thresholdHeartRate ?? null,
+            hrZoneMethod: 'CUSTOM',
+            hrZone1Max: user?.hrZone1Max ?? null,
+            hrZone2Max: user?.hrZone2Max ?? null,
+            hrZone3Max: user?.hrZone3Max ?? null,
+            hrZone4Max: user?.hrZone4Max ?? null,
+            hrZone5Max: user?.hrZone5Max ?? null,
+            hrZone6Max: user?.hrZone6Max ?? null,
+            hrMax: user?.hrMax ?? null,
+            hrRest: user?.hrRest ?? null,
         });
 
         return NextResponse.json({ goal }, { headers: rateLimitHeaders(rateLimitResult) });

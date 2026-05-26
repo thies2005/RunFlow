@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
         // HR Zone thresholds: 40-100%
         const validateZone = (val: unknown): number | null => {
             if (typeof val !== 'number') return null;
-            if (val >= 40 && val <= 100) return Math.round(val);
+            if (val >= 40 && val <= 250) return Math.round(val);
             return null;
         };
 
@@ -253,7 +253,17 @@ export async function POST(req: NextRequest) {
                 }
             });
 
-            const result = await recalculateWorkoutPaces(activeGoal.id, newVdot);
+            const result = await recalculateWorkoutPaces(activeGoal.id, newVdot, {
+                thresholdHeartRate: typeof thresholdHeartRate === 'number' ? Math.round(thresholdHeartRate) : user?.thresholdHeartRate ?? null,
+                hrZone1Max: typeof hrZone1Max === 'number' ? Math.round(hrZone1Max) : user?.hrZone1Max ?? null,
+                hrZone2Max: typeof hrZone2Max === 'number' ? Math.round(hrZone2Max) : user?.hrZone2Max ?? null,
+                hrZone3Max: typeof hrZone3Max === 'number' ? Math.round(hrZone3Max) : user?.hrZone3Max ?? null,
+                hrZone4Max: typeof hrZone4Max === 'number' ? Math.round(hrZone4Max) : user?.hrZone4Max ?? null,
+                hrZone5Max: typeof hrZone5Max === 'number' ? Math.round(hrZone5Max) : user?.hrZone5Max ?? null,
+                hrZone6Max: typeof hrZone6Max === 'number' ? Math.round(hrZone6Max) : user?.hrZone6Max ?? null,
+                hrMax: typeof maxHeartRate === 'number' ? Math.round(maxHeartRate) : user?.hrMax ?? null,
+                hrRest: typeof restingHeartRate === 'number' ? Math.round(restingHeartRate) : user?.hrRest ?? null,
+            });
             console.log(`Pace recalculation complete: ${result.updatedCount} updated, ${result.skippedCount} skipped`);
         }
 

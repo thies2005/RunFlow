@@ -725,6 +725,34 @@ describe('Training Plan Generation', () => {
             });
         });
 
+        it('adds concrete LTHR and pace targets to generated workouts', () => {
+            const workouts = generateTrainingPlan(makeConfig({
+                raceType: 'TEN_K',
+                thresholdHeartRate: 170,
+                hrZoneMethod: 'LTHR',
+                weeklyMileageGoal: 45000,
+                taperWeeks: 1,
+                peakWeeks: 1,
+                buildWeeks: 4,
+            }));
+
+            const easy = workouts.find(w => w.type === WorkoutType.EASY || w.type === WorkoutType.LONG_RUN);
+            expect(easy).toBeDefined();
+            expect(easy?.targetHrZoneLabel).toBe('Z2 Aerobic');
+            expect(easy?.targetHrMinBpm).toBe(129);
+            expect(easy?.targetHrMaxBpm).toBe(148);
+            expect(easy?.targetPaceZoneLabel).toBe('Easy');
+            expect(easy?.targetPaceMinSecondsPerKm).toBe(MOCK_PACES.easy.min);
+            expect(easy?.targetPaceMaxSecondsPerKm).toBe(MOCK_PACES.easy.max);
+
+            const quality = workouts.find(w => w.type === WorkoutType.INTERVALS || w.type === WorkoutType.TEMPO);
+            expect(quality).toBeDefined();
+            expect(quality?.targetHrZoneLabel).toMatch(/^Z[34]/);
+            expect(quality?.targetPaceZoneLabel).toMatch(/Interval|Threshold/);
+            expect(quality?.targetPaceMinSecondsPerKm).toBeGreaterThan(0);
+            expect(quality?.targetPaceMaxSecondsPerKm).toBeGreaterThan(quality?.targetPaceMinSecondsPerKm ?? 0);
+        });
+
         it('5K fartlek description pattern is preserved after scaling', () => {
             const config = makeConfig({
                 raceType: 'FIVE_K',

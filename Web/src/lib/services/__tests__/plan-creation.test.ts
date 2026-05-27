@@ -1,7 +1,7 @@
-import { resolveTrainingVdotForGoal } from '../plan-creation';
+import { resolveTrainingVdotForGoal, validateTrainingPaces } from '../plan-creation';
 
-describe('plan creation guardrails', () => {
-    it('caps training VDOT when target time is beyond safe progression from a fitness baseline', () => {
+describe('resolveTrainingVdotForGoal', () => {
+    it('returns currentVdot as trainingVdot when target time implies much higher VDOT', () => {
         const result = resolveTrainingVdotForGoal({
             currentVdot: 40,
             targetTime: 15 * 60,
@@ -9,9 +9,10 @@ describe('plan creation guardrails', () => {
             hasFitnessBaseline: true,
         });
 
+        expect(result.trainingVdot).toBe(40);
         expect(result.wasCapped).toBe(true);
-        expect(result.trainingVdot).toBe(46);
-        expect(result.targetVdot).toBeGreaterThan(46);
+        expect(result.targetVdot).toBeDefined();
+        expect(result.targetVdot!).toBeGreaterThan(40);
     });
 
     it('does not cap when no independent fitness baseline exists', () => {
@@ -26,16 +27,123 @@ describe('plan creation guardrails', () => {
         expect(result.trainingVdot).toBe(70);
     });
 
-    it('does not cap realistic target times but scales progressively', () => {
+    it('returns currentVdot as trainingVdot for realistic target times', () => {
         const result = resolveTrainingVdotForGoal({
             currentVdot: 40,
-            targetTime: 23 * 60, // VDOT for 23:00 5K is around 42.6
+            targetTime: 23 * 60,
             raceType: 'FIVE_K',
             hasFitnessBaseline: true,
         });
 
+        expect(result.trainingVdot).toBe(40);
         expect(result.wasCapped).toBe(false);
-        expect(result.trainingVdot).toBeGreaterThan(40);
-        expect(result.trainingVdot).toBeLessThan(46); // Cap is 40 * 1.15 = 46
+        expect(result.targetVdot).toBeDefined();
+        expect(result.targetVdot!).toBeGreaterThan(40);
+        expect(result.targetVdot!).toBeLessThan(46);
+    });
+
+    it('returns currentVdot as trainingVdot when target time matches current fitness', () => {
+        const result = resolveTrainingVdotForGoal({
+            currentVdot: 43.4,
+            targetTime: 6210,
+            raceType: 'HALF_MARATHON',
+            hasFitnessBaseline: true,
+        });
+
+        expect(result.trainingVdot).toBe(43.4);
+        expect(result.wasCapped).toBe(false);
+        expect(result.targetVdot).toBeDefined();
+        expect(Math.abs(result.targetVdot! - 43.4)).toBeLessThan(1);
+    });
+
+    it('returns currentVdot as trainingVdot even when target time implies much higher VDOT with fitness baseline', () => {
+        const result = resolveTrainingVdotForGoal({
+            currentVdot: 43.4,
+            targetTime: 4800,
+            raceType: 'HALF_MARATHON',
+            hasFitnessBaseline: true,
+        });
+
+        expect(result.trainingVdot).toBe(43.4);
+        expect(result.wasCapped).toBe(true);
+    });
+
+    it('returns currentVdot when no target time provided', () => {
+        const result = resolveTrainingVdotForGoal({
+            currentVdot: 50,
+            targetTime: null,
+            raceType: 'FIVE_K',
+            hasFitnessBaseline: true,
+        });
+
+        expect(result.trainingVdot).toBe(50);
+        expect(result.wasCapped).toBe(false);
+    });
+
+    it('returns currentVdot as trainingVdot when currentVdot is 0', () => {
+        const result = resolveTrainingVdotForGoal({
+            currentVdot: 0,
+            targetTime: 25 * 60,
+            raceType: 'FIVE_K',
+            hasFitnessBaseline: true,
+        });
+        expect(result.trainingVdot).toBe(0);
+    });
+});
+
+describe('validateTrainingPaces', () => {
+    it('returns valid for matching VDOT', () => {
+        const result = validateTrainingPaces({
+            trainingVdot: 43.4,
+            raceType: 'HALF_MARATHON',
+            targetTime: 6210,
+        });
+
+        expect(result.isValid).toBe(true);
+        expect(result.warnings).toEqual([]);
+    });
+
+    it('returns warnings when easy pace is faster than race pace', () => {
+        const result = validateTrainingPaces({
+            trainingVdot: 57.5,
+            raceType: 'HALF_MARATHON',
+            targetTime: 6210,
+        });
+
+        expect(result.isValid).toBe(false);
+        expect(result.warnings.length).toBeGreaterThan(0);
+    });
+
+    it('returns valid when no raceType or targetTime', () => {
+        const result = validateTrainingPaces({
+            trainingVdot: 50,
+            raceType: null,
+            targetTime: null,
+        });
+
+        expect(result.isValid).toBe(true);
+        expect(result.warnings).toEqual([]);
+    });
+
+    it('returns clampedVdot when validation fails', () => {
+        const result = validateTrainingPaces({
+            trainingVdot: 57.5,
+            raceType: 'HALF_MARATHON',
+            targetTime: 6210,
+        });
+
+        expect(result.isValid).toBe(false);
+        expect(result.clampedVdot).toBeDefined();
+        expect(result.clampedVdot!).toBeLessThan(57.5);
+    });
+
+    it('validateTrainingPaces handles raceType with no targetTime', () => {
+        const result = validateTrainingPaces({
+            trainingVdot: 50,
+            raceType: 'HALF_MARATHON',
+            targetTime: null,
+        });
+        expect(result.isValid).toBe(true);
+        expect(result.warnings).toEqual([]);
     });
 });

@@ -1,6 +1,6 @@
 import { WorkoutType, RaceType, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
-import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
+import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume, resolvePhaseBudget } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
 import { enrichWorkoutsWithDescriptions } from '../descriptions';
 
@@ -98,14 +98,17 @@ export function generateUltraPlan(config: PlanConfig): GeneratedWorkout[] {
     const ultraEasyPace = Math.round(paces.easy.max * 1.1);
 
     const taperFractions = ULTRA_TAPER_FRACTIONS[raceType];
-    const taperWeeks = taperFractions?.length || 3;
-    const enduranceWeeks = Math.max(3, Math.min(6, Math.floor((totalWeeks - taperWeeks - 1) * 0.25)));
-    const peakWeeks = 2;
-    const buildWeeks = Math.max(2, Math.min(6, Math.floor((totalWeeks - taperWeeks - enduranceWeeks - peakWeeks - 1) * 0.35)));
-    let mentalPrepWeeks = 0;
-    if (isBackyardUltra) {
-        mentalPrepWeeks = Math.max(2, Math.min(4, totalWeeks - taperWeeks - enduranceWeeks - peakWeeks - buildWeeks - 1));
-    }
+    const defaultTaperWeeks = taperFractions?.length || 3;
+    const phases = resolvePhaseBudget(totalWeeks, config, {
+        isUltra: true,
+        isBackyardUltra,
+        defaultTaper: defaultTaperWeeks,
+    });
+    const taperWeeks = phases.taperWeeks;
+    const peakWeeks = phases.peakWeeks;
+    const buildWeeks = phases.buildWeeks;
+    const enduranceWeeks = phases.enduranceWeeks || 0;
+    const mentalPrepWeeks = phases.mentalPrepWeeks || 0;
 
     const growthRatio = peakVolume / startVolume;
     const minRampWeeks = growthRatio > 1.001
@@ -440,25 +443,31 @@ function generateUltraWeek(params: {
         });
 
         if (hasBackToBack) {
-            const nextDay = (day + 1) % 7;
-            const b2bDay = usedDays.has(nextDay) ? (day + 2) % 7 : nextDay;
-            usedDays.add(b2bDay);
+            const adjacentCandidates = [
+                day < 6 ? day + 1 : null,
+                day > 0 ? day - 1 : null,
+            ].filter((candidate): candidate is number => candidate !== null);
+            const b2bDay = adjacentCandidates.find(candidate => !usedDays.has(candidate)) ?? -1;
 
-            let b2bDesc: string;
-            if (phase === 'MENTAL_PREP' && isBackyardUltra) {
-                b2bDesc = `Back-to-Back: ${(backToBackDist / 1000).toFixed(1)}km @ Loop Pace (consistency drill)`;
-            } else {
-                b2bDesc = `Back-to-Back: ${(backToBackDist / 1000).toFixed(1)}km @ Easy (fatigue legs)`;
+            if (b2bDay !== -1) {
+                usedDays.add(b2bDay);
+
+                let b2bDesc: string;
+                if (phase === 'MENTAL_PREP' && isBackyardUltra) {
+                    b2bDesc = `Back-to-Back: ${(backToBackDist / 1000).toFixed(1)}km @ Loop Pace (consistency drill)`;
+                } else {
+                    b2bDesc = `Back-to-Back: ${(backToBackDist / 1000).toFixed(1)}km @ Easy (fatigue legs)`;
+                }
+
+                workouts.push({
+                    dayOffset: b2bDay,
+                    type: WorkoutType.LONG_RUN,
+                    description: b2bDesc,
+                    totalDistance: backToBackDist,
+                    targetPace: ultraEasyPace,
+                    targetDuration: 0,
+                });
             }
-
-            workouts.push({
-                dayOffset: b2bDay,
-                type: WorkoutType.LONG_RUN,
-                description: b2bDesc,
-                totalDistance: backToBackDist,
-                targetPace: ultraEasyPace,
-                targetDuration: 0,
-            });
         }
     }
 
@@ -645,6 +654,15 @@ function scaleUltraToVolumeCap(weekSchedule: ScheduledWorkout[], weekVolumeCap: 
         if (!isUltraRun(w.type)) return w;
         const newDist = Math.floor(w.totalDistance * scaleFactor / 100) * 100;
         if (w.type === WorkoutType.LONG_RUN) {
+            if (w.description.includes('Back-to-Back')) {
+                const suffix = w.description.includes('@ Loop Pace')
+                    ? '@ Loop Pace (consistency drill)'
+                    : '@ Easy (fatigue legs)';
+                return { ...w, totalDistance: newDist, description: `Back-to-Back: ${(newDist / 1000).toFixed(1)}km ${suffix}` };
+            }
+            if (w.description.includes('fueling') || w.description.includes('walk/run')) {
+                return { ...w, totalDistance: newDist, description: `Long Run: ${(newDist / 1000).toFixed(1)}km @ Ultra Easy (fueling + walk/run strategy)` };
+            }
             return { ...w, totalDistance: newDist, description: `Long Run: ${(newDist / 1000).toFixed(1)}km @ Easy` };
         }
         return { ...w, totalDistance: newDist };

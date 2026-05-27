@@ -700,7 +700,15 @@ describe('Training Plan Generation', () => {
 
             expect(steps).not.toBeNull();
             expect(steps?.source).toBe('generated-plan');
-            expect(steps?.steps.map(s => s.type)).toEqual(['warmup', 'work', 'cooldown']);
+            expect(steps?.steps.map(s => s.type)).toEqual([
+                'warmup',
+                'work', 'recovery',
+                'work', 'recovery',
+                'work', 'recovery',
+                'work', 'recovery',
+                'work',
+                'cooldown'
+            ]);
             expect(steps?.steps[1].paceSecondsPerKm).toBe(240);
             expect(steps?.steps[1].hrZone).toBe(4);
         });
@@ -953,7 +961,7 @@ describe('Training Plan Generation', () => {
                 raceType: 'MARATHON',
                 runsPerWeek: 3,
                 longRunDay: 0, // Sunday
-                restDays: [0], // Sunday as rest — force long run to move
+                restDays: [0], // Sunday as rest - force long run to move
             });
 
             const workouts = generateTrainingPlan(config);

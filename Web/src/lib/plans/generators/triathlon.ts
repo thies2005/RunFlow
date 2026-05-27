@@ -2,7 +2,7 @@ import { WorkoutType, RaceType, PlanPhase } from '@/generated/prisma/browser';
 import { calculateTrainingPaces, TrainingPaces } from '@/lib/metrics/vdot';
 import { estimateSwimPaceFromVdot } from '../swim-pace';
 import { estimateBikeFtpFromVdot, calculateBikeZones } from '../bike-zones';
-import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume } from '../index';
+import { PlanConfig, GeneratedWorkout, PLAN_CONSTANTS, getMinStartVolume, resolvePhaseBudget } from '../index';
 import { fixBackToBackSameType } from '../schedule-utils';
 import { enrichWorkoutsWithDescriptions, getRacePace } from '../descriptions';
 
@@ -66,18 +66,22 @@ const TRI_RACE_SWIM_DIST: Partial<Record<RaceType, number>> = {
     FULL_IRONMAN: 3800,
 };
 
-const TRI_BIKE_SPEED_KMH: Partial<Record<RaceType, number>> = {
-    SPRINT_TRI: 28,
-    OLYMPIC_TRI: 27,
-    HALF_IRONMAN: 25,
-    FULL_IRONMAN: 23,
+const TRI_PEAK_BUDGET: Record<string, { bikeSecs: number; runMeters: number; swimMeters: number }> = {
+    SPRINT_TRI: { bikeSecs: 7200, runMeters: 18000, swimMeters: 3000 },
+    OLYMPIC_TRI: { bikeSecs: 12600, runMeters: 28000, swimMeters: 4500 },
+    HALF_IRONMAN: { bikeSecs: 21600, runMeters: 38000, swimMeters: 6500 },
+    FULL_IRONMAN: { bikeSecs: 36000, runMeters: 50000, swimMeters: 9000 },
 };
 
 function classifyCustomTri(swimDistM: number, bikeDistM: number, runDistM: number): RaceType {
-    const totalKm = (swimDistM + bikeDistM + runDistM) / 1000;
-    if (totalKm <= 40) return 'SPRINT_TRI';
-    if (totalKm <= 70) return 'OLYMPIC_TRI';
-    if (totalKm <= 160) return 'HALF_IRONMAN';
+    const swimMins = swimDistM / 50;
+    const bikeMins = bikeDistM / 400;
+    const runMins = runDistM / 200;
+    const totalEstMins = swimMins + bikeMins + runMins;
+
+    if (totalEstMins <= 110) return 'SPRINT_TRI';
+    if (totalEstMins <= 240) return 'OLYMPIC_TRI';
+    if (totalEstMins <= 500) return 'HALF_IRONMAN';
     return 'FULL_IRONMAN';
 }
 
@@ -146,9 +150,14 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
     const bikeZones = calculateBikeZones(bikeFtp);
 
     const taperFractions = TRI_TAPER_FRACTIONS[effectiveRaceType] || [0.80, 0.60];
-    const taperWeeks = config.taperWeeks ?? taperFractions.length;
-    const peakWeeks = Math.min(config.peakWeeks ?? 2, Math.floor((totalWeeks - taperWeeks - 1) * 0.3));
-    const buildWeeks = Math.min(config.buildWeeks ?? 4, totalWeeks - taperWeeks - peakWeeks - 1);
+    const defaultTaperWeeks = taperFractions.length;
+    const phases = resolvePhaseBudget(totalWeeks, config, {
+        isTriathlon: true,
+        defaultTaper: defaultTaperWeeks,
+    });
+    const taperWeeks = phases.taperWeeks;
+    const peakWeeks = phases.peakWeeks;
+    const buildWeeks = phases.buildWeeks;
 
     const growthRatio = peakVolume / startVolume;
     const minRampWeeks = growthRatio > 1.001
@@ -180,6 +189,9 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
     for (let week = 1; week <= totalWeeks; week++) {
         const weeksUntilRace = totalWeeks - week + 1;
         const phase = getTriPhase(weeksUntilRace, { taperWeeks, peakWeeks, buildWeeks });
+
+        let weekVolumeCap: number;
+        let isRecoveryWeek = false;
 
         if (phase === 'RACE_WEEK') {
             const raceWeekWorkouts = generateTriRaceWeek({
@@ -216,9 +228,6 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
             continue;
         }
 
-        let weekVolumeCap: number;
-        let isRecoveryWeek = false;
-
         if (phase === 'TAPER') {
             const taperIdx = taperWeeks - weeksUntilRace;
             const fraction = taperFractions[Math.min(Math.max(0, taperIdx), taperFractions.length - 1)];
@@ -244,19 +253,34 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
             : PLAN_CONSTANTS.MIN_VOLUME_START;
         weekVolumeCap = Math.max(effectiveFloor, weekVolumeCap);
 
+        const defaultPeakVolume = TRI_MIN_PEAK_VOLUME[effectiveRaceType] || 40000;
+        const totalPeakMetersScale = peakVolume / defaultPeakVolume;
+
+        const peakBikeSecs = TRI_PEAK_BUDGET[effectiveRaceType].bikeSecs * totalPeakMetersScale;
+        const peakRunMeters = TRI_PEAK_BUDGET[effectiveRaceType].runMeters * totalPeakMetersScale;
+        const peakSwimMeters = TRI_PEAK_BUDGET[effectiveRaceType].swimMeters * totalPeakMetersScale;
+
+        const currentWeekScale = weekVolumeCap / effectivePeakVolume;
+
+        const weeklyBikeDurationS = Math.round(peakBikeSecs * currentWeekScale);
+        const weeklyRunDistanceM = Math.round(peakRunMeters * currentWeekScale);
+        const weeklySwimDistanceM = Math.round(peakSwimMeters * currentWeekScale);
+
         const weekSchedule = generateTriWeek({
             phase,
             raceType: effectiveRaceType,
             paces,
             css,
             bikeZones,
-            bikeFtp,
             distribution,
             runsPerWeek,
             ridesPerWeek,
             swimsPerWeek,
             strengthPerWeek,
             weeklyVolume: weekVolumeCap,
+            weeklyRunDistanceM,
+            weeklyBikeDurationS,
+            weeklySwimDistanceM,
             maxLongRunKm: config.maxLongRunKm,
             preferredLongRunDay: longRunDay,
             preferredWorkoutDay: workoutDay,
@@ -312,13 +336,15 @@ function generateTriWeek(params: {
     paces: TrainingPaces;
     css: number;
     bikeZones: ReturnType<typeof calculateBikeZones>;
-    bikeFtp: number;
     distribution: SportDistribution;
     runsPerWeek: number;
     ridesPerWeek: number;
     swimsPerWeek: number;
     strengthPerWeek: number;
     weeklyVolume: number;
+    weeklyRunDistanceM: number;
+    weeklyBikeDurationS: number;
+    weeklySwimDistanceM: number;
     maxLongRunKm?: number;
     preferredLongRunDay: number;
     preferredWorkoutDay: number;
@@ -332,9 +358,9 @@ function generateTriWeek(params: {
     customBikeDist?: number;
 }): ScheduledWorkout[] {
     const {
-        phase, raceType, paces, css, bikeZones, bikeFtp, distribution,
+        phase, raceType, paces, css, bikeZones, distribution,
         runsPerWeek, ridesPerWeek, swimsPerWeek, strengthPerWeek,
-        weeklyVolume, maxLongRunKm,
+        weeklyVolume, weeklyRunDistanceM, weeklyBikeDurationS, weeklySwimDistanceM, maxLongRunKm,
         preferredLongRunDay, preferredWorkoutDay, preferredSwimDay,
         restDays, isRecoveryWeek, taperWeeks, weeksUntilRace,
         customSwimDist, customRunDist, customBikeDist,
@@ -351,11 +377,9 @@ function generateTriWeek(params: {
     const isTaper = phase === 'TAPER';
     const taperIdx = isTaper ? taperWeeks - weeksUntilRace : -1;
 
-    const runVolume = Math.round(weeklyVolume * distribution.run);
-    const bikeVolume = Math.round(weeklyVolume * distribution.bike);
-    const swimVolume = Math.round(weeklyVolume * distribution.swim);
-    const strengthVolume = Math.round(weeklyVolume * distribution.strength);
-
+    const runVolume = weeklyRunDistanceM;
+    const swimVolume = weeklySwimDistanceM;
+    const bikeVolumeSeconds = weeklyBikeDurationS;
     const easyPace = Math.round((paces.easy.min + paces.easy.max) / 2);
 
     const maxLongRun = TRI_MAX_LONG_RUN[raceType] || 22000;
@@ -530,9 +554,6 @@ function generateTriWeek(params: {
         });
     }
 
-    const bikeSpeedKmh = TRI_BIKE_SPEED_KMH[raceType] || 25;
-    const bikeSpeedMs = bikeSpeedKmh * 1000 / 3600;
-    const bikeVolumeSeconds = bikeVolume / bikeSpeedMs;
     const longRideDuration = getLongRideDuration(raceType, phase, isTaper, taperIdx, bikeVolumeSeconds);
     const hasLongRide = ridesPerWeek >= 2 && !isRecoveryWeek;
     let longRideDay: number | undefined;
@@ -562,10 +583,10 @@ function generateTriWeek(params: {
             workouts.push({
                 dayOffset: brickDay,
                 type: WorkoutType.BRICK,
-                description: `Brick: ${brickBikeMin}min Bike → 15min Run (T1/T2 practice)`,
+                description: `Brick: ${brickBikeMin}min Bike -> 15min Run (T1/T2 practice)`,
                 totalDistance: 0,
                 targetPace: 0,
-                targetDuration: (brickBikeMin + 15) * 60,
+                targetDuration: (brickBikeMin + 20) * 60,
             });
         }
     }
@@ -660,7 +681,10 @@ function getLongRideDuration(raceType: RaceType, phase: TriPhase, isTaper: boole
     const base = baseDurations[raceType] || 5400;
 
     if (bikeVolumeSeconds && bikeVolumeSeconds > 0) {
-        const longRideShare = 0.40;
+        const longRideShare = raceType === 'FULL_IRONMAN' ? 0.55
+            : raceType === 'HALF_IRONMAN' ? 0.50
+            : raceType === 'OLYMPIC_TRI' ? 0.45
+            : 0.40;
         const scaled = Math.round(bikeVolumeSeconds * longRideShare);
         if (phase === 'BASE') return Math.max(1800, Math.round(scaled * 0.55));
         if (phase === 'BUILD') return Math.max(2400, Math.round(scaled * 0.80));

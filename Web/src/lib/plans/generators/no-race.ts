@@ -93,6 +93,7 @@ export function generateNoRacePlan(config: PlanConfig): GeneratedWorkout[] {
             preferredSwimDay: config.swimDay,
             restDays: config.restDays,
             isRecoveryWeek,
+            weekIndex: week,
         });
 
         weekSchedule.forEach(w => {
@@ -141,11 +142,12 @@ function generateNoRaceWeek(params: {
     preferredSwimDay?: number;
     restDays?: number[];
     isRecoveryWeek: boolean;
+    weekIndex: number;
 }): ScheduledWorkout[] {
     const {
         phase, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek,
         weeklyVolume, preferredLongRunDay, preferredWorkoutDay,
-        preferredSwimDay, restDays, isRecoveryWeek,
+        preferredSwimDay, restDays, isRecoveryWeek, weekIndex,
     } = params;
 
     const workouts: ScheduledWorkout[] = [];
@@ -164,7 +166,7 @@ function generateNoRaceWeek(params: {
         22000,
     );
 
-    const hasQuality = runsPerWeek >= 3 && !isRecoveryWeek && phase !== 'MAINTAIN';
+    const hasQuality = runsPerWeek >= 3 && !isRecoveryWeek && (phase !== 'MAINTAIN' || weekIndex % 2 === 0);
 
     const getAvailableDay = (preferred: number, gapFrom: number[]): number => {
         const candidates: number[] = [];
@@ -209,30 +211,113 @@ function generateNoRaceWeek(params: {
         usedDays.add(qualityDay);
         hardSessionDays.push(qualityDay);
 
-        if (phase === 'BASE') {
-            workouts.push({
-                dayOffset: qualityDay,
-                type: WorkoutType.FARTLEK,
-                description: `Fartlek: 8km (3min hard / 2min easy)`,
-                totalDistance: 8000,
-                targetPace: Math.round((paces.threshold + paces.interval) / 2),
-                targetDuration: 0,
-            });
+        const cycle = weekIndex % 4;
+
+        if (phase === 'MAINTAIN') {
+            if (cycle === 0 || cycle === 1) {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.EASY,
+                    description: `Steady Run: 8km with 6x100m Strides`,
+                    totalDistance: 8000,
+                    targetPace: easyPace,
+                    targetDuration: 0,
+                });
+            } else {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.TEMPO,
+                    description: `Tempo: 5km @ Marathon Pace`,
+                    totalDistance: 8000,
+                    targetPace: paces.marathon,
+                    targetDuration: 0,
+                });
+            }
+        } else if (phase === 'BASE') {
+            if (cycle === 0) {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.FARTLEK,
+                    description: `Fartlek: 8km (3min hard / 2min easy)`,
+                    totalDistance: 8000,
+                    targetPace: Math.round((paces.threshold + paces.interval) / 2),
+                    targetDuration: 0,
+                });
+            } else if (cycle === 1) {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.EASY,
+                    description: `Hill Repeats: 6x200m hills (easy jog down)`,
+                    totalDistance: 8000,
+                    targetPace: easyPace,
+                    targetDuration: 0,
+                });
+            } else if (cycle === 2) {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.INTERVALS,
+                    description: `Cruise Intervals: 3x1.5km @ Threshold`,
+                    totalDistance: 8500,
+                    targetPace: paces.threshold,
+                    targetDuration: 0,
+                });
+            } else {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.TEMPO,
+                    description: `Progression: 8km (start Easy, end at Tempo)`,
+                    totalDistance: 8000,
+                    targetPace: paces.threshold,
+                    targetDuration: 0,
+                });
+            }
         } else {
-            workouts.push({
-                dayOffset: qualityDay,
-                type: WorkoutType.TEMPO,
-                description: `Threshold: 6km @ ${formatPace(paces.threshold)}`,
-                totalDistance: 8000,
-                targetPace: paces.threshold,
-                targetDuration: 0,
-            });
+            if (cycle === 0) {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.FARTLEK,
+                    description: `Fartlek: 10km (4min hard / 2min easy)`,
+                    totalDistance: 10000,
+                    targetPace: Math.round((paces.threshold + paces.interval) / 2),
+                    targetDuration: 0,
+                });
+            } else if (cycle === 1) {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.EASY,
+                    description: `Hill Repeats: 8x200m hills (easy jog down)`,
+                    totalDistance: 9000,
+                    targetPace: easyPace,
+                    targetDuration: 0,
+                });
+            } else if (cycle === 2) {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.INTERVALS,
+                    description: `Cruise Intervals: 4x1.5km @ Threshold`,
+                    totalDistance: 10000,
+                    targetPace: paces.threshold,
+                    targetDuration: 0,
+                });
+            } else {
+                workouts.push({
+                    dayOffset: qualityDay,
+                    type: WorkoutType.TEMPO,
+                    description: `Progression: 10km (start Easy, end at Tempo)`,
+                    totalDistance: 10000,
+                    targetPace: paces.threshold,
+                    targetDuration: 0,
+                });
+            }
         }
     }
 
+    const qualityDistance = workouts
+        .filter(w => w.type !== WorkoutType.LONG_RUN && isRunType(w.type))
+        .reduce((sum, w) => sum + w.totalDistance, 0);
     const keyRunCount = hasQuality ? 2 : 1;
     const easyRunsCount = Math.max(0, runsPerWeek - keyRunCount);
-    const remainingVol = Math.max(0, weeklyVolume - longRunDist - (hasQuality ? 8000 : 0));
+    const remainingVol = Math.max(0, weeklyVolume - longRunDist - qualityDistance);
     const easyDist = easyRunsCount > 0
         ? Math.max(PLAN_CONSTANTS.EASY_RUN_MIN, Math.min(PLAN_CONSTANTS.EASY_RUN_MAX, Math.round(remainingVol / easyRunsCount / 100) * 100))
         : 0;

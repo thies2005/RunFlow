@@ -6,6 +6,7 @@ import { generateTriathlonPlan } from './generators/triathlon';
 import { generateNoRacePlan } from './generators/no-race';
 import { fixBackToBackSameType } from './schedule-utils';
 import { enrichWorkoutsWithDescriptions, getRacePace } from './descriptions';
+import { estimateBikeFtpFromVdot, calculateBikeZones } from './bike-zones';
 
 export const ULTRA_RACE_TYPES: RaceType[] = [
     'FIFTY_K', 'FIFTY_MILE', 'HUNDRED_K', 'HUNDRED_MILE',
@@ -76,6 +77,98 @@ export function getMinStartVolume(raceType: RaceType | null): number {
         return PLAN_CONSTANTS.MIN_START_VOLUME[raceType]!;
     }
     return PLAN_CONSTANTS.MIN_VOLUME_START;
+}
+
+export function classifyCustomRunDistance(customDistanceM: number): RaceType {
+    if (customDistanceM <= 6000) return 'FIVE_K';
+    if (customDistanceM <= 15000) return 'TEN_K';
+    if (customDistanceM <= 30000) return 'HALF_MARATHON';
+    return 'MARATHON';
+}
+
+export interface PhaseBudget {
+    taperWeeks: number;
+    peakWeeks: number;
+    buildWeeks: number;
+    baseWeeks: number;
+    enduranceWeeks?: number;
+    mentalPrepWeeks?: number;
+}
+
+export function resolvePhaseBudget(
+    totalWeeks: number,
+    config: PlanConfig,
+    options: {
+        isTriathlon?: boolean;
+        isUltra?: boolean;
+        isBackyardUltra?: boolean;
+        defaultTaper?: number;
+    } = {}
+): PhaseBudget {
+    const { isTriathlon, isUltra, isBackyardUltra, defaultTaper } = options;
+    const resolvedTotal = Math.max(1, totalWeeks);
+    const availableWeeks = Math.max(0, resolvedTotal - 1);
+
+    let taper = config.taperWeeks !== undefined && config.taperWeeks !== null
+        ? config.taperWeeks
+        : (defaultTaper ?? 2);
+    taper = Math.max(0, Math.min(taper, availableWeeks));
+
+    let remaining = availableWeeks - taper;
+
+    if (isUltra) {
+        let peak = 2;
+        peak = Math.max(0, Math.min(peak, remaining));
+        remaining -= peak;
+
+        let endurance = Math.max(3, Math.min(6, Math.floor(availableWeeks * 0.25)));
+        endurance = Math.max(0, Math.min(endurance, remaining));
+        remaining -= endurance;
+
+        let build = Math.max(2, Math.min(6, Math.floor(availableWeeks * 0.35)));
+        build = Math.max(0, Math.min(build, remaining));
+        remaining -= build;
+
+        let mentalPrep = 0;
+        if (isBackyardUltra && remaining > 0) {
+            mentalPrep = Math.min(4, remaining);
+            remaining -= mentalPrep;
+        }
+
+        const base = Math.max(0, remaining);
+
+        return {
+            taperWeeks: taper,
+            peakWeeks: peak,
+            buildWeeks: build,
+            enduranceWeeks: endurance,
+            mentalPrepWeeks: mentalPrep,
+            baseWeeks: base,
+        };
+    } else {
+        let peak = config.peakWeeks !== undefined && config.peakWeeks !== null
+            ? config.peakWeeks
+            : (isTriathlon ? 2 : 2);
+        const maxPeak = Math.max(1, Math.floor(availableWeeks / 3));
+        peak = Math.max(0, Math.min(peak, maxPeak));
+        peak = Math.min(peak, remaining);
+        remaining -= peak;
+
+        let build = config.buildWeeks !== undefined && config.buildWeeks !== null
+            ? config.buildWeeks
+            : (isTriathlon ? 4 : 4);
+        build = Math.max(0, Math.min(build, remaining));
+        remaining -= build;
+
+        const base = Math.max(0, remaining);
+
+        return {
+            taperWeeks: taper,
+            peakWeeks: peak,
+            buildWeeks: build,
+            baseWeeks: base,
+        };
+    }
 }
 
 export type PlanConfig = {
@@ -159,6 +252,9 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
     const paces = calculateTrainingPaces(config.vdot);
 
     const enrichTargets = (workouts: GeneratedWorkout[]) => {
+        for (const w of workouts) {
+            assignWorkoutTargets(w, paces, config.sport || null);
+        }
         fillDurations(workouts, paces);
         enrichWorkoutsWithTargets(workouts, paces, config);
         return workouts;
@@ -182,6 +278,10 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
 function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     const { vdot, raceDate, customDistanceM } = config;
     const raceType = config.raceType as RaceType;
+    const effectiveRaceType = raceType === 'CUSTOM_DISTANCE' && customDistanceM && customDistanceM > 0
+        ? classifyCustomRunDistance(customDistanceM)
+        : raceType;
+
     const requestedStartDate = config.startDate || new Date();
     const startDate = requestedStartDate > raceDate ? new Date(raceDate) : requestedStartDate;
     const runsPerWeek = Math.max(0, config.runsPerWeek ?? 4);
@@ -193,7 +293,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     const workoutDay = config.workoutDay !== undefined ? config.workoutDay : 3;
 
     let peakVolume = config.weeklyMileageGoal || 40000;
-    const minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[raceType] || 20000;
+    const minPeak = PLAN_CONSTANTS.MIN_PEAK_VOLUME[effectiveRaceType] || 20000;
     if (peakVolume < minPeak) peakVolume = minPeak;
 
     let currentDate = new Date(startDate);
@@ -216,13 +316,11 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
 
     const paces = calculateTrainingPaces(vdot);
 
-    const defaultTaperWeeks = TAPER_FRACTIONS[raceType]?.length || 2;
-    const taperWeeks = (config.taperWeeks != null && config.taperWeeks > 0)
-        ? config.taperWeeks
-        : defaultTaperWeeks;
-    const availableStructured = Math.max(1, totalWeeks - taperWeeks - 1);
-    const peakWeeks = Math.min(config.peakWeeks ?? 2, Math.floor(availableStructured / 2));
-    const buildWeeks = Math.min(config.buildWeeks ?? 4, availableStructured - peakWeeks);
+    const defaultTaperWeeks = TAPER_FRACTIONS[effectiveRaceType]?.length || 2;
+    const phases = resolvePhaseBudget(totalWeeks, config, { defaultTaper: defaultTaperWeeks });
+    const taperWeeks = phases.taperWeeks;
+    const peakWeeks = phases.peakWeeks;
+    const buildWeeks = phases.buildWeeks;
 
     const growthRatio = peakVolume / startVolume;
     const minRampWeeks = growthRatio > 1.001
@@ -262,7 +360,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
                 raceType,
                 paces,
                 runsPerWeek,
-                raceWeekRunVolumeCap: getRaceWeekRunVolumeCap(raceType, effectivePeakVolume, customDistanceM),
+                raceWeekRunVolumeCap: getRaceWeekRunVolumeCap(effectiveRaceType, effectivePeakVolume, customDistanceM),
                 ridesPerWeek,
                 swimsPerWeek,
                 strengthPerWeek,
@@ -293,7 +391,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
         let isRecoveryWeek = false;
 
         if (phase === 'TAPER') {
-            weekVolumeCap = getTaperVolume(weeksUntilRace, taperWeeks, effectivePeakVolume, raceType);
+            weekVolumeCap = getTaperVolume(weeksUntilRace, taperWeeks, effectivePeakVolume, effectiveRaceType);
             weekVolumeCap = Math.max(PLAN_CONSTANTS.EASY_RUN_MIN * 2, weekVolumeCap);
         } else if (phase === 'PEAK') {
             weekVolumeCap = effectivePeakVolume;
@@ -318,7 +416,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
 
         let weekSchedule = generateWeek({
             phase,
-            raceType,
+            raceType: effectiveRaceType,
             paces,
             runsPerWeek,
             ridesPerWeek,
@@ -365,7 +463,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
         raceDate,
         restDays: config.restDays,
     });
-    const racePace = getRacePace(raceType, paces);
+    const racePace = getRacePace(effectiveRaceType, paces);
     enrichWorkoutsWithDescriptions(result, racePace);
     return result;
 }
@@ -1407,19 +1505,137 @@ export function fillDurations(workouts: GeneratedWorkout[], paces: TrainingPaces
 export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, 'type' | 'description' | 'totalDistance' | 'targetPace' | 'targetDuration' | 'targetHrZone'>): StructuredWorkoutPlan | null {
     if (workout.totalDistance <= 0 && (!workout.targetDuration || workout.targetDuration <= 0)) return null;
 
+    const type = workout.type as WorkoutType;
     const targetPace = workout.targetPace && workout.targetPace > 0 ? workout.targetPace : undefined;
     const hrZone = workout.targetHrZone;
-    const warmupDistance = workout.totalDistance >= 5000 ? 1500 : 0;
-    const cooldownDistance = workout.totalDistance >= 5000 ? 1000 : 0;
-    const remainingDistance = Math.max(0, workout.totalDistance - warmupDistance - cooldownDistance);
 
-    if (workout.type === WorkoutType.EASY || workout.type === WorkoutType.RECOVERY || workout.type === WorkoutType.LONG_RUN) {
+    // 1. STRENGTH & TRANSITION
+    if (type === WorkoutType.STRENGTH || type === WorkoutType.TRANSITION_PRACTICE) {
         return {
             version: 1,
             source: 'generated-plan',
             steps: [{
                 type: 'steady',
-                name: workout.type === WorkoutType.RECOVERY ? 'Recovery run' : workout.type === WorkoutType.LONG_RUN ? 'Long run' : 'Easy run',
+                name: type === WorkoutType.STRENGTH ? 'Strength Session' : 'Transition Practice',
+                durationSeconds: workout.targetDuration || 2700,
+            }],
+        };
+    }
+
+    // 2. BRICK (Grouped Bike + Transition + Run)
+    if (type === WorkoutType.BRICK) {
+        const match = workout.description.match(/(\d+)\s*min\s*Bike\s*(?:\u2192|->)\s*(\d+)\s*min\s*Run/i);
+        const bikeMinutes = match ? parseInt(match[1]) : 45;
+        const runMinutes = match ? parseInt(match[2]) : 15;
+        const bikeSeconds = bikeMinutes * 60;
+        const runSeconds = runMinutes * 60;
+        const plannedSeconds = workout.targetDuration && workout.targetDuration > 0
+            ? workout.targetDuration
+            : bikeSeconds + runSeconds + 300;
+        const transitionSeconds = Math.max(0, plannedSeconds - bikeSeconds - runSeconds);
+
+        return {
+            version: 1,
+            source: 'generated-plan',
+            steps: [
+                {
+                    type: 'work',
+                    name: 'Bike Leg',
+                    durationSeconds: bikeSeconds,
+                    hrZone: 2,
+                },
+                ...(transitionSeconds > 0 ? [{
+                    type: 'recovery',
+                    name: 'Transition Practice (T2)',
+                    durationSeconds: transitionSeconds,
+                } as StructuredWorkoutStep] : []),
+                {
+                    type: 'work',
+                    name: 'Run Leg',
+                    durationSeconds: runSeconds,
+                    hrZone: 2,
+                }
+            ],
+        };
+    }
+
+    // 3. BIKE RIDES (Steady & Intervals)
+    if (type === WorkoutType.RIDE || type === WorkoutType.LONG_RIDE) {
+        return {
+            version: 1,
+            source: 'generated-plan',
+            steps: [{
+                type: 'steady',
+                name: type === WorkoutType.LONG_RIDE ? 'Long Ride' : 'Easy Ride',
+                durationSeconds: workout.targetDuration || undefined,
+                hrZone: hrZone || 2,
+            }],
+        };
+    }
+
+    if (type === WorkoutType.RIDE_INTERVALS) {
+        const match = workout.description.match(/(\d+)x(\d+)\s*min/i);
+        const reps = match ? parseInt(match[1]) : 4;
+        const repMinutes = match ? parseInt(match[2]) : 5;
+
+        const warmupSeconds = 600;
+        const repSeconds = repMinutes * 60;
+        const recoverySeconds = 180;
+        const fixedSeconds = warmupSeconds + (reps * repSeconds) + ((reps - 1) * recoverySeconds);
+        const cooldownSeconds = Math.max(300, (workout.targetDuration || 0) - fixedSeconds);
+
+        const steps: StructuredWorkoutStep[] = [
+            { type: 'warmup', name: 'Warm up spin', durationSeconds: warmupSeconds, hrZone: 1 }
+        ];
+
+        for (let i = 0; i < reps; i++) {
+            steps.push({
+                type: 'work',
+                name: `Interval Rep ${i + 1}`,
+                durationSeconds: repSeconds,
+                hrZone: 4,
+            });
+            if (i < reps - 1) {
+                steps.push({
+                    type: 'recovery',
+                    name: 'Recovery spin',
+                    durationSeconds: recoverySeconds,
+                    hrZone: 1,
+                });
+            }
+        }
+
+        steps.push({ type: 'cooldown', name: 'Cool down spin', durationSeconds: cooldownSeconds, hrZone: 1 });
+
+        return { version: 1, source: 'generated-plan', steps };
+    }
+
+    // 4. SWIM SETS
+    if (type === WorkoutType.SWIM || type === WorkoutType.SWIM_DRILL || type === WorkoutType.OPEN_WATER_SWIM) {
+        const totalDist = workout.totalDistance;
+        const warmup = Math.min(200, Math.max(50, Math.round(totalDist * 0.15 / 50) * 50));
+        const cooldown = Math.min(200, Math.max(50, Math.round(totalDist * 0.15 / 50) * 50));
+        const mainSetDist = totalDist - warmup - cooldown;
+
+        return {
+            version: 1,
+            source: 'generated-plan',
+            steps: [
+                { type: 'warmup', name: 'Warm up swim', distanceMeters: warmup, paceSecondsPerKm: targetPace },
+                { type: 'work', name: 'Main Set', distanceMeters: mainSetDist, paceSecondsPerKm: targetPace },
+                { type: 'cooldown', name: 'Cool down swim', distanceMeters: cooldown, paceSecondsPerKm: targetPace },
+            ],
+        };
+    }
+
+    // 5. RUN EASY / RECOVERY / LONG RUN
+    if (type === WorkoutType.EASY || type === WorkoutType.RECOVERY || type === WorkoutType.LONG_RUN) {
+        return {
+            version: 1,
+            source: 'generated-plan',
+            steps: [{
+                type: 'steady',
+                name: type === WorkoutType.RECOVERY ? 'Recovery run' : type === WorkoutType.LONG_RUN ? 'Long run' : 'Easy run',
                 distanceMeters: workout.totalDistance || undefined,
                 durationSeconds: workout.targetDuration || undefined,
                 paceSecondsPerKm: targetPace,
@@ -1427,6 +1643,108 @@ export function buildStructuredStepsForWorkout(workout: Pick<GeneratedWorkout, '
             }],
         };
     }
+
+    // 6. RUN QUALITY / INTERVALS
+    const repMatch = workout.description.match(/(\d+)x(\d+(?:\.\d+)?)\s*(km|m)/i);
+    if (repMatch) {
+        const reps = parseInt(repMatch[1]);
+        const value = parseFloat(repMatch[2]);
+        const unit = repMatch[3].toLowerCase();
+        const repDistMeters = unit === 'km' ? value * 1000 : value;
+
+        let warmupDistance = workout.totalDistance >= 5000 ? 1500 : 0;
+        let cooldownDistance = workout.totalDistance >= 5000 ? 1000 : 0;
+        const workDistance = reps * repDistMeters;
+        const supportDistance = Math.max(0, workout.totalDistance - workDistance);
+        if (warmupDistance + cooldownDistance > supportDistance) {
+            warmupDistance = Math.round(supportDistance * 0.6);
+            cooldownDistance = supportDistance - warmupDistance;
+        }
+        const recoveryDistance = reps > 1
+            ? Math.max(0, (supportDistance - warmupDistance - cooldownDistance) / (reps - 1))
+            : 0;
+
+        const steps: StructuredWorkoutStep[] = [];
+        if (warmupDistance > 0) {
+            steps.push({ type: 'warmup', name: 'Warm up', distanceMeters: warmupDistance, hrZone: 1 });
+        }
+
+        let recoveryName = 'Recovery jog';
+
+        if (type === WorkoutType.REPETITIONS) {
+            recoveryName = 'Rest';
+        } else if (workout.description.includes('Threshold') || workout.description.includes('MP')) {
+            recoveryName = 'Tempo rest';
+        }
+
+        for (let i = 0; i < reps; i++) {
+            steps.push({
+                type: 'work',
+                name: `Rep ${i + 1}`,
+                distanceMeters: repDistMeters,
+                paceSecondsPerKm: targetPace,
+                hrZone,
+            });
+            if (i < reps - 1) {
+                steps.push({
+                    type: 'recovery',
+                    name: recoveryName,
+                    distanceMeters: recoveryDistance || undefined,
+                    durationSeconds: recoveryDistance ? undefined : 120,
+                    hrZone: 1,
+                });
+            }
+        }
+
+        if (cooldownDistance > 0) {
+            steps.push({ type: 'cooldown', name: 'Cool down', distanceMeters: cooldownDistance, hrZone: 1 });
+        }
+
+        return { version: 1, source: 'generated-plan', steps };
+    }
+
+    // 7. RUN FARTLEK
+    const fartlekMatch = workout.description.match(/(\d+)\s*min\s*(?:hard|@\s*F).*?(\d+)\s*min\s*(?:easy|@\s*E)/i);
+    if (fartlekMatch) {
+        const hardMin = parseInt(fartlekMatch[1]);
+        const easyMin = parseInt(fartlekMatch[2]);
+        const cycleSeconds = (hardMin + easyMin) * 60;
+
+        const warmupSeconds = 600;
+        const cooldownSeconds = 600;
+        const totalSecs = workout.targetDuration || Math.round((workout.totalDistance / 1000) * (targetPace || 300));
+        const mainSecs = Math.max(cycleSeconds, totalSecs - warmupSeconds - cooldownSeconds);
+        const reps = Math.max(1, Math.floor(mainSecs / cycleSeconds));
+
+        const steps: StructuredWorkoutStep[] = [
+            { type: 'warmup', name: 'Warm up', durationSeconds: warmupSeconds, hrZone: 1 }
+        ];
+
+        for (let i = 0; i < reps; i++) {
+            steps.push({
+                type: 'work',
+                name: `Fartlek Hard ${i + 1}`,
+                durationSeconds: hardMin * 60,
+                paceSecondsPerKm: targetPace,
+                hrZone,
+            });
+            steps.push({
+                type: 'recovery',
+                name: `Fartlek Easy ${i + 1}`,
+                durationSeconds: easyMin * 60,
+                paceSecondsPerKm: targetPace ? Math.round(targetPace * 1.15) : undefined,
+                hrZone: 2,
+            });
+        }
+
+        steps.push({ type: 'cooldown', name: 'Cool down', durationSeconds: cooldownSeconds, hrZone: 1 });
+
+        return { version: 1, source: 'generated-plan', steps };
+    }
+
+    const warmupDistance = workout.totalDistance >= 5000 ? 1500 : 0;
+    const cooldownDistance = workout.totalDistance >= 5000 ? 1000 : 0;
+    const remainingDistance = Math.max(0, workout.totalDistance - warmupDistance - cooldownDistance);
 
     const steps: StructuredWorkoutStep[] = [];
     if (warmupDistance > 0) {
@@ -1463,10 +1781,29 @@ function updateDescription(type: WorkoutType, distance: number, pace: number): s
     }
 }
 
+export function assignWorkoutTargets(
+    workout: GeneratedWorkout,
+    paces: TrainingPaces,
+    sport: PlanSport | string | null,
+): void {
+    const type = workout.type as WorkoutType;
+    if (workout.targetHrZone === undefined || workout.targetHrZone === null) {
+        if (type === WorkoutType.RIDE || type === WorkoutType.LONG_RIDE || type === WorkoutType.BRICK) {
+            workout.targetHrZone = 2;
+        } else if (type === WorkoutType.RIDE_INTERVALS) {
+            workout.targetHrZone = 4;
+        } else if (type === WorkoutType.SWIM || type === WorkoutType.SWIM_DRILL || type === WorkoutType.OPEN_WATER_SWIM) {
+            workout.targetHrZone = 2;
+        } else {
+            workout.targetHrZone = workoutTypeToHrZone(type);
+        }
+    }
+}
+
 function enrichWorkoutsWithTargets(
     workouts: GeneratedWorkout[],
     paces: TrainingPaces,
-    config: Pick<PlanConfig, 'thresholdHeartRate' | 'hrZoneMethod' | 'hrZone1Max' | 'hrZone2Max' | 'hrZone3Max' | 'hrZone4Max' | 'hrZone5Max' | 'hrZone6Max' | 'hrMax' | 'hrRest'>,
+    config: Pick<PlanConfig, 'vdot' | 'thresholdHeartRate' | 'hrZoneMethod' | 'hrZone1Max' | 'hrZone2Max' | 'hrZone3Max' | 'hrZone4Max' | 'hrZone5Max' | 'hrZone6Max' | 'hrMax' | 'hrRest'>,
 ): void {
     const hrZones = resolveHrZones({
         thresholdHeartRate: config.thresholdHeartRate ?? null,
@@ -1479,6 +1816,10 @@ function enrichWorkoutsWithTargets(
         hrMax: config.hrMax ?? null,
         hrRest: config.hrRest ?? null,
     }).zones;
+
+    const bikeFtp = estimateBikeFtpFromVdot(config.vdot);
+    const bikeZones = calculateBikeZones(bikeFtp);
+
     for (const workout of workouts) {
         const paceTarget = getPaceTarget(workout, paces);
         workout.targetPaceZoneLabel = paceTarget?.label ?? null;
@@ -1489,6 +1830,16 @@ function enrichWorkoutsWithTargets(
         workout.targetHrZoneLabel = hrTarget?.label ?? null;
         workout.targetHrMinBpm = hrTarget?.min ?? null;
         workout.targetHrMaxBpm = hrTarget?.max ?? null;
+
+        if (workout.type === WorkoutType.RIDE || workout.type === WorkoutType.LONG_RIDE || workout.type === WorkoutType.RIDE_INTERVALS || workout.type === WorkoutType.BRICK) {
+            if (workout.type === WorkoutType.RIDE_INTERVALS) {
+                workout.targetPaceZoneLabel = `Power Z4: ${bikeZones.threshold.min}-${bikeZones.threshold.max}W`;
+            } else if (workout.type === WorkoutType.LONG_RIDE) {
+                workout.targetPaceZoneLabel = `Power Z2: ${bikeZones.endurance.min}-${bikeZones.endurance.max}W`;
+            } else {
+                workout.targetPaceZoneLabel = `Power Z2: ${bikeZones.endurance.min}-${bikeZones.endurance.max}W`;
+            }
+        }
     }
 }
 
@@ -1499,12 +1850,20 @@ function getPaceTarget(
     if (!workout.targetPace || workout.targetPace <= 0) return null;
 
     switch (workout.type) {
+        case WorkoutType.SWIM:
+        case WorkoutType.SWIM_DRILL:
+        case WorkoutType.OPEN_WATER_SWIM:
+            return {
+                label: workout.type === WorkoutType.SWIM_DRILL ? 'Swim Drill' : workout.type === WorkoutType.OPEN_WATER_SWIM ? 'OW Swim' : 'Swim Pace',
+                min: Math.round(workout.targetPace * 0.95),
+                max: Math.round(workout.targetPace * 1.05),
+            };
         case WorkoutType.EASY:
         case WorkoutType.LONG_RUN:
         case WorkoutType.RECOVERY:
             return { label: 'Easy', min: paces.easy.min, max: paces.easy.max };
         case WorkoutType.TEMPO:
-            if (workout.description.includes('MP Segments')) {
+            if (workout.description.includes('MP Segments') || workout.description.includes('MP')) {
                 return paceWindow('Marathon Pace', paces.marathon, 0.03);
             }
             return paceWindow('Threshold', paces.threshold, 0.03);

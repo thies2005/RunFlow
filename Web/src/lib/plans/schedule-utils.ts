@@ -34,7 +34,11 @@ export function fixBackToBackSameType(
         .sort((a, b) => a.date.getTime() - b.date.getTime());
 
     let i = 1;
-    while (i < sorted.length) {
+    let iterations = 0;
+    const maxIterations = workouts.length * 4;
+
+    while (i < sorted.length && iterations < maxIterations) {
+        iterations++;
         const prev = sorted[i - 1];
         const curr = sorted[i];
 
@@ -86,6 +90,10 @@ export function fixBackToBackSameType(
 
         sorted.sort((a, b) => a.date.getTime() - b.date.getTime());
         i = Math.max(1, i - 1);
+    }
+
+    if (iterations >= maxIterations) {
+        console.warn(`[fixBackToBackSameType] Trip guard at ${iterations} iterations (workouts limit reached)`);
     }
 
     return sorted;

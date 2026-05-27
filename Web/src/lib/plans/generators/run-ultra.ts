@@ -332,7 +332,7 @@ function getUltraLongRunDistance(
 
     if (dist < PLAN_CONSTANTS.MIN_LONG_RUN) dist = PLAN_CONSTANTS.MIN_LONG_RUN;
 
-    return Math.round(dist / 1000) * 1000;
+    return Math.round(dist / 100) * 100;
 }
 
 function generateUltraWeek(params: {

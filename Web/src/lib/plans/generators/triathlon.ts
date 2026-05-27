@@ -254,7 +254,7 @@ export function generateTriathlonPlan(config: PlanConfig): GeneratedWorkout[] {
         weekVolumeCap = Math.max(effectiveFloor, weekVolumeCap);
 
         const defaultPeakVolume = TRI_MIN_PEAK_VOLUME[effectiveRaceType] || 40000;
-        const totalPeakMetersScale = peakVolume / defaultPeakVolume;
+        const totalPeakMetersScale = effectivePeakVolume / defaultPeakVolume;
 
         const peakBikeSecs = TRI_PEAK_BUDGET[effectiveRaceType].bikeSecs * totalPeakMetersScale;
         const peakRunMeters = TRI_PEAK_BUDGET[effectiveRaceType].runMeters * totalPeakMetersScale;

@@ -104,6 +104,59 @@ describe('Training Plan Generation', () => {
             }
         });
 
+        it('Half Marathon PEAK goal-pace sessions honor explicit target time', () => {
+            const config = makeConfig({
+                raceType: 'HALF_MARATHON',
+                weeklyMileageGoal: 50000,
+                targetTime: 6000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const hmWorkouts = workouts.filter(
+                w => w.description.includes('HM Pace Segment')
+            );
+            const expectedGoalPace = Math.round((6000 / 21097) * 1000);
+
+            expect(hmWorkouts.length).toBeGreaterThan(0);
+            for (const w of hmWorkouts) {
+                expect(w.targetPace).toBe(expectedGoalPace);
+                expect(w.description).toContain('4:44');
+                expect(w.targetPaceZoneLabel).toBe('HM Race Pace');
+            }
+        });
+
+        it('race day carries target pace and duration from target time', () => {
+            const config = makeConfig({
+                raceType: 'HALF_MARATHON',
+                targetTime: 6000,
+            });
+            const workouts = generateTrainingPlan(config);
+            const raceWorkout = workouts.find(w => w.type === WorkoutType.RACE);
+
+            expect(raceWorkout).toBeDefined();
+            expect(raceWorkout?.targetDuration).toBe(6000);
+            expect(raceWorkout?.targetPace).toBe(Math.round((6000 / 21097) * 1000));
+        });
+
+        it('Half Marathon BUILD intervals progress rep structure over the phase', () => {
+            const config = makeConfig({
+                raceType: 'HALF_MARATHON',
+                weeklyMileageGoal: 50000,
+                taperWeeks: 2,
+                peakWeeks: 2,
+                buildWeeks: 8,
+            });
+            const workouts = generateTrainingPlan(config);
+            const buildIntervals = workouts.filter(
+                w => w.phase === 'BUILD' && w.type === WorkoutType.INTERVALS
+            );
+            const descriptions = new Set(buildIntervals.map(w => w.description));
+
+            expect(buildIntervals.length).toBeGreaterThan(3);
+            expect(descriptions.has('Intervals: 5x800m @ 4:00')).toBe(true);
+            expect(descriptions.has('Intervals: 6x800m @ 4:00')).toBe(true);
+            expect(descriptions.has('Intervals: 5x1km @ 4:00')).toBe(true);
+        });
+
         it('taper uses configurable taperWeeks, not hardcoded 2 (Task 1.3)', () => {
             const config = makeConfig({
                 raceType: 'MARATHON',
@@ -824,6 +877,36 @@ describe('Training Plan Generation', () => {
                 .reduce((sum, w) => sum + w.totalDistance, 0);
 
             expect(firstWeekRunDistance).toBeLessThanOrEqual(13000);
+        });
+
+        it('short triathlon plans scale sport budgets from effective peak volume', () => {
+            const requestedPeakVolume = 70000;
+            const workouts = generateTrainingPlan({
+                vdot: 50,
+                raceType: 'FULL_IRONMAN',
+                raceDate: new Date('2026-05-17'),
+                startDate: new Date('2026-04-05'),
+                weeklyMileageGoal: requestedPeakVolume,
+                runsPerWeek: 3,
+                ridesPerWeek: 3,
+                swimsPerWeek: 3,
+                taperWeeks: 1,
+                peakWeeks: 1,
+                buildWeeks: 2,
+            });
+
+            const startVolume = requestedPeakVolume * PLAN_CONSTANTS.START_VOLUME_RATIO;
+            const availableRampWeeks = 5;
+            const effectiveTrainingWeeks = availableRampWeeks - Math.floor(availableRampWeeks / PLAN_CONSTANTS.STEP_LOADING_CYCLE);
+            const effectivePeakVolume = Math.round(startVolume * Math.pow(PLAN_CONSTANTS.WEEKLY_GROWTH_CAP, effectiveTrainingWeeks));
+            const expectedRunBudget = Math.ceil((50000 * (effectivePeakVolume / requestedPeakVolume)) / 100) * 100;
+
+            const maxNonRaceRunDistance = Math.max(...groupByWeek(workouts).map(week => week
+                .filter(w => w.type && isRunType(w.type) && w.type !== WorkoutType.RACE)
+                .reduce((sum, w) => sum + w.totalDistance, 0)
+            ));
+
+            expect(maxNonRaceRunDistance).toBeLessThanOrEqual(expectedRunBudget);
         });
 
         it('adds concrete LTHR and pace targets to generated workouts', () => {

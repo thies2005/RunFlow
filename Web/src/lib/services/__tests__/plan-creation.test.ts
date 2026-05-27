@@ -1,4 +1,33 @@
-import { resolveTrainingVdotForGoal, validateTrainingPaces } from '../plan-creation';
+jest.mock('@/lib/db', () => ({
+    prisma: {
+        activity: {
+            findFirst: jest.fn(),
+            findMany: jest.fn(),
+        },
+        user: {
+            findUnique: jest.fn(),
+        },
+    },
+}));
+
+import { prisma } from '@/lib/db';
+import { analyzeRace } from '../../metrics/vdot';
+import { AnalyticsService } from '../analytics';
+import { resolveTrainingVdotForGoal, resolveVdot, validateTrainingPaces } from '../plan-creation';
+
+const mockedPrisma = prisma as unknown as {
+    activity: {
+        findFirst: jest.Mock;
+        findMany: jest.Mock;
+    };
+    user: {
+        findUnique: jest.Mock;
+    };
+};
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
 
 describe('resolveTrainingVdotForGoal', () => {
     it('returns currentVdot as trainingVdot when target time implies much higher VDOT', () => {
@@ -88,6 +117,56 @@ describe('resolveTrainingVdotForGoal', () => {
             hasFitnessBaseline: true,
         });
         expect(result.trainingVdot).toBe(0);
+    });
+});
+
+describe('resolveVdot', () => {
+    it('does not apply stored VO2 correction to target-time VDOT fallback', async () => {
+        mockedPrisma.user.findUnique.mockResolvedValue({ vdotCorrectionFactor: 1.2 });
+
+        const result = await resolveVdot({
+            userId: 'user-1',
+            raceType: 'HALF_MARATHON',
+            targetTime: 6210,
+            useActivityVdot: false,
+        });
+        const expected = analyzeRace({ distance: 'HALF', timeSeconds: 6210 }).vdot;
+
+        expect(result.currentVdot).toBe(expected);
+        expect(result.vdotFromActivities).toBe(false);
+        expect(result.vdotConfidence).toBe('low');
+        expect(mockedPrisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('uses form HR and correction overrides for activity VDOT instead of stale stored profile values', async () => {
+        mockedPrisma.activity.findFirst.mockResolvedValue(null);
+        mockedPrisma.user.findUnique.mockResolvedValue({
+            hrMax: 150,
+            vdotCorrectionFactor: 1.4,
+        });
+        mockedPrisma.activity.findMany.mockResolvedValue([{
+            startDate: new Date('2026-05-01'),
+            distance: 10000,
+            movingTime: 3000,
+            averageHr: 150,
+            hasHeartrate: true,
+        }]);
+        const spy = jest.spyOn(AnalyticsService, 'calculateVO2max')
+            .mockReturnValue({ rawVO2max: 40, effectiveVO2max: 42 });
+
+        const result = await resolveVdot({
+            userId: 'user-1',
+            raceType: 'HALF_MARATHON',
+            useActivityVdot: true,
+            maxHeartRate: 190,
+            vdotCorrectionFactor: 0.9,
+        });
+
+        expect(result.currentVdot).toBe(42);
+        expect(result.vdotFromActivities).toBe(true);
+        expect(spy).toHaveBeenCalledWith(expect.any(Array), 190, 0.9);
+
+        spy.mockRestore();
     });
 });
 

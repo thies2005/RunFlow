@@ -107,16 +107,16 @@ export async function POST(request: NextRequest) {
 
         const { goal } = await createPlanWithWorkouts({
             ...normalized,
-            thresholdHeartRate: userProfile?.thresholdHeartRate ?? normalized.thresholdHeartRate ?? null,
-            hrZoneMethod: 'CUSTOM',
-            hrZone1Max: userProfile?.hrZone1Max ?? null,
-            hrZone2Max: userProfile?.hrZone2Max ?? null,
-            hrZone3Max: userProfile?.hrZone3Max ?? null,
-            hrZone4Max: userProfile?.hrZone4Max ?? null,
-            hrZone5Max: userProfile?.hrZone5Max ?? null,
-            hrZone6Max: userProfile?.hrZone6Max ?? null,
-            hrMax: userProfile?.hrMax ?? null,
-            hrRest: userProfile?.hrRest ?? null,
+            thresholdHeartRate: normalized.thresholdHeartRate ?? userProfile?.thresholdHeartRate ?? null,
+            hrZoneMethod: normalized.hrZoneMethod ?? 'CUSTOM',
+            hrZone1Max: normalized.hrZone1Max ?? userProfile?.hrZone1Max ?? null,
+            hrZone2Max: normalized.hrZone2Max ?? userProfile?.hrZone2Max ?? null,
+            hrZone3Max: normalized.hrZone3Max ?? userProfile?.hrZone3Max ?? null,
+            hrZone4Max: normalized.hrZone4Max ?? userProfile?.hrZone4Max ?? null,
+            hrZone5Max: normalized.hrZone5Max ?? userProfile?.hrZone5Max ?? null,
+            hrZone6Max: normalized.hrZone6Max ?? userProfile?.hrZone6Max ?? null,
+            hrMax: normalized.maxHeartRate ?? userProfile?.hrMax ?? null,
+            hrRest: normalized.restingHeartRate ?? userProfile?.hrRest ?? null,
         });
 
         const enrichedGoal = {

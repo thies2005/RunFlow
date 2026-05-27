@@ -82,6 +82,12 @@ export const PlanCreateInputSchema = z.object({
     thresholdHeartRate: z.number().int().min(60).max(250).optional(),
     thresholdPaceSecondsPerKm: z.number().positive().optional(),
     hrZoneMethod: z.enum(['LTHR', 'KARVONEN', 'CUSTOM']).optional(),
+    hrZone1Max: z.number().int().positive().optional(),
+    hrZone2Max: z.number().int().positive().optional(),
+    hrZone3Max: z.number().int().positive().optional(),
+    hrZone4Max: z.number().int().positive().optional(),
+    hrZone5Max: z.number().int().positive().optional(),
+    hrZone6Max: z.number().int().positive().optional(),
 });
 
 export type PlanCreateInput = z.infer<typeof PlanCreateInputSchema>;
@@ -112,6 +118,7 @@ export function normalizePlanInput(
         subGoals,
         maxHeartRate, restingHeartRate, thresholdHeartRate,
         thresholdPaceSecondsPerKm, hrZoneMethod,
+        hrZone1Max, hrZone2Max, hrZone3Max, hrZone4Max, hrZone5Max, hrZone6Max,
     } = raw;
 
     // Resolve sport: default to RUN
@@ -208,6 +215,12 @@ export function normalizePlanInput(
         thresholdHeartRate: thresholdHeartRate ?? null,
         thresholdPaceSecondsPerKm: thresholdPaceSecondsPerKm ?? null,
         hrZoneMethod: hrZoneMethod ?? null,
+        hrZone1Max: hrZone1Max ?? null,
+        hrZone2Max: hrZone2Max ?? null,
+        hrZone3Max: hrZone3Max ?? null,
+        hrZone4Max: hrZone4Max ?? null,
+        hrZone5Max: hrZone5Max ?? null,
+        hrZone6Max: hrZone6Max ?? null,
     };
 }
 
@@ -361,6 +374,8 @@ export interface ResolveVdotInput {
     calibrationFactor?: number | null;
     targetTime?: number | null;
     useActivityVdot?: boolean;
+    maxHeartRate?: number | null;
+    vdotCorrectionFactor?: number | null;
 }
 
 export interface ResolveVdotResult {
@@ -371,7 +386,16 @@ export interface ResolveVdotResult {
 }
 
 export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotResult> {
-    const { userId, raceType, calibrationTime, calibrationDistance, targetTime, useActivityVdot = true } = input;
+    const {
+        userId,
+        raceType,
+        calibrationTime,
+        calibrationDistance,
+        targetTime,
+        useActivityVdot = true,
+        maxHeartRate,
+        vdotCorrectionFactor,
+    } = input;
 
     let currentVdot: number | null = null;
     let predictedTime: number | null = null;
@@ -447,8 +471,8 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
         });
 
         if (runActivities.length > 0) {
-            const maxHR = user?.hrMax || 185;
-            const correctionFactor = user?.vdotCorrectionFactor || 1.0;
+            const maxHR = maxHeartRate || user?.hrMax || 185;
+            const correctionFactor = vdotCorrectionFactor || user?.vdotCorrectionFactor || 1.0;
             const { effectiveVO2max } = AnalyticsService.calculateVO2max(
                 runActivities as ActivityForShape[],
                 maxHR,
@@ -479,17 +503,6 @@ export async function resolveVdot(input: ResolveVdotInput): Promise<ResolveVdotR
         logger.info('No VDOT data available. Defaulting to VDOT 30.', { userId });
         currentVdot = 30.0;
         vdotConfidence = 'low';
-    }
-
-    if (currentVdot && !vdotFromActivities && userId) {
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { vdotCorrectionFactor: true },
-        });
-        const correctionFactor = user?.vdotCorrectionFactor ?? 1.0;
-        if (correctionFactor !== 1.0) {
-            currentVdot = Math.round(currentVdot * correctionFactor * 10) / 10;
-        }
     }
 
     return { currentVdot, predictedTime, vdotFromActivities, vdotConfidence };
@@ -694,6 +707,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         subGoals,
         startWeeklyMileage,
         thresholdHeartRate,
+        thresholdPaceSecondsPerKm,
         hrZoneMethod,
         hrZone1Max,
         hrZone2Max,
@@ -703,6 +717,8 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         hrZone6Max,
         hrMax,
         hrRest,
+        maxHeartRate,
+        restingHeartRate,
     } = input;
 
     let weeklyMileageGoal = input.weeklyMileageGoal ?? null;
@@ -724,16 +740,31 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         });
     }
 
-    const userUpdatePromise = calibrationFactor && calibrationFactor > 0
+    const userUpdateData: Parameters<typeof prisma.user.update>[0]['data'] = {};
+    const resolvedHrMaxForProfile = hrMax ?? maxHeartRate ?? null;
+    const resolvedHrRestForProfile = hrRest ?? restingHeartRate ?? null;
+    if (calibrationFactor && calibrationFactor > 0) {
+        userUpdateData.vdotCorrectionFactor = calibrationFactor;
+        if (calibrationFactor !== 1.0) {
+            userUpdateData.autoRevolvingVo2max = null;
+            userUpdateData.autoRevolvingCalculatedAt = null;
+        }
+    }
+    if (resolvedHrMaxForProfile != null) userUpdateData.hrMax = resolvedHrMaxForProfile;
+    if (resolvedHrRestForProfile != null) userUpdateData.hrRest = resolvedHrRestForProfile;
+    if (thresholdHeartRate != null) userUpdateData.thresholdHeartRate = thresholdHeartRate;
+    if (thresholdPaceSecondsPerKm != null) userUpdateData.thresholdPace = Math.round(thresholdPaceSecondsPerKm);
+    if (hrZone1Max != null) userUpdateData.hrZone1Max = hrZone1Max;
+    if (hrZone2Max != null) userUpdateData.hrZone2Max = hrZone2Max;
+    if (hrZone3Max != null) userUpdateData.hrZone3Max = hrZone3Max;
+    if (hrZone4Max != null) userUpdateData.hrZone4Max = hrZone4Max;
+    if (hrZone5Max != null) userUpdateData.hrZone5Max = hrZone5Max;
+    if (hrZone6Max != null) userUpdateData.hrZone6Max = hrZone6Max;
+
+    const userUpdatePromise = Object.keys(userUpdateData).length > 0
         ? prisma.user.update({
             where: { id: userId },
-            data: {
-                vdotCorrectionFactor: calibrationFactor,
-                ...(calibrationFactor !== 1.0 && {
-                    autoRevolvingVo2max: null,
-                    autoRevolvingCalculatedAt: null,
-                }),
-            },
+            data: userUpdateData,
         }).then(res => ({ result: res, error: null }))
             .catch(err => ({ result: null, error: err }))
         : Promise.resolve({ result: null, error: null });
@@ -770,6 +801,8 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         calibrationFactor,
         targetTime,
         useActivityVdot: true,
+        maxHeartRate: hrMax ?? maxHeartRate ?? null,
+        vdotCorrectionFactor: calibrationFactor ?? null,
     });
 
     const effectiveVdot = currentVdot;
@@ -872,6 +905,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
     const planConfig: PlanConfig = {
         vdot: effectiveTrainingVdot,
         targetVdot: trainingVdotResult.targetVdot ?? null,
+        targetTime: targetTime ?? calculatedTargetTime ?? null,
         raceType: raceType ?? null,
         raceDate: finalRaceDate,
         startDate,
@@ -899,8 +933,8 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         hrZone4Max: hrZone4Max ?? null,
         hrZone5Max: hrZone5Max ?? null,
         hrZone6Max: hrZone6Max ?? null,
-        hrMax: hrMax ?? null,
-        hrRest: hrRest ?? null,
+        hrMax: hrMax ?? maxHeartRate ?? null,
+        hrRest: hrRest ?? restingHeartRate ?? null,
         customDistanceM: customDistanceM ?? null,
         customSwimDistM: customSwimDistM ?? undefined,
         customBikeDistM: customBikeDistM ?? undefined,
@@ -966,6 +1000,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                     const subWorkouts = generateTrainingPlan({
                         vdot: effectiveTrainingVdot,
                         targetVdot: trainingVdotResult.targetVdot ?? null,
+                        targetTime: sg.targetTime ?? null,
                         raceType: sg.raceType as RaceType,
                         raceDate: subRaceDate,
                         startDate,
@@ -992,8 +1027,8 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
                         hrZone4Max: hrZone4Max ?? null,
                         hrZone5Max: hrZone5Max ?? null,
                         hrZone6Max: hrZone6Max ?? null,
-                        hrMax: hrMax ?? null,
-                        hrRest: hrRest ?? null,
+                        hrMax: hrMax ?? maxHeartRate ?? null,
+                        hrRest: hrRest ?? restingHeartRate ?? null,
                     });
 
                     const parentRaceDate = raceDate ? new Date(raceDate) : null;

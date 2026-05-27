@@ -652,6 +652,19 @@ export default function PlanSetupForm({
                 swimDay,
                 restDays,
                 sport: effectiveSport,
+                maxHeartRate,
+                restingHeartRate,
+                hrZoneMethod: 'CUSTOM',
+                hrZone1Max: zone1Max,
+                hrZone2Max: zone2Max,
+                hrZone3Max: zone3Max,
+                hrZone4Max: zone4Max,
+                hrZone5Max: zone5Max,
+                hrZone6Max: zone6Max,
+                thresholdHeartRate: parseInt(thresholdHR) || undefined,
+                thresholdPaceSecondsPerKm: thresholdPaceMin || thresholdPaceSec
+                    ? (parseInt(thresholdPaceMin) || 0) * 60 + (parseInt(thresholdPaceSec) || 0)
+                    : undefined,
                 ...(computedTargetTime && { targetTime: Math.round(computedTargetTime) }),
                 ...(timeSeconds > 0 && {
                     calibrationTime: Math.round(timeSeconds),

@@ -215,6 +215,7 @@ export function resolvePhaseBudget(
 export type PlanConfig = {
     vdot: number;
     targetVdot?: number | null;
+    targetTime?: number | null;
     raceType: RaceType | null;
     raceDate: Date;
     startDate?: Date;
@@ -342,7 +343,7 @@ export function generateTrainingPlan(config: PlanConfig): GeneratedWorkout[] {
 }
 
 function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
-    const { vdot, raceDate, customDistanceM } = config;
+    const { vdot, raceDate, customDistanceM, targetTime } = config;
     const raceType = config.raceType as RaceType;
     const effectiveRaceType = raceType === 'CUSTOM_DISTANCE' && customDistanceM && customDistanceM > 0
         ? classifyCustomRunDistance(customDistanceM)
@@ -381,6 +382,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
     }
 
     const paces = calculateTrainingPaces(vdot);
+    const targetRacePace = getTargetRacePaceSeconds(effectiveRaceType, targetTime, customDistanceM);
 
     const defaultTaperWeeks = TAPER_FRACTIONS[effectiveRaceType]?.length || 2;
     const phases = resolvePhaseBudget(totalWeeks, config, { defaultTaper: defaultTaperWeeks });
@@ -442,6 +444,8 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
                 swimsPerWeek,
                 strengthPerWeek,
                 customDistanceM,
+                targetRacePace,
+                targetRaceDuration: targetTime ?? null,
             });
             raceWeekWorkouts.forEach(w => {
                 const specificDate = new Date(raceDate);
@@ -509,6 +513,7 @@ function generateStandardPlan(config: PlanConfig): GeneratedWorkout[] {
             preferredSwimDay: config.swimDay,
             restDays: config.restDays,
             weekInPhase,
+            targetRacePace,
         });
 
         const runningWorkouts = weekSchedule.filter(w => isRun(w.type));
@@ -598,8 +603,10 @@ function generateRaceWeek(params: {
     swimsPerWeek?: number;
     strengthPerWeek?: number;
     customDistanceM?: number | null;
+    targetRacePace?: number | null;
+    targetRaceDuration?: number | null;
 }): ScheduledWorkout[] {
-    const { raceType, paces, runsPerWeek, raceWeekRunVolumeCap, customDistanceM } = params;
+    const { raceType, paces, runsPerWeek, raceWeekRunVolumeCap, customDistanceM, targetRacePace, targetRaceDuration } = params;
     const workouts: ScheduledWorkout[] = [];
     const usedDays = new Set<number>();
 
@@ -616,8 +623,8 @@ function generateRaceWeek(params: {
         type: WorkoutType.RACE,
         description: `Race Day: ${raceDistKm}km`,
         totalDistance: raceDistMeters,
-        targetPace: 0,
-        targetDuration: 0,
+        targetPace: targetRacePace ?? 0,
+        targetDuration: targetRaceDuration ?? (targetRacePace ? computeDuration(raceDistMeters, targetRacePace) : 0),
         phase: 'RACE_WEEK' as PlanPhase,
         targetHrZone: workoutTypeToHrZone(WorkoutType.RACE),
     });
@@ -761,6 +768,7 @@ function generateWeek(params: {
     preferredSwimDay?: number;
     restDays?: number[];
     weekInPhase?: number;
+    targetRacePace?: number | null;
 }): ScheduledWorkout[] {
     const {
         phase, raceType, paces, runsPerWeek, ridesPerWeek, strengthPerWeek, swimsPerWeek, weeklyVolume,
@@ -783,7 +791,7 @@ function generateWeek(params: {
 
     const hasQuality = runsPerWeek >= 2 && phase !== 'TAPER';
     const qualitySession = hasQuality
-        ? getQualitySession(raceType, paces, phase, weeklyVolume, params.weekInPhase ?? 1)
+        ? getQualitySession(raceType, paces, phase, weeklyVolume, params.weekInPhase ?? 1, params.targetRacePace)
         : null;
     const qualityDist = qualitySession ? qualitySession.totalDistance : 0;
 
@@ -1160,7 +1168,7 @@ function getLongRunDistance(
 
     if (dist < PLAN_CONSTANTS.MIN_LONG_RUN) dist = PLAN_CONSTANTS.MIN_LONG_RUN;
 
-    return Math.round(dist / 1000) * 1000;
+    return Math.round(dist / 100) * 100;
 }
 
 function getQualitySession(
@@ -1169,6 +1177,7 @@ function getQualitySession(
     phase: Phase,
     weeklyVolume: number,
     weekInPhase: number,
+    targetRacePace?: number | null,
 ): { type: WorkoutType; description: string; totalDistance: number; targetPace: number } {
     const scale = (session: { type: WorkoutType; description: string; totalDistance: number; targetPace: number }) => ({
         ...session,
@@ -1182,9 +1191,9 @@ function getQualitySession(
         return scale(get10KQualitySession(paces, phase, weekInPhase));
     }
     if (raceType === 'HALF_MARATHON') {
-        return scale(getHalfMarathonQualitySession(paces, phase, weekInPhase));
+        return scale(getHalfMarathonQualitySession(paces, phase, weekInPhase, targetRacePace));
     }
-    return scale(getMarathonQualitySession(paces, phase, weekInPhase));
+    return scale(getMarathonQualitySession(paces, phase, weekInPhase, targetRacePace));
 }
 
 export function scaleQualitySessionDistance(
@@ -1309,7 +1318,7 @@ function get10KQualitySession(paces: TrainingPaces, phase: Phase, weekInPhase: n
     };
 }
 
-function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekInPhase: number) {
+function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekInPhase: number, targetRacePace?: number | null) {
     if (phase === 'BASE') {
         const hardPace = getFartlekHardPace(paces);
         const easyPace = paces.easy.max;
@@ -1337,7 +1346,7 @@ function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekI
         };
     }
     if (phase === 'PEAK') {
-        const hmRacePace = Math.round((paces.marathon + paces.threshold) / 2);
+        const hmRacePace = targetRacePace ?? Math.round((paces.marathon + paces.threshold) / 2);
         return {
             type: WorkoutType.TEMPO,
             description: `HM Pace Segments: 3x3km @ ${formatPace(hmRacePace)}`,
@@ -1345,15 +1354,31 @@ function getHalfMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekI
             targetPace: hmRacePace,
         };
     }
+    if (weekInPhase <= 3) {
+        return {
+            type: WorkoutType.INTERVALS,
+            description: `Intervals: 5x800m @ ${formatPace(paces.interval)}`,
+            totalDistance: 10000,
+            targetPace: paces.interval,
+        };
+    }
+    if (weekInPhase <= 6) {
+        return {
+            type: WorkoutType.INTERVALS,
+            description: `Intervals: 6x800m @ ${formatPace(paces.interval)}`,
+            totalDistance: 11000,
+            targetPace: paces.interval,
+        };
+    }
     return {
         type: WorkoutType.INTERVALS,
-        description: `Intervals: 6x800m @ ${formatPace(paces.interval)}`,
-        totalDistance: 11000,
+        description: `Intervals: 5x1km @ ${formatPace(paces.interval)}`,
+        totalDistance: 12000,
         targetPace: paces.interval,
     };
 }
 
-function getMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekInPhase: number) {
+function getMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekInPhase: number, targetRacePace?: number | null) {
     if (phase === 'BASE') {
         const hardPace = getFartlekHardPace(paces);
         const easyPace = paces.easy.max;
@@ -1381,11 +1406,12 @@ function getMarathonQualitySession(paces: TrainingPaces, phase: Phase, weekInPha
         };
     }
     if (phase === 'PEAK') {
+        const marathonPace = targetRacePace ?? paces.marathon;
         return {
             type: WorkoutType.TEMPO,
-            description: `MP Segments: 3x5km @ ${formatPace(paces.marathon)}`,
+            description: `MP Segments: 3x5km @ ${formatPace(marathonPace)}`,
             totalDistance: 18000,
-            targetPace: paces.marathon,
+            targetPace: marathonPace,
         };
     }
     return {
@@ -1614,6 +1640,13 @@ function getRaceDistanceMeters(raceType: RaceType, customDistanceM?: number | nu
         case 'CUSTOM_DISTANCE': return customDistanceM && customDistanceM > 0 ? customDistanceM : 0;
         default: return 0;
     }
+}
+
+function getTargetRacePaceSeconds(raceType: RaceType, targetTime?: number | null, customDistanceM?: number | null): number | null {
+    if (!targetTime || targetTime <= 0) return null;
+    const distanceMeters = getRaceDistanceMeters(raceType, customDistanceM);
+    if (!distanceMeters || distanceMeters <= 0) return null;
+    return Math.round((targetTime / distanceMeters) * 1000);
 }
 
 function formatPace(secondsPerKm: number): string {
@@ -2084,11 +2117,10 @@ function getPaceTarget(
             return { label: 'Easy', min: paces.easy.min, max: paces.easy.max };
         case WorkoutType.TEMPO:
             if (workout.description.includes('HM Pace Segments')) {
-                const hmRacePace = Math.round((paces.marathon + paces.threshold) / 2);
-                return paceWindow('HM Race Pace', hmRacePace, 0.03);
+                return paceWindow('HM Race Pace', workout.targetPace, 0.03);
             }
             if (workout.description.includes('MP Segments') || workout.description.includes('MP')) {
-                return paceWindow('Marathon Pace', paces.marathon, 0.03);
+                return paceWindow('Marathon Pace', workout.targetPace, 0.03);
             }
             return paceWindow('Threshold', paces.threshold, 0.03);
         case WorkoutType.INTERVALS:

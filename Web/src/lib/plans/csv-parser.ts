@@ -15,6 +15,12 @@ export type ParsedCsvWorkout = {
     structuredSteps?: object;
 };
 
+export type RunFlowCsvMetadataEntry = {
+    section: string;
+    field: string;
+    value: string | number | null | undefined;
+};
+
 const VALID_WORKOUT_TYPES = new Set<string>(Object.values(WorkoutType));
 const VALID_PHASES = new Set<string>(Object.values(PlanPhase));
 
@@ -31,7 +37,7 @@ function matchesFormat(normalizedHeaders: string[], signature: string[]): boolea
     return signature.every(s => headerSet.has(s));
 }
 
-export function detectCsvFormat(headers: string[]): CsvFormat {
+function detectKnownCsvFormat(headers: string[]): CsvFormat | null {
     const normalized = headers.map(normalizeHeader);
 
     if (matchesFormat(normalized, TRAININGPEAKS_SIGNATURE)) return 'trainingpeaks';
@@ -42,7 +48,11 @@ export function detectCsvFormat(headers: string[]): CsvFormat {
     if (normalized.includes('date') && normalized.includes('activitytype')) return 'finalsurge';
     if (normalized.includes('date') && normalized.includes('workouttype')) return 'runflow';
 
-    return 'runflow';
+    return null;
+}
+
+export function detectCsvFormat(headers: string[]): CsvFormat {
+    return detectKnownCsvFormat(headers) ?? 'runflow';
 }
 
 function parseCsvLine(line: string): string[] {
@@ -160,6 +170,10 @@ function parseDuration(raw: string | undefined): number | undefined {
         return h * 3600 + m * 60 + s;
     }
 
+    if (/^\d+$/.test(trimmed)) {
+        return parseInt(trimmed, 10);
+    }
+
     return undefined;
 }
 
@@ -168,6 +182,13 @@ function parseDistance(raw: string | undefined): number | undefined {
     const val = parseFloat(raw.trim());
     if (isNaN(val)) return undefined;
     return val * 1000;
+}
+
+function parseMeters(raw: string | undefined): number | undefined {
+    if (!raw || !raw.trim()) return undefined;
+    const val = parseFloat(raw.trim());
+    if (isNaN(val)) return undefined;
+    return val;
 }
 
 function parsePace(raw: string | undefined): number | undefined {
@@ -182,6 +203,10 @@ function parsePace(raw: string | undefined): number | undefined {
     const perKm = trimmed.match(/^(\d+):(\d{2})\s*\/\s*km$/i);
     if (perKm) {
         return parseInt(perKm[1], 10) * 60 + parseInt(perKm[2], 10);
+    }
+
+    if (/^\d+(?:\.\d+)?$/.test(trimmed)) {
+        return Math.round(parseFloat(trimmed));
     }
 
     return undefined;
@@ -219,6 +244,25 @@ function getField(row: string[], headerMap: Map<string, number>, ...candidates: 
     return undefined;
 }
 
+function findHeaderRowIndex(rows: string[][], format?: CsvFormat): number {
+    if (rows.length === 0) return 0;
+
+    const signatureByFormat: Record<CsvFormat, string[]> = {
+        trainingpeaks: TRAININGPEAKS_SIGNATURE,
+        finalsurge: FINALSURGE_SIGNATURE,
+        runflow: RUNFLOW_SIGNATURE,
+    };
+
+    if (format) {
+        const signature = signatureByFormat[format];
+        const idx = rows.findIndex(row => matchesFormat(row.map(normalizeHeader), signature));
+        return idx >= 0 ? idx : 0;
+    }
+
+    const idx = rows.findIndex(row => detectKnownCsvFormat(row) !== null);
+    return idx >= 0 ? idx : 0;
+}
+
 function parseRunflowRow(row: string[], headerMap: Map<string, number>): ParsedCsvWorkout | null {
     const date = parseDate(getField(row, headerMap, 'date') || '');
     if (!date) return null;
@@ -234,7 +278,7 @@ function parseRunflowRow(row: string[], headerMap: Map<string, number>): ParsedC
         phase,
         name,
         description,
-        distanceM: parseDistance(getField(row, headerMap, 'distancem')),
+        distanceM: parseMeters(getField(row, headerMap, 'distancem')),
         durationS: parseDuration(getField(row, headerMap, 'durations')),
         paceSKm: parsePace(getField(row, headerMap, 'paceskm')),
         hrZone: parseHrZone(getField(row, headerMap, 'hrzone')),
@@ -297,7 +341,8 @@ export function parseCsv(
         return { workouts: [], errors: [], skipped: 0 };
     }
 
-    const headers = rows[0];
+    const headerRowIndex = findHeaderRowIndex(rows, format);
+    const headers = rows[headerRowIndex];
     const detectedFormat = (format || detectCsvFormat(headers)) as CsvFormat;
     const headerMap = buildHeaderMap(headers);
 
@@ -311,7 +356,7 @@ export function parseCsv(
             ? parseFinalSurgeRow
             : parseRunflowRow;
 
-    for (let i = 1; i < rows.length; i++) {
+    for (let i = headerRowIndex + 1; i < rows.length; i++) {
         const row = rows[i];
         if (row.every(cell => !cell)) continue;
 
@@ -332,9 +377,28 @@ export function parseCsv(
     return { workouts, errors, skipped };
 }
 
-export function workoutsToRunFlowCsv(workouts: ParsedCsvWorkout[]): string {
+function csvEscape(value: string | number | null | undefined): string {
+    const text = value == null ? '' : String(value);
+    return `"${text.replace(/"/g, '""')}"`;
+}
+
+export function workoutsToRunFlowCsv(workouts: ParsedCsvWorkout[], metadata: RunFlowCsvMetadataEntry[] = []): string {
     const headers = ['date', 'workout_type', 'phase', 'name', 'description', 'distance_m', 'duration_s', 'pace_s_km', 'hr_zone', 'structured_steps'];
-    const lines = [headers.join(',')];
+    const lines: string[] = [];
+
+    if (metadata.length > 0) {
+        lines.push(['section', 'field', 'value'].join(','));
+        for (const entry of metadata) {
+            lines.push([
+                csvEscape(entry.section),
+                csvEscape(entry.field),
+                csvEscape(entry.value),
+            ].join(','));
+        }
+        lines.push('');
+    }
+
+    lines.push(headers.join(','));
 
     for (const w of workouts) {
         const row = [

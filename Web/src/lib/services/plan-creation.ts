@@ -720,10 +720,7 @@ export async function createPlanWithWorkouts(input: CreatePlanInput): Promise<Cr
         useActivityVdot: true,
     });
 
-    let effectiveVdot = currentVdot;
-    if (calibrationFactor && calibrationFactor > 0 && vdotFromActivities) {
-        effectiveVdot = Math.round(currentVdot * calibrationFactor * 10) / 10;
-    }
+    const effectiveVdot = currentVdot;
 
     const trainingVdotResult = resolveTrainingVdotForGoal({
         currentVdot: effectiveVdot,

@@ -19,6 +19,7 @@ interface WorkoutAction {
     workoutId?: string;
     scheduledDate?: string;
     workoutType?: string;
+    customName?: string;
     description?: string;
     targetDistance?: number | null;
     targetDuration?: number | null;
@@ -67,6 +68,7 @@ function WorkoutCard({ workout, goalId, onApplied }: { workout: WorkoutAction; g
                     body: JSON.stringify({
                         scheduledDate: workout.scheduledDate,
                         workoutType: workout.workoutType || 'EASY',
+                        customName: workout.customName || null,
                         description: workout.description || 'AI-suggested workout',
                         phase: workout.phase || 'BASE',
                         targetDistance: workout.targetDistance ?? null,
@@ -82,6 +84,7 @@ function WorkoutCard({ workout, goalId, onApplied }: { workout: WorkoutAction; g
                     body: JSON.stringify({
                         ...(workout.scheduledDate && { scheduledDate: workout.scheduledDate }),
                         ...(workout.workoutType && { workoutType: workout.workoutType }),
+                        ...(workout.customName !== undefined && { customName: workout.customName }),
                         ...(workout.description && { description: workout.description }),
                         ...(workout.phase && { phase: workout.phase }),
                         ...(workout.targetDistance !== undefined && { targetDistance: workout.targetDistance }),
@@ -123,7 +126,7 @@ function WorkoutCard({ workout, goalId, onApplied }: { workout: WorkoutAction; g
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                         <span className="text-[11px] font-semibold text-zinc-200 truncate">
-                            {workout.workoutType?.replace(/_/g, ' ') || 'Workout'}
+                            {workout.customName || workout.workoutType?.replace(/_/g, ' ') || 'Workout'}
                         </span>
                         {workout.phase && (
                             <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-700 text-zinc-400 uppercase tracking-wide">

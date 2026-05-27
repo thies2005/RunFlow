@@ -26,11 +26,31 @@ export function UndoRedoButtons({ goalId }: UndoRedoButtonsProps) {
 
     const undoMutation = useMutation({
         mutationFn: async () => {
-            const res = await fetch(`/api/plan-advanced/${goalId}/undo`, { method: 'POST' });
+            const res = await fetch(`/api/plan-advanced/${goalId}/undo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}),
+            });
             if (!res.ok) throw new Error('Undo failed');
             return res.json();
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId] });
+        },
+    });
+
+    const revertMutation = useMutation({
+        mutationFn: async (snapshotId: string) => {
+            const res = await fetch(`/api/plan-advanced/${goalId}/undo`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ snapshotId }),
+            });
+            if (!res.ok) throw new Error('Revert failed');
+            return res.json();
+        },
+        onSuccess: () => {
+            setIsOpen(false);
             queryClient.invalidateQueries({ queryKey: ['plan-advanced', goalId] });
         },
     });
@@ -80,7 +100,8 @@ export function UndoRedoButtons({ goalId }: UndoRedoButtonsProps) {
                             {snapshots.map((s: { id: string; description: string; createdAt: string }) => (
                                 <div
                                     key={s.id}
-                                    className="px-3 py-2 text-xs text-zinc-400 hover:bg-zinc-800 cursor-default"
+                                    className="px-3 py-2 text-xs text-zinc-400 hover:bg-zinc-800 cursor-pointer"
+                                    onClick={() => revertMutation.mutate(s.id)}
                                 >
                                     <span className="text-zinc-300">{s.description}</span>
                                     <span className="block text-zinc-600 mt-0.5">

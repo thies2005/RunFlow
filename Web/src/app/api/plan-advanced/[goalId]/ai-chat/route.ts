@@ -79,6 +79,7 @@ When suggesting a workout to add or modify, embed a structured workout card in y
   "workoutId": "existing-workout-id-for-modify-or-delete",
   "scheduledDate": "YYYY-MM-DD",
   "workoutType": "EASY" | "LONG_RUN" | "TEMPO" | "INTERVALS" | "FARTLEK" | "REPETITIONS" | "RECOVERY" | "RACE" | "REST" | "RIDE" | "SWIM" | "STRENGTH" | "CROSS_TRAIN" | "OTHER",
+  "customName": "Optional custom display name for the workout (e.g. 'Recovery Run: 6km @ Very Easy' or 'Threshold Intervals')",
   "description": "Brief description of the workout",
   "targetDistance": 8000,
   "targetDuration": 2700,
@@ -103,7 +104,7 @@ Distance is in meters, duration in seconds.
 function buildPlanContext(goal: Record<string, unknown>, workouts: Array<Record<string, unknown>>): string {
     const workoutSummary = workouts.map(w => {
         const date = w.scheduledDate instanceof Date ? w.scheduledDate.toISOString().split('T')[0] : String(w.scheduledDate);
-        return `  - ${date} | ${w.workoutType} | ${w.targetDistance != null ? `${w.targetDistance}m` : '-'} | ${w.targetDuration != null ? `${Math.round(Number(w.targetDuration) / 60)}min` : '-'} | phase:${w.phase || 'BASE'} | "${w.description || ''}" | id:${w.id}`;
+        return `  - ${date} | ${w.workoutType} | ${w.targetDistance != null ? `${w.targetDistance}m` : '-'} | ${w.targetDuration != null ? `${Math.round(Number(w.targetDuration) / 60)}min` : '-'} | phase:${w.phase || 'BASE'} | name:"${w.customName || ''}" | "${w.description || ''}" | id:${w.id}`;
     }).join('\n');
 
     return `## Current Plan Context

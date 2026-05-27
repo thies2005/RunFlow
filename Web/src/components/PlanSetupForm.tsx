@@ -198,6 +198,9 @@ export default function PlanSetupForm({
     const [calibrationFactor, setCalibrationFactor] = useState<number>(1.0);
     const lastAutoTime = useRef<number>(0);
     const hasExistingCalibration = useRef(false);
+    // Track whether we've loaded settings from the server (to prevent race-type defaults from overriding them)
+    const settingsLoadedRef = useRef(false);
+    const initialRaceTypeRef = useRef<string | null>(null);
 
     const [message, setMessage] = useState('');
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -342,6 +345,7 @@ export default function PlanSetupForm({
                 setCalibrationDistance(dist);
                 setCalibrationMode('manual');
             }
+            settingsLoadedRef.current = true;
         }
     }, [settingsData]);
 
@@ -373,6 +377,13 @@ export default function PlanSetupForm({
     }, [raceType, weeklyMileage]);
 
     useEffect(() => {
+        // In settings mode, skip when settings just loaded — the settingsData effect handles initial values
+        if (mode === 'settings' && !settingsLoadedRef.current) return;
+        // In settings mode, skip the first raceType change (from goalsData) — only apply on user-initiated changes
+        if (mode === 'settings' && initialRaceTypeRef.current !== null && raceType === initialRaceTypeRef.current) {
+            initialRaceTypeRef.current = null; // Allow future user changes
+            return;
+        }
         let defaults = getRaceDefaults(raceType);
         if (effectiveVO2max > 0) {
             defaults = adjustDefaultsForVdot(defaults, effectiveVO2max);
@@ -454,6 +465,7 @@ export default function PlanSetupForm({
         if (goalsData?.goals?.length > 0) {
             const activeGoal = goalsData.goals.find((g: any) => g.isActive);
             if (activeGoal) {
+                initialRaceTypeRef.current = activeGoal.raceType || 'MARATHON';
                 setGoalName(activeGoal.name || 'My Race');
                 setRaceType(activeGoal.raceType || 'MARATHON');
                 if (activeGoal.raceDate) {

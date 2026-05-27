@@ -33,8 +33,13 @@ export async function POST(req: Request, ctx: RouteContext) {
             return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
         }
 
-        const body = await req.json();
-        const { snapshotId } = body;
+        let snapshotId: string | undefined;
+        try {
+            const body = await req.json();
+            snapshotId = body?.snapshotId;
+        } catch {
+            // Empty body or not JSON: default to undefined which restores the latest snapshot
+        }
 
         const snapshot = await restoreFromSnapshot(goalId, snapshotId);
 
